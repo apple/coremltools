@@ -1,0 +1,22 @@
+coremltools\.models\.neural\_network
+====================================
+
+.. automodule:: coremltools.models.neural_network
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      NeuralNetworkBuilder
+   
+   
+
+   
+   
+   

@@ -1,0 +1,447 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>coremltools.models.pipeline &mdash; coremltools 0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="coremltools 0.5.1 documentation" href="../index.html"/>
+        <link rel="up" title="Models" href="../coremltools.models.html"/>
+        <link rel="next" title="coremltools.models.tree_ensemble" href="coremltools.models.tree_ensemble.html"/>
+        <link rel="prev" title="coremltools.models.neural_network" href="coremltools.models.neural_network.html"/> 
+
+  
+  <script src="../static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> coremltools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.5.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.html">coremltools.models.neural_network</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.models.pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a> &raquo;</li>
+        
+      <li>coremltools.models.pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../sources/generated/coremltools.models.pipeline.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-coremltools.models.pipeline">
+<span id="coremltools-models-pipeline"></span><h1>coremltools.models.pipeline<a class="headerlink" href="#module-coremltools.models.pipeline" title="Permalink to this headline">¶</a></h1>
+<p>Pipeline utils for this package.</p>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.pipeline.Pipeline" title="coremltools.models.pipeline.Pipeline"><code class="xref py py-obj docutils literal"><span class="pre">Pipeline</span></code></a>(input_features,&nbsp;output_features)</td>
+<td>A pipeline model that exposes a sequence of models as a single model,  It requires a set of inputs, a sequence of other models and a set of outputs.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.pipeline.PipelineClassifier" title="coremltools.models.pipeline.PipelineClassifier"><code class="xref py py-obj docutils literal"><span class="pre">PipelineClassifier</span></code></a>(input_features,&nbsp;class_labels)</td>
+<td>A pipeline model that exposes a sequence of models as a single model,  It requires a set of inputs, a sequence of other models and a set of outputs.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.pipeline.PipelineRegressor" title="coremltools.models.pipeline.PipelineRegressor"><code class="xref py py-obj docutils literal"><span class="pre">PipelineRegressor</span></code></a>(input_features,&nbsp;…)</td>
+<td>A pipeline model that exposes a sequence of models as a single model,  It requires a set of inputs, a sequence of other models and a set of outputs.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="coremltools.models.pipeline.Pipeline">
+<em class="property">class </em><code class="descclassname">coremltools.models.pipeline.</code><code class="descname">Pipeline</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.Pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pipeline model that exposes a sequence of models as a single model, 
+It requires a set of inputs, a sequence of other models and a set of outputs.</p>
+<p>This class is the base class for <a class="reference internal" href="#coremltools.models.pipeline.PipelineClassifier" title="coremltools.models.pipeline.PipelineClassifier"><code class="xref py py-class docutils literal"><span class="pre">PipelineClassifier</span></code></a> and 
+<a class="reference internal" href="#coremltools.models.pipeline.PipelineRegressor" title="coremltools.models.pipeline.PipelineRegressor"><code class="xref py py-class docutils literal"><span class="pre">PipelineRegressor</span></code></a>, which contain a sequence ending in a classifier 
+or regressor and themselves behave like a classifier or regressor.  This class
+may be used directly for a sequence of feature transformer objects.</p>
+<dl class="method">
+<dt id="coremltools.models.pipeline.Pipeline.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a pipleine of models to be executed sequentially.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_features: [list of 2-tuples]</strong></p>
+<blockquote>
+<div><p>Name(s) of the input features, given as a list of <cite>(‘name’, datatype)</cite>
+tuples.  The datatypes entry can be any of the data types defined in the 
+<code class="xref py py-mod docutils literal"><span class="pre">models.datatypes</span></code> module.</p>
+</div></blockquote>
+<p><strong>output_features: [list of features]</strong></p>
+<blockquote class="last">
+<div><p>Name(s) of the output features, given as a list of
+<cite>(‘name’,datatype)</cite> tuples.  The datatypes entry can be any of the
+data types defined in the <code class="xref py py-mod docutils literal"><span class="pre">models.datatypes</span></code> module.  All features
+must be either defined in the inputs or be produced by one of the 
+contained models.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.pipeline.Pipeline.add_model">
+<code class="descname">add_model</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.add_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
+<p>All input features of this model must either match the input_features 
+of the pipeline, or match the outputs of a previous model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spec: [MLModel, Model_pb2]</strong></p>
+<blockquote class="last">
+<div><p>A protobuf spec or MLModel instance containing a model.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="coremltools.models.pipeline.PipelineClassifier">
+<em class="property">class </em><code class="descclassname">coremltools.models.pipeline.</code><code class="descname">PipelineClassifier</code><span class="sig-paren">(</span><em>input_features</em>, <em>class_labels</em>, <em>output_features=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pipeline model that exposes a sequence of models as a single model, 
+It requires a set of inputs, a sequence of other models and a set of outputs.
+In this case the pipeline itself behaves as a classification model by designating
+a discrete categorical output feature as its ‘predicted feature’.</p>
+<dl class="method">
+<dt id="coremltools.models.pipeline.PipelineClassifier.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>input_features</em>, <em>class_labels</em>, <em>output_features=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a set of pipleine models given a set of model specs.  The last 
+model in this list must be a classifier model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_features: [list of 2-tuples]</strong></p>
+<blockquote>
+<div><p>Name(s) of the input features, given as a list of <cite>(‘name’, datatype)</cite>
+tuples.  The datatypes entry can be any of the data types defined in the 
+<code class="xref py py-mod docutils literal"><span class="pre">models.datatypes</span></code> module.</p>
+</div></blockquote>
+<p><strong>class_labels: [list]</strong></p>
+<blockquote>
+<div><p>A list of string or integer class labels to use in making predictions. 
+This list must match the class labels in the model outputing the categorical
+predictedFeatureName</p>
+</div></blockquote>
+<p><strong>output_features: [list]</strong></p>
+<blockquote class="last">
+<div><p>A string or a list of two strings specifying the names of the two 
+output features, the first being a class label corresponding 
+to the class with the highest predicted score, and the second being 
+a dictionary mapping each class to its score. If <cite>output_features</cite> 
+is a string, it specifies the predicted class label and the class 
+scores is set to the default value of <cite>“classProbability.”</cite></p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.pipeline.PipelineClassifier.add_model">
+<code class="descname">add_model</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.add_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
+<p>All input features of this model must either match the input_features 
+of the pipeline, or match the outputs of a previous model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spec: [MLModel, Model_pb2]</strong></p>
+<blockquote class="last">
+<div><p>A protobuf spec or MLModel instance containing a model.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="coremltools.models.pipeline.PipelineRegressor">
+<em class="property">class </em><code class="descclassname">coremltools.models.pipeline.</code><code class="descname">PipelineRegressor</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pipeline model that exposes a sequence of models as a single model, 
+It requires a set of inputs, a sequence of other models and a set of outputs.
+In this case the pipeline itself behaves as a regression model by designating
+a real valued output feature as its ‘predicted feature’.</p>
+<dl class="method">
+<dt id="coremltools.models.pipeline.PipelineRegressor.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a set of pipleine models given a set of model specs.  The final 
+output model must be a regression model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_features: [list of 2-tuples]</strong></p>
+<blockquote>
+<div><p>Name(s) of the input features, given as a list of <cite>(‘name’, datatype)</cite>
+tuples.  The datatypes entry can be any of the data types defined in the 
+<code class="xref py py-mod docutils literal"><span class="pre">models.datatypes</span></code> module.</p>
+</div></blockquote>
+<p><strong>output_features: [list of features]</strong></p>
+<blockquote class="last">
+<div><p>Name(s) of the output features, given as a list of
+<cite>(‘name’,datatype)</cite> tuples.  The datatypes entry can be any of the
+data types defined in the <code class="xref py py-mod docutils literal"><span class="pre">models.datatypes</span></code> module.  All features
+must be either defined in the inputs or be produced by one of the
+contained models.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.pipeline.PipelineRegressor.add_model">
+<code class="descname">add_model</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.add_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
+<p>All input features of this model must either match the input_features 
+of the pipeline, or match the outputs of a previous model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spec: [MLModel, Model_pb2]</strong></p>
+<blockquote class="last">
+<div><p>A protobuf spec or MLModel instance containing a model.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="coremltools.models.tree_ensemble.html" class="btn btn-neutral float-right" title="coremltools.models.tree_ensemble" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="coremltools.models.neural_network.html" class="btn btn-neutral" title="coremltools.models.neural_network" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Apple Inc..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.5.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../static/jquery.js"></script>
+      <script type="text/javascript" src="../static/underscore.js"></script>
+      <script type="text/javascript" src="../static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

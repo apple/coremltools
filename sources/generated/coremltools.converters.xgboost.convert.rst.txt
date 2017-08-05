@@ -1,0 +1,6 @@
+coremltools\.converters\.xgboost\.convert
+=========================================
+
+.. currentmodule:: coremltools.converters.xgboost
+
+.. autofunction:: convert
