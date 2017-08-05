@@ -1,0 +1,996 @@
+from . import _utils
+import keras
+import numpy as np
+
+
+def _get_recurrent_activation_name_from_keras(activation):
+    if activation == keras.activations.sigmoid:
+        activation_str = 'SIGMOID'
+    elif activation == keras.activations.hard_sigmoid:
+        activation_str = 'SIGMOID_HARD'
+    elif activation == keras.activations.tanh:
+        activation_str = 'TANH'
+    elif activation == keras.activations.relu:
+        activation_str = 'RELU'
+    elif activation == keras.activations.linear:
+        activation_str = 'LINEAR'
+    else:
+        raise NotImplementedError(
+            'activation %s not supported for Recurrent layer.' % activation)
+
+    return activation_str
+
+def _get_activation_name_from_keras_layer(keras_layer):
+    if isinstance(keras_layer, keras.layers.advanced_activations.LeakyReLU):
+        non_linearity = 'LEAKYRELU'
+    elif isinstance(keras_layer, keras.layers.advanced_activations.PReLU):
+        non_linearity = 'PRELU'
+    elif isinstance(keras_layer, keras.layers.advanced_activations.ELU):
+        non_linearity = 'ELU'
+    elif isinstance(keras_layer, keras.layers.advanced_activations.ThresholdedReLU):
+        non_linearity = 'THRESHOLDEDRELU'
+    else:
+        import six
+        if six.PY2:
+            act_name = keras_layer.activation.func_name
+        else:
+            act_name = keras_layer.activation.__name__
+
+        if act_name == 'softmax':
+            non_linearity = 'SOFTMAX'
+        elif act_name == 'sigmoid':
+            non_linearity = 'SIGMOID'
+        elif act_name == 'tanh':
+            non_linearity = 'TANH'
+        elif act_name == 'relu':
+            non_linearity = 'RELU'
+        elif act_name == 'softplus':
+            non_linearity = 'SOFTPLUS'
+        elif act_name == 'softsign':
+            non_linearity = 'SOFTSIGN'
+        elif act_name == 'hard_sigmoid':
+            non_linearity = 'SIGMOID_HARD'
+        elif act_name == 'elu':
+            non_linearity = 'UNIT_ELU'
+        elif act_name == 'linear':
+            non_linearity = 'LINEAR'
+        else:
+            _utils.raise_error_unsupported_categorical_option('activation', act_name, 'Dense', ##
+                    keras_layer.name)
+
+    return non_linearity
+
+def _get_elementwise_name_from_keras_layer(keras_layer):
+    """
+    Get the keras layer name from the activation name.
+    """
+    if isinstance(keras_layer, keras.layers.Add):
+        return 'ADD'
+    elif isinstance(keras_layer, keras.layers.Multiply):
+        return 'MULTIPLY'
+    elif isinstance(keras_layer, keras.layers.Concatenate):
+        if len(keras_layer.input_shape[0]) == 3 and (keras_layer.axis == 1 or keras_layer.axis == -2):
+            return 'SEQUENCE_CONCAT'
+        elif len(keras_layer.input_shape[0]) == 4 and (keras_layer.axis == 3 or keras_layer.axis == -1):
+            return 'CONCAT'
+        elif len(keras_layer.input_shape[0]) == 2 and (keras_layer.axis == 1 or keras_layer.axis == -1):
+            return 'CONCAT'
+        else:
+            raise ValueError('Only channel and sequence concatenation are supported.')
+    elif isinstance(keras_layer, keras.layers.Dot):
+        if len(keras_layer.input_shape[0]) == 2:
+            if type(keras_layer.axes) is list or type(keras_layer.axes) is tuple:
+                if len(keras_layer.axes) > 1: 
+                    raise ValueError('Only vector dot-product is supported.')
+                else:
+                    axis = keras_layer.axes[0]
+            else:
+                axis = keras_layer.axes
+            if axis != -1 and axis != 1: 
+                 raise ValueError('Only vector dot-product is supported.')
+
+            if keras_layer.normalize:
+                return 'COS'
+            else:
+                return 'DOT'
+        else:
+            raise ValueError('Only vector dot-product is supported.')
+    elif isinstance(keras_layer, keras.layers.Maximum):
+        return 'MAX'
+    elif isinstance(keras_layer, keras.layers.Average):
+        return 'AVE'
+    else:
+        _utils.raise_error_unsupported_option(str(type(keras_layer)), 'merge',
+                keras_layer.name)
+
+def _same_elements_per_channel(x):
+    """
+    Test if a 3D (H,W,C) matrix x has the same element in each (H,W) matrix for each channel
+    """
+    eps = 1e-5
+    dims = x.shape
+    for c in range(dims[-1]):
+        xc = x[:,:,c].flatten()
+        if not np.all(np.absolute(xc - xc[0]) < eps):
+            return False
+    return True
+
+def convert_dense(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert a dense layer from keras to coreml.
+
+    Parameters
+    keras_layer: layer
+    ----------
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    has_bias = keras_layer.use_bias
+    # Get the weights from keras
+    W = keras_layer.get_weights ()[0].T
+    Wb = keras_layer.get_weights ()[1].T if has_bias else None
+    output_channels, input_channels = W.shape
+
+    builder.add_inner_product(name = layer,
+            W = W,
+            b = Wb,
+            input_channels = input_channels, 
+            output_channels = output_channels,
+            has_bias = has_bias,
+            input_name = input_name,
+            output_name = output_name)
+
+def convert_embedding(builder, layer, input_names, output_names, keras_layer):
+    """Convert a dense layer from keras to coreml.
+
+    Parameters
+    keras_layer: layer
+    ----------
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    # Get the weights from keras
+    W = keras_layer.get_weights ()[0].T
+
+    # assuming keras embedding layers don't have biases
+    builder.add_embedding(name = layer,
+                          W = W,
+                          b = None,
+                          input_dim = keras_layer.input_dim,
+                          output_channels = keras_layer.output_dim,
+                          has_bias = False,
+                          input_name = input_name,
+                          output_name = output_name)
+
+def convert_activation(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert an activation layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+    non_linearity = _get_activation_name_from_keras_layer(keras_layer)
+
+    # Add a non-linearity layer
+    if non_linearity == 'SOFTMAX':
+        builder.add_softmax(name = layer, input_name = input_name,
+                output_name = output_name)
+        return
+
+    params = None
+    if non_linearity == 'UNIT_ELU':
+        params = 1.0
+        non_linearity = 'ELU'
+    elif non_linearity == 'LEAKYRELU':
+        params = [keras_layer.alpha]
+    elif non_linearity == 'PRELU':
+        shared_axes = list(keras_layer.shared_axes)
+        if not (shared_axes == [1,2,3] or shared_axes == [1,2]):
+            _utils.raise_error_unsupported_scenario("Shared axis not being [1,2,3] or [1,2]", 'parametric_relu', layer)
+        params = keras.backend.eval(keras_layer.weights[0])
+    elif non_linearity == 'ELU':
+        params = keras_layer.alpha
+    elif non_linearity == 'THRESHOLDEDRELU':
+        params = keras_layer.theta
+    else:
+        pass # do nothing to parameters
+
+    builder.add_activation(name = layer,
+            non_linearity = non_linearity,
+            input_name = input_name, output_name = output_name,
+            params = params)
+
+def convert_convolution(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert convolution layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    has_bias = keras_layer.use_bias
+    is_deconv = isinstance(keras_layer, keras.layers.convolutional.Conv2DTranspose)
+
+    # Get the weights from keras.
+    weightList = keras_layer.get_weights()
+    output_shape = list(filter(None, keras_layer.output_shape))[:-1]
+    
+    # Dimensions and weights
+    if is_deconv: 
+        height, width, n_filters, channels = weightList[0].shape
+        W = weightList[0].transpose([0,1,3,2])
+    else: 
+        height, width, channels, n_filters = weightList[0].shape
+        W = weightList[0]
+    b = weightList[1] if has_bias else None
+
+    stride_height, stride_width = keras_layer.strides
+
+    # Dilations
+    dilations = [1,1]
+    if (type(keras_layer.dilation_rate) is list) or (type(keras_layer.dilation_rate) is tuple):
+        dilations = [keras_layer.dilation_rate[0], keras_layer.dilation_rate[1]]
+    else:
+        dilations = [keras_layer.dilation_rate, keras_layer.dilation_rate]
+
+    if is_deconv and not dilations == [1,1]:
+        raise ValueError("Unsupported non-unity dilation for Deconvolution layer")
+
+    builder.add_convolution(name = layer,
+             kernel_channels = channels,
+             output_channels = n_filters,
+             height = height,
+             width = width,
+             stride_height = stride_height,
+             stride_width = stride_width,
+             border_mode = keras_layer.padding, 
+             groups = 1,
+             W = W,
+             b = b,
+             has_bias = has_bias,
+             is_deconv = is_deconv,
+             output_shape = output_shape,
+             input_name = input_name,
+             output_name = output_name, 
+             dilation_factors = dilations)
+
+def convert_convolution1d(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert convolution layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    has_bias = keras_layer.use_bias
+
+    # Get the weights from keras.
+    # Keras stores convolution weights as list of numpy arrays
+    weightList = keras_layer.get_weights()
+    output_shape = list(filter(None, keras_layer.output_shape))[:-1]
+
+    # Parameter
+    filter_length, input_dim, n_filters = weightList[0].shape
+    stride_width = keras_layer.strides if type(keras_layer.strides) is int else keras_layer.strides[0]
+
+    # Weights and bias terms
+    W = np.expand_dims(weightList[0],axis=0)
+    b = weightList[1] if has_bias else None
+
+    dilations = [1,1]
+    if (type(keras_layer.dilation_rate) is list) or (type(keras_layer.dilation_rate) is tuple):
+        dilations = [1, keras_layer.dilation_rate[0]]
+    else:
+        dilations = [1, keras_layer.dilation_rate]
+    
+    builder.add_convolution(name = layer,
+             kernel_channels = input_dim,
+             output_channels = n_filters,
+             height = 1,
+             width = filter_length,
+             stride_height = 1,
+             stride_width = stride_width,
+             border_mode = keras_layer.padding, 
+             groups = 1,
+             W = W,
+             b = b,
+             has_bias = has_bias,
+             is_deconv = False,
+             output_shape = output_shape,
+             input_name = input_name,
+             output_name = output_name, 
+             dilation_factors = dilations)
+
+def convert_batchnorm(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert a Batch Normalization layer. 
+    
+    Parameters
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    axis = keras_layer.axis
+    nb_channels = keras_layer.input_shape[axis]
+
+    # Set parameters
+    # Parameter arrangement in Keras: gamma, beta, mean, variance
+    idx = 0
+    gamma, beta = None, None
+    if keras_layer.scale:
+        gamma = keras_layer.get_weights()[idx]
+        idx += 1
+    if keras_layer.center:
+        beta = keras_layer.get_weights()[idx]
+        idx += 1
+    mean = keras_layer.get_weights()[idx]
+    std = keras_layer.get_weights()[idx+1]
+    
+    gamma = np.ones(mean.shape) if gamma is None else gamma
+    beta = np.zeros(mean.shape) if beta is None else beta
+
+    # compute adjusted parameters
+    variance = std * std
+    f = 1.0 / np.sqrt(std + keras_layer.epsilon)
+    gamma1 = gamma*f
+    beta1 = beta - gamma*mean*f
+    mean[:] = 0.0 #mean
+    variance[:] = 1.0 - .00001 #stddev
+
+    builder.add_batchnorm(
+        name = layer,
+        channels = nb_channels,
+        gamma = gamma1,
+        beta = beta1,
+        mean = mean,
+        variance = variance,
+        input_name = input_name,
+        output_name = output_name)
+
+
+def convert_flatten(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert a flatten layer from keras to coreml.
+    ----------
+    Parameters
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    input_name, output_name = (input_names[0], output_names[0])
+
+    # blob_order == 0 if the input blob needs not be rearranged
+    # blob_order == 1 if the input blob needs to be rearranged
+    blob_order = 0
+
+    # using keras_layer.input.shape have a "?" (Dimension[None] at the front),
+    # making a 3D tensor with unknown batch size 4D
+    if len(keras_layer.input.shape) == 4:
+        blob_order = 1
+
+    builder.add_flatten(name=layer, mode=blob_order, input_name=input_name, output_name=output_name)
+
+def convert_merge(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert concat layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    output_name = output_names[0]
+
+    mode = _get_elementwise_name_from_keras_layer(keras_layer)
+    builder.add_elementwise(name = layer, input_names = input_names,
+            output_name = output_name, mode = mode)
+
+def convert_pooling(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert pooling layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    # Pooling layer type
+    if isinstance(keras_layer, keras.layers.convolutional.MaxPooling2D) or \
+        isinstance(keras_layer, keras.layers.convolutional.MaxPooling1D) or \
+        isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling2D) or \
+        isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling1D):
+        layer_type_str = 'MAX'
+    elif isinstance(keras_layer, keras.layers.convolutional.AveragePooling2D) or \
+        isinstance(keras_layer, keras.layers.convolutional.AveragePooling1D) or \
+        isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling2D) or \
+        isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling1D):
+        layer_type_str = 'AVERAGE'
+    else:
+        raise TypeError("Pooling type %s not supported" % keras_layer)
+
+    # if it's global, set the global flag
+    if isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling2D) or \
+        isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling2D):
+        # 2D global pooling
+        global_pooling = True
+        height, width = (0, 0)
+        stride_height, stride_width = (0,0)
+        padding_type = 'VALID'
+    elif isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling1D) or \
+        isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling1D):
+        # 1D global pooling: 1D global pooling seems problematic in the backend, 
+        # use this work-around
+        global_pooling = False
+        _, width, channels = keras_layer.input_shape
+        height = 1
+        stride_height, stride_width = height, width
+        padding_type = 'VALID'
+    else:
+        global_pooling = False
+        # Set pool sizes and strides
+        # 1D cases:
+        if isinstance(keras_layer, keras.layers.convolutional.MaxPooling1D) or \
+            isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling1D) or \
+            isinstance(keras_layer, keras.layers.convolutional.AveragePooling1D) or \
+            isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling1D):
+            pool_size = keras_layer.pool_size if type(keras_layer.pool_size) is int else keras_layer.pool_size[0]
+            height, width = 1, pool_size
+            if keras_layer.strides is not None:
+                strides = keras_layer.strides if type(keras_layer.strides) is int else keras_layer.strides[0]
+                stride_height, stride_width = 1, strides
+            else:
+                stride_height, stride_width = 1, pool_size
+        # 2D cases:
+        else:
+            height, width = keras_layer.pool_size
+            if keras_layer.strides is None:
+                stride_height, stride_width = height, width
+            else:
+                stride_height, stride_width = keras_layer.strides
+
+        # Padding
+        padding = keras_layer.padding
+        if keras_layer.padding == 'valid':
+            padding_type = 'VALID'
+        elif keras_layer.padding == 'same':
+            padding_type = 'SAME'
+        else:
+            raise TypeError("Border mode %s not supported" % padding)
+
+    builder.add_pooling(name = layer,
+        height = height,
+        width = width,
+        stride_height = stride_height,
+        stride_width = stride_width,
+        layer_type = layer_type_str,
+        padding_type = padding_type,
+        input_name = input_name,
+        output_name = output_name,
+        exclude_pad_area = True,
+        is_global = global_pooling)
+
+def convert_padding(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert padding layer from keras to coreml.
+    Keras only supports zero padding at this time.
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+    
+    is_1d = isinstance(keras_layer, keras.layers.ZeroPadding1D)
+    
+    padding = keras_layer.padding
+    top = left = bottom = right = 0
+    if is_1d: 
+        if type(padding) is int:
+            left = right = padding
+        elif type(padding) is tuple:
+            if type(padding[0]) is int:
+                left, right = padding
+            else:
+                raise ValueError("Unrecognized padding option: %s" % (str(padding)))
+        else: 
+            raise ValueError("Unrecognized padding option: %s" % (str(padding)))
+    else:
+        if type(padding) is int:
+            top = left = bottom = right = padding
+        elif type(padding) is tuple:
+            if type(padding[0]) is int:
+                top, left = padding
+                bottom, right = padding
+            elif type(padding[0]) is tuple:
+                top, bottom = padding[0]
+                left, right = padding[1]
+            else:
+                raise ValueError("Unrecognized padding option: %s" % (str(padding)))
+        else: 
+            raise ValueError("Unrecognized padding option: %s" % (str(padding)))
+
+    # Now add the layer
+    builder.add_padding(name = layer,
+        left = left, right=right, top=top, bottom=bottom, value = 0,
+        input_name = input_name, output_name=output_name
+        )
+
+def convert_cropping(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert padding layer from keras to coreml.
+    Keras only supports zero padding at this time.
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+    is_1d = isinstance(keras_layer, keras.layers.Cropping1D)
+
+    cropping = keras_layer.cropping
+    top = left = bottom = right = 0
+    if is_1d: 
+        if type(cropping) is int:
+            left = right = cropping
+        elif type(cropping) is tuple:
+            if type(cropping[0]) is int:
+                left, right = cropping
+            else:
+                raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
+        else: 
+            raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
+    else:
+        if type(cropping) is int:
+            top = left = bottom = right = cropping
+        elif type(cropping) is tuple:
+            if type(cropping[0]) is int:
+                top, left = cropping
+                bottom, right = cropping
+            elif type(cropping[0]) is tuple:
+                top, bottom = cropping[0]
+                left, right = cropping[1]
+            else:
+                raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
+        else: 
+            raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
+
+    # Now add the layer
+    builder.add_crop(name = layer,
+        left = left, right=right, top=top, bottom=bottom, offset = [0,0],
+        input_names = [input_name], output_name=output_name
+        )
+
+def convert_upsample(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert convolution layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    is_1d = isinstance(keras_layer, keras.layers.UpSampling1D)
+
+    # Currently, we only support upsample of same dims
+    fh = fw = 1
+    if is_1d:
+        fh, fw = 1, keras_layer.size
+    else: 
+        if type(keras_layer.size) is int:
+            fh = fw = keras_layer.size
+        elif len(keras_layer.size) == 2:
+            if keras_layer.size[0] != keras_layer.size[1]:
+                raise ValueError("Upsample with different rows and columns not supported.")
+            else:
+                fh = keras_layer.size[0]
+                fw = keras_layer.size[1]
+        else:
+            raise ValueError("Unrecognized upsample factor format %s" % (str(keras_layer.size)))
+
+    builder.add_upsample(name = layer,
+             scaling_factor_h = fh,
+             scaling_factor_w = fw,
+             input_name = input_name,
+             output_name = output_name)
+
+def convert_permute(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert a softmax layer from keras to coreml.
+
+    Parameters
+    keras_layer: layer
+    ----------
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    input_name, output_name = (input_names[0], output_names[0])
+
+    keras_dims = keras_layer.dims
+    # Keras permute layer index begins at 1
+    if len(keras_dims) == 3:
+        # Keras input tensor interpret as (H,W,C)
+        x = list(np.array(keras_dims))
+        i1, i2, i3 = x.index(1), x.index(2), x.index(3)
+        x[i1], x[i2], x[i3] = 2, 3, 1
+        # add a sequence axis
+        x = [0] + x
+        dim = tuple(x)
+    elif len(keras_dims) == 4:
+        # Here we use Keras converter as a place holder for inserting
+        # permutations - the values here are not valid Keras dim parameters
+        # but parameters we need to use to convert to CoreML model
+        dim = keras_dims
+    else:
+        raise NotImplementedError('Supports only 3d permutation.')
+
+    builder.add_permute(name = layer, dim=dim, input_name = input_name,
+            output_name = output_name)
+
+def convert_reshape(builder, layer, input_names, output_names, keras_layer):
+
+    input_name, output_name = (input_names[0], output_names[0])
+
+    input_shape = keras_layer.input_shape
+    target_shape = keras_layer.target_shape
+
+    def get_coreml_target_shape(target_shape):
+        if len(target_shape) == 1: #(D,)
+            coreml_shape = (1,target_shape[0],1,1)
+        elif len(target_shape) == 2: #(S,D)
+            coreml_shape = target_shape + (1,1)
+        elif len(target_shape) == 3: #(H,W,C)
+            coreml_shape = (1, target_shape[2], target_shape[0], target_shape[1])
+        else:
+            coreml_shape = None
+        return coreml_shape
+
+    def get_mode(input_shape, target_shape):
+        in_shape = input_shape[1:]
+        if len(in_shape) == 3 or len(target_shape) == 3:
+                return 1
+        else:
+            return 0
+
+    new_shape = get_coreml_target_shape(target_shape)
+    if new_shape is not None:
+        mode = get_mode(input_shape, target_shape)
+        builder.add_reshape(name = layer, input_name = input_name, output_name=output_name,
+                target_shape = new_shape, mode = mode)
+    else:
+        _utils.raise_error_unsupported_categorical_option('input_shape', str(input_shape), 'reshape', layer)
+
+def convert_simple_rnn(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert an SimpleRNN layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    hidden_size = keras_layer.units
+    input_size = keras_layer.input_shape[-1]
+
+    output_all = keras_layer.return_sequences
+    reverse_input = keras_layer.go_backwards
+
+    W_h = np.zeros((hidden_size, hidden_size))
+    W_x = np.zeros((hidden_size, input_size))
+    b = None
+
+    if keras_layer.implementation == 0:
+        W_h = keras_layer.get_weights()[1].T
+        W_x = keras_layer.get_weights()[0].T
+        if keras_layer.use_bias:
+            b = keras_layer.get_weights()[2]
+
+    # Set actication type
+    activation_str = _get_recurrent_activation_name_from_keras(keras_layer.activation)
+
+    # Add to the network
+    builder.add_simple_rnn(
+        name = layer,
+        W_h = W_h, W_x = W_x, b = b,
+        hidden_size = hidden_size,
+        input_size = input_size,
+        activation = activation_str,
+        input_names = input_names,
+        output_names = output_names,
+        output_all=output_all,
+        reverse_input=reverse_input)
+
+def convert_lstm(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert an LSTM layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+
+    hidden_size = keras_layer.units
+    input_size = keras_layer.input_shape[-1]
+    output_all = keras_layer.return_sequences
+    reverse_input = keras_layer.go_backwards
+
+    # Keras: [W_x, W_h, b] each in I F C O
+    # CoreML: I F O G; W_h and W_x are separated
+    W_h, W_x, b = ([], [], [])
+    keras_W_h = keras_layer.get_weights()[1].T
+    W_h.append(keras_W_h[0 * hidden_size:][:hidden_size])
+    W_h.append(keras_W_h[1 * hidden_size:][:hidden_size])
+    W_h.append(keras_W_h[3 * hidden_size:][:hidden_size])
+    W_h.append(keras_W_h[2 * hidden_size:][:hidden_size])
+
+    keras_W_x = keras_layer.get_weights()[0].T
+    W_x.append(keras_W_x[0 * hidden_size:][:hidden_size])
+    W_x.append(keras_W_x[1 * hidden_size:][:hidden_size])
+    W_x.append(keras_W_x[3 * hidden_size:][:hidden_size])
+    W_x.append(keras_W_x[2 * hidden_size:][:hidden_size])
+    if keras_layer.use_bias:
+        keras_b = keras_layer.get_weights()[2]
+        b.append(keras_b[0 * hidden_size:][:hidden_size])
+        b.append(keras_b[1 * hidden_size:][:hidden_size])
+        b.append(keras_b[3 * hidden_size:][:hidden_size])
+        b.append(keras_b[2 * hidden_size:][:hidden_size])
+    if len(b) == 0: 
+        b = None
+
+    # Set activation type
+    inner_activation_str = _get_recurrent_activation_name_from_keras(keras_layer.recurrent_activation)
+    activation_str = _get_recurrent_activation_name_from_keras(keras_layer.activation)
+
+    # Add to the network
+    builder.add_unilstm(
+        name = layer,
+        W_h = W_h, W_x = W_x, b = b,
+        hidden_size = hidden_size,
+        input_size = input_size,
+        input_names = input_names,
+        output_names = output_names,
+        inner_activation = inner_activation_str,
+        cell_state_update_activation = activation_str,
+        output_activation = activation_str,
+        output_all = output_all,
+        forget_bias = keras_layer.unit_forget_bias,
+        reverse_input = reverse_input)
+
+def convert_gru(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert a GRU layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+
+    hidden_size = keras_layer.units
+    input_size = keras_layer.input_shape[-1]
+
+    output_all = keras_layer.return_sequences
+    reverse_input = keras_layer.go_backwards
+
+    # Keras: Z R O
+    # CoreML: Z R O
+    W_h, W_x, b = ([], [], [])
+    keras_W_h = keras_layer.get_weights()[1].T
+    W_h.append(keras_W_h[0 * hidden_size:][:hidden_size])
+    W_h.append(keras_W_h[1 * hidden_size:][:hidden_size])
+    W_h.append(keras_W_h[2 * hidden_size:][:hidden_size])
+
+    keras_W_x = keras_layer.get_weights()[0].T
+    W_x.append(keras_W_x[0 * hidden_size:][:hidden_size])
+    W_x.append(keras_W_x[1 * hidden_size:][:hidden_size])
+    W_x.append(keras_W_x[2 * hidden_size:][:hidden_size])
+    
+    if keras_layer.use_bias:
+        keras_b = keras_layer.get_weights()[2]
+        b.append(keras_b[0 * hidden_size:][:hidden_size])
+        b.append(keras_b[1 * hidden_size:][:hidden_size])
+        b.append(keras_b[2 * hidden_size:][:hidden_size])
+    if len(b) == 0:
+        b = None
+
+    # Set actication type
+    inner_activation_str = _get_recurrent_activation_name_from_keras(keras_layer.recurrent_activation)
+    activation_str = _get_recurrent_activation_name_from_keras(keras_layer.activation)
+
+    # Add to the network
+    builder.add_gru(
+       name = layer,
+       W_h = W_h, W_x = W_x, b = b,
+       input_size = input_size,
+       hidden_size = hidden_size,
+       input_names = input_names,
+       output_names = output_names,
+       activation = activation_str,
+       inner_activation = inner_activation_str,
+       output_all = output_all,
+       reverse_input = reverse_input)
+
+def convert_bidirectional(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert a bidirectional layer from keras to coreml.
+    Currently assumes the units are LSTMs.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+
+    input_size = keras_layer.input_shape[-1]
+
+    lstm_layer = keras_layer.forward_layer
+    if (type(lstm_layer) != keras.layers.recurrent.LSTM):
+        raise TypeError('Bidirectional layers only supported with LSTM')
+        
+    if lstm_layer.go_backwards:
+        raise TypeError(' \'go_backwards\' mode not supported with Bidirectional layers')    
+
+    output_all = keras_layer.return_sequences
+    hidden_size = lstm_layer.units
+
+    # Keras: I C F O; W_x, W_h, b
+    # CoreML: I F O G; W_h and W_x are separated
+    # Keras has all forward weights, followed by backward in the same order
+    W_h, W_x, b = ([], [], [])
+    keras_W_h = keras_layer.forward_layer.get_weights()[1].T
+    W_h.append(keras_W_h[0 * hidden_size:][:hidden_size])
+    W_h.append(keras_W_h[1 * hidden_size:][:hidden_size])
+    W_h.append(keras_W_h[3 * hidden_size:][:hidden_size])
+    W_h.append(keras_W_h[2 * hidden_size:][:hidden_size])
+
+    keras_W_x = keras_layer.forward_layer.get_weights()[0].T
+    W_x.append(keras_W_x[0 * hidden_size:][:hidden_size])
+    W_x.append(keras_W_x[1 * hidden_size:][:hidden_size])
+    W_x.append(keras_W_x[3 * hidden_size:][:hidden_size])
+    W_x.append(keras_W_x[2 * hidden_size:][:hidden_size])
+
+    if keras_layer.forward_layer.use_bias:
+        keras_b = keras_layer.forward_layer.get_weights()[2]
+        b.append(keras_b[0 * hidden_size:][:hidden_size])
+        b.append(keras_b[1 * hidden_size:][:hidden_size])
+        b.append(keras_b[3 * hidden_size:][:hidden_size])
+        b.append(keras_b[2 * hidden_size:][:hidden_size])
+
+    if len(b) == 0:
+        b = None
+
+    W_h_back, W_x_back, b_back = ([],[],[])
+    keras_W_h = keras_layer.backward_layer.get_weights()[1].T
+    W_h_back.append(keras_W_h[0 * hidden_size:][:hidden_size])
+    W_h_back.append(keras_W_h[1 * hidden_size:][:hidden_size])
+    W_h_back.append(keras_W_h[3 * hidden_size:][:hidden_size])
+    W_h_back.append(keras_W_h[2 * hidden_size:][:hidden_size])
+
+    keras_W_x = keras_layer.backward_layer.get_weights()[0].T
+    W_x_back.append(keras_W_x[0 * hidden_size:][:hidden_size])
+    W_x_back.append(keras_W_x[1 * hidden_size:][:hidden_size])
+    W_x_back.append(keras_W_x[3 * hidden_size:][:hidden_size])
+    W_x_back.append(keras_W_x[2 * hidden_size:][:hidden_size])
+
+    if keras_layer.backward_layer.use_bias:
+        keras_b = keras_layer.backward_layer.get_weights()[2]
+        b_back.append(keras_b[0 * hidden_size:][:hidden_size])
+        b_back.append(keras_b[1 * hidden_size:][:hidden_size])
+        b_back.append(keras_b[3 * hidden_size:][:hidden_size])
+        b_back.append(keras_b[2 * hidden_size:][:hidden_size])
+    if len(b_back) == 0:
+        b_back = None
+        
+    if (b == None and b_back != None) or (b != None and b_back == None):
+        raise ValueError('Unsupported Bi-directional LSTM configuration. Bias must be enabled/disabled for both directions.')
+
+    # Set activation type
+    inner_activation_str = _get_recurrent_activation_name_from_keras(lstm_layer.recurrent_activation)
+    activation_str = _get_recurrent_activation_name_from_keras(lstm_layer.activation)
+
+    # Add to the network
+    builder.add_bidirlstm(
+        name = layer,
+        W_h = W_h, W_x = W_x, b = b,
+        W_h_back = W_h_back, W_x_back = W_x_back, b_back = b_back,
+        hidden_size=hidden_size,
+        input_size=input_size,
+        input_names=input_names,
+        output_names=output_names,
+        inner_activation = inner_activation_str,
+        cell_state_update_activation = activation_str,
+        output_activation = activation_str,
+        forget_bias = lstm_layer.unit_forget_bias,
+        output_all = output_all)
+
+def convert_repeat_vector(builder, layer, input_names, output_names, keras_layer):
+    # Keras RepeatVector only deals with 1D input
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    builder.add_sequence_repeat(name = layer,
+            nrep = keras_layer.n,
+            input_name = input_name,
+            output_name = output_name)
+
+def default_skip(builder, layer, input_names, output_names, keras_layer):
+    """ Layers that can be skipped (because they are train time only. """
+    return
