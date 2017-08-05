@@ -28,7 +28,7 @@ Once you have set up a python environment, run::
 
     pip install -U coremltools
 
-The package `documentation <http://pythonhosted.org/coremltools/>`_ contains
+The package `documentation <https://apple.github.io/coremltools/docs/>`_ contains
 more details on how to use coremltools.
 
 Dependencies
