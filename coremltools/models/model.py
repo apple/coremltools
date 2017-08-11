@@ -212,7 +212,7 @@ class MLModel(object):
         """
         return _deepcopy(self._spec)
 
-    def predict(self, data, **kwargs):
+    def predict(self, data, useCPUOnly=False, **kwargs):
         """
         Return predictions for the model. The kwargs gets passed into the
         model as a dictionary.
@@ -222,6 +222,9 @@ class MLModel(object):
         data : dict[str, value]
             Dictionary of data to make predictions from where the keys are
             the names of the input features.
+
+        useCPUOnly : bool
+            Set to true to restrict computation to use only the CPU. Defaults to False.
 
         Returns
         -------
@@ -235,7 +238,7 @@ class MLModel(object):
         >>> predictions = model.predict(data)
         """
         if self.__proxy__:
-            return self.__proxy__.predict(data)
+            return self.__proxy__.predict(data,useCPUOnly)
         else:
             if _sys.platform != 'darwin' or float('.'.join(_platform.mac_ver()[0].split('.')[:2])) < 10.13:
                 raise Exception('Model prediction is only supported on macOS version 10.13.')
