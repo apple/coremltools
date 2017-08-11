@@ -1,0 +1,429 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Data Structures &amp; Feature Types &mdash; mlmodel 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="mlmodel 1.0.0 documentation" href="../index.html"/>
+        <link rel="prev" title="Feature Engineering" href="FeatureEngineering.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mlmodel
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data Structures &amp; Feature Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#stringtoint64map">StringToInt64Map</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#int64tostringmap">Int64ToStringMap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stringtodoublemap">StringToDoubleMap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#int64todoublemap">Int64ToDoubleMap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stringvector">StringVector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#int64vector">Int64Vector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#doublevector">DoubleVector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#int64featuretype">Int64FeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#doublefeaturetype">DoubleFeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stringfeaturetype">StringFeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#imagefeaturetype">ImageFeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arrayfeaturetype">ArrayFeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dictionaryfeaturetype">DictionaryFeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#featuretype">FeatureType</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mlmodel</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Data Structures &amp; Feature Types</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/sections/DataStructuresAndFeatureTypes.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="data-structures-feature-types">
+<h1>Data Structures &amp; Feature Types<a class="headerlink" href="#data-structures-feature-types" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="stringtoint64map">
+<h2>StringToInt64Map<a class="headerlink" href="#stringtoint64map" title="Permalink to this headline">¶</a></h2>
+<p>A mapping from a string
+to a 64-bit integer.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64tostringmap">
+<h2>Int64ToStringMap<a class="headerlink" href="#int64tostringmap" title="Permalink to this headline">¶</a></h2>
+<p>A mapping from a 64-bit integer
+to a string.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stringtodoublemap">
+<h2>StringToDoubleMap<a class="headerlink" href="#stringtodoublemap" title="Permalink to this headline">¶</a></h2>
+<p>A mapping from a string
+to a double-precision floating point number.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64todoublemap">
+<h2>Int64ToDoubleMap<a class="headerlink" href="#int64todoublemap" title="Permalink to this headline">¶</a></h2>
+<p>A mapping from a 64-bit integer
+to a double-precision floating point number.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stringvector">
+<h2>StringVector<a class="headerlink" href="#stringvector" title="Permalink to this headline">¶</a></h2>
+<p>A vector of strings.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64vector">
+<h2>Int64Vector<a class="headerlink" href="#int64vector" title="Permalink to this headline">¶</a></h2>
+<p>A vector of 64-bit integers.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="doublevector">
+<h2>DoubleVector<a class="headerlink" href="#doublevector" title="Permalink to this headline">¶</a></h2>
+<p>A vector of double-precision floating point numbers.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64featuretype">
+<h2>Int64FeatureType<a class="headerlink" href="#int64featuretype" title="Permalink to this headline">¶</a></h2>
+<p>The 64-bit integer feature type.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64FeatureType</span> <span class="p">{}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="doublefeaturetype">
+<h2>DoubleFeatureType<a class="headerlink" href="#doublefeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The double-precision floating point number feature type.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleFeatureType</span> <span class="p">{}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stringfeaturetype">
+<h2>StringFeatureType<a class="headerlink" href="#stringfeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The string feature type.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringFeatureType</span> <span class="p">{}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imagefeaturetype">
+<h2>ImageFeatureType<a class="headerlink" href="#imagefeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The image feature type.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageFeatureType</span> <span class="p">{</span>
+    <span class="c1">// Assumes raw (decompressed) format</span>
+    <span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
+        <span class="na">INVALID_COLOR_SPACE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bit pixel: 0=black, 255=white</span>
+        <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bit pixel: RGBA with A channel ignored</span>
+        <span class="na">BGR</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>       <span class="c1">// 32 bit pixel: BGRA with A channel ignored</span>
+    <span class="p">}</span>
+
+    <span class="kt">int64</span> <span class="na">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">ColorSpace</span> <span class="na">colorSpace</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="arrayfeaturetype">
+<h2>ArrayFeatureType<a class="headerlink" href="#arrayfeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The array feature type.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ArrayFeatureType</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
+        <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">FLOAT32</span> <span class="o">=</span> <span class="mi">65568</span><span class="p">;</span> <span class="c1">// 0x10000 | 32</span>
+        <span class="na">DOUBLE</span> <span class="o">=</span> <span class="mi">65600</span><span class="p">;</span>  <span class="c1">// 0x10000 | 64</span>
+        <span class="na">INT32</span> <span class="o">=</span> <span class="mi">131104</span><span class="p">;</span>  <span class="c1">// 0x20000 | 32</span>
+    <span class="p">}</span>
+
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">ArrayDataType</span> <span class="na">dataType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dictionaryfeaturetype">
+<h2>DictionaryFeatureType<a class="headerlink" href="#dictionaryfeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The dictionary feature type.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DictionaryFeatureType</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">KeyType</span> <span class="p">{</span>
+        <span class="n">Int64FeatureType</span> <span class="na">int64KeyType</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">StringFeatureType</span> <span class="na">stringKeyType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="featuretype">
+<h2>FeatureType<a class="headerlink" href="#featuretype" title="Permalink to this headline">¶</a></h2>
+<p>A feature, which may be optional.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureType</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">Type</span> <span class="p">{</span>
+        <span class="n">Int64FeatureType</span> <span class="na">int64Type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">DoubleFeatureType</span> <span class="na">doubleType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="n">StringFeatureType</span> <span class="na">stringType</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="n">ImageFeatureType</span> <span class="na">imageType</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+        <span class="n">ArrayFeatureType</span> <span class="na">multiArrayType</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="n">DictionaryFeatureType</span> <span class="na">dictionaryType</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">bool</span> <span class="na">isOptional</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="arrayfeaturetype-arraydatatype">
+<h3>ArrayFeatureType.ArrayDataType<a class="headerlink" href="#arrayfeaturetype-arraydatatype" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
+    <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">FLOAT32</span> <span class="o">=</span> <span class="mi">65568</span><span class="p">;</span> <span class="c1">// 0x10000 | 32</span>
+    <span class="na">DOUBLE</span> <span class="o">=</span> <span class="mi">65600</span><span class="p">;</span>  <span class="c1">// 0x10000 | 64</span>
+    <span class="na">INT32</span> <span class="o">=</span> <span class="mi">131104</span><span class="p">;</span>  <span class="c1">// 0x20000 | 32</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imagefeaturetype-colorspace">
+<h3>ImageFeatureType.ColorSpace<a class="headerlink" href="#imagefeaturetype-colorspace" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
+    <span class="na">INVALID_COLOR_SPACE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bit pixel: 0=black, 255=white</span>
+    <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bit pixel: RGBA with A channel ignored</span>
+    <span class="na">BGR</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>       <span class="c1">// 32 bit pixel: BGRA with A channel ignored</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="FeatureEngineering.html" class="btn btn-neutral" title="Feature Engineering" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

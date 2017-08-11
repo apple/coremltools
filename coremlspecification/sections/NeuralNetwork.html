@@ -1,0 +1,2335 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Neural Networks &mdash; mlmodel 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="mlmodel 1.0.0 documentation" href="../index.html"/>
+        <link rel="next" title="Tree Ensembles" href="TreeEnsembles.html"/>
+        <link rel="prev" title="Models" href="Model.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mlmodel
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Neural Networks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#neuralnetwork">NeuralNetwork</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#neuralnetworkimagescaler">NeuralNetworkImageScaler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#neuralnetworkmeanimage">NeuralNetworkMeanImage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#neuralnetworkpreprocessing">NeuralNetworkPreprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationrelu">ActivationReLU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationleakyrelu">ActivationLeakyReLU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationtanh">ActivationTanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationscaledtanh">ActivationScaledTanh</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationsigmoid">ActivationSigmoid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationlinear">ActivationLinear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationsigmoidhard">ActivationSigmoidHard</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationprelu">ActivationPReLU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationelu">ActivationELU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationthresholdedrelu">ActivationThresholdedReLU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationsoftsign">ActivationSoftsign</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationsoftplus">ActivationSoftplus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationparametricsoftplus">ActivationParametricSoftplus</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activationparams">ActivationParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#neuralnetworklayer">NeuralNetworkLayer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#borderamounts">BorderAmounts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validpadding">ValidPadding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#samepadding">SamePadding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#weightparams">WeightParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#convolutionlayerparams">ConvolutionLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#innerproductlayerparams">InnerProductLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#embeddinglayerparams">EmbeddingLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#batchnormlayerparams">BatchnormLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#poolinglayerparams">PoolingLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#paddinglayerparams">PaddingLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#concatlayerparams">ConcatLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lrnlayerparams">LRNLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#softmaxlayerparams">SoftmaxLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#splitlayerparams">SplitLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#addlayerparams">AddLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multiplylayerparams">MultiplyLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unaryfunctionlayerparams">UnaryFunctionLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upsamplelayerparams">UpsampleLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#biaslayerparams">BiasLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scalelayerparams">ScaleLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loadconstantlayerparams">LoadConstantLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#l2normalizelayerparams">L2NormalizeLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#flattenlayerparams">FlattenLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reshapelayerparams">ReshapeLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#permutelayerparams">PermuteLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reorganizedatalayerparams">ReorganizeDataLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#slicelayerparams">SliceLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reducelayerparams">ReduceLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#croplayerparams">CropLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#averagelayerparams">AverageLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#maxlayerparams">MaxLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#minlayerparams">MinLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dotproductlayerparams">DotProductLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#meanvariancenormalizelayerparams">MeanVarianceNormalizeLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sequencerepeatlayerparams">SequenceRepeatLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simplerecurrentlayerparams">SimpleRecurrentLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#grulayerparams">GRULayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lstmparams">LSTMParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lstmweightparams">LSTMWeightParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#unidirectionallstmlayerparams">UniDirectionalLSTMLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bidirectionallstmlayerparams">BiDirectionalLSTMLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#neuralnetworkclassifier">NeuralNetworkClassifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#neuralnetworkregressor">NeuralNetworkRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mlmodel</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Neural Networks</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/sections/NeuralNetwork.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="neural-networks">
+<h1>Neural Networks<a class="headerlink" href="#neural-networks" title="Permalink to this headline">¶</a></h1>
+<p>A neural network is defined through a collection of layers
+and represents a directed acyclic graph (DAG).
+Each layer has a name, a layer type,
+a list of input names, a list of output names,
+and a collection of parameters specific to the layer type.</p>
+<p>The graph structure and connectivity of the neural network
+is inferred from the input and output names.
+A neural network starts with the layer
+whose input name is equal to the value specified in
+<code class="docutils literal"><span class="pre">Model.description.input.name</span></code>,
+and ends with the layer
+whose output name is equal to the value specified in
+<code class="docutils literal"><span class="pre">Model.description.output.name</span></code>.
+Layers must have unique input and output names,
+and a layer may not have input or output names that
+refer to layers that are not yet defined.</p>
+<p>CoreML supports sequential data that can be 1- or 3-dimensional.
+3-dimensional data typically represents an image feature map,
+whose shape is denoted by <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>,
+which corresponds to the channel, height, and width, respectively.
+1-dimensional data is a set of features
+whose shape is denoted by <code class="docutils literal"><span class="pre">[C]</span></code>,
+and is equivalent to 3-dimensional data
+with the shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>.</p>
+<p>For the purposes of this specification,
+batch dimension is ignored.
+Thus, a sequence of 3-dimensional data
+is to be understood as a 4-dimensional array,
+whose shape is denoted by <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>,
+and a sequence of 1-dimensional data
+is to be understood as a 2-dimensional array,
+whose shape is denoted by <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">C]</span></code>,
+which is equivalent to a 4-dimensional array
+with the shape <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">C,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>. This axes order is important to
+remember while setting parameters for layers such as “reshape” and “permute”.</p>
+<p>At runtime, all data blobs are internally represented
+as 5-dimensional blobs
+with the shape <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">Batch,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</p>
+<p>A layer may process input data differently if operating over a sequence;
+details of this behavior is documented in the layer’s message.
+Otherwise, sequential data is processed like a batch —
+that is, the sequence of inputs are processed independently and in parallel.</p>
+<p>The network input shape specified by <code class="docutils literal"><span class="pre">Model.description.input.type</span></code>
+must be compatible with the expected input shape
+of the network input layer, i.e. the last dimension is the fastest moving one.</p>
+<p>All data blobs, as well as weight parameters,
+are stored using row-major ordering, i.e. the last dimension is the fastest moving one.</p>
+<div class="section" id="neuralnetwork">
+<h2>NeuralNetwork<a class="headerlink" href="#neuralnetwork" title="Permalink to this headline">¶</a></h2>
+<p>A neural network.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetwork</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">NeuralNetworkLayer</span> <span class="na">layers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">NeuralNetworkPreprocessing</span> <span class="na">preprocessing</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="neuralnetworkimagescaler">
+<h2>NeuralNetworkImageScaler<a class="headerlink" href="#neuralnetworkimagescaler" title="Permalink to this headline">¶</a></h2>
+<p>A neural network preprocessor that
+performs a scalar multiplication of an image
+followed by addition of scalar biases to the channels.</p>
+<dl class="docutils">
+<dt>Input: X</dt>
+<dd>An image in BGR or RGB format with shape <code class="docutils literal"><span class="pre">[3,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>
+or in grayscale format with shape <code class="docutils literal"><span class="pre">[1,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output: Y</dt>
+<dd>An image with format and shape corresponding to the input.</dd>
+</dl>
+<p>If the input image is in BGR format:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">channelScale</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">blueBias</span>
+<span class="n">Y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">channelScale</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">greenBias</span>
+<span class="n">Y</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">channelScale</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">redBias</span>
+</pre></div>
+</div>
+<p>If the input image is in RGB format:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">channelScale</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">redBias</span>
+<span class="n">Y</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">channelScale</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">greenBias</span>
+<span class="n">Y</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">channelScale</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">blueBias</span>
+</pre></div>
+</div>
+<p>If the input image is in grayscale format:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">Y</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">channelScale</span> <span class="o">*</span> <span class="n">X</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">+</span> <span class="n">grayBias</span>
+</pre></div>
+</div>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetworkImageScaler</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">channelScale</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">blueBias</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">greenBias</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">redBias</span> <span class="o">=</span> <span class="mi">22</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">grayBias</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="neuralnetworkmeanimage">
+<h2>NeuralNetworkMeanImage<a class="headerlink" href="#neuralnetworkmeanimage" title="Permalink to this headline">¶</a></h2>
+<p>A neural network preprocessor that
+subtracts the provided mean image from the input image.
+The mean image is subtracted from the input named
+<code class="docutils literal"><span class="pre">NeuralNetworkPreprocessing.featureName</span></code>.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetworkMeanImage</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">meanImage</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="neuralnetworkpreprocessing">
+<h2>NeuralNetworkPreprocessing<a class="headerlink" href="#neuralnetworkpreprocessing" title="Permalink to this headline">¶</a></h2>
+<p>Preprocessing parameters for image inputs.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetworkPreprocessing</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">featureName</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">oneof</span> <span class="n">preprocessor</span> <span class="p">{</span>
+      <span class="n">NeuralNetworkImageScaler</span> <span class="na">scaler</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+      <span class="n">NeuralNetworkMeanImage</span> <span class="na">meanImage</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationrelu">
+<h2>ActivationReLU<a class="headerlink" href="#activationrelu" title="Permalink to this headline">¶</a></h2>
+<p>A rectified linear unit (ReLU) activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/ab606f106b3907dd9cf2e39d81eab8f5555cb7fa.svg" alt="f(x) = \text{max}(0, x)"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationReLU</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationleakyrelu">
+<h2>ActivationLeakyReLU<a class="headerlink" href="#activationleakyrelu" title="Permalink to this headline">¶</a></h2>
+<p>A leaky rectified linear unit (ReLU) activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/6592568d3e36717cf5c883adc3f60a798c08ba33.svg" alt="f(x) = \begin{cases}
+        x      &amp; \text{if } x \geq 0 \\
+        \alpha x &amp; \text{if } x &lt; 0
+       \end{cases}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationLeakyReLU</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//negative slope value for leakyReLU</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationtanh">
+<h2>ActivationTanh<a class="headerlink" href="#activationtanh" title="Permalink to this headline">¶</a></h2>
+<p>A hyperbolic tangent activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/b109fc45368735d81a77d8ca3f2c43d9a95f1bbe.svg" alt="f(x) = \dfrac{1 - e^{-2x}}{1 + e^{-2x}}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationTanh</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationscaledtanh">
+<h2>ActivationScaledTanh<a class="headerlink" href="#activationscaledtanh" title="Permalink to this headline">¶</a></h2>
+<p>A scaled hyperbolic tangent activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/cab70ed454830cdeb8a73bdc522956dd7cdc05f2.svg" alt="f(x) = \alpha \tanh(\beta x)"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationScaledTanh</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationsigmoid">
+<h2>ActivationSigmoid<a class="headerlink" href="#activationsigmoid" title="Permalink to this headline">¶</a></h2>
+<p>A sigmoid activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/1a759d053c707bb90804faeb91325a660d612358.svg" alt="f(x) = \dfrac{1}{1 + e^{-x}}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSigmoid</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationlinear">
+<h2>ActivationLinear<a class="headerlink" href="#activationlinear" title="Permalink to this headline">¶</a></h2>
+<p>A linear activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/dec15e0ea196b6aa3fb08658ba8bb970daeccd42.svg" alt="f(x) = \alpha x + \beta"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationLinear</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationsigmoidhard">
+<h2>ActivationSigmoidHard<a class="headerlink" href="#activationsigmoidhard" title="Permalink to this headline">¶</a></h2>
+<p>A hard sigmoid activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/2f0065f9622c47b8f94db52369ac080a79c4329f.svg" alt="f(x) = \text{min}(\text{max}(\alpha x + \beta, 0), 1)"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSigmoidHard</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationprelu">
+<h2>ActivationPReLU<a class="headerlink" href="#activationprelu" title="Permalink to this headline">¶</a></h2>
+<p>A parameterized rectified linear unit (PReLU) activation function,
+which takes <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,H,W]</span></code> as an input and
+applies different parameters in each channel dimension
+(shared across the <code class="docutils literal"><span class="pre">H</span></code> and <code class="docutils literal"><span class="pre">W</span></code> components).</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/2f9c271c95a3e79b5fe7976b208acf2c99da2c10.svg" alt="f(x_i) = \begin{cases}
+             x_i          &amp; \text{if } x_i \geq 0 \\
+             \alpha_i x_i &amp; \text{if } x_i &lt; 0
+         \end{cases} \;,\;i=1,...,C"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationPReLU</span> <span class="p">{</span>
+    <span class="c1">// parameter of length C or 1.</span>
+    <span class="c1">// If length is 1, same value is used for all channels</span>
+    <span class="n">WeightParams</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationelu">
+<h2>ActivationELU<a class="headerlink" href="#activationelu" title="Permalink to this headline">¶</a></h2>
+<p>An exponential linear unit (ELU) activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/9c6925635b8c7bea42d11c7233627d3cdd677c10.svg" alt="f(x) = \begin{cases}
+        x              &amp; \text{if } x \geq 0 \\
+        \alpha (e^x - 1) &amp; \text{if } x &lt; 0
+       \end{cases}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationELU</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationthresholdedrelu">
+<h2>ActivationThresholdedReLU<a class="headerlink" href="#activationthresholdedrelu" title="Permalink to this headline">¶</a></h2>
+<p>A thresholded rectified linear unit (ReLU) activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/a6c6e2ceaa0f3eb0676346e844056e95ff73b49c.svg" alt="f(x) = \begin{cases}
+        x &amp; \text{if } x \geq \alpha \\
+        0 &amp; \text{if } x &lt; \alpha
+       \end{cases}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationThresholdedReLU</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationsoftsign">
+<h2>ActivationSoftsign<a class="headerlink" href="#activationsoftsign" title="Permalink to this headline">¶</a></h2>
+<p>A softsign activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/0fb139e4eb58c12eaf4b62f1b422233e2e8b1c1a.svg" alt="f(x) = \dfrac{x}{1 + |x|}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSoftsign</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationsoftplus">
+<h2>ActivationSoftplus<a class="headerlink" href="#activationsoftplus" title="Permalink to this headline">¶</a></h2>
+<p>A softplus activation function.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/ab2db7166067cd7306164117b335b22dd9fb59c9.svg" alt="f(x) = \text{log}(1 + e^x)"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSoftplus</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationparametricsoftplus">
+<h2>ActivationParametricSoftplus<a class="headerlink" href="#activationparametricsoftplus" title="Permalink to this headline">¶</a></h2>
+<p>A parametric softplus activation function,
+which takes <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,H,W]</span></code> as an input and
+applies different parameters in each channel dimension
+(shared across the <code class="docutils literal"><span class="pre">H</span></code> and <code class="docutils literal"><span class="pre">W</span></code> components).</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/9ee4a0352980adb621b1b2deed038c41f1e2cc4e.svg" alt="f(x_i) = \alpha_i \text{log}(1 + e^{\beta_i x_i}) \;,\;i=1,...,C"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationParametricSoftplus</span> <span class="p">{</span>
+    <span class="c1">// If length is 1, same value is used for all channels</span>
+    <span class="n">WeightParams</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//parameter of length C or 1</span>
+    <span class="n">WeightParams</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>  <span class="c1">//parameter of length C or 1</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="activationparams">
+<h2>ActivationParams<a class="headerlink" href="#activationparams" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationParams</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">NonlinearityType</span> <span class="p">{</span>
+        <span class="n">ActivationLinear</span> <span class="na">linear</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+
+        <span class="n">ActivationReLU</span> <span class="na">ReLU</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+        <span class="n">ActivationLeakyReLU</span> <span class="na">leakyReLU</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+        <span class="n">ActivationThresholdedReLU</span> <span class="na">thresholdedReLU</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+        <span class="n">ActivationPReLU</span> <span class="na">PReLU</span> <span class="o">=</span> <span class="mi">25</span><span class="p">;</span>
+
+        <span class="n">ActivationTanh</span> <span class="na">tanh</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+        <span class="n">ActivationScaledTanh</span> <span class="na">scaledTanh</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+
+        <span class="n">ActivationSigmoid</span> <span class="na">sigmoid</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+        <span class="n">ActivationSigmoidHard</span> <span class="na">sigmoidHard</span> <span class="o">=</span> <span class="mi">41</span><span class="p">;</span>
+
+        <span class="n">ActivationELU</span> <span class="na">ELU</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
+        <span class="n">ActivationSoftsign</span> <span class="na">softsign</span> <span class="o">=</span> <span class="mi">60</span><span class="p">;</span>
+        <span class="n">ActivationSoftplus</span> <span class="na">softplus</span> <span class="o">=</span> <span class="mi">70</span><span class="p">;</span>
+        <span class="n">ActivationParametricSoftplus</span> <span class="na">parametricSoftplus</span> <span class="o">=</span> <span class="mi">71</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="neuralnetworklayer">
+<h2>NeuralNetworkLayer<a class="headerlink" href="#neuralnetworklayer" title="Permalink to this headline">¶</a></h2>
+<p>A single neural network layer.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetworkLayer</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>  <span class="c1">//descriptive name of the layer</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">input</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">output</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+    <span class="k">oneof</span> <span class="n">layer</span> <span class="p">{</span>
+        <span class="c1">// start at 100 here</span>
+        <span class="n">ConvolutionLayerParams</span> <span class="na">convolution</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+
+        <span class="n">PoolingLayerParams</span> <span class="na">pooling</span> <span class="o">=</span> <span class="mi">120</span><span class="p">;</span>
+
+        <span class="n">ActivationParams</span> <span class="na">activation</span> <span class="o">=</span> <span class="mi">130</span><span class="p">;</span>
+
+        <span class="n">InnerProductLayerParams</span> <span class="na">innerProduct</span> <span class="o">=</span> <span class="mi">140</span><span class="p">;</span>
+        <span class="n">EmbeddingLayerParams</span> <span class="na">embedding</span> <span class="o">=</span> <span class="mi">150</span><span class="p">;</span>
+
+        <span class="c1">//normalization related layers</span>
+        <span class="n">BatchnormLayerParams</span> <span class="na">batchnorm</span> <span class="o">=</span> <span class="mi">160</span><span class="p">;</span>
+        <span class="n">MeanVarianceNormalizeLayerParams</span> <span class="na">mvn</span> <span class="o">=</span> <span class="mi">165</span><span class="p">;</span>
+        <span class="n">L2NormalizeLayerParams</span> <span class="na">l2normalize</span> <span class="o">=</span> <span class="mi">170</span><span class="p">;</span>
+        <span class="n">SoftmaxLayerParams</span> <span class="na">softmax</span> <span class="o">=</span> <span class="mi">175</span><span class="p">;</span>
+        <span class="n">LRNLayerParams</span> <span class="na">lrn</span> <span class="o">=</span> <span class="mi">180</span><span class="p">;</span>
+
+        <span class="n">CropLayerParams</span> <span class="na">crop</span> <span class="o">=</span> <span class="mi">190</span><span class="p">;</span>
+        <span class="n">PaddingLayerParams</span> <span class="na">padding</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+        <span class="n">UpsampleLayerParams</span> <span class="na">upsample</span> <span class="o">=</span> <span class="mi">210</span><span class="p">;</span>
+
+        <span class="n">UnaryFunctionLayerParams</span> <span class="na">unary</span> <span class="o">=</span> <span class="mi">220</span><span class="p">;</span>
+
+        <span class="c1">//elementwise operations</span>
+        <span class="n">AddLayerParams</span> <span class="na">add</span> <span class="o">=</span> <span class="mi">230</span><span class="p">;</span>
+        <span class="n">MultiplyLayerParams</span> <span class="na">multiply</span> <span class="o">=</span> <span class="mi">231</span><span class="p">;</span>
+
+        <span class="n">AverageLayerParams</span> <span class="na">average</span> <span class="o">=</span> <span class="mi">240</span><span class="p">;</span>
+        <span class="n">ScaleLayerParams</span> <span class="na">scale</span> <span class="o">=</span> <span class="mi">245</span><span class="p">;</span>
+
+        <span class="n">BiasLayerParams</span> <span class="na">bias</span> <span class="o">=</span> <span class="mi">250</span><span class="p">;</span>
+        <span class="n">MaxLayerParams</span> <span class="k">max</span> <span class="o">=</span> <span class="mi">260</span><span class="p">;</span>
+        <span class="n">MinLayerParams</span> <span class="na">min</span> <span class="o">=</span> <span class="mi">261</span><span class="p">;</span>
+
+        <span class="n">DotProductLayerParams</span> <span class="na">dot</span> <span class="o">=</span> <span class="mi">270</span><span class="p">;</span>
+        <span class="n">ReduceLayerParams</span> <span class="na">reduce</span> <span class="o">=</span> <span class="mi">280</span><span class="p">;</span>
+        <span class="n">LoadConstantLayerParams</span> <span class="na">loadConstant</span> <span class="o">=</span> <span class="mi">290</span><span class="p">;</span>
+
+        <span class="c1">//data reorganization</span>
+        <span class="n">ReshapeLayerParams</span> <span class="na">reshape</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
+        <span class="n">FlattenLayerParams</span> <span class="na">flatten</span> <span class="o">=</span> <span class="mi">301</span><span class="p">;</span>
+        <span class="n">PermuteLayerParams</span> <span class="na">permute</span> <span class="o">=</span> <span class="mi">310</span><span class="p">;</span>
+        <span class="n">ConcatLayerParams</span> <span class="na">concat</span> <span class="o">=</span> <span class="mi">320</span><span class="p">;</span>
+        <span class="n">SplitLayerParams</span> <span class="na">split</span> <span class="o">=</span> <span class="mi">330</span><span class="p">;</span>
+        <span class="n">SequenceRepeatLayerParams</span> <span class="na">sequenceRepeat</span> <span class="o">=</span> <span class="mi">340</span><span class="p">;</span>
+
+        <span class="n">ReorganizeDataLayerParams</span> <span class="na">reorganizeData</span> <span class="o">=</span> <span class="mi">345</span><span class="p">;</span>
+        <span class="n">SliceLayerParams</span> <span class="na">slice</span> <span class="o">=</span> <span class="mi">350</span><span class="p">;</span>
+
+        <span class="c1">//Recurrent Layers</span>
+        <span class="n">SimpleRecurrentLayerParams</span> <span class="na">simpleRecurrent</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+        <span class="n">GRULayerParams</span> <span class="na">gru</span> <span class="o">=</span> <span class="mi">410</span><span class="p">;</span>
+        <span class="n">UniDirectionalLSTMLayerParams</span> <span class="na">uniDirectionalLSTM</span> <span class="o">=</span> <span class="mi">420</span><span class="p">;</span>
+        <span class="n">BiDirectionalLSTMLayerParams</span> <span class="na">biDirectionalLSTM</span> <span class="o">=</span> <span class="mi">430</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="borderamounts">
+<h2>BorderAmounts<a class="headerlink" href="#borderamounts" title="Permalink to this headline">¶</a></h2>
+<p>Specifies the amount of spatial border to be either padded or cropped.</p>
+<p>For padding:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span> <span class="o">+</span> <span class="n">H_in</span> <span class="o">+</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
+<span class="n">W_out</span> <span class="o">=</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span> <span class="o">+</span> <span class="n">W_in</span> <span class="o">+</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
+
+<span class="n">topPaddingAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">startEdgeSize</span>
+<span class="n">bottomPaddingAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">endEdgeSize</span>
+<span class="n">leftPaddingAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">startEdgeSize</span>
+<span class="n">rightPaddingAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">endEdgeSize</span>
+</pre></div>
+</div>
+<p>For cropping:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span><span class="p">)</span> <span class="o">+</span> <span class="n">H_in</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span><span class="p">)</span>
+<span class="n">W_out</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span><span class="p">)</span> <span class="o">+</span> <span class="n">W_in</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span><span class="p">)</span>
+
+<span class="n">topCropAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">startEdgeSize</span>
+<span class="n">bottomCropAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">endEdgeSize</span>
+<span class="n">leftCropAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">startEdgeSize</span>
+<span class="n">rightCropAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">endEdgeSize</span>
+</pre></div>
+</div>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">BorderAmounts</span> <span class="p">{</span>
+    <span class="kd">message</span> <span class="nc">EdgeSizes</span> <span class="p">{</span>
+        <span class="kt">uint64</span> <span class="na">startEdgeSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="kt">uint64</span> <span class="na">endEdgeSize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">repeated</span> <span class="n">EdgeSizes</span> <span class="na">borderAmounts</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="borderamounts-edgesizes">
+<h3>BorderAmounts.EdgeSizes<a class="headerlink" href="#borderamounts-edgesizes" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EdgeSizes</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">startEdgeSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kt">uint64</span> <span class="na">endEdgeSize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="validpadding">
+<h2>ValidPadding<a class="headerlink" href="#validpadding" title="Permalink to this headline">¶</a></h2>
+<p>Specifies the type of padding to be used with Convolution/Deconvolution and Pooling layers.
+After padding, input spatial shape: <code class="docutils literal"><span class="pre">[H_in,</span> <span class="pre">W_in]</span></code>, gets modified to the
+output spatial shape <code class="docutils literal"><span class="pre">[H_out,</span> <span class="pre">W_out]</span></code>.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">topPaddingAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">startEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span>
+<span class="n">bottomPaddingAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">endEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
+<span class="n">leftPaddingAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">startEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span>
+<span class="n">rightPaddingAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">endEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
+</pre></div>
+</div>
+<p>With Convolution or Pooling:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="n">int_division_round_down</span><span class="p">((</span><span class="n">H_in</span> <span class="o">+</span> <span class="n">topPaddingAmount</span> <span class="o">+</span> <span class="n">bottomPaddingAmount</span> <span class="o">-</span> <span class="n">KernelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>which is same as:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="n">int_division_round_up</span><span class="p">((</span><span class="n">H_in</span> <span class="o">+</span> <span class="n">topPaddingAmount</span> <span class="o">+</span> <span class="n">bottomPaddingAmount</span> <span class="o">-</span> <span class="n">KernelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>With Deconvolution:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="p">(</span><span class="n">H_in</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">kernelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">topPaddingAmount</span> <span class="o">+</span> <span class="n">bottomPaddingAmount</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The equivalent expressions hold true for <code class="docutils literal"><span class="pre">W_out</span></code> as well.</p>
+<p>By default, the values of <code class="docutils literal"><span class="pre">paddingAmounts</span></code> are set to <code class="docutils literal"><span class="pre">0</span></code>,
+which results in a “true” valid padding.
+If non-zero values are provided for <code class="docutils literal"><span class="pre">paddingAmounts</span></code>,
+“valid” convolution/pooling is performed within the spatially expanded input.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ValidPadding</span> <span class="p">{</span>
+    <span class="n">BorderAmounts</span> <span class="na">paddingAmounts</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="samepadding">
+<h2>SamePadding<a class="headerlink" href="#samepadding" title="Permalink to this headline">¶</a></h2>
+<p>Specifies the type of padding to be used with Convolution/Deconvolution and pooling layers.
+After padding, input spatial shape: <code class="docutils literal"><span class="pre">[H_in,</span> <span class="pre">W_in]</span></code>, gets modified to the
+output spatial shape <code class="docutils literal"><span class="pre">[H_out,</span> <span class="pre">W_out]</span></code>.
+With Convolution or pooling:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="n">int_division_round_up</span><span class="p">(</span><span class="n">H_in</span><span class="p">,</span><span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">W_out</span> <span class="o">=</span> <span class="n">int_division_round_up</span><span class="p">(</span><span class="n">W_in</span><span class="p">,</span><span class="n">stride</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This is achieved by using the following padding amounts:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">totalPaddingHeight</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,(</span><span class="n">H_out</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">KernelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">Hin</span><span class="p">)</span>
+<span class="n">totalPaddingWidth</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,(</span><span class="n">W_out</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">KernelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Win</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>There are two modes of asymmetry:
+<code class="docutils literal"><span class="pre">BOTTOM_RIGHT_HEAVY</span></code>, and <code class="docutils literal"><span class="pre">TOP_LEFT_HEAVY</span></code>.</p>
+<p>If the mode is <code class="docutils literal"><span class="pre">BOTTOM_RIGHT_HEAVY</span></code>:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">topPaddingAmount</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">totalPaddingHeight</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">bottomPaddingAmount</span> <span class="o">=</span> <span class="n">totalPaddingHeight</span> <span class="o">-</span> <span class="n">topPaddingAmount</span>
+<span class="n">leftPaddingAmount</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">totalPaddingWidth</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">rightPaddingAmount</span> <span class="o">=</span> <span class="n">totalPaddingWidth</span> <span class="o">-</span> <span class="n">leftPaddingAmount</span>
+</pre></div>
+</div>
+<p>If the mode is <code class="docutils literal"><span class="pre">TOP_LEFT_HEAVY</span></code>:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">bottomPaddingAmount</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">totalPaddingHeight</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">topPaddingAmount</span> <span class="o">=</span> <span class="n">totalPaddingHeight</span> <span class="o">-</span> <span class="n">bottomPaddingAmount</span>
+<span class="n">rightPaddingAmount</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="n">totalPaddingWidth</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">leftPaddingAmount</span> <span class="o">=</span> <span class="n">totalPaddingWidth</span> <span class="o">-</span> <span class="n">rightPaddingAmount</span>
+</pre></div>
+</div>
+<p>With Deconvolution:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="n">H_in</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">W_out</span> <span class="o">=</span> <span class="n">W_in</span> <span class="o">*</span> <span class="n">stride</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SamePadding</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">SamePaddingMode</span> <span class="p">{</span>
+        <span class="na">BOTTOM_RIGHT_HEAVY</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">TOP_LEFT_HEAVY</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">SamePaddingMode</span> <span class="na">asymmetryMode</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="weightparams">
+<h2>WeightParams<a class="headerlink" href="#weightparams" title="Permalink to this headline">¶</a></h2>
+<p>Weights for layer parameters.
+Weights are stored as repeated floating point numbers
+using row-major ordering
+and can represent 1-, 2-, 3-, or 4-dimensional data.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">WeightParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">floatValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="convolutionlayerparams">
+<h2>ConvolutionLayerParams<a class="headerlink" href="#convolutionlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs spatial convolution or deconvolution.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ConvolutionLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[inputChannels,inputHeight,inputWidth]</span></code> or <code class="docutils literal"><span class="pre">[C_in,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[outputChannels,outputHeight,outputWidth]</span></code> or  <code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dd>
+</dl>
+<p>If <code class="docutils literal"><span class="pre">dilationFactor</span></code> is not 1, effective kernel size is
+modified as follows:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">KernelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;--</span> <span class="p">(</span><span class="n">kernelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">dilationFactor</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+<span class="n">KernelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;--</span> <span class="p">(</span><span class="n">kernelSize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">dilationFactor</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal"><span class="pre">dilationFactor</span></code> is not 1 and <code class="docutils literal"><span class="pre">isDeconvolution</span></code> is not True, effective kernel size is
+modified as follows:</p>
+<p>Type of padding can be <code class="docutils literal"><span class="pre">valid</span></code> or <code class="docutils literal"><span class="pre">same</span></code>. Output spatial dimensions depend on the
+the type of padding. For details, refer to the descriptions of the messages “ValidPadding”
+and “SamePadding”. Padded values are all zeros.</p>
+<p>For Deconvolution, <code class="docutils literal"><span class="pre">ConvolutionPaddingType</span></code> (<code class="docutils literal"><span class="pre">valid</span></code> or <code class="docutils literal"><span class="pre">same</span></code>) is ignored when <code class="docutils literal"><span class="pre">outputShape</span></code> is set.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ConvolutionLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">outputChannels</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kt">uint64</span> <span class="na">kernelChannels</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">uint64</span> <span class="na">nGroups</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">kernelSize</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">stride</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">dilationFactor</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+
+    <span class="k">oneof</span> <span class="n">ConvolutionPaddingType</span> <span class="p">{</span>
+        <span class="n">ValidPadding</span> <span class="na">valid</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+        <span class="n">SamePadding</span> <span class="na">same</span> <span class="o">=</span> <span class="mi">51</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">bool</span> <span class="na">isDeconvolution</span> <span class="o">=</span> <span class="mi">60</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">hasBias</span> <span class="o">=</span> <span class="mi">70</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">weights</span> <span class="o">=</span> <span class="mi">90</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">bias</span> <span class="o">=</span> <span class="mi">91</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">outputShape</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="innerproductlayerparams">
+<h2>InnerProductLayerParams<a class="headerlink" href="#innerproductlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs a matrix vector product.
+This is equivalent to a fully-connected, or dense layer.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">InnerProductLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C_in]</span></code> or <code class="docutils literal"><span class="pre">[C_in,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, where <code class="docutils literal"><span class="pre">C_in</span></code> is equal to <code class="docutils literal"><span class="pre">inputChannels</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C_out]</span></code>, where <code class="docutils literal"><span class="pre">C_out</span></code> is equal to <code class="docutils literal"><span class="pre">outputChannels</span></code>.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">InnerProductLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">inputChannels</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">outputChannels</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">hasBias</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">weights</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">bias</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="embeddinglayerparams">
+<h2>EmbeddingLayerParams<a class="headerlink" href="#embeddinglayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs a matrix lookup and optionally adds a bias.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">EmbeddingLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A sequence of integers with shape <code class="docutils literal"><span class="pre">[1]</span></code> or <code class="docutils literal"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, (equivalent to <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>).
+Input values must be in the range <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">inputDim</span> <span class="pre">-</span> <span class="pre">1]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A sequence of 1-dimensional features of size <code class="docutils literal"><span class="pre">outputChannels</span></code>
+(equivalent to <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">outputChannels,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>).</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EmbeddingLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">inputDim</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">outputChannels</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">hasBias</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">weights</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">bias</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="batchnormlayerparams">
+<h2>BatchnormLayerParams<a class="headerlink" href="#batchnormlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs batch normalization,
+which is performed along the channel axis,
+and repeated along the other axes, if present.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">BatchnormLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<p>This operation is described by the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/292ab855c4a5cbaf9e0ecc52bb2d8d5b46ff11fd.svg" alt="y_i = \gamma_i \dfrac{ (x_i - \mu_i)}{\sqrt{\sigma_i^2 + \epsilon}} + \beta_i \;,\;i=1,....,C"/></p>
+</div><dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as the input.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">BatchnormLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">channels</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">computeMeanVar</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+    <span class="kt">bool</span> <span class="na">instanceNormalization</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="na">epsilon</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">gamma</span><span class="o">=</span><span class="mi">15</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">beta</span><span class="o">=</span><span class="mi">16</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">mean</span><span class="o">=</span><span class="mi">17</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">variance</span><span class="o">=</span><span class="mi">18</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="poolinglayerparams">
+<h2>PoolingLayerParams<a class="headerlink" href="#poolinglayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A spatial pooling layer.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">PoolingLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dd>
+</dl>
+<p>Padding options are similar to <code class="docutils literal"><span class="pre">ConvolutionLayerParams</span></code>
+with the additional option of <code class="docutils literal"><span class="pre">ValidCompletePadding</span></code> (<code class="docutils literal"><span class="pre">includeLastPixel</span></code>),
+which ensures that the last application of the kernel
+always includes the last pixel of the input image, if there is padding.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="n">int_division_round_up</span><span class="p">((</span><span class="n">H_in</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">paddingAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">kernelSize</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">Stride</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">paddingAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">paddingAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+     <span class="k">if</span> <span class="p">((</span><span class="n">H_out</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">Stride</span> <span class="o">&gt;=</span> <span class="n">H_in</span> <span class="o">+</span> <span class="n">paddingAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">{</span>
+         <span class="n">H_out</span> <span class="o">=</span> <span class="n">H_out</span> <span class="o">-</span> <span class="mi">1</span>
+     <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The equivalent expressions hold true for <code class="docutils literal"><span class="pre">W_out</span></code> as well.
+Only symmetric padding is supported with this option.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PoolingLayerParams</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">PoolingType</span><span class="p">{</span>
+        <span class="na">MAX</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">AVERAGE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="na">L2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">PoolingType</span> <span class="na">type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">kernelSize</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">stride</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+    <span class="kd">message</span> <span class="nc">ValidCompletePadding</span> <span class="p">{</span>
+        <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">paddingAmounts</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">PoolingPaddingType</span> <span class="p">{</span>
+        <span class="n">ValidPadding</span> <span class="na">valid</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+        <span class="n">SamePadding</span> <span class="na">same</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+        <span class="n">ValidCompletePadding</span> <span class="na">includeLastPixel</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">bool</span> <span class="na">avgPoolExcludePadding</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">globalPooling</span> <span class="o">=</span> <span class="mi">60</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="poolinglayerparams-validcompletepadding">
+<h3>PoolingLayerParams.ValidCompletePadding<a class="headerlink" href="#poolinglayerparams-validcompletepadding" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ValidCompletePadding</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">paddingAmounts</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="paddinglayerparams">
+<h2>PaddingLayerParams<a class="headerlink" href="#paddinglayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs padding along spatial dimensions.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">PaddingLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dd>
+</dl>
+<p>Output dimensions are calculated as follows:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">H_out</span> <span class="o">=</span> <span class="n">H_in</span> <span class="o">+</span> <span class="n">topPaddingAmount</span> <span class="o">+</span> <span class="n">bottomPaddingAmount</span>
+<span class="n">W_out</span> <span class="o">=</span> <span class="n">W_in</span> <span class="o">+</span> <span class="n">leftPaddingAmount</span> <span class="o">+</span> <span class="n">rightPaddingAmount</span>
+
+<span class="n">topPaddingAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">startEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span>
+<span class="n">bottomPaddingAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">endEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
+<span class="n">leftPaddingAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">startEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span>
+<span class="n">rightPaddingAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">endEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
+</pre></div>
+</div>
+<p>There are three types of padding:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">PaddingConstant</span></code>, which fills a constant value at the border.</li>
+<li><code class="docutils literal"><span class="pre">PaddingReflection</span></code>, which reflects the values at the border.</li>
+<li><code class="docutils literal"><span class="pre">PaddingReplication</span></code>, which replicates the values at the border.</li>
+</ul>
+<p>Given the following input:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>  <span class="p">:</span>  <span class="mi">1</span>   <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
+              <span class="mi">5</span>   <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>
+              <span class="mi">9</span>   <span class="mi">10</span>  <span class="mi">11</span>  <span class="mi">12</span>
+</pre></div>
+</div>
+<p>Here is the output of applying the padding
+<code class="docutils literal"><span class="pre">(top=2,</span> <span class="pre">left=2,</span> <span class="pre">bottom=0,</span> <span class="pre">right=0)</span></code>
+with each of the supported types:</p>
+<ul>
+<li><p class="first"><code class="docutils literal"><span class="pre">PaddingConstant</span></code> (<code class="docutils literal"><span class="pre">value</span> <span class="pre">=</span> <span class="pre">0</span></code>):</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>  <span class="p">:</span>  <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>  <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>
+              <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>  <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>
+              <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
+              <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">5</span>  <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>
+              <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">9</span>  <span class="mi">10</span>  <span class="mi">11</span>  <span class="mi">12</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">PaddingReflection</span></code>:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>  <span class="p">:</span>  <span class="mi">11</span>  <span class="mi">10</span>  <span class="mi">9</span>  <span class="mi">10</span>  <span class="mi">11</span>  <span class="mi">12</span>
+              <span class="mi">7</span>   <span class="mi">6</span>   <span class="mi">5</span>  <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>
+              <span class="mi">3</span>   <span class="mi">2</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
+              <span class="mi">7</span>   <span class="mi">6</span>   <span class="mi">5</span>  <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>
+              <span class="mi">11</span>  <span class="mi">10</span>  <span class="mi">9</span>  <span class="mi">10</span>  <span class="mi">11</span>  <span class="mi">12</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><code class="docutils literal"><span class="pre">PaddingReplication</span></code>:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>  <span class="p">:</span>  <span class="mi">1</span>   <span class="mi">1</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
+              <span class="mi">1</span>   <span class="mi">1</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
+              <span class="mi">1</span>   <span class="mi">1</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
+              <span class="mi">5</span>   <span class="mi">5</span>   <span class="mi">5</span>  <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>
+              <span class="mi">9</span>   <span class="mi">9</span>   <span class="mi">9</span>  <span class="mi">10</span>  <span class="mi">11</span>  <span class="mi">12</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PaddingLayerParams</span> <span class="p">{</span>
+    <span class="kd">message</span> <span class="nc">PaddingConstant</span> <span class="p">{</span>
+        <span class="kt">float</span> <span class="na">value</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">PaddingReflection</span> <span class="p">{</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">PaddingReplication</span> <span class="p">{</span>
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">PaddingType</span> <span class="p">{</span>
+        <span class="n">PaddingConstant</span> <span class="na">constant</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">PaddingReflection</span> <span class="na">reflection</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="n">PaddingReplication</span> <span class="na">replication</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">BorderAmounts</span> <span class="na">paddingAmounts</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="paddinglayerparams-paddingconstant">
+<h3>PaddingLayerParams.PaddingConstant<a class="headerlink" href="#paddinglayerparams-paddingconstant" title="Permalink to this headline">¶</a></h3>
+<p>Fill a constant value in the padded region.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PaddingConstant</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">value</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="paddinglayerparams-paddingreflection">
+<h3>PaddingLayerParams.PaddingReflection<a class="headerlink" href="#paddinglayerparams-paddingreflection" title="Permalink to this headline">¶</a></h3>
+<p>Reflect the values at the border for padding.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PaddingReflection</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="paddinglayerparams-paddingreplication">
+<h3>PaddingLayerParams.PaddingReplication<a class="headerlink" href="#paddinglayerparams-paddingreplication" title="Permalink to this headline">¶</a></h3>
+<p>Replicate the values at the border for padding.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PaddingReplication</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="concatlayerparams">
+<h2>ConcatLayerParams<a class="headerlink" href="#concatlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that concatenates along the channel axis (default) or sequence axis.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ConcatLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">....</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires more than 1 input and produces 1 output.</p>
+<p>The input and output formats are dependent on <code class="docutils literal"><span class="pre">sequenceConcat</span></code>.</p>
+<p>If <code class="docutils literal"><span class="pre">sequenceConcat</span> <span class="pre">==</span> <span class="pre">true</span></code>:</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>Sequences of length <code class="docutils literal"><span class="pre">Seq_i</span></code> of blobs with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A Sequence of length <code class="docutils literal"><span class="pre">summation(Seq_i)</span></code> of blobs with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+</dl>
+<p>If <code class="docutils literal"><span class="pre">sequenceConcat</span> <span class="pre">==</span> <span class="pre">false</span></code>:</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C_i,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>, where <code class="docutils literal"><span class="pre">i</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">...</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[summation(C_i),</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ConcatLayerParams</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="na">sequenceConcat</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lrnlayerparams">
+<h2>LRNLayerParams<a class="headerlink" href="#lrnlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs local response normalization (LRN).</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">LRNLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code></dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as the input.</dd>
+</dl>
+<p>This layer is described by the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/17d3211ab09b0a7a64161c366971011422505079.svg" alt="x_i \leftarrow  \dfrac{x_i}{\left ( k + \dfrac{\alpha}{C} \sum_j x_j^2 \right )^\beta}"/></p>
+</div><p>where the summation is done over a <code class="docutils literal"><span class="pre">(localSize,</span> <span class="pre">1,</span> <span class="pre">1)</span></code> neighborhood —
+that is, over a window “across” channels in 1x1 spatial neighborhoods.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LRNLayerParams</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">localSize</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">k</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="softmaxlayerparams">
+<h2>SoftmaxLayerParams<a class="headerlink" href="#softmaxlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>Softmax Normalization Layer</p>
+<p>A layer that performs softmax normalization.
+Normalization is done along the channel axis.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SoftmaxLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as the input.</dd>
+</dl>
+<p>This layer is described by the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/c45ae48b0db081249c0d6c55fa0096e90b500e97.svg" alt="x_i \leftarrow \dfrac{e^{x_i}}{\sum_i{e^{x_i}}}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SoftmaxLayerParams</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="splitlayerparams">
+<h2>SplitLayerParams<a class="headerlink" href="#splitlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that uniformly splits across the channel dimension
+to produce a specified number of outputs.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span><span class="p">,</span><span class="o">...</span><span class="n">yN</span><span class="p">)</span> <span class="o">=</span> <span class="n">SplitLayer</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">where</span> <span class="n">N</span> <span class="o">=</span> <span class="n">nOutputs</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces multiple outputs.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code></dd>
+<dt>Output</dt>
+<dd><code class="docutils literal"><span class="pre">nOutputs</span></code> blobs with shapes
+<code class="docutils literal"><span class="pre">[C/nOutputs]</span></code> or <code class="docutils literal"><span class="pre">[C/nOutputs,</span> <span class="pre">H,</span> <span class="pre">W]</span></code></dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SplitLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">nOutputs</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="addlayerparams">
+<h2>AddLayerParams<a class="headerlink" href="#addlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs elementwise addition.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AddLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 or more than 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>One or more blobs with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape equal to the input blob.</dd>
+</dl>
+<p>If only one input is provided, scalar addition is performed:</p>
+<div class="math">
+<p><img src="../_images/math/de9c388093626925490b2a93ef1f1d7e4447a044.svg" alt="y = x + \alpha"/></p>
+</div><p>If multiple inputs are provided,
+each input is broadcasted to the shape of the first input and added.
+The shapes of inputs after the first must be one of the following:
+<code class="docutils literal"><span class="pre">[1]</span></code>, <code class="docutils literal"><span class="pre">[C]</span></code>, <code class="docutils literal"><span class="pre">[1,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>, or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">AddLayerParams</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="multiplylayerparams">
+<h2>MultiplyLayerParams<a class="headerlink" href="#multiplylayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs elementwise multiplication.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">MultiplyLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 or more than 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>One or more blobs with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape equal to the first input blob.</dd>
+</dl>
+<p>If only one input is provided, scalar multiplication is performed:</p>
+<div class="math">
+<p><img src="../_images/math/85f7d4196988904f39a829ae5e8e6116715c6c49.svg" alt="y = \alpha x"/></p>
+</div><p>If multiple inputs are provided,
+each input is broadcasted to the shape of the first input and multiplied.
+The shapes of inputs after the first must be one of the following:
+<code class="docutils literal"><span class="pre">[1]</span></code>, <code class="docutils literal"><span class="pre">[C]</span></code>, <code class="docutils literal"><span class="pre">[1,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>, or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">MultiplyLayerParams</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="unaryfunctionlayerparams">
+<h2>UnaryFunctionLayerParams<a class="headerlink" href="#unaryfunctionlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that applies a unary function.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">UnaryFunctionLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as the input.</dd>
+</dl>
+<p>The input is first modified by shifting and scaling:</p>
+<div class="math">
+<p><img src="../_images/math/fb1905eeee2851ae1364693113b3aaaecd3c0a40.svg" alt="x \leftarrow \text{scale} \cdot x + \text{shift}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UnaryFunctionLayerParams</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">Operation</span><span class="p">{</span>
+        <span class="na">SQRT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">RSQRT</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="na">INVERSE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="na">POWER</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="na">EXP</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+        <span class="na">LOG</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="na">ABS</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+        <span class="na">THRESHOLD</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">Operation</span> <span class="na">type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="na">epsilon</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="na">shift</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="na">scale</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="upsamplelayerparams">
+<h2>UpsampleLayerParams<a class="headerlink" href="#upsamplelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that scales up spatial dimensions.
+It supports two modes: nearest neighbour (default) and bilinear.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">UpsampleLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">scalingFactor[0]</span> <span class="pre">*</span> <span class="pre">H,</span> <span class="pre">scalingFactor[1]</span> <span class="pre">*</span> <span class="pre">W]</span></code></dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UpsampleLayerParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">scalingFactor</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kd">enum</span> <span class="n">InterpolationMode</span> <span class="p">{</span>
+        <span class="na">NN</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">BILINEAR</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">InterpolationMode</span> <span class="na">mode</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="biaslayerparams">
+<h2>BiasLayerParams<a class="headerlink" href="#biaslayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs elementwise addition of a bias,
+which is broadcasted to match the input shape.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">BiasLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as the input.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">BiasLayerParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">bias</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="scalelayerparams">
+<h2>ScaleLayerParams<a class="headerlink" href="#scalelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs elmentwise multiplication by a scale factor
+and optionally adds a bias;
+both the scale and bias are broadcasted to match the input shape.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ScaleLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as the input.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ScaleLayerParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">shapeScale</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">scale</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">hasBias</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">shapeBias</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">bias</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="loadconstantlayerparams">
+<h2>LoadConstantLayerParams<a class="headerlink" href="#loadconstantlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that loads data as a parameter and provides it as an output.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">LoadConstantLayer</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Takes no input. Produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>None</dd>
+<dt>Output:</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code></dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LoadConstantLayerParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">data</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="l2normalizelayerparams">
+<h2>L2NormalizeLayerParams<a class="headerlink" href="#l2normalizelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs L2 normalization, i.e. divides by the
+the square root of the sum of squares of all elements of input.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">L2NormalizeLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as the input.</dd>
+</dl>
+<p>This layer is described by the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/e2d30fa44d55c7830d3242d6a1db48bc79f3d8c8.svg" alt="x_i \leftarrow \dfrac{x_i}{\sqrt{\sum{x_i^2} + \epsilon}}"/></p>
+</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">L2NormalizeLayerParams</span> <span class="p">{</span>
+    <span class="kt">float</span> <span class="na">epsilon</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="flattenlayerparams">
+<h2>FlattenLayerParams<a class="headerlink" href="#flattenlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that flattens the input.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">FlattenLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C</span> <span class="pre">*</span> <span class="pre">H</span> <span class="pre">*</span> <span class="pre">W,</span> <span class="pre">1,</span> <span class="pre">1]</span></code></dd>
+</dl>
+<p>There are two flatten orders: <code class="docutils literal"><span class="pre">CHANNEL_FIRST</span></code> and <code class="docutils literal"><span class="pre">CHANNEL_LAST</span></code>.
+<code class="docutils literal"><span class="pre">CHANNEL_FIRST</span></code> does not require data to be rearranged,
+because row major ordering is used by internal storage.
+<code class="docutils literal"><span class="pre">CHANNEL_LAST</span></code> requires data to be rearranged.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FlattenLayerParams</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">FlattenOrder</span> <span class="p">{</span>
+        <span class="na">CHANNEL_FIRST</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">CHANNEL_LAST</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">FlattenOrder</span> <span class="na">mode</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reshapelayerparams">
+<h2>ReshapeLayerParams<a class="headerlink" href="#reshapelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that recasts the input into a new shape.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ReshapeLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code> or <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>
+or <code class="docutils literal"><span class="pre">[Seq_out,</span> <span class="pre">C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dd>
+</dl>
+<p>There are two reshape orders: <code class="docutils literal"><span class="pre">CHANNEL_FIRST</span></code> and <code class="docutils literal"><span class="pre">CHANNEL_LAST</span></code>.
+<code class="docutils literal"><span class="pre">CHANNEL_FIRST</span></code> is equivalent to
+flattening the input to <code class="docutils literal"><span class="pre">[C</span> <span class="pre">*</span> <span class="pre">H</span> <span class="pre">*</span> <span class="pre">W,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> in channel first order
+and then reshaping it to the target shape;
+no data rearrangement is required.
+<code class="docutils literal"><span class="pre">CHANNEL_LAST</span></code> is equivalent to
+flattening the input to <code class="docutils literal"><span class="pre">[H</span> <span class="pre">*</span> <span class="pre">W</span> <span class="pre">*</span> <span class="pre">C,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> in channel last order,
+reshaping it to <code class="docutils literal"><span class="pre">[H_out,</span> <span class="pre">W_out,</span> <span class="pre">C_out]</span></code> (it is now in “H_out-major”” order),
+and then permuting it to <code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>;
+both the flattening and permuting requires the data to be rearranged.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ReshapeLayerParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">targetShape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kd">enum</span> <span class="n">ReshapeOrder</span> <span class="p">{</span>
+        <span class="na">CHANNEL_FIRST</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">CHANNEL_LAST</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">ReshapeOrder</span> <span class="na">mode</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="permutelayerparams">
+<h2>PermuteLayerParams<a class="headerlink" href="#permutelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that rearranges the dimensions and data of an input.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">PermuteLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A sequence of 3-dimensional blobs. <code class="docutils literal"><span class="pre">InputShape</span> <span class="pre">=</span> <span class="pre">[Seq,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A sequence of a different length of 3-dimensional blobs.
+Shape: <code class="docutils literal"><span class="pre">[InputShape[axis[0]],</span> <span class="pre">InputShape[axis[1]],</span>
+<span class="pre">InputShape[axis[2]],</span> <span class="pre">InputShape[axis[3]]]</span></code>. Hence output is a sequence of length <code class="docutils literal"><span class="pre">InputShape[axis[0]]</span></code>.</dd>
+</dl>
+<p>Examples:</p>
+<ul class="simple">
+<li>If <code class="docutils literal"><span class="pre">axis</span></code> is set to <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">3,</span> <span class="pre">1,</span> <span class="pre">2]</span></code>,
+then the output has shape <code class="docutils literal"><span class="pre">[W,C,H]</span></code>
+and has the same sequence length that of the input.</li>
+<li>If <code class="docutils literal"><span class="pre">axis</span></code> is set to <code class="docutils literal"><span class="pre">[3,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">0]</span></code>,
+and the input is a sequence of data
+with length <code class="docutils literal"><span class="pre">Seq</span></code> and shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>,
+then the output is a unit sequence of data with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">1,</span> <span class="pre">Seq]</span></code>.</li>
+<li>If <code class="docutils literal"><span class="pre">axis</span></code> is set to <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1]</span></code>,
+the output is a reverse of the input: <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span> <span class="pre">-&gt;</span> <span class="pre">[W,</span> <span class="pre">H,</span> <span class="pre">C]</span></code>.</li>
+<li>If <code class="docutils literal"><span class="pre">axis</span></code> is not set, or is set to <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>,
+the output is the same as the input.</li>
+</ul>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PermuteLayerParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reorganizedatalayerparams">
+<h2>ReorganizeDataLayerParams<a class="headerlink" href="#reorganizedatalayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that reorganizes data in the input in specific ways.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ReorganizeDataLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dd>
+<dt>mode == SPACE_TO_DEPTH</dt>
+<dd><code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code> : <code class="docutils literal"><span class="pre">[C</span> <span class="pre">*</span> <span class="pre">blockSize</span> <span class="pre">*</span> <span class="pre">blockSize,</span> <span class="pre">H/blockSize,</span> <span class="pre">W/blockSize]</span></code>.
+blockSize must divide H and W.
+Data is moved from the spatial dimensions to the channel dimension. Input is spatially divided into
+non-overlapping blocks of size blockSize X blockSize and data from each block is moved into the
+channel dimension.</dd>
+</dl>
+<p>mode == DEPTH_TO_SPACE
+<code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code> : <code class="docutils literal"><span class="pre">[C/(blockSize</span> <span class="pre">*</span> <span class="pre">blockSize),</span> <span class="pre">H</span> <span class="pre">*</span> <span class="pre">blockSize,</span> <span class="pre">W</span> <span class="pre">*</span> <span class="pre">blockSize]</span></code>.</p>
+<blockquote>
+<div>Square of blockSize must divide C.
+Reverse of SPACE_TO_DEPTH. Data is moved from the channel dimension to the spatial dimensions.</div></blockquote>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ReorganizeDataLayerParams</span> <span class="p">{</span>
+
+    <span class="kd">enum</span> <span class="n">ReorganizationType</span> <span class="p">{</span>
+        <span class="na">SPACE_TO_DEPTH</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">DEPTH_TO_SPACE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">ReorganizationType</span> <span class="na">mode</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">blockSize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="slicelayerparams">
+<h2>SliceLayerParams<a class="headerlink" href="#slicelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that slices the input data along a given axis.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SliceLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[Seq_out,</span> <span class="pre">C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dd>
+</dl>
+<p>Sliced section is taken from the interval <code class="docutils literal"><span class="pre">[startIndex,</span> <span class="pre">endIndex)</span></code>, i.e.
+startIndex is inclusive while endIndex is exclusive.
+stride must be positive and represents the step size for slicing.
+startIndex must be non-negative. Negative indexing is supported for endIndex: -1 denotes N, -2 denotes N-1
+and so on, where N is the length of the dimension to be sliced.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SliceLayerParams</span> <span class="p">{</span>
+
+    <span class="kt">uint64</span> <span class="na">startIndex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">endIndex</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">stride</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+    <span class="kd">enum</span> <span class="n">SliceAxis</span> <span class="p">{</span>
+        <span class="na">CHANNEL_AXIS</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">HEIGHT_AXIS</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="na">WIDTH_AXIS</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">SliceAxis</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reducelayerparams">
+<h2>ReduceLayerParams<a class="headerlink" href="#reducelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that reduces the input using a specified operation.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ReduceLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob whose shape depends on the value of axis, the dimension(s) along which reduction is performed.
+if axis == C   : <code class="docutils literal"><span class="pre">[1,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>
+if axis == H   : <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">1,</span> <span class="pre">W]</span></code>
+if axis == W   : <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">1]</span></code>
+if axis == HW  : <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>
+if axis == CHW : <code class="docutils literal"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> [Default]</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ReduceLayerParams</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">ReduceOperation</span> <span class="p">{</span>
+        <span class="na">SUM</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">AVG</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="na">PROD</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="na">LOGSUM</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="na">SUMSQUARE</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+        <span class="na">L1</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="na">L2</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+        <span class="na">MAX</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+        <span class="na">MIN</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+        <span class="na">ARGMAX</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">ReduceOperation</span> <span class="na">mode</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="na">epsilon</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kd">enum</span> <span class="n">ReduceAxis</span> <span class="p">{</span>
+        <span class="na">CHW</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">HW</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="na">C</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="na">H</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="na">W</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">ReduceAxis</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="croplayerparams">
+<h2>CropLayerParams<a class="headerlink" href="#croplayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that crops the spatial dimensions of an input.
+If two inputs are provided, the shape of the second input is used as the reference shape.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">CropLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span> <span class="ow">or</span> <span class="n">y</span> <span class="o">=</span> <span class="n">CropLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 or 2 inputs and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd><ul class="first last simple">
+<li>1 input case: A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>.</li>
+<li>2 input case: 1st blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>, 2nd blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</li>
+</ul>
+</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dd>
+</dl>
+<p>If one input is used, output is computed as follows:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span> <span class="n">y</span> <span class="o">=</span> <span class="n">x1</span><span class="p">[:,</span> <span class="n">topCropAmount</span><span class="p">:</span><span class="n">H_in</span> <span class="o">-</span> <span class="n">bottomCropAmount</span><span class="p">,</span> <span class="n">leftCropAmount</span><span class="p">:</span><span class="n">W_in</span> <span class="o">-</span> <span class="n">rightCropAmount</span><span class="p">]</span>
+
+<span class="n">topCropAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">startEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span>
+<span class="n">bottomCropAmount</span> <span class="o">==</span> <span class="n">Height</span> <span class="n">endEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
+<span class="n">leftCropAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">startEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">startEdgeSize</span>
+<span class="n">rightCropAmount</span> <span class="o">==</span> <span class="n">Width</span> <span class="n">endEdgeSize</span> <span class="o">==</span> <span class="n">borderAmounts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">endEdgeSize</span>
+
+<span class="n">H_out</span> <span class="o">=</span> <span class="n">H_in</span> <span class="o">-</span> <span class="n">topCropAmount</span> <span class="o">-</span> <span class="n">bottomCropAmount</span>
+<span class="n">W_out</span> <span class="o">=</span> <span class="n">W_in</span> <span class="o">-</span> <span class="n">leftCropAmount</span> <span class="o">-</span> <span class="n">rightCropAmount</span>
+</pre></div>
+</div>
+<p>If two inputs are used, output is computed as follows:</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">x1</span><span class="p">[:,</span> <span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">H_out</span><span class="p">,</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">W_out</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">CropLayerParams</span> <span class="p">{</span>
+    <span class="n">BorderAmounts</span> <span class="na">cropAmounts</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">offset</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="averagelayerparams">
+<h2>AverageLayerParams<a class="headerlink" href="#averagelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that computes the elementwise average of the inputs.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">AverageLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires multiple inputs and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>Multiple blobs, each with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as each input.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">AverageLayerParams</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="maxlayerparams">
+<h2>MaxLayerParams<a class="headerlink" href="#maxlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that computes the elementwise maximum over the inputs.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">MaxLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires multiple inputs and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>Multiple blobs, each with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as each input.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">MaxLayerParams</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="minlayerparams">
+<h2>MinLayerParams<a class="headerlink" href="#minlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that computes the elementwise minimum over the inputs.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">MinLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires multiple inputs and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>Multiple blobs, each with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as each input.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">MinLayerParams</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="dotproductlayerparams">
+<h2>DotProductLayerParams<a class="headerlink" href="#dotproductlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that computes the dot product of two vectors.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">DotProductLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 2 inputs and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>Two blobs with shape <code class="docutils literal"><span class="pre">[C]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A scalar.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DotProductLayerParams</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="na">cosineSimilarity</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="meanvariancenormalizelayerparams">
+<h2>MeanVarianceNormalizeLayerParams<a class="headerlink" href="#meanvariancenormalizelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that performs mean variance normalization.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">MeanVarianceNormalizeLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with the same shape as the input.</dd>
+</dl>
+<p>If <code class="docutils literal"><span class="pre">acrossChannels</span> <span class="pre">==</span> <span class="pre">true</span></code>
+normalization is performed on flattened input.</p>
+<p>If <code class="docutils literal"><span class="pre">acrossChannels</span> <span class="pre">==</span> <span class="pre">false</span></code>
+normalization is performed within a channel,
+across spatial dimensions.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">MeanVarianceNormalizeLayerParams</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="na">acrossChannels</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">normalizeVariance</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="na">epsilon</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sequencerepeatlayerparams">
+<h2>SequenceRepeatLayerParams<a class="headerlink" href="#sequencerepeatlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that repeats a sequence.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SequenceRepeatLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A sequence of blobs, i.e. shape is either <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">C]</span></code> or <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A sequence of length <code class="docutils literal"><span class="pre">nRepetitions</span> <span class="pre">*</span> <span class="pre">Seq</span></code>
+with shape corresponding to the input,
+i.e. shape is either <code class="docutils literal"><span class="pre">[nRepetitions</span> <span class="pre">*</span> <span class="pre">Seq,</span> <span class="pre">C]</span></code> or <code class="docutils literal"><span class="pre">[nRepetitions</span> <span class="pre">*</span> <span class="pre">Seq,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SequenceRepeatLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">nRepetitions</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="simplerecurrentlayerparams">
+<h2>SimpleRecurrentLayerParams<a class="headerlink" href="#simplerecurrentlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A simple recurrent layer.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y_t</span> <span class="o">=</span> <span class="n">SimpleRecurrentLayer</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">})</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A sequence of vectors of size <code class="docutils literal"><span class="pre">inputVectorSize</span></code>
+with shape <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">inputVectorSize]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A vector of size <code class="docutils literal"><span class="pre">outputVectorSize</span></code>. It is either the final output or a sequence of outputs at all time steps.
+- Output Shape: <code class="docutils literal"><span class="pre">[1,outputVectorSize]</span></code> , if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">false</span></code>
+- Output Shape: <code class="docutils literal"><span class="pre">[Seq,outputVectorSize]</span></code> , if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">true</span></code></dd>
+</dl>
+<p>This layer is described by the following equation:</p>
+<div class="math">
+<p><img src="../_images/math/9f6eab30a7338afe218476ef56da3ca988eaad53.svg" alt="\boldsymbol{y_t} = f(\mathrm{clip}(W \boldsymbol{x_t} + \
+                                   R \boldsymbol{y_{t-1}} + b))"/></p>
+</div><ul class="simple">
+<li><code class="docutils literal"><span class="pre">W</span></code> is a 2-dimensional weight matrix
+(<code class="docutils literal"><span class="pre">[outputVectorSize,</span> <span class="pre">inputVectorSize]</span></code>, row-major)</li>
+<li><code class="docutils literal"><span class="pre">R</span></code> is a 2-dimensional recursion matrix
+(<code class="docutils literal"><span class="pre">[outputVectorSize,</span> <span class="pre">outputVectorSize]</span></code>, row-major)</li>
+<li><code class="docutils literal"><span class="pre">b</span></code> is a 1-dimensional bias vector (<code class="docutils literal"><span class="pre">[outputVectorSize]</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">f()</span></code> is an activation</li>
+<li><code class="docutils literal"><span class="pre">clip()</span></code> is a function that constrains values between <code class="docutils literal"><span class="pre">[-50.0,</span> <span class="pre">50.0]</span></code></li>
+</ul>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SimpleRecurrentLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">inputVectorSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">outputVectorSize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="n">ActivationParams</span> <span class="na">activation</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">sequenceOutput</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">hasBiasVector</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">weightMatrix</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">recursionMatrix</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">biasVector</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">reverseInput</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+    <span class="c1">// If true, then the node processes the input sequence from right to left</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="grulayerparams">
+<h2>GRULayerParams<a class="headerlink" href="#grulayerparams" title="Permalink to this headline">¶</a></h2>
+<p>Gated-Recurrent Unit (GRU) Layer</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y_t</span> <span class="o">=</span> <span class="n">GRULayer</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">})</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A sequence of vectors of size <code class="docutils literal"><span class="pre">inputVectorSize</span></code>
+with shape <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">inputVectorSize]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A vector of size <code class="docutils literal"><span class="pre">outputVectorSize</span></code>. It is either the final output or a sequence of outputs at all time steps.
+- Output Shape: <code class="docutils literal"><span class="pre">[1,outputVectorSize]</span></code> , if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">false</span></code>
+- Output Shape: <code class="docutils literal"><span class="pre">[Seq,outputVectorSize]</span></code> , if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">true</span></code></dd>
+</dl>
+<p>This layer is described by the following equations:</p>
+<dl class="docutils">
+<dt>Update Gate</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/875c7235537f2add16b5fecc3c6cc1f3577b56ea.svg" alt="\boldsymbol{z_t} = \
+    f(\mathrm{clip}(W_z \boldsymbol{x_t} + \
+                    R_z \boldsymbol{y_{t-1}} + b_z)"/></p>
+</div></dd>
+<dt>Reset Gate</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/51f877c717b56c82efc9a88336ee126f0de2e9c4.svg" alt="\boldsymbol{r_t} = \
+    f(\mathrm{clip}(W_r \boldsymbol{x_t} + \
+                    R_r \boldsymbol{y_{t-1}} + b_r))"/></p>
+</div></dd>
+<dt>Cell Memory State</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/333b01d663321dcd702f97bba1d2f286eec8ad7f.svg" alt="\boldsymbol{c_t} = \
+    \boldsymbol{y_{t-1}} \odot \boldsymbol{r_t}"/></p>
+</div></dd>
+<dt>Output Gate</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/53c8900b810d975194646cf61eae01b1c162964e.svg" alt="\boldsymbol{o_t} = \
+    g(\mathrm{clip}(W_o \boldsymbol{x_t} + \
+                    R_o \boldsymbol{c_t} + b_o))"/></p>
+</div></dd>
+<dt>Output</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/2281230890a5355211a0a8c5b030f3a3cd041d5b.svg" alt="\boldsymbol{y_t} = \
+    (1 - \boldsymbol{z_t}) \odot \boldsymbol{o_t} + \
+     \boldsymbol{z_t} \odot \boldsymbol{y_{t-1}}"/></p>
+</div></dd>
+</dl>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">W_z</span></code>, <code class="docutils literal"><span class="pre">W_r</span></code>, <code class="docutils literal"><span class="pre">W_o</span></code> are 2-dimensional input weight matrices
+(<code class="docutils literal"><span class="pre">[outputVectorSize,</span> <span class="pre">inputVectorSize]</span></code>, row-major)</li>
+<li><code class="docutils literal"><span class="pre">R_z</span></code>, <code class="docutils literal"><span class="pre">R_r</span></code>, <code class="docutils literal"><span class="pre">R_o</span></code> are 2-dimensional recursion matrices
+(<code class="docutils literal"><span class="pre">[outputVectorSize,</span> <span class="pre">outputVectorSize]</span></code>, row-major)</li>
+<li><code class="docutils literal"><span class="pre">b_z</span></code>, <code class="docutils literal"><span class="pre">b_r</span></code>, <code class="docutils literal"><span class="pre">b_o</span></code> are 1-dimensional bias vectors
+(<code class="docutils literal"><span class="pre">[outputVectorSize]</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">f()</span></code>, <code class="docutils literal"><span class="pre">g()</span></code> are activations</li>
+<li><code class="docutils literal"><span class="pre">clip()</span></code> is a function that constrains values between <code class="docutils literal"><span class="pre">[-50.0,</span> <span class="pre">50.0]</span></code></li>
+<li><code class="docutils literal"><span class="pre">⊙</span></code> denotes the elementwise product of matrices</li>
+</ul>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">GRULayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">inputVectorSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">outputVectorSize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="n">ActivationParams</span> <span class="na">activations</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">sequenceOutput</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">hasBiasVectors</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">updateGateWeightMatrix</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">resetGateWeightMatrix</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">outputGateWeightMatrix</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">updateGateRecursionMatrix</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">resetGateRecursionMatrix</span> <span class="o">=</span> <span class="mi">51</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">outputGateRecursionMatrix</span> <span class="o">=</span> <span class="mi">52</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">updateGateBiasVector</span> <span class="o">=</span> <span class="mi">70</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">resetGateBiasVector</span> <span class="o">=</span> <span class="mi">71</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">outputGateBiasVector</span> <span class="o">=</span> <span class="mi">72</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">reverseInput</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lstmparams">
+<h2>LSTMParams<a class="headerlink" href="#lstmparams" title="Permalink to this headline">¶</a></h2>
+<p>Long short-term memory (LSTM) parameters.</p>
+<p>This is described by the following equations:</p>
+<dl class="docutils">
+<dt>Input Gate</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/f14d451a13a666de358bedf34cb5ea0e66004d7d.svg" alt="\boldsymbol{i_t} = \
+    f(\mathrm{clip}(W_i \boldsymbol{x_t} + \
+                    R_i \boldsymbol{y_{t-1}} + \
+                    p_i \odot c_{t-1} + b_i))"/></p>
+</div></dd>
+<dt>Forget Gate</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/bbc6a6043abdcbcc9710a90370048eec16ca1dfb.svg" alt="\boldsymbol{f_t} = \
+    f(\mathrm{clip}(W_f \boldsymbol{x_t} + \
+                    R_f \boldsymbol{y_{t-1}} + \
+                    p_f \odot c_{t-1} + b_f))"/></p>
+</div></dd>
+<dt>Block Input</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/1a4d5bab67794c735cbb52288c7f49797b16995e.svg" alt="\boldsymbol{z_t} = \
+    g(\mathrm{clip}(W_z \boldsymbol{x_t} + \
+                    R_z \boldsymbol{y_{t-1}} + b_z))"/></p>
+</div></dd>
+<dt>Cell Memory State</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/04b942a784507b5dfe2029e0e06b2578ea96d813.svg" alt="\boldsymbol{c_t} = \
+    \boldsymbol{c_{t-1}} \odot \boldsymbol{f_t} + \
+    \boldsymbol{i_t} \odot \boldsymbol{z_t}"/></p>
+</div></dd>
+<dt>Output Gate</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/78ddf76bc7b14d346cb36e0382c3728cf0c290db.svg" alt="\boldsymbol{o_t} = \
+    f(\mathrm{clip}(W_o \boldsymbol{x_t} + \
+                    R_o \boldsymbol{y_{t-1}} + \
+                    p_o \odot c_t + b_o))"/></p>
+</div></dd>
+<dt>Output</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/e06a8d4f3ab4e366287a670dedb429b1818513f4.svg" alt="\boldsymbol{y_t} = \
+    h(\boldsymbol{c_t}) \odot \boldsymbol{o_t}"/></p>
+</div></dd>
+</dl>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">W_i</span></code>, <code class="docutils literal"><span class="pre">W_f</span></code>, <code class="docutils literal"><span class="pre">W_z</span></code>, <code class="docutils literal"><span class="pre">W_o</span></code> are 2-dimensional input weight matrices
+(<code class="docutils literal"><span class="pre">[outputVectorSize,</span> <span class="pre">inputVectorSize]</span></code>, row-major)</li>
+<li><code class="docutils literal"><span class="pre">R_i</span></code>, <code class="docutils literal"><span class="pre">R_f</span></code>, <code class="docutils literal"><span class="pre">R_z</span></code>, <code class="docutils literal"><span class="pre">R_o</span></code> are 2-dimensional recursion matrices
+(<code class="docutils literal"><span class="pre">[outputVectorSize,</span> <span class="pre">outputVectorSize]</span></code>, row-major)</li>
+<li><code class="docutils literal"><span class="pre">b_i</span></code>, <code class="docutils literal"><span class="pre">b_f</span></code>, <code class="docutils literal"><span class="pre">b_z</span></code>, <code class="docutils literal"><span class="pre">b_o</span></code> are 1-dimensional bias vectors
+(<code class="docutils literal"><span class="pre">[outputVectorSize]</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">p_</span></code>, <code class="docutils literal"><span class="pre">p_f</span></code>, <code class="docutils literal"><span class="pre">p_o</span></code> are 1-dimensional peephole vectors
+(<code class="docutils literal"><span class="pre">[outputVectorSize]</span></code>)</li>
+<li><code class="docutils literal"><span class="pre">f()</span></code>, <code class="docutils literal"><span class="pre">g()</span></code>, <code class="docutils literal"><span class="pre">h()</span></code> are activations</li>
+<li><code class="docutils literal"><span class="pre">clip()</span></code> is a function that constrains values between <code class="docutils literal"><span class="pre">[-50.0,</span> <span class="pre">50.0]</span></code></li>
+<li><code class="docutils literal"><span class="pre">⊙</span></code> denotes the elementwise product of matrices</li>
+</ul>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LSTMParams</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="na">sequenceOutput</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">hasBiasVectors</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">forgetBias</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">hasPeepholeVectors</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">coupledInputAndForgetGate</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
+    <span class="kt">float</span> <span class="na">cellClipThreshold</span> <span class="o">=</span> <span class="mi">60</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lstmweightparams">
+<h2>LSTMWeightParams<a class="headerlink" href="#lstmweightparams" title="Permalink to this headline">¶</a></h2>
+<p>Weights for long short-term memory (LSTM) layers</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LSTMWeightParams</span> <span class="p">{</span>
+    <span class="n">WeightParams</span> <span class="na">inputGateWeightMatrix</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">forgetGateWeightMatrix</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">blockInputWeightMatrix</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">outputGateWeightMatrix</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
+    <span class="n">WeightParams</span> <span class="na">inputGateRecursionMatrix</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">forgetGateRecursionMatrix</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">blockInputRecursionMatrix</span> <span class="o">=</span> <span class="mi">22</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">outputGateRecursionMatrix</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
+
+    <span class="c1">//biases:</span>
+    <span class="n">WeightParams</span> <span class="na">inputGateBiasVector</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">forgetGateBiasVector</span> <span class="o">=</span> <span class="mi">41</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">blockInputBiasVector</span> <span class="o">=</span> <span class="mi">42</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">outputGateBiasVector</span> <span class="o">=</span> <span class="mi">43</span><span class="p">;</span>
+
+    <span class="c1">//peepholes:</span>
+    <span class="n">WeightParams</span> <span class="na">inputGatePeepholeVector</span> <span class="o">=</span> <span class="mi">60</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">forgetGatePeepholeVector</span> <span class="o">=</span> <span class="mi">61</span><span class="p">;</span>
+    <span class="n">WeightParams</span> <span class="na">outputGatePeepholeVector</span> <span class="o">=</span> <span class="mi">62</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="unidirectionallstmlayerparams">
+<h2>UniDirectionalLSTMLayerParams<a class="headerlink" href="#unidirectionallstmlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A unidirectional long short-term memory (LSTM) layer.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">y_t</span><span class="p">,</span> <span class="n">c_t</span><span class="p">)</span> <span class="o">=</span> <span class="n">UniDirectionalLSTMLayer</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">c_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">})</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A sequence of vectors of size <code class="docutils literal"><span class="pre">inputVectorSize</span></code>
+with shape <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">inputVectorSize]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A vector of size <code class="docutils literal"><span class="pre">outputVectorSize</span></code>. It is either the final output or a sequence of outputs at all time steps.
+- Output Shape: <code class="docutils literal"><span class="pre">[1,outputVectorSize]</span></code> , if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">false</span></code>
+- Output Shape: <code class="docutils literal"><span class="pre">[Seq,outputVectorSize]</span></code> , if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">true</span></code></dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UniDirectionalLSTMLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">inputVectorSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">outputVectorSize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="n">ActivationParams</span> <span class="na">activations</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="n">LSTMParams</span> <span class="na">params</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+
+    <span class="n">LSTMWeightParams</span> <span class="na">weightParams</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">reverseInput</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="bidirectionallstmlayerparams">
+<h2>BiDirectionalLSTMLayerParams<a class="headerlink" href="#bidirectionallstmlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>Bidirectional long short-term memory (LSTM) layer</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">y_t</span><span class="p">,</span> <span class="n">c_t</span><span class="p">,</span> <span class="n">y_t_reverse</span><span class="p">,</span> <span class="n">c_t_reverse</span><span class="p">)</span> <span class="o">=</span> <span class="n">BiDirectionalLSTMLayer</span><span class="p">(</span><span class="n">x_t</span><span class="p">,</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">c_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">y_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">}</span><span class="n">_reverse</span><span class="p">,</span> <span class="n">c_</span><span class="p">{</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">}</span><span class="n">_reverse</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A sequence of vectors of size <code class="docutils literal"><span class="pre">inputVectorSize</span></code>
+with shape <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">inputVectorSize]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A vector of size <code class="docutils literal"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">outputVectorSize</span></code>. It is either the final output or a sequence of outputs at all time steps.
+- Output Shape: <code class="docutils literal"><span class="pre">[1,</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">outputVectorSize]</span></code> , if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">false</span></code>
+- Output Shape: <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">outputVectorSize]</span></code> , if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">true</span></code></dd>
+</dl>
+<p>The first LSTM operates on the input sequence in the forward direction.
+The second LSTM operates on the input sequence in the reverse direction.</p>
+<p>Example: given the input sequence <code class="docutils literal"><span class="pre">[x_1,</span> <span class="pre">x_2,</span> <span class="pre">x_3]</span></code>,
+where <code class="docutils literal"><span class="pre">x_i</span></code> are vectors at time index <code class="docutils literal"><span class="pre">i</span></code>:</p>
+<p>The forward LSTM output is <code class="docutils literal"><span class="pre">[yf_1,</span> <span class="pre">yf_2,</span> <span class="pre">yf_3]</span></code>,</p>
+<p>where <code class="docutils literal"><span class="pre">yf_i</span></code> are vectors of size <code class="docutils literal"><span class="pre">outputVectorSize</span></code>:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">yf_1</span></code> is the output at the end of sequence {<code class="docutils literal"><span class="pre">x_1</span></code>}</li>
+<li><code class="docutils literal"><span class="pre">yf_2</span></code> is the output at the end of sequence {<code class="docutils literal"><span class="pre">x_1</span></code>, <code class="docutils literal"><span class="pre">x_2</span></code>}</li>
+<li><code class="docutils literal"><span class="pre">yf_3</span></code> is the output at the end of sequence {<code class="docutils literal"><span class="pre">x_1</span></code>, <code class="docutils literal"><span class="pre">x_2</span></code>, <code class="docutils literal"><span class="pre">x_3</span></code>}</li>
+</ul>
+<p>The backward LSTM output: <code class="docutils literal"><span class="pre">[yb_1,</span> <span class="pre">yb_2,</span> <span class="pre">yb_3]</span></code>,</p>
+<p>where <code class="docutils literal"><span class="pre">yb_i</span></code> are vectors of size <code class="docutils literal"><span class="pre">outputVectorSize</span></code>:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">yb_1</span></code> is the output at the end of sequence {<code class="docutils literal"><span class="pre">x_3</span></code>}</li>
+<li><code class="docutils literal"><span class="pre">yb_2</span></code> is the output at the end of sequence {<code class="docutils literal"><span class="pre">x_3</span></code>, <code class="docutils literal"><span class="pre">x_2</span></code>}</li>
+<li><code class="docutils literal"><span class="pre">yb_3</span></code> is the output at the end of sequence {<code class="docutils literal"><span class="pre">x_3</span></code>, <code class="docutils literal"><span class="pre">x_2</span></code>, <code class="docutils literal"><span class="pre">x_1</span></code>}</li>
+</ul>
+<p>Output of the bi-dir layer:</p>
+<ul class="simple">
+<li>if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">=</span> <span class="pre">True</span></code> : { <code class="docutils literal"><span class="pre">[yf_1,</span> <span class="pre">yb_3]</span></code>,  <code class="docutils literal"><span class="pre">[yf_2,</span> <span class="pre">yb_2]</span></code>,  <code class="docutils literal"><span class="pre">[yf_3,</span> <span class="pre">yb_1]</span></code> }</li>
+<li>if <code class="docutils literal"><span class="pre">sequenceOutput</span> <span class="pre">=</span> <span class="pre">False</span></code> : { <code class="docutils literal"><span class="pre">[yf_3,</span> <span class="pre">yb_3]</span></code> }</li>
+</ul>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">BiDirectionalLSTMLayerParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">inputVectorSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">outputVectorSize</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="n">ActivationParams</span> <span class="na">activationsForwardLSTM</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">ActivationParams</span> <span class="na">activationsBackwardLSTM</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+
+    <span class="n">LSTMParams</span> <span class="na">params</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="n">LSTMWeightParams</span> <span class="na">weightParams</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="neuralnetworkclassifier">
+<h2>NeuralNetworkClassifier<a class="headerlink" href="#neuralnetworkclassifier" title="Permalink to this headline">¶</a></h2>
+<p>A neural network specialized as a classifier.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetworkClassifier</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">NeuralNetworkLayer</span> <span class="na">layers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">NeuralNetworkPreprocessing</span> <span class="na">preprocessing</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="k">oneof</span> <span class="n">ClassLabels</span> <span class="p">{</span>
+        <span class="n">StringVector</span> <span class="na">stringClassLabels</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+        <span class="n">Int64Vector</span> <span class="na">int64ClassLabels</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">string</span> <span class="na">labelProbabilityLayerName</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="neuralnetworkregressor">
+<h2>NeuralNetworkRegressor<a class="headerlink" href="#neuralnetworkregressor" title="Permalink to this headline">¶</a></h2>
+<p>A neural network specialized as a regressor.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetworkRegressor</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">NeuralNetworkLayer</span> <span class="na">layers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">NeuralNetworkPreprocessing</span> <span class="na">preprocessing</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="flattenlayerparams-flattenorder">
+<h3>FlattenLayerParams.FlattenOrder<a class="headerlink" href="#flattenlayerparams-flattenorder" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">FlattenOrder</span> <span class="p">{</span>
+    <span class="na">CHANNEL_FIRST</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CHANNEL_LAST</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="poolinglayerparams-poolingtype">
+<h3>PoolingLayerParams.PoolingType<a class="headerlink" href="#poolinglayerparams-poolingtype" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">PoolingType</span><span class="p">{</span>
+    <span class="na">MAX</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">AVERAGE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">L2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reducelayerparams-reduceaxis">
+<h3>ReduceLayerParams.ReduceAxis<a class="headerlink" href="#reducelayerparams-reduceaxis" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ReduceAxis</span> <span class="p">{</span>
+    <span class="na">CHW</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">HW</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">C</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="na">H</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="na">W</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reducelayerparams-reduceoperation">
+<h3>ReduceLayerParams.ReduceOperation<a class="headerlink" href="#reducelayerparams-reduceoperation" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ReduceOperation</span> <span class="p">{</span>
+    <span class="na">SUM</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">AVG</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">PROD</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="na">LOGSUM</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="na">SUMSQUARE</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="na">L1</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+    <span class="na">L2</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+    <span class="na">MAX</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="na">MIN</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+    <span class="na">ARGMAX</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reorganizedatalayerparams-reorganizationtype">
+<h3>ReorganizeDataLayerParams.ReorganizationType<a class="headerlink" href="#reorganizedatalayerparams-reorganizationtype" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ReorganizationType</span> <span class="p">{</span>
+    <span class="na">SPACE_TO_DEPTH</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">DEPTH_TO_SPACE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reshapelayerparams-reshapeorder">
+<h3>ReshapeLayerParams.ReshapeOrder<a class="headerlink" href="#reshapelayerparams-reshapeorder" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ReshapeOrder</span> <span class="p">{</span>
+    <span class="na">CHANNEL_FIRST</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">CHANNEL_LAST</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="samepadding-samepaddingmode">
+<h3>SamePadding.SamePaddingMode<a class="headerlink" href="#samepadding-samepaddingmode" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">SamePaddingMode</span> <span class="p">{</span>
+    <span class="na">BOTTOM_RIGHT_HEAVY</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">TOP_LEFT_HEAVY</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="slicelayerparams-sliceaxis">
+<h3>SliceLayerParams.SliceAxis<a class="headerlink" href="#slicelayerparams-sliceaxis" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">SliceAxis</span> <span class="p">{</span>
+    <span class="na">CHANNEL_AXIS</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">HEIGHT_AXIS</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">WIDTH_AXIS</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="unaryfunctionlayerparams-operation">
+<h3>UnaryFunctionLayerParams.Operation<a class="headerlink" href="#unaryfunctionlayerparams-operation" title="Permalink to this headline">¶</a></h3>
+<p>A unary operator.</p>
+<p>The following functions are supported:</p>
+<dl class="docutils">
+<dt><code class="docutils literal"><span class="pre">SQRT</span></code></dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/1a27b6d8b45c9a79d65ed70edd8946f78fa346a4.svg" alt="f(x) = \sqrt{x}"/></p>
+</div></dd>
+<dt><code class="docutils literal"><span class="pre">RSQRT</span></code></dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/0e60b043151b37d6ddf4473a6651720dc6c7742f.svg" alt="f(x) = \dfrac{1}{\sqrt{x + \epsilon}}"/></p>
+</div></dd>
+<dt><code class="docutils literal"><span class="pre">INVERSE</span></code></dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/34a18386e34d26ed6da13860795d21b63aaa1f0e.svg" alt="f(x) = \dfrac{1}{x + \epsilon}"/></p>
+</div></dd>
+<dt><code class="docutils literal"><span class="pre">POWER</span></code></dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/e41899fee1e932cdc8e8e39223449ebc029044dd.svg" alt="f(x) = x^\alpha"/></p>
+</div></dd>
+<dt><code class="docutils literal"><span class="pre">EXP</span></code></dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/b31675a00ac60b41a7062ba39b136315d28a9230.svg" alt="f(x) = e^x"/></p>
+</div></dd>
+<dt><code class="docutils literal"><span class="pre">LOG</span></code></dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/d3a95844d7385ae0f08fd85ead71a57dbebedeca.svg" alt="f(x) = \log x"/></p>
+</div></dd>
+<dt><code class="docutils literal"><span class="pre">ABS</span></code></dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/51be7daa25504c44e98824a38f4528e75523f6ba.svg" alt="f(x) = |x|"/></p>
+</div></dd>
+<dt><code class="docutils literal"><span class="pre">THRESHOLD</span></code></dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/f59a4e8ac6fc8c5eb8df8421a3a50bc6941c8fd8.svg" alt="f(x) = \text{max}(\alpha, x)"/></p>
+</div></dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">Operation</span><span class="p">{</span>
+    <span class="na">SQRT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">RSQRT</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">INVERSE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="na">POWER</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="na">EXP</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="na">LOG</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+    <span class="na">ABS</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+    <span class="na">THRESHOLD</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="upsamplelayerparams-interpolationmode">
+<h3>UpsampleLayerParams.InterpolationMode<a class="headerlink" href="#upsamplelayerparams-interpolationmode" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">InterpolationMode</span> <span class="p">{</span>
+    <span class="na">NN</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">BILINEAR</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="TreeEnsembles.html" class="btn btn-neutral float-right" title="Tree Ensembles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Model.html" class="btn btn-neutral" title="Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

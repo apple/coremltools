@@ -1,0 +1,462 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Feature Engineering &mdash; mlmodel 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="mlmodel 1.0.0 documentation" href="../index.html"/>
+        <link rel="next" title="Data Structures &amp; Feature Types" href="DataStructuresAndFeatureTypes.html"/>
+        <link rel="prev" title="Support Vector Machines" href="SVM.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mlmodel
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Feature Engineering</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#imputer">Imputer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scaler">Scaler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#normalizer">Normalizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#onehotencoder">OneHotEncoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#categoricalmapping">CategoricalMapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#featurevectorizer">FeatureVectorizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dictvectorizer">DictVectorizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#arrayfeatureextractor">ArrayFeatureExtractor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mlmodel</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Feature Engineering</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/sections/FeatureEngineering.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="feature-engineering">
+<h1>Feature Engineering<a class="headerlink" href="#feature-engineering" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="imputer">
+<h2>Imputer<a class="headerlink" href="#imputer" title="Permalink to this headline">¶</a></h2>
+<p>A transformer that replaces missing values with a default value,
+such as a statistically-derived value.</p>
+<p>If <code class="docutils literal"><span class="pre">ReplaceValue</span></code> is set, then missing values of that type are
+replaced with the corresponding value.</p>
+<p>For example: if <code class="docutils literal"><span class="pre">replaceDoubleValue</span></code> is set to <code class="docutils literal"><span class="pre">NaN</span></code>
+and a single <code class="docutils literal"><span class="pre">NaN</span></code> double value is provided as input,
+then it is replaced by <code class="docutils literal"><span class="pre">imputedDoubleValue</span></code>. However
+if the input is an array of doubles, then any instances
+of <code class="docutils literal"><span class="pre">NaN</span></code> in the array is replaced with the corresponding
+value in <code class="docutils literal"><span class="pre">imputedDoubleArray</span></code>.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Imputer</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">ImputedValue</span> <span class="p">{</span>
+        <span class="kt">double</span> <span class="na">imputedDoubleValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="kt">int64</span> <span class="na">imputedInt64Value</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="kt">string</span> <span class="na">imputedStringValue</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="n">DoubleVector</span> <span class="na">imputedDoubleArray</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+        <span class="n">Int64Vector</span> <span class="na">imputedInt64Array</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="n">StringToDoubleMap</span> <span class="na">imputedStringDictionary</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+        <span class="n">Int64ToDoubleMap</span> <span class="na">imputedInt64Dictionary</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">ReplaceValue</span> <span class="p">{</span>
+        <span class="kt">double</span> <span class="na">replaceDoubleValue</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+        <span class="kt">int64</span> <span class="na">replaceInt64Value</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+        <span class="kt">string</span> <span class="na">replaceStringValue</span> <span class="o">=</span> <span class="mi">13</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="scaler">
+<h2>Scaler<a class="headerlink" href="#scaler" title="Permalink to this headline">¶</a></h2>
+<p>A scaling operation.</p>
+<p>This function has the following formula:</p>
+<div class="math">
+<p><img src="../_images/math/3f3f7780b96ea3108c3333a6564560f9d14f328e.svg" alt="f(x) = scaleValue \cdot (x + shiftValue)"/></p>
+</div><p>If the <code class="docutils literal"><span class="pre">scaleValue</span></code> is not given, the default value 1 is used.
+If the <code class="docutils literal"><span class="pre">shiftValue</span></code> is not given, the default value 0 is used.</p>
+<p>If <code class="docutils literal"><span class="pre">scaleValue</span></code> and <code class="docutils literal"><span class="pre">shiftValue</span></code> are each a single value
+and the input is an array, then the scale and shift are applied
+to each element of the array.</p>
+<p>If the input is an integer, then it is converted to a double to
+perform the scaling operation. If the output type is an integer,
+then it is cast to an integer. If that cast is lossy, then an
+error is generated.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Scaler</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">shiftValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">scaleValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="normalizer">
+<h2>Normalizer<a class="headerlink" href="#normalizer" title="Permalink to this headline">¶</a></h2>
+<p>A normalization preprocessor.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Normalizer</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
+        <span class="na">LMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">L1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="na">L2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">NormType</span> <span class="na">normType</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="normalizer-normtype">
+<h3>Normalizer.NormType<a class="headerlink" href="#normalizer-normtype" title="Permalink to this headline">¶</a></h3>
+<p>There are three normalization modes,
+which have the corresponding formulas:</p>
+<dl class="docutils">
+<dt>Max</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/639c1d9ea4ad72478f06fa60276fc691d0d055da.svg" alt="max(x_i)"/></p>
+</div></dd>
+<dt>L1</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/9147e260a41c775234e687e3b99fc6566c277981.svg" alt="z = ||x||_1 = \sum_{i=1}^{n} |x_i|"/></p>
+</div></dd>
+<dt>L2</dt>
+<dd><div class="first last math">
+<p><img src="../_images/math/de8cd4ee9453cad71e85647b893a78375e55f516.svg" alt="z = ||x||_2 = \sqrt{\sum_{i=1}^{n} x_i^2}"/></p>
+</div></dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
+    <span class="na">LMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">L1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">L2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="onehotencoder">
+<h2>OneHotEncoder<a class="headerlink" href="#onehotencoder" title="Permalink to this headline">¶</a></h2>
+<p>Transforms a categorical feature into an array. The array will be all
+zeros expect a single entry of one.</p>
+<p>Each categorical value will map to an index, this mapping is given by
+either the <code class="docutils literal"><span class="pre">stringCategories</span></code> parameter or the <code class="docutils literal"><span class="pre">int64Categories</span></code>
+parameter.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">OneHotEncoder</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">HandleUnknown</span> <span class="p">{</span>
+        <span class="na">ErrorOnUnknown</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">IgnoreUnknown</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>   <span class="c1">// Output will be all zeros for unknown values.</span>
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">CategoryType</span> <span class="p">{</span>
+        <span class="n">StringVector</span> <span class="na">stringCategories</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">Int64Vector</span> <span class="na">int64Categories</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Output can be a dictionary with only one entry, instead of an array.</span>
+    <span class="kt">bool</span> <span class="na">outputSparse</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="n">HandleUnknown</span> <span class="na">handleUnknown</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="onehotencoder-handleunknown">
+<h3>OneHotEncoder.HandleUnknown<a class="headerlink" href="#onehotencoder-handleunknown" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">HandleUnknown</span> <span class="p">{</span>
+    <span class="na">ErrorOnUnknown</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">IgnoreUnknown</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>   <span class="c1">// Output will be all zeros for unknown values.</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="categoricalmapping">
+<h2>CategoricalMapping<a class="headerlink" href="#categoricalmapping" title="Permalink to this headline">¶</a></h2>
+<p>A categorical mapping.</p>
+<p>This allows conversion from integers to strings, or from strings to integers.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">CategoricalMapping</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">MappingType</span> <span class="p">{</span>
+        <span class="c1">// Conversion from strings to integers</span>
+        <span class="n">StringToInt64Map</span> <span class="na">stringToInt64Map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="c1">// Conversion from integer to string</span>
+        <span class="n">Int64ToStringMap</span> <span class="na">int64ToStringMap</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">ValueOnUnknown</span> <span class="p">{</span>
+        <span class="c1">// Default output when converting from an integer to a string.</span>
+        <span class="kt">string</span> <span class="na">strValue</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
+
+        <span class="c1">// Default output when converting from an string to an integer.</span>
+        <span class="kt">int64</span> <span class="na">int64Value</span> <span class="o">=</span> <span class="mi">102</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="featurevectorizer">
+<h2>FeatureVectorizer<a class="headerlink" href="#featurevectorizer" title="Permalink to this headline">¶</a></h2>
+<p>A FeatureVectorizer puts one or more features into a single array.</p>
+<p>The ordering of features in the output array is determined by
+<code class="docutils literal"><span class="pre">inputList</span></code>.</p>
+<p><code class="docutils literal"><span class="pre">inputDimensions</span></code> is a zero based index.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureVectorizer</span> <span class="p">{</span>
+    <span class="kd">message</span> <span class="nc">InputColumn</span> <span class="p">{</span>
+        <span class="kt">string</span> <span class="na">inputColumn</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="kt">uint64</span> <span class="na">inputDimensions</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">repeated</span> <span class="n">InputColumn</span> <span class="na">inputList</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="featurevectorizer-inputcolumn">
+<h3>FeatureVectorizer.InputColumn<a class="headerlink" href="#featurevectorizer-inputcolumn" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">InputColumn</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">inputColumn</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">inputDimensions</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="dictvectorizer">
+<h2>DictVectorizer<a class="headerlink" href="#dictvectorizer" title="Permalink to this headline">¶</a></h2>
+<p>Uses an index mapping to convert a dictionary to an array.</p>
+<p>The output array will be equal in length to the index mapping vector parameter.
+All keys in the input dictionary must be present in the index mapping vector.</p>
+<p>For each item in the input dictionary, insert its value in the ouput array.
+The position of the insertion is determined by the position of the item’s key
+in the index mapping. Any keys not present in the input dictionary, will be
+zero in the output array.</p>
+<p>For example: if the <code class="docutils literal"><span class="pre">stringToIndex</span></code> paramter is set to <code class="docutils literal"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;c&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;z&quot;]</span></code>,
+then an input of <code class="docutils literal"><span class="pre">{&quot;a&quot;:</span> <span class="pre">4,</span> <span class="pre">&quot;c&quot;:</span> <span class="pre">8}</span></code> will produce an output of <code class="docutils literal"><span class="pre">[4,</span> <span class="pre">8,</span> <span class="pre">0,</span> <span class="pre">0]</span></code>.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DictVectorizer</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">Map</span> <span class="p">{</span>
+        <span class="n">StringVector</span> <span class="na">stringToIndex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="n">Int64Vector</span> <span class="na">int64ToIndex</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="arrayfeatureextractor">
+<h2>ArrayFeatureExtractor<a class="headerlink" href="#arrayfeatureextractor" title="Permalink to this headline">¶</a></h2>
+<p>An array feature extractor.</p>
+<p>Given an index, extracts the value at that index from its array input.
+Indexes are zero-based.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ArrayFeatureExtractor</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">extractIndex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="DataStructuresAndFeatureTypes.html" class="btn btn-neutral float-right" title="Data Structures &amp; Feature Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="SVM.html" class="btn btn-neutral" title="Support Vector Machines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
