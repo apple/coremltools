@@ -175,6 +175,8 @@ At a high level, the protobuf specification consists of:
 - Model parameters: The set of parameters required to represent a specific instance of the model.
 - Metadata: Information about the origin, license, and author of the model.
 
+For more information, please take a look at the `Core ML model specification <https://apple.github.io/coremltools/coremlspecification>`_
+
 
 Contents
 ========
