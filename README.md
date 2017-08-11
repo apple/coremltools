@@ -62,7 +62,7 @@ To install keras (Version >= 2.0)
   pip install keras tensorflow
 ```
 
-If you'd like to use the old keras version 1.2 APIs, 
+If you'd like to use the old keras version, you can:
 ```
   pip install keras==1.2.2 tensorflow
 ```
