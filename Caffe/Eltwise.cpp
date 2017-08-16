@@ -43,9 +43,6 @@ void CoreMLConverter::convertCaffeEltwise(CoreMLConverter::ConvertLayerParameter
     const caffe::EltwiseParameter& caffeLayerParams = caffeLayer.eltwise_param();
     
     //***************** Some Error Checking in Caffe Proto **********
-    if (caffeLayerParams.operation()==caffe::EltwiseParameter::MAX){
-        CoreMLConverter::unsupportedCaffeParrameterWithOption("operation",caffeLayer.name(), "Elementwise","Max");
-    }
     if (caffeLayerParams.coeff_size()!=0) {
         CoreMLConverter::unsupportedCaffeParrameter("coeff", caffeLayer.name(), "Elementwise");
     }
@@ -55,8 +52,9 @@ void CoreMLConverter::convertCaffeEltwise(CoreMLConverter::ConvertLayerParameter
         (void) specLayer->mutable_add();
     } else if (caffeLayerParams.operation()==caffe::EltwiseParameter::PROD) {
         (void) specLayer->mutable_multiply();
+    } else if (caffeLayerParams.operation()==caffe::EltwiseParameter::MAX) {
+        (void) specLayer->mutable_max();
     } else {
-        //default
-        (void) specLayer->mutable_add();
+        CoreMLConverter::errorInCaffeProto("Operation type should be one of 'sum', 'prod' or 'max' ",caffeLayer.name(),caffeLayer.type());
     }
 }
