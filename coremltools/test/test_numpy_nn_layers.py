@@ -142,22 +142,17 @@ class SimpleTest(CorrectnessTest):
                 
         #create a tiny mlmodel
         input_dim = (1,1,3) #(C,H,W)
-        output_dim = (1, 1, 1) #some random dimensions here: we are going to remove this information later
         input_features = [('data', datatypes.Array(*input_dim))]
-        output_features = [('output', datatypes.Array(*output_dim))]
+        output_features = [('output', None)]
         
-        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        builder = neural_network.NeuralNetworkBuilder(input_features, 
+                output_features)
         builder.add_upsample(name= 'upsample', 
-                                scaling_factor_h = 2, scaling_factor_w = 3, 
-                                input_name= 'data', output_name= 'output', mode = 'BILINEAR')
-                                
-        #Remove output shape by deleting and adding an output
-        del builder.spec.description.output[-1]                            
-        output = builder.spec.description.output.add()
-        output.name = 'output' 
-        output.type.multiArrayType.dataType = coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.Value('DOUBLE')
+                             scaling_factor_h = 2, scaling_factor_w = 3, 
+                             input_name= 'data', output_name= 'output', 
+                             mode = 'BILINEAR')
         
-        #save the model                        
+        #save the model
         model_dir = tempfile.mkdtemp()
         model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
         coremltools.utils.save_spec(builder.spec, model_path)
@@ -167,18 +162,16 @@ class SimpleTest(CorrectnessTest):
         coreml_input = {'data': np.reshape(np.array([1.0,2.0,3.0]), (1,1,3))}
         coreml_preds = coreml_model.predict(coreml_input)['output']
         
-                
-        #harcoded for this simpple test case
-        numpy_preds = np.array([[1, 1.333, 1.666, 2, 2.333, 2.666, 3, 3, 3],[1, 1.333, 1.6666, 2, 2.33333, 2.6666, 3, 3, 3]])
+        #harcoded for this simple test case
+        numpy_preds = np.array([[1, 1.333, 1.666, 2, 2.333, 2.666, 3, 3, 3],\
+                [1, 1.333, 1.6666, 2, 2.33333, 2.6666, 3, 3, 3]])
         #numpy_preds = np.array([[1, 1, 1, 2, 2, 2, 3, 3, 3],[1, 1, 1, 2, 2, 2, 3, 3, 3]])
-        
         #Test
         self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
         self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
-            
             
 class StressTest(CorrectnessTest):            
     

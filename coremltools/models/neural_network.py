@@ -76,17 +76,18 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
-        input_features: [(str, tuple)]
-            List of input feature of the network. Each feature is a (name,
-            shape) tuple, is the name of the feature, and shape is
-            a (d1, d2, ..., dN) tuple that describes the dimensions of the
-            input feature.
+        input_features: [(str, coremltools.models.datatypes.Array)]
+            List of input features of the network. Each feature is a (name,
+            arr) tuple, where `name` is the name of the feature, 
+            and `arr` is a `coremltools.models.datatypes.Array` object 
+            with shape (d1, d2, ..., dN).
 
-        output_features: [(str, tuple)]
-            List of output feature of the network. Each feature is a (name,
-            shape) tuple, where name is the name of the feature, and shape is
-            a (d1, d2, ..., dN) tuple that describes the dimensions of the
-            output feature.
+        output_features: [(str, coremltools.models.datatypes.Array | None)]
+            List of output features of the network. Each feature is a (name,
+            arr) tuple, where `name` is the name of the feature, 
+            and `arr` is a `coremltools.models.datatypes.Array` object 
+            with shape (d1, d2, ..., dN) if the output shape is known, 
+            or None if the shape is unknown. 
 
         mode: str ('classifier', 'regressor' or None)
             Mode (one of 'classifier', 'regressor', or None).
@@ -112,9 +113,23 @@ class NeuralNetworkBuilder(object):
         # Set the interface params.
         spec = _Model_pb2.Model()
         spec.specificationVersion = SPECIFICATION_VERSION
+        
+        in_features = input_features
+        out_features = []
+        unk_shape_indices = []
+        for idx, feature in enumerate(output_features):
+            name, arr = feature
+            if arr is None:
+                arr = datatypes.Array(1)
+                unk_shape_indices.append(idx)
+            out_features.append((str(name), arr))
 
         # Set inputs and outputs
-        spec = set_transform_interface_params(spec, input_features, output_features)
+        spec = set_transform_interface_params(spec, in_features, out_features)
+        
+        # We shouldn't need the output shapes
+        for idx_unk in unk_shape_indices:
+            spec.description.output[idx_unk].type.multiArrayType.ClearField("shape")
 
         # Save the spec in the protobuf
         self.spec = spec
