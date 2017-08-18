@@ -336,7 +336,7 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer
         W: numpy.array
-            Weight matrix of shape (input_channels, output_channels).
+            Weight matrix of shape (output_channels, input_channels).
         b: numpy.array
             Bias vector of shape (output_channels, ).
         input_channels: int
@@ -390,7 +390,7 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer
         W: numpy.array
-            Weight matrix of shape (input_channels, output_channels).
+            Weight matrix of shape (output_channels, input_dim).
         b: numpy.array
             Bias vector of shape (output_channels, ).
         input_dim: int
@@ -646,7 +646,12 @@ class NeuralNetworkBuilder(object):
             - 'DOT': compute the dot product of the two input blobs. In this mode, the length of input_names should be 2.
             - 'COS': compute the cosine similarity of the two input blobs. In this mode, the length of input_names should be 2.
             - 'MAX': compute the element-wise maximum over the input blobs.
+            - 'MIN': compute the element-wise minimum over the input blobs.
             - 'AVE': compute the element-wise average over the input blobs.
+        
+        alpha: float
+            if mode == 'ADD' and there is only one input_name, alpha is added to the input
+            if mode == 'MULTIPLY' and there is only one input_name, alpha is multiplied to the input
        
         See Also
         --------
@@ -685,6 +690,8 @@ class NeuralNetworkBuilder(object):
             spec_layer.dot.cosineSimilarity = False
         elif mode == 'MAX':
             spec_layer.max.MergeFromString('')
+        elif mode == 'MIN':
+            spec_layer.min.MergeFromString('')    
         elif mode == 'AVE':
             spec_layer.average.MergeFromString('')
         else:
@@ -2308,7 +2315,51 @@ class NeuralNetworkBuilder(object):
         spec_layer.output.extend(output_names)
 
         spec_layer_params = spec_layer.split
-        spec_layer_params.nOutputs = len(output_names)                                                                           
+        spec_layer_params.nOutputs = len(output_names)   
+        
+    def add_load_constant(self, name, output_name, constant_value, shape):
+        """
+        Add a load constant layer. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        output_name: str
+            The output blob name of this layer.
+        
+        constant_value: numpy.array
+            value of the constant as a numpy array. 
+        
+        shape: [int]
+            List of ints representing the shape of the constant. Must be of length 3: [C,H,W]
+        
+
+        See Also
+        --------
+        add_elementwise
+        """
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.loadConstant
+        
+        data = spec_layer_params.data
+        data.floatValue.extend(map(float, constant_value.flatten()))  
+        
+        spec_layer_params.shape.extend(shape)
+        
+        if len(data.floatValue) != np.prod(shape):
+            raise ValueError("Dimensions of 'shape' do not match the size of the provided constant")
+        if len(shape) != 3:
+            raise ValueError("'shape' must be of length 3")    
+                                                                            
 
     def set_pre_processing_parameters(self, image_input_names = [], is_bgr = False,
             red_bias = 0.0, green_bias = 0.0, blue_bias = 0.0, gray_bias = 0.0, image_scale = 1.0):
