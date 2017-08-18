@@ -370,7 +370,71 @@ class SimpleTest(CorrectnessTest):
             self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
-            shutil.rmtree(model_dir)    
+            shutil.rmtree(model_dir)   
+    
+    def test_scale_constant(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_scale(name = 'scale', W = 5, b = 45, has_bias = True, input_name = 'data', output_name = 'output')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = 5 * x + 45
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)
+            
+    def test_scale_matrix(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        
+        W = np.reshape(np.arange(5,9), (1,2,2))
+                
+        builder.add_scale(name = 'scale', W = W, b = None, has_bias = False, input_name = 'data', output_name = 'output',
+                            shape_scale = [1,2,2])
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = W * x
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)            
+                 
             
 class StressTest(CorrectnessTest):            
     

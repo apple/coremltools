@@ -12,6 +12,7 @@ from ..proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from ._interface_management import set_transform_interface_params
 from . import datatypes
+import numpy as np
 
 
 def _set_recurrent_activation(param, activation):
@@ -732,7 +733,7 @@ class NeuralNetworkBuilder(object):
         else:
             raise ValueError("Unspported upsampling mode %s" % mode)   
 
-    def add_scale(self, name, W, b, has_bias, input_name, output_name):
+    def add_scale(self, name, W, b, has_bias, input_name, output_name, shape_scale = [1], shape_bias = [1]):
         """
         Add scale layer to the model.
 
@@ -740,9 +741,9 @@ class NeuralNetworkBuilder(object):
         ----------
         name: str
             The name of this layer.
-        W: int
+        W: int | numpy.array
             Scale of the input.
-        b: int
+        b: int | numpy.array
             Bias to add to the input.
         has_bias: boolean
             Whether the bias vector of this layer is ignored in the spec.
@@ -750,10 +751,15 @@ class NeuralNetworkBuilder(object):
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
+        
+        shape_scale: [int]
+            List of ints that specifies the shape of the scale parameter. Can be [1] or [C] or [1,H,W] or [C,H,W].
+        shape_bias: [int]
+            List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].
 
         See Also
         --------
-        add_elementwise
+        add_bias
         """
         spec = self.spec
         nn_spec = self.nn_spec
@@ -763,22 +769,29 @@ class NeuralNetworkBuilder(object):
         spec_layer.input.append(input_name)
         spec_layer.output.append(output_name)
         spec_layer_params = spec_layer.scale
-
+        
         spec_layer_params.hasBias = has_bias
+        
+        #add scale and its shape
         scale = spec_layer_params.scale
-        scale.floatValue.extend(map(float, W.flatten()))
-        shapeScale = spec_layer_params.shapeScale
-        shapeScale.extend(W.shape)
+        spec_layer_params.shapeScale.extend(shape_scale)  
+        if isinstance(W, int):
+            scale.floatValue.append(float(W))
+        else:    
+            scale.floatValue.extend(map(float, W.flatten()))  
+        if len(scale.floatValue) != np.prod(shape_scale):
+            raise ValueError("Dimensions of 'shape_scale' do not match the size of the provided 'scale' parameter")     
+        
+        #add bias and its shape
         if has_bias:
             bias = spec_layer_params.bias
-            bias.floatValue.extend(map(float, b.flatten()))
-            shapeBias = spec_layer_params.shapeBias
-            shapeBias.extend(b.shape)
-        else:
-            bias = spec_layer_params.bias
-            bias.floatValue.extend(map(float, [0]))
-            shapeBias = spec_layer_params.shapeBias
-            shapeBias.extend((1,))
+            spec_layer_params.shapeBias.extend(shape_bias) 
+            if isinstance(b, int):
+                bias.floatValue.append(float(b))
+            else:    
+                bias.floatValue.extend(map(float, b.flatten()))  
+            if len(bias.floatValue) != np.prod(shape_bias):
+                raise ValueError("Dimensions of 'shape_bias' do not match the size of the provided 'bias' parameter")
 
     def add_sequence_repeat(self, name, nrep, input_name, output_name):
         """
