@@ -137,7 +137,6 @@ def get_coreml_predictions_reduce(X, params):
 
 class SimpleTest(CorrectnessTest):
     
-    #@unittest.skip("GPU Espresso Bug: rdar://problem/33189767")
     def test_tiny_upsample_linear_mode(self):
                 
         #create a tiny mlmodel
@@ -172,6 +171,38 @@ class SimpleTest(CorrectnessTest):
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
+    
+    def test_LRN(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,3,3)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', datatypes.Array(*input_dim))]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, 
+                output_features)
+                
+        builder.add_lrn(name= 'lrn', input_name = 'data', output_name = 'output',
+                        alpha = 2, beta = 3, local_size = 1, k = 8)
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        coreml_input = {'data': np.ones((1,3,3))}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = 1e-3 * np.ones((1,3,3))
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)                            
+            
             
 class StressTest(CorrectnessTest):            
     

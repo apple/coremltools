@@ -815,7 +815,7 @@ class NeuralNetworkBuilder(object):
         Add a convolution layer to the network.
 
         Please see the ConvolutionLayerParams in Core ML neural network
-        protobuf message for more information input and output blob dimensions.
+        protobuf message for more information about input and output blob dimensions.
 
         Parameters
         ----------
@@ -2021,7 +2021,57 @@ class NeuralNetworkBuilder(object):
         elif axis == 'W':
             spec_layer_params.axis = _NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value('W')
         else:
-            raise NotImplementedError('Unknown reduction axis %s ' % axis)                      
+            raise NotImplementedError('Unknown reduction axis %s ' % axis)          
+            
+    
+    def add_lrn(self, name, input_name, output_name, alpha, beta, local_size, k = 1.0):
+        """
+        Add a LRN (local response normalization) layer. Please see the LRNLayerParams message in Core ML neural network
+        protobuf for more information about the operation of this layer. Supports "across" channels normalization. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        
+        alpha: float
+            multiplicative constant in the denominator.
+        
+        beta: float
+            exponent of the normalizing term in the denominator.
+        
+        k: float
+            bias term in the denominator. Must be positive. 
+        
+        local_size: int
+            size of the neighborhood along the channel axis.
+        
+
+        See Also
+        --------
+        add_l2_normalize, add_mean_variance_normalize
+        """
+        
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.lrn
+        spec_layer_params.alpha = alpha
+        spec_layer_params.beta = beta
+        spec_layer_params.localSize = local_size
+        spec_layer_params.k = k
+                            
                 
 
     def set_pre_processing_parameters(self, image_input_names = [], is_bgr = False,
