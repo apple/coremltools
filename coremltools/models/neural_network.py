@@ -2054,7 +2054,7 @@ class NeuralNetworkBuilder(object):
 
         See Also
         --------
-        add_l2_normalize, add_mean_variance_normalize
+        add_l2_normalize, add_mvn
         """
         
         spec = self.spec
@@ -2071,6 +2071,87 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.beta = beta
         spec_layer_params.localSize = local_size
         spec_layer_params.k = k
+        
+    def add_mvn(self, name, input_name, output_name, across_channels = True, normalize_variance = True, epsilon = 1e-5):
+        """
+        Add an MVN (mean variance normalization) layer. Computes mean, variance and normalizes the input. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        
+        across_channels: boolean
+            If False, each channel plane is normalized separately
+            If True, mean/variance is computed across all C, H and W dimensions
+        
+        normalize_variance: boolean
+            If False, only mean subtraction is performed.
+        
+        epsilon: float
+            small bias to avoid division by zero.
+        
+
+        See Also
+        --------
+        add_l2_normalize, add_lrn
+        """
+        
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.mvn
+        spec_layer_params.acrossChannels = across_channels
+        spec_layer_params.normalizeVariance = normalize_variance
+        spec_layer_params.epsilon = epsilon
+        
+    
+    def add_l2_normalize(self, name, input_name, output_name, epsilon = 1e-5):
+        """
+        Add L2 normalize layer. Normalizes the input by the L2 norm, i.e. divides by the 
+        the square root of the sum of squares of all elements of the input along C, H and W dimensions.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        
+        epsilon: float
+            small bias to avoid division by zero.
+        
+
+        See Also
+        --------
+        add_mvn, add_lrn
+        """
+        
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.l2normalize
+        spec_layer_params.epsilon = epsilon    
                             
                 
 
