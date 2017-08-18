@@ -133,6 +133,33 @@ def get_coreml_predictions_reduce(X, params):
         eval = False        
         
     return coreml_preds, eval
+    
+def get_coreml_predictions_unary(x, mode, alpha = 1.0):
+    
+    #create a tiny mlmodel
+    input_dim = x.shape
+    input_features = [('data', datatypes.Array(*input_dim))]
+    output_features = [('output', datatypes.Array(*input_dim))]
+            
+    builder = neural_network.NeuralNetworkBuilder(input_features, 
+            output_features)
+            
+    builder.add_unary(name= 'unary', input_name = 'data', output_name = 'output', mode = mode, alpha = alpha)
+                    
+    #save the model
+    model_dir = tempfile.mkdtemp()
+    model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+    coremltools.utils.save_spec(builder.spec, model_path)
+    
+    #preprare input and get predictions
+    coreml_model = coremltools.models.MLModel(model_path)
+    coreml_input = {'data': x}
+    coreml_preds = coreml_model.predict(coreml_input)['output']
+    
+    if os.path.exists(model_dir):
+        shutil.rmtree(model_dir)
+    
+    return coreml_preds        
         
 
 class SimpleTest(CorrectnessTest):
@@ -262,8 +289,51 @@ class SimpleTest(CorrectnessTest):
         self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
-            shutil.rmtree(model_dir)                                           
+            shutil.rmtree(model_dir)    
             
+    def test_unary(self):
+        
+        x = np.reshape(np.arange(1,5, dtype=np.float32), (1,2,2))
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'sqrt')
+        numpy_preds = np.sqrt(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'rsqrt')
+        numpy_preds = 1/np.sqrt(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'inverse')
+        numpy_preds = 1/x
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'power', 3)
+        numpy_preds = x ** 3
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'exp')
+        numpy_preds = np.exp(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))   
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'log')
+        numpy_preds = np.log(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+                                                      
+        coreml_preds = get_coreml_predictions_unary(x, 'abs')
+        numpy_preds = np.abs(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))   
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'threshold', alpha = 2)
+        numpy_preds = np.maximum(x, 2)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
             
 class StressTest(CorrectnessTest):            
     

@@ -2152,8 +2152,78 @@ class NeuralNetworkBuilder(object):
 
         spec_layer_params = spec_layer.l2normalize
         spec_layer_params.epsilon = epsilon    
-                            
-                
+        
+        
+    def add_unary(self, name, input_name, output_name, mode, alpha = 1.0,
+                    shift = 0, scale = 1.0, epsilon = 1e-6):
+        """
+        Add a Unary layer. Applies the specified function (mode) to all the elements of the input.
+        Please see the UnaryFunctionLayerParams message in Core ML neural network
+        protobuf for more information about the operation of this layer.   
+        Prior to the application of the function the input can be scaled and shifted by using the 'scale',
+        'shift' parameters.                         
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        
+        mode: str
+            Unary function.  
+            Allowed values: 'sqrt', 'rsqrt', 'inverse', 'power', 'exp', 'log', 'abs', threshold'.        
+                    
+        alpha: float
+            constant used in with modes 'power' and 'threshold'.     
+                    
+        shift, scale: float
+            input is modified by scale and shift prior to the application of the unary function.                            
+        
+        epsilon: float
+            small bias to prevent division by zero. 
+
+        See Also
+        --------
+        add_activation
+        """
+
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.unary
+        spec_layer_params.epsilon = epsilon
+        spec_layer_params.alpha = alpha
+        spec_layer_params.shift = shift
+        spec_layer_params.scale = scale
+        
+        if mode == 'sqrt':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('SQRT')
+        elif mode == 'rsqrt':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('RSQRT')    
+        elif mode == 'inverse':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('INVERSE')    
+        elif mode == 'power':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('POWER')    
+        elif mode == 'exp':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('EXP')
+        elif mode == 'log':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('LOG')        
+        elif mode == 'abs':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('ABS')    
+        elif mode == 'threshold':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('THRESHOLD')    
+        else:
+            raise NotImplementedError('Unknown unary function %s ' % mode)                                                                        
 
     def set_pre_processing_parameters(self, image_input_names = [], is_bgr = False,
             red_bias = 0.0, green_bias = 0.0, blue_bias = 0.0, gray_bias = 0.0, image_scale = 1.0):
