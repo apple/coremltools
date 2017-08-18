@@ -334,6 +334,43 @@ class SimpleTest(CorrectnessTest):
         numpy_preds = np.maximum(x, 2)
         self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
         self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+        
+    def test_split(self):
+        
+        #create a tiny mlmodel
+        input_dim = (9,2,2)
+        x = np.random.rand(*input_dim)
+        
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_names = []
+        output_features = []
+        for i in range(3):
+            out = 'out_' + str(i)
+            output_names.append(out)
+            output_features.append((out, None)) 
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_split(name= 'split', input_name = 'data', output_names = output_names)
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        coreml_input = {'data': x}
+        coreml_preds_dict = coreml_model.predict(coreml_input)
+        
+        for i in range(3):
+            coreml_preds = coreml_preds_dict[output_names[i]]
+            numpy_preds = x[i*3:i*3+3,:,:]
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)    
             
 class StressTest(CorrectnessTest):            
     

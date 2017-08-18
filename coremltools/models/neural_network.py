@@ -2223,7 +2223,39 @@ class NeuralNetworkBuilder(object):
         elif mode == 'threshold':
             spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('THRESHOLD')    
         else:
-            raise NotImplementedError('Unknown unary function %s ' % mode)                                                                        
+            raise NotImplementedError('Unknown unary function %s ' % mode)     
+            
+    def add_split(self, name, input_name, output_names):
+        """
+        Add a Split layer that uniformly splits the input along the channel dimension 
+        to produce multiple outputs. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_names: [str]
+            List of output blob names of this layer.
+
+        See Also
+        --------
+        add_elementwise
+        """
+        
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.extend(output_names)
+
+        spec_layer_params = spec_layer.split
+        spec_layer_params.nOutputs = len(output_names)                                                                           
 
     def set_pre_processing_parameters(self, image_input_names = [], is_bgr = False,
             red_bias = 0.0, green_bias = 0.0, blue_bias = 0.0, gray_bias = 0.0, image_scale = 1.0):
