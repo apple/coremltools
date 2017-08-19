@@ -1,1 +1,13 @@
 *.pyc
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+*.a
+*.so
+/coremltools.build/
+/deps/protobuf/cmake/coremltools.build/
+/mlmodel/coremltools.build/
+/build/
+/coremltools.egg-info/
+/dist/
