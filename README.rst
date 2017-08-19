@@ -12,7 +12,7 @@ convolutional and recurrent), tree ensembles with boosting, and generalized
 linear models. Models in this format can be directly integrated into apps
 through Xcode.
 
-coremltools in a python package for creating, examining, and testing models in
+:code:`coremltools` is a python package for creating, examining, and testing models in
 the .mlmodel format.  In particular, it can be used to:
 
 - Convert existing models to .mlmodel format from popular machine learning tools including Keras, Caffe, scikit-learn, libsvm, and XGBoost.
@@ -28,7 +28,7 @@ Once you have set up a python environment, run::
 
     pip install -U coremltools
 
-The package `documentation <http://pythonhosted.org/coremltools/>`_ contains
+The package `documentation <https://apple.github.io/coremltools/>`_ contains
 more details on how to use coremltools.
 
 Dependencies
@@ -51,7 +51,7 @@ More Information
 ----------------
 
 - `Core ML framework documentation <http://developer.apple.com/documentation/coreml>`_
-- `Download Core ML model specification <https://docs-assets-developer.corp.apple.com/coreml/documentation/mlmodel_specification.zip>`_
+- `Core ML model specification <https://apple.github.io/coremltools/coremlspecification>`_
 - `Machine learning at Apple <https://developer.apple.com/machine-learning>`_
 
 License

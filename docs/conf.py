@@ -53,7 +53,10 @@ author = u'Apple Inc.'
 #
 
 import pkg_resources
-version = pkg_resources.require("coremltools")[0].version
+try:
+    version = pkg_resources.require("coremltools")[0].version
+except:
+    version = "0.5.1"
 
 # The short X.Y version.
 version = version

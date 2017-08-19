@@ -20,7 +20,7 @@ namespace CoreML {
             explicit Model(const std::string& urlStr);
             
             static Model fromSpec(const std::string& urlStr);
-            py::dict predict(const py::dict& input);
+            py::dict predict(const py::dict& input, bool useCPUOnly);
             std::string toString() const;
         };
 
