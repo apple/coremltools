@@ -51,7 +51,7 @@ More Information
 ----------------
 
 - `Core ML framework documentation <http://developer.apple.com/documentation/coreml>`_
-- `Download Core ML model specification <https://docs-assets.developer.corp.apple.com/coreml/documentation/mlmodel_specification.zip>`_
+- `Download Core ML model specification <https://docs-assets-developer.corp.apple.com/coreml/documentation/mlmodel_specification.zip>`_
 - `Machine learning at Apple <https://developer.apple.com/machine-learning>`_
 
 License

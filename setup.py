@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 
-from setuptools import setup
-
-import sys
-if sys.platform != 'darwin':
-    raise Exception("coremltools supported only on Mac OSX platforms with "
-                    "a compatible CoreML installation.")
-
 import os
+from setuptools import setup
 
 README = os.path.join(os.getcwd(), "README.rst")
 
@@ -16,7 +10,7 @@ with open(README) as f:
     long_description = f.read()
 
 setup(name='coremltools',
-    version='0.5.0',
+    version='0.3.0',
     description='Community Tools for CoreML',
     long_description=long_description,
     author='Apple Inc.',

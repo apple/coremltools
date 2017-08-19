@@ -54,9 +54,9 @@ except:
 HAS_KERAS_TF = True
 HAS_KERAS2_TF = True
 KERAS_MIN_VERSION = '1.2.2'
-KERAS_MAX_VERSION = '2.0.4'
+KERAS_MAX_VERSION = '2.0.6'
 TF_MIN_VERSION = '1.0.0'
-TF_MAX_VERSION = '1.1.1'
+TF_MAX_VERSION = '1.2.1'
 
 try:
     # Prevent keras from printing things that are not errors to standard error.

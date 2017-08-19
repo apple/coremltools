@@ -21,7 +21,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_pb=_b('\n\x12GLMRegressor.proto\x12\x14\x43oreML.Specification\"\x9d\x02\n\x0cGLMRegressor\x12?\n\x07weights\x18\x01 \x03(\x0b\x32..CoreML.Specification.GLMRegressor.DoubleArray\x12\x0e\n\x06offset\x18\x02 \x03(\x01\x12[\n\x17postEvaluationTransform\x18\x03 \x01(\x0e\x32:.CoreML.Specification.GLMRegressor.PostEvaluationTransform\x1a\x1c\n\x0b\x44oubleArray\x12\r\n\x05value\x18\x01 \x03(\x01\"A\n\x17PostEvaluationTransform\x12\x0f\n\x0bNoTransform\x10\x00\x12\t\n\x05Logit\x10\x01\x12\n\n\x06Probit\x10\x02\x42\x02H\x03\x62\x06proto3')
 )
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -132,6 +131,7 @@ _GLMREGRESSOR.fields_by_name['weights'].message_type = _GLMREGRESSOR_DOUBLEARRAY
 _GLMREGRESSOR.fields_by_name['postEvaluationTransform'].enum_type = _GLMREGRESSOR_POSTEVALUATIONTRANSFORM
 _GLMREGRESSOR_POSTEVALUATIONTRANSFORM.containing_type = _GLMREGRESSOR
 DESCRIPTOR.message_types_by_name['GLMRegressor'] = _GLMREGRESSOR
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 GLMRegressor = _reflection.GeneratedProtocolMessageType('GLMRegressor', (_message.Message,), dict(
 

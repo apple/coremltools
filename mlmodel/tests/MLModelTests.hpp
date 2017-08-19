@@ -1,0 +1,72 @@
+#include <iostream>
+#include <exception>
+
+#ifndef MLMODEL_DECLARE_TEST
+#define MLMODEL_DECLARE_TEST(x) int x();
+#endif
+
+#ifdef MLMODEL_RUN_TEST
+#define MLMODEL_TEST(x) MLMODEL_RUN_TEST(x)
+#else
+#define MLMODEL_TEST(x) MLMODEL_DECLARE_TEST(x)
+#endif
+
+MLMODEL_TEST(testBasicSaveLoad)
+MLMODEL_TEST(testLinearModelBasic)
+MLMODEL_TEST(testTreeEnsembleBasic)
+MLMODEL_TEST(testOneHotEncoderBasic)
+MLMODEL_TEST(testLargeModel)
+MLMODEL_TEST(testVeryLargeModel)
+MLMODEL_TEST(testOptionalInputs)
+MLMODEL_TEST(testFeatureDescriptions)
+MLMODEL_TEST(testNNValidatorLoop)
+MLMODEL_TEST(testNNValidatorMissingInput)
+MLMODEL_TEST(testNNValidatorSimple)
+MLMODEL_TEST(testNNValidatorMissingOutput)
+MLMODEL_TEST(testNNValidatorBadInputs)
+MLMODEL_TEST(testNNValidatorBadInput)
+MLMODEL_TEST(testNNValidatorBadInput2)
+MLMODEL_TEST(testNNValidatorBadOutput)
+MLMODEL_TEST(testNNValidatorBadOutput2)
+MLMODEL_TEST(testRNNLayer)
+MLMODEL_TEST(testRNNLayer2)
+MLMODEL_TEST(testNNValidatorAllOptional)
+MLMODEL_TEST(testNNValidatorReshape3D)
+MLMODEL_TEST(testNNValidatorReshape4D)
+MLMODEL_TEST(testNNValidatorReshapeBad)
+MLMODEL_TEST(testNNCompilerValidation)
+MLMODEL_TEST(testNNCompilerValidationGoodProbBlob)
+MLMODEL_TEST(testNNCompilerValidationBadProbBlob)
+MLMODEL_TEST(testInvalidPooling)
+MLMODEL_TEST(testInvalidConvolutionNoPadding)
+MLMODEL_TEST(testInvalidConvolutionNoWeights)
+MLMODEL_TEST(testInvalidConvolutionNoBias)
+MLMODEL_TEST(testValidConvolution)
+MLMODEL_TEST(testValidDeconvolution)
+MLMODEL_TEST(testInvalidEmbedding)
+MLMODEL_TEST(testInvalidEmbeddingBias)
+MLMODEL_TEST(testValidEmbedding)
+MLMODEL_TEST(testInvalidBatchnorm)
+MLMODEL_TEST(testValidComputeMeanVarBatchnorm)
+MLMODEL_TEST(testInvalidPaddingBorder)
+MLMODEL_TEST(testInvalidPaddingNoType)
+MLMODEL_TEST(testValidPadding)
+MLMODEL_TEST(testInvalidUpsample)
+MLMODEL_TEST(testValidUpsample)
+MLMODEL_TEST(testInvalidScaleBiasWeights)
+MLMODEL_TEST(testInvalidScaleWeights)
+MLMODEL_TEST(testInvalidScaleBiasLength)
+MLMODEL_TEST(testInvalidScaleLength)
+MLMODEL_TEST(testValidScale)
+MLMODEL_TEST(testValidScaleNoBias)
+MLMODEL_TEST(testValidCrop1)
+MLMODEL_TEST(testInvalidCrop1)
+MLMODEL_TEST(testValidCrop2)
+MLMODEL_TEST(testInvalidCrop2)
+MLMODEL_TEST(testInvalidSlice)
+MLMODEL_TEST(testValidSlice1)
+MLMODEL_TEST(testValidSlice2)
+
+
+
+#undef MLMODEL_TEST

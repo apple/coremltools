@@ -14,10 +14,13 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import DataStructures_pb2 as DataStructures__pb2
-FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+from . import DataStructures_pb2 as DataStructures__pb2
+try:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes_pb2
 
-from DataStructures_pb2 import *
+from .DataStructures_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='TreeEnsemble.proto',
@@ -27,7 +30,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   ,
   dependencies=[DataStructures__pb2.DESCRIPTOR,],
   public_dependencies=[DataStructures__pb2.DESCRIPTOR,])
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 _TREEENSEMBLEPOSTEVALUATIONTRANSFORM = _descriptor.EnumDescriptor(
   name='TreeEnsemblePostEvaluationTransform',
@@ -399,6 +401,7 @@ DESCRIPTOR.message_types_by_name['TreeEnsembleParameters'] = _TREEENSEMBLEPARAME
 DESCRIPTOR.message_types_by_name['TreeEnsembleClassifier'] = _TREEENSEMBLECLASSIFIER
 DESCRIPTOR.message_types_by_name['TreeEnsembleRegressor'] = _TREEENSEMBLEREGRESSOR
 DESCRIPTOR.enum_types_by_name['TreeEnsemblePostEvaluationTransform'] = _TREEENSEMBLEPOSTEVALUATIONTRANSFORM
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 TreeEnsembleParameters = _reflection.GeneratedProtocolMessageType('TreeEnsembleParameters', (_message.Message,), dict(
 

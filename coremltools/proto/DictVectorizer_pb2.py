@@ -13,10 +13,13 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import DataStructures_pb2 as DataStructures__pb2
-FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+from . import DataStructures_pb2 as DataStructures__pb2
+try:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes_pb2
 
-from DataStructures_pb2 import *
+from .DataStructures_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='DictVectorizer.proto',
@@ -26,7 +29,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   ,
   dependencies=[DataStructures__pb2.DESCRIPTOR,],
   public_dependencies=[DataStructures__pb2.DESCRIPTOR,])
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -80,6 +82,7 @@ _DICTVECTORIZER.oneofs_by_name['Map'].fields.append(
   _DICTVECTORIZER.fields_by_name['int64ToIndex'])
 _DICTVECTORIZER.fields_by_name['int64ToIndex'].containing_oneof = _DICTVECTORIZER.oneofs_by_name['Map']
 DESCRIPTOR.message_types_by_name['DictVectorizer'] = _DICTVECTORIZER
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 DictVectorizer = _reflection.GeneratedProtocolMessageType('DictVectorizer', (_message.Message,), dict(
   DESCRIPTOR = _DICTVECTORIZER,

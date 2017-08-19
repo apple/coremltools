@@ -21,7 +21,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_pb=_b('\n\x0cScaler.proto\x12\x14\x43oreML.Specification\"0\n\x06Scaler\x12\x12\n\nshiftValue\x18\x01 \x03(\x01\x12\x12\n\nscaleValue\x18\x02 \x03(\x01\x42\x02H\x03\x62\x06proto3')
 )
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -64,6 +63,7 @@ _SCALER = _descriptor.Descriptor(
 )
 
 DESCRIPTOR.message_types_by_name['Scaler'] = _SCALER
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Scaler = _reflection.GeneratedProtocolMessageType('Scaler', (_message.Message,), dict(
   DESCRIPTOR = _SCALER,
