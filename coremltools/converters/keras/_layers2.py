@@ -1,18 +1,18 @@
 from . import _utils
-import keras
-import numpy as np
+import keras as _keras
+import numpy as _np
 
 
 def _get_recurrent_activation_name_from_keras(activation):
-    if activation == keras.activations.sigmoid:
+    if activation == _keras.activations.sigmoid:
         activation_str = 'SIGMOID'
-    elif activation == keras.activations.hard_sigmoid:
+    elif activation == _keras.activations.hard_sigmoid:
         activation_str = 'SIGMOID_HARD'
-    elif activation == keras.activations.tanh:
+    elif activation == _keras.activations.tanh:
         activation_str = 'TANH'
-    elif activation == keras.activations.relu:
+    elif activation == _keras.activations.relu:
         activation_str = 'RELU'
-    elif activation == keras.activations.linear:
+    elif activation == _keras.activations.linear:
         activation_str = 'LINEAR'
     else:
         raise NotImplementedError(
@@ -21,13 +21,13 @@ def _get_recurrent_activation_name_from_keras(activation):
     return activation_str
 
 def _get_activation_name_from_keras_layer(keras_layer):
-    if isinstance(keras_layer, keras.layers.advanced_activations.LeakyReLU):
+    if isinstance(keras_layer, _keras.layers.advanced_activations.LeakyReLU):
         non_linearity = 'LEAKYRELU'
-    elif isinstance(keras_layer, keras.layers.advanced_activations.PReLU):
+    elif isinstance(keras_layer, _keras.layers.advanced_activations.PReLU):
         non_linearity = 'PRELU'
-    elif isinstance(keras_layer, keras.layers.advanced_activations.ELU):
+    elif isinstance(keras_layer, _keras.layers.advanced_activations.ELU):
         non_linearity = 'ELU'
-    elif isinstance(keras_layer, keras.layers.advanced_activations.ThresholdedReLU):
+    elif isinstance(keras_layer, _keras.layers.advanced_activations.ThresholdedReLU):
         non_linearity = 'THRESHOLDEDRELU'
     else:
         import six
@@ -64,11 +64,11 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
     """
     Get the keras layer name from the activation name.
     """
-    if isinstance(keras_layer, keras.layers.Add):
+    if isinstance(keras_layer, _keras.layers.Add):
         return 'ADD'
-    elif isinstance(keras_layer, keras.layers.Multiply):
+    elif isinstance(keras_layer, _keras.layers.Multiply):
         return 'MULTIPLY'
-    elif isinstance(keras_layer, keras.layers.Concatenate):
+    elif isinstance(keras_layer, _keras.layers.Concatenate):
         if len(keras_layer.input_shape[0]) == 3 and (keras_layer.axis == 1 or keras_layer.axis == -2):
             return 'SEQUENCE_CONCAT'
         elif len(keras_layer.input_shape[0]) == 4 and (keras_layer.axis == 3 or keras_layer.axis == -1):
@@ -77,7 +77,7 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
             return 'CONCAT'
         else:
             raise ValueError('Only channel and sequence concatenation are supported.')
-    elif isinstance(keras_layer, keras.layers.Dot):
+    elif isinstance(keras_layer, _keras.layers.Dot):
         if len(keras_layer.input_shape[0]) == 2:
             if type(keras_layer.axes) is list or type(keras_layer.axes) is tuple:
                 if len(keras_layer.axes) > 1: 
@@ -95,9 +95,9 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
                 return 'DOT'
         else:
             raise ValueError('Only vector dot-product is supported.')
-    elif isinstance(keras_layer, keras.layers.Maximum):
+    elif isinstance(keras_layer, _keras.layers.Maximum):
         return 'MAX'
-    elif isinstance(keras_layer, keras.layers.Average):
+    elif isinstance(keras_layer, _keras.layers.Average):
         return 'AVE'
     else:
         _utils.raise_error_unsupported_option(str(type(keras_layer)), 'merge',
@@ -111,7 +111,7 @@ def _same_elements_per_channel(x):
     dims = x.shape
     for c in range(dims[-1]):
         xc = x[:,:,c].flatten()
-        if not np.all(np.absolute(xc - xc[0]) < eps):
+        if not _np.all(_np.absolute(xc - xc[0]) < eps):
             return False
     return True
 
@@ -204,7 +204,7 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
         shared_axes = list(keras_layer.shared_axes)
         if not (shared_axes == [1,2,3] or shared_axes == [1,2]):
             _utils.raise_error_unsupported_scenario("Shared axis not being [1,2,3] or [1,2]", 'parametric_relu', layer)
-        params = keras.backend.eval(keras_layer.weights[0])
+        params = _keras.backend.eval(keras_layer.weights[0])
     elif non_linearity == 'ELU':
         params = keras_layer.alpha
     elif non_linearity == 'THRESHOLDEDRELU':
@@ -233,19 +233,22 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
     input_name, output_name = (input_names[0], output_names[0])
 
     has_bias = keras_layer.use_bias
-    is_deconv = isinstance(keras_layer, keras.layers.convolutional.Conv2DTranspose)
+    is_deconv = isinstance(keras_layer, _keras.layers.convolutional.Conv2DTranspose)
 
-    # Get the weights from keras.
+    # Get the weights from _keras.
     weightList = keras_layer.get_weights()
-    output_shape = list(filter(None, keras_layer.output_shape))[:-1]
+    output_blob_shape = list(filter(None, keras_layer.output_shape))
+    output_channels = output_blob_shape[-1] 
     
     # Dimensions and weights
     if is_deconv: 
         height, width, n_filters, channels = weightList[0].shape
         W = weightList[0].transpose([0,1,3,2])
+        output_shape = output_blob_shape[:-1]
     else: 
         height, width, channels, n_filters = weightList[0].shape
         W = weightList[0]
+        output_shape = None
     b = weightList[1] if has_bias else None
 
     stride_height, stride_width = keras_layer.strides
@@ -256,19 +259,27 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
         dilations = [keras_layer.dilation_rate[0], keras_layer.dilation_rate[1]]
     else:
         dilations = [keras_layer.dilation_rate, keras_layer.dilation_rate]
-
     if is_deconv and not dilations == [1,1]:
         raise ValueError("Unsupported non-unity dilation for Deconvolution layer")
+        
+    groups = 1
+    kernel_channels = channels
+    # depth-wise convolution
+    if isinstance(keras_layer,_keras.applications.mobilenet.DepthwiseConv2D):
+        groups = channels
+        kernel_channels = 1
+        depth_multiplier = keras_layer.depth_multiplier
+        W = _np.reshape(W,(height, width,1,channels * depth_multiplier))
 
     builder.add_convolution(name = layer,
-             kernel_channels = channels,
-             output_channels = n_filters,
+             kernel_channels = kernel_channels,
+             output_channels = output_channels,
              height = height,
              width = width,
              stride_height = stride_height,
              stride_width = stride_width,
              border_mode = keras_layer.padding, 
-             groups = 1,
+             groups = groups,
              W = W,
              b = b,
              has_bias = has_bias,
@@ -277,6 +288,7 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
              input_name = input_name,
              output_name = output_name, 
              dilation_factors = dilations)
+
 
 def convert_convolution1d(builder, layer, input_names, output_names, keras_layer):
     """
@@ -295,7 +307,7 @@ def convert_convolution1d(builder, layer, input_names, output_names, keras_layer
 
     has_bias = keras_layer.use_bias
 
-    # Get the weights from keras.
+    # Get the weights from _keras.
     # Keras stores convolution weights as list of numpy arrays
     weightList = keras_layer.get_weights()
     output_shape = list(filter(None, keras_layer.output_shape))[:-1]
@@ -305,7 +317,7 @@ def convert_convolution1d(builder, layer, input_names, output_names, keras_layer
     stride_width = keras_layer.strides if type(keras_layer.strides) is int else keras_layer.strides[0]
 
     # Weights and bias terms
-    W = np.expand_dims(weightList[0],axis=0)
+    W = _np.expand_dims(weightList[0],axis=0)
     b = weightList[1] if has_bias else None
 
     dilations = [1,1]
@@ -331,6 +343,78 @@ def convert_convolution1d(builder, layer, input_names, output_names, keras_layer
              input_name = input_name,
              output_name = output_name, 
              dilation_factors = dilations)
+
+def convert_separable_convolution(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert separable convolution layer from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+
+    has_bias = keras_layer.use_bias
+
+    # Get the weights from _keras.
+    weight_list = keras_layer.get_weights()
+    output_blob_shape = list(filter(None, keras_layer.output_shape))
+    output_channels = output_blob_shape[-1] 
+    
+    # D: depth mutliplier
+    # w[0] is (H,W,Cin,D)
+    # w[1] is (1,1,Cin * D, Cout)
+    W0 = weight_list[0]
+    W1 = weight_list[1]
+    height, width, input_channels, depth_mult = W0.shape
+    b = weight_list[2] if has_bias else None
+    
+    W0 = _np.reshape(W0, (height, width, 1, input_channels * depth_mult))
+
+    stride_height, stride_width = keras_layer.strides
+
+    intermediate_name = input_name + '_intermin_'
+
+    builder.add_convolution(name = layer + '_step_1',
+             kernel_channels = 1,
+             output_channels = input_channels * depth_mult,
+             height = height,
+             width = width,
+             stride_height = stride_height,
+             stride_width = stride_width,
+             border_mode = keras_layer.padding, 
+             groups = input_channels,
+             W = W0,
+             b = None,
+             has_bias = False,
+             is_deconv = False,
+             output_shape = None,
+             input_name = input_name,
+             output_name = intermediate_name, 
+             dilation_factors = [1,1])
+
+    builder.add_convolution(name = layer + '_step_2',
+             kernel_channels = input_channels * depth_mult,
+             output_channels = output_channels,
+             height = 1,
+             width = 1,
+             stride_height = 1,
+             stride_width = 1,
+             border_mode = keras_layer.padding, 
+             groups = 1,
+             W = W1,
+             b = b,
+             has_bias = has_bias,
+             is_deconv = False,
+             output_shape = None,
+             input_name = intermediate_name,
+             output_name = output_name, 
+             dilation_factors = [1,1])
 
 def convert_batchnorm(builder, layer, input_names, output_names, keras_layer):
     """
@@ -363,12 +447,12 @@ def convert_batchnorm(builder, layer, input_names, output_names, keras_layer):
     mean = keras_layer.get_weights()[idx]
     std = keras_layer.get_weights()[idx+1]
     
-    gamma = np.ones(mean.shape) if gamma is None else gamma
-    beta = np.zeros(mean.shape) if beta is None else beta
+    gamma = _np.ones(mean.shape) if gamma is None else gamma
+    beta = _np.zeros(mean.shape) if beta is None else beta
 
     # compute adjusted parameters
     variance = std * std
-    f = 1.0 / np.sqrt(std + keras_layer.epsilon)
+    f = 1.0 / _np.sqrt(std + keras_layer.epsilon)
     gamma1 = gamma*f
     beta1 = beta - gamma*mean*f
     mean[:] = 0.0 #mean
@@ -444,29 +528,29 @@ def convert_pooling(builder, layer, input_names, output_names, keras_layer):
     input_name, output_name = (input_names[0], output_names[0])
 
     # Pooling layer type
-    if isinstance(keras_layer, keras.layers.convolutional.MaxPooling2D) or \
-        isinstance(keras_layer, keras.layers.convolutional.MaxPooling1D) or \
-        isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling2D) or \
-        isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling1D):
+    if isinstance(keras_layer, _keras.layers.convolutional.MaxPooling2D) or \
+        isinstance(keras_layer, _keras.layers.convolutional.MaxPooling1D) or \
+        isinstance(keras_layer, _keras.layers.pooling.GlobalMaxPooling2D) or \
+        isinstance(keras_layer, _keras.layers.pooling.GlobalMaxPooling1D):
         layer_type_str = 'MAX'
-    elif isinstance(keras_layer, keras.layers.convolutional.AveragePooling2D) or \
-        isinstance(keras_layer, keras.layers.convolutional.AveragePooling1D) or \
-        isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling2D) or \
-        isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling1D):
+    elif isinstance(keras_layer, _keras.layers.convolutional.AveragePooling2D) or \
+        isinstance(keras_layer, _keras.layers.convolutional.AveragePooling1D) or \
+        isinstance(keras_layer, _keras.layers.pooling.GlobalAveragePooling2D) or \
+        isinstance(keras_layer, _keras.layers.pooling.GlobalAveragePooling1D):
         layer_type_str = 'AVERAGE'
     else:
         raise TypeError("Pooling type %s not supported" % keras_layer)
 
     # if it's global, set the global flag
-    if isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling2D) or \
-        isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling2D):
+    if isinstance(keras_layer, _keras.layers.pooling.GlobalMaxPooling2D) or \
+        isinstance(keras_layer, _keras.layers.pooling.GlobalAveragePooling2D):
         # 2D global pooling
         global_pooling = True
         height, width = (0, 0)
         stride_height, stride_width = (0,0)
         padding_type = 'VALID'
-    elif isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling1D) or \
-        isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling1D):
+    elif isinstance(keras_layer, _keras.layers.pooling.GlobalMaxPooling1D) or \
+        isinstance(keras_layer, _keras.layers.pooling.GlobalAveragePooling1D):
         # 1D global pooling: 1D global pooling seems problematic in the backend, 
         # use this work-around
         global_pooling = False
@@ -478,10 +562,10 @@ def convert_pooling(builder, layer, input_names, output_names, keras_layer):
         global_pooling = False
         # Set pool sizes and strides
         # 1D cases:
-        if isinstance(keras_layer, keras.layers.convolutional.MaxPooling1D) or \
-            isinstance(keras_layer, keras.layers.pooling.GlobalMaxPooling1D) or \
-            isinstance(keras_layer, keras.layers.convolutional.AveragePooling1D) or \
-            isinstance(keras_layer, keras.layers.pooling.GlobalAveragePooling1D):
+        if isinstance(keras_layer, _keras.layers.convolutional.MaxPooling1D) or \
+            isinstance(keras_layer, _keras.layers.pooling.GlobalMaxPooling1D) or \
+            isinstance(keras_layer, _keras.layers.convolutional.AveragePooling1D) or \
+            isinstance(keras_layer, _keras.layers.pooling.GlobalAveragePooling1D):
             pool_size = keras_layer.pool_size if type(keras_layer.pool_size) is int else keras_layer.pool_size[0]
             height, width = 1, pool_size
             if keras_layer.strides is not None:
@@ -533,7 +617,7 @@ def convert_padding(builder, layer, input_names, output_names, keras_layer):
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
     
-    is_1d = isinstance(keras_layer, keras.layers.ZeroPadding1D)
+    is_1d = isinstance(keras_layer, _keras.layers.ZeroPadding1D)
     
     padding = keras_layer.padding
     top = left = bottom = right = 0
@@ -582,7 +666,7 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer):
     """
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
-    is_1d = isinstance(keras_layer, keras.layers.Cropping1D)
+    is_1d = isinstance(keras_layer, _keras.layers.Cropping1D)
 
     cropping = keras_layer.cropping
     top = left = bottom = right = 0
@@ -632,7 +716,7 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer):
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
 
-    is_1d = isinstance(keras_layer, keras.layers.UpSampling1D)
+    is_1d = isinstance(keras_layer, _keras.layers.UpSampling1D)
 
     # Currently, we only support upsample of same dims
     fh = fw = 1
@@ -674,7 +758,7 @@ def convert_permute(builder, layer, input_names, output_names, keras_layer):
     # Keras permute layer index begins at 1
     if len(keras_dims) == 3:
         # Keras input tensor interpret as (H,W,C)
-        x = list(np.array(keras_dims))
+        x = list(_np.array(keras_dims))
         i1, i2, i3 = x.index(1), x.index(2), x.index(3)
         x[i1], x[i2], x[i3] = 2, 3, 1
         # add a sequence axis
@@ -743,8 +827,8 @@ def convert_simple_rnn(builder, layer, input_names, output_names, keras_layer):
     output_all = keras_layer.return_sequences
     reverse_input = keras_layer.go_backwards
 
-    W_h = np.zeros((hidden_size, hidden_size))
-    W_x = np.zeros((hidden_size, input_size))
+    W_h = _np.zeros((hidden_size, hidden_size))
+    W_x = _np.zeros((hidden_size, input_size))
     b = None
 
     if keras_layer.implementation == 0:
@@ -902,7 +986,7 @@ def convert_bidirectional(builder, layer, input_names, output_names, keras_layer
     input_size = keras_layer.input_shape[-1]
 
     lstm_layer = keras_layer.forward_layer
-    if (type(lstm_layer) != keras.layers.recurrent.LSTM):
+    if (type(lstm_layer) != _keras.layers.recurrent.LSTM):
         raise TypeError('Bidirectional layers only supported with LSTM')
         
     if lstm_layer.go_backwards:
