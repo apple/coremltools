@@ -1851,9 +1851,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
     @attr('slow')
     def test_dense_layer_params(self):
         options = dict(
-            # TODO - hard-sigmoid result mismatch rdar://problem/32363330
-            # activation = ['relu', 'softmax', 'tanh', 'sigmoid', 'hard_sigmoid', 'softplus', 'softsign', 'elu'],
-            activation = ['relu', 'softmax', 'tanh', 'sigmoid', 'softplus', 'softsign', 'elu'],
+            activation = ['relu', 'softmax', 'tanh', 'sigmoid', 'softplus', 'softsign', 'elu','hard_sigmoid'],
             use_bias = [True, False],
         )
         # Define a function that tests a model
@@ -1889,8 +1887,8 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         def build_model(x):
             kwargs = dict(zip(options.keys(), x))
             model = Sequential()
-            model.add(Conv2D(input_shape = input_shape, nb_row = 7,
-                nb_col = 7, nb_filter = 5))
+            model.add(Conv2D(filters=5, kernel_size=(7,7), 
+                      input_shape = input_shape))
             model.add(UpSampling2D(**kwargs))
             return x, model
 
@@ -2259,7 +2257,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         model.add(MaxPooling1D(17))
         model.add(Flatten())
 
-        model.add(Dense(1, bias=True))
+        model.add(Dense(1, use_bias=True))
         model.add(BatchNormalization())
         model.add(Activation("sigmoid"))
 
