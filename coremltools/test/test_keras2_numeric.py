@@ -12,7 +12,7 @@ from coremltools._deps import HAS_KERAS2_TF
 if HAS_KERAS2_TF:
     import keras.backend
     from keras.models import Sequential, Model
-    from keras.layers import Dense, Activation, Conv2D, Conv1D, Flatten, BatchNormalization, Conv2DTranspose
+    from keras.layers import Dense, Activation, Conv2D, Conv1D, Flatten, BatchNormalization, Conv2DTranspose, SeparableConv2D
     from keras.layers import MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, GlobalMaxPooling2D
     from keras.layers import MaxPooling1D, AveragePooling1D, GlobalAveragePooling1D, GlobalMaxPooling1D 
     from keras.layers import Embedding, Input, Permute, Reshape, RepeatVector, Dropout
@@ -22,6 +22,7 @@ if HAS_KERAS2_TF:
     from keras.layers import ZeroPadding1D, UpSampling1D, Cropping1D
     from keras.layers import SimpleRNN, LSTM, GRU
     from keras.layers.wrappers import Bidirectional, TimeDistributed
+    from keras.applications.mobilenet import DepthwiseConv2D
     from coremltools.converters import keras as kerasConverter
 
 
@@ -316,6 +317,22 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Test the keras model
         self._test_keras_model(model)
 
+    def test_large_input_length_conv1d_same_random(self):
+        np.random.seed(1988)
+        input_dim = 2
+        input_length = 80
+        filter_length = 3
+        nb_filters = 4
+        model = Sequential()
+        model.add(Conv1D(nb_filters, kernel_size = filter_length, padding = 'same',
+            input_shape=(input_length, input_dim)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)
+
     def test_tiny_conv1d_valid_random(self):
         np.random.seed(1988)
         input_dim = 2
@@ -501,6 +518,165 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Test the keras model
         self._test_keras_model(model)
 
+    def test_tiny_depthwise_conv_same_pad(self):
+        np.random.seed(1988)
+        input_dim = 16
+        input_shape = (input_dim, input_dim, 3)
+        depth_multiplier = 1
+        kernel_height = 3
+        kernel_width = 3
+
+        # Define a model
+        model = Sequential()
+        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width), 
+            input_shape = input_shape, padding = 'same', strides = (1,1)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)
+
+    def test_tiny_depthwise_conv_valid_pad(self):
+        np.random.seed(1988)
+        input_dim = 16
+        input_shape = (input_dim, input_dim, 3)
+        depth_multiplier = 1
+        kernel_height = 3
+        kernel_width = 3
+
+        # Define a model
+        model = Sequential()
+        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width), 
+            input_shape = input_shape, padding = 'valid', strides = (1,1)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)
+        
+    def test_tiny_depthwise_conv_same_pad_depth_multiplier(self):
+        np.random.seed(1988)
+        input_dim = 16
+        input_shape = (input_dim, input_dim, 3)
+        depth_multiplier = 4
+        kernel_height = 3
+        kernel_width = 3
+
+        # Define a model
+        model = Sequential()
+        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width), 
+            input_shape = input_shape, padding = 'same', strides = (1,1)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)  
+        
+    def test_tiny_depthwise_conv_valid_pad_depth_multiplier(self):
+        np.random.seed(1988)
+        input_dim = 16
+        input_shape = (input_dim, input_dim, 3)
+        depth_multiplier = 2
+        kernel_height = 3
+        kernel_width = 3
+
+        # Define a model
+        model = Sequential()
+        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width), 
+            input_shape = input_shape, padding = 'valid', strides = (1,1)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)      
+        
+    def test_tiny_separable_conv_valid(self):
+        np.random.seed(1988)
+        input_dim = 16
+        input_shape = (input_dim, input_dim, 3)
+        depth_multiplier = 1
+        kernel_height = 3
+        kernel_width = 3
+        num_kernels = 4
+        
+        # Define a model
+        model = Sequential()
+        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
+            padding = 'valid', strides = (1,1), depth_multiplier = depth_multiplier, 
+            input_shape = input_shape))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)
+
+    def test_tiny_separable_conv_same_fancy(self):
+        np.random.seed(1988)
+        input_dim = 16
+        input_shape = (input_dim, input_dim, 3)
+        depth_multiplier = 1
+        kernel_height = 3
+        kernel_width = 3
+        num_kernels = 4
+        
+        # Define a model
+        model = Sequential()
+        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
+            padding = 'same', strides = (2,2), activation='relu', depth_multiplier = depth_multiplier, 
+            input_shape = input_shape))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)
+        
+    def test_tiny_separable_conv_valid_depth_multiplier(self):
+        np.random.seed(1988)
+        input_dim = 16
+        input_shape = (input_dim, input_dim, 3)
+        depth_multiplier = 5
+        kernel_height = 3
+        kernel_width = 3
+        num_kernels = 40
+        
+        # Define a model
+        model = Sequential()
+        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
+            padding = 'valid', strides = (1,1), depth_multiplier = depth_multiplier, 
+            input_shape = input_shape))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)
+
+    def test_tiny_separable_conv_same_fancy_depth_multiplier(self):
+        np.random.seed(1988)
+        input_dim = 16
+        input_shape = (input_dim, input_dim, 3)
+        depth_multiplier = 2
+        kernel_height = 3
+        kernel_width = 3
+        num_kernels = 40
+        
+        # Define a model
+        model = Sequential()
+        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
+            padding = 'same', strides = (2,2), activation='relu', depth_multiplier = depth_multiplier, 
+            input_shape = input_shape))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)    
 
     def test_max_pooling_no_overlap(self):
         # no_overlap: pool_size = strides
@@ -1528,6 +1704,64 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_keras_model(model, mode = 'random', delta=1e-2)
+    
+    def test_tiny_mobilenet_arch(self):
+        
+        img_input = Input(shape=(32,32,3))
+        x = Conv2D(4, (3,3), padding='same', use_bias=False, strides=(2,2), name='conv1')(img_input)
+        x = BatchNormalization(axis=-1, name='conv1_bn')(x)
+        x = Activation('relu', name='conv1_relu')(x)
+        
+        x = DepthwiseConv2D((3, 3), padding='same', depth_multiplier=1, strides=(1,1),
+                use_bias=False, name='conv_dw_1')(x)
+        x = BatchNormalization(axis=-1, name='conv_dw_1_bn')(x)
+        x = Activation('relu', name='conv_dw_1_relu')(x)
+        x = Conv2D(8, (1, 1), padding='same', use_bias=False, strides=(1, 1), name='conv_pw_1')(x)
+        x = BatchNormalization(axis=-1, name='conv_pw_1_bn')(x)
+        x = Activation('relu', name='conv_pw_1_relu')(x)
+        
+        x = DepthwiseConv2D((3, 3), padding='same', depth_multiplier=1, strides=(2,2),
+                use_bias=False, name='conv_dw_2')(x)
+        x = BatchNormalization(axis=-1, name='conv_dw_2_bn')(x)
+        x = Activation('relu', name='conv_dw_2_relu')(x)
+        x = Conv2D(8, (1, 1), padding='same', use_bias=False, strides=(2, 2), name='conv_pw_2')(x)
+        x = BatchNormalization(axis=-1, name='conv_pw_2_bn')(x)
+        x = Activation('relu', name='conv_pw_2_relu')(x)
+        
+        model = Model(inputs=[img_input], outputs=[x])
+
+        self._test_keras_model(model, delta=1e-2)
+    
+    def test_tiny_xception(self):
+        img_input = Input(shape=(32,32,3))        
+        x = Conv2D(2, (3, 3), strides=(2, 2), use_bias=False, name='block1_conv1')(img_input)
+        x = BatchNormalization(name='block1_conv1_bn')(x)
+        x = Activation('relu', name='block1_conv1_act')(x)
+        x = Conv2D(4, (3, 3), use_bias=False, name='block1_conv2')(x)
+        x = BatchNormalization(name='block1_conv2_bn')(x)
+        x = Activation('relu', name='block1_conv2_act')(x)
+
+        residual = Conv2D(8, (1, 1), strides=(2, 2),
+                          padding='same', use_bias=False)(x)
+        residual = BatchNormalization()(residual)
+
+        x = SeparableConv2D(8, (3, 3), padding='same', use_bias=False, name='block2_sepconv1')(x)
+        x = BatchNormalization(name='block2_sepconv1_bn')(x)
+        x = Activation('relu', name='block2_sepconv2_act')(x)
+        x = SeparableConv2D(8, (3, 3), padding='same', use_bias=False, name='block2_sepconv2')(x)
+        x = BatchNormalization(name='block2_sepconv2_bn')(x)
+
+        x = MaxPooling2D((3, 3), strides=(2, 2), padding='same', name='block2_pool')(x)
+        x = add([x, residual])
+
+        residual = Conv2D(16, (1, 1), strides=(2, 2),
+                          padding='same', use_bias=False)(x)
+        residual = BatchNormalization()(residual)
+        
+        model = Model(inputs=[img_input], outputs=[residual])
+
+        self._test_keras_model(model, delta=1e-2)
+    
 
 @attr('slow')
 @attr('keras2')

@@ -21,7 +21,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_pb=_b('\n\x10Normalizer.proto\x12\x14\x43oreML.Specification\"o\n\nNormalizer\x12;\n\x08normType\x18\x01 \x01(\x0e\x32).CoreML.Specification.Normalizer.NormType\"$\n\x08NormType\x12\x08\n\x04LMax\x10\x00\x12\x06\n\x02L1\x10\x01\x12\x06\n\x02L2\x10\x02\x42\x02H\x03\x62\x06proto3')
 )
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -86,6 +85,7 @@ _NORMALIZER = _descriptor.Descriptor(
 _NORMALIZER.fields_by_name['normType'].enum_type = _NORMALIZER_NORMTYPE
 _NORMALIZER_NORMTYPE.containing_type = _NORMALIZER
 DESCRIPTOR.message_types_by_name['Normalizer'] = _NORMALIZER
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Normalizer = _reflection.GeneratedProtocolMessageType('Normalizer', (_message.Message,), dict(
   DESCRIPTOR = _NORMALIZER,

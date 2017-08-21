@@ -176,13 +176,7 @@ def _export(filename, model, image_input_names=[], is_bgr=False,
            red_bias=0.0, blue_bias=0.0, green_bias=0.0, gray_bias=0.0,
            image_scale=1.0,
            class_labels=None, predicted_feature_name=None):
-    try:
-        from ... import libcaffeconverter
-    except:
-        if _sys.platform != 'darwin':
-            raise RuntimeError('Caffe conversion is only supported on macOS.')
-        else:
-            raise RuntimeError('Unable to load Caffe converter library.')
+    from ... import libcaffeconverter
 
     if isinstance(model, basestring):
         src_model_path = model

@@ -916,15 +916,14 @@ class NeuralNetworkBuilder(object):
             Wt = W.transpose((3,2,0,1))
             Wt = Wt.flatten()
         else:
-            Wt = W.transpose((2,3,0,1))
-            Wt = Wt.flatten()
-        for idx in xrange(output_channels * kernel_channels * height * width):
+            Wt = W.transpose((2,3,0,1)).flatten()
+        for idx in xrange(Wt.size):
             weights.floatValue.append(float(Wt[idx]))
 
         # Assign biases
         if has_bias:
             bias = spec_layer_params.bias
-            for f in range(output_channels):
+            for f in xrange(output_channels):
                 bias.floatValue.append(float(b[f]))
         
         # add dilation factors

@@ -1,10 +1,6 @@
 #import "CoreMLPythonArray.h"
 
 @implementation PybindCompatibleArray
-{
-    // Holding reference to underlying memory
-    py::array m_array;
-}
 
 + (MLMultiArrayDataType)dataTypeOf:(py::array)array {
     const auto& dt = array.dtype();
