@@ -48,7 +48,8 @@ class NeuralNetworkBuilder(object):
     --------
     .. sourcecode:: python
 
-        # Create a neural network binary classifier that classifies 3-dimensional data points
+        # Create a neural network binary classifier that classifies 
+        # 3-dimensional data points
         # Specify input and output dimensions
         >>> input_dim = (3,)
         >>> output_dim = (2,)
@@ -76,17 +77,16 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
-        input_features: [(str, tuple)]
+        input_features: [(str, datatypes.Array)]
             List of input feature of the network. Each feature is a (name,
-            shape) tuple, is the name of the feature, and shape is
-            a (d1, d2, ..., dN) tuple that describes the dimensions of the
-            input feature.
-
-        output_features: [(str, tuple)]
+            array) tuple, where name the name of the feature, and array
+            is an datatypes.Array object describing the feature type.  
+        
+        output_features: [(str, datatypes.Array or None)]
             List of output feature of the network. Each feature is a (name,
-            shape) tuple, where name is the name of the feature, and shape is
-            a (d1, d2, ..., dN) tuple that describes the dimensions of the
-            output feature.
+            array) tuple, where name is the name of the feature, and array
+            is an datatypes.Array object describing the feature type. 
+            array can be None if not known. 
 
         mode: str ('classifier', 'regressor' or None)
             Mode (one of 'classifier', 'regressor', or None).
@@ -113,8 +113,22 @@ class NeuralNetworkBuilder(object):
         spec = _Model_pb2.Model()
         spec.specificationVersion = SPECIFICATION_VERSION
 
-        # Set inputs and outputs
-        spec = set_transform_interface_params(spec, input_features, output_features)
+        # When output_features in None, use some dummy sized type
+        out_features_with_shape = output_features
+        for idx, out_feature in enumerate(out_features_with_shape):
+            feat_name, feat_type = out_features_with_shape[idx]
+            if feat_type is None:
+                out_features_with_shape[idx][1] = datatypes.Array(1)
+        
+        # Set interface inputs and outputs
+        # set_transform_interface_params require output types and shapes, 
+        # so we call it then remove the shape
+        spec = set_transform_interface_params(spec, input_features, 
+                                              out_features_with_shape)
+
+        for idx, output_feature in enumerate(output_features):
+            if output_features[idx][1] is None:
+                spec.description.output[idx].type.multiArrayType.ClearField("shape")
 
         # Save the spec in the protobuf
         self.spec = spec
