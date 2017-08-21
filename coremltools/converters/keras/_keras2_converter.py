@@ -274,10 +274,6 @@ def _convert(model,
         input_names, output_names = graph.get_layer_blobs(layer)
         converter_func(builder, layer, input_names, output_names, keras_layer)
 
-    # Set the right inputs and outputs on the model description (interface)
-    # builder.set_input(input_names, input_dims)
-#     builder.set_output(output_names, output_dims)
-
     # Since we aren't mangling anything the user gave us, we only need to update
     # the model interface here
     builder.add_optionals(graph.optional_inputs, graph.optional_outputs)

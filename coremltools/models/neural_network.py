@@ -114,11 +114,13 @@ class NeuralNetworkBuilder(object):
         spec.specificationVersion = SPECIFICATION_VERSION
 
         # When output_features in None, use some dummy sized type
-        out_features_with_shape = output_features
-        for idx, out_feature in enumerate(out_features_with_shape):
-            feat_name, feat_type = out_features_with_shape[idx]
+        out_features_with_shape = []
+        for out_feature in output_features:
+            feat_name, feat_type = out_feature
             if feat_type is None:
-                out_features_with_shape[idx][1] = datatypes.Array(1)
+                out_features_with_shape.append((feat_name, datatypes.Array(1)))
+            else: 
+                out_features_with_shape.append(out_feature)
         
         # Set interface inputs and outputs
         # set_transform_interface_params require output types and shapes, 
