@@ -1007,6 +1007,11 @@ class NeuralNetworkBuilder(object):
 
     def add_pooling(self, name, height, width, stride_height, stride_width,
             layer_type, padding_type, input_name, output_name, exclude_pad_area = True, is_global = False):
+            
+    def add_pooling(self, name, height, width, stride_height, stride_width,
+            layer_type, padding_type, input_name, output_name, exclude_pad_area = True, is_global = False,
+            padding_top = 0, padding_bottom = 0, padding_left = 0, padding_right = 0,
+            same_padding_asymmetry_mode = 'BOTTOM_RIGHT_HEAVY'):        
         """
         Add a pooling layer to the model.
 
@@ -1017,22 +1022,23 @@ class NeuralNetworkBuilder(object):
         height: int
             Height of pooling region.
         width: int
-            Number of elements to be padded on the right side of the input blob.
+            Width of pooling region.
         stride_height: int
             Stride along the height direction.
         stride_width: int
-            Stride along the height direction.
+            Stride along the width direction.
         layer_type: str
             Type of pooling performed. Can either be 'MAX', 'AVERAGE' or 'L2'.
         padding_type: str
-            Option for the output blob shape. Can be either 'VALID' or 'SAME'.
+            Option for the output blob shape. Can be either 'VALID' , 'SAME' or 'INCLUDE_LAST_PIXEL'. 
+            Kindly refer to NeuralNetwork.proto for details. 
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
 
         exclude_pad_area: boolean
-            Whether to exclude padded area in the pooling operation. Defaults to True.
+            Whether to exclude padded area in the 'AVERAGE' pooling operation. Defaults to True.
 
             - If True, the value of the padded area will be excluded.
             - If False, the padded area will be included.
@@ -1044,12 +1050,20 @@ class NeuralNetworkBuilder(object):
             Parameters height, width, stride_height, stride_width will be ignored.
 
             - If False, the pooling operation is not global.
+            
+        padding_top, padding_bottom, padding_left, padding_right: int
+            values of height (top, bottom) and width (left, right) padding to be used if padding type is "VALID" or "INCLUDE_LAST_PIXEL"
+            
+        same_padding_asymmetry_mode : str.
+            Type of asymmetric padding to be used when  padding_type = 'SAME'. 
+            Can be either 'BOTTOM_RIGHT_HEAVY' or  'TOP_LEFT_HEAVY'. 
+            Kindly refer to NeuralNetwork.proto for details.            
 
         See Also
         --------
-        add_convolution, add_pooling, add_activation
+        add_convolution, add_activation
         """
-
+        
         spec = self.spec
         nn_spec = self.nn_spec
 
@@ -1066,13 +1080,21 @@ class NeuralNetworkBuilder(object):
 
         if padding_type == 'VALID':
             height_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
-            height_border.startEdgeSize = 0
-            height_border.endEdgeSize = 0
+            height_border.startEdgeSize = padding_top
+            height_border.endEdgeSize = padding_bottom
             width_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
-            width_border.startEdgeSize = 0
-            width_border.endEdgeSize = 0
+            width_border.startEdgeSize = padding_left
+            width_border.endEdgeSize = padding_right
         elif padding_type == 'SAME':
-            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value('BOTTOM_RIGHT_HEAVY')
+            if not (same_padding_asymmetry_mode == 'BOTTOM_RIGHT_HEAVY' or  same_padding_asymmetry_mode == 'TOP_LEFT_HEAVY'):
+                raise ValueError("Invalid value %d of same_padding_asymmetry_mode parameter" % same_padding_asymmetry_mode)
+            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(same_padding_asymmetry_mode)
+        elif padding_type == 'INCLUDE_LAST_PIXEL':
+            if padding_top != padding_bottom or padding_left != padding_right:
+                raise ValueError("Only symmetric padding is supported with the INCLUDE_LAST_PIXEL padding type")
+            spec_layer_params.includeLastPixel.paddingAmounts.append(padding_top)
+            spec_layer_params.includeLastPixel.paddingAmounts.append(padding_left)
+            
 
         spec_layer_params.kernelSize.append(height)
         spec_layer_params.kernelSize.append(width)
