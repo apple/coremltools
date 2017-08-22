@@ -1,13 +1,7 @@
 #!/usr/bin/env python
 
-from setuptools import setup
-
-import sys
-if sys.platform != 'darwin':
-    raise Exception("coremltools supported only on Mac OSX platforms with "
-                    "a compatible CoreML installation.")
-
 import os
+from setuptools import setup
 
 README = os.path.join(os.getcwd(), "README.rst")
 

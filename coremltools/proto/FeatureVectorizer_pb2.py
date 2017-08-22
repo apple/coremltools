@@ -21,7 +21,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_pb=_b('\n\x17\x46\x65\x61tureVectorizer.proto\x12\x14\x43oreML.Specification\"\x98\x01\n\x11\x46\x65\x61tureVectorizer\x12\x46\n\tinputList\x18\x01 \x03(\x0b\x32\x33.CoreML.Specification.FeatureVectorizer.InputColumn\x1a;\n\x0bInputColumn\x12\x13\n\x0binputColumn\x18\x01 \x01(\t\x12\x17\n\x0finputDimensions\x18\x02 \x01(\x04\x42\x02H\x03\x62\x06proto3')
 )
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -96,6 +95,7 @@ _FEATUREVECTORIZER = _descriptor.Descriptor(
 _FEATUREVECTORIZER_INPUTCOLUMN.containing_type = _FEATUREVECTORIZER
 _FEATUREVECTORIZER.fields_by_name['inputList'].message_type = _FEATUREVECTORIZER_INPUTCOLUMN
 DESCRIPTOR.message_types_by_name['FeatureVectorizer'] = _FEATUREVECTORIZER
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 FeatureVectorizer = _reflection.GeneratedProtocolMessageType('FeatureVectorizer', (_message.Message,), dict(
 

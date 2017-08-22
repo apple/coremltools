@@ -21,7 +21,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_pb=_b('\n\x0eIdentity.proto\x12\x14\x43oreML.Specification\"\n\n\x08IdentityB\x02H\x03\x62\x06proto3')
 )
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -50,6 +49,7 @@ _IDENTITY = _descriptor.Descriptor(
 )
 
 DESCRIPTOR.message_types_by_name['Identity'] = _IDENTITY
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Identity = _reflection.GeneratedProtocolMessageType('Identity', (_message.Message,), dict(
   DESCRIPTOR = _IDENTITY,

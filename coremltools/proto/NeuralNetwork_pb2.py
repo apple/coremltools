@@ -13,10 +13,13 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import DataStructures_pb2 as DataStructures__pb2
-FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+from . import DataStructures_pb2 as DataStructures__pb2
+try:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes_pb2
 
-from DataStructures_pb2 import *
+from .DataStructures_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='NeuralNetwork.proto',
@@ -26,7 +29,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   ,
   dependencies=[DataStructures__pb2.DESCRIPTOR,],
   public_dependencies=[DataStructures__pb2.DESCRIPTOR,])
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -3999,6 +4001,7 @@ DESCRIPTOR.message_types_by_name['UniDirectionalLSTMLayerParams'] = _UNIDIRECTIO
 DESCRIPTOR.message_types_by_name['BiDirectionalLSTMLayerParams'] = _BIDIRECTIONALLSTMLAYERPARAMS
 DESCRIPTOR.message_types_by_name['NeuralNetworkClassifier'] = _NEURALNETWORKCLASSIFIER
 DESCRIPTOR.message_types_by_name['NeuralNetworkRegressor'] = _NEURALNETWORKREGRESSOR
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 NeuralNetwork = _reflection.GeneratedProtocolMessageType('NeuralNetwork', (_message.Message,), dict(
   DESCRIPTOR = _NEURALNETWORK,

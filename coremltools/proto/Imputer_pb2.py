@@ -13,10 +13,13 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import DataStructures_pb2 as DataStructures__pb2
-FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+from . import DataStructures_pb2 as DataStructures__pb2
+try:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes_pb2
 
-from DataStructures_pb2 import *
+from .DataStructures_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Imputer.proto',
@@ -26,7 +29,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   ,
   dependencies=[DataStructures__pb2.DESCRIPTOR,],
   public_dependencies=[DataStructures__pb2.DESCRIPTOR,])
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -165,6 +167,7 @@ _IMPUTER.oneofs_by_name['ReplaceValue'].fields.append(
   _IMPUTER.fields_by_name['replaceStringValue'])
 _IMPUTER.fields_by_name['replaceStringValue'].containing_oneof = _IMPUTER.oneofs_by_name['ReplaceValue']
 DESCRIPTOR.message_types_by_name['Imputer'] = _IMPUTER
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Imputer = _reflection.GeneratedProtocolMessageType('Imputer', (_message.Message,), dict(
   DESCRIPTOR = _IMPUTER,

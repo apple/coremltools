@@ -1,0 +1,156 @@
+{{#files}}
+
+<!-- {{file_name}} -->
+
+{{#file_description}}{{& file_description}}{{/file_description}}
+
+++++
+
+{{#file_messages}}
+
+{{message_long_name}} Message
+________________________________________________________________________________
+
+{{&message_description}}
+
+
+.. list-table:: {{message_long_name}} Fields
+   :header-rows: 1
+
+   * - Field
+     - Type
+     - Label
+   {{#message_fields}}
+   * - {{field_name}}
+     - ``{{field_long_type}}``
+     - {{field_label}}
+   {{/message_fields}}
+
+
+
+
+{{#message_has_extensions}}
+
+.. list-table:: {{message_long_name}} Extensions
+   :widths: 15 10 20 20 50
+   :header-rows: 1
+
+   * - Extension
+     - Type
+     - Base
+     - Number
+     - Description
+   {{#message_extensions}}
+   * - {{extension_name}}
+     - ``{{extension_long_type}}``
+     - ``{{extension_containing_long_type}}``
+     - {{extension_number}}
+     - {{#nobr}}{{& extension_description}}{{#extension_default_value}} Default: {{extension_default_value}}{{/extension_default_value}}{{/nobr}}
+   {{/message_extensions}}
+
+{{/message_has_extensions}}
+
+{{/file_messages}}
+
+
+
+
+
+{{#file_enums}}
+
+{{enum_long_name}} Enumeration
+________________________________________________________________________________
+
+{{&enum_description}}
+
+
+.. list-table:: {{enum_long_name}}
+   :widths: 15 20
+   :header-rows: 1
+
+   * - Name
+     - Number
+   {{#enum_values}}
+   * - {{value_name}}
+     - ``{{value_number}}``
+   {{/enum_values}}
+
+{{/file_enums}}
+
+
+
+
+
+{{#file_has_extensions}}
+
+File-level Extensions
+---------------------
+
+.. list-table:: {{file_name}} Extensions
+   :widths: 15 20 20 20 50
+   :header-rows: 1
+
+   * - Extension
+     - Type
+     - Base
+     - Number
+     - Description
+   {{#file_extensions}}
+   * - {{extension_name}}
+     - ``{{extension_long_type}}``
+     - ``{{extension_containing_long_type}}``
+     - ``{{extension_number}}``
+     - {{#nobr}}{{extension_description}}{{#extension_default_value}} Default: {{extension_default_value}}{{/extension_default_value}}{{/nobr}}
+   {{/file_extensions}}
+
+{{/file_has_extensions}}
+
+
+
+
+
+{{#file_services}}
+
+{{service_name}} Service
+________________________________________________________________________________
+
+{{&service_description}}
+
+.. list-table:: {{service_name}}
+   :widths: 15 20 20 50
+   :header-rows: 1
+
+   * - Method Name
+     - Request Type
+     - Response Type
+     - Description
+   {{#service_methods}}
+   * - {{method_name}}
+     - ``{{method_request_long_type}}``
+     - ``{{method_response_long_type}}``
+     - {{#nobr}}{{& method_description}}{{/nobr}}
+   {{/service_methods}}
+
+{{/file_services}}
+
+{{/files}}
+
+
+
+
+<!-- ScalarValueTypes.proto -->
+
+.. list-table:: Scalar Value Types
+   :widths: 15 20 20 20
+   :header-rows: 1
+
+   * - .proto Type
+     - C++ Type
+     - Java Type
+     - Python Type
+   {{#scalar_value_types}}
+   * - ``{{scalar_value_proto_type}}``
+     - ``{{scalar_value_cpp_type}}``
+     - ``{{scalar_value_java_type}}``
+     - ``{{scalar_value_python_type}}``
+   {{/scalar_value_types}}
