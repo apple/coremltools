@@ -49,7 +49,8 @@ class NeuralNetworkBuilder(object):
     --------
     .. sourcecode:: python
 
-        # Create a neural network binary classifier that classifies 3-dimensional data points
+        # Create a neural network binary classifier that classifies 
+        # 3-dimensional data points
         # Specify input and output dimensions
         >>> input_dim = (3,)
         >>> output_dim = (2,)
@@ -77,18 +78,16 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
-        input_features: [(str, coremltools.models.datatypes.Array)]
-            List of input features of the network. Each feature is a (name,
-            arr) tuple, where `name` is the name of the feature, 
-            and `arr` is a `coremltools.models.datatypes.Array` object 
-            with shape (d1, d2, ..., dN).
-
-        output_features: [(str, coremltools.models.datatypes.Array | None)]
-            List of output features of the network. Each feature is a (name,
-            arr) tuple, where `name` is the name of the feature, 
-            and `arr` is a `coremltools.models.datatypes.Array` object 
-            with shape (d1, d2, ..., dN) if the output shape is known, 
-            or None if the shape is unknown. 
+        input_features: [(str, datatypes.Array)]
+            List of input feature of the network. Each feature is a (name,
+            array) tuple, where name the name of the feature, and array
+            is an datatypes.Array object describing the feature type.  
+        
+        output_features: [(str, datatypes.Array or None)]
+            List of output feature of the network. Each feature is a (name,
+            array) tuple, where name is the name of the feature, and array
+            is an datatypes.Array object describing the feature type. 
+            array can be None if not known. 
 
         mode: str ('classifier', 'regressor' or None)
             Mode (one of 'classifier', 'regressor', or None).
@@ -125,12 +124,25 @@ class NeuralNetworkBuilder(object):
                 unk_shape_indices.append(idx)
             out_features.append((str(name), arr))
 
-        # Set inputs and outputs
-        spec = set_transform_interface_params(spec, in_features, out_features)
+        # When output_features in None, use some dummy sized type
+        out_features_with_shape = []
+        for out_feature in output_features:
+            feat_name, feat_type = out_feature
+            if feat_type is None:
+                out_features_with_shape.append((feat_name, datatypes.Array(1)))
+            else: 
+                out_features_with_shape.append(out_feature)
         
-        # We shouldn't need the output shapes
-        for idx_unk in unk_shape_indices:
-            spec.description.output[idx_unk].type.multiArrayType.ClearField("shape")
+        # Set interface inputs and outputs
+        # set_transform_interface_params require output types and shapes, 
+        # so we call it then remove the shape
+        spec = set_transform_interface_params(spec, input_features, 
+                                              out_features_with_shape)
+
+        for idx, output_feature in enumerate(output_features):
+            if output_features[idx][1] is None:
+                spec.description.output[idx].type.multiArrayType.ClearField(
+                        "shape")
 
         # Save the spec in the protobuf
         self.spec = spec
@@ -177,7 +189,9 @@ class NeuralNetworkBuilder(object):
             elif len(dim) == 1:
                 input_shape = tuple(dim)
             else:
-                raise RuntimeError("Attempting to add a neural network input with rank " + str(len(dim)) + ". All networks should take inputs of rank 1 or 3.")
+                raise RuntimeError("Attempting to add a neural network " + 
+                        "input with rank " + str(len(dim)) + 
+                        ". All networks should take inputs of rank 1 or 3.")
 
             spec.description.input[idx].type.multiArrayType.ClearField("shape")
             spec.description.input[idx].type.multiArrayType.shape.extend(input_shape)
@@ -215,7 +229,8 @@ class NeuralNetworkBuilder(object):
         for idx, dim in enumerate(output_dims):
             spec.description.output[idx].type.multiArrayType.ClearField("shape")
             spec.description.output[idx].type.multiArrayType.shape.extend(dim)
-            spec.description.output[idx].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+            spec.description.output[idx].type.multiArrayType.dataType = \
+                    _Model_pb2.ArrayFeatureType.DOUBLE
 
     def set_class_labels(self, class_labels, predicted_feature_name = 'classLabel', prediction_blob = ''):
         """
@@ -1005,9 +1020,6 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.dilationFactor.append(dilation_factors[0])
         spec_layer_params.dilationFactor.append(dilation_factors[1])
 
-    def add_pooling(self, name, height, width, stride_height, stride_width,
-            layer_type, padding_type, input_name, output_name, exclude_pad_area = True, is_global = False):
-            
     def add_pooling(self, name, height, width, stride_height, stride_width,
             layer_type, padding_type, input_name, output_name, exclude_pad_area = True, is_global = False,
             padding_top = 0, padding_bottom = 0, padding_left = 0, padding_right = 0,
