@@ -5,7 +5,7 @@ import tempfile
 from nose.tools import raises
 from nose.plugins.attrib import attr
 import coremltools
-
+from coremltools.models import datatypes, MLModel
 from coremltools._deps import HAS_KERAS_TF
 
 
@@ -134,5 +134,5 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         
         for i in range(0, num_channels2):
             self.assertAlmostEquals(fullOutputs['middle_layer_output'][i], partialOutput['output2'][i], 2)
-
+            
 
