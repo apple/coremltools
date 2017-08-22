@@ -46,9 +46,9 @@ def _keras_transpose(x, is_sequence=False):
     else:
         return x
 
-def _get_mlkit_model(model, model_path, input_names = ['data'], output_names = ['output']):
+def _get_coreml_model(model, model_path, input_names, output_names):
     """
-    Get the mlkit model from the Keras model.
+    Get the coreml model from the Keras model.
     """
     # Convert the model
     from coremltools.converters import keras as keras_converter
@@ -83,10 +83,11 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
             model_dir = None, transpose_keras_result = True, 
             one_dim_seq_flags = None ):
         # transpose_keras_result: if true, compare the transposed Keras result
-        # one_dim_seq_flags: a list of same length as the number of inputs in the model. 
-        # if None, treat all 1D input (if any) as non-sequence
-        # if one_dim_seq_flags[i] is True, it means the ith input, with shape (X,), 
-        # is in fact a sequence of length X. 
+        # one_dim_seq_flags: a list of same length as the number of inputs in 
+        # the model; if None, treat all 1D input (if any) as non-sequence
+        # if one_dim_seq_flags[i] is True, it means the ith input, with shape
+        # (X,) is in fact a sequence of length X. 
+        
         # Get the CoreML model
         use_tmp_folder = False
         if model_dir is None:
@@ -97,46 +98,63 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         # Generate data
         nb_inputs = len(model.inputs)
         if nb_inputs > 1:
-            input_names = []; input_data = []; mlkit_input = {}
+            input_names = []; input_data = []; coreml_input = {}
             for i in range(nb_inputs):
-                input_shape = [1 if a is None else a for a in model.input_shape[i]]
+                input_shape = [1 if a is None else a for a in \
+                        model.input_shape[i]]
                 X = _generate_data(input_shape, mode)
                 feature_name = "data_%s" % i
                 input_names.append(feature_name)
                 input_data.append(X)
                 if one_dim_seq_flags is None: 
-                    mlkit_input[feature_name] = _keras_transpose(X).astype('f').copy()
+                    coreml_input[feature_name] = _keras_transpose(X
+                            ).astype('f').copy()
                 else: 
-                    mlkit_input[feature_name] = _keras_transpose(X, one_dim_seq_flags[i]).astype('f').copy()
+                    coreml_input[feature_name] = _keras_transpose(X, 
+                            one_dim_seq_flags[i]).astype('f').copy()
         else:
             input_shape = [1 if a is None else a for a in model.input_shape]
             input_names = ['data']
             input_data = _generate_data(input_shape, mode)
             if one_dim_seq_flags is None: 
-                mlkit_input = {'data': _keras_transpose(input_data).astype('f').copy()}
+                coreml_input = {'data': _keras_transpose(input_data).astype(
+                        'f').copy()}
             else: 
-                mlkit_input = {'data': _keras_transpose(input_data, one_dim_seq_flags[0]).astype('f').copy()}
+                coreml_input = {'data': _keras_transpose(input_data, 
+                        one_dim_seq_flags[0]).astype('f').copy()}
 
         # Compile the model
-        mlkit_model = _get_mlkit_model(model, model_path, input_names)
+        output_names = ['output'+str(i) for i in xrange(len(model.outputs))]
+        coreml_model = _get_coreml_model(model, model_path, input_names, 
+                output_names)
         
-        # Make predictions
-        if transpose_keras_result:
-            keras_preds = _keras_transpose(model.predict(input_data)).flatten()
-        else:
-            keras_preds = model.predict(input_data).flatten()
-                
-        mlkit_preds = mlkit_model.predict(mlkit_input)['output'].flatten()
+        # Assuming coreml model output names are in the same order as Keras 
+        # Output list, put predictions into a list, sorted by output name
+        coreml_preds = coreml_model.predict(coreml_input)
+        c_preds = [coreml_preds[name] for name in output_names]
 
-        # Cleanup files
+        # Cleanup files - models on disk no longer useful
         if use_tmp_folder and os.path.exists(model_dir):
             shutil.rmtree(model_dir)
-
-        # Compare predictions
-        self.assertEquals(len(keras_preds), len(mlkit_preds))
-        for i in range(len(keras_preds)):
-            max_den = max(1.0, keras_preds[i], mlkit_preds[i])
-            self.assertAlmostEquals(keras_preds[i] / max_den, mlkit_preds[i] / max_den, delta = delta)
+        
+        # Run Keras predictions
+        keras_preds = model.predict(input_data)
+        k_preds = keras_preds if type(keras_preds) is list else [keras_preds]
+        
+        # Compare each output blob
+        for idx, k_pred in enumerate(k_preds):
+            if transpose_keras_result:
+                kp = _keras_transpose(k_pred).flatten()
+            else:
+                kp = k_pred.flatten()
+            cp = c_preds[idx].flatten()
+            # Compare predictions
+            self.assertEquals(len(kp), len(cp))
+            for i in xrange(len(kp)):
+                max_den = max(1.0, kp[i], cp[i])
+                self.assertAlmostEquals(kp[i]/max_den, 
+                                        cp[i]/max_den, 
+                                        delta=delta)
 
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
@@ -1527,7 +1545,17 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         model = Model(inputs=[x], outputs=[z])
 
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
-        self._test_keras_model(model, mode = 'random', delta=1e-2)
+        self._test_keras_model(model, mode = 'random', delta=1e-4)
+    
+    def test_tiny_multiple_outputs(self):
+        x = Input(shape=(3,))
+        y1 = Dense(4)(x)
+        y2 = Dense(5)(x)
+        model = Model([x], [y1,y2])
+        
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-4)
+        
 
 @attr('slow')
 @attr('keras2')
@@ -1549,7 +1577,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         # Generate some random data
         nb_inputs = len(model.inputs)
         if nb_inputs > 1:
-            input_names = []; input_data = []; mlkit_input = {}
+            input_names = []; input_data = []; coreml_input = {}
             for i in range(nb_inputs):
                 input_shape = [1 if a is None else a for a in model.input_shape[i]]
                 X = _generate_data(input_shape)
@@ -1557,17 +1585,17 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
                 input_names.append(feature_name)
                 input_data.append(X)
                 if one_dim_seq_flags is None:
-                    mlkit_input[feature_name] = _keras_transpose(X).astype('f')
+                    coreml_input[feature_name] = _keras_transpose(X).astype('f')
                 else:
-                    mlkit_input[feature_name] = _keras_transpose(X, one_dim_seq_flags[i]).astype('f')
+                    coreml_input[feature_name] = _keras_transpose(X, one_dim_seq_flags[i]).astype('f')
         else:
             input_shape = [1 if a is None else a for a in model.input_shape]
             input_names = ['data']
             input_data = _generate_data(input_shape)
             if one_dim_seq_flags is None:
-                mlkit_input = {'data': _keras_transpose(input_data).astype('f')}
+                coreml_input = {'data': _keras_transpose(input_data).astype('f')}
             else:
-                mlkit_input = {'data': _keras_transpose(input_data, one_dim_seq_flags[0]).astype('f')}
+                coreml_input = {'data': _keras_transpose(input_data, one_dim_seq_flags[0]).astype('f')}
 
         # Make predictions
         if transpose_keras_result:
@@ -1576,18 +1604,18 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
             keras_preds = model.predict(input_data).flatten()
 
         # Get the model
-        mlkit_model = _get_mlkit_model(model, model_path, input_names, ['output'])
+        coreml_model = _get_coreml_model(model, model_path, input_names, ['output'])
         # get prediction
-        mlkit_preds = mlkit_model.predict(mlkit_input)['output'].flatten()
+        coreml_preds = coreml_model.predict(coreml_input)['output'].flatten()
 
         if use_tmp_folder:
             shutil.rmtree(model_dir)
-        self.assertEquals(len(mlkit_preds), len(keras_preds),
-                msg = 'Failed test case %s. Lengths wrong (%s vs %s)' % (param, len(mlkit_preds), len(keras_preds)))
+        self.assertEquals(len(coreml_preds), len(keras_preds),
+                msg = 'Failed test case %s. Lengths wrong (%s vs %s)' % (param, len(coreml_preds), len(keras_preds)))
         for i in range(len(keras_preds)):
-            max_den = max(1.0, keras_preds[i], mlkit_preds[i])
-            self.assertAlmostEquals(keras_preds[i]/max_den, mlkit_preds[i]/max_den, delta = delta,
-                msg = 'Failed test case %s. Predictions wrong (%s vs %s)' % (param, mlkit_preds[i], keras_preds[i]))
+            max_den = max(1.0, keras_preds[i], coreml_preds[i])
+            self.assertAlmostEquals(keras_preds[i]/max_den, coreml_preds[i]/max_den, delta = delta,
+                msg = 'Failed test case %s. Predictions wrong (%s vs %s)' % (param, coreml_preds[i], keras_preds[i]))
 
     @attr('slow')
     def test_activation_layer_params(self):
