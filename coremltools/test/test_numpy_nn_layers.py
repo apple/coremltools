@@ -560,7 +560,218 @@ class SimpleTest(CorrectnessTest):
         self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
-            shutil.rmtree(model_dir)                 
+            shutil.rmtree(model_dir)     
+            
+    def test_conv_same_padding(self):
+        
+        #create a tiny mlmodel
+        input_dim = (10,15,15)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        
+        W = np.random.rand(3,3,10,20)
+                
+        builder.add_convolution(name = 'conv', kernel_channels = 10, output_channels = 20, 
+                        height = 3, width = 3, stride_height = 2, stride_width = 2, 
+                        border_mode = 'same', groups = 1, 
+                        W = W, b = None, has_bias = False, 
+                        input_name = 'data', output_name = 'output',
+                        same_padding_asymmetry_mode = 'TOP_LEFT_HEAVY')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.random.rand(*input_dim)
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = np.random.rand(20,8,8)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)
+            
+    def test_deconv_valid_padding(self):
+        
+        #create a tiny mlmodel
+        input_dim = (10,15,15)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        
+        W = np.random.rand(3,3,20,10)
+                
+        builder.add_convolution(name = 'deconv', kernel_channels = 10, output_channels = 20, 
+                        height = 3, width = 3, stride_height = 2, stride_width = 2, 
+                        border_mode = 'valid', groups = 1, 
+                        W = W, b = None, has_bias = False, 
+                        is_deconv = True,  
+                        input_name = 'data', output_name = 'output', 
+                        padding_top = 2, padding_bottom = 3, padding_left = 2, padding_right = 3)
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.random.rand(*input_dim)
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = np.random.rand(20,26,26)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)   
+            
+    
+    def test_linear_activation(self):
+        
+        #create a tiny mlmodel
+        input_dim = (10,15,15)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_activation(name = 'activation', 
+                               non_linearity = 'LINEAR', 
+                               input_name = 'data', 
+                               output_name = 'output', params= [34.0, 67.0])
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.random.rand(*input_dim)
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = 34.0 * x + 67.0
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)
+            
+            
+    def test_padding_constant(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,3)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_padding(name = 'pad', 
+                            left = 1, right = 0, top = 2, bottom = 0, 
+                            value = -1, 
+                            input_name = 'data',
+                            output_name = 'output')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.array([[1,2,3], [4,5,6]]), (1,2,3)).astype(np.float32)
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = np.reshape(np.array([[-1,-1,-1,-1], [-1,-1,-1,-1], [-1,1,2,3], [-1,4,5,6]]), (1,4,4)).astype(np.float32)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)     
+            
+    
+    def test_padding_replication(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,3)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_padding(name = 'pad', 
+                            left = 1, top = 2, 
+                            input_name = 'data',
+                            output_name = 'output', padding_type = 'replication')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.array([[1,2,3], [4,5,6]]), (1,2,3)).astype(np.float32)
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = np.reshape(np.array([[1,1,2,3], [1,1,2,3], [1,1,2,3], [4,4,5,6]]), (1,4,4)).astype(np.float32)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)
+            
+             
+    def test_padding_reflection(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,3)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_padding(name = 'pad', 
+                            left = 1, top = 1, 
+                            input_name = 'data',
+                            output_name = 'output', padding_type = 'reflection')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.array([[1,2,3], [4,5,6]]), (1,2,3)).astype(np.float32)
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = np.reshape(np.array([[5,4,5,6], [2,1,2,3], [5,4,5,6]]), (1,3,4)).astype(np.float32)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)        
+                                                       
                  
             
 class StressTest(CorrectnessTest):            
