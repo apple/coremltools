@@ -1144,16 +1144,16 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.globalPooling = is_global
 
     def add_padding(self, name, left, right, top, bottom, value, input_name,
-            output_name):
+            output_name, padding_type = 'constant'):
         """
-        Add a padding layer to the model.
+        Add a padding layer to the model. Kindly refer to NeuralNetwork.proto for details. 
 
         Parameters
         ----------
         name: str
             The name of this layer.
         left: int
-            Number of elements to be padded on the left side of the input blob.
+            Number of elements to be padded on the left side of the input blob. 
         right: int
             Number of elements to be padded on the right side of the input blob.
         top: int
@@ -1161,11 +1161,13 @@ class NeuralNetworkBuilder(object):
         bottom: int
             Number of elements to be padded on the bottom of the input blob.
         value: float
-            Value of the elements padded.
+            Value of the elements padded. Used only when padding_type = 'constant'
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
+        padding_type: str
+            Type of the padding. Can be one of 'constant', 'reflection' or 'replication'     
 
         See Also
         --------
@@ -1183,7 +1185,16 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.padding
 
         # Set the parameters
-        spec_layer_params.constant.value = value
+        if padding_type == 'constant':
+            spec_layer_params.constant.value = value
+        elif padding_type == 'reflection':
+            spec_layer_params.reflection.MergeFromString('')
+        elif padding_type == 'replication':
+            spec_layer_params.replication.MergeFromString('')
+        else:
+            raise ValueError("Unknown padding_type %s" %(padding_type))              
+        
+        
         height_border = spec_layer_params.paddingAmounts.borderAmounts.add()
         height_border.startEdgeSize = top
         height_border.endEdgeSize = bottom
