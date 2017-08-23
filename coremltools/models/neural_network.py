@@ -962,7 +962,7 @@ class NeuralNetworkBuilder(object):
             values of height (top, bottom) and width (left, right) padding to be used if border_more is "valid".
             
         same_padding_asymmetry_mode : str.
-            Type of asymmetric padding to be used when  border_mode = 'same'. 
+            Type of asymmetric padding to be used when  border_mode is 'same'. 
             Can be either 'BOTTOM_RIGHT_HEAVY' or  'TOP_LEFT_HEAVY'. 
             Kindly refer to NeuralNetwork.proto for details.    
             
@@ -1919,8 +1919,10 @@ class NeuralNetworkBuilder(object):
             raise NotImplementedError(
                 'Unknown reorganization mode %s ' % mode)
 
-    def add_batchnorm(self, name, channels, gamma, beta, mean, variance, input_name,
-                      output_name, compute_mean_var = False,
+    def add_batchnorm(self, name, channels, gamma, beta, 
+                      mean = None, variance = None, 
+                      input_name = 'data', output_name = 'out', 
+                      compute_mean_var = False,
                       instance_normalization = False, epsilon = 1e-5):
         """
         Add a Batch Normalization layer. Batch Normalization operation is
@@ -1949,8 +1951,8 @@ class NeuralNetworkBuilder(object):
         compute_mean_var: bool
             Set to True if mean and variance is to be computed from the input data.
         instance_normalization: bool
-            Set to True to do instance normalization i.e., mean and variance are computed from the single input instance.
-            If set to False, mean and variance are computed over the whole batch of input data.           
+            Set compute_mean_var and this to True to perform
+            instance normalization i.e., mean and variance are computed from the single input instance.
         epsilon: float
             Value of epsilon. Defaults to 1e-5 if not specified.
 
