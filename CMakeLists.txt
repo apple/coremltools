@@ -101,6 +101,8 @@ if(APPLE)
     TARGET caffeconverter
     POST_BUILD
     COMMAND cp libcaffeconverter.dylib libcaffeconverter.so
+    COMMAND install_name_tool libcaffeconverter.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
+    COMMAND install_name_tool libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
   )
 endif()
 
@@ -126,6 +128,8 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     TARGET coremlpython
     POST_BUILD
     COMMAND cp libcoremlpython.dylib libcoremlpython.so
+    COMMAND install_name_tool libcoremlpython.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
+    COMMAND install_name_tool libcoremlpython.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
   )
 else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
