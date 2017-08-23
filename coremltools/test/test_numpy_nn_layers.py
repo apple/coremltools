@@ -133,31 +133,52 @@ def get_coreml_predictions_reduce(X, params):
         eval = False        
         
     return coreml_preds, eval
+    
+def get_coreml_predictions_unary(x, mode, alpha = 1.0):
+    
+    #create a tiny mlmodel
+    input_dim = x.shape
+    input_features = [('data', datatypes.Array(*input_dim))]
+    output_features = [('output', datatypes.Array(*input_dim))]
+            
+    builder = neural_network.NeuralNetworkBuilder(input_features, 
+            output_features)
+            
+    builder.add_unary(name= 'unary', input_name = 'data', output_name = 'output', mode = mode, alpha = alpha)
+                    
+    #save the model
+    model_dir = tempfile.mkdtemp()
+    model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+    coremltools.utils.save_spec(builder.spec, model_path)
+    
+    #preprare input and get predictions
+    coreml_model = coremltools.models.MLModel(model_path)
+    coreml_input = {'data': x}
+    coreml_preds = coreml_model.predict(coreml_input)['output']
+    
+    if os.path.exists(model_dir):
+        shutil.rmtree(model_dir)
+    
+    return coreml_preds        
         
 
 class SimpleTest(CorrectnessTest):
     
-    #@unittest.skip("GPU Espresso Bug: rdar://problem/33189767")
     def test_tiny_upsample_linear_mode(self):
                 
         #create a tiny mlmodel
         input_dim = (1,1,3) #(C,H,W)
-        output_dim = (1, 1, 1) #some random dimensions here: we are going to remove this information later
         input_features = [('data', datatypes.Array(*input_dim))]
-        output_features = [('output', datatypes.Array(*output_dim))]
+        output_features = [('output', None)]
         
-        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        builder = neural_network.NeuralNetworkBuilder(input_features, 
+                output_features)
         builder.add_upsample(name= 'upsample', 
-                                scaling_factor_h = 2, scaling_factor_w = 3, 
-                                input_name= 'data', output_name= 'output', mode = 'BILINEAR')
-                                
-        #Remove output shape by deleting and adding an output
-        del builder.spec.description.output[-1]                            
-        output = builder.spec.description.output.add()
-        output.name = 'output' 
-        output.type.multiArrayType.dataType = coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.Value('DOUBLE')
+                             scaling_factor_h = 2, scaling_factor_w = 3, 
+                             input_name= 'data', output_name= 'output', 
+                             mode = 'BILINEAR')
         
-        #save the model                        
+        #save the model
         model_dir = tempfile.mkdtemp()
         model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
         coremltools.utils.save_spec(builder.spec, model_path)
@@ -167,18 +188,380 @@ class SimpleTest(CorrectnessTest):
         coreml_input = {'data': np.reshape(np.array([1.0,2.0,3.0]), (1,1,3))}
         coreml_preds = coreml_model.predict(coreml_input)['output']
         
-                
-        #harcoded for this simpple test case
-        numpy_preds = np.array([[1, 1.333, 1.666, 2, 2.333, 2.666, 3, 3, 3],[1, 1.333, 1.6666, 2, 2.33333, 2.6666, 3, 3, 3]])
+        #harcoded for this simple test case
+        numpy_preds = np.array([[1, 1.333, 1.666, 2, 2.333, 2.666, 3, 3, 3],\
+                [1, 1.333, 1.6666, 2, 2.33333, 2.6666, 3, 3, 3]])
         #numpy_preds = np.array([[1, 1, 1, 2, 2, 2, 3, 3, 3],[1, 1, 1, 2, 2, 2, 3, 3, 3]])
-        
         #Test
         self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
         self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
+    
+    def test_LRN(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,3,3)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', datatypes.Array(*input_dim))]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, 
+                output_features)
+                
+        builder.add_lrn(name= 'lrn', input_name = 'data', output_name = 'output',
+                        alpha = 2, beta = 3, local_size = 1, k = 8)
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        coreml_input = {'data': np.ones((1,3,3))}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = 1e-3 * np.ones((1,3,3))
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)   
+    
+    def test_MVN(self):
+        
+        #create a tiny mlmodel
+        input_dim = (2,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', datatypes.Array(*input_dim))]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, 
+                output_features)
+                
+        builder.add_mvn(name= 'mvn', input_name = 'data', output_name = 'output',
+                        across_channels = False, normalize_variance = False)
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        coreml_input = {'data': np.reshape(np.arange(8, dtype=np.float32), (2,2,2))}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = np.reshape(np.arange(8) - np.array([1.5,1.5,1.5,1.5,5.5,5.5,5.5,5.5]),(2,2,2))
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)  
             
+    def test_L2_normalize(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', datatypes.Array(*input_dim))]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, 
+                output_features)
+                
+        builder.add_l2_normalize(name= 'mvn', input_name = 'data', output_name = 'output')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        coreml_input = {'data': np.reshape(np.arange(4, dtype=np.float32), (1,2,2))}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))/np.sqrt(14)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)    
+            
+    def test_unary(self):
+        
+        x = np.reshape(np.arange(1,5, dtype=np.float32), (1,2,2))
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'sqrt')
+        numpy_preds = np.sqrt(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'rsqrt')
+        numpy_preds = 1/np.sqrt(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'inverse')
+        numpy_preds = 1/x
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'power', 3)
+        numpy_preds = x ** 3
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'exp')
+        numpy_preds = np.exp(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))   
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'log')
+        numpy_preds = np.log(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+                                                      
+        coreml_preds = get_coreml_predictions_unary(x, 'abs')
+        numpy_preds = np.abs(x)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))   
+        
+        coreml_preds = get_coreml_predictions_unary(x, 'threshold', alpha = 2)
+        numpy_preds = np.maximum(x, 2)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+        
+    def test_split(self):
+        
+        #create a tiny mlmodel
+        input_dim = (9,2,2)
+        x = np.random.rand(*input_dim)
+        
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_names = []
+        output_features = []
+        for i in range(3):
+            out = 'out_' + str(i)
+            output_names.append(out)
+            output_features.append((out, None)) 
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_split(name= 'split', input_name = 'data', output_names = output_names)
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        coreml_input = {'data': x}
+        coreml_preds_dict = coreml_model.predict(coreml_input)
+        
+        for i in range(3):
+            coreml_preds = coreml_preds_dict[output_names[i]]
+            numpy_preds = x[i*3:i*3+3,:,:]
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)   
+    
+    def test_scale_constant(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_scale(name = 'scale', W = 5, b = 45, has_bias = True, input_name = 'data', output_name = 'output')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = 5 * x + 45
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)
+            
+    def test_scale_matrix(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        
+        W = np.reshape(np.arange(5,9), (1,2,2))
+                
+        builder.add_scale(name = 'scale', W = W, b = None, has_bias = False, input_name = 'data', output_name = 'output',
+                            shape_scale = [1,2,2])
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = W * x
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)            
+            
+    def test_bias_constant(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_bias(name = 'bias', b = 45, input_name = 'data', output_name = 'output')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = x + 45
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)
+            
+    def test_bias_matrix(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        
+        b = np.reshape(np.arange(5,9), (1,2,2))
+                
+        builder.add_bias(name = 'bias', b = b, input_name = 'data', output_name = 'output',
+                            shape_bias = [1,2,2])
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = x + b
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)   
+            
+    def test_load_constant(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        
+        b = np.reshape(np.arange(5,9), (1,2,2))
+        
+        builder.add_load_constant(name= 'load_constant', output_name = 'bias', constant_value = b, shape = [1,2,2])
+        builder.add_elementwise(name= 'add', input_names = ['data', 'bias'], output_name = 'output', mode = 'ADD')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = x + b
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)    
+            
+    def test_min(self):
+        
+        #create a tiny mlmodel
+        input_dim = (1,2,2)
+        input_features = [('data_0', datatypes.Array(*input_dim)), ('data_1', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        
+        builder.add_elementwise(name = 'min', input_names= ['data_0', 'data_1'], output_name = 'output', mode = 'MIN')
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x1 = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+        x2 = np.reshape(np.arange(2,6, dtype=np.float32), (1,2,2))
+        coreml_input = {'data_0': x1, 'data_1': x2}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = np.minimum(x1,x2)
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)                 
+                 
             
 class StressTest(CorrectnessTest):            
     
