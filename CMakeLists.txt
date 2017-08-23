@@ -135,7 +135,7 @@ if(APPLE)
   # TODO - this doesn't work on pre-10.13. Not sure how to specify multiple macOS versions.
   set(PLAT_NAME "macosx_10_13_intel")
   set(PYTHON_TAG "cp27")
-elseif(LINUX)
+elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   set(PLAT_NAME "linux_x86_64")
   set(PYTHON_TAG "py2.7")
 else()
