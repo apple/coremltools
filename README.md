@@ -5,22 +5,49 @@ Core ML community tools contains all supporting tools for CoreML model
 conversion and validation. This includes Scikit Learn, LIBSVM, Caffe,
 Keras and XGBoost.
 
-Dependencies
-------------
 
-We use virtualenv to install required python packages into the build
-directory, be sure to install virtualenv using your system pip.
+We recommend using virtualenv to use, install, or build coremltools. Be
+sure to install virtualenv using your system pip.
 
 ```
     pip install virtualenv
 ```
 
+Installation
+------------
+
+The method for installing :code:`coremltools` follows the
+`standard python package installation steps <https://packaging.python.org/installing/>`_.
+Once you have set up a python environment, run::
+
+    pip install -U coremltools
+
+The package `documentation <https://apple.github.io/coremltools/>`_ contains
+more details on how to use coremltools.
+
+Dependencies
+------------
+
+:code:`coremltools` has the following dependencies:
+
+- numpy (1.12.1+)
+- protobuf (3.1.0+)
+
+In addition, it has the following soft dependencies that are only needed when
+you are converting models of these formats:
+
+- Keras (1.2.2, 2.0.4+) with Tensorflow (1.0.x, 1.1.x)
+- Xgboost (0.6+)
+- scikit-learn (0.15+)
+- libSVM
+
+
 Building for running Unit Tests
 --------------------------------
-We require nosetests. You can install it with the following command.
+To build the project, you need CMake (https://cmake.org).
 
 ```
-    pip install nose
+  cmake .
 ```
 
 Additionally, running unit-tests would require more packages (like
@@ -72,7 +99,7 @@ Running Unit Tests
 To run the unit tests, from the repo root, run the following command:
 
 ```
-   nosetests coremltools/test/
+    make test
 ```
 
 To add a new unit test, add it to the coremltools/test folder. Make sure you
@@ -81,8 +108,10 @@ name the file with a 'test' as the prefix.
 
 Building Installable Wheel
 ---------------------------
+To make a wheel/egg that you can distribute, you can do the following
+
 ```
-   python setup.py bdist_wheel
+   make dist 
 ```
 
 Building Documentation
