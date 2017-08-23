@@ -1143,8 +1143,11 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.avgPoolExcludePadding = exclude_pad_area
         spec_layer_params.globalPooling = is_global
 
-    def add_padding(self, name, left, right, top, bottom, value, input_name,
-            output_name, padding_type = 'constant'):
+    def add_padding(self, name, 
+            left = 0, right = 0, top = 0, bottom = 0, 
+            value = 0, 
+            input_name = 'data', output_name = 'out', 
+            padding_type = 'constant'):
         """
         Add a padding layer to the model. Kindly refer to NeuralNetwork.proto for details. 
 
