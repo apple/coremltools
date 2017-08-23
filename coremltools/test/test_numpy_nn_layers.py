@@ -609,7 +609,7 @@ class SimpleTest(CorrectnessTest):
         
         W = np.random.rand(3,3,20,10)
                 
-        builder.add_convolution(name = 'conv', kernel_channels = 10, output_channels = 20, 
+        builder.add_convolution(name = 'deconv', kernel_channels = 10, output_channels = 20, 
                         height = 3, width = 3, stride_height = 2, stride_width = 2, 
                         border_mode = 'valid', groups = 1, 
                         W = W, b = None, has_bias = False, 
@@ -633,7 +633,41 @@ class SimpleTest(CorrectnessTest):
         self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
-            shutil.rmtree(model_dir)                            
+            shutil.rmtree(model_dir)   
+            
+    
+    def test_linear_activation(self):
+        
+        #create a tiny mlmodel
+        input_dim = (10,15,15)
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+                
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                
+        builder.add_activation(name = 'activation', 
+                               non_linearity = 'LINEAR', 
+                               input_name = 'data', 
+                               output_name = 'output', params= [34.0, 67.0])
+                        
+        #save the model
+        model_dir = tempfile.mkdtemp()
+        model_path = os.path.join(model_dir, 'test_layer.mlmodel')                        
+        coremltools.utils.save_spec(builder.spec, model_path)
+        
+        #preprare input and get predictions
+        coreml_model = coremltools.models.MLModel(model_path)
+        x = np.random.rand(*input_dim)
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+        
+        #harcoded for this simple test case
+        numpy_preds = 34.0 * x + 67.0
+        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        
+        if os.path.exists(model_dir):
+            shutil.rmtree(model_dir)                                 
                  
             
 class StressTest(CorrectnessTest):            

@@ -535,17 +535,18 @@ class NeuralNetworkBuilder(object):
 
                   where alpha is a constant scalar.
                 - 'LINEAR': linear function.
+                
+                   `f(x) = alpha * x + beta`    
 
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
         params: [float] | [numpy.array]
-            Parameters for the activation, depending on non_linearity. 
+            Parameters for the activation, depending on non_linearity. Kindly refer to NeuralNetwork.proto for details. 
 
-                - When non_linearity is one of ['RELU', 'SIGMOID', 'TANH', 'SCALED_TANH', 'SOFTPLUS', 'SOFTSIGN',
-                  'LINEAR'], params is ignored.
-                - When non_linearity is one of ['SCALED_TANH', 'SIGMOID_HARD'], param is a list of 2 floats
+                - When non_linearity is one of ['RELU', 'SIGMOID', 'TANH', 'SCALED_TANH', 'SOFTPLUS', 'SOFTSIGN'], params is ignored.
+                - When non_linearity is one of ['SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'], param is a list of 2 floats
                   [alpha, beta].
                 - When non_linearity is one of ['LEAKYRELU', 'ELU', 'THRESHOLDEDRELU'], param is a list of 1 float
                   [alpha].
@@ -635,7 +636,12 @@ class NeuralNetworkBuilder(object):
             spec_layer_params.thresholdedReLU.alpha = float(theta)
   
         elif non_linearity == 'LINEAR':
-            spec_layer_params.linear.alpha = 1.0
+            if params is None:
+                alpha, beta = (1.0, 0.0)
+            else:
+                alpha, beta = params[0], params[1]
+            spec_layer_params.linear.alpha = alpha
+            spec_layer_params.linear.beta = beta
         else:
             raise TypeError("Unknown activation type %s." %(non_linearity))
 
@@ -1738,7 +1744,7 @@ class NeuralNetworkBuilder(object):
 
     def add_flatten(self, name, mode, input_name, output_name):
         """
-        Add a flatten layer.
+        Add a flatten layer. Only flattens the channel, height and width axis. Leaves the sequence axis as is. 
 
         Parameters
         ----------
@@ -1927,9 +1933,10 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
         compute_mean_var: bool
-            Set to True if mean and variance is to be computed.
+            Set to True if mean and variance is to be computed from the input data.
         instance_normalization: bool
-            Set to True if instance normalization.
+            Set to True to do instance normalization i.e., mean and variance are computed from the single input instance.
+            If set to False, mean and variance are computed over the whole batch of input data.           
         epsilon: float
             Value of epsilon. Defaults to 1e-5 if not specified.
 
@@ -1956,6 +1963,10 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.epsilon = epsilon
         spec_layer_params.computeMeanVar = compute_mean_var
         spec_layer_params.instanceNormalization = instance_normalization
+        
+        if compute_mean_var:
+            if not instance_normalization:
+                raise NotImplementedError('Batch-instance norm is currently not supported')
 
         if not compute_mean_var:
             spec_layer_params.mean.floatValue.extend(map(float, mean.flatten()))
@@ -1964,7 +1975,7 @@ class NeuralNetworkBuilder(object):
 
     def add_permute(self, name, dim, input_name, output_name):
         """
-        Add a permute layer.
+        Add a permute layer. Assumes that the input has dimensions in the order [Seq, C, H, W]
 
         Parameters
         ----------
@@ -2012,10 +2023,13 @@ class NeuralNetworkBuilder(object):
 
         spec_layer_params = spec_layer.permute
         spec_layer_params.axis.extend(list(dim))
+        
+        if len(dim) != 4:
+            raise ValueError("Length of the 'dim' parameter must be equal to 4")
 
     def add_reshape(self, name, input_name, output_name, target_shape, mode):
         """
-        Add a reshape layer.
+        Add a reshape layer. Kindly refer to NeuralNetwork.proto for details. 
 
         Parameters
         ----------
@@ -2024,6 +2038,7 @@ class NeuralNetworkBuilder(object):
         target_shape: tuple
             Shape of the output blob. The product of target_shape must be equal
             to the shape of the input blob.
+            Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).
         mode: int
 
             - If mode == 0, the reshape layer is in CHANNEL_FIRST mode.
@@ -2056,6 +2071,9 @@ class NeuralNetworkBuilder(object):
         else:
             spec_layer_params.mode = \
                     _NeuralNetwork_pb2.ReshapeLayerParams.ReshapeOrder.Value('CHANNEL_LAST')
+                    
+        if len(target_shape) != 4:
+            raise ValueError("Length of the 'target-shape' parameter must be equal to 3 or 4")            
                     
     def add_reduce(self, name, input_name, output_name, axis, mode, epsilon = 1e-6):
         """
