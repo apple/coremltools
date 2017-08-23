@@ -87,7 +87,7 @@ NSString * getCompilerPath()
 Model Model::fromSpec(const std::string& urlStr) {
     @autoreleasepool {
         // compile to a temp dir, then load from there
-        NSError *error;
+        NSError *error = nil;
         NSURL *tempDir = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]] isDirectory:YES];
         [[NSFileManager defaultManager] createDirectoryAtURL:tempDir withIntermediateDirectories:YES attributes:nil error:&error];
         Utils::handleError(error);

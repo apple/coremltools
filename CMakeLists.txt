@@ -96,10 +96,18 @@ target_link_libraries(caffeconverter
   libprotobuf
 )
 
+if(APPLE)
+  add_custom_command(
+    TARGET caffeconverter
+    POST_BUILD
+    COMMAND cp libcaffeconverter.dylib libcaffeconverter.so
+  )
+endif()
+
 find_library(CORE_VIDEO CoreVideo)
 find_library(CORE_ML CoreML)
 find_library(FOUNDATION Foundation)
-if (CORE_VIDEO AND CORE_ML AND FOUNDATION)
+if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
   add_library(coremlpython
     SHARED
     coremlpython/CoreMLPython.mm
@@ -114,14 +122,35 @@ if (CORE_VIDEO AND CORE_ML AND FOUNDATION)
     ${CORE_ML}
     ${FOUNDATION}
   )
+  add_custom_command(
+    TARGET coremlpython
+    POST_BUILD
+    COMMAND cp libcoremlpython.dylib libcoremlpython.so
+  )
 else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
+endif()
+
+if(APPLE)
+  # TODO - this doesn't work on pre-10.13. Not sure how to specify multiple macOS versions.
+  set(PLAT_NAME "macosx_10_13_intel")
+  set(PYTHON_TAG "cp27")
+elseif(LINUX)
+  set(PLAT_NAME "linux_x86_64")
+  set(PYTHON_TAG "py2.7")
+else()
+  message(FATAL_ERROR "Unsupported build platform. Supported platforms are Linux and macOS.")
 endif()
 
 add_custom_target(dist
   COMMAND cp libcaffeconverter.so coremltools/
   COMMAND test ! -f libcoremlpython.so || cp libcoremlpython.so coremltools/
-  COMMAND python setup.py bdist_wheel --plat-name=linux_x86_64
+  COMMAND python setup.py bdist_wheel --plat-name=${PLAT_NAME} --python-tag=${PYTHON_TAG}
   DEPENDS caffeconverter coremlpython
   COMMENT "Building Python wheel for coremltools under dist/"
+)
+
+add_custom_target(nosetests
+  COMMAND nosetests coremltools/test/
+  DEPENDS dist
 )
