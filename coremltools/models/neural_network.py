@@ -884,8 +884,12 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.nRepetitions = nrep
 
     def add_convolution(self, name, kernel_channels, output_channels, height,
-            width, stride_height, stride_width, border_mode, groups, W, b,
-            has_bias, is_deconv, output_shape, input_name, output_name, dilation_factors = [1,1]):
+            width, stride_height, stride_width, border_mode, groups, W, b, has_bias, 
+            is_deconv = False, output_shape = None, 
+            input_name = 'data', output_name = 'out', 
+            dilation_factors = [1,1],
+            padding_top = 0, padding_bottom = 0, padding_left = 0, padding_right = 0,
+            same_padding_asymmetry_mode = 'BOTTOM_RIGHT_HEAVY'):
         """
         Add a convolution layer to the network.
 
@@ -909,7 +913,8 @@ class NeuralNetworkBuilder(object):
         stride_width: int
             Stride along the height direction.
         border_mode: str
-            Option for the output blob shape. Can be either 'valid' or 'same'.
+            Option for the padding type and output blob shape. Can be either 'valid' or 'same'.
+            Kindly refer to NeuralNetwork.proto for details. 
         groups: int
             Number of kernel groups. Input is divided into groups along the channel axis. Each kernel group share the same weights. 
         W: numpy.array
@@ -932,9 +937,12 @@ class NeuralNetworkBuilder(object):
             - If True, the convolution layer is performing transposed convolution.
             - If False, the convolution layer is performing regular convolution.
 
-        output_shape: tuple
-            A 3-tuple, specifying the output shape (output_height, output_width, output_channels). Used only when is_deconv == True.
-            When is_deconv == False, this parameter is ignored.
+        output_shape: tuple | None
+            Either None or a 2-tuple, specifying the output shape (output_height, output_width). Used only when is_deconv == True.
+            When is_deconv == False, this parameter is ignored. 
+            If it is None, the output shape is calculated automatically using the border_mode.
+            Kindly refer to NeuralNetwork.proto for details.    
+            
         input_name: str
             The input blob name of this layer.
         output_name: str
@@ -942,7 +950,15 @@ class NeuralNetworkBuilder(object):
 
         dilation_factors: [int]
             Dilation factors across height and width directions. Must be a list of two positive integers. 
-            Defaults to [1,1]
+            Defaults to [1,1]   
+            
+        padding_top, padding_bottom, padding_left, padding_right: int
+            values of height (top, bottom) and width (left, right) padding to be used if border_more is "valid".
+            
+        same_padding_asymmetry_mode : str.
+            Type of asymmetric padding to be used when  border_mode = 'same'. 
+            Can be either 'BOTTOM_RIGHT_HEAVY' or  'TOP_LEFT_HEAVY'. 
+            Kindly refer to NeuralNetwork.proto for details.    
             
             
         Depthwise convolution is a special case of convolution, where we have:
@@ -970,7 +986,11 @@ class NeuralNetworkBuilder(object):
         # Set the layer params
         spec_layer_params = spec_layer.convolution
         spec_layer_params.isDeconvolution = is_deconv
-        spec_layer_params.outputShape.extend(output_shape)
+        
+        if is_deconv and output_shape:
+            spec_layer_params.outputShape.append(output_shape[0])
+            spec_layer_params.outputShape.append(output_shape[1])
+            
         spec_layer_params.outputChannels = output_channels
         spec_layer_params.kernelChannels = kernel_channels
         spec_layer_params.kernelSize.append(height)
@@ -979,16 +999,16 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.stride.append(stride_width)
 
         if border_mode == 'valid':
-            valid = spec_layer_params.valid
             height_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
-            height_border.startEdgeSize = 0
-            height_border.endEdgeSize = 0
+            height_border.startEdgeSize = padding_top
+            height_border.endEdgeSize = padding_bottom
             width_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
-            width_border.startEdgeSize = 0
-            width_border.endEdgeSize = 0
+            width_border.startEdgeSize = padding_left
+            width_border.endEdgeSize = padding_right
         elif border_mode == 'same':
-            same = spec_layer_params.same
-            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value('BOTTOM_RIGHT_HEAVY')
+            if not (same_padding_asymmetry_mode == 'BOTTOM_RIGHT_HEAVY' or  same_padding_asymmetry_mode == 'TOP_LEFT_HEAVY'):
+                raise ValueError("Invalid value %d of same_padding_asymmetry_mode parameter" % same_padding_asymmetry_mode)
+            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(same_padding_asymmetry_mode)
         else:
             raise NotImplementedError(
                 'Border mode %s is not implemented.' % border_mode)
@@ -1042,7 +1062,7 @@ class NeuralNetworkBuilder(object):
         layer_type: str
             Type of pooling performed. Can either be 'MAX', 'AVERAGE' or 'L2'.
         padding_type: str
-            Option for the output blob shape. Can be either 'VALID' , 'SAME' or 'INCLUDE_LAST_PIXEL'. 
+            Option for the type of pading and output blob shape. Can be either 'VALID' , 'SAME' or 'INCLUDE_LAST_PIXEL'. 
             Kindly refer to NeuralNetwork.proto for details. 
         input_name: str
             The input blob name of this layer.
@@ -1064,7 +1084,7 @@ class NeuralNetworkBuilder(object):
             - If False, the pooling operation is not global.
             
         padding_top, padding_bottom, padding_left, padding_right: int
-            values of height (top, bottom) and width (left, right) padding to be used if padding type is "VALID" or "INCLUDE_LAST_PIXEL"
+            values of height (top, bottom) and width (left, right) padding to be used if padding type is "VALID" or "INCLUDE_LAST_PIXEL".
             
         same_padding_asymmetry_mode : str.
             Type of asymmetric padding to be used when  padding_type = 'SAME'. 
@@ -1106,6 +1126,8 @@ class NeuralNetworkBuilder(object):
                 raise ValueError("Only symmetric padding is supported with the INCLUDE_LAST_PIXEL padding type")
             spec_layer_params.includeLastPixel.paddingAmounts.append(padding_top)
             spec_layer_params.includeLastPixel.paddingAmounts.append(padding_left)
+        else:
+            raise ValueError("Unknown padding_type %s in pooling" %(padding_type))    
             
 
         spec_layer_params.kernelSize.append(height)
