@@ -38,7 +38,7 @@ py::dict Utils::featuresToDict(id<MLFeatureProvider> features) {
         py::dict ret;
         NSSet<NSString *> *keys = [features featureNames];
         for (NSString *key in keys) {
-            MLFeatureValue *value = features[key];
+            MLFeatureValue *value = [features featureValueForName:key];
             py::str pyKey = py::str([key UTF8String]);
             py::object pyValue = convertValueToPython(value);
             ret[pyKey] = pyValue;

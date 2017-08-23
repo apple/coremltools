@@ -12,6 +12,7 @@ from ..proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from ._interface_management import set_transform_interface_params
 from . import datatypes
+import numpy as np
 
 
 def _set_recurrent_activation(param, activation):
@@ -48,7 +49,8 @@ class NeuralNetworkBuilder(object):
     --------
     .. sourcecode:: python
 
-        # Create a neural network binary classifier that classifies 3-dimensional data points
+        # Create a neural network binary classifier that classifies 
+        # 3-dimensional data points
         # Specify input and output dimensions
         >>> input_dim = (3,)
         >>> output_dim = (2,)
@@ -76,17 +78,16 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
-        input_features: [(str, tuple)]
+        input_features: [(str, datatypes.Array)]
             List of input feature of the network. Each feature is a (name,
-            shape) tuple, is the name of the feature, and shape is
-            a (d1, d2, ..., dN) tuple that describes the dimensions of the
-            input feature.
-
-        output_features: [(str, tuple)]
+            array) tuple, where name the name of the feature, and array
+            is an datatypes.Array object describing the feature type.  
+        
+        output_features: [(str, datatypes.Array or None)]
             List of output feature of the network. Each feature is a (name,
-            shape) tuple, where name is the name of the feature, and shape is
-            a (d1, d2, ..., dN) tuple that describes the dimensions of the
-            output feature.
+            array) tuple, where name is the name of the feature, and array
+            is an datatypes.Array object describing the feature type. 
+            array can be None if not known. 
 
         mode: str ('classifier', 'regressor' or None)
             Mode (one of 'classifier', 'regressor', or None).
@@ -112,9 +113,36 @@ class NeuralNetworkBuilder(object):
         # Set the interface params.
         spec = _Model_pb2.Model()
         spec.specificationVersion = SPECIFICATION_VERSION
+        
+        in_features = input_features
+        out_features = []
+        unk_shape_indices = []
+        for idx, feature in enumerate(output_features):
+            name, arr = feature
+            if arr is None:
+                arr = datatypes.Array(1)
+                unk_shape_indices.append(idx)
+            out_features.append((str(name), arr))
 
-        # Set inputs and outputs
-        spec = set_transform_interface_params(spec, input_features, output_features)
+        # When output_features in None, use some dummy sized type
+        out_features_with_shape = []
+        for out_feature in output_features:
+            feat_name, feat_type = out_feature
+            if feat_type is None:
+                out_features_with_shape.append((feat_name, datatypes.Array(1)))
+            else: 
+                out_features_with_shape.append(out_feature)
+        
+        # Set interface inputs and outputs
+        # set_transform_interface_params require output types and shapes, 
+        # so we call it then remove the shape
+        spec = set_transform_interface_params(spec, input_features, 
+                                              out_features_with_shape)
+
+        for idx, output_feature in enumerate(output_features):
+            if output_features[idx][1] is None:
+                spec.description.output[idx].type.multiArrayType.ClearField(
+                        "shape")
 
         # Save the spec in the protobuf
         self.spec = spec
@@ -161,7 +189,9 @@ class NeuralNetworkBuilder(object):
             elif len(dim) == 1:
                 input_shape = tuple(dim)
             else:
-                raise RuntimeError("Attempting to add a neural network input with rank " + str(len(dim)) + ". All networks should take inputs of rank 1 or 3.")
+                raise RuntimeError("Attempting to add a neural network " + 
+                        "input with rank " + str(len(dim)) + 
+                        ". All networks should take inputs of rank 1 or 3.")
 
             spec.description.input[idx].type.multiArrayType.ClearField("shape")
             spec.description.input[idx].type.multiArrayType.shape.extend(input_shape)
@@ -199,7 +229,8 @@ class NeuralNetworkBuilder(object):
         for idx, dim in enumerate(output_dims):
             spec.description.output[idx].type.multiArrayType.ClearField("shape")
             spec.description.output[idx].type.multiArrayType.shape.extend(dim)
-            spec.description.output[idx].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+            spec.description.output[idx].type.multiArrayType.dataType = \
+                    _Model_pb2.ArrayFeatureType.DOUBLE
 
     def set_class_labels(self, class_labels, predicted_feature_name = 'classLabel', prediction_blob = ''):
         """
@@ -320,7 +351,7 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer
         W: numpy.array
-            Weight matrix of shape (input_channels, output_channels).
+            Weight matrix of shape (output_channels, input_channels).
         b: numpy.array
             Bias vector of shape (output_channels, ).
         input_channels: int
@@ -374,7 +405,7 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer
         W: numpy.array
-            Weight matrix of shape (input_channels, output_channels).
+            Weight matrix of shape (output_channels, input_dim).
         b: numpy.array
             Bias vector of shape (output_channels, ).
         input_dim: int
@@ -504,17 +535,18 @@ class NeuralNetworkBuilder(object):
 
                   where alpha is a constant scalar.
                 - 'LINEAR': linear function.
+                
+                   `f(x) = alpha * x + beta`    
 
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
         params: [float] | [numpy.array]
-            Parameters for the activation, depending on non_linearity. 
+            Parameters for the activation, depending on non_linearity. Kindly refer to NeuralNetwork.proto for details. 
 
-                - When non_linearity is one of ['RELU', 'SIGMOID', 'TANH', 'SCALED_TANH', 'SOFTPLUS', 'SOFTSIGN',
-                  'LINEAR'], params is ignored.
-                - When non_linearity is one of ['SCALED_TANH', 'SIGMOID_HARD'], param is a list of 2 floats
+                - When non_linearity is one of ['RELU', 'SIGMOID', 'TANH', 'SCALED_TANH', 'SOFTPLUS', 'SOFTSIGN'], params is ignored.
+                - When non_linearity is one of ['SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'], param is a list of 2 floats
                   [alpha, beta].
                 - When non_linearity is one of ['LEAKYRELU', 'ELU', 'THRESHOLDEDRELU'], param is a list of 1 float
                   [alpha].
@@ -604,7 +636,12 @@ class NeuralNetworkBuilder(object):
             spec_layer_params.thresholdedReLU.alpha = float(theta)
   
         elif non_linearity == 'LINEAR':
-            spec_layer_params.linear.alpha = 1.0
+            if params is None:
+                alpha, beta = (1.0, 0.0)
+            else:
+                alpha, beta = params[0], params[1]
+            spec_layer_params.linear.alpha = alpha
+            spec_layer_params.linear.beta = beta
         else:
             raise TypeError("Unknown activation type %s." %(non_linearity))
 
@@ -630,7 +667,12 @@ class NeuralNetworkBuilder(object):
             - 'DOT': compute the dot product of the two input blobs. In this mode, the length of input_names should be 2.
             - 'COS': compute the cosine similarity of the two input blobs. In this mode, the length of input_names should be 2.
             - 'MAX': compute the element-wise maximum over the input blobs.
+            - 'MIN': compute the element-wise minimum over the input blobs.
             - 'AVE': compute the element-wise average over the input blobs.
+        
+        alpha: float
+            if mode == 'ADD' and there is only one input_name, alpha is added to the input
+            if mode == 'MULTIPLY' and there is only one input_name, alpha is multiplied to the input
        
         See Also
         --------
@@ -669,6 +711,8 @@ class NeuralNetworkBuilder(object):
             spec_layer.dot.cosineSimilarity = False
         elif mode == 'MAX':
             spec_layer.max.MergeFromString('')
+        elif mode == 'MIN':
+            spec_layer.min.MergeFromString('')    
         elif mode == 'AVE':
             spec_layer.average.MergeFromString('')
         else:
@@ -717,7 +761,7 @@ class NeuralNetworkBuilder(object):
         else:
             raise ValueError("Unspported upsampling mode %s" % mode)   
 
-    def add_scale(self, name, W, b, has_bias, input_name, output_name):
+    def add_scale(self, name, W, b, has_bias, input_name, output_name, shape_scale = [1], shape_bias = [1]):
         """
         Add scale layer to the model.
 
@@ -725,9 +769,9 @@ class NeuralNetworkBuilder(object):
         ----------
         name: str
             The name of this layer.
-        W: int
+        W: int | numpy.array
             Scale of the input.
-        b: int
+        b: int | numpy.array
             Bias to add to the input.
         has_bias: boolean
             Whether the bias vector of this layer is ignored in the spec.
@@ -735,10 +779,15 @@ class NeuralNetworkBuilder(object):
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
+        
+        shape_scale: [int]
+            List of ints that specifies the shape of the scale parameter. Can be [1] or [C] or [1,H,W] or [C,H,W].
+        shape_bias: [int]
+            List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].
 
         See Also
         --------
-        add_elementwise
+        add_bias
         """
         spec = self.spec
         nn_spec = self.nn_spec
@@ -748,22 +797,69 @@ class NeuralNetworkBuilder(object):
         spec_layer.input.append(input_name)
         spec_layer.output.append(output_name)
         spec_layer_params = spec_layer.scale
-
+        
         spec_layer_params.hasBias = has_bias
+        
+        #add scale and its shape
         scale = spec_layer_params.scale
-        scale.floatValue.extend(map(float, W.flatten()))
-        shapeScale = spec_layer_params.shapeScale
-        shapeScale.extend(W.shape)
+        spec_layer_params.shapeScale.extend(shape_scale)  
+        if isinstance(W, int):
+            scale.floatValue.append(float(W))
+        else:    
+            scale.floatValue.extend(map(float, W.flatten()))  
+        if len(scale.floatValue) != np.prod(shape_scale):
+            raise ValueError("Dimensions of 'shape_scale' do not match the size of the provided 'scale' parameter")     
+        
+        #add bias and its shape
         if has_bias:
             bias = spec_layer_params.bias
-            bias.floatValue.extend(map(float, b.flatten()))
-            shapeBias = spec_layer_params.shapeBias
-            shapeBias.extend(b.shape)
-        else:
-            bias = spec_layer_params.bias
-            bias.floatValue.extend(map(float, [0]))
-            shapeBias = spec_layer_params.shapeBias
-            shapeBias.extend((1,))
+            spec_layer_params.shapeBias.extend(shape_bias) 
+            if isinstance(b, int):
+                bias.floatValue.append(float(b))
+            else:    
+                bias.floatValue.extend(map(float, b.flatten()))  
+            if len(bias.floatValue) != np.prod(shape_bias):
+                raise ValueError("Dimensions of 'shape_bias' do not match the size of the provided 'b' parameter")
+                
+    def add_bias(self, name, b, input_name, output_name, shape_bias = [1]):
+        """
+        Add bias layer to the model.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        b: int | numpy.array
+            Bias to add to the input.
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        shape_bias: [int]
+            List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].
+
+        See Also
+        --------
+        add_scale
+        """
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+        spec_layer_params = spec_layer.bias
+        
+        #add bias and its shape
+        bias = spec_layer_params.bias
+        spec_layer_params.shape.extend(shape_bias) 
+        if isinstance(b, int):
+            bias.floatValue.append(float(b))
+        else:    
+            bias.floatValue.extend(map(float, b.flatten()))  
+        if len(bias.floatValue) != np.prod(shape_bias):
+            raise ValueError("Dimensions of 'shape_bias' do not match the size of the provided 'b' parameter")            
 
     def add_sequence_repeat(self, name, nrep, input_name, output_name):
         """
@@ -794,13 +890,17 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.nRepetitions = nrep
 
     def add_convolution(self, name, kernel_channels, output_channels, height,
-            width, stride_height, stride_width, border_mode, groups, W, b,
-            has_bias, is_deconv, output_shape, input_name, output_name, dilation_factors = [1,1]):
+            width, stride_height, stride_width, border_mode, groups, W, b, has_bias, 
+            is_deconv = False, output_shape = None, 
+            input_name = 'data', output_name = 'out', 
+            dilation_factors = [1,1],
+            padding_top = 0, padding_bottom = 0, padding_left = 0, padding_right = 0,
+            same_padding_asymmetry_mode = 'BOTTOM_RIGHT_HEAVY'):
         """
         Add a convolution layer to the network.
 
         Please see the ConvolutionLayerParams in Core ML neural network
-        protobuf message for more information input and output blob dimensions.
+        protobuf message for more information about input and output blob dimensions.
 
         Parameters
         ----------
@@ -819,7 +919,8 @@ class NeuralNetworkBuilder(object):
         stride_width: int
             Stride along the height direction.
         border_mode: str
-            Option for the output blob shape. Can be either 'valid' or 'same'.
+            Option for the padding type and output blob shape. Can be either 'valid' or 'same'.
+            Kindly refer to NeuralNetwork.proto for details. 
         groups: int
             Number of kernel groups. Input is divided into groups along the channel axis. Each kernel group share the same weights. 
         W: numpy.array
@@ -842,9 +943,12 @@ class NeuralNetworkBuilder(object):
             - If True, the convolution layer is performing transposed convolution.
             - If False, the convolution layer is performing regular convolution.
 
-        output_shape: tuple
-            A 3-tuple, specifying the output shape (output_height, output_width, output_channels). Used only when is_deconv == True.
-            When is_deconv == False, this parameter is ignored.
+        output_shape: tuple | None
+            Either None or a 2-tuple, specifying the output shape (output_height, output_width). Used only when is_deconv == True.
+            When is_deconv == False, this parameter is ignored. 
+            If it is None, the output shape is calculated automatically using the border_mode.
+            Kindly refer to NeuralNetwork.proto for details.    
+            
         input_name: str
             The input blob name of this layer.
         output_name: str
@@ -852,7 +956,15 @@ class NeuralNetworkBuilder(object):
 
         dilation_factors: [int]
             Dilation factors across height and width directions. Must be a list of two positive integers. 
-            Defaults to [1,1]
+            Defaults to [1,1]   
+            
+        padding_top, padding_bottom, padding_left, padding_right: int
+            values of height (top, bottom) and width (left, right) padding to be used if border_more is "valid".
+            
+        same_padding_asymmetry_mode : str.
+            Type of asymmetric padding to be used when  border_mode is 'same'. 
+            Can be either 'BOTTOM_RIGHT_HEAVY' or  'TOP_LEFT_HEAVY'. 
+            Kindly refer to NeuralNetwork.proto for details.    
             
             
         Depthwise convolution is a special case of convolution, where we have:
@@ -880,7 +992,11 @@ class NeuralNetworkBuilder(object):
         # Set the layer params
         spec_layer_params = spec_layer.convolution
         spec_layer_params.isDeconvolution = is_deconv
-        spec_layer_params.outputShape.extend(output_shape)
+        
+        if is_deconv and output_shape:
+            spec_layer_params.outputShape.append(output_shape[0])
+            spec_layer_params.outputShape.append(output_shape[1])
+            
         spec_layer_params.outputChannels = output_channels
         spec_layer_params.kernelChannels = kernel_channels
         spec_layer_params.kernelSize.append(height)
@@ -889,16 +1005,16 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.stride.append(stride_width)
 
         if border_mode == 'valid':
-            valid = spec_layer_params.valid
             height_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
-            height_border.startEdgeSize = 0
-            height_border.endEdgeSize = 0
+            height_border.startEdgeSize = padding_top
+            height_border.endEdgeSize = padding_bottom
             width_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
-            width_border.startEdgeSize = 0
-            width_border.endEdgeSize = 0
+            width_border.startEdgeSize = padding_left
+            width_border.endEdgeSize = padding_right
         elif border_mode == 'same':
-            same = spec_layer_params.same
-            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value('BOTTOM_RIGHT_HEAVY')
+            if not (same_padding_asymmetry_mode == 'BOTTOM_RIGHT_HEAVY' or  same_padding_asymmetry_mode == 'TOP_LEFT_HEAVY'):
+                raise ValueError("Invalid value %d of same_padding_asymmetry_mode parameter" % same_padding_asymmetry_mode)
+            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(same_padding_asymmetry_mode)
         else:
             raise NotImplementedError(
                 'Border mode %s is not implemented.' % border_mode)
@@ -931,7 +1047,9 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.dilationFactor.append(dilation_factors[1])
 
     def add_pooling(self, name, height, width, stride_height, stride_width,
-            layer_type, padding_type, input_name, output_name, exclude_pad_area = True, is_global = False):
+            layer_type, padding_type, input_name, output_name, exclude_pad_area = True, is_global = False,
+            padding_top = 0, padding_bottom = 0, padding_left = 0, padding_right = 0,
+            same_padding_asymmetry_mode = 'BOTTOM_RIGHT_HEAVY'):        
         """
         Add a pooling layer to the model.
 
@@ -942,22 +1060,23 @@ class NeuralNetworkBuilder(object):
         height: int
             Height of pooling region.
         width: int
-            Number of elements to be padded on the right side of the input blob.
+            Width of pooling region.
         stride_height: int
             Stride along the height direction.
         stride_width: int
-            Stride along the height direction.
+            Stride along the width direction.
         layer_type: str
             Type of pooling performed. Can either be 'MAX', 'AVERAGE' or 'L2'.
         padding_type: str
-            Option for the output blob shape. Can be either 'VALID' or 'SAME'.
+            Option for the type of pading and output blob shape. Can be either 'VALID' , 'SAME' or 'INCLUDE_LAST_PIXEL'. 
+            Kindly refer to NeuralNetwork.proto for details. 
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
 
         exclude_pad_area: boolean
-            Whether to exclude padded area in the pooling operation. Defaults to True.
+            Whether to exclude padded area in the 'AVERAGE' pooling operation. Defaults to True.
 
             - If True, the value of the padded area will be excluded.
             - If False, the padded area will be included.
@@ -969,12 +1088,20 @@ class NeuralNetworkBuilder(object):
             Parameters height, width, stride_height, stride_width will be ignored.
 
             - If False, the pooling operation is not global.
+            
+        padding_top, padding_bottom, padding_left, padding_right: int
+            values of height (top, bottom) and width (left, right) padding to be used if padding type is "VALID" or "INCLUDE_LAST_PIXEL".
+            
+        same_padding_asymmetry_mode : str.
+            Type of asymmetric padding to be used when  padding_type = 'SAME'. 
+            Can be either 'BOTTOM_RIGHT_HEAVY' or  'TOP_LEFT_HEAVY'. 
+            Kindly refer to NeuralNetwork.proto for details.            
 
         See Also
         --------
-        add_convolution, add_pooling, add_activation
+        add_convolution, add_activation
         """
-
+        
         spec = self.spec
         nn_spec = self.nn_spec
 
@@ -991,13 +1118,23 @@ class NeuralNetworkBuilder(object):
 
         if padding_type == 'VALID':
             height_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
-            height_border.startEdgeSize = 0
-            height_border.endEdgeSize = 0
+            height_border.startEdgeSize = padding_top
+            height_border.endEdgeSize = padding_bottom
             width_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
-            width_border.startEdgeSize = 0
-            width_border.endEdgeSize = 0
+            width_border.startEdgeSize = padding_left
+            width_border.endEdgeSize = padding_right
         elif padding_type == 'SAME':
-            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value('BOTTOM_RIGHT_HEAVY')
+            if not (same_padding_asymmetry_mode == 'BOTTOM_RIGHT_HEAVY' or  same_padding_asymmetry_mode == 'TOP_LEFT_HEAVY'):
+                raise ValueError("Invalid value %d of same_padding_asymmetry_mode parameter" % same_padding_asymmetry_mode)
+            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(same_padding_asymmetry_mode)
+        elif padding_type == 'INCLUDE_LAST_PIXEL':
+            if padding_top != padding_bottom or padding_left != padding_right:
+                raise ValueError("Only symmetric padding is supported with the INCLUDE_LAST_PIXEL padding type")
+            spec_layer_params.includeLastPixel.paddingAmounts.append(padding_top)
+            spec_layer_params.includeLastPixel.paddingAmounts.append(padding_left)
+        else:
+            raise ValueError("Unknown padding_type %s in pooling" %(padding_type))    
+            
 
         spec_layer_params.kernelSize.append(height)
         spec_layer_params.kernelSize.append(width)
@@ -1006,17 +1143,20 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.avgPoolExcludePadding = exclude_pad_area
         spec_layer_params.globalPooling = is_global
 
-    def add_padding(self, name, left, right, top, bottom, value, input_name,
-            output_name):
+    def add_padding(self, name, 
+            left = 0, right = 0, top = 0, bottom = 0, 
+            value = 0, 
+            input_name = 'data', output_name = 'out', 
+            padding_type = 'constant'):
         """
-        Add a padding layer to the model.
+        Add a padding layer to the model. Kindly refer to NeuralNetwork.proto for details. 
 
         Parameters
         ----------
         name: str
             The name of this layer.
         left: int
-            Number of elements to be padded on the left side of the input blob.
+            Number of elements to be padded on the left side of the input blob. 
         right: int
             Number of elements to be padded on the right side of the input blob.
         top: int
@@ -1024,11 +1164,13 @@ class NeuralNetworkBuilder(object):
         bottom: int
             Number of elements to be padded on the bottom of the input blob.
         value: float
-            Value of the elements padded.
+            Value of the elements padded. Used only when padding_type = 'constant'
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
+        padding_type: str
+            Type of the padding. Can be one of 'constant', 'reflection' or 'replication'     
 
         See Also
         --------
@@ -1046,7 +1188,16 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.padding
 
         # Set the parameters
-        spec_layer_params.constant.value = value
+        if padding_type == 'constant':
+            spec_layer_params.constant.value = value
+        elif padding_type == 'reflection':
+            spec_layer_params.reflection.MergeFromString('')
+        elif padding_type == 'replication':
+            spec_layer_params.replication.MergeFromString('')
+        else:
+            raise ValueError("Unknown padding_type %s" %(padding_type))              
+        
+        
         height_border = spec_layer_params.paddingAmounts.borderAmounts.add()
         height_border.startEdgeSize = top
         height_border.endEdgeSize = bottom
@@ -1607,7 +1758,7 @@ class NeuralNetworkBuilder(object):
 
     def add_flatten(self, name, mode, input_name, output_name):
         """
-        Add a flatten layer.
+        Add a flatten layer. Only flattens the channel, height and width axis. Leaves the sequence axis as is. 
 
         Parameters
         ----------
@@ -1768,8 +1919,10 @@ class NeuralNetworkBuilder(object):
             raise NotImplementedError(
                 'Unknown reorganization mode %s ' % mode)
 
-    def add_batchnorm(self, name, channels, gamma, beta, mean, variance, input_name,
-                      output_name, compute_mean_var = False,
+    def add_batchnorm(self, name, channels, gamma, beta, 
+                      mean = None, variance = None, 
+                      input_name = 'data', output_name = 'out', 
+                      compute_mean_var = False,
                       instance_normalization = False, epsilon = 1e-5):
         """
         Add a Batch Normalization layer. Batch Normalization operation is
@@ -1796,9 +1949,10 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
         compute_mean_var: bool
-            Set to True if mean and variance is to be computed.
+            Set to True if mean and variance is to be computed from the input data.
         instance_normalization: bool
-            Set to True if instance normalization.
+            Set compute_mean_var and this to True to perform
+            instance normalization i.e., mean and variance are computed from the single input instance.
         epsilon: float
             Value of epsilon. Defaults to 1e-5 if not specified.
 
@@ -1825,6 +1979,10 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.epsilon = epsilon
         spec_layer_params.computeMeanVar = compute_mean_var
         spec_layer_params.instanceNormalization = instance_normalization
+        
+        if compute_mean_var:
+            if not instance_normalization:
+                raise NotImplementedError('Batch-instance norm is currently not supported')
 
         if not compute_mean_var:
             spec_layer_params.mean.floatValue.extend(map(float, mean.flatten()))
@@ -1833,7 +1991,7 @@ class NeuralNetworkBuilder(object):
 
     def add_permute(self, name, dim, input_name, output_name):
         """
-        Add a permute layer.
+        Add a permute layer. Assumes that the input has dimensions in the order [Seq, C, H, W]
 
         Parameters
         ----------
@@ -1881,10 +2039,13 @@ class NeuralNetworkBuilder(object):
 
         spec_layer_params = spec_layer.permute
         spec_layer_params.axis.extend(list(dim))
+        
+        if len(dim) != 4:
+            raise ValueError("Length of the 'dim' parameter must be equal to 4")
 
     def add_reshape(self, name, input_name, output_name, target_shape, mode):
         """
-        Add a reshape layer.
+        Add a reshape layer. Kindly refer to NeuralNetwork.proto for details. 
 
         Parameters
         ----------
@@ -1893,6 +2054,7 @@ class NeuralNetworkBuilder(object):
         target_shape: tuple
             Shape of the output blob. The product of target_shape must be equal
             to the shape of the input blob.
+            Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).
         mode: int
 
             - If mode == 0, the reshape layer is in CHANNEL_FIRST mode.
@@ -1925,6 +2087,9 @@ class NeuralNetworkBuilder(object):
         else:
             spec_layer_params.mode = \
                     _NeuralNetwork_pb2.ReshapeLayerParams.ReshapeOrder.Value('CHANNEL_LAST')
+                    
+        if len(target_shape) != 4:
+            raise ValueError("Length of the 'target-shape' parameter must be equal to 3 or 4")            
                     
     def add_reduce(self, name, input_name, output_name, axis, mode, epsilon = 1e-6):
         """
@@ -2005,8 +2170,285 @@ class NeuralNetworkBuilder(object):
         elif axis == 'W':
             spec_layer_params.axis = _NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value('W')
         else:
-            raise NotImplementedError('Unknown reduction axis %s ' % axis)                      
-                
+            raise NotImplementedError('Unknown reduction axis %s ' % axis)          
+            
+    
+    def add_lrn(self, name, input_name, output_name, alpha, beta, local_size, k = 1.0):
+        """
+        Add a LRN (local response normalization) layer. Please see the LRNLayerParams message in Core ML neural network
+        protobuf for more information about the operation of this layer. Supports "across" channels normalization. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        
+        alpha: float
+            multiplicative constant in the denominator.
+        
+        beta: float
+            exponent of the normalizing term in the denominator.
+        
+        k: float
+            bias term in the denominator. Must be positive. 
+        
+        local_size: int
+            size of the neighborhood along the channel axis.
+        
+
+        See Also
+        --------
+        add_l2_normalize, add_mvn
+        """
+        
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.lrn
+        spec_layer_params.alpha = alpha
+        spec_layer_params.beta = beta
+        spec_layer_params.localSize = local_size
+        spec_layer_params.k = k
+        
+    def add_mvn(self, name, input_name, output_name, across_channels = True, normalize_variance = True, epsilon = 1e-5):
+        """
+        Add an MVN (mean variance normalization) layer. Computes mean, variance and normalizes the input. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        
+        across_channels: boolean
+            If False, each channel plane is normalized separately
+            If True, mean/variance is computed across all C, H and W dimensions
+        
+        normalize_variance: boolean
+            If False, only mean subtraction is performed.
+        
+        epsilon: float
+            small bias to avoid division by zero.
+        
+
+        See Also
+        --------
+        add_l2_normalize, add_lrn
+        """
+        
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.mvn
+        spec_layer_params.acrossChannels = across_channels
+        spec_layer_params.normalizeVariance = normalize_variance
+        spec_layer_params.epsilon = epsilon
+        
+    
+    def add_l2_normalize(self, name, input_name, output_name, epsilon = 1e-5):
+        """
+        Add L2 normalize layer. Normalizes the input by the L2 norm, i.e. divides by the 
+        the square root of the sum of squares of all elements of the input along C, H and W dimensions.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        
+        epsilon: float
+            small bias to avoid division by zero.
+        
+
+        See Also
+        --------
+        add_mvn, add_lrn
+        """
+        
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.l2normalize
+        spec_layer_params.epsilon = epsilon    
+        
+        
+    def add_unary(self, name, input_name, output_name, mode, alpha = 1.0,
+                    shift = 0, scale = 1.0, epsilon = 1e-6):
+        """
+        Add a Unary layer. Applies the specified function (mode) to all the elements of the input.
+        Please see the UnaryFunctionLayerParams message in Core ML neural network
+        protobuf for more information about the operation of this layer.   
+        Prior to the application of the function the input can be scaled and shifted by using the 'scale',
+        'shift' parameters.                         
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        
+        mode: str
+            Unary function.  
+            Allowed values: 'sqrt', 'rsqrt', 'inverse', 'power', 'exp', 'log', 'abs', threshold'.        
+                    
+        alpha: float
+            constant used in with modes 'power' and 'threshold'.     
+                    
+        shift, scale: float
+            input is modified by scale and shift prior to the application of the unary function.                            
+        
+        epsilon: float
+            small bias to prevent division by zero. 
+
+        See Also
+        --------
+        add_activation
+        """
+
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.unary
+        spec_layer_params.epsilon = epsilon
+        spec_layer_params.alpha = alpha
+        spec_layer_params.shift = shift
+        spec_layer_params.scale = scale
+        
+        if mode == 'sqrt':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('SQRT')
+        elif mode == 'rsqrt':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('RSQRT')    
+        elif mode == 'inverse':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('INVERSE')    
+        elif mode == 'power':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('POWER')    
+        elif mode == 'exp':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('EXP')
+        elif mode == 'log':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('LOG')        
+        elif mode == 'abs':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('ABS')    
+        elif mode == 'threshold':
+            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('THRESHOLD')    
+        else:
+            raise NotImplementedError('Unknown unary function %s ' % mode)     
+            
+    def add_split(self, name, input_name, output_names):
+        """
+        Add a Split layer that uniformly splits the input along the channel dimension 
+        to produce multiple outputs. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_name: str
+            The input blob name of this layer.
+        output_names: [str]
+            List of output blob names of this layer.
+
+        See Also
+        --------
+        add_elementwise
+        """
+        
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.extend(output_names)
+
+        spec_layer_params = spec_layer.split
+        spec_layer_params.nOutputs = len(output_names)   
+        
+    def add_load_constant(self, name, output_name, constant_value, shape):
+        """
+        Add a load constant layer. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        output_name: str
+            The output blob name of this layer.
+        
+        constant_value: numpy.array
+            value of the constant as a numpy array. 
+        
+        shape: [int]
+            List of ints representing the shape of the constant. Must be of length 3: [C,H,W]
+        
+
+        See Also
+        --------
+        add_elementwise
+        """
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.output.append(output_name)
+
+        spec_layer_params = spec_layer.loadConstant
+        
+        data = spec_layer_params.data
+        data.floatValue.extend(map(float, constant_value.flatten()))  
+        
+        spec_layer_params.shape.extend(shape)
+        
+        if len(data.floatValue) != np.prod(shape):
+            raise ValueError("Dimensions of 'shape' do not match the size of the provided constant")
+        if len(shape) != 3:
+            raise ValueError("'shape' must be of length 3")    
+                                                                            
 
     def set_pre_processing_parameters(self, image_input_names = [], is_bgr = False,
             red_bias = 0.0, green_bias = 0.0, blue_bias = 0.0, gray_bias = 0.0, image_scale = 1.0):
