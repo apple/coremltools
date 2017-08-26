@@ -6,6 +6,10 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
 
+#if ! __has_feature(objc_arc)
+#error "ARC is off"
+#endif
+
 namespace py = pybind11;
 
 using namespace CoreML::Python;
