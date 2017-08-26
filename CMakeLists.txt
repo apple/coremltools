@@ -32,6 +32,7 @@ set(CMAKE_CXX_FLAGS " \
   ${CMAKE_CXX_FLAGS} \
   ${PYTHON_FLAGS} \
   --std=c++14 \
+  -fobjc-arc \
 ")
 set(CMAKE_EXE_LINKER_FLAGS " \
   ${CMAKE_EXE_LINKER_FLAGS} \
@@ -96,10 +97,20 @@ target_link_libraries(caffeconverter
   libprotobuf
 )
 
+if(APPLE)
+  add_custom_command(
+    TARGET caffeconverter
+    POST_BUILD
+    COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
+    COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
+    COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
+  )
+endif()
+
 find_library(CORE_VIDEO CoreVideo)
 find_library(CORE_ML CoreML)
 find_library(FOUNDATION Foundation)
-if (CORE_VIDEO AND CORE_ML AND FOUNDATION)
+if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
   add_library(coremlpython
     SHARED
     coremlpython/CoreMLPython.mm
@@ -114,14 +125,35 @@ if (CORE_VIDEO AND CORE_ML AND FOUNDATION)
     ${CORE_ML}
     ${FOUNDATION}
   )
+  add_custom_command(
+    TARGET coremlpython
+    POST_BUILD
+    COMMAND cp $<TARGET_FILE:coremlpython> coremltools/libcoremlpython.so
+    COMMAND install_name_tool coremltools/libcoremlpython.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
+    COMMAND install_name_tool coremltools/libcoremlpython.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
+  )
 else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
 endif()
 
+if(APPLE)
+  # TODO - this doesn't work on pre-10.13. Not sure how to specify multiple macOS versions.
+  set(PLAT_NAME "macosx_10_13_intel")
+  set(PYTHON_TAG "cp27")
+elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+  set(PLAT_NAME "linux_x86_64")
+  set(PYTHON_TAG "py2.7")
+else()
+  message(FATAL_ERROR "Unsupported build platform. Supported platforms are Linux and macOS.")
+endif()
+
 add_custom_target(dist
-  COMMAND cp libcaffeconverter.so coremltools/
-  COMMAND test ! -f libcoremlpython.so || cp libcoremlpython.so coremltools/
-  COMMAND python setup.py bdist_wheel --plat-name=linux_x86_64
+  COMMAND python setup.py bdist_wheel --plat-name=${PLAT_NAME} --python-tag=${PYTHON_TAG}
   DEPENDS caffeconverter coremlpython
   COMMENT "Building Python wheel for coremltools under dist/"
+)
+
+add_custom_target(nosetests
+  COMMAND nosetests coremltools/test/
+  DEPENDS dist
 )

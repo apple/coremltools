@@ -15,10 +15,10 @@ namespace CoreML {
         class Model {
         private:
             MLModel *m_model = nil;
-
+            NSURL *compiledUrl = nil;
         public:
+            ~Model();
             explicit Model(const std::string& urlStr);
-            
             static Model fromSpec(const std::string& urlStr);
             py::dict predict(const py::dict& input, bool useCPUOnly);
             std::string toString() const;
