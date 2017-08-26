@@ -14,6 +14,10 @@ namespace py = pybind11;
 
 using namespace CoreML::Python;
 
+Model::~Model() {
+    
+}
+
 Model::Model(const std::string& urlStr) {
     @autoreleasepool {
         NSURL *url = Utils::stringToNSURL(urlStr);
@@ -40,36 +44,16 @@ py::dict Model::predict(const py::dict& input, bool useCPUOnly) {
 
 Model Model::fromSpec(const std::string& urlStr) {
     @autoreleasepool {
-        // compile to a temp dir, then load from there
+        // Compile the model
         NSError *error = nil;
-        NSURL *tempDir = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[[NSProcessInfo processInfo] globallyUniqueString]] isDirectory:YES];
-        [[NSFileManager defaultManager] createDirectoryAtURL:tempDir withIntermediateDirectories:YES attributes:nil error:&error];
-        Utils::handleError(error);
-
         NSURL *specUrl = Utils::stringToNSURL(urlStr);
-
-        // Get a temporary directory in which to save the compiled model.
-        NSString *tmp_dir = NSTemporaryDirectory();
-        NSString *model_name = [[specUrl URLByDeletingPathExtension] lastPathComponent];
-        NSString *basename = [tmp_dir stringByAppendingString:[NSString stringWithFormat:@"/%@.mlmodelc", model_name]];
-        NSURL *compiledUrl = [NSURL fileURLWithPath:basename isDirectory:TRUE];
-
-        NSFileManager *fileManager = [NSFileManager defaultManager];
-        if(![fileManager createDirectoryAtPath:tmp_dir withIntermediateDirectories:YES attributes:nil error:&error]) {
-                // An error has occurred, do something to handle it
-            NSLog(@"Failed to create directory \"%@\". Error: %@", basename, error);
-        }
-
-        // Compile the model first.
-        error = nil;
-        compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
+        NSURL *compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
 
         // Translate into a type that pybind11 can bridge to Python
         if (error != nil) {
             std::stringstream errmsg;
-            errmsg << "Encountered exception \"";
+            errmsg << "Error compiling model: \"";
             errmsg << error.localizedDescription.UTF8String;
-            errmsg << "\" while compiling the CoreML model. \"";
             errmsg << "\".";
             throw std::runtime_error(errmsg.str());
         }
