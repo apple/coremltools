@@ -8,7 +8,7 @@ using namespace CoreML::Python;
 
 NSURL * Utils::stringToNSURL(const std::string& str) {
     NSString *nsstr = [NSString stringWithUTF8String:str.c_str()];
-    return [NSURL URLWithString:nsstr];
+    return [NSURL fileURLWithPath:nsstr];
 }
 
 void Utils::handleError(NSError *error) {
