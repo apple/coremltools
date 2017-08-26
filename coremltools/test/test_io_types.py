@@ -242,6 +242,7 @@ class TestIODataTypes(unittest.TestCase):
             except KeyError:
                 print("{} not supported. ".format(dtype))
 
+    @unittest.skip
     def test_keras_embedding_model(self):
 
         model = keras.models.Sequential()

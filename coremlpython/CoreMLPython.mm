@@ -15,14 +15,16 @@ namespace py = pybind11;
 using namespace CoreML::Python;
 
 Model::~Model() {
-    
+    NSError *error = nil;
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:[[compiledUrl URLByDeletingLastPathComponent] path]  error:&error];
 }
 
 Model::Model(const std::string& urlStr) {
     @autoreleasepool {
-        NSURL *url = Utils::stringToNSURL(urlStr);
+        compiledUrl = Utils::stringToNSURL(urlStr);
         NSError *error = nil;
-        m_model = [MLModel modelWithContentsOfURL:url error:&error];
+        m_model = [MLModel modelWithContentsOfURL:compiledUrl error:&error];
         Utils::handleError(error);
     }
 }

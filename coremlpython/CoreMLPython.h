@@ -15,7 +15,7 @@ namespace CoreML {
         class Model {
         private:
             MLModel *m_model = nil;
-
+            NSURL *compiledUrl = nil;
         public:
             ~Model();
             explicit Model(const std::string& urlStr);

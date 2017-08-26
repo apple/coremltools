@@ -827,7 +827,7 @@ class StressTest(CorrectnessTest):
         if 1:
             params_dict = dict(
                        input_shape = [[3,10,8], [8,5,5], [4,12,10], [7,1,14]],    
-                       mode = ['sum', 'avg', 'prod', 'logsum', 'sumsquare', 'L1', 'L2', 'max', 'min', 'argmax'],
+                       mode = ['sum', 'avg', 'prod', 'sumsquare', 'L1', 'L2', 'max', 'min', 'argmax'],
                        axis = ['CHW', 'HW', 'C', 'H', 'W'],
                        )
         if 0:
