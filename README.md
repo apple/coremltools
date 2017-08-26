@@ -16,19 +16,19 @@ sure to install virtualenv using your system pip.
 Installation
 ------------
 
-The method for installing :code:`coremltools` follows the
-`standard python package installation steps <https://packaging.python.org/installing/>`_.
+The method for installing *coremltools* follows the
+[standard python package installation steps](https://packaging.python.org/installing/).
 Once you have set up a python environment, run::
 
     pip install -U coremltools
 
-The package `documentation <https://apple.github.io/coremltools/>`_ contains
+The package [documentation](https://apple.github.io/coremltools) contains
 more details on how to use coremltools.
 
 Dependencies
 ------------
 
-:code:`coremltools` has the following dependencies:
+*coremltools* has the following dependencies:
 
 - numpy (1.12.1+)
 - protobuf (3.1.0+)
@@ -42,13 +42,38 @@ you are converting models of these formats:
 - libSVM
 
 
-Building for running Unit Tests
---------------------------------
-To build the project, you need CMake (https://cmake.org).
+Building from source
+--------------------
+To build the project, you need [CMake](https://cmake.org) to configure the project
 
 ```
   cmake .
 ```
+
+after which you can use make to build the project
+
+```
+  make -j4
+```
+
+Building Installable Wheel
+---------------------------
+To make a wheel/egg that you can distribute, you can do the following
+
+```
+   make dist 
+```
+
+Running Unit Tests
+-------------------
+To run the unit tests, from the repo root, run the following command:
+
+```
+    make test
+```
+
+To add a new unit test, add it to the coremltools/test folder. Make sure you
+name the file with a 'test' as the prefix.
 
 Additionally, running unit-tests would require more packages (like
 libsvm)
@@ -94,25 +119,6 @@ If you'd like to use the old keras version, you can:
   pip install keras==1.2.2 tensorflow
 ```
 
-Running Unit Tests
--------------------
-To run the unit tests, from the repo root, run the following command:
-
-```
-    make test
-```
-
-To add a new unit test, add it to the coremltools/test folder. Make sure you
-name the file with a 'test' as the prefix.
-
-
-Building Installable Wheel
----------------------------
-To make a wheel/egg that you can distribute, you can do the following
-
-```
-   make dist 
-```
 
 Building Documentation
 ----------------------
@@ -121,7 +127,7 @@ First install all external dependencies.
 ```
    pip install Sphinx==1.5.3 sphinx-rtd-theme==0.2.4
 ```
-You also must have the `coremltools` package install, see the `Building` section.
+You also must have the *coremltools* package install, see the *Building* section.
 
 Then from the root of the repository:
 ```
