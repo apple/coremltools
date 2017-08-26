@@ -100,7 +100,7 @@ if(APPLE)
   add_custom_command(
     TARGET caffeconverter
     POST_BUILD
-    COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/libcaffeconverter.dylib coremltools/libcaffeconverter.so
+    COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
   )
@@ -127,7 +127,7 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
   add_custom_command(
     TARGET coremlpython
     POST_BUILD
-    COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/libcoremlpython.dylib coremltools/libcoremlpython.so
+    COMMAND cp $<TARGET_FILE:coremlpython> coremltools/libcoremlpython.so
     COMMAND install_name_tool coremltools/libcoremlpython.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
     COMMAND install_name_tool coremltools/libcoremlpython.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
   )
