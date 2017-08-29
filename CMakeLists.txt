@@ -109,6 +109,12 @@ if(APPLE)
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
   )
+else()
+  add_custom_command(
+    TARGET caffeconverter
+    POST_BUILD
+    COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
+  )
 endif()
 
 find_library(CORE_VIDEO CoreVideo)
