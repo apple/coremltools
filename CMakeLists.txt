@@ -32,8 +32,12 @@ set(CMAKE_CXX_FLAGS " \
   ${CMAKE_CXX_FLAGS} \
   ${PYTHON_FLAGS} \
   --std=c++14 \
-  -fobjc-arc \
 ")
+
+if(APPLE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc ")
+endif()
+
 set(CMAKE_EXE_LINKER_FLAGS " \
   ${CMAKE_EXE_LINKER_FLAGS} \
   ${PYTHON_LIBS} \
@@ -105,6 +109,12 @@ if(APPLE)
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
   )
+else()
+  add_custom_command(
+    TARGET caffeconverter
+    POST_BUILD
+    COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
+  )
 endif()
 
 find_library(CORE_VIDEO CoreVideo)
@@ -137,8 +147,7 @@ else()
 endif()
 
 if(APPLE)
-  # TODO - this doesn't work on pre-10.13. Not sure how to specify multiple macOS versions.
-  set(PLAT_NAME "macosx_10_13_intel")
+  set(PLAT_NAME "macosx_10_13_intel;macosx_10_12_intel")
   set(PYTHON_TAG "cp27")
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   set(PLAT_NAME "linux_x86_64")
@@ -148,10 +157,12 @@ else()
 endif()
 
 add_custom_target(dist
-  COMMAND python setup.py bdist_wheel --plat-name=${PLAT_NAME} --python-tag=${PYTHON_TAG}
+  # Workaround for building multiple platform versions since python setuptools only take in one platform via '--plat-name' argument
+  # and cmake 'foreach' does not seem to work inside add_custom_target
+  COMMAND for SUPP_PLATFORM in ${PLAT_NAME}$<SEMICOLON> do python setup.py bdist_wheel --plat-name=$$SUPP_PLATFORM --python-tag=${PYTHON_TAG}$<SEMICOLON> done$<SEMICOLON>
   DEPENDS caffeconverter coremlpython
   COMMENT "Building Python wheel for coremltools under dist/"
-)
+  )
 
 add_custom_target(nosetests
   COMMAND nosetests coremltools/test/
