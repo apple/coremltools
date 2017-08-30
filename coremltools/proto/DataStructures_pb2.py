@@ -13,9 +13,9 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import FeatureTypes_pb2 as FeatureTypes__pb2
+from . import FeatureTypes_pb2 as FeatureTypes__pb2
 
-from FeatureTypes_pb2 import *
+from .FeatureTypes_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='DataStructures.proto',
@@ -25,7 +25,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   ,
   dependencies=[FeatureTypes__pb2.DESCRIPTOR,],
   public_dependencies=[FeatureTypes__pb2.DESCRIPTOR,])
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -409,6 +408,7 @@ DESCRIPTOR.message_types_by_name['Int64ToDoubleMap'] = _INT64TODOUBLEMAP
 DESCRIPTOR.message_types_by_name['StringVector'] = _STRINGVECTOR
 DESCRIPTOR.message_types_by_name['Int64Vector'] = _INT64VECTOR
 DESCRIPTOR.message_types_by_name['DoubleVector'] = _DOUBLEVECTOR
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 StringToInt64Map = _reflection.GeneratedProtocolMessageType('StringToInt64Map', (_message.Message,), dict(
 

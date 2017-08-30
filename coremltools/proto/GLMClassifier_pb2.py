@@ -13,10 +13,13 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import DataStructures_pb2 as DataStructures__pb2
-FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+from . import DataStructures_pb2 as DataStructures__pb2
+try:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes_pb2
 
-from DataStructures_pb2 import *
+from .DataStructures_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='GLMClassifier.proto',
@@ -26,7 +29,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   ,
   dependencies=[DataStructures__pb2.DESCRIPTOR,],
   public_dependencies=[DataStructures__pb2.DESCRIPTOR,])
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -190,6 +192,7 @@ _GLMCLASSIFIER.oneofs_by_name['ClassLabels'].fields.append(
   _GLMCLASSIFIER.fields_by_name['int64ClassLabels'])
 _GLMCLASSIFIER.fields_by_name['int64ClassLabels'].containing_oneof = _GLMCLASSIFIER.oneofs_by_name['ClassLabels']
 DESCRIPTOR.message_types_by_name['GLMClassifier'] = _GLMCLASSIFIER
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 GLMClassifier = _reflection.GeneratedProtocolMessageType('GLMClassifier', (_message.Message,), dict(
 

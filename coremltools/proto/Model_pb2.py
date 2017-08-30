@@ -13,53 +13,101 @@ from google.protobuf import descriptor_pb2
 _sym_db = _symbol_database.Default()
 
 
-import ArrayFeatureExtractor_pb2 as ArrayFeatureExtractor__pb2
-import CategoricalMapping_pb2 as CategoricalMapping__pb2
-DataStructures__pb2 = CategoricalMapping__pb2.DataStructures__pb2
-FeatureTypes__pb2 = CategoricalMapping__pb2.FeatureTypes__pb2
-import DictVectorizer_pb2 as DictVectorizer__pb2
-DataStructures__pb2 = DictVectorizer__pb2.DataStructures__pb2
-FeatureTypes__pb2 = DictVectorizer__pb2.FeatureTypes__pb2
-import FeatureTypes_pb2 as FeatureTypes__pb2
-import FeatureVectorizer_pb2 as FeatureVectorizer__pb2
-import GLMRegressor_pb2 as GLMRegressor__pb2
-import GLMClassifier_pb2 as GLMClassifier__pb2
-DataStructures__pb2 = GLMClassifier__pb2.DataStructures__pb2
-FeatureTypes__pb2 = GLMClassifier__pb2.FeatureTypes__pb2
-import Identity_pb2 as Identity__pb2
-import Imputer_pb2 as Imputer__pb2
-DataStructures__pb2 = Imputer__pb2.DataStructures__pb2
-FeatureTypes__pb2 = Imputer__pb2.FeatureTypes__pb2
-import NeuralNetwork_pb2 as NeuralNetwork__pb2
-DataStructures__pb2 = NeuralNetwork__pb2.DataStructures__pb2
-FeatureTypes__pb2 = NeuralNetwork__pb2.FeatureTypes__pb2
-import Normalizer_pb2 as Normalizer__pb2
-import OneHotEncoder_pb2 as OneHotEncoder__pb2
-DataStructures__pb2 = OneHotEncoder__pb2.DataStructures__pb2
-FeatureTypes__pb2 = OneHotEncoder__pb2.FeatureTypes__pb2
-import Scaler_pb2 as Scaler__pb2
-import SVM_pb2 as SVM__pb2
-DataStructures__pb2 = SVM__pb2.DataStructures__pb2
-FeatureTypes__pb2 = SVM__pb2.FeatureTypes__pb2
-import TreeEnsemble_pb2 as TreeEnsemble__pb2
-DataStructures__pb2 = TreeEnsemble__pb2.DataStructures__pb2
-FeatureTypes__pb2 = TreeEnsemble__pb2.FeatureTypes__pb2
+from . import ArrayFeatureExtractor_pb2 as ArrayFeatureExtractor__pb2
+from . import CategoricalMapping_pb2 as CategoricalMapping__pb2
+try:
+  DataStructures__pb2 = CategoricalMapping__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = CategoricalMapping__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = CategoricalMapping__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = CategoricalMapping__pb2.FeatureTypes_pb2
+from . import DictVectorizer_pb2 as DictVectorizer__pb2
+try:
+  DataStructures__pb2 = DictVectorizer__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = DictVectorizer__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = DictVectorizer__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = DictVectorizer__pb2.FeatureTypes_pb2
+from . import FeatureTypes_pb2 as FeatureTypes__pb2
+from . import FeatureVectorizer_pb2 as FeatureVectorizer__pb2
+from . import GLMRegressor_pb2 as GLMRegressor__pb2
+from . import GLMClassifier_pb2 as GLMClassifier__pb2
+try:
+  DataStructures__pb2 = GLMClassifier__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = GLMClassifier__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = GLMClassifier__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = GLMClassifier__pb2.FeatureTypes_pb2
+from . import Identity_pb2 as Identity__pb2
+from . import Imputer_pb2 as Imputer__pb2
+try:
+  DataStructures__pb2 = Imputer__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = Imputer__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = Imputer__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = Imputer__pb2.FeatureTypes_pb2
+from . import NeuralNetwork_pb2 as NeuralNetwork__pb2
+try:
+  DataStructures__pb2 = NeuralNetwork__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = NeuralNetwork__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = NeuralNetwork__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = NeuralNetwork__pb2.FeatureTypes_pb2
+from . import Normalizer_pb2 as Normalizer__pb2
+from . import OneHotEncoder_pb2 as OneHotEncoder__pb2
+try:
+  DataStructures__pb2 = OneHotEncoder__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = OneHotEncoder__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = OneHotEncoder__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = OneHotEncoder__pb2.FeatureTypes_pb2
+from . import Scaler_pb2 as Scaler__pb2
+from . import SVM_pb2 as SVM__pb2
+try:
+  DataStructures__pb2 = SVM__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = SVM__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = SVM__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = SVM__pb2.FeatureTypes_pb2
+from . import TreeEnsemble_pb2 as TreeEnsemble__pb2
+try:
+  DataStructures__pb2 = TreeEnsemble__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = TreeEnsemble__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = TreeEnsemble__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = TreeEnsemble__pb2.FeatureTypes_pb2
 
-from ArrayFeatureExtractor_pb2 import *
-from CategoricalMapping_pb2 import *
-from DictVectorizer_pb2 import *
-from FeatureTypes_pb2 import *
-from FeatureVectorizer_pb2 import *
-from GLMRegressor_pb2 import *
-from GLMClassifier_pb2 import *
-from Identity_pb2 import *
-from Imputer_pb2 import *
-from NeuralNetwork_pb2 import *
-from Normalizer_pb2 import *
-from OneHotEncoder_pb2 import *
-from Scaler_pb2 import *
-from SVM_pb2 import *
-from TreeEnsemble_pb2 import *
+from .ArrayFeatureExtractor_pb2 import *
+from .CategoricalMapping_pb2 import *
+from .DictVectorizer_pb2 import *
+from .FeatureTypes_pb2 import *
+from .FeatureVectorizer_pb2 import *
+from .GLMRegressor_pb2 import *
+from .GLMClassifier_pb2 import *
+from .Identity_pb2 import *
+from .Imputer_pb2 import *
+from .NeuralNetwork_pb2 import *
+from .Normalizer_pb2 import *
+from .OneHotEncoder_pb2 import *
+from .Scaler_pb2 import *
+from .SVM_pb2 import *
+from .TreeEnsemble_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Model.proto',
@@ -69,7 +117,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   ,
   dependencies=[ArrayFeatureExtractor__pb2.DESCRIPTOR,CategoricalMapping__pb2.DESCRIPTOR,DictVectorizer__pb2.DESCRIPTOR,FeatureTypes__pb2.DESCRIPTOR,FeatureVectorizer__pb2.DESCRIPTOR,GLMRegressor__pb2.DESCRIPTOR,GLMClassifier__pb2.DESCRIPTOR,Identity__pb2.DESCRIPTOR,Imputer__pb2.DESCRIPTOR,NeuralNetwork__pb2.DESCRIPTOR,Normalizer__pb2.DESCRIPTOR,OneHotEncoder__pb2.DESCRIPTOR,Scaler__pb2.DESCRIPTOR,SVM__pb2.DESCRIPTOR,TreeEnsemble__pb2.DESCRIPTOR,],
   public_dependencies=[ArrayFeatureExtractor__pb2.DESCRIPTOR,CategoricalMapping__pb2.DESCRIPTOR,DictVectorizer__pb2.DESCRIPTOR,FeatureTypes__pb2.DESCRIPTOR,FeatureVectorizer__pb2.DESCRIPTOR,GLMRegressor__pb2.DESCRIPTOR,GLMClassifier__pb2.DESCRIPTOR,Identity__pb2.DESCRIPTOR,Imputer__pb2.DESCRIPTOR,NeuralNetwork__pb2.DESCRIPTOR,Normalizer__pb2.DESCRIPTOR,OneHotEncoder__pb2.DESCRIPTOR,Scaler__pb2.DESCRIPTOR,SVM__pb2.DESCRIPTOR,TreeEnsemble__pb2.DESCRIPTOR,])
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -655,6 +702,7 @@ DESCRIPTOR.message_types_by_name['FeatureDescription'] = _FEATUREDESCRIPTION
 DESCRIPTOR.message_types_by_name['Metadata'] = _METADATA
 DESCRIPTOR.message_types_by_name['ModelDescription'] = _MODELDESCRIPTION
 DESCRIPTOR.message_types_by_name['Model'] = _MODEL
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Pipeline = _reflection.GeneratedProtocolMessageType('Pipeline', (_message.Message,), dict(
   DESCRIPTOR = _PIPELINE,

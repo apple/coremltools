@@ -17,7 +17,10 @@
 
 namespace py = pybind11;
 
-@interface PybindCompatibleArray : MLMultiArray
+@interface PybindCompatibleArray : MLMultiArray {
+    // Holding reference to underlying memory
+    py::array m_array;
+}
 
 - (PybindCompatibleArray *)initWithArray:(py::array)array;
 

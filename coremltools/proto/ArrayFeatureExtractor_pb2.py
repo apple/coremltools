@@ -21,7 +21,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_pb=_b('\n\x1b\x41rrayFeatureExtractor.proto\x12\x14\x43oreML.Specification\"-\n\x15\x41rrayFeatureExtractor\x12\x14\n\x0c\x65xtractIndex\x18\x01 \x03(\x04\x42\x02H\x03\x62\x06proto3')
 )
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -57,6 +56,7 @@ _ARRAYFEATUREEXTRACTOR = _descriptor.Descriptor(
 )
 
 DESCRIPTOR.message_types_by_name['ArrayFeatureExtractor'] = _ARRAYFEATUREEXTRACTOR
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 ArrayFeatureExtractor = _reflection.GeneratedProtocolMessageType('ArrayFeatureExtractor', (_message.Message,), dict(
   DESCRIPTOR = _ARRAYFEATUREEXTRACTOR,
