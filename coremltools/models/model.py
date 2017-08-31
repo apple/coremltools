@@ -52,7 +52,7 @@ def _get_proxy_from_spec(filename):
         _MLModelProxy = None
 
     if _MLModelProxy:
-        return _MLModelProxy.fromSpec(filename)
+        return _MLModelProxy(filename)
     else:
         return None
 
@@ -122,8 +122,11 @@ class MLModel(object):
         from .utils import load_spec as _load_spec
 
         if isinstance(model, str):
+            print "0"
             self._spec = _load_spec(model)
+            print "1"
             self.__proxy__ = _get_proxy_from_spec(model)
+            print "2"
         elif isinstance(model, _Model_pb2.Model):
             self._spec = model
             filename = _tempfile.mktemp(suffix = '.mlmodel')
