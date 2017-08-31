@@ -28,10 +28,6 @@ Model::Model(const std::string& urlStr) {
         // Compile the model
         NSError *error = nil;
         NSURL *specUrl = Utils::stringToNSURL(urlStr);
-<<<<<<< Updated upstream
-        NSURL *compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
-
-=======
         
         // Swallow output for the very verbose coremlcompiler
         int stdoutBack = dup(STDOUT_FILENO);
@@ -46,7 +42,6 @@ Model::Model(const std::string& urlStr) {
         close(devnull);
         close(stdoutBack);
         
->>>>>>> Stashed changes
         // Translate into a type that pybind11 can bridge to Python
         if (error != nil) {
             std::stringstream errmsg;
