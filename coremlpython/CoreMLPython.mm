@@ -49,7 +49,21 @@ Model Model::fromSpec(const std::string& urlStr) {
         // Compile the model
         NSError *error = nil;
         NSURL *specUrl = Utils::stringToNSURL(urlStr);
+        
+        // Swallow output for the very verbose coremlcompiler
+        int stdoutBack = dup(STDOUT_FILENO);
+        int fileDescriptor[2];
+        pipe(fileDescriptor);
+        dup2(fileDescriptor[1], STDOUT_FILENO);
+        
+        // Compile the model
         NSURL *compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
+        
+        // Close all the file descriptors and revert back to normal
+        dup2(stdoutBack, STDOUT_FILENO);
+        close(stdoutBack);
+        close(fileDescriptor[0]);
+        close(fileDescriptor[1]);
 
         // Translate into a type that pybind11 can bridge to Python
         if (error != nil) {
