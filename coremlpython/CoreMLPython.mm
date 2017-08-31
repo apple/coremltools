@@ -61,6 +61,7 @@ Model Model::fromSpec(const std::string& urlStr) {
         // Close all the file descriptors and revert back to normal
         dup2(stdoutBack, STDOUT_FILENO);
         close(devnull);
+        close(stdoutBack);
         
         // Translate into a type that pybind11 can bridge to Python
         if (error != nil) {
