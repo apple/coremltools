@@ -6,7 +6,6 @@
 #pragma clang diagnostic pop
 
 #import <CoreML/CoreML.h>
-#include <memory>
 
 namespace py = pybind11;
 
