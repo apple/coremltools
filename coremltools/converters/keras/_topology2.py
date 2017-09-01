@@ -1,7 +1,7 @@
 import keras as _keras
 import numpy as _np
 
-_KERAS_LAYERS_1D = [
+_KERAS_1D_LAYERS = [
     _keras.layers.Conv1D,
     _keras.layers.UpSampling1D,
     _keras.layers.ZeroPadding1D,
@@ -40,6 +40,48 @@ _KERAS_MERGE_LAYERS = [
     _keras.layers.Dot,
 ]
 
+def is_merge_layer(layer):
+    for lt in _KERAS_MERGE_LAYERS:
+        if isinstance(layer, lt):
+            return True
+    return False
+
+def is_seq_merge_layer(layer):
+    # check if it is a merge that involves merging "sequence" axis
+    if is_merge_layer(layer):
+        shape = layer.input_shape[0]
+        if hasattr(layer, 'axis'):
+            axis = layer.axis
+            if len(shape) == 3 and (axis == 1 or axis == -2):
+                return True
+            else:
+                return False
+    return False
+    
+def is_recurrent_layer(layer):
+    for lt in _KERAS_RECURRENT_LAYERS:
+        if isinstance(layer, lt):
+            return True
+    return False
+
+def is_activation_layer(layer):
+    for lt in _KERAS_ACTIVATION_LAYERS:
+        if isinstance(layer, lt):
+            return True
+    return False
+
+def is_1d_layer(layer):
+    for lt in _KERAS_1D_LAYERS:
+        if isinstance(layer, lt):
+            return True
+    return False
+
+def is_normalization_layer(layer):
+    for lt in _KERAS_NORMALIZATION_LAYERS:
+        if isinstance(layer, lt):
+            return True
+    return False
+
 def _to_list(x):
     if type(x) is not list: 
         return [x]
@@ -52,12 +94,6 @@ def _insert_to_dict(d, key, e):
         d[key] = []
     if e not in d[key]:
         d[key].append(e)
-
-def _is_merge_layer(layer):
-    for lt in _KERAS_MERGE_LAYERS:
-        if isinstance(layer, lt):
-            return True
-    return False
 
 class NetGraph(object):
     """
@@ -270,7 +306,7 @@ class NetGraph(object):
     
     def _get_first_shared_layer(self):
         for idx, layer in enumerate(self.layer_list):
-            if (not _is_merge_layer(self.keras_layer_map[layer])) and len(self.get_predecessors(layer)) > 1:   # weight sharing criteria
+            if (not is_merge_layer(self.keras_layer_map[layer])) and len(self.get_predecessors(layer)) > 1:   # weight sharing criteria
                 return idx
         return -1
     
@@ -414,9 +450,9 @@ class NetGraph(object):
             k_layer = self.keras_layer_map[layer]
             if (isinstance(k_layer, _keras.layers.TimeDistributed)):
                 k_layer = k_layer.layer
-            if (isinstance(k_layer, _keras.layers.convolutional.Convolution2D) or 
-                isinstance(k_layer, _keras.layers.convolutional.Convolution1D) or 
-                isinstance(k_layer, _keras.layers.core.Dense)):
+            if (isinstance(k_layer, _keras.layers.Conv2D) or 
+                isinstance(k_layer, _keras.layers.Conv1D) or 
+                isinstance(k_layer, _keras.layers.Dense)):
 
                 import six
                 if six.PY2:
@@ -433,94 +469,70 @@ class NetGraph(object):
                     idx += 1
                     nb_layers += 1
             idx += 1
-    
-    def is_activation(self,layer):
-        keras_layer = self.keras_layer_map[layer]
-        for activation_type in _KERAS_ACTIVATION_LAYERS:
-            if isinstance(keras_layer, activation_type):
-                return True
-        return False
-    
-    def is_1d_layer(self,layer):
-        keras_layer = self.keras_layer_map[layer]
-        for layer_type in _KERAS_LAYERS_1D:
-            if isinstance(keras_layer, layer_type):
-                return True
-        return False
-    
-    def _get_1d_interface_edges(self):
-        """
-        Get edges that represents transition from not 1D to 1D, and 1D to not 1D
-        A 'in_edge e(u,v)' means u operates on non-1D blobs, but v operates on 1D blobs.  
-        An 'out_edge e(u,v)' means u operates on 1D blobs, but v operates on non-1D blobs. 
-        """
-        in_edges = []
-        for layer in self.layer_list: 
-            if not self.is_1d_layer(layer):
-                continue
-            preds = self.get_predecessors(layer)
-            if len(preds) == 0:
-                in_edges.append((None, layer))
-            else: 
-                # because 1D layers are all 1-input, there should only be 1 predecessor
-                u, v = preds[0], layer
-                while (u != None) and (self.is_activation(u) or type(u) in _KERAS_NORMALIZATION_LAYERS):
-                    preds = self.get_predecessors(u)
-                    v = u
-                    u = preds[0] if len(preds) > 0 else None
-                if u is None or (not self.is_1d_layer(u)):
-                    in_edges.append((u, v))
 
-        out_edges = []
+    def _insert_seq_to_width_permute_layers(self):
+        """Insert permutation layers between embedding->conv1d
+        """
+        # get the embedding->conv1d pair
+        edges = []
         for layer in self.layer_list: 
-            if not self.is_1d_layer(layer):
-                continue
-            succs = self.get_successors(layer)
-            if len(succs) == 0:
-                out_edges.append((layer, None))
-            elif not self.is_activation(succs[0]):
-                for succ in succs: 
-                    if not self.is_1d_layer(succ):
-                        out_edges.append((layer, succ))
-            else: 
-                act_layer = succs[0]
-                succs = self.get_successors(act_layer)
-                if len(succs) == 0:
-                    out_edges.append((act_layer, None))
-                else: 
-                    for succ in succs: 
-                        if not self.is_1d_layer(succ):
-                            out_edges.append((act_layer, succ))
-
-        return in_edges, out_edges
-    
-    def insert_1d_permute_layers(self):
-        """
-        Insert permutation layers before a 1D start point or after 1D end point 
-        """
-        idx, nb_layers = 0, len(self.layer_list)
-        in_edges, out_edges = self._get_1d_interface_edges()
-        
-        # Hacky Warning: (1) use a 4-D permute, which is not likely to happen in Keras, 
-        # to represent actual permutation needed for (seq, c, h, w) in CoreML
-        # (2) Assume 2-D input shape has meaning (seq, c), and during CoreML runtime, 
-        # it is represented as 4D blob, (seq, c, h, w)
-        for in_edge in in_edges: 
-            src, snk = in_edge
-            if src is None:
-                permute_layer = '_permute_' + snk
-            else: 
-                permute_layer = src + '_permute_' + snk
-            keras_permute = _keras.layers.Permute(dims=(3,1,2,0)) # assume w = 1, switch seq and w
+            k_layer = self.keras_layer_map[layer]
+            if isinstance(k_layer, _keras.layers.embeddings.Embedding):
+                succs = self.get_successors(layer)
+                for succ in succs:
+                    if is_1d_layer(self.keras_layer_map[succ]):
+                        edges.append((layer, succ))
+        # add permute layers
+        for edge in edges: 
+            src, snk = edge
+            permute_layer = src + '_permute_' + snk
+            # assume w = 1, switch seq and w
+            keras_permute = _keras.layers.Permute(dims=(3,1,2,0))
             self._insert_layer_between(src, snk, permute_layer, keras_permute)
-        for out_edge in out_edges: 
-            src, snk = out_edge
-            if snk is None: 
-                permute_layer = src + '_permute_'
+
+    def backtrace_activation_layers(self, layer):
+        preds = self.get_predecessors(layer)
+        u = preds[0] if len(preds) > 0 else None
+        while u != None:
+            k_u = self.keras_layer_map[u]
+            if is_activation_layer(k_u) or is_normalization_layer(k_u):
+                preds = self.get_predecessors(layer)
+                u = preds[0] if len(preds) > 0 else None
             else:
-                permute_layer = src + '_permute_' + snk
-            keras_permute = _keras.layers.Permute(dims=(3,1,2,0)) # assume w = 1, switch seq and w back
+                break
+        return u
+    
+    def _insert_width_to_seq_permute_layers(self):
+        """Insert permutation layers between 1d conv layers and seq operation 
+        layers. The cases are:
+        1d_layer->recurrent
+        1d_layer->sequence_merge
+        """
+        edges = []
+        for layer in self.layer_list: 
+            k_layer = self.keras_layer_map[layer]
+            if is_recurrent_layer(k_layer) or is_seq_merge_layer(k_layer):
+                preds = self.get_predecessors(layer)
+                for pred in preds:
+                    u = self.backtrace_activation_layers(pred)
+                    if u is not None and is_1d_layer(self.keras_layer_map[u]):
+                        # pred is a conv1d, pooling1d or activation /
+                        # normalization layer used by a conv1d/pooling1d
+                        edges.append((pred, layer))
+        
+        # Hacky Warning: use a 4-D permute (unlikely used in Keras), 
+        # to represent actual permutation needed for (seq, c, h, w) in CoreML
+        for edge in edges: 
+            src, snk = edge
+            permute_layer = src + '_permute_' + snk
+            # CoreML (1,(B),C,H,Seq) -> (Seq,(B),C,H,W), B omitted
+            # assume w = 1, switch seq and w
+            keras_permute = _keras.layers.Permute(dims=(3,1,2,0))
             self._insert_layer_between(src, snk, permute_layer, keras_permute)
+    
+    def insert_1d_sequence_permute_layers(self):
+        self._insert_seq_to_width_permute_layers()
+        self._insert_width_to_seq_permute_layers()
     
     def insert_permute_for_spatial_bn(self):
         
