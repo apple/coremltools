@@ -17,13 +17,40 @@ using namespace CoreML::Python;
 Model::~Model() {
     NSError *error = nil;
     NSFileManager *fileManager = [NSFileManager defaultManager];
-    [fileManager removeItemAtPath:[[compiledUrl URLByDeletingLastPathComponent] path]  error:&error];
+    if (compiledUrl != nil) {
+        [fileManager removeItemAtPath:[[compiledUrl URLByDeletingLastPathComponent] path]  error:&error];
+    }
 }
 
 Model::Model(const std::string& urlStr) {
     @autoreleasepool {
-        compiledUrl = Utils::stringToNSURL(urlStr);
+        
+        // Compile the model
         NSError *error = nil;
+        NSURL *specUrl = Utils::stringToNSURL(urlStr);
+        
+        // Swallow output for the very verbose coremlcompiler
+        int stdoutBack = dup(STDOUT_FILENO);
+        int devnull = open("/dev/null", O_WRONLY);
+        dup2(devnull, STDOUT_FILENO);
+        
+        // Compile the model
+        compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
+        
+        // Close all the file descriptors and revert back to normal
+        dup2(stdoutBack, STDOUT_FILENO);
+        close(devnull);
+        close(stdoutBack);
+        
+        // Translate into a type that pybind11 can bridge to Python
+        if (error != nil) {
+            std::stringstream errmsg;
+            errmsg << "Error compiling model: \"";
+            errmsg << error.localizedDescription.UTF8String;
+            errmsg << "\".";
+            throw std::runtime_error(errmsg.str());
+        }
+        
         m_model = [MLModel modelWithContentsOfURL:compiledUrl error:&error];
         Utils::handleError(error);
     }
@@ -44,43 +71,11 @@ py::dict Model::predict(const py::dict& input, bool useCPUOnly) {
     }
 }
 
-Model Model::fromSpec(const std::string& urlStr) {
-    @autoreleasepool {
-        // Compile the model
-        NSError *error = nil;
-        NSURL *specUrl = Utils::stringToNSURL(urlStr);
-        
-        // Swallow output for the very verbose coremlcompiler
-        int stdoutBack = dup(STDOUT_FILENO);
-        int devnull = open("/dev/null", O_WRONLY);
-        dup2(devnull, STDOUT_FILENO);
-        
-        // Compile the model
-        NSURL *compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
-        
-        // Close all the file descriptors and revert back to normal
-        dup2(stdoutBack, STDOUT_FILENO);
-        close(devnull);
-        close(stdoutBack);
-        
-        // Translate into a type that pybind11 can bridge to Python
-        if (error != nil) {
-            std::stringstream errmsg;
-            errmsg << "Error compiling model: \"";
-            errmsg << error.localizedDescription.UTF8String;
-            errmsg << "\".";
-            throw std::runtime_error(errmsg.str());
-        }
-        return Model(compiledUrl.fileSystemRepresentation);
-    }
-}
-
 PYBIND11_PLUGIN(libcoremlpython) {
     py::module m("libcoremlpython", "CoreML.Framework Python bindings");
 
     py::class_<Model>(m, "_MLModelProxy")
         .def(py::init<const std::string&>())
-        .def_static("fromSpec", &Model::fromSpec)
         .def("predict", &Model::predict);
 
     return m.ptr();

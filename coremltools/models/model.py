@@ -52,7 +52,7 @@ def _get_proxy_from_spec(filename):
         _MLModelProxy = None
 
     if _MLModelProxy:
-        return _MLModelProxy.fromSpec(filename)
+        return _MLModelProxy(filename)
     else:
         return None
 
