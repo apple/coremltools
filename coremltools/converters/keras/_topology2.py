@@ -491,16 +491,15 @@ class NetGraph(object):
             self._insert_layer_between(src, snk, permute_layer, keras_permute)
 
     def backtrace_activation_layers(self, layer):
-        preds = self.get_predecessors(layer)
-        u = preds[0] if len(preds) > 0 else None
-        while u != None:
-            k_u = self.keras_layer_map[u]
-            if is_activation_layer(k_u) or is_normalization_layer(k_u):
-                preds = self.get_predecessors(layer)
-                u = preds[0] if len(preds) > 0 else None
+        l = layer
+        while l != None:
+            k_l = self.keras_layer_map[l]
+            if is_activation_layer(k_l) or is_normalization_layer(k_l):
+                preds = self.get_predecessors(l)
+                l = preds[0] if len(preds) > 0 else None
             else:
                 break
-        return u
+        return l
     
     def _insert_width_to_seq_permute_layers(self):
         """Insert permutation layers between 1d conv layers and seq operation 
@@ -519,7 +518,6 @@ class NetGraph(object):
                         # pred is a conv1d, pooling1d or activation /
                         # normalization layer used by a conv1d/pooling1d
                         edges.append((pred, layer))
-        
         # Hacky Warning: use a 4-D permute (unlikely used in Keras), 
         # to represent actual permutation needed for (seq, c, h, w) in CoreML
         for edge in edges: 

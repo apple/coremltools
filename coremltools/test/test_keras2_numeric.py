@@ -352,7 +352,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
     def test_large_input_length_conv1d_same_random(self):
         np.random.seed(1988)
         input_dim = 2
-        input_length = 80
+        input_length = 640
         filter_length = 3
         nb_filters = 4
         model = Sequential()
@@ -1816,6 +1816,85 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_keras_model(model, mode = 'random', delta=1e-4)
 
+    def test_stacked_conv1d(self):
+        model = Sequential()
+        model.add(Conv1D(4, 3, padding='same', input_shape=(32, 2)))
+        model.add(Conv1D(5, 3, padding='same'))
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-4)
+    
+    def test_embed_conv1d(self):
+        model = Sequential()
+        model.add(Embedding(10, 4, input_length=8))
+        model.add(Conv1D(5, 3, padding='same'))
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-4, 
+                input_is_seq_flags=[True])
+    
+    def test_embed_conv1d_lstm(self):
+        model = Sequential()
+        model.add(Embedding(10, 4, input_length=8))
+        model.add(Conv1D(5, 3, padding='same'))
+        model.add(LSTM(2))
+        model.set_weights([np.random.rand(*w.shape)-0.5 for w in 
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-4, 
+                input_is_seq_flags=[True])
+    
+    def test_embed_conv1d_act_lstm(self):
+        model = Sequential()
+        model.add(Embedding(10, 4, input_length=8))
+        model.add(Conv1D(5, 3, padding='same', activation='sigmoid'))
+        model.add(LSTM(2))
+        model.set_weights([np.random.rand(*w.shape)-0.5 for w in 
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-4, 
+                input_is_seq_flags=[True])
+    
+    def test_embed_stacked_conv1d_pad_lstm(self):
+        model = Sequential()
+        model.add(Embedding(10, 4, input_length=8))
+        model.add(Conv1D(5, 3, padding='same', activation='relu'))
+        model.add(Conv1D(5, 3, padding='same', activation='relu'))
+        model.add(ZeroPadding1D(padding=2))
+        model.add(LSTM(2))
+        model.set_weights([np.random.rand(*w.shape)-0.5 for w in 
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-4, 
+                input_is_seq_flags=[True])
+    
+    def test_conv1d_concat_lstm(self):
+        x1 = Input(shape=(8,3))
+        x2 = Input(shape=(6,3))
+        y1 = Conv1D(2,3,padding='same')(x1)
+        y2 = Conv1D(2,3,padding='same')(x2)
+        z = concatenate([y1, y2], axis=1)
+        out = LSTM(5)(z)
+        
+        model = Model(inputs=[x1,x2], outputs=[out])
+
+        model.set_weights([np.random.rand(*w.shape) * 0.2 -0.1 for w in 
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-4)
+    
+    def test_embed_stacked_1d_act_concat_lstm_return_seq(self):
+        in1 = Input(shape=(16,))
+        x1 = Embedding(5,4)(in1)
+        in2 = Input(shape=(12,))
+        x2 = Embedding(5,4)(in2)
+        y1 = Conv1D(2,3,padding='same',activation='relu')(x1)
+        y2 = Conv1D(2,3,padding='same',activation='relu')(x2)
+        y1 = AveragePooling1D(pool_size=2)(y1)
+        y2 = AveragePooling1D(pool_size=2)(y2)
+        z = concatenate([y1, y2], axis=1)
+        out = LSTM(5, return_sequences=True)(z)
+        
+        model = Model(inputs=[in1,in2], outputs=[out])
+
+        model.set_weights([np.random.rand(*w.shape) * 0.2 -0.1 for w in 
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-4, 
+                input_is_seq_flags=[True, True], output_is_seq_flags=[True])
     
     def test_tiny_mobilenet_arch(self):
         
