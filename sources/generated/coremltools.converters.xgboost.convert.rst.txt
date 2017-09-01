@@ -1,5 +1,5 @@
-coremltools\.converters\.xgboost\.convert
-=========================================
+coremltools.converters.xgboost.convert
+======================================
 
 .. currentmodule:: coremltools.converters.xgboost
 
