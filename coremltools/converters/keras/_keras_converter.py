@@ -334,7 +334,8 @@ def convert(model,
             predicted_feature_name = None,
             predicted_probabilities_output = ''):
 
-    """Convert a Keras model to Core ML format.
+    """
+    Convert a Keras model to Core ML format.
 
     Parameters
     ----------

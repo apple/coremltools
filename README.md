@@ -125,7 +125,7 @@ Building Documentation
 First install all external dependencies.
 
 ```
-   pip install Sphinx==1.5.3 sphinx-rtd-theme==0.2.4
+   pip install Sphinx==1.5.3 sphinx-rtd-theme==0.2.4 numpydoc
 ```
 You also must have the *coremltools* package install, see the *Building* section.
 
