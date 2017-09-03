@@ -2299,7 +2299,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         model.add(Reshape((2,3)))
         model.add(TimeDistributed(Dense(5)))
 
-        self._test_keras_model(model)
+        self._test_keras_model(model, output_is_seq_flags=[True])
 
     def test_tiny_mcrnn_recurrent(self):
 
@@ -2343,7 +2343,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         model.add(Dense(5))
         model.add(Activation('softmax'))
 
-        self._test_keras_model(model)
+        self._test_keras_model(model, input_is_seq_flags=[True])
 
     def test_tiny_image_captioning_image_branch(self):
         img_input_1 = Input(shape=(16,16,3))
@@ -2375,7 +2375,8 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         z = concatenate([x,y], axis = 1, name = 'cap_merge')
 
         combined_model = Model(inputs=[img_input, sentence_input], outputs=[z])
-        self._test_keras_model(combined_model, input_is_seq_flags=[False, True])
+        self._test_keras_model(combined_model, input_is_seq_flags=[False, True],
+                output_is_seq_flags=[True])
 
     def test_tiny_image_captioning(self):
         # use a conv layer as a image feature branch
@@ -2396,7 +2397,8 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         z = TimeDistributed(Dense(8), name = 'cap_timedistributed')(z)
 
         combined_model = Model(inputs=[img_input, sentence_input], outputs=[z])
-        self._test_keras_model(combined_model, input_is_seq_flags=[False, True])
+        self._test_keras_model(combined_model, input_is_seq_flags=[False, True],
+                output_is_seq_flags=[True])
 
     def test_tiny_babi_rnn(self):
         vocab_size = 10
