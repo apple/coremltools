@@ -136,8 +136,6 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         
         # Assuming coreml model output names are in the same order as Keras 
         # Output list, put predictions into a list, sorted by output name
-        # from nose.tools import set_trace
-        # set_trace()
         coreml_preds = coreml_model.predict(coreml_input)
         c_preds = [coreml_preds[name] for name in output_names]
 
@@ -149,9 +147,6 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         keras_preds = model.predict(input_data)
         k_preds = keras_preds if type(keras_preds) is list else [keras_preds]
         
-        
-        # from nose.tools import set_trace
-        # set_trace()
         # Compare each output blob
         for idx, k_pred in enumerate(k_preds):
             if transpose_keras_result:

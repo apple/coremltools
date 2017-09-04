@@ -244,8 +244,6 @@ def _convert(model,
             is_seq = True
         output_dims[idx] =  _convert_to_coreml_shape(dim, is_seq)
 
-    # from nose.tools import set_trace
-    # set_trace()
     input_types = [datatypes.Array(*dim) for dim in input_dims]
     output_types = [datatypes.Array(*dim) for dim in output_dims]
 
