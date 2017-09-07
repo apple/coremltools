@@ -2088,7 +2088,7 @@ class NeuralNetworkBuilder(object):
             spec_layer_params.mode = \
                     _NeuralNetwork_pb2.ReshapeLayerParams.ReshapeOrder.Value('CHANNEL_LAST')
                     
-        if len(target_shape) != 4:
+        if len(target_shape) != 4 and len(target_shape) != 3:
             raise ValueError("Length of the 'target-shape' parameter must be equal to 3 or 4")            
                     
     def add_reduce(self, name, input_name, output_name, axis, mode, epsilon = 1e-6):
