@@ -72,13 +72,6 @@ if _HAS_KERAS2_TF:
     _KERAS_SKIP_LAYERS = [
         _keras.layers.core.Dropout,
     ]
-    
-
-def _is_merge_layer(layer):
-    for lt in _KERAS_MERGE_LAYERS:
-        if isinstance(layer, lt):
-            return True
-    return False
 
 def _check_unsupported_layers(model):
     for i, layer in enumerate(model.layers):
@@ -105,7 +98,6 @@ def _get_layer_converter_fn(layer):
         return _KERAS_LAYER_REGISTRY[layer_type]
     else:
         raise TypeError("Keras layer of type %s is not supported." % type(layer))
-
 
 def _load_keras_model(model_network_path, model_weight_path):
     """Load a keras model from disk
@@ -136,6 +128,40 @@ def _load_keras_model(model_network_path, model_weight_path):
 
     return loaded_model
 
+def _convert_to_coreml_shape(dim, is_seq = False):
+    """
+    Keras -> Core ML input dimension dictionary
+    (D) -> [D] or [D,1,1,1,1] for RNN
+    (None, None) -> [1, 1, 1, 1, 1] (unknown sequence length or batch)
+    (S, D) -> [S, 1, D, 1, 1] for RNN or [1,1,D,1,S] for 1D conv
+    (None, D) -> [D] or [D, 1, 1, 1, 1] for Embedding layer of RNN
+    (None, S, D) -> [S, 1, D, 1, 1] for RNN or [1, 1, D, 1, S] for 1D conv
+    (None, H, W, C) -> [C, H, W]
+    (B, S, D) -> [D]
+    For protobuf we're ignoring (S,B)
+    """
+    if len(dim) == 1:
+        # (D) -> [D] or [D,1,1,1,1] for RNN
+        return (1,) if is_seq else dim
+    elif len(dim) == 2:
+        if dim[0] == None and dim[1] == None:
+            # (None,None) -> [1,1,1,1,1]
+            return (1,)
+        elif dim[0] != None and dim[1] != None: 
+            # (S,D) -> [S,1,D,1,1] for RNN or [1,1,D,1,S] for 1D conv
+            return (dim[1],1,1) if is_seq else (dim[1],1,dim[0])
+        elif dim[0] == None and dim[1] != None: 
+            # (None,D) -> [D] or [D,1,1,1,1]
+            return (1,) if is_seq else (dim[1],)
+    elif len(dim) == 3:
+        if dim[0] == None: #(None,S,D)
+            return (dim[2],) if is_seq else (dim[2],1,dim[1])
+        else: # (B,S,D)
+            return (dim[2],)
+    elif len(dim) == 4: #(None,H,W,C)
+        return (dim[3],dim[1],dim[2])
+    else:
+        raise ValueError('Unrecognizable shape ' + str(dim))
 
 def _convert(model, 
             input_names = None, 
@@ -163,7 +189,7 @@ def _convert(model,
     graph = _topology2.NetGraph(model)
     graph.build()
     graph.remove_skip_layers(_KERAS_SKIP_LAYERS)
-    graph.insert_1d_permute_layers()
+    graph.insert_1d_sequence_permute_layers()
     graph.insert_permute_for_spatial_bn()
     graph.defuse_activation()
     graph.remove_internal_input_layers()
@@ -176,79 +202,47 @@ def _convert(model,
     inputs = graph.get_input_layers()
     outputs = graph.get_output_layers()
     
-    # check input / output names validity
-    if input_names is not None: 
-        if isinstance(input_names, _string_types):
-            input_names = [input_names]
-    else: 
-        input_names = ['input' + str(i+1) for i in range(len(inputs))]
-    if output_names is not None: 
-        if isinstance(output_names, _string_types):
-            output_names = [output_names]
-    else: 
-        output_names = ['output' + str(i+1) for i in range(len(outputs))]
+    # standardize input / output names format
+    def to_name_list(names):
+        return [names] if isinstance(names, _string_types) else names
     
-    if image_input_names is not None and isinstance(image_input_names, _string_types):
-        image_input_names = [image_input_names]
+    input_names = ['input' + str(i+1) for i in range(len(inputs))] \
+            if input_names is None else to_name_list(input_names)
+    output_names = ['output' + str(i+1) for i in range(len(outputs))] \
+            if output_names is None else to_name_list(output_names)
     
     graph.reset_model_input_names(input_names)
     graph.reset_model_output_names(output_names)
-    
-    # Keras -> Core ML input dimension dictionary
-    # (None, None) -> [1, 1, 1, 1, 1]
-    # (None, D) -> [D] or [D, 1, 1, 1, 1]
-    # (None, Seq, D) -> [Seq, 1, D, 1, 1]
-    # (None, H, W, C) -> [C, H, W]
-    # (D) -> [D]
-    # (Seq, D) -> [Seq, 1, 1, D, 1]
-    # (Batch, Sequence, D) -> [D]
 
     # Retrieve input shapes from model
-    if type(model.input_shape) is list:
-        input_dims = [filter(None, x) for x in model.input_shape]
-        unfiltered_shapes = model.input_shape
-    else:
-        input_dims = [filter(None, model.input_shape)]
-        unfiltered_shapes = [model.input_shape]
-            
+    input_dims = model.input_shape if type(model.input_shape) is list \
+            else [model.input_shape]
     for idx, dim in enumerate(input_dims):
-        unfiltered_shape = unfiltered_shapes[idx]
-        dim = list(dim)
-        if len(dim) == 0:
-            # Used to be [None, None] before filtering; indicating unknown sequence length
-            input_dims[idx] = tuple([1])
-        elif len(dim) == 1:
-            s = graph.get_successors(inputs[idx])[0]
-            if isinstance(graph.get_keras_layer(s), _keras.layers.embeddings.Embedding):
-                # Embedding layer's special input (None, D) where D is actually sequence length
-                input_dims[idx] = (1,)
-            else:
-                input_dims[idx] = dim # dim is just a number
-        elif len(dim) == 2:  # [Seq, D]
-            input_dims[idx] = (dim[1],)
-        elif len(dim) == 3: #H,W,C
-            if (len(unfiltered_shape) > 3):
-                # keras uses the reverse notation from us
-                input_dims[idx] = (dim[2], dim[0], dim[1])
-            else: # keras provided fixed batch and sequence length, so the input was (batch, sequence, channel)
-                input_dims[idx] = (dim[2],)
-        else:
-            raise ValueError('Input' + input_names[idx] + 'has input shape of length' + str(len(dim)))
+        is_seq = False
+        s = graph.get_successors(inputs[idx])[0]
+        ks = graph.get_keras_layer(s)
+        if len(dim) == 2 and isinstance(ks,_keras.layers.embeddings.Embedding):
+            is_seq = True
+        if len(dim) == 3 and (_topology2.is_recurrent_layer(ks) or 
+                isinstance(ks, _keras.layers.wrappers.TimeDistributed)):
+            is_seq = True
+        input_dims[idx] = _convert_to_coreml_shape(dim, is_seq)
 
     # Retrieve output shapes from model
-    if type(model.output_shape) is list:
-        output_dims = [filter(None, x) for x in model.output_shape]
-    else:
-        output_dims = [filter(None, model.output_shape[1:])]
-
+    output_dims = model.output_shape if type(model.output_shape) is list \
+            else [model.output_shape]
     for idx, dim in enumerate(output_dims):
-        dim = list(dim)
-        if len(dim) == 1:
-            output_dims[idx] = dim
-        elif len(dim) == 2:  # [Seq, D]
-            output_dims[idx] = (dim[1],)
-        elif len(dim) == 3:
-            output_dims[idx] = (dim[2], dim[1], dim[0])
+        is_seq = False
+        out_layer = outputs[idx]
+        if _topology2.is_activation_layer(graph.get_keras_layer(out_layer)):
+            out_layer = graph.backtrace_activation_layers(out_layer)
+        kl = graph.get_keras_layer(out_layer)
+        if len(dim) == 3 and (_topology2.is_recurrent_layer(kl) or 
+                _topology2.is_seq_merge_layer(kl) or 
+                isinstance(kl, _keras.layers.embeddings.Embedding) or
+                isinstance(kl, _keras.layers.wrappers.TimeDistributed)):
+            is_seq = True
+        output_dims[idx] =  _convert_to_coreml_shape(dim, is_seq)
 
     input_types = [datatypes.Array(*dim) for dim in input_dims]
     output_types = [datatypes.Array(*dim) for dim in output_dims]
@@ -256,17 +250,18 @@ def _convert(model,
     # Some of the feature handling is sensitive about string vs. unicode
     input_names = map(str, input_names)
     output_names = map(str, output_names)
+    
+    mode = 'classifier' if class_labels is not None else None
+    
     is_classifier = class_labels is not None
-    if is_classifier:
-        mode = 'classifier'
-    else:
-        mode = None
+    mode = 'classifier' if is_classifier else None
 
     # assuming these match
     input_features = list(zip(input_names, input_types))
     output_features = list(zip(output_names, output_types))
 
-    builder = _NeuralNetworkBuilder(input_features, output_features, mode = mode)
+    builder = _NeuralNetworkBuilder(input_features, output_features, 
+            mode = mode)
 
     for iter, layer in enumerate(graph.layer_list):
         keras_layer = graph.keras_layer_map[layer]
@@ -280,6 +275,11 @@ def _convert(model,
     # Since we aren't mangling anything the user gave us, we only need to update
     # the model interface here
     builder.add_optionals(graph.optional_inputs, graph.optional_outputs)
+
+    # Add image input identifier
+    if image_input_names is not None and isinstance(image_input_names, 
+            _string_types):
+        image_input_names = [image_input_names]
 
     # Add classifier classes (if applicable)
     if is_classifier:
