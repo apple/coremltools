@@ -125,7 +125,8 @@ Building Documentation
 First install all external dependencies.
 
 ```
-   pip install Sphinx==1.5.3 sphinx-rtd-theme==0.2.4
+   pip install Sphinx==1.5.3 sphinx-rtd-theme==0.2.4 numpydoc
+   pip install -e git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
 ```
 You also must have the *coremltools* package install, see the *Building* section.
 
