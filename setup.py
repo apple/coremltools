@@ -25,6 +25,7 @@ setup(name='coremltools',
         'coremltools.converters.xgboost',
         'coremltools.converters.libsvm',
         'coremltools.converters.keras',
+        'coremltools.graph_visualization',
         'coremltools.models',
         'coremltools.proto',
         'coremltools._scripts'
