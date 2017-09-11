@@ -30,7 +30,10 @@ setup(name='coremltools',
         'coremltools.proto',
         'coremltools._scripts'
     ],
-    package_data={'': ['LICENSE.txt', 'README.rst', 'libcaffeconverter.so', 'libcoremlpython.so']},
+    package_data={'': ['LICENSE.txt', 'README.rst', 'libcaffeconverter.so', 'libcoremlpython.so'],
+                  'coremltools': ['graph_visualization/*', 'graph_visualization/assets/*',
+                                  'graph_visualization/icons/*']
+                  },
     install_requires=[
         'numpy >= 1.6.2',
         'protobuf >= 3.1.0',
