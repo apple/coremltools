@@ -31,7 +31,11 @@ setup(name='coremltools',
         'coremltools._scripts'
     ],
     package_data={'': ['LICENSE.txt', 'README.rst', 'libcaffeconverter.so', 'libcoremlpython.so'],
-                  'coremltools': ['graph_visualization/*', 'graph_visualization/assets/*',
+                  'coremltools': ['graph_visualization/__init__.py',
+                                  'graph_visualization/app.js',
+                                  'graph_visualization/index.html',
+                                  'graph_visualization/style.css',
+                                  'graph_visualization/assets/*',
                                   'graph_visualization/icons/*']
                   },
     install_requires=[
