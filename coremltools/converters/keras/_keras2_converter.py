@@ -68,10 +68,6 @@ if _HAS_KERAS2_TF:
         _keras.applications.mobilenet.DepthwiseConv2D:_layers2.convert_convolution,
 
     }
-
-    _KERAS_SKIP_LAYERS = [
-        _keras.layers.core.Dropout,
-    ]
     
 
 def _is_merge_layer(layer):
@@ -162,12 +158,6 @@ def _convert(model,
     # Build network graph to represent Keras model
     graph = _topology2.NetGraph(model)
     graph.build()
-    graph.remove_skip_layers(_KERAS_SKIP_LAYERS)
-    graph.insert_1d_permute_layers()
-    graph.insert_permute_for_spatial_bn()
-    graph.defuse_activation()
-    graph.remove_internal_input_layers()
-    graph.make_output_layers()
 
     # The graph should be finalized before executing this
     graph.generate_blob_names()

@@ -1,5 +1,6 @@
 import keras as _keras
 import numpy as _np
+import six
 
 _KERAS_LAYERS_1D = [
     _keras.layers.Conv1D,
@@ -38,6 +39,10 @@ _KERAS_MERGE_LAYERS = [
     _keras.layers.Maximum,
     _keras.layers.Concatenate,
     _keras.layers.Dot,
+]
+
+_KERAS_SKIP_LAYERS = [
+    _keras.layers.core.Dropout,
 ]
 
 def _to_list(x):
@@ -95,6 +100,18 @@ class NetGraph(object):
         if layer not in self.layer_list: 
             self.layer_list.append(layer)
             self.keras_layer_map[layer] = keras_layer
+
+    def _replace_blob_name(self, old_name, new_name):
+        # replace a blob with a new name
+        for l in self.layers_outputs:
+            for idx, b in enumerate(self.layers_outputs[l]):
+                if b == old_name:
+                    self.layers_outputs[l][idx] = new_name
+        
+        for l in self.layers_inputs:
+            for idx, b in enumerate(self.layers_inputs[l]):
+                if b == old_name:
+                    self.layers_inputs[l][idx] = new_name
     
     def get_predecessors(self, layer_name):
         if layer_name in self.reverse_edge_map: 
@@ -110,6 +127,13 @@ class NetGraph(object):
     
     def get_keras_layer(self, layer_name):
         return self.keras_layer_map[layer_name]
+    
+    def get_coreml_layers(self, keras_layer):
+        coreml_layers = []
+        for key in self.keras_layer_map:
+            if self.keras_layer_map[key] == keras_layer:
+                coreml_layers.append(key)
+        return coreml_layers
     
     def make_input_layers(self):
         """
@@ -139,16 +163,21 @@ class NetGraph(object):
         """
         Extract the ordering of output layers. 
         """
-        # TODO
-        # use successors == 0 as the criteria for output layer 
-        # will fail when some intermediate layers also generate output. 
-        # However, because the possibility of having inserted layers, 
-        # it's more difficult to tell which layer is the output layer. 
-        # Once possible way is to keep track of newly added layers... 
+        # TODO - finish this
         self.output_layers = []
-        for layer in self.layer_list:
-            if len(self.get_successors(layer)) == 0: 
-                self.output_layers.append(layer)
+        if hasattr(self.model, 'output_layers'):
+            # find corresponding output layers in CoreML model
+            # assume output layers are not shared
+            self.output_layers = [self.get_coreml_layers(kl)[0] for kl in 
+                    self.model.output_layers]
+        elif len(self.model.outputs) > 0:
+            for model_output in self.model.outputs:                
+                for l in self.layer_list:
+                    out_tensor = self.keras_layer_map[l].output
+                    if out_tensor == model_output:
+                        self.output_layers.append(l)
+        else:
+            raise ValueError("Output values cannot be identified.")
     
     def get_input_layers(self):
         return self.input_layers
@@ -215,9 +244,10 @@ class NetGraph(object):
             print('Output name length mismatch')
             return
         for i, out_layer in enumerate(self.output_layers):
-            new_blob_name = new_names[i]
-            self.layers_outputs[out_layer][0] = new_blob_name
-    
+            old_blob_name = self.layers_outputs[self.output_layers[i]][0]
+            self._replace_blob_name(old_blob_name, 
+                    new_names[i])
+
     # need to update both layer's in/out list and graph in/out ports
     def add_recurrent_optionals(self):
         # call this after blob names are generated
@@ -315,8 +345,8 @@ class NetGraph(object):
         self.layer_list.remove(layer)
     
     def _remove_layer_and_reconnect(self, layer):
-        """
-        remove the layer, and reconnect each of its predecessor to each of its successor
+        """ Remove the layer, and reconnect each of its predecessor to each of 
+        its successor
         """
         successors = self.get_successors(layer)
         predecessors = self.get_predecessors(layer)
@@ -330,9 +360,25 @@ class NetGraph(object):
         for pred in predecessors:
             for succ in successors:
                 self._add_edge(pred, succ)
+        
         # remove layer in the data structures
         self.layer_list.remove(layer)
         self.keras_layer_map.pop(layer)
+        
+        # re-assign input and output layers if layer happens to be an 
+        # input / output layer
+        if layer in self.input_layers:
+            idx = self.input_layers.index(layer)
+            self.input_layers.pop(idx)
+            for pred in predecessors:
+                self.input_layers.insert(idx, pred)
+                idx += 1
+        if layer in self.output_layers:
+            idx = self.output_layers.index(layer)
+            self.output_layers.pop(idx)
+            for succ in successors:
+                self.output_layers.insert(idx, succ)
+                idx += 1
 
     def _remove_old_edges(self, layer):
         predecessors = self.get_predecessors(layer)
@@ -358,7 +404,8 @@ class NetGraph(object):
         while idx < nb_layers: 
             layer = self.layer_list[idx]
             keras_layer = self.keras_layer_map[layer]
-            if isinstance(keras_layer, _keras.engine.topology.InputLayer) and len(self.get_predecessors(layer)) > 0:
+            if isinstance(keras_layer, _keras.engine.topology.InputLayer) and \
+                    len(self.get_predecessors(layer)) > 0:
                 # these are internal input layers that needs to be taken out
                 self._remove_layer_and_reconnect(layer)
                 idx -= 1
@@ -366,13 +413,9 @@ class NetGraph(object):
             idx += 1
     
     def _insert_layer_after(self, layer_idx, new_layer, new_keras_layer):
+        """ Insert the new_layer, whose parameter is stored in a Keras layer 
+        structure new_keras_layer, after the layer whose position is layer_idx. 
         """
-        Insert the new_layer after layer, whose position is layer_idx. The new layer's 
-        parameter is stored in a Keras layer called new_keras_layer
-        """
-        # reminder: new_keras_layer is not part of the original Keras network, 
-        # so it's input / output blob information is missing. It serves only as 
-        # a parameter holder. 
         layer = self.layer_list[layer_idx]
         self.layer_list.insert(layer_idx+1, new_layer)
         self.keras_layer_map[new_layer] = new_keras_layer
@@ -383,11 +426,14 @@ class NetGraph(object):
         for succ in successors:
             self._add_edge(new_layer, succ)
             self._remove_edge(layer, succ)
+        # if layer is an output layer, change the output layer tag
+        if layer in self.output_layers:
+            idx = self.output_layers.index(layer)
+            self.output_layers[idx] = new_layer
         
     def _insert_layer_between(self, src, snk, new_layer, new_keras_layer):
-        """
-        Insert the new_layer before layer, whose position is layer_idx. The new layer's 
-        parameter is stored in a Keras layer called new_keras_layer
+        """ Insert the new_layer, whose keras layer parameters are stored in 
+        new_keras_layer, between src and snk.
         """
         if snk is None: 
             insert_pos = self.layer_list.index(src) + 1
@@ -402,11 +448,10 @@ class NetGraph(object):
         else: 
             self._add_edge(src, new_layer)
             self._add_edge(new_layer, snk)
-            self._remove_edge(src, snk)    
+            self._remove_edge(src, snk)
     
     def defuse_activation(self):
-        """
-        Defuse the fused activation layers in the network. 
+        """ Defuse the fused activation layers in the network. 
         """
         idx, nb_layers = 0, len(self.layer_list)
         while idx < nb_layers:
@@ -414,15 +459,12 @@ class NetGraph(object):
             k_layer = self.keras_layer_map[layer]
             if (isinstance(k_layer, _keras.layers.TimeDistributed)):
                 k_layer = k_layer.layer
-            if (isinstance(k_layer, _keras.layers.convolutional.Convolution2D) or 
-                isinstance(k_layer, _keras.layers.convolutional.Convolution1D) or 
-                isinstance(k_layer, _keras.layers.core.Dense)):
-
-                import six
-                if six.PY2:
-                    func_name = k_layer.activation.func_name
-                else:
-                    func_name = k_layer.activation.__name__
+            if (isinstance(k_layer, _keras.layers.Conv2D) or 
+                isinstance(k_layer, _keras.layers.Conv1D) or 
+                isinstance(k_layer, _keras.layers.Dense)):
+                
+                func_name = k_layer.activation.func_name if six.PY2 else \
+                        k_layer.activation.__name__
 
                 if func_name != 'linear':
                     # Create new layer
@@ -624,6 +666,8 @@ class NetGraph(object):
             # replace input / output edges to the model with input/output edges of the embedded layers
             predecessors = self.get_predecessors(embedded_model)
             embedded_inputs = embedded_graph.get_input_layers()
+            # from nose.tools import set_trace
+            # set_trace()
             for i, pred in enumerate(predecessors): 
                 embed_input = embedded_inputs[i]
                 new_embed_input = embedded_model + '_' + embed_input
@@ -641,9 +685,17 @@ class NetGraph(object):
             self._remove_layer(embedded_model)
             idx = self._get_first_embedded_model()
         
+        # tag input layers and and output layers
         self.make_input_layers()
         self.make_output_layers()
-    
+
+        # make graph level adjustments
+        self.remove_skip_layers(_KERAS_SKIP_LAYERS) # done 1 pass
+        self.insert_1d_permute_layers()
+        self.insert_permute_for_spatial_bn()
+        self.defuse_activation()
+        self.remove_internal_input_layers()
+
     def print_layer_list(self):
         print('\n')
         print('layer_list')
