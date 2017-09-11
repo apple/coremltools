@@ -449,6 +449,11 @@ class NetGraph(object):
             self._add_edge(src, new_layer)
             self._add_edge(new_layer, snk)
             self._remove_edge(src, snk)
+            
+        # if layer is an output layer, change the output layer tag
+        if src in self.output_layers:
+            idx = self.output_layers.index(src)
+            self.output_layers[idx] = new_layer
     
     def defuse_activation(self):
         """ Defuse the fused activation layers in the network. 
@@ -491,10 +496,10 @@ class NetGraph(object):
         return False
     
     def _get_1d_interface_edges(self):
-        """
-        Get edges that represents transition from not 1D to 1D, and 1D to not 1D
-        A 'in_edge e(u,v)' means u operates on non-1D blobs, but v operates on 1D blobs.  
-        An 'out_edge e(u,v)' means u operates on 1D blobs, but v operates on non-1D blobs. 
+        """ Get edges that represents transition from not-1D to 1D, and 1D to 
+        not-1D. A 'in_edge e(u,v)' means u operates on non-1D blobs, but v 
+        operates on 1D blobs. An 'out_edge e(u,v)' means u operates on 1D
+        blobs, but v operates on non-1D blobs. 
         """
         in_edges = []
         for layer in self.layer_list: 
@@ -504,9 +509,11 @@ class NetGraph(object):
             if len(preds) == 0:
                 in_edges.append((None, layer))
             else: 
-                # because 1D layers are all 1-input, there should only be 1 predecessor
+                # because 1D layers are all 1-input, 
+                # there should only be 1 predecessor
                 u, v = preds[0], layer
-                while (u != None) and (self.is_activation(u) or type(u) in _KERAS_NORMALIZATION_LAYERS):
+                while (u != None) and (self.is_activation(u) or type(u) in \
+                        _KERAS_NORMALIZATION_LAYERS):
                     preds = self.get_predecessors(u)
                     v = u
                     u = preds[0] if len(preds) > 0 else None
@@ -514,25 +521,29 @@ class NetGraph(object):
                     in_edges.append((u, v))
 
         out_edges = []
-        for layer in self.layer_list: 
+        for layer in self.layer_list:
             if not self.is_1d_layer(layer):
                 continue
-            succs = self.get_successors(layer)
-            if len(succs) == 0:
+            # cases for 1d->output
+            if layer in self.output_layers:
                 out_edges.append((layer, None))
-            elif not self.is_activation(succs[0]):
-                for succ in succs: 
-                    if not self.is_1d_layer(succ):
-                        out_edges.append((layer, succ))
-            else: 
-                act_layer = succs[0]
-                succs = self.get_successors(act_layer)
-                if len(succs) == 0:
-                    out_edges.append((act_layer, None))
-                else: 
+            
+            succs = self.get_successors(layer)
+            if len(succs) > 0:
+                # this should be handled in 1d->output already
+                if not self.is_activation(succs[0]):
                     for succ in succs: 
                         if not self.is_1d_layer(succ):
-                            out_edges.append((act_layer, succ))
+                            out_edges.append((layer, succ))
+                else: 
+                    act_layer = succs[0]
+                    succs = self.get_successors(act_layer)
+                    if len(succs) == 0:
+                        out_edges.append((act_layer, None))
+                    else: 
+                        for succ in succs: 
+                            if not self.is_1d_layer(succ):
+                                out_edges.append((act_layer, succ))
 
         return in_edges, out_edges
     
@@ -595,7 +606,7 @@ class NetGraph(object):
                     keras_permute = _keras.layers.Permute(dims=dims)
                     self._insert_layer_between(sbn, succ, permute_layer, keras_permute)
     
-    def build(self):
+    def build(self, is_top_level = True):
         # sanity check. 
         model = self.model
         if not (type(model) == _keras.models.Sequential or type(model) == _keras.models.Model):
@@ -643,7 +654,7 @@ class NetGraph(object):
             # build the embedded model
             embedded_keras_model = self.keras_layer_map[embedded_model]
             embedded_graph = NetGraph(embedded_keras_model)
-            embedded_graph.build()
+            embedded_graph.build(is_top_level=False)
             # replace the embedded model with the layers of the embedded graph
             embedded_layer_list = embedded_graph.layer_list
             new_layer_list = []
@@ -666,8 +677,6 @@ class NetGraph(object):
             # replace input / output edges to the model with input/output edges of the embedded layers
             predecessors = self.get_predecessors(embedded_model)
             embedded_inputs = embedded_graph.get_input_layers()
-            # from nose.tools import set_trace
-            # set_trace()
             for i, pred in enumerate(predecessors): 
                 embed_input = embedded_inputs[i]
                 new_embed_input = embedded_model + '_' + embed_input
@@ -689,12 +698,13 @@ class NetGraph(object):
         self.make_input_layers()
         self.make_output_layers()
 
-        # make graph level adjustments
-        self.remove_skip_layers(_KERAS_SKIP_LAYERS) # done 1 pass
-        self.insert_1d_permute_layers()
-        self.insert_permute_for_spatial_bn()
-        self.defuse_activation()
-        self.remove_internal_input_layers()
+        # make graph level adjustments - do this only on top level
+        if is_top_level:
+            self.remove_skip_layers(_KERAS_SKIP_LAYERS) # done 1 pass
+            self.insert_1d_permute_layers()
+            self.insert_permute_for_spatial_bn()
+            self.defuse_activation()
+            self.remove_internal_input_layers()
 
     def print_layer_list(self):
         print('\n')

@@ -1734,14 +1734,72 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         
     def test_intermediate_outputs_dense(self):
         x = Input(shape=(3,))
-        y = Dense(4, name='dense_y')(x)
-        z = Dense(5, name='dense_z')(y)
+        y = Dense(4, name='intermediate_dense_y')(x)
+        z = Dense(5, name='intermediate_dense_z')(y)
         model = Model([x], [y,z])
         
         model.set_weights([np.random.rand(*w.shape) for w in \
                 model.get_weights()])
-        self._test_keras_model(model, mode = 'random', delta=1e-4)
+        self._test_keras_model(model, mode = 'random', delta=1e-2)
     
+    def test_intermediate_outputs_conv2d(self):
+        x = Input(shape=(8,8,3))
+        y = Conv2D(4, (3,3), name='intermdiate_conv2d_1')(x)
+        z = Conv2D(5, (3,3), name='intermdiate_conv2d_2')(y)
+        model = Model([x], [y,z])
+        
+        model.set_weights([np.random.rand(*w.shape) for w in \
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-2)
+    
+    def test_intermediate_outputs_conv2d_fused_act(self):
+        x = Input(shape=(8,8,3))
+        y = Conv2D(4, (3,3), name='intermdiate_conv2d_1_fused', 
+                activation='relu')(x)
+        z = Conv2D(5, (3,3), name='intermdiate_conv2d_2_fused', 
+                activation='relu')(y)
+        model = Model([x], [y,z])
+        
+        model.set_weights([np.random.rand(*w.shape) - 0.5 for w in \
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-2)
+    
+    def test_intermediate_outputs_conv1d(self):
+        x = Input(shape=(10,3))
+        y = Conv1D(4, 3, name='intermdiate_conv1d_1')(x)
+        z = Conv1D(5, 3, name='intermdiate_conv1d_2')(y)
+        model = Model([x], [y,z])
+        model.set_weights([np.random.rand(*w.shape) for w in \
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-2)
+    
+    def test_intermediate_outputs_conv1d_fused_act(self):
+        x = Input(shape=(10,3))
+        y = Conv1D(4, 3, name='intermdiate_conv1d_1_fused', 
+                activation='relu')(x)
+        z = Conv1D(5, 3, name='intermdiate_conv1d_2_fused', 
+                activation='relu')(y)
+        model = Model([x], [y,z])
+        model.set_weights([np.random.rand(*w.shape) - 0.5 for w in \
+                model.get_weights()])
+        self._test_keras_model(model, mode = 'random', delta=1e-2)
+    
+    def test_intermediate_rcnn_1d(self):
+
+        x_in = Input(shape=(10,2))
+        # Conv block 1
+        x = Conv1D(3, 3, padding='same', name='interm_rcnn_conv1')(x_in)
+        x = BatchNormalization(axis=-1, name='interm_rcnn_bn1')(x)
+        x = Activation('elu')(x)
+        x = MaxPooling1D(pool_size=2, name='interm_rcnn_pool1')(x)
+        
+        out1 = x # out1.shape = (5,3)
+        x = GRU(6, name='gru1')(x)
+        out2 = x
+        model = Model(x_in, [out1,out2])
+        # model = Model(x_in, [out2])
+        self._test_keras_model(model, mode='random_zero_mean', delta=1e-2)
+
     def test_tiny_mobilenet_arch(self):
         
         img_input = Input(shape=(32,32,3))
