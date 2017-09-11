@@ -829,8 +829,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		cy.$('node').on('mouseover', function(e){
             var ele = e.target;
-            // console.log(ele.classes());
-
 		    var keys = Object.keys(ele.data('info'));
 		    var div = document.getElementById('node-info');
 		    var content = '<br />';
