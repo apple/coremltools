@@ -13,7 +13,9 @@ import os as _os
 import six as _six
 
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
-
+from _graph_vizualization import \
+    _neural_network_nodes_and_edges, \
+    _pipeline_nodes_and_edges, _start_server
 
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
@@ -52,6 +54,7 @@ def save_spec(spec, filename):
         s = spec.SerializeToString()
         f.write(s)
 
+
 def load_spec(filename):
     """
     Load a protobuf model specification from file
@@ -85,6 +88,7 @@ def load_spec(filename):
         spec.ParseFromString(contents)
         return spec
 
+
 def _get_model(spec):
     """
     Utility to get the model and the data.
@@ -96,7 +100,7 @@ def _get_model(spec):
         return MLModel(spec)
 
 
-def evaluate_regressor(model, data, target = "target", verbose = False):
+def evaluate_regressor(model, data, target="target", verbose=False):
     """
     Evaluate a CoreML regression model and compare against predictions
     from the original framework (for testing correctness of conversion)
@@ -160,7 +164,8 @@ def evaluate_regressor(model, data, target = "target", verbose = False):
         print("results: %s" % ret)
     return ret
 
-def evaluate_classifier(model, data, target = 'target', verbose = False):
+
+def evaluate_classifier(model, data, target='target', verbose=False):
     """
     Evaluate a CoreML classifier model and compare against predictions
     from the original framework (for testing correctness of conversion). Use
@@ -221,8 +226,9 @@ def evaluate_classifier(model, data, target = 'target', verbose = False):
     return ret
 
 
-def evaluate_classifier_with_probabilities(model, data, probabilities =
-        'probabilities', verbose = False):
+def evaluate_classifier_with_probabilities(model, data,
+                                           probabilities='probabilities',
+                                           verbose = False):
     """
     Evaluate a classifier specification for testing.
 
@@ -281,7 +287,9 @@ def evaluate_classifier_with_probabilities(model, data, probabilities =
 
     return ret
 
-def rename_feature(spec, current_name, new_name, rename_inputs=True, rename_outputs=True):
+
+def rename_feature(spec, current_name, new_name, rename_inputs=True,
+                   rename_outputs=True):
     """
     Rename a feature in the specification.
 
@@ -382,6 +390,7 @@ def rename_feature(spec, current_name, new_name, rename_inputs=True, rename_outp
                            rename_inputs or (index != 0),
                            rename_outputs or (index < len(spec.pipeline.models)))
 
+
 def _sanitize_value(x):
     """
     Performs cleaning steps on the data so various type comparisons can
@@ -423,7 +432,9 @@ def _element_equal(x, y):
     else:
         return bool(x == y)
 
-def evaluate_transformer(model, input_data, reference_output, verbose = False):
+
+def evaluate_transformer(model, input_data, reference_output,
+                         verbose=False):
     """
     Evaluate a transformer specification for testing.
 
@@ -490,3 +501,106 @@ def evaluate_transformer(model, input_data, reference_output, verbose = False):
     if verbose:
         print("results: %s" % ret)
     return ret
+
+
+def create_model_viz(spec, port=None):
+    """
+
+    Function to create a graph visualization of the mlmodel
+
+    Parameters
+    ----------
+    spec: mlmodel spec
+    port: if server is to be hosted on specific localhost port
+
+    Returns
+    -------
+
+    None
+
+    """
+    model_type = spec.WhichOneof('Type')
+    model_description = spec.description
+    input_spec = model_description.input
+    output_spec = model_description.output
+
+    spec_inputs = []
+    for model_input in input_spec:
+        spec_inputs.append(model_input.name)
+
+    spec_outputs = []
+    for model_output in output_spec:
+        spec_outputs.append(model_output.name)
+
+    cy_nodes = []
+    cy_edges = []
+
+    cy_nodes.append({
+        'data': {
+            'id': 'input_node',
+            'name': 'input_node',
+            'info': {
+                'inputs': str([]),
+                'outputs': str(spec_inputs)
+            }
+
+        },
+        'classes': 'input',
+    })
+
+    if model_type == 'pipeline':
+        pipeline_spec = spec.pipeline
+        cy_data = _pipeline_nodes_and_edges(cy_nodes,
+                                            cy_edges,
+                                            pipeline_spec,
+                                            spec_outputs
+                                            )
+    elif model_type == 'pipelineRegressor':
+        pipeline_spec = spec.pipelineRegressor.pipeline
+        cy_data = _pipeline_nodes_and_edges(cy_nodes,
+                                            cy_edges,
+                                            pipeline_spec,
+                                            spec_outputs
+                                            )
+    elif model_type == 'pipelineClassifier':
+        pipeline_spec = spec.pipelineClassifier.pipeline
+        cy_data = _pipeline_nodes_and_edges(cy_nodes,
+                                            cy_edges,
+                                            pipeline_spec,
+                                            spec_outputs
+                                            )
+    elif model_type == 'neuralNetwork':
+        nn_spec = spec.neuralNetwork
+        cy_data = _neural_network_nodes_and_edges(nn_spec,
+                                                  cy_nodes,
+                                                  cy_edges,
+                                                  spec_outputs,
+                                                  input_spec
+                                                  )
+    elif model_type == 'neuralNetworkClassifier':
+        nn_spec = spec.neuralNetworkClassifier
+        cy_data = _neural_network_nodes_and_edges(nn_spec,
+                                                  cy_nodes,
+                                                  cy_edges,
+                                                  spec_outputs,
+                                                  input_spec
+                                                  )
+    elif model_type == 'neuralNetworkRegressor':
+        nn_spec = spec.neuralNetworkRegressor
+        cy_data = _neural_network_nodes_and_edges(nn_spec,
+                                                  cy_nodes,
+                                                  cy_edges,
+                                                  spec_outputs,
+                                                  input_spec
+                                                  )
+    else:
+        print("Model is not of type Pipeline or Neural Network "
+              "and cannot be visualized")
+        return
+
+    import coremltools
+    web_dir = _os.path.join(_os.path.dirname(coremltools.__file__),
+                            'graph_visualization')
+    with open('{}/model.json'.format(web_dir), 'w') as file:
+        _json.dump(cy_data, file)
+    _start_server(port, web_dir)
