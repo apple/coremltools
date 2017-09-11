@@ -13,7 +13,7 @@ import os as _os
 import six as _six
 
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
-from _graph_vizualization import \
+from _graph_visualization import \
     _neural_network_nodes_and_edges, \
     _pipeline_nodes_and_edges, _start_server
 
@@ -503,7 +503,7 @@ def evaluate_transformer(model, input_data, reference_output,
     return ret
 
 
-def create_model_viz(spec, port=None):
+def create_model_visualization(spec, port=None):
     """
 
     Function to create a graph visualization of the mlmodel
