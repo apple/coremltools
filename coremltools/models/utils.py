@@ -503,7 +503,7 @@ def evaluate_transformer(model, input_data, reference_output,
     return ret
 
 
-def create_model_visualization(spec, port=None):
+def visualize_spec(spec, port=None):
     """
 
     Function to create a graph visualization of the mlmodel
