@@ -104,8 +104,8 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
                 keras_layer.name)
 
 def _same_elements_per_channel(x):
-    """
-    Test if a 3D (H,W,C) matrix x has the same element in each (H,W) matrix for each channel
+    """ Test if a 3D (H,W,C) matrix x has the same element in each (H,W) 
+    matrix for each channel
     """
     eps = 1e-5
     dims = x.shape
@@ -203,7 +203,9 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
     elif non_linearity == 'PRELU':
         shared_axes = list(keras_layer.shared_axes)
         if not (shared_axes == [1,2,3] or shared_axes == [1,2]):
-            _utils.raise_error_unsupported_scenario("Shared axis not being [1,2,3] or [1,2]", 'parametric_relu', layer)
+            _utils.raise_error_unsupported_scenario(
+                    "Shared axis not being [1,2,3] or [1,2]", 
+                    'parametric_relu', layer)
         params = _keras.backend.eval(keras_layer.weights[0])
     elif non_linearity == 'ELU':
         params = keras_layer.alpha
@@ -233,7 +235,8 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
     input_name, output_name = (input_names[0], output_names[0])
 
     has_bias = keras_layer.use_bias
-    is_deconv = isinstance(keras_layer, _keras.layers.convolutional.Conv2DTranspose)
+    is_deconv = isinstance(keras_layer, 
+            _keras.layers.convolutional.Conv2DTranspose)
 
     # Get the weights from _keras.
     weightList = keras_layer.get_weights()
@@ -314,17 +317,28 @@ def convert_convolution1d(builder, layer, input_names, output_names, keras_layer
 
     # Parameter
     filter_length, input_dim, n_filters = weightList[0].shape
-    stride_width = keras_layer.strides if type(keras_layer.strides) is int else keras_layer.strides[0]
+    stride_width = keras_layer.strides if type(keras_layer.strides) is int \
+            else keras_layer.strides[0]
 
     # Weights and bias terms
     W = _np.expand_dims(weightList[0],axis=0)
     b = weightList[1] if has_bias else None
 
     dilations = [1,1]
-    if (type(keras_layer.dilation_rate) is list) or (type(keras_layer.dilation_rate) is tuple):
+    if (type(keras_layer.dilation_rate) is list) or \
+            (type(keras_layer.dilation_rate) is tuple):
         dilations = [1, keras_layer.dilation_rate[0]]
     else:
         dilations = [1, keras_layer.dilation_rate]
+    
+    keras_padding = keras_layer.padding
+    if keras_padding == 'causal':
+        builder.add_padding(name = layer + '__causal_pad__',
+                left = filter_length-1, right=0, top=0, bottom=0, value= 0,
+                input_name = input_name, 
+                output_name= input_name + '__causal_pad__')
+        input_name = input_name + '__causal_pad__'
+        keras_padding = 'valid'
     
     builder.add_convolution(name = layer,
              kernel_channels = input_dim,
@@ -333,7 +347,7 @@ def convert_convolution1d(builder, layer, input_names, output_names, keras_layer
              width = filter_length,
              stride_height = 1,
              stride_width = stride_width,
-             border_mode = keras_layer.padding, 
+             border_mode = keras_padding, 
              groups = 1,
              W = W,
              b = b,
