@@ -526,11 +526,11 @@ def visualize_spec(spec, port=None):
 
     spec_inputs = []
     for model_input in input_spec:
-        spec_inputs.append(model_input.name)
+        spec_inputs.append((model_input.name, str(model_input.type)))
 
     spec_outputs = []
     for model_output in output_spec:
-        spec_outputs.append(model_output.name)
+        spec_outputs.append((model_output.name, str(model_output.type)))
 
     cy_nodes = []
     cy_edges = []
@@ -548,13 +548,13 @@ def visualize_spec(spec, port=None):
     })
 
 
-    for model_input in spec_inputs:
+    for model_input, input_type in spec_inputs:
         cy_nodes.append({
             'data': {
                 'id': str(model_input),
                 'name': str(model_input),
                 'info': {
-                    'type': 'input',
+                    'type': "\n".join(str(input_type).split("\n")),
                     'inputs': str([]),
                     'outputs': str([model_input])
                 },

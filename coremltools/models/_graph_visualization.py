@@ -593,13 +593,13 @@ def _neural_network_nodes_and_edges(nn_spec,
         }
     })
 
-    for model_output in spec_outputs:
+    for model_output, output_type in spec_outputs:
         cy_nodes.append({
             'data': {
                 'id': str(model_output),
                 'name': str(model_output),
                 'info': {
-                    'type': 'input',
+                    'type': "\n".join(str(output_type).split("\n")),
                     'inputs': str([model_output]),
                     'outputs': str([])
                 },
@@ -691,13 +691,13 @@ def _pipeline_nodes_and_edges(cy_nodes, cy_edges, pipeline_spec, spec_outputs):
         }
     })
 
-    for model_output in spec_outputs:
+    for model_output, output_type in spec_outputs:
         cy_nodes.append({
             'data': {
                 'id': str(model_output),
                 'name': str(model_output),
                 'info': {
-                    'type': 'output',
+                    'type': "\n".join(str(output_type).split("\n")),
                     'inputs': str([model_output]),
                     'outputs': str([])
                 },
