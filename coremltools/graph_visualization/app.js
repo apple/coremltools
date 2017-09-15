@@ -448,14 +448,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		cy.on('click', 'node.parent', function(evt){
 		    var node = evt.target;
-		    console.log( 'tapped ' + node.id() );
             node.children().style({'opacity': 1});
             node.style({'color' : '#d5e1df'});
             var selectedChildNodeCollection = node.children();
+			var parentEdges = node.connectedEdges();
             var selectedChildEdges  = selectedChildNodeCollection.connectedEdges();
-            console.log(selectedChildNodeCollection);
             selectedChildEdges.style({'opacity' : 1});
-            node.connectedEdges().style({'opacity' : 0});
+
+            var selectedChildEdgesTarget = [];
+
+            for(var idx = 0; idx < selectedChildEdges.length; idx++) {
+				if (selectedChildEdges[idx].data('target') != node.data().id) {
+					selectedChildEdgesTarget.push(selectedChildEdges[idx].data('target'));
+				}
+			}
+			parentEdges.style({'opacity' : 0});
+
+			for(var idx = 0; idx < parentEdges.length; idx++) {
+				if (parentEdges[idx].data('target') != node.data().id) {
+
+					if (selectedChildEdgesTarget.includes(parentEdges[idx].data('target')) == false) {
+						parentEdges[idx].style({'opacity' : "1"});
+					}
+				}
+			}
+
             cy.animate({
                 fit : {
                     eles : selectedChildNodeCollection,

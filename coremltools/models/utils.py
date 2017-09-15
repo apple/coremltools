@@ -538,15 +538,30 @@ def visualize_spec(spec, port=None):
     cy_nodes.append({
         'data': {
             'id': 'input_node',
-            'name': 'input_node',
+            'name': '',
             'info': {
-                'inputs': str([]),
-                'outputs': str(spec_inputs)
-            }
+                'type': 'input node'
+            },
+            'classes': 'input',
 
-        },
-        'classes': 'input',
+        }
     })
+
+
+    for model_input in spec_inputs:
+        cy_nodes.append({
+            'data': {
+                'id': str(model_input),
+                'name': str(model_input),
+                'info': {
+                    'type': 'input',
+                    'inputs': str([]),
+                    'outputs': str([model_input])
+                },
+                'parent': 'input_node'
+            },
+            'classes': 'input'
+        })
 
     if model_type == 'pipeline':
         pipeline_spec = spec.pipeline

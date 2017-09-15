@@ -34,33 +34,38 @@ def _calculate_edges(cy_nodes, cy_edges, shape_dict=None):
 
     for upper_index in range(0, node_len):
         for lower_index in range(upper_index + 1, node_len):
-            outputs = _ast.literal_eval(
-                cy_nodes[upper_index]['data']['info']['outputs']
-            )
-            inputs = _ast.literal_eval(
-                cy_nodes[lower_index]['data']['info']['inputs']
-            )
-            for output in outputs:
-                if output in inputs:
-                    if shape_dict is None or output not in shape_dict.keys():
-                        label = None
-                    else:
-                        label = str(shape_dict[output])
 
-                    cy_edges.append(
-                        {
-                            'data':{'id':
-                                    '{}.{}.{}'.format(
-                                        output,
-                                        cy_nodes[upper_index]['data']['id'],
-                                        cy_nodes[lower_index]['data']['id']
-                                    ),
-                                    'source': cy_nodes[upper_index]['data']['id'],
-                                    'target': cy_nodes[lower_index]['data']['id'],
-                                    'label': label
+            if 'outputs' in cy_nodes[upper_index]['data']['info'].keys() and \
+                            'inputs' in cy_nodes[upper_index]['data']['info'].keys() \
+                    and 'outputs' in cy_nodes[lower_index]['data']['info'].keys() \
+                    and 'inputs' in cy_nodes[lower_index]['data']['info'].keys():
+                outputs = _ast.literal_eval(
+                    cy_nodes[upper_index]['data']['info']['outputs']
+                )
+                inputs = _ast.literal_eval(
+                    cy_nodes[lower_index]['data']['info']['inputs']
+                )
+                for output in outputs:
+                    if output in inputs:
+                        if shape_dict is None or output not in shape_dict.keys():
+                            label = None
+                        else:
+                            label = str(shape_dict[output])
+
+                        cy_edges.append(
+                            {
+                                'data':{'id':
+                                        '{}.{}.{}'.format(
+                                            output,
+                                            cy_nodes[upper_index]['data']['id'],
+                                            cy_nodes[lower_index]['data']['id']
+                                        ),
+                                        'source': cy_nodes[upper_index]['data']['id'],
+                                        'target': cy_nodes[lower_index]['data']['id'],
+                                        'label': label
+                                }
                             }
-                        }
-                    )
+                        )
 
     return cy_nodes, cy_edges
 
@@ -576,19 +581,32 @@ def _neural_network_nodes_and_edges(nn_spec,
 
     """
     cy_nodes = _neural_network_node_info(nn_spec, cy_nodes)
-
     cy_nodes.append({
         'data': {
             'id': 'output_node',
-            'name': 'output_node',
+            'name': '',
             'info': {
-                'inputs': str(spec_outputs),
-                'outputs': str([])
+                'type': 'output node'
             },
             'classes': 'output',
 
         }
     })
+
+    for model_output in spec_outputs:
+        cy_nodes.append({
+            'data': {
+                'id': str(model_output),
+                'name': str(model_output),
+                'info': {
+                    'type': 'input',
+                    'inputs': str([model_output]),
+                    'outputs': str([])
+                },
+                'parent': 'output_node'
+            },
+            'classes': 'output'
+        })
 
     shape_dict = _infer_shapes(nn_spec, input_spec)
     cy_nodes, cy_edges = _calculate_edges(cy_nodes, cy_edges, shape_dict)
@@ -664,15 +682,30 @@ def _pipeline_nodes_and_edges(cy_nodes, cy_edges, pipeline_spec, spec_outputs):
     cy_nodes.append({
         'data': {
             'id': 'output_node',
-            'name': 'output_node',
+            'name': '',
             'info': {
-                'inputs': str(spec_outputs),
-                'outputs': str([])
+                'type': 'output node'
             },
             'classes': 'output',
 
         }
     })
+
+    for model_output in spec_outputs:
+        cy_nodes.append({
+            'data': {
+                'id': str(model_output),
+                'name': str(model_output),
+                'info': {
+                    'type': 'output',
+                    'inputs': str([model_output]),
+                    'outputs': str([])
+                },
+                'parent' : 'output_node'
+            },
+            'classes': 'output'
+        })
+
 
     cy_nodes, cy_edges = _calculate_edges(cy_nodes, cy_edges, shape_dict)
 
