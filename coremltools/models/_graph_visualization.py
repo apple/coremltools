@@ -529,20 +529,22 @@ def _neural_network_node_info(nn_spec, cy_nodes, child=False, parent=None):
         print(" Now adding: {}".format(layer.name))
         info = _layer_specific_info(layer)
         if child:
+            info["name"] = layer.name
             cy_nodes.append({
                 'data': {
                     'id': layer.name,
-                    'name': layer.name,
+                    'name': layer.WhichOneof('layer'),
                     'info': info,
                     'parent': parent
                 },
                 'classes': layer.WhichOneof('layer'),
             })
         else:
+            info["name"] = layer.name
             cy_nodes.append({
                 'data': {
                     'id': layer.name,
-                    'name': layer.name,
+                    'name': layer.WhichOneof('layer'),
                     'info': info
                 },
                 'classes': layer.WhichOneof('layer'),

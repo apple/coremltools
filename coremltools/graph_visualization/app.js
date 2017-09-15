@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			        label: 'data(name)',
                     'font-size' : 30,
 			        'border-width': 3,
-                    'border-style': 'outset',
+                    'border-color': 'black',
 			        width: 'label',
 			        'color': '#000000',
 			        'text-valign': 'center',
@@ -37,15 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			{
 			    selector: "node.parent",
 			    style: {
-			        shape: 'roundrectangle',
-			        label: 'data(name)',
-                    'font-size' : 30,
-			        'border-width': 10,
-                    'border-color': 'black',
-			        width: 'label',
-			        'color': 'black',
-			        'text-valign': 'center',
-			        padding: 10,
 					'compound-sizing-wrt-labels': 'include',
                     'background-image' : 'icons/parent.png',
                     'text-rotation' : '90deg',
@@ -61,741 +52,344 @@ document.addEventListener('DOMContentLoaded', function() {
             {
 			    selector: "node.arrayFeatureExtractor",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/arrayFeatureExtractor.png'
 		    	}
 		    },
             {
 			    selector: "node.categoricalMapping",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/categoricalMapping.png'
 		    	}
 		    },
             {
 			    selector: "node.dictVectorizer",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/dictVectorizer.png'
 		    	}
 		    },
             {
 			    selector: "node.featureVectorizer",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/featureVectorizer.png'
 		    	}
 		    },
             {
 			    selector: "node.glmClassifier",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/glmClassifier.png'
 		    	}
 		    },
             {
 			    selector: "node.glmRegressor",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/glmRegressor.png'
 		    	}
 		    },
             {
 			    selector: "node.identity",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/identity.png'
 		    	}
 		    },
             {
 			    selector: "node.imputer",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/imputer.png'
 		    	}
 		    },
             {
 			    selector: "node.neuralNetwork",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/neuralNetwork.png'
 		    	}
 		    },
             {
 			    selector: "node.neuralNetworkClassifier",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/neuralNetworkClassifier.png'
 		    	}
 		    },
             {
 			    selector: "node.neuralNetworkRegressor",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/neuralNetworkRegressor.png'
 		    	}
 		    },
             {
 			    selector: "node.normalizer",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/normalizer.png'
 		    	}
 		    },
             {
 			    selector: "node.oneHotEncoder",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/oneHotEncoder.png'
 		    	}
 		    },
             {
 			    selector: "node.scaler",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/scaler.png'
 		    	}
 		    },
             {
 			    selector: "node.supportVectorClassifier",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/supportVectorClassifier.png'
 		    	}
 		    },
             {
 			    selector: "node.supportVectorRegressor",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/supportVectorRegressor.png'
 		    	}
 		    },
             {
 			    selector: "node.treeEnsembleClassifier",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/treeEnsembleClassifier.png'
 		    	}
 		    },
             {
 			    selector: "node.treeEnsembleRegressor",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/treeEnsembleRegressor.png'
 		    	}
 		    },
             {
 			    selector: "node.convolution",
 			    style: {
-			        shape: 'roundrectangle',
-                    'font-weight': 'bold',
-			        label: 'data(name)',
-                    'font-size' : 30,
-			        'border-width': 2,
-			        'color': '#FFFFFF',
-			        width: 'label',
-			        'text-valign': 'center',
+					'color': 'white',
 					'background-image': 'icons/convolution.png'
 		    	}
 		    },
 		    {
 			    selector: "node.pooling",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#FFFFFF',
-			        'font-weight': 'bold',
+					'color': 'white',
 					'background-image': 'icons/pooling.png'
 		    	}
 		    },
 		    {
 			    selector: "node.activation",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/activation.png'
 		    	}
 		    },
             {
 			    selector: "node.add",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/add.png'
 		    	}
 		    },
             {
 			    selector: "node.average",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/average.png'
 		    	}
 		    },
             {
 			    selector: "node.batchnorm",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/batchnorm.png'
 		    	}
 		    },
             {
 			    selector: "node.biDirectionalLSTM",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/biDirectionalLSTM.png'
 		    	}
 		    },
             {
 			    selector: "node.bias",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/bias.png'
 		    	}
 		    },
             {
 			    selector: "node.concat",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/concat.png'
 		    	}
 		    },
             {
 			    selector: "node.crop",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/crop.png'
 		    	}
 		    },
             {
 			    selector: "node.dot",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/dot.png'
 		    	}
 		    },
             {
 			    selector: "node.embedding",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/embedding.png'
 		    	}
 		    },
             {
 			    selector: "node.flatten",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/flatten.png'
 		    	}
 		    },
             {
 			    selector: "node.gru",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/gru.png'
 		    	}
 		    },
             {
 			    selector: "node.innerProduct",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/innerProduct.png'
 		    	}
 		    },
             {
 			    selector: "node.input",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/input.png'
 		    	}
 		    },
             {
 			    selector: "node.output",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/output.png'
 		    	}
 		    },
             {
 			    selector: "node.l2normalize",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/l2normalize.png'
 		    	}
 		    },
             {
 			    selector: "node.loadConstant",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/loadConstant.png'
 		    	}
 		    },
             {
 			    selector: "node.lrn",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/lrn.png'
 		    	}
 		    },
             {
 			    selector: "node.max",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/max.png'
 		    	}
 		    },
             {
 			    selector: "node.min",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/min.png'
 		    	}
 		    },
             {
 			    selector: "node.multiply",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/multiply.png'
 		    	}
 		    },
             {
 			    selector: "node.mvn",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/mvn.png'
 		    	}
 		    },
             {
 			    selector: "node.padding",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/padding.png'
 		    	}
 		    },
             {
 			    selector: "node.permute",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/permute.png'
 		    	}
 		    },
             {
 			    selector: "node.pooling",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#FFFFFF',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/pooling.png'
 		    	}
 		    },
             {
 			    selector: "node.reduce",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/reduce.png'
 		    	}
 		    },
             {
 			    selector: "node.reorganizeData",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/reorganizeData.png'
 		    	}
 		    },
             {
 			    selector: "node.reshape",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/reshape.png'
 		    	}
 		    },
             {
 			    selector: "node.scale",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/scale.png'
 		    	}
 		    },
             {
 			    selector: "node.sequenceRepeat",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/sequenceRepeat.png'
 		    	}
 		    },
             {
 			    selector: "node.simpleRecurrent",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/simpleRecurrent.png'
 		    	}
 		    },
             {
 			    selector: "node.slice",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/slice.png'
 		    	}
 		    },
             {
 			    selector: "node.softmax",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/softmax.png'
 		    	}
 		    },
             {
 			    selector: "node.split",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/split.png'
 		    	}
 		    },
             {
 			    selector: "node.unary",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/unary.png'
 		    	}
 		    },
             {
 			    selector: "node.uniDirectionalLSTM",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/uniDirectionalLSTM.png'
 		    	}
 		    },
             {
 			    selector: "node.upsample",
 			    style: {
-			        shape: 'roundrectangle',
-			        width: 'label',
-			        label: 'data(name)',
-			        'border-width': 2,
-			        'color': '#000000',
-					padding: 10,
-			        'font-weight': 'bold',
 					'background-image': 'icons/upsample.png'
 		    	}
 		    },
