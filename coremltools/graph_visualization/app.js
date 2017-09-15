@@ -446,6 +446,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			div.innerHTML = '';
 		});
 
+		cy.on('select', 'edge', function (evt) {
+           var edge = evt.target;
+           console.log(edge.data().source);
+           edge.style({
+           	'text-opacity': 1,
+           	'text-margin-x': 15,
+           	'text-border-opacity': 1,
+           	'text-background-opacity': 1
+           });
+           edge.style({label: edge.data().source});
+
+        });
+
 		cy.on('click', 'node.parent', function(evt){
 		    var node = evt.target;
             node.children().style({'opacity': 1});
@@ -485,15 +498,22 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 
 		$('#label-switch').on('click', function(e) {
-			if (cy.edges().style().textOpacity == 0) {
-				cy.edges().style({
+
+			var edges = cy.edges();
+
+			for(var idx = 0; idx < edges.length; idx++) {
+				edges[idx].style({label: edges[idx].data().label});
+			}
+
+			if (edges.style().textOpacity == 0) {
+				edges.style({
 					'text-opacity': 1,
 					'text-background-opacity': 1,
 					'text-border-opacity': 1
 				});
 			}
 			else {
-				cy.edges().style({
+				edges.style({
 					'text-opacity': 0,
 					'text-background-opacity': 0,
 					'text-border-opacity': 0
