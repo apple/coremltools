@@ -858,6 +858,15 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Test the keras model
         self._test_keras_model(model)
 
+    def test_tiny_conv_causal_1d(self):
+        np.random.seed(1988)
+        model = Sequential()
+        model.add(Conv1D(1,3,input_shape=(10,1),use_bias=False,
+                padding='causal'))
+        model.set_weights([np.random.rand(*w.shape) for w in \
+                model.get_weights()])
+        self._test_keras_model(model)
+
     def test_embedding(self):
         model = Sequential()
         num_inputs = 10
@@ -1626,6 +1635,27 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         model.add(MaxPooling1D(2))
 
         self._test_keras_model(model, one_dim_seq_flags=[True])
+
+    def test_lstm_td(self):
+        np.random.seed(1988)
+        input_dim = 2
+        input_length = 4
+        num_channels = 3
+
+        # Define a model
+        model = Sequential()
+        model.add(SimpleRNN(num_channels, return_sequences=True, 
+                input_shape=(input_length, input_dim),))
+        model.add(TimeDistributed(Dense(5)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape)*0.2 - 0.1 for w in \
+                model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model, input_blob = 'data', 
+                output_blob = 'output')
+
 
     # Making sure that giant channel sizes get handled correctly
     def test_large_channel_gpu(self):
