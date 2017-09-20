@@ -384,14 +384,23 @@ class SimpleTestCase(unittest.TestCase):
             stateful=False, unroll=False, return_sequences=True, output_dim=4  # Passes for < 3
         ),
         model = Sequential()
-        model.add(SimpleRNN(output_dim=params[0]['output_dim'],
-                            input_length=params[0]['input_dims'][1],
-                            input_dim=params[0]['input_dims'][2],
-                            activation=params[0]['activation'],
-                            return_sequences=params[0]['return_sequences'],
-                            go_backwards=params[0]['go_backwards'],
-                            unroll=True,
-                            ))
+        if keras.__version__[:2] == '2.':
+            model.add(SimpleRNN(units=params[0]['output_dim'],
+                                input_shape=(params[0]['input_dims'][1],params[0]['input_dims'][2]),
+                                activation=params[0]['activation'],
+                                return_sequences=params[0]['return_sequences'],
+                                go_backwards=params[0]['go_backwards'],
+                                unroll=True,
+                                ))            
+        else:
+            model.add(SimpleRNN(output_dim=params[0]['output_dim'],
+                                input_length=params[0]['input_dims'][1],
+                                input_dim=params[0]['input_dims'][2],
+                                activation=params[0]['activation'],
+                                return_sequences=params[0]['return_sequences'],
+                                go_backwards=params[0]['go_backwards'],
+                                unroll=True,
+                                ))
         relative_error, keras_preds, coreml_preds = simple_model_eval(params, model)
         for i in range(len(relative_error)):
             self.assertLessEqual(relative_error[i], 0.01)
@@ -403,15 +412,25 @@ class SimpleTestCase(unittest.TestCase):
             inner_activation='linear'
         ),
         model = Sequential()
-        model.add(LSTM(output_dim=params[0]['output_dim'],
-                            input_length=params[0]['input_dims'][1],
-                            input_dim=params[0]['input_dims'][2],
-                            activation=params[0]['activation'],
-                            return_sequences=params[0]['return_sequences'],
-                            go_backwards=params[0]['go_backwards'],
-                            unroll=True,
-                            inner_activation='linear'
-                            ))
+        if keras.__version__[:2] == '2.':
+            model.add(LSTM(units=params[0]['output_dim'],
+                           input_shape=(params[0]['input_dims'][1],params[0]['input_dims'][2]),
+                           activation=params[0]['activation'],
+                           return_sequences=params[0]['return_sequences'],
+                           go_backwards=params[0]['go_backwards'],
+                           unroll=True,
+                           recurrent_activation='linear'
+                           ))
+        else:
+            model.add(LSTM(output_dim=params[0]['output_dim'],
+                           input_length=params[0]['input_dims'][1],
+                           input_dim=params[0]['input_dims'][2],
+                           activation=params[0]['activation'],
+                           return_sequences=params[0]['return_sequences'],
+                           go_backwards=params[0]['go_backwards'],
+                           unroll=True,
+                           inner_activation='linear'
+                           ))
         relative_error, keras_preds, coreml_preds = simple_model_eval(params, model)
         for i in range(len(relative_error)):
             self.assertLessEqual(relative_error[i], 0.01)
@@ -422,15 +441,25 @@ class SimpleTestCase(unittest.TestCase):
             stateful=False, unroll=False, return_sequences=False, output_dim=4
         ),
         model = Sequential()
-        model.add(GRU(output_dim=params[0]['output_dim'],
-                            input_length=params[0]['input_dims'][1],
-                            input_dim=params[0]['input_dims'][2],
-                            activation=params[0]['activation'],
-                            inner_activation='sigmoid',
-                            return_sequences=params[0]['return_sequences'],
-                            go_backwards=params[0]['go_backwards'],
-                            unroll=True,
-                            ))
+        if keras.__version__[:2] == '2.':
+             model.add(GRU(units=params[0]['output_dim'],
+                           input_shape=(params[0]['input_dims'][1],params[0]['input_dims'][2]),
+                           activation=params[0]['activation'],
+                           recurrent_activation='sigmoid',
+                           return_sequences=params[0]['return_sequences'],
+                           go_backwards=params[0]['go_backwards'],
+                           unroll=True,
+                           ))
+        else:
+            model.add(GRU(output_dim=params[0]['output_dim'],
+                          input_length=params[0]['input_dims'][1],
+                          input_dim=params[0]['input_dims'][2],
+                          activation=params[0]['activation'],
+                          inner_activation='sigmoid',
+                          return_sequences=params[0]['return_sequences'],
+                          go_backwards=params[0]['go_backwards'],
+                          unroll=True,
+                          ))
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         relative_error, keras_preds, coreml_preds = simple_model_eval(params, model)
         for i in range(len(relative_error)):
@@ -562,32 +591,61 @@ class LSTMLayer(RecurrentLayerTest):
                 lstm_params = dict(zip(self.lstm_params_dict.keys(), lstm_params))
                 model = Sequential()
                 if lstm_params['bidirectional'] is True:
-                    model.add(
-                        Bidirectional(
+                    if keras.__version__[:2] == '2.':
+                        model.add(
+                            Bidirectional(
+                                LSTM(
+                                    base_params['output_dim'],
+                                    activation=base_params['activation'],
+                                    recurrent_activation=lstm_params['inner_activation'],
+                                    return_sequences=base_params['return_sequences'],
+                                    go_backwards=False,
+                                    unroll=base_params['unroll'],
+                                ),
+                                input_shape=(base_params['input_dims'][1], base_params['input_dims'][2]),
+
+                            )
+                        )
+                    else:
+                        model.add(
+                            Bidirectional(
+                                LSTM(
+                                    base_params['output_dim'],
+                                    activation=base_params['activation'],
+                                    inner_activation=lstm_params['inner_activation'],
+                                    return_sequences=base_params['return_sequences'],
+                                    go_backwards=False,
+                                    unroll=base_params['unroll'],
+                                ),
+                                input_shape=(base_params['input_dims'][1], base_params['input_dims'][2]),
+
+                            )
+                        )
+                else:
+                    if keras.__version__[:2] == '2.':
+                        model.add(
                             LSTM(
                                 base_params['output_dim'],
+                                input_shape=(base_params['input_dims'][1], base_params['input_dims'][2]),
+                                activation=base_params['activation'],
+                                recurrent_activation=lstm_params['inner_activation'],
+                                return_sequences=base_params['return_sequences'],
+                                go_backwards=base_params['go_backwards'],
+                                unroll=base_params['unroll'],
+                            )
+                        )
+                    else:
+                        model.add(
+                            LSTM(
+                                base_params['output_dim'],
+                                input_shape=(base_params['input_dims'][1], base_params['input_dims'][2]),
                                 activation=base_params['activation'],
                                 inner_activation=lstm_params['inner_activation'],
                                 return_sequences=base_params['return_sequences'],
-                                go_backwards=False,
+                                go_backwards=base_params['go_backwards'],
                                 unroll=base_params['unroll'],
-                            ),
-                            input_shape=(base_params['input_dims'][1], base_params['input_dims'][2]),
-
+                            )
                         )
-                    )
-                else:
-                    model.add(
-                        LSTM(
-                            base_params['output_dim'],
-                            input_shape=(base_params['input_dims'][1], base_params['input_dims'][2]),
-                            activation=base_params['activation'],
-                            inner_activation=lstm_params['inner_activation'],
-                            return_sequences=base_params['return_sequences'],
-                            go_backwards=base_params['go_backwards'],
-                            unroll=base_params['unroll'],
-                        )
-                    )
                 mlkitmodel = _get_mlkit_model_from_path(model)
                 input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                             base_params['input_dims'][2])
@@ -663,18 +721,31 @@ class GRULayer(RecurrentLayerTest):
             for gru_params in self.gru_layer_params:
                 gru_params = dict(zip(self.gru_params_dict.keys(), gru_params))
                 model = Sequential()
-                model.add(
-                    GRU(
-                        base_params['output_dim'],
-                        input_length=base_params['input_dims'][1],
-                        input_dim=base_params['input_dims'][2],
-                        activation=base_params['activation'],
-                        inner_activation=gru_params['inner_activation'],
-                        return_sequences=base_params['return_sequences'],
-                        go_backwards=base_params['go_backwards'],
-                        unroll=base_params['unroll'],
+                if keras.__version__[:2] == '2.':
+                    model.add(
+                        GRU(
+                            base_params['output_dim'],
+                            input_shape=(base_params['input_dims'][1],base_params['input_dims'][2]),
+                            activation=base_params['activation'],
+                            recurrent_activation=gru_params['inner_activation'],
+                            return_sequences=base_params['return_sequences'],
+                            go_backwards=base_params['go_backwards'],
+                            unroll=base_params['unroll'],
+                        )
                     )
-                )
+                else:
+                    model.add(
+                        GRU(
+                            base_params['output_dim'],
+                            input_length=base_params['input_dims'][1],
+                            input_dim=base_params['input_dims'][2],
+                            activation=base_params['activation'],
+                            inner_activation=gru_params['inner_activation'],
+                            return_sequences=base_params['return_sequences'],
+                            go_backwards=base_params['go_backwards'],
+                            unroll=base_params['unroll'],
+                        )
+                    )
                 model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
                 mlkitmodel = _get_mlkit_model_from_path(model)
                 input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
