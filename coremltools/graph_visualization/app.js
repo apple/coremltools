@@ -3,13 +3,13 @@
 document.addEventListener('DOMContentLoaded', function() {
 	var options = {
 	  name: 'dagre',
-      nodeSep: 3, // the separation between adjacent nodes in the same rank
-	  edgeSep: 5, // the separation between adjacent edges in the same rank
-	  minLen: function( edge ){ return 1; }, // number of ranks to keep between the source and target of the edge
-	  edgeWeight: function( edge ){ return 2; }, // higher weight edges are generally made shorter and straighter than lower weight edges
-	  fit: true, // whether to fit to viewport
-	  spacingFactor: 1.1, // Applies a multiplicative factor (>0) to expand or compress the overall area that the nodes take up
-	  nodeDimensionsIncludeLabels: true // whether labels should be included in determining the space used by a node (default true)
+      nodeSep: 3,
+	  edgeSep: 5,
+	  minLen: function( edge ){ return 1; },
+	  edgeWeight: function( edge ){ return 2; },
+	  fit: true,
+	  spacingFactor: 1.1,
+	  nodeDimensionsIncludeLabels: true
 	};
 
 	var nodeInfo = getGraphNodesAndEdges();
@@ -401,6 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		    		'line-color': '#111111',
 					'color' : '#000000',
 					'border-width': 5,
+					'font-size': 20,
 		    		'target-arrow-shape': 'triangle',
 		    		'target-arrow-color': '#111111',
 					 label: 'data(label)',
@@ -420,7 +421,6 @@ document.addEventListener('DOMContentLoaded', function() {
         var childNodeCollection = cy.elements("node.parent > node");
         var childEdges  = childNodeCollection.connectedEdges();
         childEdges.style({'opacity': 0});
-
 		cy.$('node').on('mouseover', function(e){
             var ele = e.target;
 		    var keys = Object.keys(ele.data('info'));
@@ -446,17 +446,18 @@ document.addEventListener('DOMContentLoaded', function() {
 			div.innerHTML = '';
 		});
 
-		cy.on('select', 'edge', function (evt) {
+		cy.on('tap', 'edge', function (evt) {
            var edge = evt.target;
-           console.log(edge.data().source);
-           edge.style({
-           	'text-opacity': 1,
-           	'text-margin-x': 15,
-           	'text-border-opacity': 1,
-           	'text-background-opacity': 1
+           var edgeLabel = edge.data().source;
+           edge.style({'label': edgeLabel});
+           edge.animate({
+           		style: {
+           			'text-opacity': 1,
+		           	'text-margin-x': 15,
+		           	'text-border-opacity': 1,
+		           	'text-background-opacity': 1
+           		}
            });
-           edge.style({label: edge.data().source});
-
         });
 
 		cy.on('click', 'node.parent', function(evt){
@@ -499,24 +500,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		$('#label-switch').on('click', function(e) {
 
-			var edges = cy.edges();
-
-			for(var idx = 0; idx < edges.length; idx++) {
-				edges[idx].style({label: edges[idx].data().label});
+			var edges = cy.$('edge');
+			for(var idx = 0 ; idx < edges.length; idx++) {
+				edges[idx].style({label: edges[idx].data().shape});
 			}
-
 			if (edges.style().textOpacity == 0) {
-				edges.style({
+				edges.animate({
+					style: {
 					'text-opacity': 1,
 					'text-background-opacity': 1,
 					'text-border-opacity': 1
+					}
 				});
 			}
 			else {
-				edges.style({
+				edges.animate({
+					style: {
 					'text-opacity': 0,
 					'text-background-opacity': 0,
 					'text-border-opacity': 0
+					}
 				});
 			}
 		});
@@ -536,9 +539,20 @@ document.addEventListener('DOMContentLoaded', function() {
 			parentNodes.connectedEdges().style({
 				'opacity': 1
 			});
+			var edges = cy.edges();
+			for(var idx = 0 ; idx < edges.length; idx++) {
+				edges[idx].style({label: null});
+			}
+			edges.animate({
+				style: {
+				'text-opacity': 0,
+				'text-background-opacity': 0,
+				'text-border-opacity': 0
+				}
+			});
 			cy.fit();
 		});
-        
+
 	});
 
 });

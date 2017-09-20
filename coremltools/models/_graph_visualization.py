@@ -62,7 +62,8 @@ def _calculate_edges(cy_nodes, cy_edges, shape_dict=None):
                                         ),
                                         'source': cy_nodes[upper_index]['data']['id'],
                                         'target': cy_nodes[lower_index]['data']['id'],
-                                        'label': label
+                                        'label': label,
+                                        'shape': label
                                 }
                             }
                         )
@@ -531,7 +532,6 @@ def _neural_network_node_info(nn_spec, cy_nodes, child=False, parent=None):
     """
     layers = nn_spec.layers
     for layer in layers:
-        print(" Now adding: {}".format(layer.name))
         info = _layer_specific_info(layer)
         if child:
             info["name"] = layer.name
