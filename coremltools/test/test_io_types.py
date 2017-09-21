@@ -125,7 +125,7 @@ class TestIODataTypes(unittest.TestCase):
                                  )
                                  )
             except RuntimeError:
-                print "{} not supported. ".format(dtype)
+                print("{} not supported. ".format(dtype))
 
     def test_random_forest_regressor(self):
         for dtype in self.number_data_type.keys():
@@ -148,7 +148,7 @@ class TestIODataTypes(unittest.TestCase):
                                        )
                                        )
             except RuntimeError:
-                print "{} not supported. ".format(dtype)
+                print("{} not supported. ".format(dtype))
 
     def test_support_vector_classifier(self):
         for dtype in self.number_data_type.keys():
@@ -189,7 +189,7 @@ class TestIODataTypes(unittest.TestCase):
                                  )
                                  )
             except RuntimeError:
-                print "{} not supported. ".format(dtype)
+                print("{} not supported. ".format(dtype))
 
     def test_linear_regressor(self):
         for dtype in self.number_data_type.keys():
@@ -211,7 +211,7 @@ class TestIODataTypes(unittest.TestCase):
                                        )
                                        )
             except RuntimeError:
-                print "{} not supported. ".format(dtype)
+                print("{} not supported. ".format(dtype))
 
     @attr('keras2')
     def test_keras_dense_model(self):

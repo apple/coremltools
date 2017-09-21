@@ -883,15 +883,15 @@ class StressTest(CorrectnessTest):
                          start = [0,1,2,5],
                          end = [5,100,56,-1,-2,-4],
                          stride = [1,2,3]
-                         )              
-        params = [x for x in apply(itertools.product, params_dict.values())] 
+                         )
+        params = list(itertools.product(*params_dict.values()))
         all_candidates = [dict(zip(params_dict.keys(), x)) for x in params]     
         valid_params = []               
         for pr in all_candidates:
             X = np.random.rand(*pr["input_shape"])
             if get_size_after_stride(X, pr):
                 valid_params.append(pr)        
-        print "Total params to be tested: ", len(valid_params), "out of canditates: ", len(all_candidates)
+        print("Total params to be tested: ", len(valid_params), "out of canditates: ", len(all_candidates))
         '''
         Test
         '''
@@ -900,8 +900,8 @@ class StressTest(CorrectnessTest):
         failed_tests_numerical = []
         for i in range(len(valid_params)):
             params = valid_params[i]
-            #print "=========: ", params
-            #if i % 10 == 0: print "======== Testing {}/{}".format(str(i), str(len(valid_params)))
+            #print("=========: ", params)
+            #if i % 10 == 0: print("======== Testing {}/{}".format(str(i), str(len(valid_params))))
             X = np.random.rand(*params["input_shape"])
             np_preds = get_numpy_predictions_slice(X, params)
             coreml_preds, eval = get_coreml_predictions_slice(X, params)
@@ -933,7 +933,7 @@ class StressTest(CorrectnessTest):
                        mode = ['logsum'],
                        axis = ['HW'],
                        )                             
-        params = [x for x in apply(itertools.product, params_dict.values())] 
+        params = list(itertools.product(*params_dict.values()))
         all_candidates = [dict(zip(params_dict.keys(), x)) for x in params]     
         valid_params = []               
         for pr in all_candidates:
@@ -941,7 +941,7 @@ class StressTest(CorrectnessTest):
                 if pr["axis"] == 'CHW' or pr["axis"] == 'HW':
                     continue            
             valid_params.append(pr)        
-        print "Total params to be tested: ", len(valid_params), "out of canditates: ", len(all_candidates)
+        print("Total params to be tested: ", len(valid_params), "out of canditates: ", len(all_candidates))
         '''
         Test
         '''
@@ -950,8 +950,8 @@ class StressTest(CorrectnessTest):
         failed_tests_numerical = []
         for i in range(len(valid_params)):
             params = valid_params[i]
-            #print "=========: ", params
-            #if i % 10 == 0: print "======== Testing {}/{}".format(str(i), str(len(valid_params)))
+            #print("=========: ", params)
+            #if i % 10 == 0: print("======== Testing {}/{}".format(str(i), str(len(valid_params))))
             X = np.random.rand(*params["input_shape"])
             np_preds = get_numpy_predictions_reduce(X, params)
             coreml_preds, eval = get_coreml_predictions_reduce(X, params)
