@@ -6,16 +6,15 @@
     top: 100px;
     left: 0px;
     overflow: hidden;
-    border: 5px solid black;
     padding: 10px;
-    box-shadow: 10px 10px 10px #888888;
+    box-shadow: inset 0 0 10px #000000;
 }
 
 #label-switch {
     position: absolute;
     right: 10px;
     top: 100px;
-    border: 1px solid black;
+    border: 1px solid silver;
     border-radius: 10px;
     box-shadow: 2px 2px 2px #888888;
     text-align: center;
@@ -39,7 +38,7 @@
     position: absolute;
     right: 10px;
     top: 150px;
-    border: 1px solid black;
+    border: 1px solid silver;
     border-radius: 10px;
     box-shadow: 2px 2px 2px #888888;
     text-align: center;
@@ -72,7 +71,7 @@
     width: 30%;
     height: 100%;
     padding: 50px;
-    border: 2px solid black;
+    border: 1px solid silver;
     background-color: white;
     font-weight: bold;
     font-family: 'Roboto Slab', serif;
