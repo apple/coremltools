@@ -43,6 +43,8 @@ _KERAS_MERGE_LAYERS = [
 
 _KERAS_SKIP_LAYERS = [
     _keras.layers.core.Dropout,
+    _keras.layers.core.SpatialDropout1D,
+    _keras.layers.core.SpatialDropout2D,
 ]
 
 def _to_list(x):
