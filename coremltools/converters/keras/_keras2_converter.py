@@ -149,6 +149,13 @@ def _convert(model,
             predicted_feature_name = None,
             predicted_probabilities_output = ''):
 
+    # Check Keras format
+    if _keras.backend.image_data_format() == 'channels_first':
+        print("Keras image data format 'channels_first' detected. Currently only 'channels_last' is supported. "
+            "Changing to 'channels_last', but your model may not be converted "
+            "converted properly.")
+        _keras.backend.set_image_data_format('channels_last')
+    
     if isinstance(model, _string_types):
         model = _keras.models.load_model(model)
     elif isinstance(model, tuple):

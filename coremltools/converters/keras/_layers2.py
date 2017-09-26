@@ -115,6 +115,12 @@ def _same_elements_per_channel(x):
             return False
     return True
 
+def _check_data_format(keras_layer):
+    if hasattr(keras_layer,('data_format')):
+        if keras_layer.data_format != 'channels_last':
+            raise ValueError("Converter currently supports data_format = "
+                "'channels_last' only.")        
+
 def convert_dense(builder, layer, input_names, output_names, keras_layer):
     """
     Convert a dense layer from keras to coreml.
@@ -231,6 +237,9 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
     builder: NeuralNetworkBuilder
         A neural network builder object.
     """
+    
+    _check_data_format(keras_layer)
+    
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
 
@@ -370,6 +379,8 @@ def convert_separable_convolution(builder, layer, input_names, output_names, ker
     builder: NeuralNetworkBuilder
         A neural network builder object.
     """
+    _check_data_format(keras_layer)
+    
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
 
@@ -538,6 +549,7 @@ def convert_pooling(builder, layer, input_names, output_names, keras_layer):
     builder: NeuralNetworkBuilder
         A neural network builder object.
     """
+    _check_data_format(keras_layer)
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
 
@@ -628,6 +640,7 @@ def convert_padding(builder, layer, input_names, output_names, keras_layer):
     builder: NeuralNetworkBuilder
         A neural network builder object.
     """
+    _check_data_format(keras_layer)
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
     
@@ -678,6 +691,8 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer):
     builder: NeuralNetworkBuilder
         A neural network builder object.
     """
+    
+    _check_data_format(keras_layer)
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
     is_1d = isinstance(keras_layer, _keras.layers.Cropping1D)
@@ -727,6 +742,7 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer):
     builder: NeuralNetworkBuilder
         A neural network builder object.
     """
+    _check_data_format(keras_layer)
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
 
