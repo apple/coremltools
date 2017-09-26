@@ -21,6 +21,7 @@ if HAS_KERAS2_TF:
     from keras.layers import ZeroPadding2D, UpSampling2D, Cropping2D
     from keras.layers import ZeroPadding1D, UpSampling1D, Cropping1D
     from keras.layers import SimpleRNN, LSTM, GRU
+    from keras.layers.core import SpatialDropout1D, SpatialDropout2D
     from keras.layers.wrappers import Bidirectional, TimeDistributed
     from keras.applications.mobilenet import DepthwiseConv2D
     from coremltools.converters import keras as kerasConverter
@@ -1528,6 +1529,31 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         model = Sequential()
         model.add(Conv2D(input_shape = input_shape,
             filters = num_kernels, kernel_size=(kernel_height, kernel_width)))
+        model.add(Dropout(0.5))
+        model.add(Flatten())
+        model.add(Dense(hidden_dim))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Get the coreml model
+        self._test_keras_model(model)
+        
+    def test_tiny_conv_dropout_random(self):
+        np.random.seed(1988)
+        num_samples = 1
+        input_dim = 8
+        input_shape = (input_dim, input_dim, 3)
+        num_kernels = 2
+        kernel_height = 5
+        kernel_width = 5
+        hidden_dim = 4
+
+        # Define a model
+        model = Sequential()
+        model.add(Conv2D(input_shape = input_shape,
+            filters = num_kernels, kernel_size=(kernel_height, kernel_width)))
+        model.add(SpatialDropout2D(0.5))
         model.add(Flatten())
         model.add(Dense(hidden_dim))
 
