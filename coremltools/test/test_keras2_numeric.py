@@ -1612,6 +1612,22 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         self._test_keras_model(model, input_blob = 'data', output_blob = 'output', delta=1e-2)
     
+    def test_embedding_fixed_length(self):
+        sequence_length = 5
+        vocab_size = 10
+        embed_channels = 4
+        
+        dense_units = sequence_length * embed_channels
+        model = Sequential()
+        model.add(Embedding(vocab_size, embed_channels, input_length=sequence_length))
+        model.add(Flatten())
+        model.add(Dense(dense_units))
+        model.add(Dense(20))
+        
+        print 'Test: model.input_shape = ', model.input_shape
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+        self._test_keras_model(model, one_dim_seq_flags=[True])
+    
     def test_dense_fused_act_in_td(self):
         np.random.seed(1988)
         x_in = Input(shape=(10,2))
