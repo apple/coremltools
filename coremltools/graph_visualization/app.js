@@ -441,11 +441,6 @@ document.addEventListener('DOMContentLoaded', function() {
             div.innerHTML = content;
 		});
 
-		cy.$('node').on('mouseout', function(e){
-			var div = document.getElementById('node-info');
-			div.innerHTML = '';
-		});
-
 		cy.on('tap', 'edge', function (evt) {
            var edge = evt.target;
            var edgeLabel = edge.data().source;
