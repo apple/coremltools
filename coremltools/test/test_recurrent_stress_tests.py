@@ -338,7 +338,7 @@ Nosetest Functions
 =============================
 '''  
 
-def _get_mlkit_model_from_path(model):
+def get_mlkit_model_from_path(model):
     from coremltools.converters import keras as keras_converter
     model = keras_converter.convert(model, ['data'], ['output'])
     return model
@@ -350,7 +350,7 @@ def generate_input(dim0, dim1, dim2):
 
 
 def simple_model_eval(params, model):
-    mlkitmodel = _get_mlkit_model_from_path(model)
+    mlkitmodel = get_mlkit_model_from_path(model)
     # New test case takes in 2D input as opposed to uniform 3d input across all other tests
     if len(params[0]['input_dims']) == 3:
         input_data = generate_input(params[0]['input_dims'][0], params[0]['input_dims'][1],
@@ -527,7 +527,7 @@ class RNNLayer(RecurrentLayerTest):
                         unroll=base_params['unroll'],
                     )
                 )
-                mlkitmodel = _get_mlkit_model_from_path(model)
+                mlkitmodel = get_mlkit_model_from_path(model)
                 input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                             base_params['input_dims'][2])
                 keras_preds = model.predict(input_data).flatten()
@@ -646,7 +646,7 @@ class LSTMLayer(RecurrentLayerTest):
                                 unroll=base_params['unroll'],
                             )
                         )
-                mlkitmodel = _get_mlkit_model_from_path(model)
+                mlkitmodel = get_mlkit_model_from_path(model)
                 input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                             base_params['input_dims'][2])
                 
@@ -747,7 +747,7 @@ class GRULayer(RecurrentLayerTest):
                         )
                     )
                 model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
-                mlkitmodel = _get_mlkit_model_from_path(model)
+                mlkitmodel = get_mlkit_model_from_path(model)
                 input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                             base_params['input_dims'][2])
                 
@@ -865,7 +865,7 @@ class LSTMStacked(unittest.TestCase):
                 except ValueError as e:
                     print("error ocurred with {}".format(e))
             model.add(LSTM(output_dim=10, return_sequences=base_params['top_return_sequences'], activation='sigmoid'))
-            mlkitmodel = _get_mlkit_model_from_path(model)
+            mlkitmodel = get_mlkit_model_from_path(model)
             input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                         base_params['input_dims'][2])
             keras_preds = model.predict(input_data).flatten()
@@ -974,3 +974,92 @@ class DifferentIOModelsTypes(unittest.TestCase):
     @attr('keras2')
     def test_keras2_many_to_many(self):
         self.test_many_to_many()
+
+
+@attr('keras2')
+class InitialStateRecurrentModels(unittest.TestCase):
+    """
+    This test class sets initial states to the recurrent nodes
+    and then tests if the state is passed in Espresso
+    """
+
+    @attr('keras2')
+    def test_initial_state_GRU(self):
+        data = np.random.rand(1, 1, 2)
+
+        model = keras.models.Sequential()
+        model.add(keras.layers.GRU(5, input_shape=(1, 2), batch_input_shape=[1,1,2], stateful=True))
+        model.get_layer(index=1).reset_states()
+
+        coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
+        keras_output_1 = model.predict(data)
+        coreml_full_output_1 = coreml_model.predict({'data': data})
+        coreml_output_1 = coreml_full_output_1['output']
+        coreml_output_1 = np.expand_dims(coreml_output_1, 1)
+
+        np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
+
+        hidden_state = (np.random.rand(1, 5))
+        model.get_layer(index=1).reset_states(hidden_state)
+        coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
+        spec = coreml_model.get_spec()
+        keras_output_2 = model.predict(data)
+        coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
+        coreml_output_2 = coreml_full_output_2['output']
+        coreml_output_2 = np.expand_dims(coreml_output_2, 1)
+        np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
+
+    @attr('keras2')
+    def test_initial_state_SimpleRNN(self):
+        data = np.random.rand(1, 1, 2)
+        model = keras.models.Sequential()
+        model.add(keras.layers.SimpleRNN(5, input_shape=(1, 2), batch_input_shape=[1,1,2], stateful=True))
+        model.get_layer(index=1).reset_states()
+        coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
+        keras_output_1 = model.predict(data)
+        coreml_full_output_1 = coreml_model.predict({'data': data})
+        coreml_output_1 = coreml_full_output_1['output']
+        coreml_output_1 = np.expand_dims(coreml_output_1, 1)
+        np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
+
+        hidden_state = np.random.rand(1, 5)
+        model.get_layer(index=1).reset_states(hidden_state)
+        coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
+        spec = coreml_model.get_spec()
+        keras_output_2 = model.predict(data)
+        coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
+        coreml_output_2 = coreml_full_output_2['output']
+        coreml_output_2 = np.expand_dims(coreml_output_2, 1)
+        np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
+
+    @attr('keras2')
+    def test_initial_state_LSTM(self):
+        data = np.random.rand(1, 1, 2)
+
+        model = keras.models.Sequential()
+        model.add(keras.layers.LSTM(5, input_shape=(1, 2), batch_input_shape=[1,1,2], stateful=True))
+        model.get_layer(index=1).reset_states()
+
+        coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
+
+        keras_output_1 = model.predict(data)
+        coreml_full_output_1 = coreml_model.predict({'data': data})
+        coreml_output_1 = coreml_full_output_1['output']
+        coreml_output_1 = np.expand_dims(coreml_output_1, 1)
+
+        np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
+
+        hidden_state = (np.random.rand(1, 5), np.random.rand(1, 5))
+        model.get_layer(index=1).reset_states(hidden_state)
+
+        coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
+        spec = coreml_model.get_spec()
+
+        keras_output_2 = model.predict(data)
+        coreml_full_output_2 = coreml_model.predict(
+            {'data': data, spec.description.input[1].name: hidden_state[0][0],
+             spec.description.input[2].name: hidden_state[1][0]})
+        coreml_output_2 = coreml_full_output_2['output']
+        coreml_output_2 = np.expand_dims(coreml_output_2, 1)
+
+        np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
