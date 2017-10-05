@@ -9,8 +9,8 @@ Keras and XGBoost.
 We recommend using virtualenv to use, install, or build coremltools. Be
 sure to install virtualenv using your system pip.
 
-```
-    pip install virtualenv
+```shell
+pip install virtualenv
 ```
 
 Installation
@@ -20,7 +20,9 @@ The method for installing *coremltools* follows the
 [standard python package installation steps](https://packaging.python.org/installing/).
 Once you have set up a python environment, run::
 
-    pip install -U coremltools
+```shell
+pip install -U coremltools
+```
 
 The package [documentation](https://apple.github.io/coremltools) contains
 more details on how to use coremltools.
@@ -46,30 +48,30 @@ Building from source
 --------------------
 To build the project, you need [CMake](https://cmake.org) to configure the project
 
-```
-  cmake .
+```shell
+cmake .
 ```
 
 after which you can use make to build the project
 
-```
-  make -j4
+```shell
+make -j4
 ```
 
 Building Installable Wheel
 ---------------------------
 To make a wheel/egg that you can distribute, you can do the following
 
-```
-   make dist 
+```shell
+make dist 
 ```
 
 Running Unit Tests
 -------------------
 To run the unit tests, from the repo root, run the following command:
 
-```
-    make test
+```shell
+make test
 ```
 
 To add a new unit test, add it to the coremltools/test folder. Make sure you
@@ -78,45 +80,46 @@ name the file with a 'test' as the prefix.
 Additionally, running unit-tests would require more packages (like
 libsvm)
 
-```
-   pip install numpy
-   pip install scikit-learn
+```shell
+pip install numpy scikit-learn
 ```
 
 To install libsvm
 
-```
-   git clone https://github.com/cjlin1/libsvm.git
-   cd libsvm/
-   make
-   cd python/
-   make
+```shell
+git clone https://github.com/cjlin1/libsvm.git
+cd libsvm/
+make
+cd python/
+make
 ```
 
 To make sure you can run libsvm python bindings everywhere, you need the
 following command, replacing <LIBSVM_PATH> with the path to the root of
 your repository.
 
-```
-   export PYTHONPATH=${PYTHONPATH}:<LIBSVM_PATH>/python
+```shell
+export PYTHONPATH=${PYTHONPATH}:<LIBSVM_PATH>/python
 ```
 
 To install xgboost
 
-```
-   git clone --recursive https://github.com/dmlc/xgboost
-   cd xgboost; cp make/minimum.mk ./config.mk; make -j4
-   cd python-package; python setup.py develop --user
+```shell
+git clone --recursive https://github.com/dmlc/xgboost
+cd xgboost; cp make/minimum.mk ./config.mk; make -j4
+cd python-package; python setup.py develop --user
 ```
 
 To install keras (Version >= 2.0)
-```
-  pip install keras tensorflow
+
+```shell
+pip install keras tensorflow
 ```
 
 If you'd like to use the old keras version, you can:
-```
-  pip install keras==1.2.2 tensorflow
+
+```shell
+pip install keras==1.2.2 tensorflow
 ```
 
 
@@ -124,15 +127,17 @@ Building Documentation
 ----------------------
 First install all external dependencies.
 
+```shell
+pip install Sphinx==1.5.3 sphinx-rtd-theme==0.2.4 numpydoc
+pip install -e git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
 ```
-   pip install Sphinx==1.5.3 sphinx-rtd-theme==0.2.4 numpydoc
-   pip install -e git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
-```
+
 You also must have the *coremltools* package install, see the *Building* section.
 
 Then from the root of the repository:
-```
-   cd docs
-   make html
-   open _build/html/index.html
+
+```shell
+cd docs
+make html
+open _build/html/index.html
 ```
