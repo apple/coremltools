@@ -242,5 +242,7 @@ class MLModel(object):
         else:
             if _sys.platform != 'darwin' or float('.'.join(_platform.mac_ver()[0].split('.')[:2])) < 10.13:
                 raise Exception('Model prediction is only supported on macOS version 10.13.')
+            if _sys.version_info.major >= 3:
+                raise Exception('Model prediction is currently only supported in Python 2.7')
             else:
                 raise Exception('Unable to load CoreML.framework. Cannot make predictions.')
