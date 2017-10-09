@@ -73,9 +73,10 @@ if _HAS_KERAS2_TF:
     
 
 def _is_merge_layer(layer):
-    for lt in _KERAS_MERGE_LAYERS:
-        if isinstance(layer, lt):
-            return True
+    if _HAS_KERAS2_TF:
+        for lt in _topology2._KERAS_MERGE_LAYERS:
+            if isinstance(layer, lt):
+                return True
     return False
 
 def _check_unsupported_layers(model):
