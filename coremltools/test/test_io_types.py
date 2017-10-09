@@ -125,7 +125,7 @@ class TestIODataTypes(unittest.TestCase):
                                  )
                                  )
             except RuntimeError:
-                print "{} not supported. ".format(dtype)
+                print("{} not supported. ".format(dtype))
 
     def test_random_forest_regressor(self):
         for dtype in self.number_data_type.keys():
@@ -148,7 +148,7 @@ class TestIODataTypes(unittest.TestCase):
                                        )
                                        )
             except RuntimeError:
-                print "{} not supported. ".format(dtype)
+                print("{} not supported. ".format(dtype))
 
     def test_support_vector_classifier(self):
         for dtype in self.number_data_type.keys():
@@ -189,7 +189,7 @@ class TestIODataTypes(unittest.TestCase):
                                  )
                                  )
             except RuntimeError:
-                print "{} not supported. ".format(dtype)
+                print("{} not supported. ".format(dtype))
 
     def test_linear_regressor(self):
         for dtype in self.number_data_type.keys():
@@ -211,14 +211,14 @@ class TestIODataTypes(unittest.TestCase):
                                        )
                                        )
             except RuntimeError:
-                print "{} not supported. ".format(dtype)
+                print("{} not supported. ".format(dtype))
 
     @attr('keras2')
     def test_keras_dense_model(self):
         model = keras.models.Sequential()
         model.add(keras.layers.Dense(3, activation='sigmoid', kernel_initializer='random_uniform',
                                      bias_initializer='random_uniform', input_dim=3))
-        for key, dtype in self.number_data_type.iteritems():
+        for key, dtype in self.number_data_type.items():
             try:
                 input_data = np.random.rand(1, 3).astype(key)
                 keras_out = model.predict(input_data)
@@ -247,7 +247,7 @@ class TestIODataTypes(unittest.TestCase):
 
         model = keras.models.Sequential()
         model.add(keras.layers.Embedding(100, 3, input_length=5, input_dtype='float32'))
-        for key, dtype in self.number_data_type.iteritems():
+        for key, dtype in self.number_data_type.items():
             try:
                 input_data = np.random.randint(0, 100, size=(1, 5)).astype(key)
                 keras_out = np.squeeze(model.predict(input_data)).flatten()

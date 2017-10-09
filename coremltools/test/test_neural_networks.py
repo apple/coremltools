@@ -30,7 +30,7 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
     def test_classifier(self):
         np.random.seed(1988)
         
-        print 'running test classifier'
+        print('running test classifier')
         
         input_dim = 5
         num_hidden = 12

@@ -11,7 +11,7 @@ import ast as _ast
 import json as _json
 import os as _os
 import numpy as _np
-from _infer_shapes_nn_mlmodel import infer_shapes as _infer_shapes
+from ._infer_shapes_nn_mlmodel import infer_shapes as _infer_shapes
 
 
 def _calculate_edges(cy_nodes, cy_edges, shape_dict=None):

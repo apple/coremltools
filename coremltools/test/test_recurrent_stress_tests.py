@@ -504,7 +504,7 @@ class RNNLayer(RecurrentLayerTest):
     def setUp(self):
         super(RNNLayer, self).setUp()
         self.simple_rnn_params_dict = dict()
-        self.rnn_layer_params = [x for x in apply(itertools.product, self.simple_rnn_params_dict.values())]
+        self.rnn_layer_params = list(itertools.product(self.simple_rnn_params_dict.values()))
 
     def test_rnn_layer(self):
         i = 0

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import numpy as np
 import os, shutil
@@ -155,7 +156,7 @@ class StressTest(CorrectnessTest):
                             block_size = [2,3,4,5],
                             mode = ['SPACE_TO_DEPTH','DEPTH_TO_SPACE']
                             )
-        params = [x for x in apply(itertools.product, params_dict.values())] 
+        params = [x for x in list(itertools.product(*params_dict.values()))]
         all_candidates = [dict(zip(params_dict.keys(), x)) for x in params]     
         valid_params = []               
         for pr in all_candidates:
@@ -165,7 +166,7 @@ class StressTest(CorrectnessTest):
             else:
                 if pr["C"] % (pr["block_size"] ** 2) == 0:
                     valid_params.append(pr)        
-        print "Total params to be tested: ", len(valid_params), "out of canditates: ", len(all_candidates)
+        print("Total params to be tested: ", len(valid_params), "out of canditates: ", len(all_candidates))
         '''
         Test
         '''
@@ -174,8 +175,8 @@ class StressTest(CorrectnessTest):
         failed_tests_numerical = []
         for i in range(len(valid_params)):
             params = valid_params[i]
-            #print "=========: ", params
-            #if i % 10 == 0: print "======== Testing {}/{}".format(str(i), str(len(valid_params)))
+            #print("=========: ", params)
+            #if i % 10 == 0: print("======== Testing {}/{}".format(str(i), str(len(valid_params))))
             X = np.random.rand(1,params["C"],params["H"],params["W"])
             tf_preds = get_tf_predictions_reorganize(np.transpose(X,[0,2,3,1]), params)
             tf_preds = np.transpose(tf_preds, [0,3,1,2])
@@ -205,7 +206,7 @@ class StressTest(CorrectnessTest):
                            multiplier = [1,2,3,4],
                            padding = ['SAME', 'VALID']
                            )
-        params = [x for x in apply(itertools.product, params_dict.values())] 
+        params = [x for x in list(itertools.product(*params_dict.values()))]
         all_candidates = [dict(zip(params_dict.keys(), x)) for x in params]     
         valid_params = []               
         for pr in all_candidates:
@@ -213,7 +214,7 @@ class StressTest(CorrectnessTest):
                 if np.floor((pr["H"]-pr["kernel_size"])/pr["stride"]) + 1 <= 0:
                     continue
             valid_params.append(pr)       
-        print "Total params to be tested: ", len(valid_params), "out of canditates: ", len(all_candidates)
+        print("Total params to be tested: ", len(valid_params), "out of canditates: ", len(all_candidates))
         '''
         Test
         '''

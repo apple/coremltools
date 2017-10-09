@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import tarfile
 import shutil
@@ -55,9 +56,9 @@ def compare_models(caffe_preds, coreml_preds):
         if relative_error > max_relative_error:
             max_relative_error = relative_error
 
-    print 'maximum relative error: ', max_relative_error
-    #print 'caffe preds : ', caffe_preds
-    #print 'coreml preds: ', coreml_preds      
+    print('maximum relative error: ', max_relative_error)
+    #print('caffe preds : ', caffe_preds)
+    #print('coreml preds: ', coreml_preds)
     return max_relative_error 
     
 class ManyImages(unittest.TestCase):

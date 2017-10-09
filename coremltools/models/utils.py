@@ -13,7 +13,7 @@ import os as _os
 import six as _six
 
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
-from _graph_visualization import \
+from ._graph_visualization import \
     _neural_network_nodes_and_edges, \
     _pipeline_nodes_and_edges, _start_server
 
