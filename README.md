@@ -18,24 +18,24 @@ Installation
 
 The method for installing *coremltools* follows the
 [standard python package installation steps](https://packaging.python.org/installing/).
-To create a Python virtual environment called `pythonSource` follow these steps:
+To create a Python virtual environment called `pythonenv` follow these steps:
 
 ```shell
 # Create a folder for your virtualenv
-mkdir coreMLProject
-cd coreMLProject
+mkdir mlvirtualenv
+cd mlvirtualenv
 
 # Create a Python virtual environment for your CoreML project
-virtualenv pythonSource
+virtualenv pythonenv
 ```
 
 To activate your new virtual environment and install `coremltools` in this environment, follow these steps:
 ```
 # Active your virtual environment
-source pythonSource/bin/active
+source pythonenv/bin/active
 
-# Install coremltools in the new virtual environment, pythonSource
-(pythonSource) pip install -U coremltools
+# Install coremltools in the new virtual environment, pythonenv
+(pythonenv) pip install -U coremltools
 ```
 
 The package [documentation](https://apple.github.io/coremltools) contains
