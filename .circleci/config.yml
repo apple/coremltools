@@ -1,0 +1,68 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
+version: 2
+jobs:
+  build:
+    docker:
+      # specify the version you desire here
+      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
+      - image: circleci/python:2.7.13-browsers
+      
+      # Specify service dependencies here if necessary
+      # CircleCI maintains a library of pre-built images
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      # - image: circleci/postgres:9.4
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            sudo apt install cmake python-dev python-setuptools
+            cmake .
+            make -j4
+            make dist
+            sudo easy_install pip
+            sudo pip install -r requirements.txt
+            git clone https://github.com/cjlin1/libsvm.git && cd libsvm/ && make && cd python/ && make
+            export PYTHONPATH="${PYTHONPATH}:`pwd`/libsvm"
+            echo ${PYTHONPATH}
+            sudo apt install --no-install-recommends libboost-all-dev -y
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      # run tests!
+      - run:
+          name: run all
+          command: |
+            make all
+
+      - run:
+          name: run nosetests 
+          command: |
+            make nosetests
+
+      - run:
+          name: create documentation
+          command: |
+            echo "creating documentation.."
+            cd docs && make html # _build/html/index.html
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
+          

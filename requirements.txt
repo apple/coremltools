@@ -1,0 +1,14 @@
+# test requirements
+numpy 
+scikit-learn
+keras
+tensorflow
+nose
+parameterized # nosetests for any python version - https://pypi.python.org/pypi/parameterized
+pandas
+
+# documentation requirements
+Sphinx==1.5.3 
+sphinx-rtd-theme==0.2.4 
+numpydoc
+git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
