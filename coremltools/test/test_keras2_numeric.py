@@ -23,7 +23,7 @@ if HAS_KERAS2_TF:
     from keras.layers import SimpleRNN, LSTM, GRU
     from keras.layers.core import SpatialDropout1D, SpatialDropout2D
     from keras.layers.wrappers import Bidirectional, TimeDistributed
-    from keras.applications.mobilenet import DepthwiseConv2D
+    from keras.applications.mobilenet import DepthwiseConv2D, relu6
     from coremltools.converters import keras as kerasConverter
 
 
@@ -1877,23 +1877,23 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         img_input = Input(shape=(32,32,3))
         x = Conv2D(4, (3,3), padding='same', use_bias=False, strides=(2,2), name='conv1')(img_input)
         x = BatchNormalization(axis=-1, name='conv1_bn')(x)
-        x = Activation('relu', name='conv1_relu')(x)
+        x = Activation(relu6, name='conv1_relu')(x)
         
         x = DepthwiseConv2D((3, 3), padding='same', depth_multiplier=1, strides=(1,1),
                 use_bias=False, name='conv_dw_1')(x)
         x = BatchNormalization(axis=-1, name='conv_dw_1_bn')(x)
-        x = Activation('relu', name='conv_dw_1_relu')(x)
+        x = Activation(relu6, name='conv_dw_1_relu')(x)
         x = Conv2D(8, (1, 1), padding='same', use_bias=False, strides=(1, 1), name='conv_pw_1')(x)
         x = BatchNormalization(axis=-1, name='conv_pw_1_bn')(x)
-        x = Activation('relu', name='conv_pw_1_relu')(x)
+        x = Activation(relu6, name='conv_pw_1_relu')(x)
         
         x = DepthwiseConv2D((3, 3), padding='same', depth_multiplier=1, strides=(2,2),
                 use_bias=False, name='conv_dw_2')(x)
         x = BatchNormalization(axis=-1, name='conv_dw_2_bn')(x)
-        x = Activation('relu', name='conv_dw_2_relu')(x)
+        x = Activation(relu6, name='conv_dw_2_relu')(x)
         x = Conv2D(8, (1, 1), padding='same', use_bias=False, strides=(2, 2), name='conv_pw_2')(x)
         x = BatchNormalization(axis=-1, name='conv_pw_2_bn')(x)
-        x = Activation('relu', name='conv_pw_2_relu')(x)
+        x = Activation(relu6, name='conv_pw_2_relu')(x)
         
         model = Model(inputs=[img_input], outputs=[x])
 
