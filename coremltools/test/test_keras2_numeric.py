@@ -1793,7 +1793,7 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         model = Model(inputs=[x], outputs=[z])
 
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
-        self._test_keras_model(model, mode = 'random', delta=1e-4)
+        self._test_keras_model(model, mode = 'random', delta=1e-3)
     
     def test_tiny_multiple_outputs(self):
         x = Input(shape=(3,))
@@ -1802,7 +1802,7 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         model = Model([x], [y1,y2])
         
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
-        self._test_keras_model(model, mode = 'random', delta=1e-4)
+        self._test_keras_model(model, mode = 'random', delta=1e-2)
         
     def test_intermediate_outputs_dense(self):
         x = Input(shape=(3,))
