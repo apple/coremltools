@@ -44,6 +44,8 @@ def _get_activation_name_from_keras_layer(keras_layer):
             non_linearity = 'TANH'
         elif act_name == 'relu':
             non_linearity = 'RELU'
+        elif act_name == 'relu6':
+            non_linearity = 'RELU6'
         elif act_name == 'softplus':
             non_linearity = 'SOFTPLUS'
         elif act_name == 'softsign':
@@ -55,8 +57,8 @@ def _get_activation_name_from_keras_layer(keras_layer):
         elif act_name == 'linear':
             non_linearity = 'LINEAR'
         else:
-            _utils.raise_error_unsupported_categorical_option('activation', act_name, 'Dense', ##
-                    keras_layer.name)
+            _utils.raise_error_unsupported_categorical_option('activation', 
+                    act_name, 'Activation', keras_layer.name)
 
     return non_linearity
 
@@ -198,6 +200,23 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
     if non_linearity == 'SOFTMAX':
         builder.add_softmax(name = layer, input_name = input_name,
                 output_name = output_name)
+        return
+    if non_linearity == 'RELU6':
+        # No direct support of RELU with max-activation value - use negate and 
+        # clip layers
+        relu_output_name = output_name + '_relu'
+        builder.add_activation(layer, 'RELU', input_name, relu_output_name)
+        # negate it
+        neg_output_name = relu_output_name + '_neg'
+        builder.add_activation(layer+'__neg__', 'LINEAR', relu_output_name, 
+                neg_output_name,[-1.0, 0])
+        # apply threshold
+        clip_output_name = relu_output_name + '_clip'
+        builder.add_unary(layer+'__clip__', neg_output_name, clip_output_name, 
+                'threshold', alpha = -6.0)
+        # negate it back
+        builder.add_activation(layer+'_neg2', 'LINEAR', clip_output_name, 
+                output_name,[-1.0, 0])
         return
 
     params = None
