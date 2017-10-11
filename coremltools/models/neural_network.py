@@ -704,7 +704,7 @@ class NeuralNetworkBuilder(object):
         elif mode == 'MULTIPLY':
             spec_layer.multiply.MergeFromString('')
             if alpha:
-                spec_layer.add.alpha = alpha
+                spec_layer.multiply.alpha = alpha
         elif mode == 'COS':
             spec_layer.dot.cosineSimilarity = True
         elif mode == 'DOT':
