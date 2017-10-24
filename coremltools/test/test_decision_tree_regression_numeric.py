@@ -81,7 +81,7 @@ class DecisionTreeRegressorBostonHousingScikitNumericTest(unittest.TestCase):
             min_weight_fraction_leaf = [0.0, 0.5],
             max_features = [None, 1, 5],
             max_leaf_nodes = [None, 20],
-            min_impurity_split = [0.0, 1e-07, 0.1],
+            min_impurity_decrease = [0.0, 1e-07, 0.1],
             presort = [False, True],
         )
 
