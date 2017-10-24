@@ -32,7 +32,8 @@ virtualenv pythonenv
 To activate your new virtual environment and install `coremltools` in this environment, follow these steps:
 ```
 # Active your virtual environment
-source pythonenv/bin/active
+source pythonenv/bin/activate
+
 
 # Install coremltools in the new virtual environment, pythonenv
 (pythonenv) pip install -U coremltools
@@ -69,7 +70,7 @@ cmake .
 after which you can use make to build the project
 
 ```shell
-make -j4
+make -j
 ```
 
 Building Installable Wheel
@@ -82,10 +83,10 @@ make dist
 
 Running Unit Tests
 -------------------
-To run the unit tests, from the repo root, run the following command:
+In order to run unit tests, pandas and h5py must be installed.
 
 ```shell
-make test
+pip install pandas h5py
 ```
 
 To add a new unit test, add it to the coremltools/test folder. Make sure you
@@ -95,7 +96,7 @@ Additionally, running unit-tests would require more packages (like
 libsvm)
 
 ```shell
-pip install numpy scikit-learn
+pip install numpy scipy scikit-learn
 ```
 
 To install libsvm
@@ -120,8 +121,8 @@ To install xgboost
 
 ```shell
 git clone --recursive https://github.com/dmlc/xgboost
-cd xgboost; cp make/minimum.mk ./config.mk; make -j4
-cd python-package; python setup.py develop --user
+cd xgboost; cp make/minimum.mk ./config.mk; make -j
+cd python-package; python setup.py develop
 ```
 
 To install keras (Version >= 2.0)
