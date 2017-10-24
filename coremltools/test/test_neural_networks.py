@@ -1,26 +1,13 @@
 import unittest
 import numpy as np
-import os, shutil
-import tempfile
-from nose.tools import raises
-from nose.plugins.attrib import attr
 import coremltools
-from coremltools.models import datatypes, MLModel
+from coremltools.models import MLModel
 from coremltools._deps import HAS_KERAS_TF
 
 
 if HAS_KERAS_TF:
-    import keras.backend
-    from keras.models import Sequential, Model
-    from keras.layers import Dense, Activation, Convolution2D, LSTM, \
-        ZeroPadding2D, Deconvolution2D, Permute, Convolution1D, \
-        MaxPooling2D, AveragePooling2D, Flatten, Dropout, UpSampling2D, merge, Merge, Input, GRU, \
-        GlobalMaxPooling2D, GlobalMaxPooling1D, GlobalAveragePooling2D, GlobalAveragePooling1D, \
-        Cropping1D, Cropping2D, Reshape, AveragePooling1D, MaxPooling1D, RepeatVector, ELU, \
-        SimpleRNN, BatchNormalization, Embedding, ZeroPadding1D, UpSampling1D
-    from keras.layers.wrappers import Bidirectional, TimeDistributed
-    from keras.optimizers import SGD
-    from coremltools.converters import keras as kerasConverter
+    from keras.models import Sequential
+    from keras.layers import Dense, LSTM
     from coremltools.converters import keras as keras_converter
 
 

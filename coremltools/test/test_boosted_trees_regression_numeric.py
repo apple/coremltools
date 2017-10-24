@@ -7,7 +7,6 @@ import unittest
 
 import pandas as pd
 import itertools
-import numpy as np
 from nose.plugins.attrib import attr
 
 from coremltools._deps import HAS_SKLEARN, HAS_XGBOOST

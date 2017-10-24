@@ -1,12 +1,12 @@
 from __future__ import print_function
 import unittest
 import numpy as np
-import os, shutil
+import os
+import shutil
 import tempfile
 import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
 import coremltools
-from nose.plugins.attrib import attr
 import itertools
 
 np.random.seed(10)

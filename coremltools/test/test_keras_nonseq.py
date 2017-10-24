@@ -5,12 +5,9 @@
 
 import unittest
 from coremltools._deps import HAS_KERAS_TF
-from coremltools.proto import Model_pb2
-from coremltools.proto import NeuralNetwork_pb2
 
 if HAS_KERAS_TF:
-    import tensorflow as tf
-    from keras.models import Sequential, Model
+    from keras.models import Model
     from keras.layers import Dense, Input, merge
     from coremltools.converters import keras
 
