@@ -70,7 +70,7 @@ cmake .
 after which you can use make to build the project
 
 ```shell
-make -j
+make
 ```
 
 Building Installable Wheel
@@ -121,7 +121,7 @@ To install xgboost
 
 ```shell
 git clone --recursive https://github.com/dmlc/xgboost
-cd xgboost; cp make/minimum.mk ./config.mk; make -j
+cd xgboost; cp make/minimum.mk ./config.mk; make
 cd python-package; python setup.py develop
 ```
 
