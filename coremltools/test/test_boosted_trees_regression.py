@@ -8,8 +8,6 @@ import tempfile
 import json
 
 from coremltools._deps import HAS_SKLEARN, HAS_XGBOOST
-from coremltools.proto import Model_pb2
-from coremltools.proto import FeatureTypes_pb2
 
 if HAS_XGBOOST:
     import xgboost

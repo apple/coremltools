@@ -5,26 +5,18 @@
 
 import unittest
 import numpy as np
-import os, shutil
+import os
+import shutil
 import tempfile
 import itertools
 import coremltools
 from coremltools._deps import HAS_KERAS_TF
-import tempfile
 from nose.plugins.attrib import attr
 
 
 if HAS_KERAS_TF:
-    import keras.backend
-    from keras.models import Sequential, Model
-    from keras.layers import Dense, Activation, Convolution2D, LSTM, \
-        ZeroPadding2D, Deconvolution2D, Permute, Convolution1D, \
-        MaxPooling2D, AveragePooling2D, Flatten, Dropout, UpSampling2D, merge, Merge, Input, GRU, \
-        GlobalMaxPooling2D, GlobalMaxPooling1D, GlobalAveragePooling2D, GlobalAveragePooling1D, \
-        Cropping1D, Cropping2D, Reshape, \
-        SimpleRNN, BatchNormalization, Embedding
-    from keras.layers.wrappers import Bidirectional, TimeDistributed
-    from keras.optimizers import SGD
+    from keras.models import Sequential
+    from keras.layers import LSTM, GRU, SimpleRNN
     from coremltools.converters import keras as keras_converter
 
 
@@ -245,7 +237,6 @@ class GRULayer(RecurrentLayerTest):
         )
         self.gru_layer_params = list(itertools.product(*self.gru_params_dict.values()))
 
-    @unittest.skip(" GRU numerical errors")
     def test_gru_layer(self):
         i = 0
         numerical_err_models = []

@@ -82,7 +82,7 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
             min_samples_leaf = [1, 5],
             min_weight_fraction_leaf = [0.0, 0.5],
             max_leaf_nodes = [None, 20],
-            min_impurity_split = [1e-07, 0.1, 0.0],
+            min_impurity_decrease = [1e-07, 0.1, 0.0],
         )
 
         # Make a cartesian product of all options

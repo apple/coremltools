@@ -6,9 +6,7 @@
 import unittest
 
 from coremltools._deps import HAS_KERAS_TF
-from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2
-from coremltools.proto import NeuralNetwork_pb2
 from nose.tools import raises
 
 if HAS_KERAS_TF:

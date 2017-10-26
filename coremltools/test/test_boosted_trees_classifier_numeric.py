@@ -5,7 +5,6 @@
 
 import itertools
 from nose.plugins.attrib import attr
-import os
 import pandas as pd
 import unittest
 
@@ -131,4 +130,3 @@ class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
         for it, arg in enumerate(args):
             metrics = self._train_convert_evaluate(**arg)
             self._check_metrics(metrics, arg)
-

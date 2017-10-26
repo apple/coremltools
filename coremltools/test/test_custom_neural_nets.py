@@ -1,11 +1,11 @@
 import unittest
 import numpy as np
-import os, shutil
+import os
+import shutil
 import tempfile
 import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
 import coremltools
-from nose.plugins.attrib import attr
 
 
 class SimpleTest(unittest.TestCase):
@@ -63,5 +63,3 @@ class SimpleTest(unittest.TestCase):
                 
         self.assertTrue(eval)
         self.assertEquals(len(coreml_preds.flatten()), 2)
-        
-                
