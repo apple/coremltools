@@ -248,7 +248,7 @@ def _convert(model,
         elif len(dim) == 2:  # [Seq, D]
             output_dims[idx] = (dim[1],)
         elif len(dim) == 3:
-            output_dims[idx] = (dim[2], dim[1], dim[0])
+            output_dims[idx] = (dim[2], dim[0], dim[1])
 
     input_types = [datatypes.Array(*dim) for dim in input_dims]
     output_types = [datatypes.Array(*dim) for dim in output_dims]
