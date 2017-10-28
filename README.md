@@ -89,7 +89,7 @@ In order to run unit tests, pandas and h5py must be installed.
 pip install pandas h5py
 ```
 
-To add a new unit test, add it to the coremltools/test folder. Make sure you
+To add a new unit test, add it to the `coremltools/test` folder. Make sure you
 name the file with a 'test' as the prefix.
 
 Additionally, running unit-tests would require more packages (like
@@ -110,7 +110,7 @@ make
 ```
 
 To make sure you can run libsvm python bindings everywhere, you need the
-following command, replacing <LIBSVM_PATH> with the path to the root of
+following command, replacing `<LIBSVM_PATH>` with the path to the root of
 your repository.
 
 ```shell
