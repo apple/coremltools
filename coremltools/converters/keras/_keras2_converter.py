@@ -233,7 +233,7 @@ def _convert(model,
             else: # keras provided fixed batch and sequence length, so the input was (batch, sequence, channel)
                 input_dims[idx] = (dim[2],)
         else:
-            raise ValueError('Input' + input_names[idx] + 'has input shape of length' + str(len(dim)))
+            raise ValueError("Input '%s' has input shape of length %d" % (input_names[idx], len(dim)))
 
     # Retrieve output shapes from model
     if type(model.output_shape) is list:
