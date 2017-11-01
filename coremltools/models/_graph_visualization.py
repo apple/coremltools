@@ -12,6 +12,7 @@ import json as _json
 import os as _os
 import numpy as _np
 from ._infer_shapes_nn_mlmodel import infer_shapes as _infer_shapes
+from coremltools.proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 
 
 def _calculate_edges(cy_nodes, cy_edges, shape_dict=None):
@@ -107,11 +108,15 @@ def _layer_specific_info(layer):
             'desc': 'Applies specified type of activation function to input.'
         }
     elif layer.WhichOneof('layer') == 'pooling':
+        params = layer.pooling
+        paddingType = params.WhichOneof('PoolingPaddingType')
         info = {
             'type': layer.WhichOneof('layer'),
-            'kernelSize': _json.dumps(str(layer.pooling.kernelSize)),
-            'stride': _json.dumps(str(layer.pooling.stride)),
-            'padding': _json.dumps(str(layer.pooling.valid.paddingAmounts.borderAmounts)),
+            'poolingType': _json.dumps(str(_NeuralNetwork_pb2.PoolingLayerParams.PoolingType.Name(params.type))),
+            'globalPooling': _json.dumps(str(params.globalPooling)),
+            'kernelSize': _json.dumps(str(params.kernelSize)),
+            'stride': _json.dumps(str(params.stride)),
+            'paddingType': _json.dumps(paddingType),
             'desc': 'Spatial Pooling layer to reduce dimensions of input using the '
                     'specified kernel size and type.'
         }
