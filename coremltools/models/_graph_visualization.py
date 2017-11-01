@@ -98,28 +98,35 @@ def _layer_specific_info(layer):
             'groups': _json.dumps(str(layer.convolution.nGroups)),
             'kernelSize': _json.dumps(str(layer.convolution.kernelSize)),
             'stride': _json.dumps(str(layer.convolution.stride)),
+            'dilationFactor': _json.dumps(str(layer.convolution.dilationFactor)),
+            'isDeconvolution': _json.dumps(str(layer.convolution.isDeconvolution)),
+            'paddingType' : _json.dumps(layer.convolution.WhichOneof('ConvolutionPaddingType')),
             'desc': 'A layer that performs spatial convolution or deconvolution.'
-
         }
+
     elif layer.WhichOneof('layer') == 'activation':
         info = {
             'type': layer.WhichOneof('layer'),
             'activation': layer.activation.WhichOneof('NonlinearityType'),
             'desc': 'Applies specified type of activation function to input.'
         }
+
     elif layer.WhichOneof('layer') == 'pooling':
         params = layer.pooling
         paddingType = params.WhichOneof('PoolingPaddingType')
         info = {
             'type': layer.WhichOneof('layer'),
             'poolingType': _json.dumps(str(_NeuralNetwork_pb2.PoolingLayerParams.PoolingType.Name(params.type))),
-            'globalPooling': _json.dumps(str(params.globalPooling)),
-            'kernelSize': _json.dumps(str(params.kernelSize)),
-            'stride': _json.dumps(str(params.stride)),
-            'paddingType': _json.dumps(paddingType),
             'desc': 'Spatial Pooling layer to reduce dimensions of input using the '
                     'specified kernel size and type.'
         }
+        if params.globalPooling:
+            info['globalPooling'] = 'True'
+        else:
+            info['stride'] = _json.dumps(str(params.stride))
+            info['kernelSize'] = _json.dumps(str(params.kernelSize))
+            info['paddingType'] =  _json.dumps(paddingType)
+
     elif layer.WhichOneof('layer') == 'add':
         info = {
             'type': layer.WhichOneof('layer'),
