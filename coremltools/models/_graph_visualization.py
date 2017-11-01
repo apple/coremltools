@@ -105,11 +105,28 @@ def _layer_specific_info(layer):
         }
 
     elif layer.WhichOneof('layer') == 'activation':
+        params = layer.activation
+        act_type = params.WhichOneof('NonlinearityType')
         info = {
             'type': layer.WhichOneof('layer'),
-            'activation': layer.activation.WhichOneof('NonlinearityType'),
+            'activationType': act_type,
             'desc': 'Applies specified type of activation function to input.'
         }
+        if act_type == 'linear':
+            info['alpha'] = _json.dumps(str(params.linear.alpha))
+            info['beta'] = _json.dumps(str(params.linear.beta))
+        if act_type == 'leakyReLU':
+            info['alpha'] = _json.dumps(str(params.leakyReLU.alpha))
+        if act_type == 'thresholdedReLU':
+            info['alpha'] = _json.dumps(str(params.thresholdedReLU.alpha))
+        if act_type == 'scaledTanh':
+            info['alpha'] = _json.dumps(str(params.scaledTanh.alpha))
+            info['beta'] = _json.dumps(str(params.scaledTanh.beta))
+        if act_type == 'sigmoidHard':
+            info['alpha'] = _json.dumps(str(params.sigmoidHard.alpha))
+            info['beta'] = _json.dumps(str(params.sigmoidHard.beta))
+        if act_type == 'ELU':
+            info['alpha'] = _json.dumps(str(params.ELU.alpha))
 
     elif layer.WhichOneof('layer') == 'pooling':
         params = layer.pooling
