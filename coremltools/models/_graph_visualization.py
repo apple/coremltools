@@ -12,6 +12,7 @@ import json as _json
 import os as _os
 import numpy as _np
 from ._infer_shapes_nn_mlmodel import infer_shapes as _infer_shapes
+from coremltools.proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 
 
 def _calculate_edges(cy_nodes, cy_edges, shape_dict=None):
@@ -97,24 +98,52 @@ def _layer_specific_info(layer):
             'groups': _json.dumps(str(layer.convolution.nGroups)),
             'kernelSize': _json.dumps(str(layer.convolution.kernelSize)),
             'stride': _json.dumps(str(layer.convolution.stride)),
+            'dilationFactor': _json.dumps(str(layer.convolution.dilationFactor)),
+            'isDeconvolution': _json.dumps(str(layer.convolution.isDeconvolution)),
+            'paddingType' : _json.dumps(layer.convolution.WhichOneof('ConvolutionPaddingType')),
             'desc': 'A layer that performs spatial convolution or deconvolution.'
-
         }
+
     elif layer.WhichOneof('layer') == 'activation':
+        params = layer.activation
+        act_type = params.WhichOneof('NonlinearityType')
         info = {
             'type': layer.WhichOneof('layer'),
-            'activation': layer.activation.WhichOneof('NonlinearityType'),
+            'activationType': act_type,
             'desc': 'Applies specified type of activation function to input.'
         }
+        if act_type == 'linear':
+            info['alpha'] = _json.dumps(str(params.linear.alpha))
+            info['beta'] = _json.dumps(str(params.linear.beta))
+        if act_type == 'leakyReLU':
+            info['alpha'] = _json.dumps(str(params.leakyReLU.alpha))
+        if act_type == 'thresholdedReLU':
+            info['alpha'] = _json.dumps(str(params.thresholdedReLU.alpha))
+        if act_type == 'scaledTanh':
+            info['alpha'] = _json.dumps(str(params.scaledTanh.alpha))
+            info['beta'] = _json.dumps(str(params.scaledTanh.beta))
+        if act_type == 'sigmoidHard':
+            info['alpha'] = _json.dumps(str(params.sigmoidHard.alpha))
+            info['beta'] = _json.dumps(str(params.sigmoidHard.beta))
+        if act_type == 'ELU':
+            info['alpha'] = _json.dumps(str(params.ELU.alpha))
+
     elif layer.WhichOneof('layer') == 'pooling':
+        params = layer.pooling
+        paddingType = params.WhichOneof('PoolingPaddingType')
         info = {
             'type': layer.WhichOneof('layer'),
-            'kernelSize': _json.dumps(str(layer.pooling.kernelSize)),
-            'stride': _json.dumps(str(layer.pooling.stride)),
-            'padding': _json.dumps(str(layer.pooling.valid.paddingAmounts.borderAmounts)),
+            'poolingType': _json.dumps(str(_NeuralNetwork_pb2.PoolingLayerParams.PoolingType.Name(params.type))),
             'desc': 'Spatial Pooling layer to reduce dimensions of input using the '
                     'specified kernel size and type.'
         }
+        if params.globalPooling:
+            info['globalPooling'] = 'True'
+        else:
+            info['stride'] = _json.dumps(str(params.stride))
+            info['kernelSize'] = _json.dumps(str(params.kernelSize))
+            info['paddingType'] =  _json.dumps(paddingType)
+
     elif layer.WhichOneof('layer') == 'add':
         info = {
             'type': layer.WhichOneof('layer'),
@@ -229,7 +258,7 @@ def _layer_specific_info(layer):
     elif layer.WhichOneof('layer') == 'flatten':
         info = {
             'type': layer.WhichOneof('layer'),
-            'mode': _json.dumps(str(layer.flatten.mode)),
+            'mode': _json.dumps(_NeuralNetwork_pb2.FlattenLayerParams.FlattenOrder.Name(layer.flatten.mode)),
             'desc': 'A layer that flattens the input.'
         }
     elif layer.WhichOneof('layer') == 'innerProduct':
@@ -291,17 +320,18 @@ def _layer_specific_info(layer):
             'desc': 'A layer that rearranges the dimensions and data of an input.'
         }
     elif layer.WhichOneof('layer') == 'reduce':
+        params = layer.reduce
         info = {
             'type': layer.WhichOneof('layer'),
-            'mode': _json.dumps(str(layer.reduce.mode)),
-            'epsilon': _json.dumps(str(layer.reduce.epsilon)),
-            'axis': _json.dumps(str(layer.reduce.axis)),
+            'mode': _json.dumps(str(params.mode)),
+            'epsilon': _json.dumps(str(params.epsilon)),
+            'axis': _json.dumps(_NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Name(params.axis)),
             'desc': 'A layer that reduces the input using a specified operation.'
         }
     elif layer.WhichOneof('layer') == 'reorganizeData':
         info = {
             'type': layer.WhichOneof('layer'),
-            'mode': _json.dumps(str(layer.reorganizeData.mode)),
+            'mode': _json.dumps(_NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Name(layer.reorganizeData.mode)),
             'blockSize': _json.dumps(str(layer.reorganizeData.blockSize)),
             'desc': 'A layer that reorganizes data in the input in: \n'
                     '1. SPACE_TO_DEPTH\n'
@@ -310,7 +340,7 @@ def _layer_specific_info(layer):
     elif layer.WhichOneof('layer') == 'reshape':
         info = {
             'type': layer.WhichOneof('layer'),
-            'mode': _json.dumps(str(layer.reshape.mode)),
+            'mode': _json.dumps(_NeuralNetwork_pb2.ReshapeLayerParams.ReshapeOrder.Name(layer.reshape.mode)),
             'targetShape': _json.dumps(str(layer.reshape.targetShape)),
             'desc': 'A layer that recasts the input into a new shape.'
         }
@@ -335,7 +365,7 @@ def _layer_specific_info(layer):
             'startIndex': _json.dumps(str(layer.slice.startIndex)),
             'endIndex': _json.dumps(str(layer.slice.endIndex)),
             'stride': _json.dumps(str(layer.slice.stride)),
-            'axis': _json.dumps(str(layer.slice.axis)),
+            'axis': _json.dumps(_NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Name(layer.slice.axis)),
             'desc': 'A layer that slices the input data along a given axis.'
         }
     elif layer.WhichOneof('layer') == 'split':
@@ -348,7 +378,7 @@ def _layer_specific_info(layer):
     elif layer.WhichOneof('layer') == 'unary':
         info = {
             'type': layer.WhichOneof('layer'),
-            'unary_type': _json.dumps(str(layer.unary.type)),
+            'unary_type': _json.dumps(_NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Name(layer.unary.type)),
             'alpha': _json.dumps(str(layer.unary.alpha)),
             'epsilon': _json.dumps(str(layer.unary.epsilon)),
             'shift': _json.dumps(str(layer.unary.shift)),
@@ -359,7 +389,7 @@ def _layer_specific_info(layer):
         info = {
             'type': layer.WhichOneof('layer'),
             'scalingFactor': _json.dumps(str(layer.upsample.scalingFactor)),
-            'mode': _json.dumps(str(layer.upsample.mode)),
+            'mode': _json.dumps(_NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Name(layer.upsample.mode)),
             'desc': 'A layer that scales up spatial dimensions.\n'
                     'It supports two modes: '
                     'nearest neighbour (default) and bilinear.'
