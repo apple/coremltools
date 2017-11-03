@@ -434,6 +434,10 @@ py::object Utils::convertImageValueToPython(CVPixelBufferRef value) {
         throw std::runtime_error("Only non-planar CVPixelBuffers are currently supported by this Python binding.");
     }
     
+    // supports grayscale and BGRA format types
+    auto formatType = CVPixelBufferGetPixelFormatType(value);
+    assert(formatType == kCVPixelFormatType_32BGRA || formatType == kCVPixelFormatType_OneComponent8);
+    
     auto result = CVPixelBufferLockBaseAddress(value, kCVPixelBufferLock_ReadOnly);
     assert(result == kCVReturnSuccess);
     
@@ -442,16 +446,28 @@ py::object Utils::convertImageValueToPython(CVPixelBufferRef value) {
     
     auto height = CVPixelBufferGetHeight(value);
     auto width = CVPixelBufferGetWidth(value);
-    auto srcBytesPerRow = CVPixelBufferGetBytesPerRow(value);
-    auto dstBytesPerRow = width * 4;
+    size_t srcBytesPerRow = CVPixelBufferGetBytesPerRow(value);
+    size_t dstBytesPerRow;
+    py::str mode;
+    if (formatType == kCVPixelFormatType_32BGRA) {
+        dstBytesPerRow = width * 4;
+        mode = "RGBA";
+    } else if (formatType == kCVPixelFormatType_OneComponent8) {
+        dstBytesPerRow = width;
+        mode = "L";
+    }
     std::string array(height * dstBytesPerRow, 0);
     for (size_t i=0; i<height; i++) {
         for (size_t j=0; j<width; j++) {
-            // convert BGRA to RGBA
-            array[(i * dstBytesPerRow) + (j * 4) + 0] = static_cast<char>(src[(i * srcBytesPerRow) + (j * 4) + 2]);
-            array[(i * dstBytesPerRow) + (j * 4) + 1] = static_cast<char>(src[(i * srcBytesPerRow) + (j * 4) + 1]);
-            array[(i * dstBytesPerRow) + (j * 4) + 2] = static_cast<char>(src[(i * srcBytesPerRow) + (j * 4) + 0]);
-            array[(i * dstBytesPerRow) + (j * 4) + 3] = static_cast<char>(src[(i * srcBytesPerRow) + (j * 4) + 3]);
+            if (formatType == kCVPixelFormatType_32BGRA) {
+                // convert BGRA to RGBA
+                array[(i * dstBytesPerRow) + (j * 4) + 0] = static_cast<char>(src[(i * srcBytesPerRow) + (j * 4) + 2]);
+                array[(i * dstBytesPerRow) + (j * 4) + 1] = static_cast<char>(src[(i * srcBytesPerRow) + (j * 4) + 1]);
+                array[(i * dstBytesPerRow) + (j * 4) + 2] = static_cast<char>(src[(i * srcBytesPerRow) + (j * 4) + 0]);
+                array[(i * dstBytesPerRow) + (j * 4) + 3] = static_cast<char>(src[(i * srcBytesPerRow) + (j * 4) + 3]);
+            } else if (formatType == kCVPixelFormatType_OneComponent8) {
+                array[(i * dstBytesPerRow) + j] = static_cast<char>(src[(i * srcBytesPerRow) + j]);
+            }
         }
     }
     
@@ -461,10 +477,8 @@ py::object Utils::convertImageValueToPython(CVPixelBufferRef value) {
     py::object scope = py::module::import("__main__").attr("__dict__");
     py::eval<py::eval_single_statement>("import PIL.Image", scope);
     py::object pilImage = py::eval<py::eval_expr>("PIL.Image", scope);
-    
-    assert(CVPixelBufferGetPixelFormatType(value) == kCVPixelFormatType_32BGRA);
     py::object frombytes = pilImage.attr("frombytes");
-    py::object img = frombytes("RGBA", py::make_tuple(width, height), py::bytes(array));
+    py::object img = frombytes(mode, py::make_tuple(width, height), py::bytes(array));
     return img;
 }
 
