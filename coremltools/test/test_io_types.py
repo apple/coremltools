@@ -14,6 +14,7 @@ import unittest
 import numpy as np
 from sklearn.datasets import load_boston
 from nose.plugins.attrib import attr
+import PIL.Image
 
 
 def create_model(spec):
@@ -272,3 +273,69 @@ class TestIODataTypes(unittest.TestCase):
                                                msg="{}\n{} != {}".format(dtype, keras_out, coreml_out), places=2)
             except KeyError:
                 print("{} not supported. ".format(dtype))
+
+
+    def test_image_output_rgb(self):
+        input_shape = (3, 10, 20)
+        input_features = [('data', coremltools.models.datatypes.Array(*input_shape))]
+        output_features = [('target', coremltools.models.datatypes.Array(*input_shape))]
+        builder = coremltools.models.neural_network.NeuralNetworkBuilder(input_features, output_features)
+        builder.add_elementwise('Identity', input_names=['data'],
+                                output_name='target', mode='ADD', alpha=0.0)
+        spec = builder.spec
+        output = spec.description.output[0]
+        output.type.imageType.colorSpace = coremltools.proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value('RGB')
+        output.type.imageType.height = input_shape[1]
+        output.type.imageType.width = input_shape[2]
+        
+        coreml_model = coremltools.models.MLModel(spec)
+        input_data = np.floor(np.random.rand(*input_shape) * 255)
+
+        coreml_out = coreml_model.predict({'data': input_data})['target']
+        self.assertEqual(PIL.Image.Image, type(coreml_out))
+        self.assertEqual('RGBA', coreml_out.mode)
+        np.testing.assert_equal(np.uint8(input_data), np.array(coreml_out).transpose(2, 0, 1)[:3, :])
+
+
+    def test_image_output_bgr(self):
+        input_shape = (3, 15, 25)
+        input_features = [('data', coremltools.models.datatypes.Array(*input_shape))]
+        output_features = [('target', coremltools.models.datatypes.Array(*input_shape))]
+        builder = coremltools.models.neural_network.NeuralNetworkBuilder(input_features, output_features)
+        builder.add_elementwise('Identity', input_names=['data'],
+                                output_name='target', mode='ADD', alpha=0.0)
+        spec = builder.spec
+        output = spec.description.output[0]
+        output.type.imageType.colorSpace = coremltools.proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value('BGR')
+        output.type.imageType.height = input_shape[1]
+        output.type.imageType.width = input_shape[2]
+        
+        coreml_model = coremltools.models.MLModel(spec)
+        input_data = np.floor(np.random.rand(*input_shape) * 255)
+
+        coreml_out = coreml_model.predict({'data': input_data})['target']
+        self.assertEqual(PIL.Image.Image, type(coreml_out))
+        self.assertEqual('RGBA', coreml_out.mode)
+        np.testing.assert_equal(np.uint8(input_data), np.array(coreml_out)[:, :, ::-1].transpose(2, 0, 1)[1:, :])
+
+
+    def test_image_output_grayscale(self):
+        input_shape = (1, 20, 30)
+        input_features = [('data', coremltools.models.datatypes.Array(*input_shape))]
+        output_features = [('target', coremltools.models.datatypes.Array(*input_shape))]
+        builder = coremltools.models.neural_network.NeuralNetworkBuilder(input_features, output_features)
+        builder.add_elementwise('Identity', input_names=['data'],
+                                output_name='target', mode='ADD', alpha=0.0)
+        spec = builder.spec
+        output = spec.description.output[0]
+        output.type.imageType.colorSpace = coremltools.proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value('GRAYSCALE')
+        output.type.imageType.height = input_shape[1]
+        output.type.imageType.width = input_shape[2]
+        
+        coreml_model = coremltools.models.MLModel(spec)
+        input_data = np.floor(np.random.rand(*input_shape) * 255)
+
+        coreml_out = coreml_model.predict({'data': input_data})['target']
+        self.assertEqual(PIL.Image.Image, type(coreml_out))
+        self.assertEqual('L', coreml_out.mode)
+        np.testing.assert_equal(np.uint8(input_data)[0], np.array(coreml_out))
