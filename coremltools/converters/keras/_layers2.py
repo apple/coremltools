@@ -880,7 +880,9 @@ def convert_simple_rnn(builder, layer, input_names, output_names, keras_layer):
     W_x = _np.zeros((hidden_size, input_size))
     b = None
 
-    if keras_layer.implementation == 0:
+    implementation = keras_layer.implementation if hasattr(keras_layer,
+            'implementation') else 0
+    if implementation == 0:
         W_h = keras_layer.get_weights()[1].T
         W_x = keras_layer.get_weights()[0].T
         if keras_layer.use_bias:
