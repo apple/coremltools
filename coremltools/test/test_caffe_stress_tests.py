@@ -11,7 +11,7 @@ from coremltools.converters import caffe as caffe_converter
 nets_path = os.environ["CAFFE_MODELS_PATH"]
 nets_path = nets_path + '/'
 import coremltools
-from nose.plugins.attrib import attr
+import pytest
 
 
 def extract_tarfile(input_filename, dest_dir):
@@ -265,7 +265,7 @@ class CaffeLayers(unittest.TestCase):
         )
 
     #@unittest.skip("Add Test cases where group is not 1: Radar: 32739970")
-    @attr("slow")
+    @pytest.mark.slow
     def test_convolutional_layer(self):
         self.run_case(
             layer_type='convolutional',
@@ -274,7 +274,7 @@ class CaffeLayers(unittest.TestCase):
         )
         
     #@unittest.skip("Add Test cases where group and dilation are not 1 Radar: 32739970")    
-    @attr("slow")
+    @pytest.mark.slow
     def test_deconvolution_layer(self):
         self.run_case(
             layer_type='deconvolution',
@@ -325,7 +325,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerConcat'
         )
 
-    @attr("slow")
+    @pytest.mark.slow
     def test_pooling_layer(self):
         self.run_case(
             layer_type='pooling',
@@ -339,7 +339,7 @@ class CaffeLayers(unittest.TestCase):
             input_layer='data',
             output_layer='LayerLRN',
         )
-           
+
     @unittest.skip(" Radar: 33056676") 
     def test_mvn(self):
         self.run_case(

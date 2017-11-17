@@ -3,9 +3,7 @@ import unittest
 import numpy as np
 import os, shutil
 import tempfile
-from nose.tools import raises
-from nose.plugins.attrib import attr
-
+import pytest
 from coremltools._deps import HAS_KERAS2_TF
 
 
@@ -75,7 +73,7 @@ def _generate_data(input_shape, mode = 'random'):
     return X
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
-@attr('keras2')
+@pytest.mark.keras2
 class KerasNumericCorrectnessTest(unittest.TestCase):
     """
     Unit test class for testing the Keras converter.
@@ -160,7 +158,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
 
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
-@attr('keras2')
+@pytest.mark.keras2
 class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
     def test_tiny_inner_product(self):
@@ -1714,7 +1712,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         self._test_keras_model(model, input_blob='data', output_blob='output', delta=1e-2)
 
-    @raises(Exception)
+    @pytest.mark.xfail(rases = Exception)
     def test_large_batch_gpu(self):
 
         batch_size = 2049
@@ -1730,7 +1728,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
-@attr('keras2')
+@pytest.mark.keras2
 class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
     def test_dangling_merge_left(self):
@@ -1929,8 +1927,8 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
         self._test_keras_model(model, delta=1e-2)
 
-@attr('slow')
-@attr('keras2')
+@pytest.mark.slow
+@pytest.mark.keras2
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
     """
@@ -1989,7 +1987,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
             self.assertAlmostEquals(keras_preds[i]/max_den, coreml_preds[i]/max_den, delta = delta,
                 msg = 'Failed test case %s. Predictions wrong (%s vs %s)' % (param, coreml_preds[i], keras_preds[i]))
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_activation_layer_params(self):
         options = dict(
             activation = ['tanh', 'relu', 'sigmoid', 'softmax', 'softplus', 'softsign', 'hard_sigmoid', 'elu']
@@ -2014,7 +2012,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
             model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
             self._run_test(model, param)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_dense_layer_params(self):
         options = dict(
             activation = ['relu', 'softmax', 'tanh', 'sigmoid', 'softplus', 'softsign', 'elu','hard_sigmoid'],
@@ -2038,7 +2036,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         for param, model in args:
             self._run_test(model, param)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_upsample_layer_params(self):
         options = dict(
             size= [(2,2), (3,3), (4,4), (5,5)]
@@ -2067,7 +2065,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         for param, model in args:
             self._run_test(model, param)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_conv_layer_params(self):
         options = dict(
             activation = ['relu', 'tanh', 'sigmoid'], # keras does not support softmax on 4-D
@@ -2094,7 +2092,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         for param, model in args:
             self._run_test(model, param)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_dense_elementwise_params(self):
         options = dict(
             modes = [add, multiply, concatenate, average, maximum]

@@ -9,7 +9,7 @@ import pandas as pd
 import os
 from coremltools._deps import HAS_SKLEARN
 from coremltools.models.utils import evaluate_regressor
-from nose.plugins.attrib import attr
+import pytest
 
 if HAS_SKLEARN:
     from sklearn.ensemble import RandomForestRegressor
@@ -70,7 +70,7 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         metrics = self._train_convert_evaluate(max_depth = 13)
         self._check_metrics(metrics)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_boston_housing_parameter_stress_test(self):
 
         ## These are all the options in decision tree regression of scikit-learn

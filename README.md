@@ -83,8 +83,13 @@ make dist
 
 Running Unit Tests
 -------------------
-In order to run unit tests, pandas and h5py must be installed.
+In order to run unit tests, you need pytest
 
+```shell
+pip install pytest 
+```
+
+In addition, pandas and h5py must be installed.
 ```shell
 pip install pandas h5py
 ```
@@ -137,6 +142,17 @@ If you'd like to use the old keras version, you can:
 pip install keras==1.2.2 tensorflow
 ```
 
+Finally, to run the most important unit tests, you can use:
+
+```shell
+pytest -rs
+```
+some tests are marked as slow because they test a lot of combinations.
+If you want to run, all tests, you can use:
+
+``shell
+pytest
+```
 
 Building Documentation
 ----------------------

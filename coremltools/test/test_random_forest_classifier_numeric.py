@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from coremltools._deps import HAS_SKLEARN
 from coremltools.models.utils import evaluate_classifier
-from nose.plugins.attrib import attr
+import pytest
 
 if HAS_SKLEARN:
     from sklearn.ensemble import RandomForestClassifier
@@ -59,7 +59,7 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
         metrics = self._train_convert_evaluate(max_depth = 13)
         self._check_metrics(metrics)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_classifier_stress_test(self):
 
         options = dict(
@@ -108,7 +108,7 @@ class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
         metrics = self._train_convert_evaluate()
         self._check_metrics(metrics)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_multiclass_stress_test(self):
         options = dict(
                        n_estimators = [1, 5, 10],

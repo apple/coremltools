@@ -8,7 +8,7 @@ import tempfile
 import os
 import pandas as pd
 import random
-from nose.plugins.attrib import attr
+import pytest
 
 from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities
 from coremltools._deps import HAS_LIBSVM, HAS_SKLEARN
@@ -84,14 +84,14 @@ class SvcScikitTest(unittest.TestCase):
             if not allow_slow:
                 break
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_class_string_label_without_probability_stress_test(self):
         self._evaluation_test_helper(['A', 'B'], False, allow_slow = True)
 
     def test_binary_class_string_label_without_probability(self):
         self._evaluation_test_helper(['A', 'B'], False, allow_slow = False)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_class_string_label_with_probability_stress_test(self):
         # Scikit Learn uses technique to normalize pairwise probabilities even for binary classification.
         # This leads to difference in probabilities.
@@ -102,14 +102,14 @@ class SvcScikitTest(unittest.TestCase):
         # This leads to difference in probabilities.
         self._evaluation_test_helper(["foo", "bar"], True, allow_slow = False, allowed_prob_delta=0.005)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_multi_class_int_label_without_probability_stress_test(self):
         self._evaluation_test_helper([12, 33, -1, 1234], False, allow_slow = True)
 
     def test_multi_class_int_label_without_probability(self):
         self._evaluation_test_helper([12, 33, -1, 1234], False, allow_slow = False)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_multi_class_int_label_with_probability_stress_test(self):
         self._evaluation_test_helper([1, 2, 3], True, allow_slow = True)
 
@@ -198,19 +198,19 @@ class CSVCLibSVMTest(unittest.TestCase):
 
 
     # LibSVM only supports string labels
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_class_without_probability_stress_test(self):
         self._evaluation_test_helper_no_probability([0, 1], allow_slow = True)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_class_with_probability_stress_test(self):
         self._evaluation_test_helper_with_probability([-1, 90], allow_slow = True)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_multi_class_without_probability_stress_test(self):
         self._evaluation_test_helper_no_probability([12, 33, 12341], allow_slow = True)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_multi_class_with_probability_stress_test(self):
         self._evaluation_test_helper_with_probability([1, 2, 3], allow_slow = True)
 

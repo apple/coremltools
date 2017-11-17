@@ -8,7 +8,7 @@ import tempfile
 import os
 import pandas as pd
 import random
-from nose.plugins.attrib import attr
+import pytest
 
 from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities
 from coremltools._deps import HAS_LIBSVM, HAS_SKLEARN
@@ -83,14 +83,14 @@ class NuSvcScikitTest(unittest.TestCase):
             if not allow_slow:
                 break
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_class_int_label_without_probability_stress_test(self):
         self._evaluation_test_helper([1, 3], False, allow_slow = True)
 
     def test_binary_class_int_label_without_probability(self):
         self._evaluation_test_helper([1, 3], False, allow_slow = False)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_class_string_label_with_probability_stress_test(self):
         # Scikit Learn uses technique to normalize pairwise probabilities even for binary classification.
         # This leads to difference in probabilities.
@@ -101,14 +101,14 @@ class NuSvcScikitTest(unittest.TestCase):
         # This leads to difference in probabilities.
         self._evaluation_test_helper(["foo", "bar"], True, allow_slow = False, allowed_prob_delta=0.005)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_multi_class_int_label_without_probability_stress_test(self):
         self._evaluation_test_helper([12, 33, -1, 1234], False, allow_slow = True)
 
     def test_multi_class_int_label_without_probability(self):
         self._evaluation_test_helper([12, 33, -1, 1234], False, allow_slow = False)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_multi_class_string_label_with_probability_stress_test(self):
         self._evaluation_test_helper(['X', 'Y', 'z'], True, allow_slow = True)
 
@@ -197,7 +197,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
         self.assertEquals(metrics['num_key_mismatch'], 0)
         self.assertLess(metrics['max_probability_error'], 0.00001)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_classificaiton_with_probability_stress_test(self):
         for param1 in self.non_kernel_parameters:
             for param2 in self.kernel_parameters:
@@ -209,7 +209,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
         self._test_prob_model(param1, param2)
 
 
-    @attr('slow')
+    @pytest.mark.slow
     @unittest.skip("LibSVM's Python library is broken for NuSVC without probabilities. It always segfaults during prediction time.")
     def test_multi_class_without_probability(self):
         # Generate some random data.

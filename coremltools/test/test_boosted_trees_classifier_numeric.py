@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-from nose.plugins.attrib import attr
+import pytest
 import pandas as pd
 import unittest
 
@@ -64,7 +64,7 @@ class BoostedTreeBinaryClassificationBostonHousingScikitNumericTest(
         metrics = self._train_convert_evaluate()
         self._check_metrics(metrics)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_classifier_stress_test(self):
 
         options = dict(
@@ -111,7 +111,7 @@ class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
         metrics = self._train_convert_evaluate()
         self._check_metrics(metrics)
     
-    @attr('slow')
+    @pytest.mark.slow
     def test_multiclass_stress_test(self):
         options = dict(
                max_depth = [1, 10, None],

@@ -11,7 +11,7 @@ import tempfile
 import itertools
 import coremltools
 from coremltools._deps import HAS_KERAS_TF
-from nose.plugins.attrib import attr
+import pytest
 
 
 if HAS_KERAS_TF:
@@ -63,7 +63,7 @@ class SimpleRNNLayer(RecurrentLayerTest):
         )
         self.rnn_layer_params = list(itertools.product(*self.simple_rnn_params_dict.values()))
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_rnn_layer_stress(self):
         self._test_rnn_layer(True)
 
@@ -149,7 +149,7 @@ class LSTMLayer(RecurrentLayerTest):
         )
         self.lstm_layer_params = list(itertools.product(*self.lstm_params_dict.values()))
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_lstm_layer_stress(self):
         self._test_lstm_layer(True)
 

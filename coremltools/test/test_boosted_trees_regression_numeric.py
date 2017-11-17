@@ -7,7 +7,7 @@ import unittest
 
 import pandas as pd
 import itertools
-from nose.plugins.attrib import attr
+import pytest
 
 from coremltools._deps import HAS_SKLEARN, HAS_XGBOOST
 from coremltools.models.utils import evaluate_regressor
@@ -61,7 +61,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         metrics = self._train_convert_evaluate()
         self._check_metrics(metrics)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_boston_housing_parameter_stress_test(self):
 
         options = dict(
@@ -154,7 +154,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
                    'max_depth': 5}, num_boost_round = 2)
         self._check_metrics(metrics)
         
-    @attr('slow')
+    @pytest.mark.slow
     def test_boston_housing_parameter_stress_test(self):
 
         options = dict(
@@ -241,7 +241,7 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
                           'reg:linear', 'max_depth': 1})
         self._check_metrics(metrics)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_boston_housing_parameter_stress_test(self):
 
         options = dict(

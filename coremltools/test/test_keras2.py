@@ -4,8 +4,7 @@ from coremltools._deps import HAS_KERAS2_TF
 from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2
 from coremltools.proto import NeuralNetwork_pb2
-from nose.tools import raises
-from nose.plugins.attrib import attr
+import pytest
 
 if HAS_KERAS2_TF:
     import tensorflow as tf
@@ -13,7 +12,7 @@ if HAS_KERAS2_TF:
     from coremltools.converters import keras
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
-@attr('keras2')
+@pytest.mark.keras2
 class KerasSingleLayerTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -619,7 +618,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         layers = spec.neuralNetwork.layers
         self.assertIsNotNone(layers[0].sequenceRepeat)
 
-    @raises(ValueError)
+    @pytest.mark.xfail(rases = ValueError)
     def test_unsupported_variational_deconv(self):
         from keras.layers import Input, Lambda, Conv2D, Flatten, Dense
         x = Input(shape=(8,8,3))

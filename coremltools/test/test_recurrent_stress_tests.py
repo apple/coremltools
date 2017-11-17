@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import itertools
 from coremltools._deps import HAS_KERAS2_TF, HAS_KERAS_TF
-from nose.plugins.attrib import attr
+import pytest
 np.random.seed(1377)
 
 if HAS_KERAS2_TF or HAS_KERAS_TF:
@@ -465,15 +465,15 @@ class SimpleTestCase(unittest.TestCase):
         for i in range(len(relative_error)):
             self.assertLessEqual(relative_error[i], 0.01)
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_SimpleRNN(self):
         self.test_SimpleRNN()
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_SimpleLSTM(self):
         self.test_SimpleLSTM()
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_SimpleGRU(self):
         self.test_SimpleGRU()
 
@@ -496,7 +496,7 @@ class RecurrentLayerTest(unittest.TestCase):
         )
         self.base_layer_params = list(itertools.product(*self.params_dict.values()))
 
-@attr('slow')
+@pytest.mark.slow
 class RNNLayer(RecurrentLayerTest):
     """
     Class for testing single RNN layer
@@ -563,11 +563,11 @@ class RNNLayer(RecurrentLayerTest):
             numerical_err_models,
             numerical_failiure, i)
                           )
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_rnn_layer(self):
         self.test_rnn_layer()
 
-@attr('slow')
+@pytest.mark.slow
 class LSTMLayer(RecurrentLayerTest):
     """
     Class for testing single RNN layer
@@ -695,11 +695,11 @@ class LSTMLayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
         
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_lstm_layer(self):
         self.test_lstm_layer()
 
-@attr('slow')
+@pytest.mark.slow
 class GRULayer(RecurrentLayerTest):
     """
     Class for testing GRU layer
@@ -791,12 +791,12 @@ class GRULayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_test_gru_layer(self):
         self.test_gru_layer()
 
 
-@attr('slow')
+@pytest.mark.slow
 class LSTMStacked(unittest.TestCase):
     """
     Class for testing LSTMStacked
@@ -898,11 +898,11 @@ class LSTMStacked(unittest.TestCase):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_SimpleLSTMStacked(self):
         self.test_SimpleLSTMStacked()
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_StressLSTMStacked(self):
         self.test_StressLSTMStacked()
 
@@ -963,14 +963,14 @@ class DifferentIOModelsTypes(unittest.TestCase):
         for i in range(len(relative_error)):
             self.assertLessEqual(relative_error[i], 0.01)
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_test_one_to_many(self):
         self.test_one_to_many()
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_test_many_to_one(self):
         self.test_many_to_one()
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras2_many_to_many(self):
         self.test_many_to_many()
