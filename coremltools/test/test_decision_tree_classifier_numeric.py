@@ -9,7 +9,7 @@ import pandas as pd
 import unittest
 from coremltools._deps import HAS_SKLEARN
 from coremltools.models.utils import evaluate_classifier
-from nose.plugins.attrib import attr
+import pytest
 
 if HAS_SKLEARN:
     from coremltools.converters import sklearn as skl_converter
@@ -56,7 +56,7 @@ class DecisionTreeBinaryClassificationBostonHousingScikitNumericTest(
         metrics = self._train_convert_evaluate()
         self._check_metrics(metrics)
     
-    @attr('slow')
+    @pytest.mark.slow
     def test_binary_classifier_stress_test(self):
         options = dict(
             splitter = ['best'],
@@ -105,7 +105,7 @@ class DecisionTreeMultiClassClassificationBostonHousingScikitNumericTest(
         metrics = self._train_convert_evaluate()
         self._check_metrics(metrics)
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_multiclass_stress_test(self):
         options = dict(
             splitter = ['best'],

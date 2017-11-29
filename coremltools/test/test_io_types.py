@@ -13,7 +13,7 @@ from sklearn.svm import SVC, SVR
 import unittest
 import numpy as np
 from sklearn.datasets import load_boston
-from nose.plugins.attrib import attr
+import pytest
 import PIL.Image
 
 
@@ -214,7 +214,7 @@ class TestIODataTypes(unittest.TestCase):
             except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
-    @attr('keras2')
+    @pytest.mark.keras2
     def test_keras_dense_model(self):
         model = keras.models.Sequential()
         model.add(keras.layers.Dense(3, activation='sigmoid', kernel_initializer='random_uniform',

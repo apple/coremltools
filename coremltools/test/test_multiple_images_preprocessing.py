@@ -11,7 +11,7 @@ import numpy as np
 from coremltools.converters import caffe as caffe_converter
 import coremltools
 import PIL.Image
-from nose.plugins.attrib import attr
+import pytest
 
 from coremltools._deps import HAS_KERAS2_TF
 
@@ -231,7 +231,7 @@ class ManyImages(unittest.TestCase):
 
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
-@attr('keras2')
+@pytest.mark.keras2
 class ManyImagesKeras(unittest.TestCase):                                                    
                                                                                                  
     def test_keras_1_image_bias(self):

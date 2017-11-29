@@ -164,7 +164,7 @@ add_custom_target(dist
   COMMENT "Building Python wheel for coremltools under dist/"
   )
 
-add_custom_target(nosetests
-  COMMAND nosetests coremltools/test/
+add_custom_target(pytest
+  COMMAND pytest coremltools/test/
   DEPENDS dist
 )

@@ -7,7 +7,7 @@ import pandas as pd
 import random
 import tempfile
 import unittest
-from nose.plugins.attrib import attr
+import pytest
 
 from coremltools._deps import HAS_LIBSVM
 from coremltools._deps import HAS_SKLEARN
@@ -59,7 +59,7 @@ class SvrScikitTest(unittest.TestCase):
             model = OneHotEncoder()
             spec = sklearn_converter.convert(model, 'data', 'out')
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_evaluation_stress_test(self):
         self._test_evaluation(allow_slow = True)
 
@@ -170,7 +170,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
             model = OneHotEncoder()
             spec = libsvm.convert(model, 'data', 'out')
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_evaluation_stress_test(self):
         self._test_evaluation(allow_slow = True)
 

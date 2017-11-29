@@ -7,7 +7,7 @@ import unittest
 
 from coremltools._deps import HAS_KERAS_TF
 from coremltools.proto import FeatureTypes_pb2
-from nose.tools import raises
+import pytest
 
 if HAS_KERAS_TF:
     import tensorflow as tf
@@ -637,7 +637,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         layers = spec.neuralNetwork.layers
         self.assertIsNotNone(layers[0].sequenceRepeat)
 
-    @raises(ValueError)
+    @pytest.mark.xfail(raises = ValueError)
     def test_unsupported_variational_deconv(self):
         from keras.layers import Input, Lambda, Convolution2D, Flatten, Dense
         x = Input(shape=(8,8,3))

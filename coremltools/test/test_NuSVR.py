@@ -7,7 +7,7 @@ import pandas as pd
 import tempfile
 import random
 import unittest
-from nose.plugins.attrib import attr
+import pytest
 
 from coremltools._deps import HAS_LIBSVM
 from coremltools._deps import HAS_SKLEARN
@@ -52,7 +52,7 @@ class NuSVRScikitTest(unittest.TestCase):
             model = OneHotEncoder()
             spec = scikit_converter.convert(model, 'data', 'out')
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_evaluation_stress_test(self):
         self._test_evaluation(allow_slow = True)
 
@@ -145,7 +145,7 @@ class NuSVRLibSVMTest(unittest.TestCase):
             model = OneHotEncoder()
             spec = libsvm.convert(model, 'data', 'out')
 
-    @attr('slow')
+    @pytest.mark.slow
     def test_evaluation_stress_test(self):
         self._test_evaluation(allow_slow = True)
 
