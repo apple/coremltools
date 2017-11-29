@@ -1712,7 +1712,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         self._test_keras_model(model, input_blob='data', output_blob='output', delta=1e-2)
 
-    @pytest.mark.xfail(rases = Exception)
+    @pytest.mark.xfail(raises = Exception)
     def test_large_batch_gpu(self):
 
         batch_size = 2049

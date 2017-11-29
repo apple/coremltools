@@ -83,15 +83,10 @@ make dist
 
 Running Unit Tests
 -------------------
-In order to run unit tests, you need pytest
+In order to run unit tests, you need pytest, pandas, and h5py. 
 
 ```shell
-pip install pytest 
-```
-
-In addition, pandas and h5py must be installed.
-```shell
-pip install pandas h5py
+pip install pytest pandas h5py
 ```
 
 To add a new unit test, add it to the `coremltools/test` folder. Make sure you
@@ -150,7 +145,7 @@ pytest -rs
 some tests are marked as slow because they test a lot of combinations.
 If you want to run, all tests, you can use:
 
-``shell
+```shell
 pytest
 ```
 
