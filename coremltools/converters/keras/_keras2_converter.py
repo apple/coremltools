@@ -151,7 +151,8 @@ def _convert(model,
             predicted_feature_name = None,
             predicted_probabilities_output = '',
             add_custom_layers = False,
-            custom_conversion_functions = None):
+            custom_conversion_functions = None,
+            custom_objects=None):
 
     # Check Keras format
     if _keras.backend.image_data_format() == 'channels_first':
@@ -161,9 +162,9 @@ def _convert(model,
         _keras.backend.set_image_data_format('channels_last')
     
     if isinstance(model, _string_types):
-        model = _keras.models.load_model(model)
+        model = _keras.models.load_model(model, custom_objects = custom_objects)
     elif isinstance(model, tuple):
-        model = _load_keras_model(model[0], model[1])
+        model = _load_keras_model(model[0], model[1], custom_objects = custom_objects)
     
     # Check valid versions
     _check_unsupported_layers(model, add_custom_layers)

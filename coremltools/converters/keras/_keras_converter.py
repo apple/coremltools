@@ -152,14 +152,15 @@ def _convert(model,
             image_scale = 1.0, 
             class_labels = None, 
             predicted_feature_name = None,
-            predicted_probabilities_output = ''):
+            predicted_probabilities_output = '',
+            custom_objects = None):
     
     if not(_HAS_KERAS_TF):
         raise RuntimeError('keras not found or unsupported version or backend found. keras conversion API is disabled.')
     if isinstance(model, _string_types):
-        model = _keras.models.load_model(model)
+        model = _keras.models.load_model(model, custom_objects = custom_objects)
     elif isinstance(model, tuple):
-        model = _load_keras_model(model[0], model[1])
+        model = _load_keras_model(model[0], model[1], custom_objects = custom_objects)
     
     # Check valid versions
     _check_unsupported_layers(model)
@@ -337,7 +338,8 @@ def convertToSpec(model,
                   model_precision = _MLMODEL_FULL_PRECISION,
                   predicted_probabilities_output = '',
                   add_custom_layers = False,
-                  custom_conversion_functions = None):
+                  custom_conversion_functions = None,
+                  custom_objects=None):
 
     """
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
@@ -440,6 +442,12 @@ def convertToSpec(model,
         as functions taking a Keras custom layer and returning a parameter dictionary
         and list of weights.
 
+    custom_objects: {'str': (function)}
+        Dictionary that includes a key, value pair of {'<function name>': <function>}
+        for custom objects such as custom loss in the Keras model.
+        Provide a string of the name of the custom function as a key.
+        Provide a function as a value.
+
     Returns
     -------
     model: MLModel
@@ -449,16 +457,16 @@ def convertToSpec(model,
     --------
     .. sourcecode:: python
 
-	    # Make a Keras model
-	    >>> model = Sequential()
-	    >>> model.add(Dense(num_channels, input_dim = input_dim))
+        # Make a Keras model
+        >>> model = Sequential()
+        >>> model.add(Dense(num_channels, input_dim = input_dim))
 
-	    # Convert it with default input and output names
-   	    >>> import coremltools
-	    >>> coreml_model = coremltools.converters.keras.convert(model)
+        # Convert it with default input and output names
+        >>> import coremltools
+        >>> coreml_model = coremltools.converters.keras.convert(model)
 
-	    # Saving the Core ML model to a file.
-	    >>> coreml_model.save('my_model.mlmodel')
+        # Saving the Core ML model to a file.
+        >>> coreml_model.save('my_model.mlmodel')
 
     Converting a model with a single image input.
 
@@ -507,7 +515,8 @@ def convertToSpec(model,
                          image_scale=image_scale,
                          class_labels=class_labels,
                          predicted_feature_name=predicted_feature_name,
-                         predicted_probabilities_output=predicted_probabilities_output)
+                         predicted_probabilities_output=predicted_probabilities_output,
+                         custom_objects=custom_objects)
     elif _HAS_KERAS2_TF:
         from . import _keras2_converter
         spec = _keras2_converter._convert(model=model,
@@ -524,7 +533,8 @@ def convertToSpec(model,
                                            predicted_feature_name=predicted_feature_name,
                                            predicted_probabilities_output=predicted_probabilities_output,
                                            add_custom_layers=add_custom_layers,
-                                           custom_conversion_functions=custom_conversion_functions)
+                                           custom_conversion_functions=custom_conversion_functions,
+                                           custom_objects=custom_objects)
     else:
         raise RuntimeError(
             'Keras not found or unsupported version or backend found. keras conversion API is disabled.')
