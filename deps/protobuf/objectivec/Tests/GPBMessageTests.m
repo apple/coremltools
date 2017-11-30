@@ -31,6 +31,7 @@
 #import "GPBTestUtilities.h"
 
 #import <objc/runtime.h>
+#import <Foundation/NSKeyedArchiver_Private.h>
 
 #import "GPBArray_PackagePrivate.h"
 #import "GPBDescriptor.h"
@@ -339,7 +340,8 @@
 - (void)testCoding {
   NSData *data =
       [NSKeyedArchiver archivedDataWithRootObject:[self mergeResult]];
-  id unarchivedObject = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+  id unarchivedObject =
+      [NSKeyedUnarchiver unarchivedObjectOfClass:[[self mergeResult] class] fromData:data error:nil];
 
   XCTAssertEqualObjects(unarchivedObject, [self mergeResult]);
 

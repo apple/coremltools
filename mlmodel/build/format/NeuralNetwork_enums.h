@@ -106,6 +106,7 @@ enum MLNeuralNetworkLayerlayer: int {
     MLNeuralNetworkLayerlayer_gru = 410,
     MLNeuralNetworkLayerlayer_uniDirectionalLSTM = 420,
     MLNeuralNetworkLayerlayer_biDirectionalLSTM = 430,
+    MLNeuralNetworkLayerlayer_custom = 500,
     MLNeuralNetworkLayerlayer_NOT_SET = 0,
 };
 
@@ -183,6 +184,8 @@ static const char * MLNeuralNetworkLayerlayer_Name(MLNeuralNetworkLayerlayer x) 
             return "MLNeuralNetworkLayerlayer_uniDirectionalLSTM";
         case MLNeuralNetworkLayerlayer_biDirectionalLSTM:
             return "MLNeuralNetworkLayerlayer_biDirectionalLSTM";
+        case MLNeuralNetworkLayerlayer_custom:
+            return "MLNeuralNetworkLayerlayer_custom";
         case MLNeuralNetworkLayerlayer_NOT_SET:
             return "INVALID";
     }
@@ -313,6 +316,32 @@ enum MLReduceAxis: int {
     MLReduceAxisH = 3,
     MLReduceAxisW = 4,
 };
+
+enum MLCustomLayerParamValuevalue: int {
+    MLCustomLayerParamValuevalue_doubleValue = 10,
+    MLCustomLayerParamValuevalue_stringValue = 20,
+    MLCustomLayerParamValuevalue_intValue = 30,
+    MLCustomLayerParamValuevalue_longValue = 40,
+    MLCustomLayerParamValuevalue_boolValue = 50,
+    MLCustomLayerParamValuevalue_NOT_SET = 0,
+};
+
+static const char * MLCustomLayerParamValuevalue_Name(MLCustomLayerParamValuevalue x) {
+    switch (x) {
+        case MLCustomLayerParamValuevalue_doubleValue:
+            return "MLCustomLayerParamValuevalue_doubleValue";
+        case MLCustomLayerParamValuevalue_stringValue:
+            return "MLCustomLayerParamValuevalue_stringValue";
+        case MLCustomLayerParamValuevalue_intValue:
+            return "MLCustomLayerParamValuevalue_intValue";
+        case MLCustomLayerParamValuevalue_longValue:
+            return "MLCustomLayerParamValuevalue_longValue";
+        case MLCustomLayerParamValuevalue_boolValue:
+            return "MLCustomLayerParamValuevalue_boolValue";
+        case MLCustomLayerParamValuevalue_NOT_SET:
+            return "INVALID";
+    }
+}
 
 enum MLNeuralNetworkClassifierClassLabels: int {
     MLNeuralNetworkClassifierClassLabels_stringClassLabels = 100,

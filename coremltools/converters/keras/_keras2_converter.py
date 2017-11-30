@@ -79,14 +79,13 @@ def _is_merge_layer(layer):
                 return True
     return False
 
-def _check_unsupported_layers(model):
+def _check_unsupported_layers(model, add_custom_layers = False):
     for i, layer in enumerate(model.layers):
         if isinstance(layer, _keras.models.Sequential) or isinstance(layer, _keras.models.Model):
             _check_unsupported_layers(layer)
         else:
-            if type(layer) not in _KERAS_LAYER_REGISTRY:
-                 raise ValueError(
-                     "Keras layer '%s' not supported. " % str(type(layer)))
+            if type(layer) not in _KERAS_LAYER_REGISTRY and not add_custom_layers:
+                raise ValueError("Keras layer '%s' not supported. " % str(type(layer)))
             if isinstance(layer, _keras.layers.wrappers.TimeDistributed):
                 if type(layer.layer) not in _KERAS_LAYER_REGISTRY:
                      raise ValueError(
@@ -96,12 +95,14 @@ def _check_unsupported_layers(model):
                     raise ValueError(
                         "Keras bi-directional wrapper conversion supports only LSTM layer at this time. ")
 
-def _get_layer_converter_fn(layer):
+def _get_layer_converter_fn(layer, add_custom_layers = False):
     """Get the right converter function for Keras
     """
     layer_type = type(layer)
     if layer_type in _KERAS_LAYER_REGISTRY:
         return _KERAS_LAYER_REGISTRY[layer_type]
+    elif add_custom_layers:
+        return None
     else:
         raise TypeError("Keras layer of type %s is not supported." % type(layer))
 
@@ -148,7 +149,9 @@ def _convert(model,
             image_scale = 1.0, 
             class_labels = None, 
             predicted_feature_name = None,
-            predicted_probabilities_output = ''):
+            predicted_probabilities_output = '',
+            add_custom_layers = False,
+            custom_conversion_functions = None):
 
     # Check Keras format
     if _keras.backend.image_data_format() == 'channels_first':
@@ -163,7 +166,7 @@ def _convert(model,
         model = _load_keras_model(model[0], model[1])
     
     # Check valid versions
-    _check_unsupported_layers(model)
+    _check_unsupported_layers(model, add_custom_layers)
     
     # Build network graph to represent Keras model
     graph = _topology2.NetGraph(model)
@@ -273,9 +276,19 @@ def _convert(model,
         print("%d : %s, %s" % (iter, layer, keras_layer))
         if isinstance(keras_layer, _keras.layers.wrappers.TimeDistributed):
             keras_layer = keras_layer.layer
-        converter_func = _get_layer_converter_fn(keras_layer)
+        converter_func = _get_layer_converter_fn(keras_layer, add_custom_layers)
         input_names, output_names = graph.get_layer_blobs(layer)
-        converter_func(builder, layer, input_names, output_names, keras_layer)
+        # this may be none if we're using custom layers
+        if converter_func:
+            converter_func(builder, layer, input_names, output_names, keras_layer)
+        else:
+            layer_name = type(keras_layer).__name__
+            if layer_name in custom_conversion_functions:
+                custom_spec = custom_conversion_functions[layer_name](keras_layer)
+            else:
+                custom_spec = None
+
+            builder.add_custom(layer, input_names, output_names, custom_spec)
 
     # Since we aren't mangling anything the user gave us, we only need to update
     # the model interface here
@@ -313,4 +326,5 @@ def _convert(model,
 
     # Return the protobuf spec
     spec = builder.spec
-    return _MLModel(spec)
+    return spec
+

@@ -12,6 +12,9 @@
 
 #include "framework/TestUtils.hpp"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-conversion"
+
 using namespace CoreML;
 
 
@@ -1700,4 +1703,224 @@ int testValidSlice2() {
     ML_ASSERT_GOOD(res);
     return 0;
 }
+
+
+int testValidCustom() {
+    
+    Specification::Model m1;
+    m1.set_specificationversion(MLMODEL_SPECIFICATION_VERSION);
+    
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("probs");
+    auto *outvec = out->mutable_type()->mutable_multiarraytype();
+    outvec->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    
+    const auto nn = m1.mutable_neuralnetwork();
+    
+    Specification::NeuralNetworkLayer *layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("probs");
+    auto *params = layer->mutable_custom();
+    
+    params->set_classname("CustomClassName");
+    
+    auto *weights = params->add_weights();
+    weights->set_float16value("somebitshere");
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+    
+    // We'll also test that the spec version is correct here
+    Model mlmodel = Model(m1);
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION);
+
+    return 0;
+}
+
+int testInvalidCustomNoName() {
+    
+    Specification::Model m1;
+    
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("probs");
+    auto *outvec = out->mutable_type()->mutable_multiarraytype();
+    outvec->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    
+    const auto nn = m1.mutable_neuralnetwork();
+    
+    Specification::NeuralNetworkLayer *layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("probs");
+    auto *params = layer->mutable_custom();
+  
+    // No name, should be invalids
+//    params->set_classname("CustomClassName");
+    
+    auto *weights = params->add_weights();
+    weights->set_float16value("somebitshere");
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    return 0;
+}
+
+int testInvalidCustomMultipleWeights() {
+    
+    Specification::Model m1;
+    
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("probs");
+    auto *outvec = out->mutable_type()->mutable_multiarraytype();
+    outvec->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    
+    const auto nn = m1.mutable_neuralnetwork();
+    
+    Specification::NeuralNetworkLayer *layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("probs");
+    auto *params = layer->mutable_custom();
+    
+    params->set_classname("CustomClassName");
+    
+    auto *weights = params->add_weights();
+    weights->set_float16value("somebitshere");
+
+    auto *weights2 = params->add_weights();
+    weights2->set_float16value("bitsbits");
+    weights2->set_rawvalue("morebits");
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    return 0;
+}
+
+int testSpecDowngrade() {
+ 
+    Specification::Model m1;
+    m1.set_specificationversion(MLMODEL_SPECIFICATION_VERSION);
+    
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("probs");
+    auto *outvec = out->mutable_type()->mutable_multiarraytype();
+    outvec->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    
+    const auto nn = m1.mutable_neuralnetwork();
+    
+    Specification::NeuralNetworkLayer *layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("probs");
+    auto *params = layer->mutable_slice();
+    
+    params->set_startindex(5);
+    // The validator can't know if the input is big enough for this or not
+    params->set_endindex(-3);
+    params->set_stride(2);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+    
+    Model mlmodel = Model(m1);
+    
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11);
+    
+    return 0;
+    
+}
+
+int testSpecDowngradefp16() {
+    
+    Specification::Model m1;
+    m1.set_specificationversion(MLMODEL_SPECIFICATION_VERSION);
+    
+    int output_channels = 5;
+    int kernel_channels = 3;
+    int kernel_height = 2;
+    int kernel_width = 5;
+    int nGroups = 1;
+    
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(3);
+    shape->add_shape(100);
+    shape->add_shape(100);
+    
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+    
+    const auto nn = m1.mutable_neuralnetwork();
+    
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution();
+    params->set_outputchannels(5);
+    params->set_kernelchannels(3);
+    params->add_kernelsize(kernel_height);
+    params->add_kernelsize(kernel_width);
+    
+    params->set_hasbias(true);
+    
+    (void)params->mutable_valid();
+    
+    int num_weights = output_channels * (kernel_channels / nGroups) * kernel_height * kernel_width;
+    for (int i = 0; i < num_weights; i++) {
+//        params->mutable_weights()->add_floatvalue(1.0);
+        params->mutable_weights()->set_float16value(std::string(num_weights*2, 'a'));
+    }
+    
+    for (int i = 0; i < output_channels; i++) {
+//        params->mutable_bias()->add_floatvalue(1.0);
+        params->mutable_bias()->set_float16value(std::string(output_channels*2, 'b'));
+    }
+    
+    // Not specifying the right number of weights should be invalid
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+
+    Model mlmodel = Model(m1);
+    
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION);
+    
+    return 0;
+    
+}
+
+
+
+
+#pragma clang diagnostic pop
 

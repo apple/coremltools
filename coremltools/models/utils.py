@@ -89,6 +89,281 @@ def load_spec(filename):
         return spec
 
 
+def _get_nn_layers(spec):
+    """
+    Returns a list of neural network layers if the model contains any.
+
+    Parameters
+    ----------
+    spec: Model_pb
+        A model protobuf specification.
+
+    Returns
+    -------
+    [NN layer]
+        list of all layers (including layers from elements of a pipeline
+
+    """
+
+    layers = []
+    if spec.WhichOneof('Type') == 'pipeline':
+        layers = []
+        for model_spec in spec.pipeline.models:
+            layers = layers + _get_nn_layers(model_spec)
+
+    elif spec.WhichOneof('Type') in ['pipelineClassifier',
+                                        'pipelineRegressor']:
+        layers = []
+        for model_spec in spec.pipeline.models:
+            layers = layers + _get_nn_layers(model_spec)
+
+    elif spec.neuralNetwork.layers:
+        layers = spec.neuralNetwork.layers
+    elif spec.neuralNetworkClassifier.layers:
+        layers = spec.neuralNetworkClassifier.layers
+    elif spec.neuralNetworkRegressor.layers:
+        layers = spec.neuralNetworkRegressor.layers
+
+    outlayers = [layer for layer in layers]
+
+    return outlayers
+
+
+def _fp32_to_reversed_fp16_byte_array(fp32_arr):
+    raw_fp16 = _np.float16(fp32_arr)
+    x = ''
+    for fp16 in raw_fp16:
+        all_bytes = _np.fromstring(fp16.tobytes(), dtype='int8')
+        x += all_bytes[1].tobytes()
+        x += all_bytes[0].tobytes()
+    return x
+
+
+def _fp32_to_fp16_byte_array(fp32_arr):
+    if _np.amax(fp32_arr) >= 65504 or _np.amin(fp32_arr) <= -65504:
+        raise Exception('Model cannot be converted as '
+                        'it has weights that cannot be represented in '
+                        'half precision.\n')
+
+    import sys
+    if sys.byteorder == 'little':
+        return _np.float16(fp32_arr).tobytes()
+    else:
+        return _fp32_to_reversed_fp16_byte_array(fp32_arr)
+
+
+def _wp_to_fp16wp(wp):
+    assert wp
+    # If the float32 field is empty do nothing.
+    if len(wp.floatValue) == 0:
+        return
+    wp.float16Value = _fp32_to_fp16_byte_array(wp.floatValue)
+    del wp.floatValue[:]
+
+
+def _convert_nn_spec_to_half_precision(spec):
+    ignored_layers = [
+        'pooling', 'mvn', 'l2normalize', 'softmax',
+        'lrn', 'crop', 'padding', 'upsample', 'unary', 'add',
+        'multiply', 'average', 'max', 'min', 'dot', 'reduce',
+        'reshape', 'flatten', 'permute', 'concat', 'split',
+        'sequenceRepeat', 'reorganizeData', 'slice', 'custom'
+    ]
+
+    quantized_layers = [
+        'convolution', 'innerProduct', 'embedding',
+        'batchnorm', 'scale', 'bias', 'loadConstant',
+        'simpleRecurrent', 'gru', 'uniDirectionalLSTM',
+        'biDirectionalLSTM'
+    ]
+
+    from coremltools import _MINIMUM_FP16_SPEC_VERSION
+    spec.specificationVersion = max(_MINIMUM_FP16_SPEC_VERSION, spec.specificationVersion)
+
+    layers = _get_nn_layers(spec)
+
+    if not layers:
+        raise Exception("Half precision conversion only supported for "
+                        "neural network models with layers")
+
+    for layer in layers:
+        layer_type = layer.WhichOneof('layer')
+
+        if layer_type in ignored_layers:
+            continue
+
+        # Convolution
+        if layer_type == 'convolution':
+            _wp_to_fp16wp(layer.convolution.weights)
+            if layer.convolution.hasBias:
+                _wp_to_fp16wp(layer.convolution.bias)
+
+        # Batchnorm
+        elif layer_type == 'batchnorm':
+            _wp_to_fp16wp(layer.batchnorm.gamma)
+            _wp_to_fp16wp(layer.batchnorm.beta)
+            _wp_to_fp16wp(layer.batchnorm.mean)
+            _wp_to_fp16wp(layer.batchnorm.variance)
+
+        # InnerProduct
+        elif layer_type == 'innerProduct':
+            _wp_to_fp16wp(layer.innerProduct.weights)
+            if layer.innerProduct.hasBias:
+                _wp_to_fp16wp(layer.innerProduct.bias)
+
+        # Embedding layer
+        elif layer_type == 'embedding':
+            _wp_to_fp16wp(layer.embedding.weights)
+            if layer.embedding.hasBias:
+                _wp_to_fp16wp(layer.embedding.bias)
+
+        # Scale layer
+        elif layer_type == 'scale':
+            _wp_to_fp16wp(layer.scale.scale)
+            if layer.scale.hasBias:
+                _wp_to_fp16wp(layer.scale.bias)
+
+        # Bias layer
+        elif layer_type == 'bias':
+            _wp_to_fp16wp(layer.bias.bias)
+
+        # LoadConstant layer
+        elif layer_type == 'loadConstant':
+            _wp_to_fp16wp(layer.loadConstant.data)
+
+        # Activation layer
+        elif layer_type == 'activation':
+            activation_type = layer.activation.WhichOneof('NonlinearityType')
+            if activation_type == 'PReLU':
+                _wp_to_fp16wp(layer.activation.PReLU.alpha)
+            elif activation_type == 'parametricSoftplus':
+                _wp_to_fp16wp(layer.activation.parametricSoftplus.alpha)
+                _wp_to_fp16wp(layer.activation.parametricSoftplus.beta)
+
+        # Simple Recurrent
+        elif layer_type == 'simpleRecurrent':
+            _wp_to_fp16wp(layer.simpleRecurrent.weightMatrix)
+            _wp_to_fp16wp(layer.simpleRecurrent.recursionMatrix)
+            if layer.simpleRecurrent.hasBiasVector:
+                _wp_to_fp16wp(layer.simpleRecurrent.biasVector)
+
+        # GRU
+        elif layer_type == 'gru':
+            # Weight Matrix
+            _wp_to_fp16wp(layer.gru.updateGateWeightMatrix)
+            _wp_to_fp16wp(layer.gru.resetGateWeightMatrix)
+            _wp_to_fp16wp(layer.gru.outputGateWeightMatrix)
+
+            # Recursion Weights
+            _wp_to_fp16wp(layer.gru.updateGateRecursionMatrix)
+            _wp_to_fp16wp(layer.gru.resetGateRecursionMatrix)
+            _wp_to_fp16wp(layer.gru.outputGateRecursionMatrix)
+
+            if layer.gru.hasBiasVectors:
+                _wp_to_fp16wp(layer.gru.updateGateBiasVector)
+                _wp_to_fp16wp(layer.gru.resetGateBiasVector)
+                _wp_to_fp16wp(layer.gru.outputGateBiasVector)
+
+        # LSTM Layers
+        elif layer_type in ['uniDirectionalLSTM', 'biDirectionalLSTM']:
+
+            def _lstmwp_to_fp16_lstmwp(lstm_wp, has_peephole=True):
+                assert lstm_wp
+                _wp_to_fp16wp(lstm_wp.inputGateWeightMatrix)
+                _wp_to_fp16wp(lstm_wp.forgetGateWeightMatrix)
+                _wp_to_fp16wp(lstm_wp.blockInputWeightMatrix)
+                _wp_to_fp16wp(lstm_wp.outputGateWeightMatrix)
+
+                _wp_to_fp16wp(lstm_wp.inputGateRecursionMatrix)
+                _wp_to_fp16wp(lstm_wp.forgetGateRecursionMatrix)
+                _wp_to_fp16wp(lstm_wp.blockInputRecursionMatrix)
+                _wp_to_fp16wp(lstm_wp.outputGateRecursionMatrix)
+
+                _wp_to_fp16wp(lstm_wp.inputGateBiasVector)
+                _wp_to_fp16wp(lstm_wp.forgetGateBiasVector)
+                _wp_to_fp16wp(lstm_wp.blockInputBiasVector)
+                _wp_to_fp16wp(lstm_wp.outputGateBiasVector)
+
+                if has_peephole:
+                    _wp_to_fp16wp(lstm_wp.inputGatePeepholeVector)
+                    _wp_to_fp16wp(lstm_wp.forgetGatePeepholeVector)
+                    _wp_to_fp16wp(lstm_wp.outputGatePeepholeVector)
+
+            if layer_type == 'uniDirectionalLSTM':
+                _lstmwp_to_fp16_lstmwp(
+                    lstm_wp=layer.uniDirectionalLSTM.weightParams,
+                    has_peephole=layer.uniDirectionalLSTM.params.hasPeepholeVectors
+                )
+            elif layer_type == 'biDirectionalLSTM':
+                for lstm_wp in layer.biDirectionalLSTM.weightParams:
+                    _lstmwp_to_fp16_lstmwp(
+                        lstm_wp=lstm_wp,
+                        has_peephole=layer.biDirectionalLSTM.params.hasPeepholeVectors
+                    )
+
+        elif layer_type == 'custom':
+            print ('Skipping custom layer {}. Weights for this layer need to'
+                   'be converted manually'.format(layer.name))
+            continue
+
+        elif layer_type in quantized_layers:
+            raise Exception('Half precision for ' + layer_type +
+                            ' not yet implemented\n')
+        else:
+            raise Exception('Unknown layer ' + layer_type)
+
+    return spec
+
+
+def convert_neural_network_spec_weights_to_fp16(fp_spec):
+    nn_model_types = ['neuralNetwork', 'neuralNetworkClassifier',
+                      'neuralNetworkRegressor']
+
+    # Neural network models
+    if fp_spec.WhichOneof('Type') in nn_model_types:
+        return _convert_nn_spec_to_half_precision(fp_spec)
+
+    # Recursively convert all pipeline models
+    elif fp_spec.WhichOneof('Type') == 'pipeline':
+        for model_spec in fp_spec.pipeline.models:
+            convert_neural_network_spec_weights_to_fp16(model_spec)
+
+    elif fp_spec.WhichOneof('Type') in ['pipelineClassifier',
+                                        'pipelineRegressor']:
+        convert_neural_network_spec_weights_to_fp16(fp_spec.pipeline)
+
+    return fp_spec
+
+
+def convert_neural_network_weights_to_fp16(full_precision_model):
+    """
+    Utility function to convert a full precision (float) MLModel to a
+    half precision MLModel (float16).
+
+    Parameter
+    ----------
+    full_precision_model: MLModel
+        Model which will be converted to half precision. Currently conversion
+        for only neural network models is supported. If a pipeline model is
+        passed in then all embedded neural network models embedded within
+        will be converted.
+
+    Returns
+    -------
+    model: MLModel
+        The converted half precision MLModel
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        >>> half_precision_model =  coremltools.utils.convert_neural_network_weights_to_fp16(model)
+
+    """
+    spec = full_precision_model.get_spec()
+    return _get_model(convert_neural_network_spec_weights_to_fp16(spec))
+
+
 def _get_model(spec):
     """
     Utility to get the model and the data.
@@ -324,7 +599,7 @@ def rename_feature(spec, current_name, new_name, rename_inputs=True,
 
     if not rename_inputs and not rename_outputs:
         return
-    
+
     changed_input = False
     changed_output = False
 
@@ -619,3 +894,103 @@ def visualize_spec(spec, port=None):
     with open('{}/model.json'.format(web_dir), 'w') as file:
         _json.dump(cy_data, file)
     _start_server(port, web_dir)
+
+
+def has_custom_layer(spec):
+    """
+
+    Returns true if the given protobuf specification has a custom layer, and false otherwise.
+
+    Parameters
+    ----------
+    spec: mlmodel spec
+
+    Returns
+    -------
+
+    True if the protobuf specification contains a neural network with a custom layer, False otherwise.
+
+    """
+
+    layers = _get_nn_layers(spec)
+    for layer in layers:
+        if layer.WhichOneof('layer') == 'custom':
+            return True
+
+    return False
+
+
+def get_custom_layer_names(spec):
+    """
+
+    Returns a list of className fields which appear in the given protobuf spec
+
+    Parameters
+    ----------
+    spec: mlmodel spec
+
+    Returns
+    -------
+
+    set(str) A set of unique className fields of custom layers that appear in the model.
+
+    """
+    layers = _get_nn_layers(spec)
+    layers_out = set()
+    for layer in layers:
+        if (layer.WhichOneof('layer') == 'custom'):
+            layers_out.add(layer.custom.className)
+
+    return layers_out
+
+
+def get_custom_layers(spec):
+    """
+
+    Returns a list of all neural network custom layers in the spec.
+
+    Parameters
+    ----------
+    spec: mlmodel spec
+
+    Returns
+    -------
+
+    [NN layer] A list of custom layer implementations
+
+    """
+    layers = _get_nn_layers(spec)
+    layers_out = []
+    for layer in layers:
+        if (layer.WhichOneof('layer') == 'custom'):
+            layers_out.append(layer)
+
+    return layers_out
+
+
+def replace_custom_layer_name(spec, oldname, newname):
+    """
+
+    Substitutes newname for oldname in the className field of custom layers. If there are no custom layers, or no
+    layers with className=oldname, then the spec is unchanged.
+
+    Parameters
+    ----------
+    spec: mlmodel spec
+
+    oldname: str The custom layer className to be replaced.
+
+    newname: str The new className value to replace oldname
+
+    Returns
+    -------
+
+    An mlmodel spec.
+
+    """
+    layers = get_custom_layers(spec)
+    for layer in layers:
+        if layer.custom.className == oldname:
+            layer.custom.className = newname
+
+

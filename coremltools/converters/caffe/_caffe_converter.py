@@ -4,10 +4,11 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import sys as _sys
+from ...models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, _VALID_MLMODEL_PRECISION_TYPES
 
 def convert(model, image_input_names=[], is_bgr=False,
             red_bias=0.0, blue_bias=0.0, green_bias=0.0, gray_bias=0.0,
-            image_scale=1.0, class_labels=None, predicted_feature_name=None):
+            image_scale=1.0, class_labels=None, predicted_feature_name=None, model_precision=_MLMODEL_FULL_PRECISION):
     """
     Convert a Caffe model to Core ML format.
 
@@ -76,6 +77,10 @@ def convert(model, image_input_names=[], is_bgr=False,
     predicted_feature_name: str
         Name of the output feature for the class labels exposed in the Core ML
         model (applies to classifiers only). Defaults to 'classLabel'
+
+    model_precision: str
+        Precision at which model will be saved. Currently full precision (float) and half precision
+        (float16) models are supported. Defaults to '_MLMODEL_FULL_PRECISION' (full precision).
 
     Returns
     -------
@@ -164,12 +169,24 @@ def convert(model, image_input_names=[], is_bgr=False,
 
     """
     from ...models import MLModel
+    from ...models.utils import convert_neural_network_weights_to_fp16 as convert_neural_network_weights_to_fp16
+
+    if model_precision not in _VALID_MLMODEL_PRECISION_TYPES:
+        raise RuntimeError('Model precision {} is not valid'.format(model_precision))
+
     import tempfile
+
     model_path = tempfile.mktemp()
-    spec = _export(model_path, model, image_input_names, is_bgr, red_bias, blue_bias,
+    _export(model_path, model, image_input_names, is_bgr, red_bias,
+            blue_bias,
             green_bias, gray_bias, image_scale, class_labels,
             predicted_feature_name)
-    return MLModel(model_path)
+    model = MLModel(model_path)
+
+    if model_precision == _MLMODEL_HALF_PRECISION and model is not None:
+        model = convert_neural_network_weights_to_fp16(model)
+
+    return model
 
 
 def _export(filename, model, image_input_names=[], is_bgr=False,

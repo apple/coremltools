@@ -15,6 +15,8 @@ namespace CoreML {
     
     Model::Model(const Specification::Model& proto) {
         m_spec = std::make_shared<Specification::Model>(proto);
+        // We need to check this here because the proto could be overly strict
+        downgradeSpecificationVersion();
     }
     
     Model::Model(const std::string& description)
@@ -117,18 +119,28 @@ namespace CoreML {
         return load(in, out);
     }
     
+    void Model::downgradeSpecificationVersion() {
+        if (!(hasCustomLayer(*m_spec) || hasfp16Weights(*m_spec))) {
+            // If there are no custom layers or fp16 weights, then the version 1 compiler can still
+            // process the model
+            m_spec->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS11);
+        }
+    }
+    
     Result Model::save(std::ostream& out) {
         if (!out.good()) {
             return Result(ResultType::UNABLE_TO_OPEN_FILE,
                           "unable to open file for write");
         }
 
+        downgradeSpecificationVersion();
+
         // validate on save
         Result r = validate();
         if (!r.good()) {
             return r;
         }
-
+        
         return saveSpecification(*m_spec, out);
     }
     

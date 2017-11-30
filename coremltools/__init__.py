@@ -22,8 +22,14 @@ format. In particular, it can be used to:
 For more information: http://developer.apple.com/documentation/coreml
 """
 
-# File format versions
+# This is the basic Core ML specification format understood by iOS 11.0
 SPECIFICATION_VERSION = 1
+
+# New versions for iOS 11.2 features. Models which use these features should have these
+# versions, but models created from this coremltools which do not use the features can
+# still have the basic version.
+_MINIMUM_CUSTOM_LAYER_SPEC_VERSION = 2
+_MINIMUM_FP16_SPEC_VERSION = 2
 
 # expose sub packages as directories
 from . import converters

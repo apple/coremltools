@@ -14,3 +14,4 @@ from . import neural_network
 from . import _interface_management
 
 from .model import MLModel
+from .model import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, _VALID_MLMODEL_PRECISION_TYPES

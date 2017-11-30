@@ -8,8 +8,8 @@ import json
 import numpy as np
 import math
 from coremltools.converters import caffe as caffe_converter
-nets_path = os.environ["CAFFE_MODELS_PATH"]
-nets_path = nets_path + '/'
+nets_path = os.getenv('CAFFE_MODELS_PATH', '')
+nets_path = nets_path + '/' if nets_path else ''
 import coremltools
 import pytest
 
@@ -111,6 +111,8 @@ def evaluation_data(net_name, layer_type, data_files):
         return input_data, output_data
 
 
+@unittest.skipIf(not nets_path, 'Caffe nets path environment variable not '
+                                'found. Skipping all caffe nose tests')
 class CaffeLayers(unittest.TestCase):
     """
     Unit test case for caffe layers
