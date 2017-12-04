@@ -26,6 +26,7 @@ include_directories(
   deps/caffe/include/caffe/proto
   deps/protobuf/src
   deps/pybind11/include
+  mlmodel/src
 )
 
 set(CMAKE_CXX_FLAGS " \

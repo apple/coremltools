@@ -2204,7 +2204,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         for param, model in args:
             self._run_test(model, param, model_precision=model_precision)
 
-    @attr('slow')
+    @pytest.mark.keras2
     def test_conv_layer_params_half_precision(self):
         return self.test_conv_layer_params(model_precision=_MLMODEL_HALF_PRECISION)
 
