@@ -9,7 +9,16 @@ import sys as _sys
 import tempfile as _tempfile
 
 from .utils import save_spec as _save_spec
+from .utils import load_spec as _load_spec
+from .utils import has_custom_layer as _has_custom_layer
 from ..proto import Model_pb2 as _Model_pb2
+
+
+_MLMODEL_FULL_PRECISION = 'float32'
+_MLMODEL_HALF_PRECISION = 'float16'
+
+_VALID_MLMODEL_PRECISION_TYPES = [_MLMODEL_FULL_PRECISION,
+                                  _MLMODEL_HALF_PRECISION]
 
 
 class _FeatureDescription(object):
@@ -52,6 +61,19 @@ def _get_proxy_from_spec(filename):
         _MLModelProxy = None
 
     if _MLModelProxy:
+        # check if the version is supported
+        engineVersion = _MLModelProxy.maximum_supported_specification_version()
+        spec = _load_spec(filename)
+        if spec.specificationVersion > engineVersion:
+            # in this case the specification is a newer kind of .mlmodel than this version of the engine can support
+            # so we'll not try to have a proxy object
+            return None
+
+        # check if there are custom layers
+        if _has_custom_layer(spec):
+            # custom layers can't be supported directly by compiling and loading the model here
+            return None
+
         return _MLModelProxy(filename)
     else:
         return None
@@ -237,12 +259,27 @@ class MLModel(object):
         >>> data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
         >>> predictions = model.predict(data)
         """
+
         if self.__proxy__:
             return self.__proxy__.predict(data,useCPUOnly)
         else:
             if _sys.platform != 'darwin' or float('.'.join(_platform.mac_ver()[0].split('.')[:2])) < 10.13:
-                raise Exception('Model prediction is only supported on macOS version 10.13.')
+                raise Exception('Model prediction is only supported on macOS version 10.13 or later.')
             if _sys.version_info.major >= 3:
                 raise Exception('Model prediction is currently only supported in Python 2.7')
+
+            try:
+                from ..libcoremlpython import _MLModelProxy
+            except:
+                _MLModelProxy = None
+
+            if not _MLModelProxy:
+                raise Exception('Unable to load CoreML.framework. Cannot make predictions.')
+            elif _MLModelProxy.maximum_supported_specification_version() < self._spec.specificationVersion:
+                raise Exception('The specification has version ' + str(self._spec.specificationVersion)
+                                + ' but the Core ML framework version installed only supports Core ML model specification version '
+                                + str(engineVersion) + ' or older.')
+            elif _has_custom_layer(self._spec):
+                raise Exception('This model contains a custom neural network layer, so predict is not supported.')
             else:
                 raise Exception('Unable to load CoreML.framework. Cannot make predictions.')

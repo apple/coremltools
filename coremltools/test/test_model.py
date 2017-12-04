@@ -10,6 +10,7 @@ from coremltools.proto import Model_pb2
 from coremltools.models.utils import rename_feature, save_spec
 from coremltools.models import MLModel
 
+
 class MLModelTest(unittest.TestCase):
 
     @classmethod
@@ -116,4 +117,16 @@ class MLModelTest(unittest.TestCase):
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
         self.assertEquals(preds['output'], 3.1)
+
+    def test_future_version(self):
+        self.spec.specificationVersion = 10000
+        model = MLModel(self.spec)
+        # this model should exist, but throw an exception when we try to use predict because the engine doesn't support
+        # this model version
+        self.assertIsNotNone(model)
+        with self.assertRaises(Exception):
+            model.predict(1)
+        self.spec.specificationVersion = 1
+
+
 

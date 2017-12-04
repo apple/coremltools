@@ -1,6 +1,7 @@
 from . import _utils
 import keras as _keras
 import numpy as _np
+from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 
 
 def _get_recurrent_activation_name_from_keras(activation):
@@ -1125,6 +1126,7 @@ def convert_repeat_vector(builder, layer, input_names, output_names, keras_layer
             nrep = keras_layer.n,
             input_name = input_name,
             output_name = output_name)
+
 
 def default_skip(builder, layer, input_names, output_names, keras_layer):
     """ Layers that can be skipped (because they are train time only. """

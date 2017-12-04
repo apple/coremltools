@@ -151,6 +151,13 @@ public:
      */
     virtual Result addOutput(const std::string& outputName, FeatureType outputType);
     
+    /**
+     * If a model does not use features from later specification versions, this will
+     * set the spec version so that the model can be executed on older versions of
+     * Core ML.
+     */
+    void downgradeSpecificationVersion();
+    
     // TODO -- This seems like a giant hack. This is leaking abstractions.
     const Specification::Model& getProto() const;
     Specification::Model& getProto();

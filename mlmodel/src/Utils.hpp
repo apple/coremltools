@@ -15,6 +15,9 @@
 
 namespace CoreML {
 
+    // This is the type used internally in Espresso for float 16
+    typedef unsigned short float16;
+    
     // insert_or_assign not available until C++17
     template<typename K, typename V>
     inline void insert_or_assign(std::unordered_map<K, V>& map, const K& k, const V& v) {
@@ -76,6 +79,36 @@ namespace CoreML {
         formatObj = m.getProto();
         return Result();
     }
+    
+    // Helper functions for determining model version
+    bool hasCustomLayer(Specification::Model& model);
+    
+    // Returns a vector of pairs of strings, one pair per custom layer instance
+    // TODO: make it a set, and only display the custom layer type once?
+    std::vector<std::pair<std::string, std::string> > getCustomLayerNamesAndDescriptions(const Specification::Model& model);
 
+    bool hasfp16Weights(Specification::Model& model);
+    
+    // Returns the lowest precision weight type among the weights in the layer
+    WeightParamType getLSTMWeightParamType(const Specification::LSTMWeightParams& params);
+    WeightParamType getWeightParamType(const Specification::NeuralNetworkLayer& layer);
+
+    static inline std::vector<float16> readFloat16Weights(const Specification::WeightParams& weights) {
+
+        std::string weight_bytes = weights.float16value();
+        std::vector<float16> output(weight_bytes.size() / 2);
+        
+        for (size_t i = 0; i < weight_bytes.size(); i+=2) {
+
+            float16 out = static_cast<float16>((static_cast<float16>(weight_bytes[i]) << 8)) | static_cast<float16>(weight_bytes[i+1]);
+            output[i/2] = out;
+            
+        }
+        return output;
+    }
+    
 }
+
+google::protobuf::RepeatedPtrField<CoreML::Specification::NeuralNetworkLayer> const *getNNSpec(const CoreML::Specification::Model& model);
+
 #endif

@@ -2,6 +2,7 @@
 #import "CoreMLPythonArray.h"
 #import "CoreMLPython.h"
 #import "CoreMLPythonUtils.h"
+#import "Globals.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
@@ -71,12 +72,19 @@ py::dict Model::predict(const py::dict& input, bool useCPUOnly) {
     }
 }
 
+int32_t Model::maximumSupportedSpecificationVersion() {
+    // Does this get the one from the public tools or the one from the framework in the OS?
+    // Looks like it's the OS framework version, which means this will work the way I want 
+    return CoreML::MLMODEL_SPECIFICATION_VERSION;
+}
+
 PYBIND11_PLUGIN(libcoremlpython) {
     py::module m("libcoremlpython", "CoreML.Framework Python bindings");
 
     py::class_<Model>(m, "_MLModelProxy")
         .def(py::init<const std::string&>())
-        .def("predict", &Model::predict);
+        .def("predict", &Model::predict)
+        .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);
 
     return m.ptr();
 }

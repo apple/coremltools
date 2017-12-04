@@ -107,6 +107,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::GRULayerParams* gru_;
   const ::CoreML::Specification::UniDirectionalLSTMLayerParams* unidirectionallstm_;
   const ::CoreML::Specification::BiDirectionalLSTMLayerParams* bidirectionallstm_;
+  const ::CoreML::Specification::CustomLayerParams* custom_;
 } _NeuralNetworkLayer_default_instance_;
 class BorderAmounts_EdgeSizesDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BorderAmounts_EdgeSizes> {
 } _BorderAmounts_EdgeSizes_default_instance_;
@@ -211,6 +212,18 @@ class UniDirectionalLSTMLayerParamsDefaultTypeInternal : public ::google::protob
 } _UniDirectionalLSTMLayerParams_default_instance_;
 class BiDirectionalLSTMLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BiDirectionalLSTMLayerParams> {
 } _BiDirectionalLSTMLayerParams_default_instance_;
+class CustomLayerParams_CustomLayerParamValueDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<CustomLayerParams_CustomLayerParamValue> {
+  public:
+  double doublevalue_;
+  ::google::protobuf::internal::ArenaStringPtr stringvalue_;
+  ::google::protobuf::int32 intvalue_;
+  ::google::protobuf::int64 longvalue_;
+  bool boolvalue_;
+} _CustomLayerParams_CustomLayerParamValue_default_instance_;
+class CustomLayerParams_ParametersEntryDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<CustomLayerParams::CustomLayerParams_ParametersEntry> {
+} _CustomLayerParams_ParametersEntry_default_instance_;
+class CustomLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<CustomLayerParams> {
+} _CustomLayerParams_default_instance_;
 class NeuralNetworkClassifierDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NeuralNetworkClassifier> {
   public:
   const ::CoreML::Specification::StringVector* stringclasslabels_;
@@ -232,6 +245,9 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
     TableStruct::schema[] = {
+  { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
@@ -368,6 +384,8 @@ void TableStruct::Shutdown() {
   _LSTMWeightParams_default_instance_.Shutdown();
   _UniDirectionalLSTMLayerParams_default_instance_.Shutdown();
   _BiDirectionalLSTMLayerParams_default_instance_.Shutdown();
+  _CustomLayerParams_CustomLayerParamValue_default_instance_.Shutdown();
+  _CustomLayerParams_default_instance_.Shutdown();
   _NeuralNetworkClassifier_default_instance_.Shutdown();
   _NeuralNetworkRegressor_default_instance_.Shutdown();
 }
@@ -442,6 +460,9 @@ void TableStruct::InitDefaultsImpl() {
   _LSTMWeightParams_default_instance_.DefaultConstruct();
   _UniDirectionalLSTMLayerParams_default_instance_.DefaultConstruct();
   _BiDirectionalLSTMLayerParams_default_instance_.DefaultConstruct();
+  _CustomLayerParams_CustomLayerParamValue_default_instance_.DefaultConstruct();
+  _CustomLayerParams_ParametersEntry_default_instance_.DefaultConstruct();
+  _CustomLayerParams_default_instance_.DefaultConstruct();
   _NeuralNetworkClassifier_default_instance_.DefaultConstruct();
   _NeuralNetworkRegressor_default_instance_.DefaultConstruct();
   _ActivationPReLU_default_instance_.get_mutable()->alpha_ = const_cast< ::CoreML::Specification::WeightParams*>(
@@ -546,6 +567,8 @@ void TableStruct::InitDefaultsImpl() {
       ::CoreML::Specification::LSTMWeightParams::internal_default_instance());
   _BiDirectionalLSTMLayerParams_default_instance_.get_mutable()->params_ = const_cast< ::CoreML::Specification::LSTMParams*>(
       ::CoreML::Specification::LSTMParams::internal_default_instance());
+  _CustomLayerParams_ParametersEntry_default_instance_.get_mutable()->set_default_instance(_CustomLayerParams_ParametersEntry_default_instance_.get_mutable());
+  _CustomLayerParams_ParametersEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
 }
 
 void InitDefaults() {
@@ -6027,6 +6050,7 @@ const int NeuralNetworkLayer::kSimpleRecurrentFieldNumber;
 const int NeuralNetworkLayer::kGruFieldNumber;
 const int NeuralNetworkLayer::kUniDirectionalLSTMFieldNumber;
 const int NeuralNetworkLayer::kBiDirectionalLSTMFieldNumber;
+const int NeuralNetworkLayer::kCustomFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NeuralNetworkLayer::NeuralNetworkLayer()
@@ -6192,6 +6216,10 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
     }
     case kBiDirectionalLSTM: {
       mutable_bidirectionallstm()->::CoreML::Specification::BiDirectionalLSTMLayerParams::MergeFrom(from.bidirectionallstm());
+      break;
+    }
+    case kCustom: {
+      mutable_custom()->::CoreML::Specification::CustomLayerParams::MergeFrom(from.custom());
       break;
     }
     case LAYER_NOT_SET: {
@@ -6382,6 +6410,10 @@ void NeuralNetworkLayer::clear_layer() {
     }
     case kBiDirectionalLSTM: {
       delete layer_.bidirectionallstm_;
+      break;
+    }
+    case kCustom: {
+      delete layer_.custom_;
       break;
     }
     case LAYER_NOT_SET: {
@@ -6892,6 +6924,18 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.CustomLayerParams custom = 500;
+      case 500: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(4002u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_custom()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -7163,6 +7207,12 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
   if (has_bidirectionallstm()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       430, *layer_.bidirectionallstm_, output);
+  }
+
+  // .CoreML.Specification.CustomLayerParams custom = 500;
+  if (has_custom()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      500, *layer_.custom_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NeuralNetworkLayer)
@@ -7448,6 +7498,13 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.bidirectionallstm_);
       break;
     }
+    // .CoreML.Specification.CustomLayerParams custom = 500;
+    case kCustom: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.custom_);
+      break;
+    }
     case LAYER_NOT_SET: {
       break;
     }
@@ -7620,6 +7677,10 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
     }
     case kBiDirectionalLSTM: {
       mutable_bidirectionallstm()->::CoreML::Specification::BiDirectionalLSTMLayerParams::MergeFrom(from.bidirectionallstm());
+      break;
+    }
+    case kCustom: {
+      mutable_custom()->::CoreML::Specification::CustomLayerParams::MergeFrom(from.custom());
       break;
     }
     case LAYER_NOT_SET: {
@@ -9578,6 +9639,54 @@ void NeuralNetworkLayer::set_allocated_bidirectionallstm(::CoreML::Specification
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.biDirectionalLSTM)
 }
 
+// .CoreML.Specification.CustomLayerParams custom = 500;
+bool NeuralNetworkLayer::has_custom() const {
+  return layer_case() == kCustom;
+}
+void NeuralNetworkLayer::set_has_custom() {
+  _oneof_case_[0] = kCustom;
+}
+void NeuralNetworkLayer::clear_custom() {
+  if (has_custom()) {
+    delete layer_.custom_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::CustomLayerParams& NeuralNetworkLayer::custom() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.custom)
+  return has_custom()
+      ? *layer_.custom_
+      : ::CoreML::Specification::CustomLayerParams::default_instance();
+}
+::CoreML::Specification::CustomLayerParams* NeuralNetworkLayer::mutable_custom() {
+  if (!has_custom()) {
+    clear_layer();
+    set_has_custom();
+    layer_.custom_ = new ::CoreML::Specification::CustomLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.custom)
+  return layer_.custom_;
+}
+::CoreML::Specification::CustomLayerParams* NeuralNetworkLayer::release_custom() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.custom)
+  if (has_custom()) {
+    clear_has_layer();
+    ::CoreML::Specification::CustomLayerParams* temp = layer_.custom_;
+    layer_.custom_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_custom(::CoreML::Specification::CustomLayerParams* custom) {
+  clear_layer();
+  if (custom) {
+    set_has_custom();
+    layer_.custom_ = custom;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.custom)
+}
+
 bool NeuralNetworkLayer::has_layer() const {
   return layer_case() != LAYER_NOT_SET;
 }
@@ -10477,6 +10586,8 @@ void SamePadding::set_asymmetrymode(::CoreML::Specification::SamePadding_SamePad
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int WeightParams::kFloatValueFieldNumber;
+const int WeightParams::kFloat16ValueFieldNumber;
+const int WeightParams::kRawValueFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 WeightParams::WeightParams()
@@ -10493,10 +10604,20 @@ WeightParams::WeightParams(const WeightParams& from)
       floatvalue_(from.floatvalue_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
+  float16value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.float16value().size() > 0) {
+    float16value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.float16value_);
+  }
+  rawvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.rawvalue().size() > 0) {
+    rawvalue_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.rawvalue_);
+  }
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.WeightParams)
 }
 
 void WeightParams::SharedCtor() {
+  float16value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  rawvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   _cached_size_ = 0;
 }
 
@@ -10506,6 +10627,8 @@ WeightParams::~WeightParams() {
 }
 
 void WeightParams::SharedDtor() {
+  float16value_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  rawvalue_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 void WeightParams::SetCachedSize(int size) const {
@@ -10529,6 +10652,8 @@ WeightParams* WeightParams::New(::google::protobuf::Arena* arena) const {
 void WeightParams::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.WeightParams)
   floatvalue_.Clear();
+  float16value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  rawvalue_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
 bool WeightParams::MergePartialFromCodedStream(
@@ -10537,7 +10662,7 @@ bool WeightParams::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:CoreML.Specification.WeightParams)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(16383u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -10553,6 +10678,30 @@ bool WeightParams::MergePartialFromCodedStream(
           DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
                    float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
                  1, 10u, input, this->mutable_floatvalue())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bytes float16Value = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_float16value()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bytes rawValue = 30;
+      case 30: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(242u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_rawvalue()));
         } else {
           goto handle_unusual;
         }
@@ -10594,6 +10743,18 @@ void WeightParams::SerializeWithCachedSizes(
       this->floatvalue().data(), this->floatvalue_size(), output);
   }
 
+  // bytes float16Value = 2;
+  if (this->float16value().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      2, this->float16value(), output);
+  }
+
+  // bytes rawValue = 30;
+  if (this->rawvalue().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      30, this->rawvalue(), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.WeightParams)
 }
 
@@ -10616,6 +10777,20 @@ size_t WeightParams::ByteSizeLong() const {
     total_size += data_size;
   }
 
+  // bytes float16Value = 2;
+  if (this->float16value().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
+        this->float16value());
+  }
+
+  // bytes rawValue = 30;
+  if (this->rawvalue().size() > 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
+        this->rawvalue());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -10636,6 +10811,14 @@ void WeightParams::MergeFrom(const WeightParams& from) {
   (void) cached_has_bits;
 
   floatvalue_.MergeFrom(from.floatvalue_);
+  if (from.float16value().size() > 0) {
+
+    float16value_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.float16value_);
+  }
+  if (from.rawvalue().size() > 0) {
+
+    rawvalue_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.rawvalue_);
+  }
 }
 
 void WeightParams::CopyFrom(const WeightParams& from) {
@@ -10655,6 +10838,8 @@ void WeightParams::Swap(WeightParams* other) {
 }
 void WeightParams::InternalSwap(WeightParams* other) {
   floatvalue_.InternalSwap(&other->floatvalue_);
+  float16value_.Swap(&other->float16value_);
+  rawvalue_.Swap(&other->rawvalue_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -10693,6 +10878,112 @@ WeightParams::floatvalue() const {
 WeightParams::mutable_floatvalue() {
   // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.WeightParams.floatValue)
   return &floatvalue_;
+}
+
+// bytes float16Value = 2;
+void WeightParams::clear_float16value() {
+  float16value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& WeightParams::float16value() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.WeightParams.float16Value)
+  return float16value_.GetNoArena();
+}
+void WeightParams::set_float16value(const ::std::string& value) {
+  
+  float16value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.WeightParams.float16Value)
+}
+#if LANG_CXX11
+void WeightParams::set_float16value(::std::string&& value) {
+  
+  float16value_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.WeightParams.float16Value)
+}
+#endif
+void WeightParams::set_float16value(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  float16value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.WeightParams.float16Value)
+}
+void WeightParams::set_float16value(const void* value, size_t size) {
+  
+  float16value_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.WeightParams.float16Value)
+}
+::std::string* WeightParams::mutable_float16value() {
+  
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.WeightParams.float16Value)
+  return float16value_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* WeightParams::release_float16value() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.WeightParams.float16Value)
+  
+  return float16value_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void WeightParams::set_allocated_float16value(::std::string* float16value) {
+  if (float16value != NULL) {
+    
+  } else {
+    
+  }
+  float16value_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), float16value);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.float16Value)
+}
+
+// bytes rawValue = 30;
+void WeightParams::clear_rawvalue() {
+  rawvalue_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& WeightParams::rawvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.WeightParams.rawValue)
+  return rawvalue_.GetNoArena();
+}
+void WeightParams::set_rawvalue(const ::std::string& value) {
+  
+  rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.WeightParams.rawValue)
+}
+#if LANG_CXX11
+void WeightParams::set_rawvalue(::std::string&& value) {
+  
+  rawvalue_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.WeightParams.rawValue)
+}
+#endif
+void WeightParams::set_rawvalue(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.WeightParams.rawValue)
+}
+void WeightParams::set_rawvalue(const void* value, size_t size) {
+  
+  rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.WeightParams.rawValue)
+}
+::std::string* WeightParams::mutable_rawvalue() {
+  
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.WeightParams.rawValue)
+  return rawvalue_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* WeightParams::release_rawvalue() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.WeightParams.rawValue)
+  
+  return rawvalue_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void WeightParams::set_allocated_rawvalue(::std::string* rawvalue) {
+  if (rawvalue != NULL) {
+    
+  } else {
+    
+  }
+  rawvalue_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), rawvalue);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.rawValue)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -26169,6 +26460,1134 @@ const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::LSTMWeightP
 BiDirectionalLSTMLayerParams::weightparams() const {
   // @@protoc_insertion_point(field_list:CoreML.Specification.BiDirectionalLSTMLayerParams.weightParams)
   return weightparams_;
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int CustomLayerParams_CustomLayerParamValue::kDoubleValueFieldNumber;
+const int CustomLayerParams_CustomLayerParamValue::kStringValueFieldNumber;
+const int CustomLayerParams_CustomLayerParamValue::kIntValueFieldNumber;
+const int CustomLayerParams_CustomLayerParamValue::kLongValueFieldNumber;
+const int CustomLayerParams_CustomLayerParamValue::kBoolValueFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+CustomLayerParams_CustomLayerParamValue::CustomLayerParams_CustomLayerParamValue()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+}
+CustomLayerParams_CustomLayerParamValue::CustomLayerParams_CustomLayerParamValue(const CustomLayerParams_CustomLayerParamValue& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  clear_has_value();
+  switch (from.value_case()) {
+    case kDoubleValue: {
+      set_doublevalue(from.doublevalue());
+      break;
+    }
+    case kStringValue: {
+      set_stringvalue(from.stringvalue());
+      break;
+    }
+    case kIntValue: {
+      set_intvalue(from.intvalue());
+      break;
+    }
+    case kLongValue: {
+      set_longvalue(from.longvalue());
+      break;
+    }
+    case kBoolValue: {
+      set_boolvalue(from.boolvalue());
+      break;
+    }
+    case VALUE_NOT_SET: {
+      break;
+    }
+  }
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+}
+
+void CustomLayerParams_CustomLayerParamValue::SharedCtor() {
+  clear_has_value();
+  _cached_size_ = 0;
+}
+
+CustomLayerParams_CustomLayerParamValue::~CustomLayerParams_CustomLayerParamValue() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  SharedDtor();
+}
+
+void CustomLayerParams_CustomLayerParamValue::SharedDtor() {
+  if (has_value()) {
+    clear_value();
+  }
+}
+
+void CustomLayerParams_CustomLayerParamValue::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const CustomLayerParams_CustomLayerParamValue& CustomLayerParams_CustomLayerParamValue::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+CustomLayerParams_CustomLayerParamValue* CustomLayerParams_CustomLayerParamValue::New(::google::protobuf::Arena* arena) const {
+  CustomLayerParams_CustomLayerParamValue* n = new CustomLayerParams_CustomLayerParamValue;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void CustomLayerParams_CustomLayerParamValue::clear_value() {
+// @@protoc_insertion_point(one_of_clear_start:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  switch (value_case()) {
+    case kDoubleValue: {
+      // No need to clear
+      break;
+    }
+    case kStringValue: {
+      value_.stringvalue_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+      break;
+    }
+    case kIntValue: {
+      // No need to clear
+      break;
+    }
+    case kLongValue: {
+      // No need to clear
+      break;
+    }
+    case kBoolValue: {
+      // No need to clear
+      break;
+    }
+    case VALUE_NOT_SET: {
+      break;
+    }
+  }
+  _oneof_case_[0] = VALUE_NOT_SET;
+}
+
+
+void CustomLayerParams_CustomLayerParamValue::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  clear_value();
+}
+
+bool CustomLayerParams_CustomLayerParamValue::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(16383u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // double doubleValue = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(81u)) {
+          clear_value();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
+                 input, &value_.doublevalue_)));
+          set_has_doublevalue();
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string stringValue = 20;
+      case 20: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(162u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_stringvalue()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->stringvalue().data(), this->stringvalue().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 intValue = 30;
+      case 30: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(240u)) {
+          clear_value();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &value_.intvalue_)));
+          set_has_intvalue();
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int64 longValue = 40;
+      case 40: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(320u)) {
+          clear_value();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &value_.longvalue_)));
+          set_has_longvalue();
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool boolValue = 50;
+      case 50: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(400u)) {
+          clear_value();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &value_.boolvalue_)));
+          set_has_boolvalue();
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  return false;
+#undef DO_
+}
+
+void CustomLayerParams_CustomLayerParamValue::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // double doubleValue = 10;
+  if (has_doublevalue()) {
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(10, this->doublevalue(), output);
+  }
+
+  // string stringValue = 20;
+  if (has_stringvalue()) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->stringvalue().data(), this->stringvalue().length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      20, this->stringvalue(), output);
+  }
+
+  // int32 intValue = 30;
+  if (has_intvalue()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(30, this->intvalue(), output);
+  }
+
+  // int64 longValue = 40;
+  if (has_longvalue()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(40, this->longvalue(), output);
+  }
+
+  // bool boolValue = 50;
+  if (has_boolvalue()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(50, this->boolvalue(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+}
+
+size_t CustomLayerParams_CustomLayerParamValue::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  size_t total_size = 0;
+
+  switch (value_case()) {
+    // double doubleValue = 10;
+    case kDoubleValue: {
+      total_size += 1 + 8;
+      break;
+    }
+    // string stringValue = 20;
+    case kStringValue: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::StringSize(
+          this->stringvalue());
+      break;
+    }
+    // int32 intValue = 30;
+    case kIntValue: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(
+          this->intvalue());
+      break;
+    }
+    // int64 longValue = 40;
+    case kLongValue: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
+          this->longvalue());
+      break;
+    }
+    // bool boolValue = 50;
+    case kBoolValue: {
+      total_size += 2 + 1;
+      break;
+    }
+    case VALUE_NOT_SET: {
+      break;
+    }
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void CustomLayerParams_CustomLayerParamValue::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const CustomLayerParams_CustomLayerParamValue*>(&from));
+}
+
+void CustomLayerParams_CustomLayerParamValue::MergeFrom(const CustomLayerParams_CustomLayerParamValue& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  switch (from.value_case()) {
+    case kDoubleValue: {
+      set_doublevalue(from.doublevalue());
+      break;
+    }
+    case kStringValue: {
+      set_stringvalue(from.stringvalue());
+      break;
+    }
+    case kIntValue: {
+      set_intvalue(from.intvalue());
+      break;
+    }
+    case kLongValue: {
+      set_longvalue(from.longvalue());
+      break;
+    }
+    case kBoolValue: {
+      set_boolvalue(from.boolvalue());
+      break;
+    }
+    case VALUE_NOT_SET: {
+      break;
+    }
+  }
+}
+
+void CustomLayerParams_CustomLayerParamValue::CopyFrom(const CustomLayerParams_CustomLayerParamValue& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.CustomLayerParams.CustomLayerParamValue)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool CustomLayerParams_CustomLayerParamValue::IsInitialized() const {
+  return true;
+}
+
+void CustomLayerParams_CustomLayerParamValue::Swap(CustomLayerParams_CustomLayerParamValue* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void CustomLayerParams_CustomLayerParamValue::InternalSwap(CustomLayerParams_CustomLayerParamValue* other) {
+  std::swap(value_, other->value_);
+  std::swap(_oneof_case_[0], other->_oneof_case_[0]);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string CustomLayerParams_CustomLayerParamValue::GetTypeName() const {
+  return "CoreML.Specification.CustomLayerParams.CustomLayerParamValue";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// CustomLayerParams_CustomLayerParamValue
+
+// double doubleValue = 10;
+bool CustomLayerParams_CustomLayerParamValue::has_doublevalue() const {
+  return value_case() == kDoubleValue;
+}
+void CustomLayerParams_CustomLayerParamValue::set_has_doublevalue() {
+  _oneof_case_[0] = kDoubleValue;
+}
+void CustomLayerParams_CustomLayerParamValue::clear_doublevalue() {
+  if (has_doublevalue()) {
+    value_.doublevalue_ = 0;
+    clear_has_value();
+  }
+}
+double CustomLayerParams_CustomLayerParamValue::doublevalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.doubleValue)
+  if (has_doublevalue()) {
+    return value_.doublevalue_;
+  }
+  return 0;
+}
+void CustomLayerParams_CustomLayerParamValue::set_doublevalue(double value) {
+  if (!has_doublevalue()) {
+    clear_value();
+    set_has_doublevalue();
+  }
+  value_.doublevalue_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.doubleValue)
+}
+
+// string stringValue = 20;
+bool CustomLayerParams_CustomLayerParamValue::has_stringvalue() const {
+  return value_case() == kStringValue;
+}
+void CustomLayerParams_CustomLayerParamValue::set_has_stringvalue() {
+  _oneof_case_[0] = kStringValue;
+}
+void CustomLayerParams_CustomLayerParamValue::clear_stringvalue() {
+  if (has_stringvalue()) {
+    value_.stringvalue_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+    clear_has_value();
+  }
+}
+const ::std::string& CustomLayerParams_CustomLayerParamValue::stringvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+  if (has_stringvalue()) {
+    return value_.stringvalue_.GetNoArena();
+  }
+  return *&::google::protobuf::internal::GetEmptyStringAlreadyInited();
+}
+void CustomLayerParams_CustomLayerParamValue::set_stringvalue(const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+  if (!has_stringvalue()) {
+    clear_value();
+    set_has_stringvalue();
+    value_.stringvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  value_.stringvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+}
+#if LANG_CXX11
+void CustomLayerParams_CustomLayerParamValue::set_stringvalue(::std::string&& value) {
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+  if (!has_stringvalue()) {
+    clear_value();
+    set_has_stringvalue();
+    value_.stringvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  value_.stringvalue_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+}
+#endif
+void CustomLayerParams_CustomLayerParamValue::set_stringvalue(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  if (!has_stringvalue()) {
+    clear_value();
+    set_has_stringvalue();
+    value_.stringvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  value_.stringvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+}
+void CustomLayerParams_CustomLayerParamValue::set_stringvalue(const char* value, size_t size) {
+  if (!has_stringvalue()) {
+    clear_value();
+    set_has_stringvalue();
+    value_.stringvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  value_.stringvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+}
+::std::string* CustomLayerParams_CustomLayerParamValue::mutable_stringvalue() {
+  if (!has_stringvalue()) {
+    clear_value();
+    set_has_stringvalue();
+    value_.stringvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+  return value_.stringvalue_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* CustomLayerParams_CustomLayerParamValue::release_stringvalue() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+  if (has_stringvalue()) {
+    clear_has_value();
+    return value_.stringvalue_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  } else {
+    return NULL;
+  }
+}
+void CustomLayerParams_CustomLayerParamValue::set_allocated_stringvalue(::std::string* stringvalue) {
+  if (!has_stringvalue()) {
+    value_.stringvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  }
+  clear_value();
+  if (stringvalue != NULL) {
+    set_has_stringvalue();
+    value_.stringvalue_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+        stringvalue);
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.stringValue)
+}
+
+// int32 intValue = 30;
+bool CustomLayerParams_CustomLayerParamValue::has_intvalue() const {
+  return value_case() == kIntValue;
+}
+void CustomLayerParams_CustomLayerParamValue::set_has_intvalue() {
+  _oneof_case_[0] = kIntValue;
+}
+void CustomLayerParams_CustomLayerParamValue::clear_intvalue() {
+  if (has_intvalue()) {
+    value_.intvalue_ = 0;
+    clear_has_value();
+  }
+}
+::google::protobuf::int32 CustomLayerParams_CustomLayerParamValue::intvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.intValue)
+  if (has_intvalue()) {
+    return value_.intvalue_;
+  }
+  return 0;
+}
+void CustomLayerParams_CustomLayerParamValue::set_intvalue(::google::protobuf::int32 value) {
+  if (!has_intvalue()) {
+    clear_value();
+    set_has_intvalue();
+  }
+  value_.intvalue_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.intValue)
+}
+
+// int64 longValue = 40;
+bool CustomLayerParams_CustomLayerParamValue::has_longvalue() const {
+  return value_case() == kLongValue;
+}
+void CustomLayerParams_CustomLayerParamValue::set_has_longvalue() {
+  _oneof_case_[0] = kLongValue;
+}
+void CustomLayerParams_CustomLayerParamValue::clear_longvalue() {
+  if (has_longvalue()) {
+    value_.longvalue_ = GOOGLE_LONGLONG(0);
+    clear_has_value();
+  }
+}
+::google::protobuf::int64 CustomLayerParams_CustomLayerParamValue::longvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.longValue)
+  if (has_longvalue()) {
+    return value_.longvalue_;
+  }
+  return GOOGLE_LONGLONG(0);
+}
+void CustomLayerParams_CustomLayerParamValue::set_longvalue(::google::protobuf::int64 value) {
+  if (!has_longvalue()) {
+    clear_value();
+    set_has_longvalue();
+  }
+  value_.longvalue_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.longValue)
+}
+
+// bool boolValue = 50;
+bool CustomLayerParams_CustomLayerParamValue::has_boolvalue() const {
+  return value_case() == kBoolValue;
+}
+void CustomLayerParams_CustomLayerParamValue::set_has_boolvalue() {
+  _oneof_case_[0] = kBoolValue;
+}
+void CustomLayerParams_CustomLayerParamValue::clear_boolvalue() {
+  if (has_boolvalue()) {
+    value_.boolvalue_ = false;
+    clear_has_value();
+  }
+}
+bool CustomLayerParams_CustomLayerParamValue::boolvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.boolValue)
+  if (has_boolvalue()) {
+    return value_.boolvalue_;
+  }
+  return false;
+}
+void CustomLayerParams_CustomLayerParamValue::set_boolvalue(bool value) {
+  if (!has_boolvalue()) {
+    clear_value();
+    set_has_boolvalue();
+  }
+  value_.boolvalue_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.CustomLayerParamValue.boolValue)
+}
+
+bool CustomLayerParams_CustomLayerParamValue::has_value() const {
+  return value_case() != VALUE_NOT_SET;
+}
+void CustomLayerParams_CustomLayerParamValue::clear_has_value() {
+  _oneof_case_[0] = VALUE_NOT_SET;
+}
+CustomLayerParams_CustomLayerParamValue::ValueCase CustomLayerParams_CustomLayerParamValue::value_case() const {
+  return CustomLayerParams_CustomLayerParamValue::ValueCase(_oneof_case_[0]);
+}
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int CustomLayerParams::kClassNameFieldNumber;
+const int CustomLayerParams::kWeightsFieldNumber;
+const int CustomLayerParams::kParametersFieldNumber;
+const int CustomLayerParams::kDescriptionFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+CustomLayerParams::CustomLayerParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.CustomLayerParams)
+}
+CustomLayerParams::CustomLayerParams(const CustomLayerParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      weights_(from.weights_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  parameters_.MergeFrom(from.parameters_);
+  classname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.classname().size() > 0) {
+    classname_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.classname_);
+  }
+  description_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.description().size() > 0) {
+    description_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.description_);
+  }
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.CustomLayerParams)
+}
+
+void CustomLayerParams::SharedCtor() {
+  classname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  description_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  _cached_size_ = 0;
+}
+
+CustomLayerParams::~CustomLayerParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.CustomLayerParams)
+  SharedDtor();
+}
+
+void CustomLayerParams::SharedDtor() {
+  classname_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  description_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void CustomLayerParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const CustomLayerParams& CustomLayerParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+CustomLayerParams* CustomLayerParams::New(::google::protobuf::Arena* arena) const {
+  CustomLayerParams* n = new CustomLayerParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void CustomLayerParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.CustomLayerParams)
+  weights_.Clear();
+  parameters_.Clear();
+  classname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  description_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+bool CustomLayerParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.CustomLayerParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(16383u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // string className = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(82u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_classname()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->classname().data(), this->classname().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.CustomLayerParams.className"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .CoreML.Specification.WeightParams weights = 20;
+      case 20: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(162u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_weights()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // map<string, .CoreML.Specification.CustomLayerParams.CustomLayerParamValue> parameters = 30;
+      case 30: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(242u)) {
+          CustomLayerParams_ParametersEntry::Parser< ::google::protobuf::internal::MapFieldLite<
+              CustomLayerParams_ParametersEntry,
+              ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue,
+              ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+              ::google::protobuf::internal::WireFormatLite::TYPE_MESSAGE,
+              0 >,
+            ::google::protobuf::Map< ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue > > parser(&parameters_);
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+              input, &parser));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            parser.key().data(), parser.key().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.CustomLayerParams.ParametersEntry.key"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string description = 40;
+      case 40: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(322u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_description()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->description().data(), this->description().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.CustomLayerParams.description"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.CustomLayerParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.CustomLayerParams)
+  return false;
+#undef DO_
+}
+
+void CustomLayerParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.CustomLayerParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string className = 10;
+  if (this->classname().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->classname().data(), this->classname().length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.CustomLayerParams.className");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      10, this->classname(), output);
+  }
+
+  // repeated .CoreML.Specification.WeightParams weights = 20;
+  for (unsigned int i = 0, n = this->weights_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      20, this->weights(i), output);
+  }
+
+  // map<string, .CoreML.Specification.CustomLayerParams.CustomLayerParamValue> parameters = 30;
+  if (!this->parameters().empty()) {
+    typedef ::google::protobuf::Map< ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue >::const_pointer
+        ConstPtr;
+    typedef ConstPtr SortItem;
+    typedef ::google::protobuf::internal::CompareByDerefFirst<SortItem> Less;
+    struct Utf8Check {
+      static void Check(ConstPtr p) {
+        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+          p->first.data(), p->first.length(),
+          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+          "CoreML.Specification.CustomLayerParams.ParametersEntry.key");
+      }
+    };
+
+    if (output->IsSerializationDeterministic() &&
+        this->parameters().size() > 1) {
+      ::google::protobuf::scoped_array<SortItem> items(
+          new SortItem[this->parameters().size()]);
+      typedef ::google::protobuf::Map< ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue >::size_type size_type;
+      size_type n = 0;
+      for (::google::protobuf::Map< ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue >::const_iterator
+          it = this->parameters().begin();
+          it != this->parameters().end(); ++it, ++n) {
+        items[n] = SortItem(&*it);
+      }
+      ::std::sort(&items[0], &items[n], Less());
+      ::google::protobuf::scoped_ptr<CustomLayerParams_ParametersEntry> entry;
+      for (size_type i = 0; i < n; i++) {
+        entry.reset(parameters_.NewEntryWrapper(
+            items[i]->first, items[i]->second));
+        ::google::protobuf::internal::WireFormatLite::WriteMessage(
+            30, *entry, output);
+        Utf8Check::Check(items[i]);
+      }
+    } else {
+      ::google::protobuf::scoped_ptr<CustomLayerParams_ParametersEntry> entry;
+      for (::google::protobuf::Map< ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue >::const_iterator
+          it = this->parameters().begin();
+          it != this->parameters().end(); ++it) {
+        entry.reset(parameters_.NewEntryWrapper(
+            it->first, it->second));
+        ::google::protobuf::internal::WireFormatLite::WriteMessage(
+            30, *entry, output);
+        Utf8Check::Check(&*it);
+      }
+    }
+  }
+
+  // string description = 40;
+  if (this->description().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->description().data(), this->description().length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.CustomLayerParams.description");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      40, this->description(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.CustomLayerParams)
+}
+
+size_t CustomLayerParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.CustomLayerParams)
+  size_t total_size = 0;
+
+  // repeated .CoreML.Specification.WeightParams weights = 20;
+  {
+    unsigned int count = this->weights_size();
+    total_size += 2UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->weights(i));
+    }
+  }
+
+  // map<string, .CoreML.Specification.CustomLayerParams.CustomLayerParamValue> parameters = 30;
+  total_size += 2 *
+      ::google::protobuf::internal::FromIntSize(this->parameters_size());
+  {
+    ::google::protobuf::scoped_ptr<CustomLayerParams_ParametersEntry> entry;
+    for (::google::protobuf::Map< ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue >::const_iterator
+        it = this->parameters().begin();
+        it != this->parameters().end(); ++it) {
+      entry.reset(parameters_.NewEntryWrapper(it->first, it->second));
+      total_size += ::google::protobuf::internal::WireFormatLite::
+          MessageSizeNoVirtual(*entry);
+    }
+  }
+
+  // string className = 10;
+  if (this->classname().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->classname());
+  }
+
+  // string description = 40;
+  if (this->description().size() > 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->description());
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void CustomLayerParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const CustomLayerParams*>(&from));
+}
+
+void CustomLayerParams::MergeFrom(const CustomLayerParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.CustomLayerParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  weights_.MergeFrom(from.weights_);
+  parameters_.MergeFrom(from.parameters_);
+  if (from.classname().size() > 0) {
+
+    classname_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.classname_);
+  }
+  if (from.description().size() > 0) {
+
+    description_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.description_);
+  }
+}
+
+void CustomLayerParams::CopyFrom(const CustomLayerParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.CustomLayerParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool CustomLayerParams::IsInitialized() const {
+  return true;
+}
+
+void CustomLayerParams::Swap(CustomLayerParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void CustomLayerParams::InternalSwap(CustomLayerParams* other) {
+  weights_.InternalSwap(&other->weights_);
+  parameters_.Swap(&other->parameters_);
+  classname_.Swap(&other->classname_);
+  description_.Swap(&other->description_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string CustomLayerParams::GetTypeName() const {
+  return "CoreML.Specification.CustomLayerParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// CustomLayerParams
+
+// string className = 10;
+void CustomLayerParams::clear_classname() {
+  classname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& CustomLayerParams::classname() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CustomLayerParams.className)
+  return classname_.GetNoArena();
+}
+void CustomLayerParams::set_classname(const ::std::string& value) {
+  
+  classname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.className)
+}
+#if LANG_CXX11
+void CustomLayerParams::set_classname(::std::string&& value) {
+  
+  classname_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.CustomLayerParams.className)
+}
+#endif
+void CustomLayerParams::set_classname(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  classname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.CustomLayerParams.className)
+}
+void CustomLayerParams::set_classname(const char* value, size_t size) {
+  
+  classname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.CustomLayerParams.className)
+}
+::std::string* CustomLayerParams::mutable_classname() {
+  
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CustomLayerParams.className)
+  return classname_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* CustomLayerParams::release_classname() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.CustomLayerParams.className)
+  
+  return classname_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void CustomLayerParams::set_allocated_classname(::std::string* classname) {
+  if (classname != NULL) {
+    
+  } else {
+    
+  }
+  classname_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), classname);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CustomLayerParams.className)
+}
+
+// repeated .CoreML.Specification.WeightParams weights = 20;
+int CustomLayerParams::weights_size() const {
+  return weights_.size();
+}
+void CustomLayerParams::clear_weights() {
+  weights_.Clear();
+}
+const ::CoreML::Specification::WeightParams& CustomLayerParams::weights(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CustomLayerParams.weights)
+  return weights_.Get(index);
+}
+::CoreML::Specification::WeightParams* CustomLayerParams::mutable_weights(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CustomLayerParams.weights)
+  return weights_.Mutable(index);
+}
+::CoreML::Specification::WeightParams* CustomLayerParams::add_weights() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.CustomLayerParams.weights)
+  return weights_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::CoreML::Specification::WeightParams >*
+CustomLayerParams::mutable_weights() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.CustomLayerParams.weights)
+  return &weights_;
+}
+const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::WeightParams >&
+CustomLayerParams::weights() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.CustomLayerParams.weights)
+  return weights_;
+}
+
+// map<string, .CoreML.Specification.CustomLayerParams.CustomLayerParamValue> parameters = 30;
+int CustomLayerParams::parameters_size() const {
+  return parameters_.size();
+}
+void CustomLayerParams::clear_parameters() {
+  parameters_.Clear();
+}
+ const ::google::protobuf::Map< ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue >&
+CustomLayerParams::parameters() const {
+  // @@protoc_insertion_point(field_map:CoreML.Specification.CustomLayerParams.parameters)
+  return parameters_.GetMap();
+}
+ ::google::protobuf::Map< ::std::string, ::CoreML::Specification::CustomLayerParams_CustomLayerParamValue >*
+CustomLayerParams::mutable_parameters() {
+  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.CustomLayerParams.parameters)
+  return parameters_.MutableMap();
+}
+
+// string description = 40;
+void CustomLayerParams::clear_description() {
+  description_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& CustomLayerParams::description() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CustomLayerParams.description)
+  return description_.GetNoArena();
+}
+void CustomLayerParams::set_description(const ::std::string& value) {
+  
+  description_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CustomLayerParams.description)
+}
+#if LANG_CXX11
+void CustomLayerParams::set_description(::std::string&& value) {
+  
+  description_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.CustomLayerParams.description)
+}
+#endif
+void CustomLayerParams::set_description(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  description_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.CustomLayerParams.description)
+}
+void CustomLayerParams::set_description(const char* value, size_t size) {
+  
+  description_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.CustomLayerParams.description)
+}
+::std::string* CustomLayerParams::mutable_description() {
+  
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CustomLayerParams.description)
+  return description_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* CustomLayerParams::release_description() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.CustomLayerParams.description)
+  
+  return description_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void CustomLayerParams::set_allocated_description(::std::string* description) {
+  if (description != NULL) {
+    
+  } else {
+    
+  }
+  description_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), description);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CustomLayerParams.description)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

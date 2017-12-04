@@ -62,6 +62,7 @@ def _convert(args):
                 model = (args.kerasJsonPath, args.srcModelPath)
             else:
                 model = args.srcModelPath
+            
             model = converters.keras.convert(model,
                                     args.inputNames,
                                     args.outputNames,

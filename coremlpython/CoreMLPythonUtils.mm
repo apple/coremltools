@@ -447,7 +447,8 @@ py::object Utils::convertImageValueToPython(CVPixelBufferRef value) {
     auto height = CVPixelBufferGetHeight(value);
     auto width = CVPixelBufferGetWidth(value);
     size_t srcBytesPerRow = CVPixelBufferGetBytesPerRow(value);
-    size_t dstBytesPerRow;
+    // Initializing this for Xcode warnings
+    size_t dstBytesPerRow = 0;
     py::str mode;
     if (formatType == kCVPixelFormatType_32BGRA) {
         dstBytesPerRow = width * 4;

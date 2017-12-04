@@ -76,6 +76,7 @@ add_library(mlmodel
     src/DataType.cpp
     src/Model.cpp
     src/Result.cpp
+    src/Utils.cpp
 
     src/ArrayFeatureExtractorValidator.cpp
     src/CategoricalMappingValidator.cpp

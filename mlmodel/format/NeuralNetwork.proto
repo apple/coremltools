@@ -398,6 +398,9 @@ message NeuralNetworkLayer {
         GRULayerParams gru = 410;
         UniDirectionalLSTMLayerParams uniDirectionalLSTM = 420;
         BiDirectionalLSTMLayerParams biDirectionalLSTM = 430;
+
+        // Custom (user-implemented) Layer
+        CustomLayerParams custom = 500;
     }
 }
 
@@ -539,6 +542,17 @@ message WeightParams {
      * Values specified in single / float / FP32 precision.
      */
     repeated float floatValue = 1;
+
+    /**
+     * Values in 16-bit half precision floating point.
+     */
+    bytes float16Value = 2;
+
+    /**
+     * Raw value specification for smaller types. Currently only supported by custom layer implementations.
+     */
+    bytes rawValue  = 30;
+
 }
 
 /// Layers
@@ -2113,6 +2127,25 @@ message BiDirectionalLSTMLayerParams {
     repeated LSTMWeightParams weightParams = 20;
 }
 
+message CustomLayerParams {
+
+    message CustomLayerParamValue {
+        oneof value {
+            double doubleValue = 10;
+            string stringValue = 20;
+            int32 intValue = 30;
+            int64 longValue = 40;
+            bool boolValue = 50;
+        }
+    }
+
+    string className = 10; // The name of the class (conforming to MLCustomLayer) corresponding to this layer
+    repeated WeightParams weights = 20; // Any weights -- these are serialized in binary format and memmapped at runtime
+    map<string, CustomLayerParamValue> parameters = 30; // these may be handled as strings, so this should not be large
+    string description = 40; // An (optional) description of the layer provided by the model creator. This information is displayed when viewing the model, but does not affect the model's execution on device. 
+
+}
+
 /// Neural Network Specializations
 /// ------------------------------
 
@@ -2144,4 +2177,5 @@ message NeuralNetworkClassifier {
 message NeuralNetworkRegressor {
     repeated NeuralNetworkLayer layers = 1;
     repeated NeuralNetworkPreprocessing preprocessing = 2;
+
 }

@@ -2,9 +2,20 @@
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
 #pragma clang diagnostic ignored "-Wdocumentation"
 #pragma clang diagnostic ignored "-Wrange-loop-analysis"
+
+#ifdef check
+#define __old_check check
+#undef check
+#endif
+
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+#ifdef __old_check
+#define check __old_check
+#endif
+
 #pragma clang diagnostic pop
 
 #import <CoreML/CoreML.h>

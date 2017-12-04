@@ -2450,6 +2450,44 @@ class NeuralNetworkBuilder(object):
             raise ValueError("'shape' must be of length 3")    
                                                                             
 
+    def add_custom(self, name, input_names, output_names, custom_proto_spec = None):
+        """
+        Add a custom layer.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_names: [str]
+            The input blob names to this layer.
+
+        output_names: [str]
+            The output blob names from this layer.
+
+        custom_proto_spec: CustomLayerParams
+            A protobuf CustomLayerParams message. This can also be left blank and filled in later.
+        """
+
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # custom layers require a newer specification version
+        from coremltools import _MINIMUM_CUSTOM_LAYER_SPEC_VERSION
+        spec.specificationVersion = max(spec.specificationVersion, _MINIMUM_CUSTOM_LAYER_SPEC_VERSION)
+
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        for inname in input_names:
+            spec_layer.input.append(inname)
+        for outname in output_names:
+            spec_layer.output.append(outname)
+
+        # Have to do it this way since I can't just assign custom in a layer
+        if custom_proto_spec:
+            spec_layer.custom.CopyFrom(custom_proto_spec)
+
+
     def set_pre_processing_parameters(self, image_input_names = [], is_bgr = False,
             red_bias = 0.0, green_bias = 0.0, blue_bias = 0.0, gray_bias = 0.0, image_scale = 1.0):
         """Add pre-processing parameters to the neural network object

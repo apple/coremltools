@@ -66,7 +66,10 @@ MLMODEL_TEST(testInvalidCrop2)
 MLMODEL_TEST(testInvalidSlice)
 MLMODEL_TEST(testValidSlice1)
 MLMODEL_TEST(testValidSlice2)
-
-
+MLMODEL_TEST(testValidCustom)
+MLMODEL_TEST(testInvalidCustomNoName)
+MLMODEL_TEST(testInvalidCustomMultipleWeights)
+MLMODEL_TEST(testSpecDowngrade)
+MLMODEL_TEST(testSpecDowngradefp16)
 
 #undef MLMODEL_TEST
