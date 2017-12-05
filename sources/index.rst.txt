@@ -177,6 +177,12 @@ At a high level, the protobuf specification consists of:
 
 For more information, please take a look at the `Core ML model specification <https://apple.github.io/coremltools/coremlspecification>`_
 
+External Tools
+==============
+In addition to the conversion tools in this package, TensorFlow and MXNet have their own conversion tools:
+
+- `TensorFlow <https://pypi.python.org/pypi/tfcoreml>`_
+- `MXNet <https://github.com/apache/incubator-mxnet/tree/master/tools/coreml>`_
 
 Contents
 ========

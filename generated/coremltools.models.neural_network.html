@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network &mdash; coremltools 0.6.3 documentation</title>
+  <title>coremltools.models.neural_network &mdash; coremltools 0.7 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 0.6.3 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 0.7 documentation" href="../index.html"/>
         <link rel="up" title="Models" href="../coremltools.models.html"/>
         <link rel="next" title="coremltools.models.pipeline" href="coremltools.models.pipeline.html"/>
         <link rel="prev" title="coremltools.models.MLModel" href="coremltools.models.MLModel.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.6.3
+                0.7
               </div>
             
           
@@ -764,6 +764,36 @@ or a list of 2 strings (2-input crop layer).</p>
 <p class="first admonition-title">See also</p>
 <p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_padding" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_padding"><code class="xref py py-obj docutils literal"><span class="pre">add_padding</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a></p>
 </div>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_custom">
+<code class="descname">add_custom</code><span class="sig-paren">(</span><em>name</em>, <em>input_names</em>, <em>output_names</em>, <em>custom_proto_spec=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_custom" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a custom layer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
+<blockquote>
+<div><p>The name of this layer.</p>
+</div></blockquote>
+<p><strong>input_names: [str]</strong></p>
+<blockquote>
+<div><p>The input blob names to this layer.</p>
+</div></blockquote>
+<p><strong>output_names: [str]</strong></p>
+<blockquote>
+<div><p>The output blob names from this layer.</p>
+</div></blockquote>
+<p><strong>custom_proto_spec: CustomLayerParams</strong></p>
+<blockquote class="last">
+<div><p>A protobuf CustomLayerParams message. This can also be left blank and filled in later.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -2218,7 +2248,7 @@ as output_names.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.6.3',
+            VERSION:'0.7',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
