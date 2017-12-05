@@ -449,16 +449,16 @@ def convertToSpec(model,
     --------
     .. sourcecode:: python
 
-	    # Make a Keras model
-	    >>> model = Sequential()
-	    >>> model.add(Dense(num_channels, input_dim = input_dim))
+        # Make a Keras model
+        >>> model = Sequential()
+        >>> model.add(Dense(num_channels, input_dim = input_dim))
 
-	    # Convert it with default input and output names
-   	    >>> import coremltools
-	    >>> coreml_model = coremltools.converters.keras.convert(model)
+        # Convert it with default input and output names
+        >>> import coremltools
+        >>> coreml_model = coremltools.converters.keras.convert(model)
 
-	    # Saving the Core ML model to a file.
-	    >>> coreml_model.save('my_model.mlmodel')
+        # Saving the Core ML model to a file.
+        >>> coreml_model.save('my_model.mlmodel')
 
     Converting a model with a single image input.
 
@@ -662,46 +662,46 @@ def convert(model,
         --------
         .. sourcecode:: python
         
-        # Make a Keras model
-        >>> model = Sequential()
-        >>> model.add(Dense(num_channels, input_dim = input_dim))
+            # Make a Keras model
+            >>> model = Sequential()
+            >>> model.add(Dense(num_channels, input_dim = input_dim))
         
-        # Convert it with default input and output names
-        >>> import coremltools
-        >>> coreml_model = coremltools.converters.keras.convert(model)
+            # Convert it with default input and output names
+            >>> import coremltools
+            >>> coreml_model = coremltools.converters.keras.convert(model)
         
-        # Saving the Core ML model to a file.
-        >>> coreml_model.save('my_model.mlmodel')
+            # Saving the Core ML model to a file.
+            >>> coreml_model.save('my_model.mlmodel')
         
         Converting a model with a single image input.
         
         .. sourcecode:: python
         
-        >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
-        ... 'image', image_input_names = 'image')
+            >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
+            ... 'image', image_input_names = 'image')
         
         Core ML also lets you add class labels to models to expose them as
         classifiers.
         
         .. sourcecode:: python
         
-        >>> coreml_model = coremltools.converters.keras.convert(model, input_names = 'image',
-        ... image_input_names = 'image', class_labels = ['cat', 'dog', 'rat'])
+            >>> coreml_model = coremltools.converters.keras.convert(model, input_names = 'image',
+            ... image_input_names = 'image', class_labels = ['cat', 'dog', 'rat'])
         
         Class labels for classifiers can also come from a file on disk.
         
         .. sourcecode:: python
         
-        >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
-        ... 'image', image_input_names = 'image', class_labels = 'labels.txt')
+            >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
+            ... 'image', image_input_names = 'image', class_labels = 'labels.txt')
         
         Provide customized input and output names to the Keras inputs and outputs
         while exposing them to Core ML.
         
         .. sourcecode:: python
         
-        >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
-        ...   ['my_input_1', 'my_input_2'], output_names = ['my_output'])
+            >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
+            ...   ['my_input_1', 'my_input_2'], output_names = ['my_output'])
         
         """
     spec = convertToSpec(model,

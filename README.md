@@ -167,3 +167,10 @@ cd docs
 make html
 open _build/html/index.html
 ```
+
+External Tools
+--------------
+In addition to the conversion tools in this package, TensorFlow and MXNet have their own conversion tools:
+
+- [TensorFlow](https://pypi.python.org/pypi/tfcoreml)
+- [MXNet](https://github.com/apache/incubator-mxnet/tree/master/tools/coreml)
