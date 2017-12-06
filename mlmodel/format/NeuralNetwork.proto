@@ -1568,7 +1568,7 @@ message ReorganizeDataLayerParams {
  */
 message SliceLayerParams {
 
-    int64 startIndex = 1; /// start of the sliced section. Inclusive.
+    uint64 startIndex = 1; /// start of the sliced section. Inclusive.
     int64 endIndex = 2; /// end of sliced section. Exclusive.
     uint64 stride = 3; /// The step size. Must be postive.
 
