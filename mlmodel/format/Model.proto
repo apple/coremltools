@@ -8,38 +8,38 @@
  * and a model description,
  * and can be any one of the following types:
  *
- * Pipelines
- *     - ``PipelineClassifier``
- *     - ``PipelineRegressor``
- *     - ``Pipeline``
+ * Neural Networks
+ *   - `NeuralNetwork`
  *
  * Regressors
- *     - ``GLMRegressor``
- *     - ``SupportVectorRegressor``
- *     - ``TreeEnsembleRegressor``
- *     - ``NeuralNetworkRegressor``
+ *   - `NeuralNetworkRegressor`
+ *   - `TreeEnsembleRegressor`
+ *   - `GLMRegressor`
+ *   - `SupportVectorRegressor`
  *
  * Classifiers
- *     - ``GLMClassifier``
- *     - ``SupportVectorClassifier``
- *     - ``TreeEnsembleClassifier``
- *     - ``NeuralNetworkClassifier``
- *
- * Neural Networks
- *     - ``NeuralNetwork``
+ *   - `NeuralNetworkClassifier`
+ *   - `TreeEnsembleClassifier`
+ *   - `GLMClassifier`
+ *   - `SupportVectorClassifier`
  *
  * Feature Engineering
- *     - ``OneHotEncoder``
- *     - ``Imputer``
- *     - ``FeatureVectorizer``
- *     - ``DictVectorizer``
- *     - ``Scaler``
- *     - ``CategoricalMapping``
- *     - ``Normalizer``
- *     - ``ArrayFeatureExtractor``
+ *   - `Imputer`
+ *   - `Scaler`
+ *   - `Normalizer`
+ *   - `OneHotEncoder`
+ *   - `CategoricalMapping`
+ *   - `FeatureVectorizer`
+ *   - `DictVectorizer`
+ *   - `ArrayFeatureExtractor`
+ *
+ * Pipelines
+ *   - `PipelineClassifier`
+ *   - `PipelineRegressor`
+ *   - `Pipeline`
  *
  * Simple Mathematical Functions
- *     - ``Identity``
+ *   - `Identity`
  */
 
 syntax = "proto3";
@@ -137,7 +137,7 @@ message ModelDescription {
  * which is incremented anytime a backward-incompatible change is made
  * (this is functionally equivalent to the MAJOR version number
  * described by `Semantic Versioning 2.0.0 <http://semver.org/>`_).
- * The Core ML framework in macOS currently supports specification version `1`.
+ * The Core ML framework in macOS currently supports specification version ``1``.
  */
 message Model {
     int32 specificationVersion = 1;
