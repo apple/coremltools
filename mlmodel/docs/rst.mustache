@@ -2,31 +2,29 @@
 
 <!-- {{file_name}} -->
 
-{{#file_description}}{{& file_description}}{{/file_description}}
-
-++++
+{{&file_description}}
 
 {{#file_messages}}
 
-{{message_long_name}} Message
+{{#message_has_declaration}}
+
+{{^message_is_nested}}
+{{message_long_name}}
 ________________________________________________________________________________
+{{/message_is_nested}}
+{{#message_is_nested}}
+{{message_long_name}}
+--------------------------------------------------------------------------------
+{{/message_is_nested}}
 
 {{&message_description}}
 
 
-.. list-table:: {{message_long_name}} Fields
-   :header-rows: 1
+{{#message_has_declaration}}
+.. code-block:: proto
 
-   * - Field
-     - Type
-     - Label
-   {{#message_fields}}
-   * - {{field_name}}
-     - ``{{field_long_type}}``
-     - {{field_label}}
-   {{/message_fields}}
-
-
+{{&message_declaration}}
+{{/message_has_declaration}}
 
 
 {{#message_has_extensions}}
@@ -45,10 +43,11 @@ ________________________________________________________________________________
      - ``{{extension_long_type}}``
      - ``{{extension_containing_long_type}}``
      - {{extension_number}}
-     - {{#nobr}}{{& extension_description}}{{#extension_default_value}} Default: {{extension_default_value}}{{/extension_default_value}}{{/nobr}}
+     - {{#nobr}}{{&extension_description}}{{#extension_default_value}} Default: {{extension_default_value}}{{/extension_default_value}}{{/nobr}}
    {{/message_extensions}}
 
 {{/message_has_extensions}}
+{{/message_has_declaration}}
 
 {{/file_messages}}
 
@@ -58,22 +57,20 @@ ________________________________________________________________________________
 
 {{#file_enums}}
 
-{{enum_long_name}} Enumeration
+{{^enum_is_nested}}
+{{enum_long_name}}
 ________________________________________________________________________________
+{{/enum_is_nested}}
+{{#enum_is_nested}}
+{{enum_long_name}}
+--------------------------------------------------------------------------------
+{{/enum_is_nested}}
 
 {{&enum_description}}
 
+.. code-block:: proto
 
-.. list-table:: {{enum_long_name}}
-   :widths: 15 20
-   :header-rows: 1
-
-   * - Name
-     - Number
-   {{#enum_values}}
-   * - {{value_name}}
-     - ``{{value_number}}``
-   {{/enum_values}}
+{{&enum_declaration}}
 
 {{/file_enums}}
 
@@ -111,7 +108,7 @@ File-level Extensions
 
 {{#file_services}}
 
-{{service_name}} Service
+{{service_name}}
 ________________________________________________________________________________
 
 {{&service_description}}
@@ -134,23 +131,3 @@ ________________________________________________________________________________
 {{/file_services}}
 
 {{/files}}
-
-
-
-
-<!-- ScalarValueTypes.proto -->
-
-.. list-table:: Scalar Value Types
-   :widths: 15 20 20 20
-   :header-rows: 1
-
-   * - .proto Type
-     - C++ Type
-     - Java Type
-     - Python Type
-   {{#scalar_value_types}}
-   * - ``{{scalar_value_proto_type}}``
-     - ``{{scalar_value_cpp_type}}``
-     - ``{{scalar_value_java_type}}``
-     - ``{{scalar_value_python_type}}``
-   {{/scalar_value_types}}

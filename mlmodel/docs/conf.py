@@ -17,7 +17,7 @@ import sphinx_rtd_theme
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.imgmath']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.imgmath', 'sphinx.ext.autosectionlabel']
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ['_templates']
@@ -31,9 +31,11 @@ source_suffix = '.rst'
 # The master toctree document.
 master_doc = 'index'
 
+default_role = 'ref'
+
 # General information about the project.
 project = u'mlmodel'
-copyright = u'2017, Apple Inc.'
+copyright = u'2017, Apple Inc'
 author = u'Apple Inc.'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -55,7 +57,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['conf.py', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['conf.py', 'Thumbs.db', '.DS_Store', 'reference']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
