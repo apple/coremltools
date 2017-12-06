@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.converters.caffe.convert &mdash; coremltools 0.6.3 documentation</title>
+  <title>coremltools.converters.caffe.convert &mdash; coremltools 0.7 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 0.6.3 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 0.7 documentation" href="../index.html"/>
         <link rel="up" title="Converters" href="../coremltools.converters.html"/>
         <link rel="next" title="coremltools.converters.keras.convert" href="coremltools.converters.keras.convert.html"/>
         <link rel="prev" title="Converters" href="../coremltools.converters.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.6.3
+                0.7
               </div>
             
           
@@ -171,7 +171,7 @@
 <h1>coremltools.converters.caffe.convert<a class="headerlink" href="#coremltools-converters-caffe-convert" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="coremltools.converters.caffe.convert">
-<code class="descclassname">coremltools.converters.caffe.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>image_input_names=[]</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>green_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.caffe.convert" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.converters.caffe.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>image_input_names=[]</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>green_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em>, <em>model_precision='float32'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.caffe.convert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a Caffe model to Core ML format.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -252,6 +252,11 @@ Provide this argument to get a model of type classifier.</p>
 <blockquote>
 <div><p>Name of the output feature for the class labels exposed in the Core ML
 model (applies to classifiers only). Defaults to &#8216;classLabel&#8217;</p>
+</div></blockquote>
+<p><strong>model_precision: str</strong></p>
+<blockquote>
+<div><p>Precision at which model will be saved. Currently full precision (float) and half precision
+(float16) models are supported. Defaults to &#8216;_MLMODEL_FULL_PRECISION&#8217; (full precision).</p>
 </div></blockquote>
 </td>
 </tr>
@@ -375,7 +380,7 @@ Input name string (&#8220;my_image_input&#8221;) must also match the name of the
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.6.3',
+            VERSION:'0.7',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
