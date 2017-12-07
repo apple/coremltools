@@ -1052,7 +1052,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         model = Sequential()
         model.add(LSTM(num_channels, input_shape = (input_length, input_dim),
-            implementation = 0, recurrent_activation = 'sigmoid'))
+            implementation = 1, recurrent_activation = 'sigmoid'))
 
         model.set_weights([np.random.rand(*w.shape)*0.2-0.1 for w in model.get_weights()])
         self._test_keras_model(model, mode = 'zeros', input_blob = 'data', output_blob = 'output')
@@ -1065,7 +1065,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         model = Sequential()
         model.add(LSTM(num_channels, input_shape = (input_length, input_dim),
-            implementation = 0, recurrent_activation = 'sigmoid'))
+            implementation = 1, recurrent_activation = 'sigmoid'))
 
         model.set_weights([np.random.rand(*w.shape)*0.2-0.1 for w in model.get_weights()])
         self._test_keras_model(model, mode = 'ones', input_blob = 'data', output_blob = 'output')
@@ -1279,7 +1279,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Define a model
         model = Sequential()
         model.add(Bidirectional(LSTM(num_channels, 
-            implementation = 0, recurrent_activation = 'sigmoid'),
+            implementation = 1, recurrent_activation = 'sigmoid'),
             input_shape=(input_length, input_dim)))
 
         # Set some random weights
@@ -1720,7 +1720,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Define a model
         model = Sequential()
         model.add(LSTM(num_channels, input_shape = (input_length, input_dim), 
-            implementation = 0, recurrent_activation = 'sigmoid'))
+            implementation = 1, recurrent_activation = 'sigmoid'))
 
         # Set some random weights
         model.set_weights([(np.random.rand(*w.shape)-0.5)*0.2 for w in model.get_weights()])
@@ -1753,10 +1753,20 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         model.add(Dense(dense_units))
         model.add(Dense(20))
         
-        print 'Test: model.input_shape = ', model.input_shape
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_keras_model(model, one_dim_seq_flags=[True])
     
+    def test_conv1d_flatten(self):
+        model = Sequential()
+        model.add(AveragePooling1D(2,input_shape=(64,9)))
+        model.add(Conv1D(16, 1, padding='same', activation='relu', use_bias=False))
+        model.add(MaxPooling1D(2))
+        model.add(Flatten())
+        model.add(Dense(units=7, activation='softmax', use_bias=False))
+
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+        self._test_keras_model(model)
+
     def test_dense_fused_act_in_td(self):
         np.random.seed(1988)
         x_in = Input(shape=(10,2))

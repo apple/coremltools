@@ -533,10 +533,21 @@ def convert_flatten(builder, layer, input_names, output_names, keras_layer):
 
     # using keras_layer.input.shape have a "?" (Dimension[None] at the front),
     # making a 3D tensor with unknown batch size 4D
-    if len(keras_layer.input.shape) == 4:
+    in_shape = keras_layer.input_shape
+    if len(in_shape) == 4:
         blob_order = 1
-
-    builder.add_flatten(name=layer, mode=blob_order, input_name=input_name, output_name=output_name)
+    if len(in_shape) == 3 and in_shape[0] == None:
+        # handling Keras rank-3 tensor (Batch, Sequence, Channels)
+        dim = (2,1,0,3)
+        blob_order = 1
+        permute_output_name = output_name + '__permute__'
+        builder.add_permute(name=layer+'__permute__', dim=dim,
+            input_name=input_name, output_name=permute_output_name)
+        builder.add_flatten(name=layer, mode=blob_order,
+            input_name=permute_output_name, output_name=output_name)
+    else:
+        builder.add_flatten(name=layer, mode=blob_order, input_name=input_name,
+                output_name=output_name)
 
 def convert_merge(builder, layer, input_names, output_names, keras_layer):
     """
