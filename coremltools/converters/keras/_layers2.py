@@ -536,14 +536,12 @@ def convert_flatten(builder, layer, input_names, output_names, keras_layer):
     in_shape = keras_layer.input_shape
     if len(in_shape) == 4:
         blob_order = 1
-    if len(in_shape) == 3 and in_shape[0] == None:
+    if len(in_shape) == 3 and in_shape[0] is None:
         # handling Keras rank-3 tensor (Batch, Sequence, Channels)
-        dim = (2,1,0,3)
-        blob_order = 1
         permute_output_name = output_name + '__permute__'
-        builder.add_permute(name=layer+'__permute__', dim=dim,
+        builder.add_permute(name=layer+'__permute__', dim=(2,1,0,3),
             input_name=input_name, output_name=permute_output_name)
-        builder.add_flatten(name=layer, mode=blob_order,
+        builder.add_flatten(name=layer, mode=1,
             input_name=permute_output_name, output_name=output_name)
     else:
         builder.add_flatten(name=layer, mode=blob_order, input_name=input_name,
