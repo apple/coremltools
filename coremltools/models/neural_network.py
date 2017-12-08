@@ -2495,10 +2495,10 @@ class NeuralNetworkBuilder(object):
         Parameters
         ----------
         image_input_names: [str]
-            Name if input blobs that are images
+            Name of input blobs that are images
 
         is_bgr: boolean | dict()
-            Image pixel order (RGB or BGR)
+            Channel order for input blobs that are images. BGR if True, RGB if False.
 
         red_bias: float | dict()
             Image re-centering parameter (red channel)
