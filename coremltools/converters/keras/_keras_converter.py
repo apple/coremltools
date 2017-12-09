@@ -375,10 +375,16 @@ def convertToSpec(model,
         are treated as MultiArrays (N-D Arrays).
 
     is_bgr: bool | dict()
-        Flag to determine if input images are in pixel order (RGB or BGR).
-        Defaults to False.
-        Applicable only if image_input_names is specified.
-        To specify different values for each image input provide a dictionary with input names as keys.    
+        Flag indicating the channel order the model internally uses to represent
+        color images. Set to True if the internal channel order is BGR,
+        otherwise it will be assumed RGB. This flag is applicable only if
+        image_input_names is specified. To specify a different value for each
+        image input, provide a dictionary with input names as keys.
+        Note that this flag is about the models internal channel order.
+        An input image can be passed to the model in any color pixel layout
+        containing red, green and blue values (e.g. 32BGRA or 32ARGB). This flag
+        determines how those pixel values get mapped to the internal multiarray
+        representation.
 
     red_bias: float | dict()
         Bias value to be added to the red channel of the input image. 
@@ -555,155 +561,162 @@ def convert(model,
     """
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
         
-        Parameters
-        ----------
-        model: Keras model object | str | (str, str)
+    Parameters
+    ----------
+    model: Keras model object | str | (str, str)
+
         A trained Keras neural network model which can be one of the following:
-        
+
         - a Keras model object
         - a string with the path to a Keras model file (h5)
         - a tuple of strings, where the first is the path to a Keras model
         architecture (.json file), the second is the path to its weights
         stored in h5 file.
-        
-        input_names: [str] | str
+
+    input_names: [str] | str
         Optional name(s) that can be given to the inputs of the Keras model.
         These names will be used in the interface of the Core ML models to refer
         to the inputs of the Keras model. If not provided, the Keras inputs
         are named to [input1, input2, ..., inputN] in the Core ML model.  When
         multiple inputs are present, the input feature names are in the same
         order as the Keras inputs.
-        
-        output_names: [str] | str
+
+    output_names: [str] | str
         Optional name(s) that can be given to the outputs of the Keras model.
         These names will be used in the interface of the Core ML models to refer
         to the outputs of the Keras model. If not provided, the Keras outputs
         are named to [output1, output2, ..., outputN] in the Core ML model.
         When multiple outputs are present, output feature names are in the same
         order as the Keras inputs.
-        
-        image_input_names: [str] | str
+
+    image_input_names: [str] | str
         Input names to the Keras model (a subset of the input_names
         parameter) that can be treated as images by Core ML. All other inputs
         are treated as MultiArrays (N-D Arrays).
-        
-        is_bgr: bool | dict()
-        Flag to determine if input images are in pixel order (RGB or BGR).
-        Defaults to False.
-        Applicable only if image_input_names is specified.
-        To specify different values for each image input provide a dictionary with input names as keys.
-        
-        red_bias: float | dict()
+
+    is_bgr: bool | dict()
+        Flag indicating the channel order the model internally uses to represent
+        color images. Set to True if the internal channel order is BGR,
+        otherwise it will be assumed RGB. This flag is applicable only if
+        image_input_names is specified. To specify a different value for each
+        image input, provide a dictionary with input names as keys.
+        Note that this flag is about the models internal channel order.
+        An input image can be passed to the model in any color pixel layout
+        containing red, green and blue values (e.g. 32BGRA or 32ARGB). This flag
+        determines how those pixel values get mapped to the internal multiarray
+        representation.
+
+    red_bias: float | dict()
         Bias value to be added to the red channel of the input image.
         Defaults to 0.0
         Applicable only if image_input_names is specified.
         To specify different values for each image input provide a dictionary with input names as keys.
-        
-        blue_bias: float | dict()
+
+    blue_bias: float | dict()
         Bias value to be added to the blue channel of the input image.
         Defaults to 0.0
         Applicable only if image_input_names is specified.
         To specify different values for each image input provide a dictionary with input names as keys.
-        
-        green_bias: float | dict()
+
+    green_bias: float | dict()
         Bias value to be added to the green channel of the input image.
         Defaults to 0.0
         Applicable only if image_input_names is specified.
         To specify different values for each image input provide a dictionary with input names as keys.
-        
-        gray_bias: float | dict()
+
+    gray_bias: float | dict()
         Bias value to be added to the input image (in grayscale). Defaults
         to 0.0
         Applicable only if image_input_names is specified.
         To specify different values for each image input provide a dictionary with input names as keys.
-        
-        image_scale: float | dict()
+
+    image_scale: float | dict()
         Value by which input images will be scaled before bias is added and
         Core ML model makes a prediction. Defaults to 1.0.
         Applicable only if image_input_names is specified.
         To specify different values for each image input provide a dictionary with input names as keys.
-        
-        class_labels: list[int or str] | str
+
+    class_labels: list[int or str] | str
         Class labels (applies to classifiers only) that map the index of the
         output of a neural network to labels in a classifier.
-        
+
         If the provided class_labels is a string, it is assumed to be a
         filepath where classes are parsed as a list of newline separated
         strings.
-        
-        predicted_feature_name: str
+
+    predicted_feature_name: str
         Name of the output feature for the class labels exposed in the Core ML
         model (applies to classifiers only). Defaults to 'classLabel'
-        
-        model_precision: str
+
+    model_precision: str
         Precision at which model will be saved. Currently full precision (float) and half precision
         (float16) models are supported. Defaults to '_MLMODEL_FULL_PRECISION' (full precision).
-        
-        predicted_probabilities_output: str
+
+    predicted_probabilities_output: str
         Name of the neural network output to be interpreted as the predicted
         probabilities of the resulting classes. Typically the output of a
         softmax function. Defaults to the first output blob.
-        
-        add_custom_layers: bool
+
+    add_custom_layers: bool
         If yes, then unknown Keras layer types will be added to the model as
         'custom' layers, which must then be filled in as postprocessing.
 
-        custom_conversion_functions: {str:(Layer -> (dict, [weights])) }
+    custom_conversion_functions: {str:(Layer -> (dict, [weights])) }
         A dictionary with keys corresponding to names of custom layers and values
         as functions taking a Keras custom layer and returning a parameter dictionary
         and list of weights.
 
-        Returns
-        -------
-        model: MLModel
-        Model in Core ML format.
-        
-        Examples
-        --------
-        .. sourcecode:: python
-        
-            # Make a Keras model
-            >>> model = Sequential()
-            >>> model.add(Dense(num_channels, input_dim = input_dim))
-        
-            # Convert it with default input and output names
-            >>> import coremltools
-            >>> coreml_model = coremltools.converters.keras.convert(model)
-        
-            # Saving the Core ML model to a file.
-            >>> coreml_model.save('my_model.mlmodel')
-        
-        Converting a model with a single image input.
-        
-        .. sourcecode:: python
-        
-            >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
-            ... 'image', image_input_names = 'image')
-        
-        Core ML also lets you add class labels to models to expose them as
-        classifiers.
-        
-        .. sourcecode:: python
-        
-            >>> coreml_model = coremltools.converters.keras.convert(model, input_names = 'image',
-            ... image_input_names = 'image', class_labels = ['cat', 'dog', 'rat'])
-        
-        Class labels for classifiers can also come from a file on disk.
-        
-        .. sourcecode:: python
-        
-            >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
-            ... 'image', image_input_names = 'image', class_labels = 'labels.txt')
-        
-        Provide customized input and output names to the Keras inputs and outputs
-        while exposing them to Core ML.
-        
-        .. sourcecode:: python
-        
-            >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
-            ...   ['my_input_1', 'my_input_2'], output_names = ['my_output'])
-        
-        """
+    Returns
+    -------
+    model: MLModel
+    Model in Core ML format.
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        # Make a Keras model
+        >>> model = Sequential()
+        >>> model.add(Dense(num_channels, input_dim = input_dim))
+
+        # Convert it with default input and output names
+        >>> import coremltools
+        >>> coreml_model = coremltools.converters.keras.convert(model)
+
+        # Saving the Core ML model to a file.
+        >>> coreml_model.save('my_model.mlmodel')
+
+    Converting a model with a single image input.
+
+    .. sourcecode:: python
+
+        >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
+        ... 'image', image_input_names = 'image')
+
+    Core ML also lets you add class labels to models to expose them as
+    classifiers.
+
+    .. sourcecode:: python
+
+        >>> coreml_model = coremltools.converters.keras.convert(model, input_names = 'image',
+        ... image_input_names = 'image', class_labels = ['cat', 'dog', 'rat'])
+
+    Class labels for classifiers can also come from a file on disk.
+
+    .. sourcecode:: python
+
+        >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
+        ... 'image', image_input_names = 'image', class_labels = 'labels.txt')
+
+    Provide customized input and output names to the Keras inputs and outputs
+    while exposing them to Core ML.
+
+    .. sourcecode:: python
+
+        >>> coreml_model = coremltools.converters.keras.convert(model, input_names =
+        ...   ['my_input_1', 'my_input_2'], output_names = ['my_output'])
+
+    """
     spec = convertToSpec(model,
                       input_names,
                       output_names,

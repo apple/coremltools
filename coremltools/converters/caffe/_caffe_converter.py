@@ -35,9 +35,16 @@ def convert(model, image_input_names=[], is_bgr=False,
         Arrays) by Core ML.
 
     is_bgr: bool | dict()
-        Flag to determine if the input images are in pixel order (RGB or BGR).
-        Applicable only if image_input_names is specified.
-        To specify different values for each image input provide a dictionary with input names as keys.
+        Flag indicating the channel order the model internally uses to represent
+        color images. Set to True if the internal channel order is BGR,
+        otherwise it will be assumed RGB. This flag is applicable only if
+        image_input_names is specified. To specify a different value for each
+        image input, provide a dictionary with input names as keys.
+        Note that this flag is about the models internal channel order.
+        An input image can be passed to the model in any color pixel layout
+        containing red, green and blue values (e.g. 32BGRA or 32ARGB). This flag
+        determines how those pixel values get mapped to the internal multiarray
+        representation.
 
     red_bias: float | dict()
         Bias value to be added to the red channel of the input image.
