@@ -608,19 +608,6 @@ class NetGraph(object):
                     keras_permute = _keras.layers.Permute(dims=dims)
                     self._insert_layer_between(sbn, succ, permute_layer, keras_permute)
     
-    def insert_permute_for_embed_flatten(self):
-        for layer in self.layer_list:
-            keras_layer = self.keras_layer_map[layer]
-            succs = self.get_successors(layer)
-            if len(succs) > 0: 
-                succ = succs[0]
-            keras_succ = self.keras_layer_map[succ]
-            if isinstance(keras_layer, _keras.layers.Embedding) and isinstance(keras_succ, _keras.layers.Flatten):
-                dims = (2,3,0,1)
-                permute_layer = layer + '_permute_'
-                keras_permute = _keras.layers.Permute(dims=dims)
-                self._insert_layer_between(layer, succ, permute_layer, keras_permute)
-    
     def build(self, is_top_level = True):
         # sanity check. 
         model = self.model
@@ -718,7 +705,6 @@ class NetGraph(object):
             self.remove_skip_layers(_KERAS_SKIP_LAYERS) # done 1 pass
             self.insert_1d_permute_layers()
             self.insert_permute_for_spatial_bn()
-            self.insert_permute_for_embed_flatten()
             self.defuse_activation()
             self.remove_internal_input_layers()
 
