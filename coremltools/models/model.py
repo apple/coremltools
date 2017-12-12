@@ -68,7 +68,6 @@ def _get_proxy_from_spec(filename):
             # in this case the specification is a newer kind of .mlmodel than this version of the engine can support
             # so we'll not try to have a proxy object
             return None
-
         # check if there are custom layers
         if _has_custom_layer(spec):
             # custom layers can't be supported directly by compiling and loading the model here

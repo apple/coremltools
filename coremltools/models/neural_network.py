@@ -2484,6 +2484,7 @@ class NeuralNetworkBuilder(object):
             spec_layer.output.append(outname)
 
         # Have to do it this way since I can't just assign custom in a layer
+        spec_layer.custom.MergeFromString("")
         if custom_proto_spec:
             spec_layer.custom.CopyFrom(custom_proto_spec)
 

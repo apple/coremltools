@@ -58,8 +58,7 @@ def _get_activation_name_from_keras_layer(keras_layer):
         elif act_name == 'linear':
             non_linearity = 'LINEAR'
         else:
-            _utils.raise_error_unsupported_categorical_option('activation', 
-                    act_name, 'Activation', keras_layer.name)
+            non_linearity = 'CUSTOM'
 
     return non_linearity
 
