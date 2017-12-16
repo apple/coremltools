@@ -169,9 +169,8 @@ class NetGraph(object):
         self.output_layers = []
         if hasattr(self.model, 'output_layers'):
             # find corresponding output layers in CoreML model
-            # if layers are shared, merge them.
-            self.output_layers = [self.get_coreml_layers(kl)[0] for kl in
-                    list(set(self.model.output_layers))]
+            # if layers are shared, get from the second or more index..
+            self.output_layers = [self.get_coreml_layers(kl)[self.model.output_layers[:i].count(kl)] for kl in self.model.output_layers]
         elif len(self.model.outputs) > 0:
             for model_output in self.model.outputs:                
                 for l in self.layer_list:
