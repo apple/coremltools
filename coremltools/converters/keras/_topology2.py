@@ -169,9 +169,9 @@ class NetGraph(object):
         self.output_layers = []
         if hasattr(self.model, 'output_layers'):
             # find corresponding output layers in CoreML model
-            # assume output layers are not shared
-            self.output_layers = [self.get_coreml_layers(kl)[0] for kl in 
-                    self.model.output_layers]
+            # if layers are shared, merge them.
+            self.output_layers = [self.get_coreml_layers(kl)[0] for kl in
+                    list(set(self.model.output_layers))]
         elif len(self.model.outputs) > 0:
             for model_output in self.model.outputs:                
                 for l in self.layer_list:
@@ -633,7 +633,7 @@ class NetGraph(object):
             layer = self.layer_list[idx]
             keras_layer = self.keras_layer_map[layer]
             predecessors = self.reverse_edge_map[layer]
-            successors = self.edge_map[layer]
+            successors = self.edge_map.get(layer, [])
             new_layers = [layer+'_'+str(i) for i in range(len(predecessors))]
             self.layer_list[idx:idx+1] = new_layers
             for i, new_layer in enumerate(new_layers):
