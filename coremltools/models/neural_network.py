@@ -1453,16 +1453,16 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer.
         W_h: [numpy.array]
-            List of recursion weight matrices. The ordering is [R_i, R_f, R_z, R_o],
-            where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of recursion weight matrices. The ordering is [R_i, R_f, R_o, R_z],
+            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, hidden_size).
         W_x: [numpy.array]
-            List of input weight matrices. The ordering is [W_i, W_f, W_z, W_o],
-            where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of input weight matrices. The ordering is [W_i, W_f, W_o, W_z],
+            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, input_size).
         b: [numpy.array] | None
-            List of biases. The ordering is [b_i, b_f, b_z, b_o],
-            where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+            List of biases. The ordering is [b_i, b_f, b_o, b_z],
+            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
             If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
@@ -1588,28 +1588,28 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer.
         W_h: [numpy.array]
-            List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_z, R_o],
-            where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_o, R_z],
+            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, hidden_size).
         W_x: [numpy.array]
-            List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_z, W_o],
-            where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_o, W_z],
+            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, input_size).
         b: [numpy.array]
-            List of biases for the forward layer. The ordering is [b_i, b_f, b_z, b_o],
-            where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+            List of biases for the forward layer. The ordering is [b_i, b_f, b_o, b_z],
+            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
             If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
         W_h_back: [numpy.array]
-            List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_z, R_o],
-            where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_o, R_z],
+            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, hidden_size).
         W_x_back: [numpy.array]
-            List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_z, W_o],
-            where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_o, W_z],
+            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, input_size).
         b_back: [numpy.array]
-            List of biases for the backward layer. The ordering is [b_i, b_f, b_z, b_o],
-            where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+            List of biases for the backward layer. The ordering is [b_i, b_f, b_o, b_z],
+            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
             The shapes of the biases (hidden_size).
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
@@ -1730,25 +1730,25 @@ class NeuralNetworkBuilder(object):
             weight_params.outputGatePeepholeVector.floatValue.extend(map(float, p_o.flatten()))
 
         # Write the backward lstm weights
-        R_i, R_f, R_z, R_o = W_h_back
-        W_i, W_f, W_z, W_o = W_x_back
+        R_i, R_f, R_o, R_z = W_h_back
+        W_i, W_f, W_o, W_z = W_x_back
         
         weight_params_back.inputGateWeightMatrix.floatValue.extend(map(float, W_i.flatten()))
         weight_params_back.forgetGateWeightMatrix.floatValue.extend(map(float, W_f.flatten()))
-        weight_params_back.outputGateWeightMatrix.floatValue.extend(map(float, W_z.flatten()))
-        weight_params_back.blockInputWeightMatrix.floatValue.extend(map(float, W_o.flatten()))
+        weight_params_back.outputGateWeightMatrix.floatValue.extend(map(float, W_o.flatten()))
+        weight_params_back.blockInputWeightMatrix.floatValue.extend(map(float, W_z.flatten()))
 
         weight_params_back.inputGateRecursionMatrix.floatValue.extend(map(float, R_i.flatten()))
         weight_params_back.forgetGateRecursionMatrix.floatValue.extend(map(float, R_f.flatten()))
-        weight_params_back.outputGateRecursionMatrix.floatValue.extend(map(float, R_z.flatten()))
-        weight_params_back.blockInputRecursionMatrix.floatValue.extend(map(float, R_o.flatten()))
+        weight_params_back.outputGateRecursionMatrix.floatValue.extend(map(float, R_o.flatten()))
+        weight_params_back.blockInputRecursionMatrix.floatValue.extend(map(float, R_z.flatten()))
 
         if b_back is not None:
-            b_i, b_f, b_z, b_o = b_back
+            b_i, b_f, b_o, b_z = b_back
             weight_params_back.inputGateBiasVector.floatValue.extend(map(float, b_i.flatten()))
             weight_params_back.forgetGateBiasVector.floatValue.extend(map(float, b_f.flatten()))
-            weight_params_back.outputGateBiasVector.floatValue.extend(map(float, b_z.flatten()))
-            weight_params_back.blockInputBiasVector.floatValue.extend(map(float, b_o.flatten()))
+            weight_params_back.outputGateBiasVector.floatValue.extend(map(float, b_o.flatten()))
+            weight_params_back.blockInputBiasVector.floatValue.extend(map(float, b_z.flatten()))
 
         if peep_back is not None:
             p_i, p_f, p_o = peep_back
