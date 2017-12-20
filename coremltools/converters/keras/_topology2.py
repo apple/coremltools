@@ -165,21 +165,24 @@ class NetGraph(object):
         """
         Extract the ordering of output layers. 
         """
-        # TODO - finish this
         self.output_layers = []
         if hasattr(self.model, 'output_layers'):
             # find corresponding output layers in CoreML model
             # assume output layers are not shared
-            self.output_layers = [self.get_coreml_layers(kl)[0] for kl in 
-                    self.model.output_layers]
+            for kl in self.model.output_layers:
+                coreml_layers = self.get_coreml_layers(kl)
+                if len(coreml_layers) > 0:
+                    for cl in coreml_layers:
+                        self.output_layers.append(cl)
         elif len(self.model.outputs) > 0:
-            for model_output in self.model.outputs:                
+            for model_output in self.model.outputs:
                 for l in self.layer_list:
                     out_tensor = self.keras_layer_map[l].output
                     if out_tensor == model_output:
                         self.output_layers.append(l)
-        else:
-            raise ValueError("Output values cannot be identified.")
+
+        if len(self.output_layers) == 0:
+            raise ValueError("No outputs can be identified")
     
     def get_input_layers(self):
         return self.input_layers
