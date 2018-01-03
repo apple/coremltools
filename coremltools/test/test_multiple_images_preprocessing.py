@@ -42,10 +42,10 @@ def load_mlmodel(model_path):
                     shell=True)
     stdout, err = process.communicate()
 
-    if err == '':
+    if not err:
         return True
     else:
-        print(" The error is {}".format(err))
+        print(" The error is {}".format(err.decode()))
         return False   
         
 def compare_models(caffe_preds, coreml_preds):

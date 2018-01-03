@@ -21,6 +21,13 @@ if _HAS_SKLEARN:
     import scipy.sparse as _sp
 
 
+def to_unicode(x):
+    if isinstance(x, _six.binary_type):
+        return x.decode()
+    else:
+        return x
+
+
 def save_spec(spec, filename):
     """
     Save a protobuf model specification to file.
@@ -419,7 +426,7 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     error_squared = 0
 
     for index,row in data.iterrows():
-        predicted = model.predict(dict(row))[unicode(target)]
+        predicted = model.predict(dict(row))[to_unicode(target)]
         other_framework = row["prediction"]
         delta = predicted - other_framework
 
@@ -482,7 +489,7 @@ def evaluate_classifier(model, data, target='target', verbose=False):
     num_errors = 0
 
     for index,row in data.iterrows():
-        predicted = model.predict(dict(row))[unicode(target)]
+        predicted = model.predict(dict(row))[to_unicode(target)]
         other_framework = row["prediction"]
         if predicted != other_framework:
             num_errors += 1
@@ -532,7 +539,7 @@ def evaluate_classifier_with_probabilities(model, data,
     max_probability_error, num_key_mismatch = 0, 0
 
     for _,row in data.iterrows():
-        predicted_values = model.predict(dict(row))[unicode(probabilities)]
+        predicted_values = model.predict(dict(row))[to_unicode(probabilities)]
         other_values = row[probabilities]
 
         if set(predicted_values.keys()) != set(other_values.keys()):
