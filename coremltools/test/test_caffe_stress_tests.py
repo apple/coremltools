@@ -252,6 +252,7 @@ class CaffeLayers(unittest.TestCase):
                 
         return relative_error, failed_tests
 
+    @pytest.mark.slow
     def test_caffe_inner_product_layer(self):
         self.run_case(
             layer_type='inner_product',
@@ -259,6 +260,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerInnerProduct'
         )
 
+    @pytest.mark.slow
     def test_caffe_inner_product_activation_layer(self):
         self.run_case(
             layer_type='inner_product_activation',
@@ -312,6 +314,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerBias'
         )
 
+    @pytest.mark.slow
     def test_crop_layer(self):
         self.run_case(
             layer_type='crop',
@@ -335,6 +338,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerPooling'
         )
 
+    @pytest.mark.slow
     def test_lrn(self):
         self.run_case(
             layer_type='lrn',
