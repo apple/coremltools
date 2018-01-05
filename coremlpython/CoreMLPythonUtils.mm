@@ -108,7 +108,7 @@ static MLFeatureValue * convertValueToDictionary(const py::handle& handle) {
     }
     
     if(PyInt_Check(key) || PyLong_Check(key)) {
-        if(PyInt_Check(value) || PyLong_Check(key)) {
+        if(PyInt_Check(value) || PyLong_Check(value)) {
             auto dict = handle.cast<std::unordered_map<int64_t, int64_t> >();
             return convertToNSDictionary(dict);
         } else if(PyFloat_Check(value)) {
@@ -117,8 +117,8 @@ static MLFeatureValue * convertValueToDictionary(const py::handle& handle) {
         } else {
             throw std::runtime_error("Unknown value type for int key in dictionary.");
         }
-    } else if (PyString_Check(key) || PyUnicode_Check(handle.ptr())) {
-        if(PyInt_Check(value) || PyLong_Check(key)) {
+    } else if (PyString_Check(key) || PyUnicode_Check(key)) {
+        if(PyInt_Check(value) || PyLong_Check(value)) {
             auto dict = handle.cast<std::unordered_map<std::string, int64_t> >();
             return convertToNSDictionary(dict);
         } else if(PyFloat_Check(value)) {
