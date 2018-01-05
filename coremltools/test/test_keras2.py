@@ -825,7 +825,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         model = Sequential()
         model.add(Dense(32, input_shape=(16,)))
         model.add(Activation('softmax'))
-        classes = range(32)
+        classes = list(range(32))
 
         input_names = ['input']
         output_names = ['prob_output']
@@ -844,7 +844,7 @@ class KerasSingleLayerTest(unittest.TestCase):
                sorted(map(lambda x: x.name, spec.description.input)))
         self.assertEquals(len(spec.description.output), len(expected_output_names))
         self.assertEquals(expected_output_names,
-               map(lambda x: x.name, spec.description.output))
+               list(map(lambda x: x.name, spec.description.output)))
 
         # Check the types
         self.assertEquals(spec.description.output[0].type.WhichOneof('Type'), 'dictionaryType')

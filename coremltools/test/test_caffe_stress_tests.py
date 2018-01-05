@@ -70,10 +70,10 @@ def load_mlmodel(net_name, layer_type):
                     shell=True)
     stdout, err = process.communicate()
 
-    if err == '':
+    if not err:
         return True
     else:
-        print(" The error is {}".format(err))
+        print(" The error is {}".format(err.decode()))
         return False
 
 
