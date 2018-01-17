@@ -142,6 +142,8 @@ class NetGraph(object):
         Extract the ordering of the input layers. 
         """
         self.input_layers = []
+        in_nodes = self.model._inbound_nodes if hasattr(
+                self.model,'_inbound_nodes') else self.model.inbound_nodes
         if hasattr(self.model, 'input_layers'):
             input_keras_layers = self.model.input_layers[:]
             self.input_layers = [None] * len(input_keras_layers)
@@ -151,7 +153,7 @@ class NetGraph(object):
                     if keras_layer in input_keras_layers:
                         idx = input_keras_layers.index(keras_layer)
                         self.input_layers[idx] = layer
-        elif len(self.model.inbound_nodes) <= 1: 
+        elif len(in_nodes) <= 1:
             for ts in _to_list(self.model.input): 
                 # search for the InputLayer that matches this ts
                 for l in self.layer_list: 
@@ -621,7 +623,9 @@ class NetGraph(object):
         
         # build the graph without considering embedded subgraphs
         for i, layer in enumerate(model.layers):
-            for node in layer.inbound_nodes:
+            in_nodes = layer._inbound_nodes if hasattr(layer,
+                    '_inbound_nodes') else layer.inbound_nodes
+            for node in in_nodes:
                 for pred in node.inbound_layers:
                     if pred.name not in self.layer_list:
                         self.layer_list.append(pred.name)
