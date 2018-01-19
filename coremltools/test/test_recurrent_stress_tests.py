@@ -480,14 +480,17 @@ class SimpleTestCase(unittest.TestCase):
         for i in range(len(relative_error)):
             self.assertLessEqual(relative_error[i], 0.01)
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_SimpleRNN(self):
         self.test_SimpleRNN()
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_SimpleLSTM(self):
         self.test_SimpleLSTM()
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_SimpleGRU(self):
         self.test_SimpleGRU()
@@ -581,6 +584,7 @@ class RNNLayer(RecurrentLayerTest):
             numerical_failiure, i)
                           )
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_rnn_layer(self):
         self.test_rnn_layer()
@@ -718,6 +722,7 @@ class LSTMLayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
         
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_lstm_layer(self):
         self.test_lstm_layer()
@@ -819,6 +824,7 @@ class GRULayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_test_gru_layer(self):
         self.test_gru_layer()
@@ -927,10 +933,12 @@ class LSTMStacked(unittest.TestCase):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_SimpleLSTMStacked(self):
         self.test_SimpleLSTMStacked()
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_StressLSTMStacked(self):
         self.test_StressLSTMStacked()
@@ -993,25 +1001,28 @@ class DifferentIOModelsTypes(unittest.TestCase):
         for i in range(len(relative_error)):
             self.assertLessEqual(relative_error[i], 0.01)
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_test_one_to_many(self):
         self.test_one_to_many()
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_test_many_to_one(self):
         self.test_many_to_one()
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_many_to_many(self):
         self.test_many_to_many()
 
+@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
 @pytest.mark.keras2
 class InitialStateRecurrentModels(unittest.TestCase):
     """
     This test class sets initial states to the recurrent nodes
     and then tests if the state is passed in Espresso
     """
-    @pytest.mark.keras2
     def test_initial_state_GRU(self):
         data = np.random.rand(1, 1, 2)
 
@@ -1028,7 +1039,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
 
         hidden_state = (np.random.rand(1, 5))
-        model.get_layer(index=1).reset_states(states=hidden_state)
+        model.get_layer(index=1).reset_states(hidden_state)
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
         keras_output_2 = model.predict(data)
@@ -1037,7 +1048,6 @@ class InitialStateRecurrentModels(unittest.TestCase):
         coreml_output_2 = np.expand_dims(coreml_output_2, 1)
         np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
 
-    @pytest.mark.keras2
     def test_initial_state_SimpleRNN(self):
         data = np.random.rand(1, 1, 2)
         model = keras.models.Sequential()
@@ -1051,7 +1061,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
 
         hidden_state = np.random.rand(1, 5)
-        model.get_layer(index=1).reset_states(states=hidden_state)
+        model.get_layer(index=1).reset_states(hidden_state)
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
         keras_output_2 = model.predict(data)
@@ -1060,7 +1070,6 @@ class InitialStateRecurrentModels(unittest.TestCase):
         coreml_output_2 = np.expand_dims(coreml_output_2, 1)
         np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
 
-    @pytest.mark.keras2
     def test_initial_state_LSTM(self):
         data = np.random.rand(1, 1, 2)
 
@@ -1078,7 +1087,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
 
         hidden_state = (np.random.rand(1, 5), np.random.rand(1, 5))
-        model.get_layer(index=1).reset_states(states=hidden_state)
+        model.get_layer(index=1).reset_states(hidden_state)
 
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
