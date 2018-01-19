@@ -143,7 +143,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
                         one_dim_seq_flags[0]).astype('f').copy()}
 
         # Compile the model
-        output_names = ['output'+str(i) for i in xrange(len(model.outputs))]
+        output_names = ['output'+str(i) for i in range(len(model.outputs))]
         coreml_model = _get_coreml_model(model, model_path, input_names, 
                 output_names)
         
@@ -169,7 +169,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
             cp = c_preds[idx].flatten()
             # Compare predictions
             self.assertEquals(len(kp), len(cp))
-            for i in xrange(len(kp)):
+            for i in range(len(kp)):
                 max_den = max(1.0, kp[i], cp[i])
                 self.assertAlmostEquals(kp[i]/max_den, 
                                         cp[i]/max_den, 
