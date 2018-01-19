@@ -118,7 +118,11 @@ def convert_tree_ensemble(model, feature_names, target, force_32bit_float):
 
         # Now use the booster API.
         if isinstance(model, _xgboost.XGBRegressor):
-            model = model.booster()
+            # Name change in 0.7
+            if hasattr(model, 'get_booster'):
+                model = model.get_booster()
+            else:
+                model = model.booster()
 
         # Xgboost sometimes has feature names in there. Sometimes does not.
         if (feature_names is None) and (model.feature_names is None):
