@@ -928,4 +928,24 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertEquals(sorted(expected_output_names),
                sorted(map(lambda x: x.name, spec.description.output)))
 
+    def test_against_inputs_permutation_bug(self):
+        from keras.layers import Concatenate, Conv2D, Input
+        from keras.models import Model
         
+        # Create a simple model with concatenation over layer with and without activations
+        i = Input(shape=(4,4,3))
+        n = Conv2D(6, 3, activation='relu', padding='same')(i)
+        o = Concatenate()([n, i])
+        model = Model(inputs=i, outputs=o)
+
+        spec = keras.convert(model, input_names=["input"], output_names=["output"]).get_spec()
+        self.assertIsNotNone(spec)
+
+        # Test the model class
+        self.assertIsNotNone(spec.description)
+        self.assertTrue(spec.HasField("neuralNetwork"))
+
+        # Test inputs for concatenation layer
+        self.assertTrue(spec.neuralNetwork.layers[2].name.startswith("concatenate"))
+        expected_layer_inputs = [spec.neuralNetwork.layers[1].output[0], "input"]
+        self.assertEquals(expected_layer_inputs, spec.neuralNetwork.layers[2].input)

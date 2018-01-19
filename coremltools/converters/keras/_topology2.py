@@ -318,7 +318,7 @@ class NetGraph(object):
                 return idx
         return -1
     
-    def _add_edge(self, src, snk):
+    def _add_edge(self, src, snk, hint_predecessor_idx=None):
         if src not in self.edge_map:
             self.edge_map[src] = []
         if snk not in self.edge_map[src]:
@@ -326,7 +326,10 @@ class NetGraph(object):
         if snk not in self.reverse_edge_map:
             self.reverse_edge_map[snk] = []
         if src not in self.reverse_edge_map[snk]:
-            self.reverse_edge_map[snk].append(src)
+            if hint_predecessor_idx is not None and hint_predecessor_idx < len(self.reverse_edge_map):
+                self.reverse_edge_map[snk].insert(hint_predecessor_idx, src)
+            else:
+                self.reverse_edge_map[snk].append(src)
     
     def _remove_edge(self, src, snk):
         self.edge_map[src].remove(snk)
@@ -335,6 +338,20 @@ class NetGraph(object):
         self.reverse_edge_map[snk].remove(src)
         if len(self.reverse_edge_map[snk]) == 0: 
             self.reverse_edge_map.pop(snk)
+
+    def _replace_edge(self, edge_old, edge_new):
+        src_old, snk_old = edge_old
+        src_new, snk_new = edge_new
+        if src_old == src_new:
+            src = src_new
+            self._add_edge(src, snk_new)
+            self._remove_edge(src, snk_old)
+        elif snk_old == snk_new:
+            snk = snk_new
+            idx = self.reverse_edge_map[snk].index(src_old)
+            self._add_edge(src_new, snk, idx)
+            self._remove_edge(src_old, snk)
+
     
     def _remove_layer(self, layer):
         """
@@ -431,8 +448,7 @@ class NetGraph(object):
         self._add_edge(layer, new_layer)
         # add edges new_layer -> layer_successor, remove layer -> successor
         for succ in successors:
-            self._add_edge(new_layer, succ)
-            self._remove_edge(layer, succ)
+            self._replace_edge((layer, succ), (new_layer, succ))
         # if layer is an output layer, change the output layer tag
         if layer in self.output_layers:
             idx = self.output_layers.index(layer)
