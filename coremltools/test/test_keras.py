@@ -8,6 +8,7 @@ import unittest
 from coremltools._deps import HAS_KERAS_TF
 from coremltools.proto import FeatureTypes_pb2
 import pytest
+import six
 
 if HAS_KERAS_TF:
     import tensorflow as tf
@@ -46,11 +47,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-               map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+               [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -84,11 +85,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
             # Test the inputs and outputs
             self.assertEquals(len(spec.description.input), len(input_names))
-            self.assertItemsEqual(input_names,
-                   map(lambda x: x.name, spec.description.input))
+            six.assertCountEqual(self, input_names,
+                   [x.name for x in spec.description.input])
             self.assertEquals(len(spec.description.output), len(output_names))
-            self.assertItemsEqual(output_names,
-                   map(lambda x: x.name, spec.description.output))
+            six.assertCountEqual(self, output_names,
+                   [x.name for x in spec.description.output])
 
             # Test the layer parameters.
             layers = spec.neuralNetwork.layers
@@ -118,11 +119,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-               map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+               [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -154,11 +155,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-               map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+               [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -189,11 +190,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-               map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+               [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -222,11 +223,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-               map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+               [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -260,11 +261,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-               map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+               [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -291,11 +292,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-               map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+               [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -533,11 +534,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-              map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+              [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-              map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+              [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -565,11 +566,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-              map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+              [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-              map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+              [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -603,11 +604,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-              map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+              [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-              map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+              [x.name for x in spec.description.output])
 
         # Test the layer parameters.
         layers = spec.neuralNetwork.layers
@@ -629,11 +630,11 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertTrue(spec.HasField('neuralNetwork'))
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-              map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+              [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(output_names))
-        self.assertItemsEqual(output_names,
-              map(lambda x: x.name, spec.description.output))
+        six.assertCountEqual(self, output_names,
+              [x.name for x in spec.description.output])
         layers = spec.neuralNetwork.layers
         self.assertIsNotNone(layers[0].sequenceRepeat)
 
@@ -773,11 +774,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(expected_output_names))
         self.assertEquals(expected_output_names,
-               map(lambda x: x.name, spec.description.output))
+               [x.name for x in spec.description.output])
 
         # Check the types
         self.assertEquals(spec.description.output[0].type.WhichOneof('Type'), 'dictionaryType')
@@ -790,7 +791,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertEqual(spec.WhichOneof('Type'), 'neuralNetworkClassifier', "Expected a NN classifier model")
         self.assertEqual(spec.neuralNetworkClassifier.WhichOneof('ClassLabels'), 'stringClassLabels')
         class_from_proto = list(spec.neuralNetworkClassifier.stringClassLabels.vector)
-        self.assertItemsEqual(classes, class_from_proto)
+        six.assertCountEqual(self, classes, class_from_proto)
 
     def test_classifier_file(self):
         from keras.layers import Dense
@@ -820,11 +821,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(expected_output_names))
         self.assertEquals(expected_output_names,
-               map(lambda x: x.name, spec.description.output))
+               [x.name for x in spec.description.output])
 
         # Check the types
         self.assertEquals(spec.description.output[0].type.WhichOneof('Type'), 'dictionaryType')
@@ -844,7 +845,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         model = Sequential()
         model.add(Dense(32, input_dim=16))
         model.add(Activation('softmax'))
-        classes = range(32)
+        classes = list(range(32))
 
         input_names = ['input']
         output_names = ['prob_output']
@@ -859,11 +860,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(expected_output_names))
         self.assertEquals(expected_output_names,
-               map(lambda x: x.name, spec.description.output))
+               [x.name for x in spec.description.output])
 
         # Check the types
         self.assertEquals(spec.description.output[0].type.WhichOneof('Type'), 'dictionaryType')
@@ -876,7 +877,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertEqual(spec.WhichOneof('Type'), 'neuralNetworkClassifier', "Expected a NN classifier model")
         self.assertEqual(spec.neuralNetworkClassifier.WhichOneof('ClassLabels'), 'int64ClassLabels')
         class_from_proto = list(spec.neuralNetworkClassifier.int64ClassLabels.vector)
-        self.assertItemsEqual(classes, class_from_proto)
+        six.assertCountEqual(self, classes, class_from_proto)
 
     def test_classifier_custom_class_name(self):
         from keras.layers import Dense
@@ -902,11 +903,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        self.assertItemsEqual(input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(expected_output_names))
         self.assertEquals(expected_output_names,
-               map(lambda x: x.name, spec.description.output))
+               [x.name for x in spec.description.output])
 
         # Check the types
         self.assertEquals(spec.description.output[0].type.WhichOneof('Type'), 'dictionaryType')
@@ -919,7 +920,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertEqual(spec.WhichOneof('Type'), 'neuralNetworkClassifier', "Expected a NN classifier model")
         self.assertEqual(spec.neuralNetworkClassifier.WhichOneof('ClassLabels'), 'stringClassLabels')
         class_from_proto = list(spec.neuralNetworkClassifier.stringClassLabels.vector)
-        self.assertItemsEqual(classes, class_from_proto)
+        six.assertCountEqual(self, classes, class_from_proto)
 
     def test_default_interface_names(self):
         from keras.layers import Dense
@@ -941,10 +942,10 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(expected_input_names))
-        self.assertItemsEqual(expected_input_names,
-               map(lambda x: x.name, spec.description.input))
+        six.assertCountEqual(self, expected_input_names,
+               [x.name for x in spec.description.input])
         self.assertEquals(len(spec.description.output), len(expected_output_names))
         self.assertEquals(expected_output_names,
-               map(lambda x: x.name, spec.description.output))
+               [x.name for x in spec.description.output])
 
         
