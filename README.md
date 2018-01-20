@@ -54,8 +54,8 @@ In addition, it has the following soft dependencies that are only needed when
 you are converting models of these formats:
 
 - Keras (1.2.2, 2.0.4+) with Tensorflow (1.0.x, 1.1.x)
-- Xgboost (0.6+)
-- scikit-learn (0.15+)
+- Xgboost (0.7+)
+- scikit-learn (0.17+)
 - libSVM
 
 
