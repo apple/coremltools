@@ -5,6 +5,7 @@ from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2
 from coremltools.proto import NeuralNetwork_pb2
 import pytest
+import numpy as np
 
 if HAS_KERAS2_TF:
     import tensorflow as tf
@@ -936,9 +937,14 @@ class KerasSingleLayerTest(unittest.TestCase):
         i = Input(shape=(4,4,3))
         n = Conv2D(6, 3, activation='relu', padding='same')(i)
         o = Concatenate()([n, i])
-        model = Model(inputs=i, outputs=o)
+        keras_model = Model(inputs=i, outputs=o)
+        keras_model.set_weights([
+            np.random.normal(size=(3, 3, 3, 6)), # convolution layer weights
+            np.zeros(6)                          # convolution layer activation offsets
+        ])
 
-        spec = keras.convert(model, input_names=["input"], output_names=["output"]).get_spec()
+        coreml_model = keras.convert(keras_model, input_names=["input"], output_names=["output"])
+        spec = coreml_model.get_spec()
         self.assertIsNotNone(spec)
 
         # Test the model class
@@ -949,3 +955,10 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertTrue(spec.neuralNetwork.layers[2].name.startswith("concatenate"))
         expected_layer_inputs = [spec.neuralNetwork.layers[1].output[0], "input"]
         self.assertEquals(expected_layer_inputs, spec.neuralNetwork.layers[2].input)
+
+        # Test models output
+        image = np.ones((4, 4, 3))
+        keras_output = keras_model.predict(np.array([image]))[0]
+        coreml_output = coreml_model.predict({'input': image.astype(np.float64).transpose(2, 0, 1)})['output'].transpose(1, 2, 0)
+        models_average_diff = np.square(keras_output - coreml_output).mean()
+        self.assertAlmostEqual(0, models_average_diff, places=8)
