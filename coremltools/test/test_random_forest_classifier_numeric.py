@@ -8,8 +8,9 @@ import itertools
 import os
 import pandas as pd
 import numpy as np
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import HAS_SKLEARN, SKLEARN_VERSION
 from coremltools.models.utils import evaluate_classifier
+from distutils.version import StrictVersion
 import pytest
 
 if HAS_SKLEARN:
@@ -69,8 +70,10 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
             min_samples_leaf = [1, 5],
             min_weight_fraction_leaf = [0.0, 0.5],
             max_leaf_nodes = [None, 20],
-            min_impurity_decrease = [1e-07, 0.1],
         )
+
+        if SKLEARN_VERSION >= StrictVersion('0.19'):
+            options['min_impurity_decrease'] = [1e-07, 0.1]
 
         # Make a cartesian product of all options
         product = itertools.product(*options.values())
@@ -117,8 +120,10 @@ class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
                        min_samples_leaf = [1, 5],
                        min_weight_fraction_leaf = [0.0, 0.5],
                        max_leaf_nodes = [None, 20],
-                       min_impurity_decrease = [1e-07, 0.1],
         )
+
+        if SKLEARN_VERSION >= StrictVersion('0.19'):
+            options['min_impurity_decrease'] = [1e-07, 0.1]
 
         # Make a cartesian product of all options
         product = itertools.product(*options.values())

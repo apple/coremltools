@@ -19,6 +19,7 @@ def __get_version(version):
 
 # ---------------------------------------------------------------------------------------
 HAS_SKLEARN = True
+SKLEARN_VERSION = None
 SKLEARN_MIN_VERSION = '0.15'
 def __get_sklearn_version(version):
     # matching 0.15b, 0.16bf, etc
@@ -28,7 +29,8 @@ def __get_sklearn_version(version):
 
 try:
     import sklearn
-    if __get_sklearn_version(sklearn.__version__) < _StrictVersion(SKLEARN_MIN_VERSION):
+    SKLEARN_VERSION = __get_sklearn_version(sklearn.__version__)
+    if SKLEARN_VERSION < _StrictVersion(SKLEARN_MIN_VERSION):
         HAS_SKLEARN = False
         _logging.warn(('scikit-learn version %s is not supported. Minimum required version: %s. '
                       'Disabling scikit-learn conversion API.')
