@@ -141,11 +141,11 @@ class CustomLayerUtilsTest(unittest.TestCase):
         for f in features:
             input_ = spec.description.input.add()
             input_.name = f
-            input_.type.doubleType.MergeFromString('')
+            input_.type.doubleType.MergeFromString(b'')
 
         output_ = spec.description.output.add()
         output_.name = output
-        output_.type.doubleType.MergeFromString('')
+        output_.type.doubleType.MergeFromString(b'')
 
         layer = spec.neuralNetwork.layers.add()
         layer.name = 'custom1'

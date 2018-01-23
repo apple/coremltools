@@ -24,11 +24,11 @@ class MLModelTest(unittest.TestCase):
         for f in features:
             input_ = spec.description.input.add()
             input_.name = f
-            input_.type.doubleType.MergeFromString('')
+            input_.type.doubleType.MergeFromString(b'')
 
         output_ = spec.description.output.add()
         output_.name = output
-        output_.type.doubleType.MergeFromString('')
+        output_.type.doubleType.MergeFromString(b'')
 
         lr = spec.glmRegressor
         lr.offset.append(0.1)
