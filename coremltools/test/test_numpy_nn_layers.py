@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
+from coremltools.models.utils import macos_version
 import coremltools
 import itertools
 
@@ -77,7 +78,10 @@ def get_coreml_predictions_slice(X, params):
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         coreml_input = {'data': X}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
+        if macos_version() >= (10, 13):
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+        else:
+            coreml_preds = None
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
     except RuntimeError as e:
@@ -126,7 +130,10 @@ def get_coreml_predictions_reduce(X, params):
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         coreml_input = {'data': X}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
+        if macos_version() >= (10, 13):
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+        else:
+            coreml_preds = None
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
     except RuntimeError as e:
@@ -154,8 +161,11 @@ def get_coreml_predictions_unary(x, mode, alpha = 1.0):
     
     #preprare input and get predictions
     coreml_model = coremltools.models.MLModel(model_path)
-    coreml_input = {'data': x}
-    coreml_preds = coreml_model.predict(coreml_input)['output']
+    if macos_version() >= (10, 13):
+        coreml_input = {'data': x}
+        coreml_preds = coreml_model.predict(coreml_input)['output']
+    else:
+        coreml_preds = None
     
     if os.path.exists(model_dir):
         shutil.rmtree(model_dir)
@@ -186,16 +196,17 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        coreml_input = {'data': np.reshape(np.array([1.0,2.0,3.0]), (1,1,3))}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
+        if macos_version() >= (10, 13):
+            coreml_input = {'data': np.reshape(np.array([1.0,2.0,3.0]), (1,1,3))}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
         
-        #harcoded for this simple test case
-        numpy_preds = np.array([[1, 1.333, 1.666, 2, 2.333, 2.666, 3, 3, 3],\
-                [1, 1.333, 1.6666, 2, 2.33333, 2.6666, 3, 3, 3]])
-        #numpy_preds = np.array([[1, 1, 1, 2, 2, 2, 3, 3, 3],[1, 1, 1, 2, 2, 2, 3, 3, 3]])
-        #Test
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+            #harcoded for this simple test case
+            numpy_preds = np.array([[1, 1.333, 1.666, 2, 2.333, 2.666, 3, 3, 3],\
+                    [1, 1.333, 1.6666, 2, 2.33333, 2.6666, 3, 3, 3]])
+            #numpy_preds = np.array([[1, 1, 1, 2, 2, 2, 3, 3, 3],[1, 1, 1, 2, 2, 2, 3, 3, 3]])
+            #Test
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
@@ -220,13 +231,14 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        coreml_input = {'data': np.ones((1,3,3))}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = 1e-3 * np.ones((1,3,3))
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            coreml_input = {'data': np.ones((1,3,3))}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = 1e-3 * np.ones((1,3,3))
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)   
@@ -251,13 +263,14 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        coreml_input = {'data': np.reshape(np.arange(8, dtype=np.float32), (2,2,2))}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.reshape(np.arange(8) - np.array([1.5,1.5,1.5,1.5,5.5,5.5,5.5,5.5]),(2,2,2))
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            coreml_input = {'data': np.reshape(np.arange(8, dtype=np.float32), (2,2,2))}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.reshape(np.arange(8) - np.array([1.5,1.5,1.5,1.5,5.5,5.5,5.5,5.5]),(2,2,2))
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)  
@@ -281,13 +294,14 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        coreml_input = {'data': np.reshape(np.arange(4, dtype=np.float32), (1,2,2))}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))/np.sqrt(14)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            coreml_input = {'data': np.reshape(np.arange(4, dtype=np.float32), (1,2,2))}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))/np.sqrt(14)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)    
@@ -297,44 +311,52 @@ class SimpleTest(CorrectnessTest):
         x = np.reshape(np.arange(1,5, dtype=np.float32), (1,2,2))
         
         coreml_preds = get_coreml_predictions_unary(x, 'sqrt')
-        numpy_preds = np.sqrt(x)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+        if coreml_preds is not None:
+            numpy_preds = np.sqrt(x)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
         
         coreml_preds = get_coreml_predictions_unary(x, 'rsqrt')
-        numpy_preds = 1/np.sqrt(x)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if coreml_preds is not None:
+            numpy_preds = 1/np.sqrt(x)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         coreml_preds = get_coreml_predictions_unary(x, 'inverse')
-        numpy_preds = 1/x
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if coreml_preds is not None:
+            numpy_preds = 1/x
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         coreml_preds = get_coreml_predictions_unary(x, 'power', 3)
-        numpy_preds = x ** 3
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if coreml_preds is not None:
+            numpy_preds = x ** 3
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         coreml_preds = get_coreml_predictions_unary(x, 'exp')
-        numpy_preds = np.exp(x)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))   
+        if coreml_preds is not None:
+            numpy_preds = np.exp(x)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))   
         
         coreml_preds = get_coreml_predictions_unary(x, 'log')
-        numpy_preds = np.log(x)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+        if coreml_preds is not None:
+            numpy_preds = np.log(x)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
                                                       
         coreml_preds = get_coreml_predictions_unary(x, 'abs')
-        numpy_preds = np.abs(x)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))   
+        if coreml_preds is not None:
+            numpy_preds = np.abs(x)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))   
         
         coreml_preds = get_coreml_predictions_unary(x, 'threshold', alpha = 2)
-        numpy_preds = np.maximum(x, 2)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
+        if coreml_preds is not None:
+            numpy_preds = np.maximum(x, 2)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds)) 
         
     def test_split(self):
         
@@ -361,14 +383,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        coreml_input = {'data': x}
-        coreml_preds_dict = coreml_model.predict(coreml_input)
-        
-        for i in range(3):
-            coreml_preds = coreml_preds_dict[output_names[i]]
-            numpy_preds = x[i*3:i*3+3,:,:]
-            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            coreml_input = {'data': x}
+            coreml_preds_dict = coreml_model.predict(coreml_input)
+            
+            for i in range(3):
+                coreml_preds = coreml_preds_dict[output_names[i]]
+                numpy_preds = x[i*3:i*3+3,:,:]
+                self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+                self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)   
@@ -391,14 +414,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = 5 * x + 45
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = 5 * x + 45
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
@@ -424,14 +448,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = W * x
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = W * x
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)            
@@ -454,14 +479,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = x + 45
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = x + 45
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
@@ -487,14 +513,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = x + b
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = x + b
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)   
@@ -520,14 +547,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = x + b
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = x + b
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)    
@@ -550,15 +578,16 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x1 = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
-        x2 = np.reshape(np.arange(2,6, dtype=np.float32), (1,2,2))
-        coreml_input = {'data_0': x1, 'data_1': x2}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.minimum(x1,x2)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x1 = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+            x2 = np.reshape(np.arange(2,6, dtype=np.float32), (1,2,2))
+            coreml_input = {'data_0': x1, 'data_1': x2}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.minimum(x1,x2)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)     
@@ -588,13 +617,14 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.random.rand(*input_dim)
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.random.rand(20,8,8)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.random.rand(*input_dim)
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.random.rand(20,8,8)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
@@ -625,13 +655,14 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.random.rand(*input_dim)
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.random.rand(20,26,26)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.random.rand(*input_dim)
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.random.rand(20,26,26)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)   
@@ -658,14 +689,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.random.rand(*input_dim)
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = 34.0 * x + 67.0
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.random.rand(*input_dim)
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = 34.0 * x + 67.0
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
@@ -693,14 +725,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.reshape(np.array([[1,2,3], [4,5,6]]), (1,2,3)).astype(np.float32)
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.reshape(np.array([[-1,-1,-1,-1], [-1,-1,-1,-1], [-1,1,2,3], [-1,4,5,6]]), (1,4,4)).astype(np.float32)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.reshape(np.array([[1,2,3], [4,5,6]]), (1,2,3)).astype(np.float32)
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.reshape(np.array([[-1,-1,-1,-1], [-1,-1,-1,-1], [-1,1,2,3], [-1,4,5,6]]), (1,4,4)).astype(np.float32)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)     
@@ -727,14 +760,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.reshape(np.array([[1,2,3], [4,5,6]]), (1,2,3)).astype(np.float32)
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.reshape(np.array([[1,1,2,3], [1,1,2,3], [1,1,2,3], [4,4,5,6]]), (1,4,4)).astype(np.float32)
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.reshape(np.array([[1,2,3], [4,5,6]]), (1,2,3)).astype(np.float32)
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.reshape(np.array([[1,1,2,3], [1,1,2,3], [1,1,2,3], [4,4,5,6]]), (1,4,4)).astype(np.float32)
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
@@ -758,14 +792,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.random.rand(*input_dim)
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.reshape(x, (10,1,1))
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.random.rand(*input_dim)
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.reshape(x, (10,1,1))
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir) 
@@ -788,14 +823,15 @@ class SimpleTest(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.random.rand(*input_dim)
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = np.reshape(x, (1,10,1,1))
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.random.rand(*input_dim)
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = np.reshape(x, (1,10,1,1))
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)           
@@ -824,14 +860,15 @@ class SimpleTestCPUOnly(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input, useCPUOnly = True)['output']
-        
-        #harcoded for this simple test case
-        numpy_preds = x + b
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+        if macos_version() >= (10, 13):
+            x = np.reshape(np.arange(4, dtype=np.float32), (1,2,2))
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input, useCPUOnly = True)['output']
+            
+            #harcoded for this simple test case
+            numpy_preds = x + b
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
@@ -858,14 +895,15 @@ class SimpleTestCPUOnly(CorrectnessTest):
         
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
-        x = np.random.rand(*input_dim)
-        coreml_input = {'data': x}
-        coreml_preds = coreml_model.predict(coreml_input, useCPUOnly = True)['output']
+        if macos_version() >= (10, 13):
+            x = np.random.rand(*input_dim)
+            coreml_input = {'data': x}
+            coreml_preds = coreml_model.predict(coreml_input, useCPUOnly = True)['output']
         
-        #harcoded for this simple test case
-        numpy_preds = 34.0 * x + 67.0
-        self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
-        self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+            #harcoded for this simple test case
+            numpy_preds = 34.0 * x + 67.0
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)        
@@ -908,7 +946,7 @@ class StressTest(CorrectnessTest):
             coreml_preds, eval = get_coreml_predictions_slice(X, params)
             if eval is False:
                 failed_tests_compile.append(params)
-            else:
+            elif coreml_preds is not None:
                 if not self._compare_shapes(np_preds, coreml_preds):    
                     failed_tests_shape.append(params)
                 elif not self._compare_predictions(np_preds, coreml_preds):
@@ -958,7 +996,7 @@ class StressTest(CorrectnessTest):
             coreml_preds, eval = get_coreml_predictions_reduce(X, params)
             if eval is False:
                 failed_tests_compile.append(params)
-            else:
+            elif coreml_preds is not None:
                 if not self._compare_shapes(np_preds, coreml_preds):    
                     failed_tests_shape.append(params)
                 elif not self._compare_predictions(np_preds, coreml_preds):
@@ -967,7 +1005,3 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_compile,[])
         self.assertEqual(failed_tests_shape, [])
         self.assertEqual(failed_tests_numerical,[])    
-            
-            
-            
-            

@@ -12,7 +12,7 @@ import pytest
 from coremltools._deps import HAS_LIBSVM
 from coremltools._deps import HAS_SKLEARN
 
-from coremltools.models.utils import evaluate_regressor
+from coremltools.models.utils import evaluate_regressor, macos_version
 
 if HAS_LIBSVM:
     import svmutil
@@ -104,8 +104,9 @@ class SvrScikitTest(unittest.TestCase):
 
                 spec = sklearn_converter.convert(cur_model, input_names, 'target')
 
-                metrics = evaluate_regressor(spec, df)
-                self.assertAlmostEquals(metrics['max_error'], 0)
+                if macos_version() >= (10, 13):
+                    metrics = evaluate_regressor(spec, df)
+                    self.assertAlmostEquals(metrics['max_error'], 0)
 
                 if not allow_slow:
                     break
@@ -144,9 +145,10 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
 
         # Default values
         spec = libsvm.convert(self.libsvm_model)
-        (df['prediction'], _, _) = svmutil.svm_predict(data['target'], data['data'].tolist(), self.libsvm_model)
-        metrics = evaluate_regressor(spec, df)
-        self.assertAlmostEquals(metrics['max_error'], 0)
+        if macos_version() >= (10, 13):
+            (df['prediction'], _, _) = svmutil.svm_predict(data['target'], data['data'].tolist(), self.libsvm_model)
+            metrics = evaluate_regressor(spec, df)
+            self.assertAlmostEquals(metrics['max_error'], 0)
 
         # One extra parameters. This is legal/possible.
         num_inputs = len(data['data'][0])
@@ -217,8 +219,9 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
 
                 spec = libsvm.convert(model, input_names=input_names, target_name='target')
 
-                metrics = evaluate_regressor(spec, df)
-                self.assertAlmostEquals(metrics['max_error'], 0)
+                if macos_version() >= (10, 13):
+                    metrics = evaluate_regressor(spec, df)
+                    self.assertAlmostEquals(metrics['max_error'], 0)
 
                 if not allow_slow:
                     break

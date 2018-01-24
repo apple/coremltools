@@ -8,7 +8,7 @@ import unittest
 import numpy as np
 
 from coremltools._deps import HAS_SKLEARN
-from coremltools.models.utils import evaluate_transformer
+from coremltools.models.utils import evaluate_transformer, macos_version
 
 
 if HAS_SKLEARN:
@@ -47,39 +47,42 @@ class OneHotEncoderScikitTest(unittest.TestCase):
         scikit_model.fit(self.scikit_data)
         spec = sklearn.convert(scikit_model, 'single_feature', 'out').get_spec()
 
-        test_data = [{'single_feature' : row} for row in self.scikit_data]
-        scikit_output = [{'out' : row} for row in scikit_model.transform(self.scikit_data).toarray()]
-        metrics = evaluate_transformer(spec, test_data, scikit_output)
+        if macos_version() >= (10, 13):
+            test_data = [{'single_feature' : row} for row in self.scikit_data]
+            scikit_output = [{'out' : row} for row in scikit_model.transform(self.scikit_data).toarray()]
+            metrics = evaluate_transformer(spec, test_data, scikit_output)
 
-        self.assertIsNotNone(spec)
-        self.assertIsNotNone(spec.description)
-        self.assertEquals(metrics['num_errors'], 0)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.description)
+            self.assertEquals(metrics['num_errors'], 0)
 
     def test_conversion_many_columns(self):
         scikit_model = OneHotEncoder()
         scikit_model.fit(self.scikit_data_multiple_cols)
         spec = sklearn.convert(scikit_model, ['feature_1', 'feature_2'], 'out').get_spec()
 
-        test_data = [{'feature_1': row[0], 'feature_2': row[1]} for row in self.scikit_data_multiple_cols]
-        scikit_output = [{'out': row} for row in scikit_model.transform(self.scikit_data_multiple_cols).toarray()]
-        metrics = evaluate_transformer(spec, test_data, scikit_output)
+        if macos_version() >= (10, 13):
+            test_data = [{'feature_1': row[0], 'feature_2': row[1]} for row in self.scikit_data_multiple_cols]
+            scikit_output = [{'out': row} for row in scikit_model.transform(self.scikit_data_multiple_cols).toarray()]
+            metrics = evaluate_transformer(spec, test_data, scikit_output)
 
-        self.assertIsNotNone(spec)
-        self.assertIsNotNone(spec.description)
-        self.assertEquals(metrics['num_errors'], 0)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.description)
+            self.assertEquals(metrics['num_errors'], 0)
 
     def test_conversion_one_column_of_several(self):
         scikit_model = OneHotEncoder(categorical_features = [0])
         scikit_model.fit(copy(self.scikit_data_multiple_cols))
         spec = sklearn.convert(scikit_model, ['feature_1', 'feature_2'], 'out').get_spec()
 
-        test_data = [{'feature_1': row[0], 'feature_2': row[1]} for row in self.scikit_data_multiple_cols]
-        scikit_output = [{'out': row} for row in scikit_model.transform(self.scikit_data_multiple_cols).toarray()]
-        metrics = evaluate_transformer(spec, test_data, scikit_output)
+        if macos_version() >= (10, 13):
+            test_data = [{'feature_1': row[0], 'feature_2': row[1]} for row in self.scikit_data_multiple_cols]
+            scikit_output = [{'out': row} for row in scikit_model.transform(self.scikit_data_multiple_cols).toarray()]
+            metrics = evaluate_transformer(spec, test_data, scikit_output)
 
-        self.assertIsNotNone(spec)
-        self.assertIsNotNone(spec.description)
-        self.assertEquals(metrics['num_errors'], 0)
+            self.assertIsNotNone(spec)
+            self.assertIsNotNone(spec.description)
+            self.assertEquals(metrics['num_errors'], 0)
 
     def test_boston_OHE(self): 
         data = load_boston()
@@ -95,9 +98,10 @@ class OneHotEncoderScikitTest(unittest.TestCase):
             input_data = [dict(zip(data.feature_names, row)) for row in data.data]
             output_data = [{"out" : row} for row in model.transform(data.data)]
 
-            result = evaluate_transformer(spec, input_data, output_data)
+            if macos_version() >= (10, 13):
+                result = evaluate_transformer(spec, input_data, output_data)
 
-            assert result["num_errors"] == 0
+                assert result["num_errors"] == 0
 
     # This test still isn't working
     def test_boston_OHE_pipeline(self): 
@@ -116,12 +120,13 @@ class OneHotEncoderScikitTest(unittest.TestCase):
             # Convert the model
             spec = sklearn.convert(model, data.feature_names, 'out').get_spec()
 
-            input_data = [dict(zip(data.feature_names, row)) for row in data.data]
-            output_data = [{"out" : row} for row in model.transform(data.data.copy())]
+            if macos_version() >= (10, 13):
+                input_data = [dict(zip(data.feature_names, row)) for row in data.data]
+                output_data = [{"out" : row} for row in model.transform(data.data.copy())]
 
-            result = evaluate_transformer(spec, input_data, output_data)
+                result = evaluate_transformer(spec, input_data, output_data)
 
-            assert result["num_errors"] == 0
+                assert result["num_errors"] == 0
    
     def test_random_sparse_data(self): 
 
@@ -152,16 +157,17 @@ class OneHotEncoderScikitTest(unittest.TestCase):
                     # Convert the model
                     spec = sklearn.convert(model, [('data', Array(n_columns))], 'out')
 
-                    X_out = model.transform(X)
-                    if sparse:
-                        X_out = X_out.todense()
+                    if macos_version() >= (10, 13):
+                        X_out = model.transform(X)
+                        if sparse:
+                            X_out = X_out.todense()
 
-                    input_data = [{'data' : row} for row in X]
-                    output_data = [{"out" : row} for row in X_out]
+                        input_data = [{'data' : row} for row in X]
+                        output_data = [{"out" : row} for row in X_out]
 
-                    result = evaluate_transformer(spec, input_data, output_data)
+                        result = evaluate_transformer(spec, input_data, output_data)
 
-                    assert result["num_errors"] == 0
+                        assert result["num_errors"] == 0
 
             # Test normal data inside a pipeline
             for sparse in (True, False): 
@@ -176,16 +182,17 @@ class OneHotEncoderScikitTest(unittest.TestCase):
                     # Convert the model
                     spec = sklearn.convert(model, [('data', Array(n_columns))], 'out').get_spec()
                     
-                    X_out = model.transform(X)
-                    if sparse:
-                        X_out = X_out.todense()
+                    if macos_version() >= (10, 13):
+                        X_out = model.transform(X)
+                        if sparse:
+                            X_out = X_out.todense()
 
-                    input_data = [{'data' : row} for row in X]
-                    output_data = [{"out" : row} for row in X_out]
+                        input_data = [{'data' : row} for row in X]
+                        output_data = [{"out" : row} for row in X_out]
 
-                    result = evaluate_transformer(spec, input_data, output_data)
+                        result = evaluate_transformer(spec, input_data, output_data)
 
-                    assert result["num_errors"] == 0
+                        assert result["num_errors"] == 0
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model

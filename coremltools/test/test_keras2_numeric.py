@@ -6,6 +6,7 @@ import tempfile
 import pytest
 from coremltools._deps import HAS_KERAS2_TF
 from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION
+from coremltools.models.utils import macos_version
 
 if HAS_KERAS2_TF:
     import keras.backend
@@ -133,34 +134,35 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         coreml_model = _get_coreml_model(model, model_path, input_names, 
                 output_names, model_precision=model_precision)
         
-        # Assuming coreml model output names are in the same order as Keras 
-        # Output list, put predictions into a list, sorted by output name
-        coreml_preds = coreml_model.predict(coreml_input)
-        c_preds = [coreml_preds[name] for name in output_names]
+        if macos_version() >= (10, 13):
+            # Assuming coreml model output names are in the same order as Keras 
+            # Output list, put predictions into a list, sorted by output name
+            coreml_preds = coreml_model.predict(coreml_input)
+            c_preds = [coreml_preds[name] for name in output_names]
+
+            # Run Keras predictions
+            keras_preds = model.predict(input_data)
+            k_preds = keras_preds if type(keras_preds) is list else [keras_preds]
+            
+            # Compare each output blob
+            for idx, k_pred in enumerate(k_preds):
+                if transpose_keras_result:
+                    kp = _keras_transpose(k_pred).flatten()
+                else:
+                    kp = k_pred.flatten()
+                cp = c_preds[idx].flatten()
+                # Compare predictions
+                self.assertEquals(len(kp), len(cp))
+                for i in range(len(kp)):
+                    max_den = max(1.0, kp[i], cp[i])
+                    self.assertAlmostEquals(kp[i]/max_den, 
+                                            cp[i]/max_den, 
+                                            delta=delta)
 
         # Cleanup files - models on disk no longer useful
         if use_tmp_folder and os.path.exists(model_dir):
             shutil.rmtree(model_dir)
         
-        # Run Keras predictions
-        keras_preds = model.predict(input_data)
-        k_preds = keras_preds if type(keras_preds) is list else [keras_preds]
-        
-        # Compare each output blob
-        for idx, k_pred in enumerate(k_preds):
-            if transpose_keras_result:
-                kp = _keras_transpose(k_pred).flatten()
-            else:
-                kp = k_pred.flatten()
-            cp = c_preds[idx].flatten()
-            # Compare predictions
-            self.assertEquals(len(kp), len(cp))
-            for i in range(len(kp)):
-                max_den = max(1.0, kp[i], cp[i])
-                self.assertAlmostEquals(kp[i]/max_den, 
-                                        cp[i]/max_den, 
-                                        delta=delta)
-
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
@@ -2097,17 +2099,18 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
 
         # Get the model
         coreml_model = _get_coreml_model(model, model_path, input_names, ['output'], model_precision=model_precision)
-        # get prediction
-        coreml_preds = coreml_model.predict(coreml_input)['output'].flatten()
+        if macos_version() >= (10, 13):
+            # get prediction
+            coreml_preds = coreml_model.predict(coreml_input)['output'].flatten()
 
-        if use_tmp_folder:
-            shutil.rmtree(model_dir)
-        self.assertEquals(len(coreml_preds), len(keras_preds),
-                msg = 'Failed test case %s. Lengths wrong (%s vs %s)' % (param, len(coreml_preds), len(keras_preds)))
-        for i in range(len(keras_preds)):
-            max_den = max(1.0, keras_preds[i], coreml_preds[i])
-            self.assertAlmostEquals(keras_preds[i]/max_den, coreml_preds[i]/max_den, delta = delta,
-                msg = 'Failed test case %s. Predictions wrong (%s vs %s)' % (param, coreml_preds[i], keras_preds[i]))
+            if use_tmp_folder:
+                shutil.rmtree(model_dir)
+            self.assertEquals(len(coreml_preds), len(keras_preds),
+                    msg = 'Failed test case %s. Lengths wrong (%s vs %s)' % (param, len(coreml_preds), len(keras_preds)))
+            for i in range(len(keras_preds)):
+                max_den = max(1.0, keras_preds[i], coreml_preds[i])
+                self.assertAlmostEquals(keras_preds[i]/max_den, coreml_preds[i]/max_den, delta = delta,
+                    msg = 'Failed test case %s. Predictions wrong (%s vs %s)' % (param, coreml_preds[i], keras_preds[i]))
 
     @pytest.mark.slow
     def test_activation_layer_params(self):

@@ -8,6 +8,7 @@ import json
 import numpy as np
 import math
 from coremltools.converters import caffe as caffe_converter
+from coremltools.models.utils import macos_version
 nets_path = os.getenv('CAFFE_MODELS_PATH', '')
 nets_path = nets_path + '/' if nets_path else ''
 import coremltools
@@ -151,23 +152,24 @@ class CaffeLayers(unittest.TestCase):
                 layer_type,
                 input_layer
             )
-            if conversion_result is False:
-                failed_tests_conversion.append(net_name)
-                continue
-            load_result = load_mlmodel(net_name, layer_type)
-            if load_result is False:
-                failed_tests_load.append(net_name)
-            if 'input' in net_name:
-                evaluation_result, failed_tests_evaluation = \
-                    self.evaluate_model(
-                        net_name,
-                        layer_type,
-                        input_layer,
-                        output_layer,
-                        net_data_files,
-                        failed_tests_evaluation,
-                        counter,
-                        delta)
+            if macos_version() >= (10, 13):
+                if conversion_result is False:
+                    failed_tests_conversion.append(net_name)
+                    continue
+                load_result = load_mlmodel(net_name, layer_type)
+                if load_result is False:
+                    failed_tests_load.append(net_name)
+                if 'input' in net_name:
+                    evaluation_result, failed_tests_evaluation = \
+                        self.evaluate_model(
+                            net_name,
+                            layer_type,
+                            input_layer,
+                            output_layer,
+                            net_data_files,
+                            failed_tests_evaluation,
+                            counter,
+                            delta)
         with open('./failed_tests_{}.json'.format(layer_type), mode='w') \
                 as file:
             json.dump({'conversion': failed_tests_conversion,

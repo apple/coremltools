@@ -10,7 +10,7 @@ import pandas as pd
 import random
 import pytest
 
-from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities
+from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities, macos_version
 from coremltools._deps import HAS_LIBSVM, HAS_SKLEARN
 
 if HAS_LIBSVM:
@@ -66,16 +66,17 @@ class NuSvcScikitTest(unittest.TestCase):
 
                 spec = scikit_converter.convert(cur_model, column_names, 'target')
 
-                if use_probability_estimates:
-                    probability_lists = cur_model.predict_proba(x)
-                    df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
-                    metrics = evaluate_classifier_with_probabilities(spec, df, probabilities='classProbability')
-                    self.assertEquals(metrics['num_key_mismatch'], 0)
-                    self.assertLess(metrics['max_probability_error'], allowed_prob_delta)
-                else:
-                    df['prediction'] = cur_model.predict(x)
-                    metrics = evaluate_classifier(spec, df, verbose=False)
-                    self.assertEquals(metrics['num_errors'], 0)
+                if macos_version() >= (10, 13):
+                    if use_probability_estimates:
+                        probability_lists = cur_model.predict_proba(x)
+                        df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
+                        metrics = evaluate_classifier_with_probabilities(spec, df, probabilities='classProbability')
+                        self.assertEquals(metrics['num_key_mismatch'], 0)
+                        self.assertLess(metrics['max_probability_error'], allowed_prob_delta)
+                    else:
+                        df['prediction'] = cur_model.predict(x)
+                        metrics = evaluate_classifier(spec, df, verbose=False)
+                        self.assertEquals(metrics['num_errors'], 0)
                 
                 if not allow_slow:
                     break
@@ -193,9 +194,10 @@ class NuSVCLibSVMTest(unittest.TestCase):
 
         spec = libsvm.convert(model, self.column_names, 'target', 'probabilities')
 
-        metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False)
-        self.assertEquals(metrics['num_key_mismatch'], 0)
-        self.assertLess(metrics['max_probability_error'], 0.00001)
+        if macos_version() >= (10, 13):
+            metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False)
+            self.assertEquals(metrics['num_key_mismatch'], 0)
+            self.assertLess(metrics['max_probability_error'], 0.00001)
 
     @pytest.mark.slow
     def test_binary_classificaiton_with_probability_stress_test(self):

@@ -1001,3 +1001,15 @@ def replace_custom_layer_name(spec, oldname, newname):
             layer.custom.className = newname
 
 
+def macos_version():
+    """
+    Returns macOS version as a tuple of integers, making it easy to do proper
+    version comparisons. On non-Macs, it returns an empty tuple.
+    """
+    import sys
+    if sys.platform == 'darwin':
+        import platform
+        ver_str = platform.mac_ver()[0]
+        return tuple([int(v) for v in ver_str.split('.')])
+    else:
+        return ()

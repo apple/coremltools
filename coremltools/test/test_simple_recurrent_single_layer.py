@@ -11,6 +11,7 @@ import tempfile
 import itertools
 import coremltools
 from coremltools._deps import HAS_KERAS_TF
+from coremltools.models.utils import macos_version
 import pytest
 
 
@@ -105,25 +106,26 @@ class SimpleRNNLayer(RecurrentLayerTest):
                 coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
                 model.save_weights(keras_model_path)
                 mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-                keras_preds = model.predict(input_data).flatten()
-                input_data = np.transpose(input_data, [1, 0, 2])
-                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-                try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                except AssertionError:
-                    print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                        base_params, keras_preds.shape, coreml_preds.shape))
-                    shape_err_models.append(base_params)
-                    shutil.rmtree(model_dir)
-                    i += 1
-                    continue
-                try:
-                    for idx in range(0, len(coreml_preds)):
-                        relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
-                        self.assertAlmostEqual(relative_error, 0, places=2)
-                except AssertionError:
-                    print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params, keras_preds, coreml_preds))
-                    numerical_err_models.append(base_params)
+                if macos_version() >= (10, 13):
+                    keras_preds = model.predict(input_data).flatten()
+                    input_data = np.transpose(input_data, [1, 0, 2])
+                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                    try:
+                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    except AssertionError:
+                        print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                            base_params, keras_preds.shape, coreml_preds.shape))
+                        shape_err_models.append(base_params)
+                        shutil.rmtree(model_dir)
+                        i += 1
+                        continue
+                    try:
+                        for idx in range(0, len(coreml_preds)):
+                            relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
+                            self.assertAlmostEqual(relative_error, 0, places=2)
+                    except AssertionError:
+                        print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params, keras_preds, coreml_preds))
+                        numerical_err_models.append(base_params)
                 shutil.rmtree(model_dir)
                 i += 1
 
@@ -190,27 +192,28 @@ class LSTMLayer(RecurrentLayerTest):
                 coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
                 model.save_weights(keras_model_path)
                 mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-                keras_preds = model.predict(input_data).flatten()
-                input_data = np.transpose(input_data, [1, 0, 2])
-                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-                try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                except AssertionError:
-                    print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                        base_params, keras_preds.shape, coreml_preds.shape))
-                    shape_err_models.append(base_params)
-                    shutil.rmtree(model_dir)
-                    i += 1
-                    continue
-                try:
-                    for idx in range(0, len(coreml_preds)):
-                        relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
-                        self.assertAlmostEqual(relative_error, 0, places=2)
-                except AssertionError:
-                    print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
-                                                                                                        keras_preds,
-                                                                                                        coreml_preds))
-                    numerical_err_models.append(base_params)
+                if macos_version() >= (10, 13):
+                    keras_preds = model.predict(input_data).flatten()
+                    input_data = np.transpose(input_data, [1, 0, 2])
+                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                    try:
+                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    except AssertionError:
+                        print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                            base_params, keras_preds.shape, coreml_preds.shape))
+                        shape_err_models.append(base_params)
+                        shutil.rmtree(model_dir)
+                        i += 1
+                        continue
+                    try:
+                        for idx in range(0, len(coreml_preds)):
+                            relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
+                            self.assertAlmostEqual(relative_error, 0, places=2)
+                    except AssertionError:
+                        print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
+                                                                                                            keras_preds,
+                                                                                                            coreml_preds))
+                        numerical_err_models.append(base_params)
                 shutil.rmtree(model_dir)
                 i += 1
 
@@ -271,27 +274,28 @@ class GRULayer(RecurrentLayerTest):
                 coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
                 model.save_weights(keras_model_path)
                 mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-                keras_preds = model.predict(input_data).flatten()
-                input_data = np.transpose(input_data, [1, 0, 2])
-                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-                try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                except AssertionError:
-                    print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                        base_params, keras_preds.shape, coreml_preds.shape))
-                    shape_err_models.append(base_params)
-                    shutil.rmtree(model_dir)
-                    i += 1
-                    continue
-                try:
-                    for idx in range(0, len(coreml_preds)):
-                        relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
-                        self.assertAlmostEqual(relative_error, 0, places=2)
-                except AssertionError:
-                    print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
-                                                                                                        keras_preds,
-                                                                                                        coreml_preds))
-                    numerical_err_models.append(base_params)
+                if macos_version() >= (10, 13):
+                    keras_preds = model.predict(input_data).flatten()
+                    input_data = np.transpose(input_data, [1, 0, 2])
+                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                    try:
+                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    except AssertionError:
+                        print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                            base_params, keras_preds.shape, coreml_preds.shape))
+                        shape_err_models.append(base_params)
+                        shutil.rmtree(model_dir)
+                        i += 1
+                        continue
+                    try:
+                        for idx in range(0, len(coreml_preds)):
+                            relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
+                            self.assertAlmostEqual(relative_error, 0, places=2)
+                    except AssertionError:
+                        print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
+                                                                                                            keras_preds,
+                                                                                                            coreml_preds))
+                        numerical_err_models.append(base_params)
                 shutil.rmtree(model_dir)
                 i += 1
 
