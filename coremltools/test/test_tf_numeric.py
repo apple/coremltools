@@ -6,6 +6,7 @@ import shutil
 import tempfile
 import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
+from coremltools.models.utils import macos_version
 import coremltools
 import tensorflow as tf
 import itertools
@@ -66,7 +67,10 @@ def get_coreml_predictions_reorganize(X, params):
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         coreml_input = {'data': X}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
+        if macos_version() >= (10, 13):
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+        else:
+            coreml_preds = None
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
     except RuntimeError as e:
@@ -132,7 +136,10 @@ def get_coreml_predictions_depthwise(X, params, w):
         #preprare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         coreml_input = {'data': X}
-        coreml_preds = coreml_model.predict(coreml_input)['output']
+        if macos_version() >= (10, 13):
+            coreml_preds = coreml_model.predict(coreml_input)['output']
+        else:
+            coreml_preds = None
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
     except RuntimeError as e:
@@ -183,7 +190,7 @@ class StressTest(CorrectnessTest):
             coreml_preds, eval = get_coreml_predictions_reorganize(np.expand_dims(X, axis=0), params)
             if eval is False:
                 failed_tests_compile.append(params)
-            else:
+            elif coreml_preds is not None:
                 if not self._compare_shapes(tf_preds, coreml_preds):    
                     failed_tests_shape.append(params)
                 elif not self._compare_predictions(tf_preds, coreml_preds):
@@ -232,7 +239,7 @@ class StressTest(CorrectnessTest):
             coreml_preds, eval = get_coreml_predictions_depthwise(np.expand_dims(X, axis=0), params, w)
             if eval is False:
                 failed_tests_compile.append(params)
-            else:
+            elif coreml_preds is not None:
                 if not self._compare_shapes(tf_preds, coreml_preds):    
                     failed_tests_shape.append(params)
                 elif not self._compare_predictions(tf_preds, coreml_preds):
@@ -241,13 +248,3 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_compile,[])
         self.assertEqual(failed_tests_shape, [])
         self.assertEqual(failed_tests_numerical,[])    
-        
-                    
-                        
-            
-            
-
-
-
-
-            

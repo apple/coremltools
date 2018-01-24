@@ -7,7 +7,7 @@ import os
 import pandas as pd
 import unittest
 from coremltools._deps import HAS_SKLEARN
-from coremltools.models.utils import evaluate_regressor
+from coremltools.models.utils import evaluate_regressor, macos_version
 
 if HAS_SKLEARN:
     from sklearn.linear_model import LinearRegression
@@ -95,10 +95,11 @@ class LinearRegressionScikitTest(unittest.TestCase):
             cur_model.fit(self.scikit_data['data'], self.scikit_data['target'])
             spec = convert(cur_model, input_names, 'target')
 
-            df['prediction'] = cur_model.predict(self.scikit_data.data)
+            if macos_version() >= (10, 13):
+                df['prediction'] = cur_model.predict(self.scikit_data.data)
 
-            metrics = evaluate_regressor(spec, df)
-            self.assertAlmostEquals(metrics['max_error'], 0)
+                metrics = evaluate_regressor(spec, df)
+                self.assertAlmostEquals(metrics['max_error'], 0)
 
 
     def test_linear_svr_evaluation(self):
@@ -122,7 +123,8 @@ class LinearRegressionScikitTest(unittest.TestCase):
             cur_model.fit(self.scikit_data['data'], self.scikit_data['target'])
             spec = convert(cur_model, input_names, 'target')
 
-            df['prediction'] = cur_model.predict(self.scikit_data.data)
+            if macos_version() >= (10, 13):
+                df['prediction'] = cur_model.predict(self.scikit_data.data)
 
-            metrics = evaluate_regressor(spec, df)
-            self.assertAlmostEquals(metrics['max_error'], 0)
+                metrics = evaluate_regressor(spec, df)
+                self.assertAlmostEquals(metrics['max_error'], 0)

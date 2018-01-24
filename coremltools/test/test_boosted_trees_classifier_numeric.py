@@ -9,7 +9,7 @@ import pandas as pd
 import unittest
 
 from coremltools._deps import HAS_SKLEARN
-from coremltools.models.utils import evaluate_classifier
+from coremltools.models.utils import evaluate_classifier, macos_version
 if HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingClassifier
@@ -38,7 +38,7 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
     def _check_metrics(self, metrics, params = {}):
         self.assertEquals(metrics['num_errors'], 0, msg = 'Failed case %s. Results %s' % (params, metrics))
 
-    def _train_convert_evaluate(self, **scikit_params):
+    def _train_convert_evaluate_assert(self, **scikit_params):
         """
         Train a scikit-learn model, convert it and then evaluate it with CoreML
         """
@@ -48,21 +48,21 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
         
-        # Get predictions
-        df = pd.DataFrame(self.X, columns=self.feature_names)
-        df['prediction'] = scikit_model.predict(self.X)
-        
-        # Evaluate it
-        metrics = evaluate_classifier(spec, df)
-        return metrics
+        if macos_version() >= (10, 13):
+            # Get predictions
+            df = pd.DataFrame(self.X, columns=self.feature_names)
+            df['prediction'] = scikit_model.predict(self.X)
+
+            # Evaluate it
+            metrics = evaluate_classifier(spec, df)
+            self._check_metrics(metrics)
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class BoostedTreeBinaryClassificationBostonHousingScikitNumericTest(
            BoostedTreeClassificationBostonHousingScikitNumericTest):
 
     def test_simple_binary_classifier(self):
-        metrics = self._train_convert_evaluate()
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert()
 
     @pytest.mark.slow
     def test_binary_classifier_stress_test(self):
@@ -82,8 +82,7 @@ class BoostedTreeBinaryClassificationBostonHousingScikitNumericTest(
 
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
-            metrics = self._train_convert_evaluate(**arg)
-            self._check_metrics(metrics, arg)
+            self._train_convert_evaluate_assert(**arg)
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
@@ -108,8 +107,7 @@ class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
         self.output_name = 'target'
         
     def test_simple_multiclass(self):
-        metrics = self._train_convert_evaluate()
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert()
     
     @pytest.mark.slow
     def test_multiclass_stress_test(self):
@@ -128,5 +126,4 @@ class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
 
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
-            metrics = self._train_convert_evaluate(**arg)
-            self._check_metrics(metrics, arg)
+            self._train_convert_evaluate_assert(**arg)

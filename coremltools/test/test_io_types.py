@@ -5,6 +5,7 @@
 
 import coremltools
 from coremltools._deps import HAS_KERAS2_TF
+from coremltools.models.utils import macos_version
 import keras
 import sklearn
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -32,6 +33,7 @@ def create_model(spec):
     return coremltools.models.MLModel(spec)
 
 
+@unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
 class TestIODataTypes(unittest.TestCase):
     """
     This class tests for different I/O feature data types for an .mlmodel

@@ -10,7 +10,7 @@ import itertools
 import pytest
 
 from coremltools._deps import HAS_SKLEARN, HAS_XGBOOST
-from coremltools.models.utils import evaluate_regressor
+from coremltools.models.utils import evaluate_regressor, macos_version
 
 if HAS_XGBOOST:
     import xgboost
@@ -42,24 +42,24 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         self.assertAlmostEquals(metrics['max_error'], 0, delta = 1e-5,
                 msg = 'Failed case %s. Results %s' % (params, metrics))
 
-    def _train_convert_evaluate(self, **scikit_params):
+    def _train_convert_evaluate_assert(self, **scikit_params):
         scikit_model = GradientBoostingRegressor(random_state = 1, **scikit_params)
         scikit_model.fit(self.X, self.target)
 
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
-        # Get predictions
-        df = pd.DataFrame(self.X, columns=self.feature_names)
-        df['prediction'] = scikit_model.predict(self.X)
+        if macos_version() >= (10, 13):
+            # Get predictions
+            df = pd.DataFrame(self.X, columns=self.feature_names)
+            df['prediction'] = scikit_model.predict(self.X)
 
-        # Evaluate it
-        metrics = evaluate_regressor(spec, df, 'target', verbose = False)
-        return metrics
+            # Evaluate it
+            metrics = evaluate_regressor(spec, df, 'target', verbose = False)
+            self._check_metrics(metrics, scikit_params)
 
     def test_boston_housing_simple_regression(self):
-        metrics = self._train_convert_evaluate()
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert()
 
     @pytest.mark.slow
     def test_boston_housing_parameter_stress_test(self):
@@ -79,8 +79,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
 
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
-            metrics = self._train_convert_evaluate(**arg)
-            self._check_metrics(metrics, arg)
+            self._train_convert_evaluate_assert(**arg)
 
 
 @unittest.skipIf(not HAS_XGBOOST, 'Missing xgboost. Skipping')
@@ -110,7 +109,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
         self.assertAlmostEquals(metrics['max_error'], 0, delta = 1e-4,
                 msg = 'Failed case %s. Results %s' % (params, metrics))
 
-    def _train_convert_evaluate(self, bt_params = {}, **params):
+    def _train_convert_evaluate_assert(self, bt_params = {}, **params):
         """
         Set up the unit test by loading the dataset and training a model.
         """
@@ -120,28 +119,26 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
         # Convert the model
         spec = xgb_converter.convert(xgb_model, self.feature_names, self.output_name, force_32bit_float = False)
 
-        # Get predictions
-        df = pd.DataFrame(self.X, columns=self.feature_names)
-        df['prediction'] = xgb_model.predict(self.dtrain)
+        if macos_version() >= (10, 13):
+            # Get predictions
+            df = pd.DataFrame(self.X, columns=self.feature_names)
+            df['prediction'] = xgb_model.predict(self.dtrain)
 
-        # Evaluate it
-        metrics = evaluate_regressor(spec, df, target = 'target', verbose = False)
-        return metrics
+            # Evaluate it
+            metrics = evaluate_regressor(spec, df, target = 'target', verbose = False)
+            self._check_metrics(metrics, bt_params)
 
     def test_boston_housing_simple_decision_tree_regression(self):
-        metrics = self._train_convert_evaluate(num_boost_round = 1)
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert(num_boost_round = 1)
 
     def test_boston_housing_simple_boosted_tree_regression(self):
-        metrics = self._train_convert_evaluate(num_boost_round = 10)
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert(num_boost_round = 10)
 
     def test_boston_housing_simple_random_forest_regression(self):
-        metrics = self._train_convert_evaluate({"subsample":0.5})
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert({"subsample":0.5})
 
     def test_boston_housing_float_double_corner_case(self):
-        metrics = self._train_convert_evaluate({
+        self._train_convert_evaluate_assert({
                    'colsample_bytree': 1,
                    'colsample_bylevel': 1,
                    'scale_pos_weight': 1,
@@ -152,7 +149,6 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
                    'subsample': 0.5,
                    'objective': 'reg:linear',
                    'max_depth': 5}, num_boost_round = 2)
-        self._check_metrics(metrics)
         
     @pytest.mark.slow
     def test_boston_housing_parameter_stress_test(self):
@@ -174,8 +170,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
 
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
-            metrics = self._train_convert_evaluate(arg)
-            self._check_metrics(metrics, arg)
+            self._train_convert_evaluate_assert(arg)
 
 @unittest.skipIf(not HAS_XGBOOST, 'Missing xgboost. Skipping')
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
@@ -201,7 +196,7 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         self.assertAlmostEquals(metrics['max_error'], 0, delta = 1e-4,
                 msg = 'Failed case %s. Results %s' % (params, metrics))
 
-    def _train_convert_evaluate(self, bt_params = {}, **params):
+    def _train_convert_evaluate_assert(self, bt_params = {}, **params):
         """
         Set up the unit test by loading the dataset and training a model.
         """
@@ -212,34 +207,31 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         # Convert the model (feature_names can't be given because of XGboost)
         spec = xgb_converter.convert(xgb_model, self.feature_names, self.output_name, force_32bit_float = False)
 
-        # Get predictions
-        df = pd.DataFrame(self.X, columns=self.feature_names)
-        df['prediction'] = xgb_model.predict(self.X)
+        if macos_version() >= (10, 13):
+            # Get predictions
+            df = pd.DataFrame(self.X, columns=self.feature_names)
+            df['prediction'] = xgb_model.predict(self.X)
 
-        # Evaluate it
-        metrics = evaluate_regressor(spec, df, target = 'target', verbose = False)
-        return metrics
+            # Evaluate it
+            metrics = evaluate_regressor(spec, df, target = 'target', verbose = False)
+            self._check_metrics(metrics, bt_params)
 
     def test_boston_housing_simple_boosted_tree_regression(self):
-        metrics = self._train_convert_evaluate()
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert()
 
     def test_boston_housing_simple_random_forest_regression(self):
-        metrics = self._train_convert_evaluate(subsample = 0.5)
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert(subsample = 0.5)
 
     def test_boston_housing_simple_decision_tree_regression(self):
-        metrics = self._train_convert_evaluate(n_estimators = 1)
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert(n_estimators = 1)
 
     def test_boston_housing_float_double_corner_case(self):
-        metrics = self._train_convert_evaluate({
+        self._train_convert_evaluate_assert({
                           'colsample_bytree': 1, 'colsample_bylevel': 1,
                           'scale_pos_weight': 1, 'learning_rate': 0.1,
                           'max_delta_step': 0, 'min_child_weight': 1,
                           'n_estimators': 10, 'subsample': 0.3, 'objective':
                           'reg:linear', 'max_depth': 1})
-        self._check_metrics(metrics)
 
     @pytest.mark.slow
     def test_boston_housing_parameter_stress_test(self):
@@ -263,5 +255,4 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
 
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
-            metrics = self._train_convert_evaluate(arg)
-            self._check_metrics(metrics, arg)
+            self._train_convert_evaluate_assert(arg)

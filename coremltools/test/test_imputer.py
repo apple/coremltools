@@ -7,7 +7,7 @@ import unittest
 from coremltools._deps import HAS_SKLEARN
 import numpy.random as rn
 import numpy as np
-from coremltools.models.utils import evaluate_transformer
+from coremltools.models.utils import evaluate_transformer, macos_version
 
 
 if HAS_SKLEARN:
@@ -47,13 +47,12 @@ class NumericalImputerTestCase(unittest.TestCase):
 
                 spec = converter.convert(model, scikit_data.feature_names, 'out')
 
-                input_data = [dict(zip(scikit_data.feature_names, row)) 
-                                for row in X]
+                if macos_version() >= (10, 13):
+                    input_data = [dict(zip(scikit_data.feature_names, row)) 
+                                    for row in X]
 
-                output_data = [{"out" : row} for row in tr_X]
+                    output_data = [{"out" : row} for row in tr_X]
 
-                result = evaluate_transformer(spec, input_data, output_data)
+                    result = evaluate_transformer(spec, input_data, output_data)
 
-                assert result["num_errors"] == 0
-                
-
+                    assert result["num_errors"] == 0

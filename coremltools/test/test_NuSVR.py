@@ -11,7 +11,7 @@ import pytest
 
 from coremltools._deps import HAS_LIBSVM
 from coremltools._deps import HAS_SKLEARN
-from coremltools.models.utils import evaluate_regressor
+from coremltools.models.utils import evaluate_regressor, macos_version
 
 if HAS_LIBSVM:
     import svmutil
@@ -97,8 +97,9 @@ class NuSVRScikitTest(unittest.TestCase):
 
                 spec = scikit_converter.convert(cur_model, input_names, 'target')
 
-                metrics = evaluate_regressor(spec, df)
-                self.assertAlmostEquals(metrics['max_error'], 0)
+                if macos_version() >= (10, 13):
+                    metrics = evaluate_regressor(spec, df)
+                    self.assertAlmostEquals(metrics['max_error'], 0)
 
                 if not allow_slow:
                     break
@@ -191,8 +192,9 @@ class NuSVRLibSVMTest(unittest.TestCase):
 
                 spec = libsvm.convert(model, input_names, 'target')
 
-                metrics = evaluate_regressor(spec, df)
-                self.assertAlmostEquals(metrics['max_error'], 0)
+                if macos_version() >= (10, 13):
+                    metrics = evaluate_regressor(spec, df)
+                    self.assertAlmostEquals(metrics['max_error'], 0)
 
                 if not allow_slow:
                     break

@@ -2,7 +2,9 @@ import unittest
 import numpy as np
 from coremltools.models import datatypes, MLModel
 from coremltools.models.neural_network import NeuralNetworkBuilder
+from coremltools.models.utils import macos_version
 
+@unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
 class BasicNumericCorrectnessTest(unittest.TestCase):
             
     def test_undefined_shape_single_output(self):

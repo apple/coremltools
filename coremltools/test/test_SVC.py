@@ -10,7 +10,7 @@ import pandas as pd
 import random
 import pytest
 
-from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities
+from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities, macos_version
 from coremltools._deps import HAS_LIBSVM, HAS_SKLEARN
 
 if HAS_SKLEARN:
@@ -67,16 +67,17 @@ class SvcScikitTest(unittest.TestCase):
 
                 spec = scikit_converter.convert(cur_model, column_names, 'target')
 
-                if use_probability_estimates:
-                    probability_lists = cur_model.predict_proba(x)
-                    df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
-                    metrics = evaluate_classifier_with_probabilities(spec, df, probabilities='classProbability', verbose=True)
-                    self.assertEquals(metrics['num_key_mismatch'], 0)
-                    self.assertLess(metrics['max_probability_error'], allowed_prob_delta)
-                else:
-                    df['prediction'] = cur_model.predict(x)
-                    metrics = evaluate_classifier(spec, df, verbose=False)
-                    self.assertEquals(metrics['num_errors'], 0)
+                if macos_version() >= (10, 13):
+                    if use_probability_estimates:
+                        probability_lists = cur_model.predict_proba(x)
+                        df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
+                        metrics = evaluate_classifier_with_probabilities(spec, df, probabilities='classProbability', verbose=True)
+                        self.assertEquals(metrics['num_key_mismatch'], 0)
+                        self.assertLess(metrics['max_probability_error'], allowed_prob_delta)
+                    else:
+                        df['prediction'] = cur_model.predict(x)
+                        metrics = evaluate_classifier(spec, df, verbose=False)
+                        self.assertEquals(metrics['num_errors'], 0)
 
                 if not allow_slow:
                     break
@@ -181,20 +182,22 @@ class CSVCLibSVMTest(unittest.TestCase):
 
         # Test with probabilities
         spec = libsvm.convert(self.libsvm_model).get_spec()
-        (_, _, probability_lists) = svm_predict(self.y, self.x, self.libsvm_model, '-b 1 -q')
-        probability_dicts = [dict(zip([1, 2], cur_vals)) for cur_vals in probability_lists]
-        df['classProbability'] = probability_dicts
-        metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False, probabilities='classProbability')
-        self.assertLess(metrics['max_probability_error'], 0.00001)
+        if macos_version() >= (10, 13):
+            (_, _, probability_lists) = svm_predict(self.y, self.x, self.libsvm_model, '-b 1 -q')
+            probability_dicts = [dict(zip([1, 2], cur_vals)) for cur_vals in probability_lists]
+            df['classProbability'] = probability_dicts
+            metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False, probabilities='classProbability')
+            self.assertLess(metrics['max_probability_error'], 0.00001)
 
         # Test model without probabilities
         no_probability_model = svmutil.svm_train(self.prob, svmutil.svm_parameter())
         spec = libsvm.convert(no_probability_model).get_spec()
         self.assertEqual(len(spec.description.output), 1)
         self.assertEqual(spec.description.output[0].name, u'target')
-        (df['prediction'], _, _) = svm_predict(self.y, self.x, no_probability_model, ' -q')
-        metrics = evaluate_classifier(spec, df, verbose=False)
-        self.assertEquals(metrics['num_errors'], 0)
+        if macos_version() >= (10, 13):
+            (df['prediction'], _, _) = svm_predict(self.y, self.x, no_probability_model, ' -q')
+            metrics = evaluate_classifier(spec, df, verbose=False)
+            self.assertEquals(metrics['num_errors'], 0)
 
 
     # LibSVM only supports string labels
@@ -251,9 +254,10 @@ class CSVCLibSVMTest(unittest.TestCase):
                 
                 spec = libsvm.convert(model, self.column_names, 'target', 'probabilities')
 
-                metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False)
-                self.assertEquals(metrics['num_key_mismatch'], 0)
-                self.assertLess(metrics['max_probability_error'], 0.00001)
+                if macos_version() >= (10, 13):
+                    metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False)
+                    self.assertEquals(metrics['num_key_mismatch'], 0)
+                    self.assertLess(metrics['max_probability_error'], 0.00001)
 
                 if not allow_slow:
                     break
@@ -290,8 +294,9 @@ class CSVCLibSVMTest(unittest.TestCase):
 
                 spec = libsvm.convert(model, column_names, 'target')
 
-                metrics = evaluate_classifier(spec, df, verbose=False)
-                self.assertEquals(metrics['num_errors'], 0)
+                if macos_version() >= (10, 13):
+                    metrics = evaluate_classifier(spec, df, verbose=False)
+                    self.assertEquals(metrics['num_errors'], 0)
 
                 if not allow_slow:
                     break

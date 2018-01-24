@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 import itertools
 from coremltools._deps import HAS_KERAS2_TF, HAS_KERAS_TF
+from coremltools.models.utils import macos_version
 import pytest
 
 np.random.seed(1377)
@@ -375,16 +376,19 @@ def simple_model_eval(params, model):
             input_data.reshape((params[0]['input_dims'][0], params[0]['input_dims'][1]))).flatten()
     if len(params[0]['input_dims']) == 3:
         input_data = np.transpose(input_data, [1, 0, 2])
-    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-    if K.tensorflow_backend._SESSION:
-        import tensorflow as tf
-        tf.reset_default_graph()
-        K.tensorflow_backend._SESSION.close()
-        K.tensorflow_backend._SESSION = None
+    if macos_version() >= (10, 13):
+        coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+        if K.tensorflow_backend._SESSION:
+            import tensorflow as tf
+            tf.reset_default_graph()
+            K.tensorflow_backend._SESSION.close()
+            K.tensorflow_backend._SESSION = None
 
-    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
-    relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
-    return relative_error, keras_preds, coreml_preds
+        max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
+        relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
+        return relative_error, keras_preds, coreml_preds
+    else:
+        return [], None, None
 
 
 class SimpleTestCase(unittest.TestCase):
@@ -555,26 +559,27 @@ class RNNLayer(RecurrentLayerTest):
                     K.tensorflow_backend._SESSION.close()
                     K.tensorflow_backend._SESSION = None
                 input_data = np.transpose(input_data, [1, 0, 2])
-                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-                try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                except AssertionError:
-                    print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                        base_params, keras_preds.shape, coreml_preds.shape))
-                    shape_err_models.append(base_params)
-                    i += 1
-                    continue
-                try:
-                    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
-                    relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
-                    for i in range(len(relative_error)):
-                        self.assertLessEqual(relative_error[i], 0.01)
-                except AssertionError:
-                    print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
-                                                                                                        keras_preds,
-                                                                                                        coreml_preds))
-                    numerical_failiure += 1
-                    numerical_err_models.append(base_params)
+                if macos_version() >= (10, 13):
+                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                    try:
+                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    except AssertionError:
+                        print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                            base_params, keras_preds.shape, coreml_preds.shape))
+                        shape_err_models.append(base_params)
+                        i += 1
+                        continue
+                    try:
+                        max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
+                        relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
+                        for i in range(len(relative_error)):
+                            self.assertLessEqual(relative_error[i], 0.01)
+                    except AssertionError:
+                        print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
+                                                                                                            keras_preds,
+                                                                                                            coreml_preds))
+                        numerical_failiure += 1
+                        numerical_err_models.append(base_params)
                 i += 1
 
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
@@ -683,40 +688,41 @@ class LSTMLayer(RecurrentLayerTest):
                 else:
                     keras_preds = model.predict(input_data).flatten()
 
-                input_data = np.transpose(input_data, [1, 0, 2])
-                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                if macos_version() >= (10, 13):
+                    input_data = np.transpose(input_data, [1, 0, 2])
+                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
 
-                if K.tensorflow_backend._SESSION:
-                    import tensorflow as tf
-                    tf.reset_default_graph()
-                    K.tensorflow_backend._SESSION.close()
-                    K.tensorflow_backend._SESSION = None
+                    if K.tensorflow_backend._SESSION:
+                        import tensorflow as tf
+                        tf.reset_default_graph()
+                        K.tensorflow_backend._SESSION.close()
+                        K.tensorflow_backend._SESSION = None
 
-                try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                except AssertionError:
-                    print(
-                    "Shape error:\n base_params: {}\n\n lstm_params: {}\n\n keras_preds.shape: {}\n\n coreml_preds.shape: {}".format(
-                        base_params, lstm_params, keras_preds.shape, coreml_preds.shape))
-                    shape_err_models.append(base_params)
-                    i += 1
-                    continue
-                try:
-                    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
-                    relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
-                    for i in range(len(relative_error)):
-                        self.assertLessEqual(relative_error[i], 0.01)
-                except AssertionError:
-                    print(
-                    "Assertion error:\n base_params: {}\n lstm_params: {}\n\n keras_preds: {}\n\n coreml_preds: {}\n\n\n keras_preds: {}\n\n\n coreml_preds: {}\n".format(
-                        base_params,
-                        lstm_params,
-                        keras_preds / max_denominator,
-                        coreml_preds / max_denominator,
-                        keras_preds,
-                        coreml_preds))
-                    numerical_failiure += 1
-                    numerical_err_models.append(base_params)
+                    try:
+                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    except AssertionError:
+                        print(
+                        "Shape error:\n base_params: {}\n\n lstm_params: {}\n\n keras_preds.shape: {}\n\n coreml_preds.shape: {}".format(
+                            base_params, lstm_params, keras_preds.shape, coreml_preds.shape))
+                        shape_err_models.append(base_params)
+                        i += 1
+                        continue
+                    try:
+                        max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
+                        relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
+                        for i in range(len(relative_error)):
+                            self.assertLessEqual(relative_error[i], 0.01)
+                    except AssertionError:
+                        print(
+                        "Assertion error:\n base_params: {}\n lstm_params: {}\n\n keras_preds: {}\n\n coreml_preds: {}\n\n\n keras_preds: {}\n\n\n coreml_preds: {}\n".format(
+                            base_params,
+                            lstm_params,
+                            keras_preds / max_denominator,
+                            coreml_preds / max_denominator,
+                            keras_preds,
+                            coreml_preds))
+                        numerical_failiure += 1
+                        numerical_err_models.append(base_params)
                 i += 1
 
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
@@ -787,38 +793,39 @@ class GRULayer(RecurrentLayerTest):
                 else:
                     keras_preds = model.predict(input_data).flatten()
 
-                input_data = np.transpose(input_data, [1, 0, 2])
-                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-                if K.tensorflow_backend._SESSION:
-                    import tensorflow as tf
-                    tf.reset_default_graph()
-                    K.tensorflow_backend._SESSION.close()
-                    K.tensorflow_backend._SESSION = None
-                try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                except AssertionError:
-                    print(
-                    "Shape error:\nbase_params: {}\n gru_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                        base_params, gru_params, keras_preds.shape, coreml_preds.shape))
-                    shape_err_models.append(base_params)
-                    i += 1
-                    continue
-                try:
-                    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
-                    relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
-                    for i in range(len(relative_error)):
-                        self.assertLessEqual(relative_error[i], 0.01)
-                except AssertionError:
-                    print(
-                    "===============Assertion error:\n base_params: {}\n gru_params: {}\n\n keras_preds: {}\n\n coreml_preds: {}\n\n\n keras_preds: {}\n\n\n coreml_preds: {}\n".format(
-                        base_params,
-                        gru_params,
-                        keras_preds / max_denominator,
-                        coreml_preds / max_denominator,
-                        keras_preds,
-                        coreml_preds))
-                    numerical_failiure += 1
-                    numerical_err_models.append(base_params)
+                if macos_version() >= (10, 13):
+                    input_data = np.transpose(input_data, [1, 0, 2])
+                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                    if K.tensorflow_backend._SESSION:
+                        import tensorflow as tf
+                        tf.reset_default_graph()
+                        K.tensorflow_backend._SESSION.close()
+                        K.tensorflow_backend._SESSION = None
+                    try:
+                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    except AssertionError:
+                        print(
+                        "Shape error:\nbase_params: {}\n gru_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                            base_params, gru_params, keras_preds.shape, coreml_preds.shape))
+                        shape_err_models.append(base_params)
+                        i += 1
+                        continue
+                    try:
+                        max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
+                        relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
+                        for i in range(len(relative_error)):
+                            self.assertLessEqual(relative_error[i], 0.01)
+                    except AssertionError:
+                        print(
+                        "===============Assertion error:\n base_params: {}\n gru_params: {}\n\n keras_preds: {}\n\n coreml_preds: {}\n\n\n keras_preds: {}\n\n\n coreml_preds: {}\n".format(
+                            base_params,
+                            gru_params,
+                            keras_preds / max_denominator,
+                            coreml_preds / max_denominator,
+                            keras_preds,
+                            coreml_preds))
+                        numerical_failiure += 1
+                        numerical_err_models.append(base_params)
                 i += 1
 
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
@@ -904,31 +911,32 @@ class LSTMStacked(unittest.TestCase):
             input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                         base_params['input_dims'][2])
             keras_preds = model.predict(input_data).flatten()
-            input_data = np.transpose(input_data, [1, 0, 2])
-            coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-            import tensorflow as tf
-            tf.reset_default_graph()
-            K.tensorflow_backend._SESSION.close()
-            K.tensorflow_backend._SESSION = None
-            try:
-                self.assertEquals(coreml_preds.shape, keras_preds.shape)
-            except AssertionError:
-                print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                    base_params, keras_preds.shape, coreml_preds.shape))
-                shape_err_models.append(base_params)
-                i += 1
-                continue
-            try:
-                max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
-                relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
-                for i in range(len(relative_error)):
-                    self.assertLessEqual(relative_error[i], 0.01)
-            except AssertionError:
-                print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
-                                                                                                    keras_preds,
-                                                                                                    coreml_preds))
-                numerical_failiure += 1
-                numerical_err_models.append(base_params)
+            if macos_version() >= (10, 13):
+                input_data = np.transpose(input_data, [1, 0, 2])
+                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                import tensorflow as tf
+                tf.reset_default_graph()
+                K.tensorflow_backend._SESSION.close()
+                K.tensorflow_backend._SESSION = None
+                try:
+                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                except AssertionError:
+                    print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                        base_params, keras_preds.shape, coreml_preds.shape))
+                    shape_err_models.append(base_params)
+                    i += 1
+                    continue
+                try:
+                    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
+                    relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
+                    for i in range(len(relative_error)):
+                        self.assertLessEqual(relative_error[i], 0.01)
+                except AssertionError:
+                    print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
+                                                                                                        keras_preds,
+                                                                                                        coreml_preds))
+                    numerical_failiure += 1
+                    numerical_err_models.append(base_params)
             i += 1
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
@@ -1031,22 +1039,24 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.get_layer(index=1).reset_states()
 
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
-        keras_output_1 = model.predict(data)
-        coreml_full_output_1 = coreml_model.predict({'data': data})
-        coreml_output_1 = coreml_full_output_1['output']
-        coreml_output_1 = np.expand_dims(coreml_output_1, 1)
+        if macos_version() >= (10, 13):
+            keras_output_1 = model.predict(data)
+            coreml_full_output_1 = coreml_model.predict({'data': data})
+            coreml_output_1 = coreml_full_output_1['output']
+            coreml_output_1 = np.expand_dims(coreml_output_1, 1)
 
-        np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
+            np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
 
         hidden_state = (np.random.rand(1, 5))
         model.get_layer(index=1).reset_states(hidden_state)
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
-        keras_output_2 = model.predict(data)
-        coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
-        coreml_output_2 = coreml_full_output_2['output']
-        coreml_output_2 = np.expand_dims(coreml_output_2, 1)
-        np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
+        if macos_version() >= (10, 13):
+            keras_output_2 = model.predict(data)
+            coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
+            coreml_output_2 = coreml_full_output_2['output']
+            coreml_output_2 = np.expand_dims(coreml_output_2, 1)
+            np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
 
     def test_initial_state_SimpleRNN(self):
         data = np.random.rand(1, 1, 2)
@@ -1054,21 +1064,23 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.add(keras.layers.SimpleRNN(5, input_shape=(1, 2), batch_input_shape=[1, 1, 2], stateful=True))
         model.get_layer(index=1).reset_states()
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
-        keras_output_1 = model.predict(data)
-        coreml_full_output_1 = coreml_model.predict({'data': data})
-        coreml_output_1 = coreml_full_output_1['output']
-        coreml_output_1 = np.expand_dims(coreml_output_1, 1)
-        np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
+        if macos_version() >= (10, 13):
+            keras_output_1 = model.predict(data)
+            coreml_full_output_1 = coreml_model.predict({'data': data})
+            coreml_output_1 = coreml_full_output_1['output']
+            coreml_output_1 = np.expand_dims(coreml_output_1, 1)
+            np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
 
         hidden_state = np.random.rand(1, 5)
         model.get_layer(index=1).reset_states(hidden_state)
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
-        keras_output_2 = model.predict(data)
-        coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
-        coreml_output_2 = coreml_full_output_2['output']
-        coreml_output_2 = np.expand_dims(coreml_output_2, 1)
-        np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
+        if macos_version() >= (10, 13):
+            keras_output_2 = model.predict(data)
+            coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
+            coreml_output_2 = coreml_full_output_2['output']
+            coreml_output_2 = np.expand_dims(coreml_output_2, 1)
+            np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
 
     def test_initial_state_LSTM(self):
         data = np.random.rand(1, 1, 2)
@@ -1077,14 +1089,15 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.add(keras.layers.LSTM(5, input_shape=(1, 2), batch_input_shape=[1, 1, 2], stateful=True))
         model.get_layer(index=1).reset_states()
 
-        coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
+        if macos_version() >= (10, 13):
+            coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
 
-        keras_output_1 = model.predict(data)
-        coreml_full_output_1 = coreml_model.predict({'data': data})
-        coreml_output_1 = coreml_full_output_1['output']
-        coreml_output_1 = np.expand_dims(coreml_output_1, 1)
+            keras_output_1 = model.predict(data)
+            coreml_full_output_1 = coreml_model.predict({'data': data})
+            coreml_output_1 = coreml_full_output_1['output']
+            coreml_output_1 = np.expand_dims(coreml_output_1, 1)
 
-        np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
+            np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
 
         hidden_state = (np.random.rand(1, 5), np.random.rand(1, 5))
         model.get_layer(index=1).reset_states(hidden_state)
@@ -1092,11 +1105,12 @@ class InitialStateRecurrentModels(unittest.TestCase):
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
 
-        keras_output_2 = model.predict(data)
-        coreml_full_output_2 = coreml_model.predict(
-            {'data': data, spec.description.input[1].name: hidden_state[0][0],
-             spec.description.input[2].name: hidden_state[1][0]})
-        coreml_output_2 = coreml_full_output_2['output']
-        coreml_output_2 = np.expand_dims(coreml_output_2, 1)
+        if macos_version() >= (10, 13):
+            keras_output_2 = model.predict(data)
+            coreml_full_output_2 = coreml_model.predict(
+                {'data': data, spec.description.input[1].name: hidden_state[0][0],
+                 spec.description.input[2].name: hidden_state[1][0]})
+            coreml_output_2 = coreml_full_output_2['output']
+            coreml_output_2 = np.expand_dims(coreml_output_2, 1)
 
-        np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)
+            np.testing.assert_array_almost_equal(coreml_output_2.T, keras_output_2)

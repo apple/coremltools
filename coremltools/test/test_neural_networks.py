@@ -5,7 +5,7 @@ from coremltools.models import MLModel
 from coremltools._deps import HAS_KERAS_TF
 from coremltools.proto import Model_pb2
 from coremltools.models import MLModel
-from coremltools.models.utils import get_custom_layer_names, replace_custom_layer_name
+from coremltools.models.utils import get_custom_layer_names, replace_custom_layer_name, macos_version
 
 
 
@@ -40,10 +40,11 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         predicted_feature_name = 'pf'
         coremlmodel = keras_converter.convert(model, input_names, output_names, class_labels=class_labels, predicted_feature_name=predicted_feature_name, predicted_probabilities_output=output_names[0])
     
-        inputs = np.random.rand(input_dim)
-        outputs = coremlmodel.predict({'input': inputs})
-        # this checks that the dictionary got the right name and type
-        self.assertEquals(type(outputs[output_names[0]]), type({'a': 0.5}))
+        if macos_version() >= (10, 13):
+            inputs = np.random.rand(input_dim)
+            outputs = coremlmodel.predict({'input': inputs})
+            # this checks that the dictionary got the right name and type
+            self.assertEquals(type(outputs[output_names[0]]), type({'a': 0.5}))
     
     def test_classifier_no_name(self):
         np.random.seed(1988)
@@ -65,10 +66,11 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         predicted_feature_name = 'pf'
         coremlmodel = keras_converter.convert(model, input_names, output_names, class_labels=class_labels, predicted_feature_name=predicted_feature_name)
         
-        inputs = np.random.rand(input_dim)
-        outputs = coremlmodel.predict({'input': inputs})
-        # this checks that the dictionary got the right name and type
-        self.assertEquals(type(outputs[output_names[0]]), type({'a': 0.5}))
+        if macos_version() >= (10, 13):
+            inputs = np.random.rand(input_dim)
+            outputs = coremlmodel.predict({'input': inputs})
+            # this checks that the dictionary got the right name and type
+            self.assertEquals(type(outputs[output_names[0]]), type({'a': 0.5}))
     
     def test_internal_layer(self):
         
@@ -116,16 +118,16 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         
         coreml2 = keras_converter.convert(model2, input_names, ['output2'])
         
-        # generate input data
-        inputs = np.random.rand(input_dim)
+        if macos_version() >= (10, 13):
+            # generate input data
+            inputs = np.random.rand(input_dim)
 
-        fullOutputs = coremlfinal.predict({'input': inputs})
-        
-        partialOutput = coreml2.predict({'input': inputs})
-        
-        for i in range(0, num_channels2):
-            self.assertAlmostEquals(fullOutputs['middle_layer_output'][i], partialOutput['output2'][i], 2)
+            fullOutputs = coremlfinal.predict({'input': inputs})
             
+            partialOutput = coreml2.predict({'input': inputs})
+            
+            for i in range(0, num_channels2):
+                self.assertAlmostEquals(fullOutputs['middle_layer_output'][i], partialOutput['output2'][i], 2)
 
 
 class CustomLayerUtilsTest(unittest.TestCase):

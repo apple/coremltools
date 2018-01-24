@@ -9,7 +9,7 @@ import os
 import pandas as pd
 import numpy as np
 from coremltools._deps import HAS_SKLEARN, SKLEARN_VERSION
-from coremltools.models.utils import evaluate_classifier
+from coremltools.models.utils import evaluate_classifier, macos_version
 from distutils.version import StrictVersion
 import pytest
 
@@ -23,20 +23,21 @@ class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase
     def _check_metrics(self, metrics, params = {}):
         self.assertEquals(metrics['num_errors'], 0, msg = 'Failed case %s. Results %s' % (params, metrics))
 
-    def _train_convert_evaluate(self, **scikit_params):
+    def _train_convert_evaluate_assert(self, **scikit_params):
         scikit_model = RandomForestClassifier(random_state = 1, **scikit_params)
         scikit_model.fit(self.X, self.target)
 
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
-        # Get predictions
-        df = pd.DataFrame(self.X, columns=self.feature_names)
-        df['prediction'] = scikit_model.predict(self.X)
+        if macos_version() >= (10, 13):
+            # Get predictions
+            df = pd.DataFrame(self.X, columns=self.feature_names)
+            df['prediction'] = scikit_model.predict(self.X)
 
-        # Evaluate it
-        metrics = evaluate_classifier(spec, df, verbose = False)
-        return metrics
+            # Evaluate it
+            metrics = evaluate_classifier(spec, df, verbose = False)
+            self._check_metrics(metrics, scikit_params)
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
@@ -57,8 +58,7 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
         self.scikit_data = scikit_data
 
     def test_simple_binary_classifier(self):
-        metrics = self._train_convert_evaluate(max_depth = 13)
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert(max_depth = 13)
 
     @pytest.mark.slow
     def test_binary_classifier_stress_test(self):
@@ -81,8 +81,7 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
 
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
-            metrics = self._train_convert_evaluate(**arg)
-            self._check_metrics(metrics, arg)
+            self._train_convert_evaluate_assert(**arg)
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
@@ -108,8 +107,7 @@ class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
         self.output_name = 'target'
 
     def test_simple_multiclass(self):
-        metrics = self._train_convert_evaluate()
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert()
 
     @pytest.mark.slow
     def test_multiclass_stress_test(self):
@@ -131,5 +129,4 @@ class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
 
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
-            metrics = self._train_convert_evaluate(**arg)
-            self._check_metrics(metrics, arg)
+            self._train_convert_evaluate_assert(**arg)

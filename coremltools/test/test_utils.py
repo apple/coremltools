@@ -1,10 +1,8 @@
 # Copyright (c) 2017, Apple Inc. All rights reserved.
-#
-# Use of this source code is governed by a BSD-3-clause license that can be
-# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+# # Use of this source code is governed by a BSD-3-clause license that can be # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools.models.utils import rename_feature
+from coremltools.models.utils import rename_feature, macos_version
 from coremltools.models import MLModel
 from coremltools._deps import HAS_SKLEARN
 import pandas as pd
@@ -15,6 +13,7 @@ if HAS_SKLEARN:
     from sklearn.linear_model import LinearRegression
     from sklearn.pipeline import Pipeline
     from coremltools.converters import sklearn as converter
+
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class PipeLineRenameTests(unittest.TestCase):
@@ -53,6 +52,6 @@ class PipeLineRenameTests(unittest.TestCase):
         renamed_model = MLModel(scikit_spec)
         
         # Check the predictions
-        self.assertEquals(model.predict({'input': sample_data}),
-                          renamed_model.predict({'renamed_input': sample_data}))
-                          
+        if macos_version() >= (10, 13):
+            self.assertEquals(model.predict({'input': sample_data}),
+                              renamed_model.predict({'renamed_input': sample_data}))

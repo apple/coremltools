@@ -13,6 +13,7 @@ import numpy as np
 from coremltools._deps import HAS_SKLEARN
 from coremltools.models.utils import evaluate_transformer
 from coremltools.models.utils import evaluate_regressor
+from coremltools.models.utils import macos_version
 from coremltools.converters.sklearn import convert
 
 if HAS_SKLEARN:
@@ -39,12 +40,12 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = convert(pl, data.feature_names, 'out')
 
-        input_data = [dict(zip(data.feature_names, row)) for row in data.data]
-        output_data = [{"out" : row} for row in pl.transform(data.data)]
+        if macos_version() >= (10, 13):
+            input_data = [dict(zip(data.feature_names, row)) for row in data.data]
+            output_data = [{"out" : row} for row in pl.transform(data.data)]
 
-        result = evaluate_transformer(spec, input_data, output_data)
-
-        assert result["num_errors"] == 0
+            result = evaluate_transformer(spec, input_data, output_data)
+            assert result["num_errors"] == 0
     
     def test_boston_OHE_plus_trees(self): 
 
@@ -59,13 +60,14 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = convert(pl, data.feature_names, 'target')
 
-        # Get predictions
-        df = pd.DataFrame(data.data, columns=data.feature_names)
-        df['prediction'] = pl.predict(data.data)
+        if macos_version() >= (10, 13):
+            # Get predictions
+            df = pd.DataFrame(data.data, columns=data.feature_names)
+            df['prediction'] = pl.predict(data.data)
 
-        # Evaluate it
-        result = evaluate_regressor(spec, df, 'target', verbose = False)
+            # Evaluate it
+            result = evaluate_regressor(spec, df, 'target', verbose = False)
 
-        assert result["max_error"] < 0.0001
+            assert result["max_error"] < 0.0001
 
     
