@@ -10,12 +10,12 @@ import shutil
 import tempfile
 import itertools
 import coremltools
-from coremltools._deps import HAS_KERAS_TF
+from coremltools._deps import HAS_KERAS_TF, HAS_KERAS2_TF
 from coremltools.models.utils import macos_version
 import pytest
 
 
-if HAS_KERAS_TF:
+if HAS_KERAS_TF or HAS_KERAS2_TF:
     from keras.models import Sequential
     from keras.layers import LSTM, GRU, SimpleRNN
     from coremltools.converters import keras as keras_converter
@@ -33,7 +33,14 @@ def generate_input(dim0, dim1, dim2):
     return input_data
 
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+def valid_params(params):
+    """Checks if this combination of parameters is allowed by Keras"""
+    return not (
+        params['input_dims'][1] == 1 and
+        params['unroll']
+    )
+
+
 class RecurrentLayerTest(unittest.TestCase):
     """
     Base class for recurrent layer tests. Masking param not included here
@@ -51,7 +58,6 @@ class RecurrentLayerTest(unittest.TestCase):
         )
         self.base_layer_params = list(itertools.product(*self.params_dict.values()))
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 class SimpleRNNLayer(RecurrentLayerTest):
     """
     Class for testing single RNN layer
@@ -64,81 +70,107 @@ class SimpleRNNLayer(RecurrentLayerTest):
         )
         self.rnn_layer_params = list(itertools.product(*self.simple_rnn_params_dict.values()))
 
-    @pytest.mark.slow
-    def test_rnn_layer_stress(self):
-        self._test_rnn_layer(True)
-
-    def test_rnn_layer(self):
-        self._test_rnn_layer(False)
-
-    def _test_rnn_layer(self, allow_slow):
+    def _test_rnn_layer(self, keras_major_version, limit=None):
         i = 0
         layer_name = str(SimpleRNN).split('.')[3].split("'>")[0]
         numerical_err_models = []
         shape_err_models = []
-        for base_params in self.base_layer_params:
+        params = list(itertools.product(self.base_layer_params, self.rnn_layer_params))
+        np.random.shuffle(params)
+        params = [param for param in params if valid_params(dict(zip(self.params_dict.keys(), param[0])))]
+        for base_params, rnn_params in params[:limit]:
             base_params = dict(zip(self.params_dict.keys(), base_params))
+            rnn_params = dict(zip(self.simple_rnn_params_dict.keys(), rnn_params))
             input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                         base_params['input_dims'][2])
-            for rnn_params in self.rnn_layer_params:
-                rnn_params = dict(zip(self.simple_rnn_params_dict.keys(), rnn_params))
-                model = Sequential()
+            model = Sequential()
+            settings = dict(
+                activation=base_params['activation'],
+                return_sequences=base_params['return_sequences'],
+                go_backwards=base_params['go_backwards'],
+                unroll=base_params['unroll'],
+            )
+            if keras_major_version == 2:
+                model.add(
+                    SimpleRNN(
+                        base_params['output_dim'],
+                        input_shape=base_params['input_dims'][1:],
+                        dropout=rnn_params['dropout']['dropout_U'],
+                        recurrent_dropout=rnn_params['dropout']['dropout_W'],
+                        kernel_regularizer=rnn_params['regularizer']['W_regularizer'],
+                        recurrent_regularizer=rnn_params['regularizer']['U_regularizer'],
+                        bias_regularizer=rnn_params['regularizer']['b_regularizer'],
+                        **settings,
+                    )
+                )
+            else:
                 model.add(
                     SimpleRNN(
                         base_params['output_dim'],
                         input_length=base_params['input_dims'][1],
                         input_dim=base_params['input_dims'][2],
-                        # init=base_params['init'],
-                        # inner_init=base_params['inner_init'],
-                        activation=base_params['activation'],
-                        return_sequences=base_params['return_sequences'],
-                        go_backwards=base_params['go_backwards'],
-                        unroll=base_params['unroll'],
                         dropout_U=rnn_params['dropout']['dropout_U'],
                         dropout_W=rnn_params['dropout']['dropout_W'],
                         W_regularizer=rnn_params['regularizer']['W_regularizer'],
                         U_regularizer=rnn_params['regularizer']['U_regularizer'],
                         b_regularizer=rnn_params['regularizer']['b_regularizer'],
+                        **settings,
                     )
                 )
-                model_dir = tempfile.mkdtemp()
-                keras_model_path = os.path.join(model_dir, 'keras.h5')
-                coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
-                model.save_weights(keras_model_path)
-                mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-                if macos_version() >= (10, 13):
-                    keras_preds = model.predict(input_data).flatten()
-                    input_data = np.transpose(input_data, [1, 0, 2])
-                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-                    try:
-                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                    except AssertionError:
-                        print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                            base_params, keras_preds.shape, coreml_preds.shape))
-                        shape_err_models.append(base_params)
-                        shutil.rmtree(model_dir)
-                        i += 1
-                        continue
-                    try:
-                        for idx in range(0, len(coreml_preds)):
-                            relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
-                            self.assertAlmostEqual(relative_error, 0, places=2)
-                    except AssertionError:
-                        print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params, keras_preds, coreml_preds))
-                        numerical_err_models.append(base_params)
-                shutil.rmtree(model_dir)
-                i += 1
-
-                if not allow_slow:
-                    break
-
-            if not allow_slow:
-                break
+            model_dir = tempfile.mkdtemp()
+            keras_model_path = os.path.join(model_dir, 'keras.h5')
+            coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
+            model.save_weights(keras_model_path)
+            mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
+            if macos_version() >= (10, 13):
+                keras_preds = model.predict(input_data).flatten()
+                input_data = np.transpose(input_data, [1, 0, 2])
+                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                try:
+                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                except AssertionError:
+                    print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                        base_params, keras_preds.shape, coreml_preds.shape))
+                    shape_err_models.append(base_params)
+                    shutil.rmtree(model_dir)
+                    i += 1
+                    continue
+                try:
+                    for idx in range(0, len(coreml_preds)):
+                        relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
+                        self.assertAlmostEqual(relative_error, 0, places=2)
+                except AssertionError:
+                    print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params, keras_preds, coreml_preds))
+                    numerical_err_models.append(base_params)
+            shutil.rmtree(model_dir)
+            i += 1
 
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @pytest.mark.keras1
+    @pytest.mark.slow
+    def test_keras1_rnn_layer_stress(self):
+        self._test_rnn_layer(keras_major_version=1)
+
+    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @pytest.mark.keras1
+    def test_keras1_rnn_layer(self):
+        self._test_rnn_layer(keras_major_version=1, limit=10)
+
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @pytest.mark.keras2
+    @pytest.mark.slow
+    def test_keras2_rnn_layer_stress(self):
+        self._test_rnn_layer(keras_major_version=2)
+
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @pytest.mark.keras2
+    def test_keras2_rnn_layer(self):
+        self._test_rnn_layer(keras_major_version=2, limit=10)
+
+
 class LSTMLayer(RecurrentLayerTest):
     """
     Class for testing single RNN layer
@@ -151,83 +183,108 @@ class LSTMLayer(RecurrentLayerTest):
         )
         self.lstm_layer_params = list(itertools.product(*self.lstm_params_dict.values()))
 
-    @pytest.mark.slow
-    def test_lstm_layer_stress(self):
-        self._test_lstm_layer(True)
-
-    def test_lstm_layer(self):
-        self._test_lstm_layer(False)
-
-    def _test_lstm_layer(self, allow_slow):
+    def _test_lstm_layer(self, keras_major_version, limit=None):
         i = 0
         numerical_err_models = []
         shape_err_models = []
-        for base_params in self.base_layer_params:
+        params = list(itertools.product(self.base_layer_params, self.lstm_layer_params))
+        np.random.shuffle(params)
+        params = [param for param in params if valid_params(dict(zip(self.params_dict.keys(), param[0])))]
+        for base_params, lstm_params in params[:limit]:
             base_params = dict(zip(self.params_dict.keys(), base_params))
+            lstm_params = dict(zip(self.lstm_params_dict.keys(), lstm_params))
             input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                         base_params['input_dims'][2])
-            for lstm_params in self.lstm_layer_params:
-                lstm_params = dict(zip(self.lstm_params_dict.keys(), lstm_params))
-                model = Sequential()
+            model = Sequential()
+            settings = dict(
+                activation=base_params['activation'],
+                return_sequences=base_params['return_sequences'],
+                go_backwards=base_params['go_backwards'],
+                unroll=base_params['unroll'],
+            )
+            if keras_major_version == 2:
+                model.add(
+                    LSTM(
+                        base_params['output_dim'],
+                        input_shape=base_params['input_dims'][1:],
+                        recurrent_dropout=lstm_params['dropout']['dropout_U'],
+                        dropout=lstm_params['dropout']['dropout_W'],
+                        kernel_regularizer=lstm_params['regularizer']['W_regularizer'],
+                        recurrent_regularizer=lstm_params['regularizer']['U_regularizer'],
+                        bias_regularizer=lstm_params['regularizer']['b_regularizer'],
+                        **settings,
+                    )
+                )
+            else:
                 model.add(
                     LSTM(
                         base_params['output_dim'],
                         input_length=base_params['input_dims'][1],
                         input_dim=base_params['input_dims'][2],
-                        # init=base_params['init'],
-                        # inner_init=base_params['inner_init'],
-                        activation=base_params['activation'],
-                        return_sequences=base_params['return_sequences'],
-                        go_backwards=base_params['go_backwards'],
-                        unroll=base_params['unroll'],
                         dropout_U=lstm_params['dropout']['dropout_U'],
                         dropout_W=lstm_params['dropout']['dropout_W'],
                         W_regularizer=lstm_params['regularizer']['W_regularizer'],
                         U_regularizer=lstm_params['regularizer']['U_regularizer'],
                         b_regularizer=lstm_params['regularizer']['b_regularizer'],
+                        **settings,
                     )
                 )
-                model_dir = tempfile.mkdtemp()
-                keras_model_path = os.path.join(model_dir, 'keras.h5')
-                coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
-                model.save_weights(keras_model_path)
-                mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-                if macos_version() >= (10, 13):
-                    keras_preds = model.predict(input_data).flatten()
-                    input_data = np.transpose(input_data, [1, 0, 2])
-                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-                    try:
-                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                    except AssertionError:
-                        print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                            base_params, keras_preds.shape, coreml_preds.shape))
-                        shape_err_models.append(base_params)
-                        shutil.rmtree(model_dir)
-                        i += 1
-                        continue
-                    try:
-                        for idx in range(0, len(coreml_preds)):
-                            relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
-                            self.assertAlmostEqual(relative_error, 0, places=2)
-                    except AssertionError:
-                        print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
-                                                                                                            keras_preds,
-                                                                                                            coreml_preds))
-                        numerical_err_models.append(base_params)
-                shutil.rmtree(model_dir)
-                i += 1
-
-                if not allow_slow:
-                    break
-
-            if not allow_slow:
-                break
-            
+            model_dir = tempfile.mkdtemp()
+            keras_model_path = os.path.join(model_dir, 'keras.h5')
+            coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
+            model.save_weights(keras_model_path)
+            mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
+            if macos_version() >= (10, 13):
+                keras_preds = model.predict(input_data).flatten()
+                input_data = np.transpose(input_data, [1, 0, 2])
+                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                try:
+                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                except AssertionError:
+                    print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                        base_params, keras_preds.shape, coreml_preds.shape))
+                    shape_err_models.append(base_params)
+                    shutil.rmtree(model_dir)
+                    i += 1
+                    continue
+                try:
+                    for idx in range(0, len(coreml_preds)):
+                        relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
+                        self.assertAlmostEqual(relative_error, 0, places=2)
+                except AssertionError:
+                    print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
+                                                                                                        keras_preds,
+                                                                                                        coreml_preds))
+                    numerical_err_models.append(base_params)
+            shutil.rmtree(model_dir)
+            i += 1
 
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @pytest.mark.keras1
+    @pytest.mark.slow
+    def test_keras1_lstm_layer_stress(self):
+        self._test_lstm_layer(keras_major_version=1)
+
+    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @pytest.mark.keras1
+    def test_keras1_lstm_layer(self):
+        self._test_lstm_layer(keras_major_version=1, limit=10)
+
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @pytest.mark.keras2
+    @pytest.mark.slow
+    def test_keras2_lstm_layer_stress(self):
+        self._test_lstm_layer(keras_major_version=2)
+
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @pytest.mark.keras2
+    def test_keras2_lstm_layer(self):
+        self._test_lstm_layer(keras_major_version=2, limit=10)
+
+
 class GRULayer(RecurrentLayerTest):
     """
     Class for testing GRU layer
@@ -240,64 +297,103 @@ class GRULayer(RecurrentLayerTest):
         )
         self.gru_layer_params = list(itertools.product(*self.gru_params_dict.values()))
 
-    def test_gru_layer(self):
+    def _test_gru_layer(self, keras_major_version, limit=None):
         i = 0
         numerical_err_models = []
         shape_err_models = []
-        for base_params in self.base_layer_params:
+        params = list(itertools.product(self.base_layer_params, self.gru_layer_params))
+        np.random.shuffle(params)
+        params = [param for param in params if valid_params(dict(zip(self.params_dict.keys(), param[0])))]
+        for base_params, gru_params in params[:limit]:
             base_params = dict(zip(self.params_dict.keys(), base_params))
+            gru_params = dict(zip(self.gru_params_dict.keys(), gru_params))
             input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                         base_params['input_dims'][2])
-            for gru_params in self.gru_layer_params:
-                gru_params = dict(zip(self.gru_params_dict.keys(), gru_params))
-                model = Sequential()
+            model = Sequential()
+            settings = dict(
+                activation=base_params['activation'],
+                return_sequences=base_params['return_sequences'],
+                go_backwards=base_params['go_backwards'],
+                unroll=base_params['unroll'],
+            )
+            if keras_major_version == 2:
+                model.add(
+                    GRU(
+                        base_params['output_dim'],
+                        input_shape=base_params['input_dims'][1:],
+                        recurrent_dropout=gru_params['dropout']['dropout_U'],
+                        dropout=gru_params['dropout']['dropout_W'],
+                        kernel_regularizer=gru_params['regularizer']['W_regularizer'],
+                        recurrent_regularizer=gru_params['regularizer']['U_regularizer'],
+                        bias_regularizer=gru_params['regularizer']['b_regularizer'],
+                        **settings,
+                    )
+                )
+            else:
                 model.add(
                     GRU(
                         base_params['output_dim'],
                         input_length=base_params['input_dims'][1],
                         input_dim=base_params['input_dims'][2],
-                        # init=base_params['init'],
-                        # inner_init=base_params['inner_init'],
-                        activation=base_params['activation'],
-                        return_sequences=base_params['return_sequences'],
-                        go_backwards=base_params['go_backwards'],
-                        unroll=base_params['unroll'],
                         dropout_U=gru_params['dropout']['dropout_U'],
                         dropout_W=gru_params['dropout']['dropout_W'],
                         W_regularizer=gru_params['regularizer']['W_regularizer'],
                         U_regularizer=gru_params['regularizer']['U_regularizer'],
                         b_regularizer=gru_params['regularizer']['b_regularizer'],
+                        **settings,
                     )
                 )
-                model_dir = tempfile.mkdtemp()
-                keras_model_path = os.path.join(model_dir, 'keras.h5')
-                coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
-                model.save_weights(keras_model_path)
-                mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-                if macos_version() >= (10, 13):
-                    keras_preds = model.predict(input_data).flatten()
-                    input_data = np.transpose(input_data, [1, 0, 2])
-                    coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
-                    try:
-                        self.assertEquals(coreml_preds.shape, keras_preds.shape)
-                    except AssertionError:
-                        print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
-                            base_params, keras_preds.shape, coreml_preds.shape))
-                        shape_err_models.append(base_params)
-                        shutil.rmtree(model_dir)
-                        i += 1
-                        continue
-                    try:
-                        for idx in range(0, len(coreml_preds)):
-                            relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
-                            self.assertAlmostEqual(relative_error, 0, places=2)
-                    except AssertionError:
-                        print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
-                                                                                                            keras_preds,
-                                                                                                            coreml_preds))
-                        numerical_err_models.append(base_params)
-                shutil.rmtree(model_dir)
-                i += 1
+            model_dir = tempfile.mkdtemp()
+            keras_model_path = os.path.join(model_dir, 'keras.h5')
+            coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
+            model.save_weights(keras_model_path)
+            mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
+            if macos_version() >= (10, 13):
+                keras_preds = model.predict(input_data).flatten()
+                input_data = np.transpose(input_data, [1, 0, 2])
+                coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
+                try:
+                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                except AssertionError:
+                    print("Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
+                        base_params, keras_preds.shape, coreml_preds.shape))
+                    shape_err_models.append(base_params)
+                    shutil.rmtree(model_dir)
+                    i += 1
+                    continue
+                try:
+                    for idx in range(0, len(coreml_preds)):
+                        relative_error = (coreml_preds[idx] - keras_preds[idx]) / coreml_preds[idx]
+                        self.assertAlmostEqual(relative_error, 0, places=2)
+                except AssertionError:
+                    print("Assertion error:\nbase_params: {}\nkeras_preds: {}\ncoreml_preds: {}".format(base_params,
+                                                                                                        keras_preds,
+                                                                                                        coreml_preds))
+                    numerical_err_models.append(base_params)
+            shutil.rmtree(model_dir)
+            i += 1
 
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
+
+    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @pytest.mark.keras1
+    @pytest.mark.slow
+    def test_keras1_gru_layer_stress(self):
+        self._test_gru_layer(keras_major_version=1)
+
+    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @pytest.mark.keras1
+    def test_keras1_gru_layer(self):
+        self._test_gru_layer(keras_major_version=1, limit=10)
+
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @pytest.mark.keras2
+    @pytest.mark.slow
+    def test_keras2_gru_layer_stress(self):
+        self._test_gru_layer(keras_major_version=2)
+
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @pytest.mark.keras2
+    def test_keras2_gru_layer(self):
+        self._test_gru_layer(keras_major_version=2, limit=10)
