@@ -93,7 +93,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
         for cur_input_name in feature_names:
             input = export_spec.description.input.add()
             input.name = cur_input_name
-            input.type.doubleType.MergeFromString('')
+            input.type.doubleType.MergeFromString(b'')
 
     # Set target
     output = export_spec.description.output.add()
@@ -102,12 +102,12 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     # Set the interface types
     if(svm_type_enum == libsvm.EPSILON_SVR or svm_type_enum == libsvm.NU_SVR):
         export_spec.description.predictedFeatureName = target
-        output.type.doubleType.MergeFromString('')
+        output.type.doubleType.MergeFromString(b'')
         nr_class = 2
 
     elif(svm_type_enum == libsvm.C_SVC or svm_type_enum == libsvm.NU_SVC):
         export_spec.description.predictedFeatureName = target
-        output.type.int64Type.MergeFromString('')
+        output.type.int64Type.MergeFromString(b'')
 
         nr_class = len(libsvm_model.get_labels())
 
@@ -118,15 +118,15 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
         if probability and bool(libsvm_model.probA):
             output = export_spec.description.output.add()
             output.name = probability
-            output.type.dictionaryType.MergeFromString('')
-            output.type.dictionaryType.int64KeyType.MergeFromString('')
+            output.type.dictionaryType.MergeFromString(b'')
+            output.type.dictionaryType.int64KeyType.MergeFromString(b'')
             export_spec.description.predictedProbabilitiesName = probability
 
     else:
         raise ValueError('Only the following SVM types are supported: C_SVC, NU_SVC, EPSILON_SVR, NU_SVR')
 
     if(libsvm_model.param.kernel_type == libsvm.LINEAR):
-        svm.kernel.linearKernel.MergeFromString('')  # Hack to set kernel to an empty type
+        svm.kernel.linearKernel.MergeFromString(b'')  # Hack to set kernel to an empty type
     elif(libsvm_model.param.kernel_type == libsvm.RBF):
         svm.kernel.rbfKernel.gamma = libsvm_model.param.gamma
     elif(libsvm_model.param.kernel_type == libsvm.POLY):
