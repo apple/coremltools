@@ -100,7 +100,7 @@ class SimpleRNNLayer(RecurrentLayerTest):
                         kernel_regularizer=rnn_params['regularizer']['W_regularizer'],
                         recurrent_regularizer=rnn_params['regularizer']['U_regularizer'],
                         bias_regularizer=rnn_params['regularizer']['b_regularizer'],
-                        **settings,
+                        **settings
                     )
                 )
             else:
@@ -114,7 +114,7 @@ class SimpleRNNLayer(RecurrentLayerTest):
                         W_regularizer=rnn_params['regularizer']['W_regularizer'],
                         U_regularizer=rnn_params['regularizer']['U_regularizer'],
                         b_regularizer=rnn_params['regularizer']['b_regularizer'],
-                        **settings,
+                        **settings
                     )
                 )
             model_dir = tempfile.mkdtemp()
@@ -212,7 +212,7 @@ class LSTMLayer(RecurrentLayerTest):
                         kernel_regularizer=lstm_params['regularizer']['W_regularizer'],
                         recurrent_regularizer=lstm_params['regularizer']['U_regularizer'],
                         bias_regularizer=lstm_params['regularizer']['b_regularizer'],
-                        **settings,
+                        **settings
                     )
                 )
             else:
@@ -226,7 +226,7 @@ class LSTMLayer(RecurrentLayerTest):
                         W_regularizer=lstm_params['regularizer']['W_regularizer'],
                         U_regularizer=lstm_params['regularizer']['U_regularizer'],
                         b_regularizer=lstm_params['regularizer']['b_regularizer'],
-                        **settings,
+                        **settings
                     )
                 )
             model_dir = tempfile.mkdtemp()
@@ -326,7 +326,7 @@ class GRULayer(RecurrentLayerTest):
                         kernel_regularizer=gru_params['regularizer']['W_regularizer'],
                         recurrent_regularizer=gru_params['regularizer']['U_regularizer'],
                         bias_regularizer=gru_params['regularizer']['b_regularizer'],
-                        **settings,
+                        **settings
                     )
                 )
             else:
@@ -340,7 +340,7 @@ class GRULayer(RecurrentLayerTest):
                         W_regularizer=gru_params['regularizer']['W_regularizer'],
                         U_regularizer=gru_params['regularizer']['U_regularizer'],
                         b_regularizer=gru_params['regularizer']['b_regularizer'],
-                        **settings,
+                        **settings
                     )
                 )
             model_dir = tempfile.mkdtemp()
