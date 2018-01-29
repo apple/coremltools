@@ -13,12 +13,38 @@ endif()
 add_subdirectory(deps)
 add_subdirectory(mlmodel)
 
-exec_program(python-config
+if("${PYTHON}" STREQUAL "")
+  find_program(PYTHON NAMES python3 python)
+endif()
+if("${PYTHON_MAJOR_VERSION}" STREQUAL "")
+  exec_program(${PYTHON}
+    ARGS "-c 'import sys; print(sys.version_info.major)'"
+    OUTPUT_VARIABLE PYTHON_MAJOR_VERSION)
+endif()
+if("${PYTHON_MINOR_VERSION}" STREQUAL "")
+  exec_program(${PYTHON}
+    ARGS "-c 'import sys; print(sys.version_info.minor)'"
+    OUTPUT_VARIABLE PYTHON_MINOR_VERSION)
+endif()
+if("${PYTHON_VERSION}" STREQUAL "")
+  set(PYTHON_VERSION "${PYTHON_MAJOR_VERSION}.${PYTHON_MINOR_VERSION}")
+endif()
+
+if("${PYTHON_CONFIG}" STREQUAL "")
+  find_program(PYTHON_CONFIG NAMES python3-config python-config)
+endif()
+exec_program(${PYTHON_CONFIG}
   ARGS "--includes"
-  OUTPUT_VARIABLE PYTHON_FLAGS)
-exec_program(python-config
-  ARGS "--libs"
-  OUTPUT_VARIABLE PYTHON_LIBS)
+  OUTPUT_VARIABLE PYTHON_CFLAGS)
+exec_program(${PYTHON_CONFIG}
+  ARGS "--ldflags"
+  OUTPUT_VARIABLE PYTHON_LDFLAGS)
+
+message("Found python at ${PYTHON}")
+message("Found python version ${PYTHON_VERSION}")
+message("Found python-config at ${PYTHON_CONFIG}")
+message("Found python includes ${PYTHON_CFLAGS}")
+message("Found python libs ${PYTHON_LDFLAGS}")
 
 include_directories(
   .
@@ -31,27 +57,28 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS " \
   ${CMAKE_CXX_FLAGS} \
-  ${PYTHON_FLAGS} \
+  ${PYTHON_CFLAGS} \
   --std=c++14 \
 ")
 
 if(APPLE)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc ")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc ")
+  include_directories(/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/lib/python${PYTHON_VERSION}/site-packages/numpy/core/include)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS " \
   ${CMAKE_EXE_LINKER_FLAGS} \
-  ${PYTHON_LIBS} \
+  ${PYTHON_LDFLAGS} \
   --std=c++14 \
 ")
 set(CMAKE_MODULE_LINKER_FLAGS " \
   ${CMAKE_MODULE_LINKER_FLAGS} \
-  ${PYTHON_LIBS} \
+  ${PYTHON_LDFLAGS} \
   --std=c++14 \
 ")
 set(CMAKE_SHARED_LINKER_FLAGS " \
   ${CMAKE_SHARED_LINKER_FLAGS} \
-  ${PYTHON_LIBS} \
+  ${PYTHON_LDFLAGS} \
   --std=c++14 \
 ")
 
@@ -107,8 +134,8 @@ if(APPLE)
     TARGET caffeconverter
     POST_BUILD
     COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
-    COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
-    COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
+    COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython${PYTHON_VERSION}.dylib @rpath/libpython${PYTHON_VERSION}.dylib
+    COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
   )
 else()
   add_custom_command(
@@ -140,8 +167,8 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     TARGET coremlpython
     POST_BUILD
     COMMAND cp $<TARGET_FILE:coremlpython> coremltools/libcoremlpython.so
-    COMMAND install_name_tool coremltools/libcoremlpython.so -change libpython2.7.dylib @rpath/libpython2.7.dylib
-    COMMAND install_name_tool coremltools/libcoremlpython.so -change /System/Library/Frameworks/Python.framework/Versions/2.7/Python @rpath/libpython2.7.dylib
+    COMMAND install_name_tool coremltools/libcoremlpython.so -change libpython${PYTHON_VERSION}.dylib @rpath/libpython${PYTHON_VERSION}.dylib
+    COMMAND install_name_tool coremltools/libcoremlpython.so -change /System/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
   )
 else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
@@ -149,10 +176,10 @@ endif()
 
 if(APPLE)
   set(PLAT_NAME "macosx_10_13_intel;macosx_10_12_intel")
-  set(PYTHON_TAG "cp27")
+  set(PYTHON_TAG "cp${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}")
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   set(PLAT_NAME "manylinux1_x86_64")
-  set(PYTHON_TAG "py2.7")
+  set(PYTHON_TAG "py${PYTHON_VERSION}")
 else()
   message(FATAL_ERROR "Unsupported build platform. Supported platforms are Linux and macOS.")
 endif()
@@ -160,7 +187,7 @@ endif()
 add_custom_target(dist
   # Workaround for building multiple platform versions since python setuptools only take in one platform via '--plat-name' argument
   # and cmake 'foreach' does not seem to work inside add_custom_target
-  COMMAND for SUPP_PLATFORM in ${PLAT_NAME}$<SEMICOLON> do python setup.py bdist_wheel --plat-name=$$SUPP_PLATFORM --python-tag=${PYTHON_TAG}$<SEMICOLON> done$<SEMICOLON>
+  COMMAND for SUPP_PLATFORM in ${PLAT_NAME}$<SEMICOLON> do ${PYTHON} setup.py bdist_wheel --plat-name=$$SUPP_PLATFORM --python-tag=${PYTHON_TAG}$<SEMICOLON> done$<SEMICOLON>
   DEPENDS caffeconverter coremlpython
   COMMENT "Building Python wheel for coremltools under dist/"
   )
