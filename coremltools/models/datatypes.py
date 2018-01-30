@@ -189,30 +189,30 @@ def _set_datatype(proto_type_obj, datatype_instance):
 
     # Now set the protobuf from this interface.
     if isinstance(datatype_instance, Int64):
-        proto_type_obj.int64Type.MergeFromString('')
+        proto_type_obj.int64Type.MergeFromString(b'')
 
     elif isinstance(datatype_instance, Double):
-        proto_type_obj.doubleType.MergeFromString('')
+        proto_type_obj.doubleType.MergeFromString(b'')
 
     elif isinstance(datatype_instance, String):
-        proto_type_obj.stringType.MergeFromString('')
+        proto_type_obj.stringType.MergeFromString(b'')
 
     elif isinstance(datatype_instance, Array):
-        proto_type_obj.multiArrayType.MergeFromString('')
+        proto_type_obj.multiArrayType.MergeFromString(b'')
         proto_type_obj.multiArrayType.dataType = Model_pb2.ArrayFeatureType.DOUBLE
 
         for n in datatype_instance.dimensions:
             proto_type_obj.multiArrayType.shape.append(n)
 
     elif isinstance(datatype_instance, Dictionary):
-        proto_type_obj.dictionaryType.MergeFromString('')
+        proto_type_obj.dictionaryType.MergeFromString(b'')
 
         kt = datatype_instance.key_type
         
         if isinstance(kt, Int64):
-            proto_type_obj.dictionaryType.int64KeyType.MergeFromString('')
+            proto_type_obj.dictionaryType.int64KeyType.MergeFromString(b'')
         elif isinstance(kt, String):
-            proto_type_obj.dictionaryType.stringKeyType.MergeFromString('')
+            proto_type_obj.dictionaryType.stringKeyType.MergeFromString(b'')
         else:
             raise ValueError("Dictionary key type must be either string or int.")
 

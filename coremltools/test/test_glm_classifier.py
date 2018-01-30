@@ -10,7 +10,7 @@ import unittest
 
 from coremltools._deps import HAS_SKLEARN
 from coremltools.converters.sklearn import convert
-from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities
+from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities, macos_version
 
 if HAS_SKLEARN:
     from sklearn.linear_model import LogisticRegression
@@ -63,13 +63,13 @@ class GlmCassifierTest(unittest.TestCase):
             spec = convert(cur_model, input_features=column_names,
                            output_feature_names='target')
 
-            probability_lists = cur_model.predict_proba(x)
-            df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
+            if macos_version() >= (10, 13):
+                probability_lists = cur_model.predict_proba(x)
+                df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
 
-            metrics = evaluate_classifier_with_probabilities(spec, df, probabilities='classProbability', verbose=False)
-            self.assertEquals(metrics['num_key_mismatch'], 0)
-            self.assertLess(metrics['max_probability_error'],  0.00001)
-
+                metrics = evaluate_classifier_with_probabilities(spec, df, probabilities='classProbability', verbose=False)
+                self.assertEquals(metrics['num_key_mismatch'], 0)
+                self.assertLess(metrics['max_probability_error'],  0.00001)
 
     def test_linear_svc_binary_classification_with_string_labels(self):
         self._conversion_and_evaluation_helper_for_linear_svc(['Foo', 'Bar'])
@@ -96,9 +96,9 @@ class GlmCassifierTest(unittest.TestCase):
 
             spec = convert(cur_model, input_features=column_names,
                            output_feature_names='target')
-            
-            df['prediction'] = cur_model.predict(x)
 
-            cur_eval_metics = evaluate_classifier(spec, df, verbose=False)
-            self.assertEquals(cur_eval_metics['num_errors'], 0)
+            if macos_version() >= (10, 13):
+                df['prediction'] = cur_model.predict(x)
 
+                cur_eval_metics = evaluate_classifier(spec, df, verbose=False)
+                self.assertEquals(cur_eval_metics['num_errors'], 0)

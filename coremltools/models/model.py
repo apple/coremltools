@@ -11,6 +11,7 @@ import tempfile as _tempfile
 from .utils import save_spec as _save_spec
 from .utils import load_spec as _load_spec
 from .utils import has_custom_layer as _has_custom_layer
+from .utils import macos_version as _macos_version
 from ..proto import Model_pb2 as _Model_pb2
 
 
@@ -68,7 +69,6 @@ def _get_proxy_from_spec(filename):
             # in this case the specification is a newer kind of .mlmodel than this version of the engine can support
             # so we'll not try to have a proxy object
             return None
-
         # check if there are custom layers
         if _has_custom_layer(spec):
             # custom layers can't be supported directly by compiling and loading the model here
@@ -263,10 +263,8 @@ class MLModel(object):
         if self.__proxy__:
             return self.__proxy__.predict(data,useCPUOnly)
         else:
-            if _sys.platform != 'darwin' or float('.'.join(_platform.mac_ver()[0].split('.')[:2])) < 10.13:
+            if _macos_version() < (10, 13):
                 raise Exception('Model prediction is only supported on macOS version 10.13 or later.')
-            if _sys.version_info.major >= 3:
-                raise Exception('Model prediction is currently only supported in Python 2.7')
 
             try:
                 from ..libcoremlpython import _MLModelProxy

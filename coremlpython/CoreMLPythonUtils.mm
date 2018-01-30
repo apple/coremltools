@@ -4,6 +4,14 @@
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
 
+#if PY_MAJOR_VERSION < 3
+#define PyBytes_Check(name) PyString_Check(name)
+#define PyAnyInteger_Check(name) (PyLong_Check(name) || PyInt_Check(name))
+#else
+#include <numpy/arrayobject.h>
+#define PyAnyInteger_Check(name) (PyLong_Check(name) || (_import_array(), PyArray_IsScalar(name, Integer)))
+#endif
+
 using namespace CoreML::Python;
 
 NSURL * Utils::stringToNSURL(const std::string& str) {
@@ -106,9 +114,9 @@ static MLFeatureValue * convertValueToDictionary(const py::handle& handle) {
     if(!has_values) {
         return [MLFeatureValue featureValueWithDictionary:@{} error:nullptr];
     }
-    
-    if(PyInt_Check(key) || PyLong_Check(key)) {
-        if(PyInt_Check(value) || PyLong_Check(key)) {
+
+    if(PyAnyInteger_Check(key)) {
+        if(PyAnyInteger_Check(value)) {
             auto dict = handle.cast<std::unordered_map<int64_t, int64_t> >();
             return convertToNSDictionary(dict);
         } else if(PyFloat_Check(value)) {
@@ -117,8 +125,8 @@ static MLFeatureValue * convertValueToDictionary(const py::handle& handle) {
         } else {
             throw std::runtime_error("Unknown value type for int key in dictionary.");
         }
-    } else if (PyString_Check(key) || PyUnicode_Check(handle.ptr())) {
-        if(PyInt_Check(value) || PyLong_Check(key)) {
+    } else if (PyBytes_Check(key) || PyUnicode_Check(key)) {
+        if(PyAnyInteger_Check(value)) {
             auto dict = handle.cast<std::unordered_map<std::string, int64_t> >();
             return convertToNSDictionary(dict);
         } else if(PyFloat_Check(value)) {
@@ -178,10 +186,10 @@ static MLFeatureValue * convertValueToImage(const py::handle& handle) {
     // get bytes out of the PIL image
     py::object tobytes = handle.attr("tobytes");
     py::object bytesResult = tobytes();
-    assert(PyString_Check(bytesResult.ptr()));
-    Py_ssize_t bytesLength = PyString_Size(bytesResult.ptr());
+    assert(PyBytes_Check(bytesResult.ptr()));
+    Py_ssize_t bytesLength = PyBytes_Size(bytesResult.ptr());
     assert(bytesLength >= 0);
-    const char *bytesPtr = PyString_AsString(bytesResult.ptr());
+    const char *bytesPtr = PyBytes_AsString(bytesResult.ptr());
     std::string bytes(bytesPtr, static_cast<size_t>(bytesLength));
     
     // copy data into the CVPixelBuffer
@@ -307,7 +315,7 @@ static bool IsPILImage(const py::handle& handle) {
 
 MLFeatureValue * Utils::convertValueToObjC(const py::handle& handle) {
     
-    if (PyInt_Check(handle.ptr()) || PyLong_Check(handle.ptr())) {
+    if (PyAnyInteger_Check(handle.ptr())) {
         try {
             int64_t val = handle.cast<int64_t>();
             return [MLFeatureValue featureValueWithInt64:val];
@@ -321,7 +329,7 @@ MLFeatureValue * Utils::convertValueToObjC(const py::handle& handle) {
         } catch(...) {}
     }
     
-    if (PyString_Check(handle.ptr()) || PyUnicode_Check(handle.ptr())) {
+    if (PyBytes_Check(handle.ptr()) || PyUnicode_Check(handle.ptr())) {
         try {
             std::string val = handle.cast<std::string>();
             return [MLFeatureValue featureValueWithString:[NSString stringWithUTF8String:val.c_str()]];

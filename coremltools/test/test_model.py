@@ -7,7 +7,7 @@ import coremltools
 import unittest
 import tempfile
 from coremltools.proto import Model_pb2
-from coremltools.models.utils import rename_feature, save_spec
+from coremltools.models.utils import rename_feature, save_spec, macos_version
 from coremltools.models import MLModel
 
 
@@ -24,11 +24,11 @@ class MLModelTest(unittest.TestCase):
         for f in features:
             input_ = spec.description.input.add()
             input_.name = f
-            input_.type.doubleType.MergeFromString('')
+            input_.type.doubleType.MergeFromString(b'')
 
         output_ = spec.description.output.add()
         output_.name = output
-        output_.type.doubleType.MergeFromString('')
+        output_.type.doubleType.MergeFromString(b'')
 
         lr = spec.glmRegressor
         lr.offset.append(0.1)
@@ -81,12 +81,14 @@ class MLModelTest(unittest.TestCase):
         self.assertEquals(model.input_description['feature_1'], 'This is feature 1')
         self.assertEquals(model.output_description['output'], 'This is output')
 
+    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_predict_api(self):
         model = MLModel(self.spec)
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
         self.assertEquals(preds['output'], 3.1)
 
+    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_rename_input(self):
         rename_feature(self.spec, 'feature_1', 'renamed_feature', rename_inputs=True)
         model = MLModel(self.spec)
@@ -96,6 +98,7 @@ class MLModelTest(unittest.TestCase):
         # reset the spec for next run
         rename_feature(self.spec, 'renamed_feature', 'feature_1', rename_inputs=True)
 
+    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_rename_input_bad(self):
         rename_feature(self.spec, 'blah', 'bad_name', rename_inputs=True)
         model = MLModel(self.spec)
@@ -103,6 +106,7 @@ class MLModelTest(unittest.TestCase):
         self.assertIsNotNone(preds)
         self.assertEquals(preds['output'], 3.1)
 
+    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_rename_output(self):
         rename_feature(self.spec, 'output', 'renamed_output', rename_inputs=False, rename_outputs=True)
         model = MLModel(self.spec)
@@ -111,6 +115,7 @@ class MLModelTest(unittest.TestCase):
         self.assertEquals(preds['renamed_output'], 3.1)
         rename_feature(self.spec, 'renamed_output', 'output', rename_inputs=False, rename_outputs=True)
 
+    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_rename_output_bad(self):
         rename_feature(self.spec, 'blah', 'bad_name', rename_inputs=False, rename_outputs=True)
         model = MLModel(self.spec)
@@ -118,6 +123,7 @@ class MLModelTest(unittest.TestCase):
         self.assertIsNotNone(preds)
         self.assertEquals(preds['output'], 3.1)
 
+    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_future_version(self):
         self.spec.specificationVersion = 10000
         model = MLModel(self.spec)

@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import sys as _sys
+import six as _six
 from ...models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, _VALID_MLMODEL_PRECISION_TYPES
 
 def convert(model, image_input_names=[], is_bgr=False,
@@ -202,7 +203,7 @@ def _export(filename, model, image_input_names=[], is_bgr=False,
            class_labels=None, predicted_feature_name=None):
     from ... import libcaffeconverter
 
-    if isinstance(model, basestring):
+    if isinstance(model, _six.string_types):
         src_model_path = model
         prototxt_path = u''
         binaryproto_path = dict()
@@ -213,7 +214,7 @@ def _export(filename, model, image_input_names=[], is_bgr=False,
             src_model_path, prototxt_path = model
             binaryproto_path = dict()
 
-    if isinstance(image_input_names, basestring):
+    if isinstance(image_input_names, _six.string_types):
         image_input_names = [image_input_names]
     if predicted_feature_name is None:
         predicted_feature_name = u'classLabel'
@@ -224,7 +225,7 @@ def _export(filename, model, image_input_names=[], is_bgr=False,
         if not image_input_names:
             raise RuntimeError('\'image_input_names\' must be provided when a mean image binaryproto path is specified. ')
 
-    if isinstance(binaryproto_path, basestring):
+    if isinstance(binaryproto_path, _six.string_types):
         binaryproto_paths = dict()
         binaryproto_paths[image_input_names[0]] = binaryproto_path
     elif isinstance(binaryproto_path, dict):

@@ -9,6 +9,7 @@ from subprocess import Popen
 import subprocess
 import numpy as np
 from coremltools.converters import caffe as caffe_converter
+from coremltools.models.utils import macos_version
 import coremltools
 import PIL.Image
 import pytest
@@ -42,10 +43,10 @@ def load_mlmodel(model_path):
                     shell=True)
     stdout, err = process.communicate()
 
-    if err == '':
+    if not err:
         return True
     else:
-        print(" The error is {}".format(err))
+        print(" The error is {}".format(err.decode()))
         return False   
         
 def compare_models(caffe_preds, coreml_preds):
@@ -124,20 +125,21 @@ class ManyImages(unittest.TestCase):
 
         #load and evaluate mlmodel
         mlmodel = coremltools.models.MLModel(path_mlmodel)
-        coreml_out = mlmodel.predict(coreml_input_dict)['output']
+        if macos_version() >= (10, 13):
+            coreml_out = mlmodel.predict(coreml_input_dict)['output']
 
-        caffe_preds = output_data.flatten()
-        coreml_preds = coreml_out.flatten()
-        if len(caffe_preds) != len(coreml_preds):
-            failed_tests_evaluation.append('single image mean preprocessing: evaluation failure')
-        
-        max_relative_error = compare_models(output_data.flatten(), coreml_out.flatten())
-        if max_relative_error > 0.001:
-            failed_tests_evaluation.append('single image mean preprocessing: evaluation failure')
-       
-        self.assertEqual(failed_tests_conversion,[])
-        self.assertEqual(failed_tests_load,[])
-        self.assertEqual(failed_tests_evaluation,[])
+            caffe_preds = output_data.flatten()
+            coreml_preds = coreml_out.flatten()
+            if len(caffe_preds) != len(coreml_preds):
+                failed_tests_evaluation.append('single image mean preprocessing: evaluation failure')
+            
+            max_relative_error = compare_models(output_data.flatten(), coreml_out.flatten())
+            if max_relative_error > 0.001:
+                failed_tests_evaluation.append('single image mean preprocessing: evaluation failure')
+           
+            self.assertEqual(failed_tests_conversion,[])
+            self.assertEqual(failed_tests_load,[])
+            self.assertEqual(failed_tests_evaluation,[])
         shutil.rmtree('{}nets/{}'.format(nets_path, FOLDER_NAME))    
         
     
@@ -172,38 +174,39 @@ class ManyImages(unittest.TestCase):
         if load_result is False:
             failed_tests_load.append('image bias preprocessing: load failure')
         
-
-        #load Caffe's input and output
-        with open('{}nets/{}/{}_bias/input.json'.format(nets_path, FOLDER_NAME, str(n))) as data_file:
-            input_data_dict = json.load(data_file)
-        with open('{}nets/{}/{}_bias/output.json'.format(nets_path, FOLDER_NAME, str(n))) as data_file:
-            output_data_dict = json.load(data_file)
+        if macos_version() >= (10, 13):
+            #load Caffe's input and output
+            with open('{}nets/{}/{}_bias/input.json'.format(nets_path, FOLDER_NAME, str(n))) as data_file:
+                input_data_dict = json.load(data_file)
+            with open('{}nets/{}/{}_bias/output.json'.format(nets_path, FOLDER_NAME, str(n))) as data_file:
+                output_data_dict = json.load(data_file)
+            
+            output_data = np.array(output_data_dict["output_data"])    
         
-        output_data = np.array(output_data_dict["output_data"])    
-    
-        coreml_input_dict = dict()
-    
-        for i in range(n):
-            input_data = np.array(input_data_dict["input_data{}".format(str(i+1))]).astype(np.uint8)
-            img = PIL.Image.fromarray(np.transpose(input_data[0,:,:,:],[1,2,0]))
-            coreml_input_dict["data{}".format(str(i+1))] = img
-
-        #load and evaluate mlmodel
-        mlmodel = coremltools.models.MLModel(path_mlmodel)
-        coreml_out = mlmodel.predict(coreml_input_dict)['output']
-
-        caffe_preds = output_data.flatten()
-        coreml_preds = coreml_out.flatten()
-        if len(caffe_preds) != len(coreml_preds):
-            failed_tests_evaluation.append('single image bias preprocessing: evaluation failure')
+            coreml_input_dict = dict()
         
-        max_relative_error = compare_models(output_data.flatten(), coreml_out.flatten())
-        if max_relative_error > 0.001:
-            failed_tests_evaluation.append('single image bias preprocessing: evaluation failure')
-       
-        self.assertEqual(failed_tests_conversion,[])
-        self.assertEqual(failed_tests_load,[])
-        self.assertEqual(failed_tests_evaluation,[])
+            for i in range(n):
+                input_data = np.array(input_data_dict["input_data{}".format(str(i+1))]).astype(np.uint8)
+                img = PIL.Image.fromarray(np.transpose(input_data[0,:,:,:],[1,2,0]))
+                coreml_input_dict["data{}".format(str(i+1))] = img
+
+            #load and evaluate mlmodel
+            mlmodel = coremltools.models.MLModel(path_mlmodel)
+            coreml_out = mlmodel.predict(coreml_input_dict)['output']
+
+            caffe_preds = output_data.flatten()
+            coreml_preds = coreml_out.flatten()
+            if len(caffe_preds) != len(coreml_preds):
+                failed_tests_evaluation.append('single image bias preprocessing: evaluation failure')
+            
+            max_relative_error = compare_models(output_data.flatten(), coreml_out.flatten())
+            if max_relative_error > 0.001:
+                failed_tests_evaluation.append('single image bias preprocessing: evaluation failure')
+           
+            self.assertEqual(failed_tests_conversion,[])
+            self.assertEqual(failed_tests_load,[])
+            self.assertEqual(failed_tests_evaluation,[])
+
         shutil.rmtree('{}nets/{}'.format(nets_path, FOLDER_NAME))    
 
     def test_1_mean_image(self):
@@ -268,14 +271,14 @@ class ManyImagesKeras(unittest.TestCase):
         #coreml_model.save(model_path)    
         #coreml_model = coremltools.models.MLModel(model_path)
         
-        coreml_input_dict = dict()
-        coreml_input_dict["data"] = PIL.Image.fromarray(data.astype(np.uint8))
-        coreml_preds = coreml_model.predict(coreml_input_dict)['output'].flatten()
-        
-        #compare    
-        self.assertEquals(len(keras_preds), len(coreml_preds))    
-        max_relative_error = compare_models(keras_preds, coreml_preds)
-        self.assertAlmostEquals(max(max_relative_error, .001), .001, delta = 1e-6)
+        if macos_version() >= (10, 13):
+            coreml_input_dict = dict()
+            coreml_input_dict["data"] = PIL.Image.fromarray(data.astype(np.uint8))
+            coreml_preds = coreml_model.predict(coreml_input_dict)['output'].flatten()
+
+            self.assertEquals(len(keras_preds), len(coreml_preds))    
+            max_relative_error = compare_models(keras_preds, coreml_preds)
+            self.assertAlmostEquals(max(max_relative_error, .001), .001, delta = 1e-6)
         
                                                             
         if os.path.exists(model_dir):
@@ -341,16 +344,16 @@ class ManyImagesKeras(unittest.TestCase):
         #coreml_model.save(model_path)
         #coreml_model = coremltools.models.MLModel(model_path)
 
-        coreml_input_dict = dict()
-        coreml_input_dict["data1"] = PIL.Image.fromarray(data1.astype(np.uint8))
-        coreml_input_dict["data2"] = PIL.Image.fromarray(data2.astype(np.uint8))
-        coreml_preds = coreml_model.predict(coreml_input_dict)['output'].flatten()
+        if macos_version() >= (10, 13):
+            coreml_input_dict = dict()
+            coreml_input_dict["data1"] = PIL.Image.fromarray(data1.astype(np.uint8))
+            coreml_input_dict["data2"] = PIL.Image.fromarray(data2.astype(np.uint8))
+            coreml_preds = coreml_model.predict(coreml_input_dict)['output'].flatten()
 
-        #compare
-        self.assertEquals(len(keras_preds), len(coreml_preds))
-        max_relative_error = compare_models(keras_preds, coreml_preds)
-        self.assertAlmostEquals(max(max_relative_error, .001), .001, delta = 1e-6)
-
+            #compare
+            self.assertEquals(len(keras_preds), len(coreml_preds))
+            max_relative_error = compare_models(keras_preds, coreml_preds)
+            self.assertAlmostEquals(max(max_relative_error, .001), .001, delta = 1e-6)
 
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)

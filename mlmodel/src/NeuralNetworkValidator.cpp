@@ -748,7 +748,7 @@ namespace CoreML {
         if (paramType == FLOAT32) {
             data_size = static_cast<uint64_t>(params.data().floatvalue_size());
         } else {
-            data_size = static_cast<uint64_t>(params.data().float16value().size());
+            data_size = static_cast<uint64_t>(params.data().float16value().size() / 2);
         }
 
         if (params.shape_size() != 3) {

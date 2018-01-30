@@ -8,6 +8,7 @@ import json
 import numpy as np
 import math
 from coremltools.converters import caffe as caffe_converter
+from coremltools.models.utils import macos_version
 nets_path = os.getenv('CAFFE_MODELS_PATH', '')
 nets_path = nets_path + '/' if nets_path else ''
 import coremltools
@@ -70,10 +71,10 @@ def load_mlmodel(net_name, layer_type):
                     shell=True)
     stdout, err = process.communicate()
 
-    if err == '':
+    if not err:
         return True
     else:
-        print(" The error is {}".format(err))
+        print(" The error is {}".format(err.decode()))
         return False
 
 
@@ -151,23 +152,24 @@ class CaffeLayers(unittest.TestCase):
                 layer_type,
                 input_layer
             )
-            if conversion_result is False:
-                failed_tests_conversion.append(net_name)
-                continue
-            load_result = load_mlmodel(net_name, layer_type)
-            if load_result is False:
-                failed_tests_load.append(net_name)
-            if 'input' in net_name:
-                evaluation_result, failed_tests_evaluation = \
-                    self.evaluate_model(
-                        net_name,
-                        layer_type,
-                        input_layer,
-                        output_layer,
-                        net_data_files,
-                        failed_tests_evaluation,
-                        counter,
-                        delta)
+            if macos_version() >= (10, 13):
+                if conversion_result is False:
+                    failed_tests_conversion.append(net_name)
+                    continue
+                load_result = load_mlmodel(net_name, layer_type)
+                if load_result is False:
+                    failed_tests_load.append(net_name)
+                if 'input' in net_name:
+                    evaluation_result, failed_tests_evaluation = \
+                        self.evaluate_model(
+                            net_name,
+                            layer_type,
+                            input_layer,
+                            output_layer,
+                            net_data_files,
+                            failed_tests_evaluation,
+                            counter,
+                            delta)
         with open('./failed_tests_{}.json'.format(layer_type), mode='w') \
                 as file:
             json.dump({'conversion': failed_tests_conversion,
@@ -252,6 +254,7 @@ class CaffeLayers(unittest.TestCase):
                 
         return relative_error, failed_tests
 
+    @pytest.mark.slow
     def test_caffe_inner_product_layer(self):
         self.run_case(
             layer_type='inner_product',
@@ -259,6 +262,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerInnerProduct'
         )
 
+    @pytest.mark.slow
     def test_caffe_inner_product_activation_layer(self):
         self.run_case(
             layer_type='inner_product_activation',
@@ -312,6 +316,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerBias'
         )
 
+    @pytest.mark.slow
     def test_crop_layer(self):
         self.run_case(
             layer_type='crop',
@@ -335,6 +340,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerPooling'
         )
 
+    @pytest.mark.slow
     def test_lrn(self):
         self.run_case(
             layer_type='lrn',

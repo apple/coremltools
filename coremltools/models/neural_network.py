@@ -17,17 +17,17 @@ import numpy as np
 
 def _set_recurrent_activation(param, activation):
     if activation == 'SIGMOID':
-        param.sigmoid.MergeFromString('')
+        param.sigmoid.MergeFromString(b'')
     elif activation == 'TANH':
-        param.tanh.MergeFromString('')
+        param.tanh.MergeFromString(b'')
     elif activation == 'LINEAR':
-        param.linear.MergeFromString('')
+        param.linear.MergeFromString(b'')
     elif activation == 'SIGMOID_HARD':
-        param.sigmoidHard.MergeFromString('')
+        param.sigmoidHard.MergeFromString(b'')
     elif activation == 'SCALED_TANH':
-        param.scaledTanh.MergeFromString('')
+        param.scaledTanh.MergeFromString(b'')
     elif activation == 'RELU':
-        param.ReLU.MergeFromString('')
+        param.ReLU.MergeFromString(b'')
     else:
         raise TypeError("Unsupported activation type with Recurrrent layer: %s." % activation)
 
@@ -263,7 +263,7 @@ class NeuralNetworkBuilder(object):
             raise ValueError(
                 "Model should have atleast one output (the probabilities) to automatically make it a classifier.")
         probOutput = spec.description.output[0]
-        probOutput.type.dictionaryType.MergeFromString('')
+        probOutput.type.dictionaryType.MergeFromString(b'')
         if len(class_labels) == 0:
             return
         class_type = type(class_labels[0])
@@ -277,14 +277,14 @@ class NeuralNetworkBuilder(object):
         classLabel.name = predicted_feature_name
         if class_type == int:
             nn_spec.ClearField('int64ClassLabels')
-            probOutput.type.dictionaryType.int64KeyType.MergeFromString('')
-            classLabel.type.int64Type.MergeFromString('')
+            probOutput.type.dictionaryType.int64KeyType.MergeFromString(b'')
+            classLabel.type.int64Type.MergeFromString(b'')
             for c in class_labels:
                 nn_spec.int64ClassLabels.vector.append(c)
         else:
             nn_spec.ClearField('stringClassLabels')
-            probOutput.type.dictionaryType.stringKeyType.MergeFromString('')
-            classLabel.type.stringType.MergeFromString('')
+            probOutput.type.dictionaryType.stringKeyType.MergeFromString(b'')
+            classLabel.type.stringType.MergeFromString(b'')
             for c in class_labels:
                 nn_spec.stringClassLabels.vector.append(c)
 
@@ -477,7 +477,7 @@ class NeuralNetworkBuilder(object):
         spec_layer.name = name
         spec_layer.input.append(input_name)
         spec_layer.output.append(output_name)
-        spec_layer_params = spec_layer.softmax.MergeFromString('')
+        spec_layer_params = spec_layer.softmax.MergeFromString(b'')
 
     def add_activation(self, name, non_linearity, input_name, output_name,
         params=None):
@@ -575,16 +575,16 @@ class NeuralNetworkBuilder(object):
 
         # Fill in the parameters
         if non_linearity == 'RELU':
-            spec_layer_params.ReLU.MergeFromString('')
+            spec_layer_params.ReLU.MergeFromString(b'')
   
         elif non_linearity == 'SIGMOID':
-            spec_layer_params.sigmoid.MergeFromString('')
+            spec_layer_params.sigmoid.MergeFromString(b'')
 
         elif non_linearity == 'TANH':
-            spec_layer_params.tanh.MergeFromString('')
+            spec_layer_params.tanh.MergeFromString(b'')
 
         elif non_linearity == 'SCALED_TANH':
-            spec_layer_params.scaledTanh.MergeFromString('')
+            spec_layer_params.scaledTanh.MergeFromString(b'')
             if params is None:
                 alpha, beta = (0.0, 0.0)
             else:
@@ -593,10 +593,10 @@ class NeuralNetworkBuilder(object):
             spec_layer_params.scaledTanh.beta = beta
 
         elif non_linearity == 'SOFTPLUS':
-            spec_layer_params.softplus.MergeFromString('')
+            spec_layer_params.softplus.MergeFromString(b'')
 
         elif non_linearity == 'SOFTSIGN':
-            spec_layer_params.softsign.MergeFromString('')
+            spec_layer_params.softsign.MergeFromString(b'')
 
         elif non_linearity == 'SIGMOID_HARD':
             if params is None:
@@ -698,11 +698,11 @@ class NeuralNetworkBuilder(object):
         elif mode == 'SEQUENCE_CONCAT':
             spec_layer.concat.sequenceConcat = True
         elif mode == 'ADD':
-            spec_layer.add.MergeFromString('')
+            spec_layer.add.MergeFromString(b'')
             if alpha:
                 spec_layer.add.alpha = alpha
         elif mode == 'MULTIPLY':
-            spec_layer.multiply.MergeFromString('')
+            spec_layer.multiply.MergeFromString(b'')
             if alpha:
                 spec_layer.multiply.alpha = alpha
         elif mode == 'COS':
@@ -710,11 +710,11 @@ class NeuralNetworkBuilder(object):
         elif mode == 'DOT':
             spec_layer.dot.cosineSimilarity = False
         elif mode == 'MAX':
-            spec_layer.max.MergeFromString('')
+            spec_layer.max.MergeFromString(b'')
         elif mode == 'MIN':
-            spec_layer.min.MergeFromString('')    
+            spec_layer.min.MergeFromString(b'')    
         elif mode == 'AVE':
-            spec_layer.average.MergeFromString('')
+            spec_layer.average.MergeFromString(b'')
         else:
             raise ValueError("Unspported elementwise mode %s" % mode)
 
@@ -987,7 +987,7 @@ class NeuralNetworkBuilder(object):
         spec_layer.name = name
         spec_layer.input.append(input_name)
         spec_layer.output.append(output_name)
-        spec_layer.convolution.MergeFromString('') # hack to set empty message
+        spec_layer.convolution.MergeFromString(b'') # hack to set empty message
 
         # Set the layer params
         spec_layer_params = spec_layer.convolution
@@ -1191,9 +1191,9 @@ class NeuralNetworkBuilder(object):
         if padding_type == 'constant':
             spec_layer_params.constant.value = value
         elif padding_type == 'reflection':
-            spec_layer_params.reflection.MergeFromString('')
+            spec_layer_params.reflection.MergeFromString(b'')
         elif padding_type == 'replication':
-            spec_layer_params.replication.MergeFromString('')
+            spec_layer_params.replication.MergeFromString(b'')
         else:
             raise ValueError("Unknown padding_type %s" %(padding_type))              
         
@@ -1453,16 +1453,16 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer.
         W_h: [numpy.array]
-            List of recursion weight matrices. The ordering is [R_i, R_f, R_z, R_o],
-            where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of recursion weight matrices. The ordering is [R_i, R_f, R_o, R_z],
+            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, hidden_size).
         W_x: [numpy.array]
-            List of input weight matrices. The ordering is [W_i, W_f, W_z, W_o],
-            where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of input weight matrices. The ordering is [W_i, W_f, W_o, W_z],
+            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, input_size).
         b: [numpy.array] | None
-            List of biases. The ordering is [b_i, b_f, b_z, b_o],
-            where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+            List of biases. The ordering is [b_i, b_f, b_o, b_z],
+            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
             If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
@@ -1588,28 +1588,28 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer.
         W_h: [numpy.array]
-            List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_z, R_o],
-            where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_o, R_z],
+            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, hidden_size).
         W_x: [numpy.array]
-            List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_z, W_o],
-            where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_o, W_z],
+            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, input_size).
         b: [numpy.array]
-            List of biases for the forward layer. The ordering is [b_i, b_f, b_z, b_o],
-            where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+            List of biases for the forward layer. The ordering is [b_i, b_f, b_o, b_z],
+            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
             If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
         W_h_back: [numpy.array]
-            List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_z, R_o],
-            where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_o, R_z],
+            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, hidden_size).
         W_x_back: [numpy.array]
-            List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_z, W_o],
-            where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+            List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_o, W_z],
+            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
             The shapes of these matrices are (hidden_size, input_size).
         b_back: [numpy.array]
-            List of biases for the backward layer. The ordering is [b_i, b_f, b_z, b_o],
-            where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+            List of biases for the backward layer. The ordering is [b_i, b_f, b_o, b_z],
+            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
             The shapes of the biases (hidden_size).
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
@@ -1730,25 +1730,25 @@ class NeuralNetworkBuilder(object):
             weight_params.outputGatePeepholeVector.floatValue.extend(map(float, p_o.flatten()))
 
         # Write the backward lstm weights
-        R_i, R_f, R_z, R_o = W_h_back
-        W_i, W_f, W_z, W_o = W_x_back
+        R_i, R_f, R_o, R_z = W_h_back
+        W_i, W_f, W_o, W_z = W_x_back
         
         weight_params_back.inputGateWeightMatrix.floatValue.extend(map(float, W_i.flatten()))
         weight_params_back.forgetGateWeightMatrix.floatValue.extend(map(float, W_f.flatten()))
-        weight_params_back.outputGateWeightMatrix.floatValue.extend(map(float, W_z.flatten()))
-        weight_params_back.blockInputWeightMatrix.floatValue.extend(map(float, W_o.flatten()))
+        weight_params_back.outputGateWeightMatrix.floatValue.extend(map(float, W_o.flatten()))
+        weight_params_back.blockInputWeightMatrix.floatValue.extend(map(float, W_z.flatten()))
 
         weight_params_back.inputGateRecursionMatrix.floatValue.extend(map(float, R_i.flatten()))
         weight_params_back.forgetGateRecursionMatrix.floatValue.extend(map(float, R_f.flatten()))
-        weight_params_back.outputGateRecursionMatrix.floatValue.extend(map(float, R_z.flatten()))
-        weight_params_back.blockInputRecursionMatrix.floatValue.extend(map(float, R_o.flatten()))
+        weight_params_back.outputGateRecursionMatrix.floatValue.extend(map(float, R_o.flatten()))
+        weight_params_back.blockInputRecursionMatrix.floatValue.extend(map(float, R_z.flatten()))
 
         if b_back is not None:
-            b_i, b_f, b_z, b_o = b_back
+            b_i, b_f, b_o, b_z = b_back
             weight_params_back.inputGateBiasVector.floatValue.extend(map(float, b_i.flatten()))
             weight_params_back.forgetGateBiasVector.floatValue.extend(map(float, b_f.flatten()))
-            weight_params_back.outputGateBiasVector.floatValue.extend(map(float, b_z.flatten()))
-            weight_params_back.blockInputBiasVector.floatValue.extend(map(float, b_o.flatten()))
+            weight_params_back.outputGateBiasVector.floatValue.extend(map(float, b_o.flatten()))
+            weight_params_back.blockInputBiasVector.floatValue.extend(map(float, b_z.flatten()))
 
         if peep_back is not None:
             p_i, p_f, p_o = peep_back
@@ -2484,6 +2484,7 @@ class NeuralNetworkBuilder(object):
             spec_layer.output.append(outname)
 
         # Have to do it this way since I can't just assign custom in a layer
+        spec_layer.custom.MergeFromString(b'')
         if custom_proto_spec:
             spec_layer.custom.CopyFrom(custom_proto_spec)
 

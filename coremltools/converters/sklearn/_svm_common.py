@@ -22,7 +22,7 @@ def _set_kernel(model, spec):
 
     result = None
     if(model.kernel == 'linear'):
-        spec.kernel.linearKernel.MergeFromString('')  # hack to set kernel to an empty type
+        spec.kernel.linearKernel.MergeFromString(b'')  # hack to set kernel to an empty type
     elif(model.kernel == 'rbf'):
             spec.kernel.rbfKernel.gamma = gamma_value(model)
     elif(model.kernel == 'poly'):

@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import os
 from coremltools._deps import HAS_SKLEARN
-from coremltools.models.utils import evaluate_regressor
+from coremltools.models.utils import evaluate_regressor, macos_version
 import pytest
 
 if HAS_SKLEARN:
@@ -44,7 +44,7 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         self.assertAlmostEquals(metrics['max_error'], 0.0, delta = 1e-5,
                 msg = 'Failed case %s. Results %s' % (params, metrics))
 
-    def _train_convert_evaluate(self, **scikit_params):
+    def _train_convert_evaluate_assert(self, **scikit_params):
         """
         Train a scikit-learn model, convert it and then evaluate it with CoreML
         """
@@ -54,21 +54,20 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
-        # Get predictions
-        df = pd.DataFrame(self.X, columns=self.feature_names)
-        df['prediction'] = scikit_model.predict(self.X)
+        if macos_version() >= (10, 13):
+            # Get predictions
+            df = pd.DataFrame(self.X, columns=self.feature_names)
+            df['prediction'] = scikit_model.predict(self.X)
 
-        # Evaluate it
-        metrics = evaluate_regressor(spec, df, verbose = False)
-        return metrics
+            # Evaluate it
+            metrics = evaluate_regressor(spec, df, verbose = False)
+            self._check_metrics(metrics, scikit_params)
 
     def test_boston_housing_simple_regression(self):
-        metrics = self._train_convert_evaluate()
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert()
 
     def test_boston_housing_float_double_corner_case(self):
-        metrics = self._train_convert_evaluate(max_depth = 13)
-        self._check_metrics(metrics)
+        self._train_convert_evaluate_assert(max_depth = 13)
 
     @pytest.mark.slow
     def test_boston_housing_parameter_stress_test(self):
@@ -92,5 +91,4 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
 
         print("Testing a total of %s cases. This could take a while" % len(args))
         for it, arg in enumerate(args):
-            metrics = self._train_convert_evaluate(**arg)
-            self._check_metrics(metrics, arg)
+            self._train_convert_evaluate_assert(**arg)

@@ -79,12 +79,24 @@ def _is_merge_layer(layer):
                 return True
     return False
 
+def _is_activation_layer(layer):
+    return (isinstance(layer, _keras.layers.core.Activation) or \
+            isinstance(layer, _keras.layers.advanced_activations.LeakyReLU) or \
+            isinstance(layer, _keras.layers.advanced_activations.PReLU) or \
+            isinstance(layer, _keras.layers.advanced_activations.ELU) or \
+            isinstance(layer, _keras.layers.advanced_activations.ThresholdedReLU))
+
 def _check_unsupported_layers(model, add_custom_layers = False):
+    # When add_custom_layers = True, we just convert all layers not present in
+    # registry as custom layer placeholders
+    if add_custom_layers:
+        return
     for i, layer in enumerate(model.layers):
-        if isinstance(layer, _keras.models.Sequential) or isinstance(layer, _keras.models.Model):
+        if isinstance(layer, _keras.models.Sequential) or isinstance(layer,
+                _keras.models.Model):
             _check_unsupported_layers(layer)
         else:
-            if type(layer) not in _KERAS_LAYER_REGISTRY and not add_custom_layers:
+            if type(layer) not in _KERAS_LAYER_REGISTRY:
                 raise ValueError("Keras layer '%s' not supported. " % str(type(layer)))
             if isinstance(layer, _keras.layers.wrappers.TimeDistributed):
                 if type(layer.layer) not in _KERAS_LAYER_REGISTRY:
@@ -100,7 +112,12 @@ def _get_layer_converter_fn(layer, add_custom_layers = False):
     """
     layer_type = type(layer)
     if layer_type in _KERAS_LAYER_REGISTRY:
-        return _KERAS_LAYER_REGISTRY[layer_type]
+        convert_func = _KERAS_LAYER_REGISTRY[layer_type]
+        if convert_func is _layers2.convert_activation:
+            act_name = _layers2._get_activation_name_from_keras_layer(layer)
+            if act_name == 'CUSTOM':
+                return None
+        return convert_func
     elif add_custom_layers:
         return None
     else:
@@ -283,7 +300,14 @@ def _convert(model,
         if converter_func:
             converter_func(builder, layer, input_names, output_names, keras_layer)
         else:
-            layer_name = type(keras_layer).__name__
+            if _is_activation_layer(keras_layer):
+                import six
+                if six.PY2:
+                    layer_name = keras_layer.activation.func_name
+                else:
+                    layer_name = keras_layer.activation.__name__
+            else:
+                layer_name = type(keras_layer).__name__
             if layer_name in custom_conversion_functions:
                 custom_spec = custom_conversion_functions[layer_name](keras_layer)
             else:

@@ -4,6 +4,8 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import coremltools
+from coremltools._deps import HAS_KERAS2_TF
+from coremltools.models.utils import macos_version
 import keras
 import sklearn
 from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -31,6 +33,7 @@ def create_model(spec):
     return coremltools.models.MLModel(spec)
 
 
+@unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
 class TestIODataTypes(unittest.TestCase):
     """
     This class tests for different I/O feature data types for an .mlmodel
@@ -214,6 +217,7 @@ class TestIODataTypes(unittest.TestCase):
             except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras_dense_model(self):
         model = keras.models.Sequential()
