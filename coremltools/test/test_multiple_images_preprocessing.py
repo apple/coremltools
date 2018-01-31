@@ -22,8 +22,11 @@ if HAS_KERAS2_TF:
     from keras.layers import Activation, GlobalMaxPooling2D, Input
     from coremltools.converters import keras as kerasConverter
 
-nets_path = os.environ["CAFFE_MODELS_PATH"]
-nets_path = nets_path + '/'
+try:
+    nets_path = os.environ["CAFFE_MODELS_PATH"]
+    nets_path = nets_path + '/'
+except:
+    nets_path = None
 
 FOLDER_NAME = 'multiple_images_preprocessing'
 
@@ -61,7 +64,8 @@ def compare_models(caffe_preds, coreml_preds):
     #print('caffe preds : ', caffe_preds)
     #print('coreml preds: ', coreml_preds)
     return max_relative_error 
-    
+
+@unittest.skipIf(nets_path is None, "Unable to find CAFFE_MODELS_PATH")
 class ManyImages(unittest.TestCase):
     """
     Unit test case for caffe layers

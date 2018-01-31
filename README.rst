@@ -42,9 +42,9 @@ Dependencies
 In addition, it has the following soft dependencies that are only needed when
 you are converting models of these formats:
 
-- Keras (1.2.2, 2.0.4+) with Tensorflow (1.0.x, 1.1.x)
-- Xgboost (0.6+)
-- scikit-learn (0.15+)
+- Keras (1.2.2, 2.0.4+) with corresponding Tensorflow version
+- Xgboost (0.7+)
+- scikit-learn (0.17+)
 - libSVM
 
 More Information
@@ -56,7 +56,7 @@ More Information
 
 License
 -------
-Copyright (c) 2017, Apple Inc. All rights reserved.
+Copyright (c) 2018, Apple Inc. All rights reserved.
 
 Use of this source code is governed by the 
 `3-Clause BSD License <https://opensource.org/licenses/BSD-3-Clause>`_

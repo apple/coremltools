@@ -20,7 +20,7 @@ def __get_version(version):
 # ---------------------------------------------------------------------------------------
 HAS_SKLEARN = True
 SKLEARN_VERSION = None
-SKLEARN_MIN_VERSION = '0.15'
+SKLEARN_MIN_VERSION = '0.17'
 def __get_sklearn_version(version):
     # matching 0.15b, 0.16bf, etc
     version_regex = '^\d+\.\d+'
@@ -56,9 +56,9 @@ except:
 HAS_KERAS_TF = True
 HAS_KERAS2_TF = True
 KERAS_MIN_VERSION = '1.2.2'
-KERAS_MAX_VERSION = '2.0.6'
+KERAS_MAX_VERSION = '2.1.3'
 TF_MIN_VERSION = '1.0.0'
-TF_MAX_VERSION = '1.2.1'
+TF_MAX_VERSION = '1.5.0'
 
 try:
     # Prevent keras from printing things that are not errors to standard error.
