@@ -137,6 +137,12 @@ if(APPLE)
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython${PYTHON_VERSION}.dylib @rpath/libpython${PYTHON_VERSION}.dylib
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
+
+    # Make any local virtualenv work if it provides a libpython dylib
+    COMMAND install_name_tool -add_rpath @loader_path/../../../ coremltools/libcaffeconverter.so
+
+    # If local virtualenv doesn't contain a libpython dylib, use /Library/Frameworks python if available
+    COMMAND install_name_tool -add_rpath /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/lib coremltools/libcaffeconverter.so
   )
 else()
   add_custom_command(
@@ -171,6 +177,12 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     COMMAND install_name_tool coremltools/libcoremlpython.so -change libpython${PYTHON_VERSION}.dylib @rpath/libpython${PYTHON_VERSION}.dylib
     COMMAND install_name_tool coremltools/libcoremlpython.so -change /System/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
     COMMAND install_name_tool coremltools/libcoremlpython.so -change /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
+
+    # Make any local virtualenv work if it provides a libpython dylib
+    COMMAND install_name_tool -add_rpath @loader_path/../../../ coremltools/libcoremlpython.so
+
+    # If local virtualenv doesn't contain a libpython dylib, use /Library/Frameworks python if available
+    COMMAND install_name_tool -add_rpath /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/lib coremltools/libcoremlpython.so
   )
 else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
