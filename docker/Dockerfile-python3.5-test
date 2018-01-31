@@ -11,17 +11,9 @@ RUN yum -y groupinstall 'development tools'
 WORKDIR /
 RUN mkdir src
 ENV PATH="/usr/local/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="/usr/local/lib:/usr/local/lib64:${LD_LIBRARY_PATH}"
 
 # Install gcc dependencies
-WORKDIR /src
-RUN curl -O https://ftp.gnu.org/gnu/binutils/binutils-2.29.1.tar.gz
-RUN tar xvf binutils-2.29.1.tar.gz
-WORKDIR /src/binutils-2.29.1
-RUN ./configure --prefix=/usr/local
-RUN make -j16
-RUN make install
-
 WORKDIR /src
 RUN curl -O https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
 RUN tar xvf gmp-6.1.2.tar.bz2
@@ -60,7 +52,7 @@ WORKDIR /src
 RUN curl -O https://www.python.org/ftp/python/3.5.4/Python-3.5.4.tgz
 RUN tar xvf Python-3.5.4.tgz
 WORKDIR /src/Python-3.5.4
-RUN ./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-optimizations
+RUN ./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-shared
 RUN make -j16
 RUN make install
 
