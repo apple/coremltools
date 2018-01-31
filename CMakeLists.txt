@@ -136,6 +136,7 @@ if(APPLE)
     COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython${PYTHON_VERSION}.dylib @rpath/libpython${PYTHON_VERSION}.dylib
     COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
+    COMMAND install_name_tool coremltools/libcaffeconverter.so -change /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
   )
 else()
   add_custom_command(
@@ -169,6 +170,7 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     COMMAND cp $<TARGET_FILE:coremlpython> coremltools/libcoremlpython.so
     COMMAND install_name_tool coremltools/libcoremlpython.so -change libpython${PYTHON_VERSION}.dylib @rpath/libpython${PYTHON_VERSION}.dylib
     COMMAND install_name_tool coremltools/libcoremlpython.so -change /System/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
+    COMMAND install_name_tool coremltools/libcoremlpython.so -change /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
   )
 else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
