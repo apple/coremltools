@@ -36,15 +36,11 @@ endif()
 exec_program(${PYTHON_CONFIG}
   ARGS "--includes"
   OUTPUT_VARIABLE PYTHON_CFLAGS)
-exec_program(${PYTHON_CONFIG}
-  ARGS "--ldflags"
-  OUTPUT_VARIABLE PYTHON_LDFLAGS)
 
 message("Found python at ${PYTHON}")
 message("Found python version ${PYTHON_VERSION}")
 message("Found python-config at ${PYTHON_CONFIG}")
 message("Found python includes ${PYTHON_CFLAGS}")
-message("Found python libs ${PYTHON_LDFLAGS}")
 
 include_directories(
   .
@@ -68,17 +64,14 @@ endif()
 
 set(CMAKE_EXE_LINKER_FLAGS " \
   ${CMAKE_EXE_LINKER_FLAGS} \
-  ${PYTHON_LDFLAGS} \
   --std=c++14 \
 ")
 set(CMAKE_MODULE_LINKER_FLAGS " \
   ${CMAKE_MODULE_LINKER_FLAGS} \
-  ${PYTHON_LDFLAGS} \
   --std=c++14 \
 ")
 set(CMAKE_SHARED_LINKER_FLAGS " \
   ${CMAKE_SHARED_LINKER_FLAGS} \
-  ${PYTHON_LDFLAGS} \
   --std=c++14 \
 ")
 
@@ -129,20 +122,17 @@ target_link_libraries(caffeconverter
   libprotobuf
 )
 
+if (APPLE)
+  # Allow Python to be found at runtime instead of compile/link time
+  # This is apparently the default on Linux
+  set_target_properties(caffeconverter PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+endif()
+
 if(APPLE)
   add_custom_command(
     TARGET caffeconverter
     POST_BUILD
     COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
-    COMMAND install_name_tool coremltools/libcaffeconverter.so -change libpython${PYTHON_VERSION}.dylib @rpath/libpython${PYTHON_VERSION}.dylib
-    COMMAND install_name_tool coremltools/libcaffeconverter.so -change /System/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
-    COMMAND install_name_tool coremltools/libcaffeconverter.so -change /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
-
-    # Make any local virtualenv work if it provides a libpython dylib
-    COMMAND install_name_tool -add_rpath @loader_path/../../../ coremltools/libcaffeconverter.so
-
-    # If local virtualenv doesn't contain a libpython dylib, use /Library/Frameworks python if available
-    COMMAND install_name_tool -add_rpath /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/lib coremltools/libcaffeconverter.so
   )
 else()
   add_custom_command(
@@ -155,6 +145,7 @@ endif()
 find_library(CORE_VIDEO CoreVideo)
 find_library(CORE_ML CoreML)
 find_library(FOUNDATION Foundation)
+
 if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
   add_library(coremlpython
     SHARED
@@ -170,19 +161,17 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     ${CORE_ML}
     ${FOUNDATION}
   )
+
+  if (APPLE)
+    # Allow Python to be found at runtime instead of compile/link time
+    # This is apparently the default on Linux
+    set_target_properties(coremlpython PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+  endif()
+
   add_custom_command(
     TARGET coremlpython
     POST_BUILD
     COMMAND cp $<TARGET_FILE:coremlpython> coremltools/libcoremlpython.so
-    COMMAND install_name_tool coremltools/libcoremlpython.so -change libpython${PYTHON_VERSION}.dylib @rpath/libpython${PYTHON_VERSION}.dylib
-    COMMAND install_name_tool coremltools/libcoremlpython.so -change /System/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
-    COMMAND install_name_tool coremltools/libcoremlpython.so -change /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/Python @rpath/libpython${PYTHON_VERSION}.dylib
-
-    # Make any local virtualenv work if it provides a libpython dylib
-    COMMAND install_name_tool -add_rpath @loader_path/../../../ coremltools/libcoremlpython.so
-
-    # If local virtualenv doesn't contain a libpython dylib, use /Library/Frameworks python if available
-    COMMAND install_name_tool -add_rpath /Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/lib coremltools/libcoremlpython.so
   )
 else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
@@ -204,7 +193,7 @@ add_custom_target(dist
   COMMAND for SUPP_PLATFORM in ${PLAT_NAME}$<SEMICOLON> do ${PYTHON} setup.py bdist_wheel --plat-name=$$SUPP_PLATFORM --python-tag=${PYTHON_TAG}$<SEMICOLON> done$<SEMICOLON>
   DEPENDS caffeconverter coremlpython
   COMMENT "Building Python wheel for coremltools under dist/"
-  )
+)
 
 add_custom_target(pytest
   COMMAND pytest coremltools/test/
