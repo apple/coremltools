@@ -428,7 +428,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names, ker
     else:
         dilations = [keras_layer.dilation_rate, keras_layer.dilation_rate]
 
-    intermediate_name = input_name + '_intermin_'
+    intermediate_name = output_name + '_intermin_'
 
     builder.add_convolution(name = layer + '_step_1',
              kernel_channels = 1,
