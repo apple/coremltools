@@ -5,7 +5,7 @@ FROM centos:centos6
 
 # Update yum and install some standard dev tools and dependencies
 RUN yum -y update
-RUN yum -y install git.x86_64 openssl-devel zlib-devel* bzip2-devel vim-common lapack-devel blas-devel
+RUN yum -y install git.x86_64 openssl-devel zlib-devel* bzip2-devel vim-common lapack-devel blas-devel sqlite-devel
 RUN yum -y groupinstall 'development tools'
 
 # Create a directory for building deps from source code and set up env vars
@@ -53,7 +53,7 @@ WORKDIR /src
 RUN curl -O https://www.python.org/ftp/python/3.6.4/Python-3.6.4.tgz
 RUN tar xvf Python-3.6.4.tgz
 WORKDIR /src/Python-3.6.4
-RUN ./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-shared
+RUN ./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-shared --enable-loadable-sqlite-extensions
 RUN make -j16
 RUN make install
 
