@@ -25,3 +25,9 @@ class FeatureManagementTests(unittest.TestCase):
             fm.process_or_validate_features("a", num_dimensions = 10),
             [("a", dt.Array(10))])
 
+    def test_num_dimensions_long_is_accepted(self):
+
+        self.assertEquals(
+            fm.process_or_validate_features("a", num_dimensions = 10L),
+            [("a", dt.Array(10))])
+
