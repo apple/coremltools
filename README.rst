@@ -36,7 +36,7 @@ Dependencies
 
 :code:`coremltools` has the following dependencies:
 
-- numpy (1.12.1+)
+- numpy (1.10.0+)
 - protobuf (3.1.0+)
 
 In addition, it has the following soft dependencies that are only needed when

@@ -47,7 +47,7 @@ Dependencies
 
 *coremltools* has the following dependencies:
 
-- numpy (1.12.1+)
+- numpy (1.10.0+)
 - protobuf (3.1.0+)
 
 In addition, it has the following soft dependencies that are only needed when
@@ -96,7 +96,7 @@ Additionally, running unit-tests would require more packages (like
 libsvm)
 
 ```shell
-pip install numpy scipy scikit-learn
+pip install -r test_requirements.pip
 ```
 
 To install libsvm
