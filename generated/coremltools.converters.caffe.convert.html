@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.converters.caffe.convert &mdash; coremltools 0.7 documentation</title>
+  <title>coremltools.converters.caffe.convert &mdash; coremltools 0.8 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 0.7 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 0.8 documentation" href="../index.html"/>
         <link rel="up" title="Converters" href="../coremltools.converters.html"/>
         <link rel="next" title="coremltools.converters.keras.convert" href="coremltools.converters.keras.convert.html"/>
         <link rel="prev" title="Converters" href="../coremltools.converters.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.7
+                0.8
               </div>
             
           
@@ -190,7 +190,7 @@ deploy.prototxt while the third is a path to the mean image binary, data in
 which is subtracted from the input image as a preprocessing step.</li>
 <li>A tuple of two paths to .caffemodel and .prototxt and a dict with image input names
 as keys and paths to mean image binaryprotos as values. The keys should be same as
-the input names provided via the argument &#8216;image_input_name&#8217;.</li>
+the input names provided via the argument ‘image_input_name’.</li>
 </ul>
 </div></blockquote>
 <p><strong>image_input_names: [str] | str</strong></p>
@@ -201,9 +201,16 @@ Arrays) by Core ML.</p>
 </div></blockquote>
 <p><strong>is_bgr: bool | dict()</strong></p>
 <blockquote>
-<div><p>Flag to determine if the input images are in pixel order (RGB or BGR).
-Applicable only if image_input_names is specified.
-To specify different values for each image input provide a dictionary with input names as keys.</p>
+<div><p>Flag indicating the channel order the model internally uses to represent
+color images. Set to True if the internal channel order is BGR,
+otherwise it will be assumed RGB. This flag is applicable only if
+image_input_names is specified. To specify a different value for each
+image input, provide a dictionary with input names as keys.
+Note that this flag is about the models internal channel order.
+An input image can be passed to the model in any color pixel layout
+containing red, green and blue values (e.g. 32BGRA or 32ARGB). This flag
+determines how those pixel values get mapped to the internal multiarray
+representation.</p>
 </div></blockquote>
 <p><strong>red_bias: float | dict()</strong></p>
 <blockquote>
@@ -251,12 +258,12 @@ Provide this argument to get a model of type classifier.</p>
 <p><strong>predicted_feature_name: str</strong></p>
 <blockquote>
 <div><p>Name of the output feature for the class labels exposed in the Core ML
-model (applies to classifiers only). Defaults to &#8216;classLabel&#8217;</p>
+model (applies to classifiers only). Defaults to ‘classLabel’</p>
 </div></blockquote>
 <p><strong>model_precision: str</strong></p>
 <blockquote>
 <div><p>Precision at which model will be saved. Currently full precision (float) and half precision
-(float16) models are supported. Defaults to &#8216;_MLMODEL_FULL_PRECISION&#8217; (full precision).</p>
+(float16) models are supported. Defaults to ‘_MLMODEL_FULL_PRECISION’ (full precision).</p>
 </div></blockquote>
 </td>
 </tr>
@@ -305,11 +312,11 @@ file can also be provided during conversion:</p>
 <p>Input and output names used in the interface of the converted Core ML model are inferred from the .prototxt file,
 which contains a description of the network architecture.
 Input names are read from the input layer definition in the .prototxt. By default, they are of type MultiArray.
-Argument &#8220;image_input_names&#8221; can be used to assign image type to specific inputs.
-All the blobs that are &#8220;dangling&#8221;, i.e.
+Argument “image_input_names” can be used to assign image type to specific inputs.
+All the blobs that are “dangling”, i.e.
 which do not feed as input to any other layer are taken as outputs. The .prototxt file can be modified to specify
 custom input and output names.</p>
-<p>The converted Core ML model is of type classifier when the argument &#8220;class_labels&#8221; is specified.</p>
+<p>The converted Core ML model is of type classifier when the argument “class_labels” is specified.</p>
 <p>Advanced usage with custom classifiers, and images:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Mark some inputs as Images</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;my_caffe_model.prototxt&#39;</span><span class="p">),</span>
@@ -330,8 +337,8 @@ input_dim: <span class="m">227</span>
 input_dim: <span class="m">227</span>
 </pre></div>
 </div>
-<p>Here we have specified an input with dimensions (1,3,227,227), using Caffe&#8217;s convention, in the order (batch, channel, height, width). 
-Input name string (&#8220;my_image_input&#8221;) must also match the name of the input (or &#8220;bottom&#8221;, as inputs are known in Caffe) of the first layer in the .prototxt.</p>
+<p>Here we have specified an input with dimensions (1,3,227,227), using Caffe’s convention, in the order (batch, channel, height, width). 
+Input name string (“my_image_input”) must also match the name of the input (or “bottom”, as inputs are known in Caffe) of the first layer in the .prototxt.</p>
 </dd></dl>
 
 </div>
@@ -380,7 +387,7 @@ Input name string (&#8220;my_image_input&#8221;) must also match the name of the
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.7',
+            VERSION:'0.8',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -390,7 +397,7 @@ Input name string (&#8220;my_image_input&#8221;) must also match the name of the
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

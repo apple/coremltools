@@ -1,5 +1,5 @@
-coremltools.converters.libsvm.convert
-=====================================
+coremltools\.converters\.libsvm\.convert
+========================================
 
 .. currentmodule:: coremltools.converters.libsvm
 

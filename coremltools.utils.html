@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; coremltools 0.7 documentation</title>
+  <title>Utilities &mdash; coremltools 0.8 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="coremltools 0.7 documentation" href="index.html"/>
+    <link rel="top" title="coremltools 0.8 documentation" href="index.html"/>
         <link rel="prev" title="coremltools.models.tree_ensemble" href="generated/coremltools.models.tree_ensemble.html"/> 
 
   
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                0.7
+                0.8
               </div>
             
           
@@ -189,7 +189,7 @@ half precision MLModel (float16).</p>
 <code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target='target'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate a CoreML classifier model and compare against predictions
 from the original framework (for testing correctness of conversion). Use
-this evaluation for models that don&#8217;t deal with probabilities.</p>
+this evaluation for models that don’t deal with probabilities.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -427,6 +427,13 @@ as a protobuf spec.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="coremltools.models.utils.macos_version">
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">macos_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.macos_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns macOS version as a tuple of integers, making it easy to do proper
+version comparisons. On non-Macs, it returns an empty tuple.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="coremltools.models.utils.rename_feature">
 <code class="descclassname">coremltools.models.utils.</code><code class="descname">rename_feature</code><span class="sig-paren">(</span><em>spec</em>, <em>current_name</em>, <em>new_name</em>, <em>rename_inputs=True</em>, <em>rename_outputs=True</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.rename_feature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rename a feature in the specification.</p>
@@ -440,7 +447,7 @@ as a protobuf spec.</p>
 </div></blockquote>
 <p><strong>current_name: str</strong></p>
 <blockquote>
-<div><p>Current name of the feature. If this feature doesn&#8217;t exist, the rename
+<div><p>Current name of the feature. If this feature doesn’t exist, the rename
 is a no-op.</p>
 </div></blockquote>
 <p><strong>new_name: str</strong></p>
@@ -590,7 +597,7 @@ layers with className=oldname, then the spec is unchanged.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7',
+            VERSION:'0.8',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -600,7 +607,7 @@ layers with className=oldname, then the spec is unchanged.</p>
       <script type="text/javascript" src="static/jquery.js"></script>
       <script type="text/javascript" src="static/underscore.js"></script>
       <script type="text/javascript" src="static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

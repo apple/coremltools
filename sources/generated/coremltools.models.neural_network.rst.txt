@@ -1,15 +1,9 @@
-coremltools.models.neural_network
-=================================
+coremltools\.models\.neural\_network
+====================================
 
 .. automodule:: coremltools.models.neural_network
 
    
-   
-   .. rubric:: Functions
-
-   .. autosummary::
-   
-      set_transform_interface_params
    
    
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network &mdash; coremltools 0.7 documentation</title>
+  <title>coremltools.models.neural_network &mdash; coremltools 0.8 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 0.7 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 0.8 documentation" href="../index.html"/>
         <link rel="up" title="Models" href="../coremltools.models.html"/>
         <link rel="next" title="coremltools.models.pipeline" href="coremltools.models.pipeline.html"/>
         <link rel="prev" title="coremltools.models.MLModel" href="coremltools.models.MLModel.html"/> 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                0.7
+                0.8
               </div>
             
           
@@ -169,18 +169,6 @@
   <div class="section" id="module-coremltools.models.neural_network">
 <span id="coremltools-models-neural-network"></span><h1>coremltools.models.neural_network<a class="headerlink" href="#module-coremltools.models.neural_network" title="Permalink to this headline">¶</a></h1>
 <p>Neural network builder class to construct Core ML models.</p>
-<p class="rubric">Functions</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_transform_interface_params</span></code>(spec,&nbsp;...[,&nbsp;...])</td>
-<td>Common utilities to set transform interface params.</td>
-</tr>
-</tbody>
-</table>
 <p class="rubric">Classes</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -188,7 +176,7 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder" title="coremltools.models.neural_network.NeuralNetworkBuilder"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkBuilder</span></code></a>(input_features,&nbsp;...[,&nbsp;mode])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder" title="coremltools.models.neural_network.NeuralNetworkBuilder"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkBuilder</span></code></a>(input_features,&nbsp;…[,&nbsp;mode])</td>
 <td>Neural network builder class to construct Core ML models.</td>
 </tr>
 </tbody>
@@ -250,11 +238,11 @@ array) tuple, where name is the name of the feature, and array
 is an datatypes.Array object describing the feature type. 
 array can be None if not known.</p>
 </div></blockquote>
-<p><strong>mode: str (&#8216;classifier&#8217;, &#8216;regressor&#8217; or None)</strong></p>
+<p><strong>mode: str (‘classifier’, ‘regressor’ or None)</strong></p>
 <blockquote class="last">
-<div><p>Mode (one of &#8216;classifier&#8217;, &#8216;regressor&#8217;, or None).</p>
-<p>When mode = &#8216;classifier&#8217;, a NeuralNetworkClassifier spec will be
-constructed.  When mode = &#8216;regressor&#8217;, a NeuralNetworkRegressor
+<div><p>Mode (one of ‘classifier’, ‘regressor’, or None).</p>
+<p>When mode = ‘classifier’, a NeuralNetworkClassifier spec will be
+constructed.  When mode = ‘regressor’, a NeuralNetworkRegressor
 spec will be constructed.</p>
 </div></blockquote>
 </td>
@@ -293,45 +281,45 @@ spec will be constructed.</p>
 It can be one of the following:</p>
 <blockquote>
 <div><ul>
-<li><p class="first">&#8216;RELU&#8217;: Rectified Linear Unit (ReLU) function.</p>
+<li><p class="first">‘RELU’: Rectified Linear Unit (ReLU) function.</p>
 </li>
-<li><p class="first">&#8216;SIGMOID&#8217;: sigmoid function.</p>
+<li><p class="first">‘SIGMOID’: sigmoid function.</p>
 </li>
-<li><p class="first">&#8216;TANH&#8217;: tanh function.</p>
+<li><p class="first">‘TANH’: tanh function.</p>
 </li>
-<li><p class="first">&#8216;SCALED_TANH&#8217;: scaled tanh function, defined as:</p>
+<li><p class="first">‘SCALED_TANH’: scaled tanh function, defined as:</p>
 <p><cite>f(x) = alpha * tanh(beta * x)</cite></p>
 <p>where alpha and beta are constant scalars.</p>
 </li>
-<li><p class="first">&#8216;SOFTPLUS&#8217;: softplus function.</p>
+<li><p class="first">‘SOFTPLUS’: softplus function.</p>
 </li>
-<li><p class="first">&#8216;SOFTSIGN&#8217;: softsign function.</p>
+<li><p class="first">‘SOFTSIGN’: softsign function.</p>
 </li>
-<li><p class="first">&#8216;SIGMOID_HARD&#8217;: hard sigmoid function, defined as:</p>
+<li><p class="first">‘SIGMOID_HARD’: hard sigmoid function, defined as:</p>
 <p><cite>f(x) = min(max(alpha * x + beta, -1), 1)</cite></p>
 <p>where alpha and beta are constant scalars.</p>
 </li>
-<li><p class="first">&#8216;LEAKYRELU&#8217;: leaky relu function, defined as:</p>
+<li><p class="first">‘LEAKYRELU’: leaky relu function, defined as:</p>
 <p><cite>f(x) = (x &gt;= 0) * x + (x &lt; 0) * alpha * x</cite></p>
 <p>where alpha is a constant scalar.</p>
 </li>
-<li><p class="first">&#8216;PRELU&#8217;: Parametric ReLU function, defined as:</p>
+<li><p class="first">‘PRELU’: Parametric ReLU function, defined as:</p>
 <p><cite>f(x) = (x &gt;= 0) * x + (x &lt; 0) * alpha * x</cite></p>
 <p>where alpha is a multi-dimensional array of same size as x.</p>
 </li>
-<li><p class="first">&#8216;ELU&#8217;: Exponential linear unit function, defined as:</p>
+<li><p class="first">‘ELU’: Exponential linear unit function, defined as:</p>
 <p><cite>f(x) = (x &gt;= 0) * x + (x &lt; 0) * (alpha * exp(x) - 1)</cite></p>
 <p>where alpha is a constant scalar.</p>
 </li>
-<li><p class="first">&#8216;PARAMETRICSOFTPLUS&#8217;: Parametric softplus function, defined as:</p>
+<li><p class="first">‘PARAMETRICSOFTPLUS’: Parametric softplus function, defined as:</p>
 <p><cite>f(x) = alpha * log(1 + exp(beta * x))</cite></p>
 <p>where alpha and beta are two multi-dimensional arrays of same size as x.</p>
 </li>
-<li><p class="first">&#8216;THRESHOLDEDRELU&#8217;: Thresholded ReLU function, defined as:</p>
+<li><p class="first">‘THRESHOLDEDRELU’: Thresholded ReLU function, defined as:</p>
 <p><cite>f(x) = (x &gt;= alpha) * x</cite></p>
 <p>where alpha is a constant scalar.</p>
 </li>
-<li><p class="first">&#8216;LINEAR&#8217;: linear function.</p>
+<li><p class="first">‘LINEAR’: linear function.</p>
 <blockquote>
 <div><p><cite>f(x) = alpha * x + beta</cite></p>
 </div></blockquote>
@@ -352,15 +340,15 @@ It can be one of the following:</p>
 <div><p>Parameters for the activation, depending on non_linearity. Kindly refer to NeuralNetwork.proto for details.</p>
 <blockquote>
 <div><ul class="simple">
-<li>When non_linearity is one of [&#8216;RELU&#8217;, &#8216;SIGMOID&#8217;, &#8216;TANH&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SOFTPLUS&#8217;, &#8216;SOFTSIGN&#8217;], params is ignored.</li>
-<li>When non_linearity is one of [&#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;], param is a list of 2 floats
+<li>When non_linearity is one of [‘RELU’, ‘SIGMOID’, ‘TANH’, ‘SCALED_TANH’, ‘SOFTPLUS’, ‘SOFTSIGN’], params is ignored.</li>
+<li>When non_linearity is one of [‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’], param is a list of 2 floats
 [alpha, beta].</li>
-<li>When non_linearity is one of [&#8216;LEAKYRELU&#8217;, &#8216;ELU&#8217;, &#8216;THRESHOLDEDRELU&#8217;], param is a list of 1 float
+<li>When non_linearity is one of [‘LEAKYRELU’, ‘ELU’, ‘THRESHOLDEDRELU’], param is a list of 1 float
 [alpha].</li>
-<li>When non_linearity is &#8216;PRELU&#8217;, param is a list of 1 numpy array [alpha]. The shape of
+<li>When non_linearity is ‘PRELU’, param is a list of 1 numpy array [alpha]. The shape of
 alpha is (C,), where C is either the number of input channels or
 1. When C = 1, same alpha is applied to all channels.</li>
-<li>When non_linearity is &#8216;PARAMETRICSOFTPLUS&#8217;, param is a list of 2 numpy arrays [alpha,
+<li>When non_linearity is ‘PARAMETRICSOFTPLUS’, param is a list of 2 numpy arrays [alpha,
 beta]. The shape of alpha and beta is (C, ), where C is either
 the number of input channels or 1. When C = 1, same alpha and
 beta are applied to all channels.</li>
@@ -467,38 +455,38 @@ instance normalization i.e., mean and variance are computed from the single inpu
 </div></blockquote>
 <p><strong>W_h: [numpy.array]</strong></p>
 <blockquote>
-<div><p>List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_z, R_o],
-where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+<div><p>List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_o, R_z],
+where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, hidden_size).</p>
 </div></blockquote>
 <p><strong>W_x: [numpy.array]</strong></p>
 <blockquote>
-<div><p>List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_z, W_o],
-where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+<div><p>List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_o, W_z],
+where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, input_size).</p>
 </div></blockquote>
 <p><strong>b: [numpy.array]</strong></p>
 <blockquote>
-<div><p>List of biases for the forward layer. The ordering is [b_i, b_f, b_z, b_o],
-where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+<div><p>List of biases for the forward layer. The ordering is [b_i, b_f, b_o, b_z],
+where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
 If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).</p>
 </div></blockquote>
 <p><strong>W_h_back: [numpy.array]</strong></p>
 <blockquote>
-<div><p>List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_z, R_o],
-where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+<div><p>List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_o, R_z],
+where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, hidden_size).</p>
 </div></blockquote>
 <p><strong>W_x_back: [numpy.array]</strong></p>
 <blockquote>
-<div><p>List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_z, W_o],
-where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+<div><p>List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_o, W_z],
+where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, input_size).</p>
 </div></blockquote>
 <p><strong>b_back: [numpy.array]</strong></p>
 <blockquote>
-<div><p>List of biases for the backward layer. The ordering is [b_i, b_f, b_z, b_o],
-where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+<div><p>List of biases for the backward layer. The ordering is [b_i, b_f, b_o, b_z],
+where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
 The shapes of the biases (hidden_size).</p>
 </div></blockquote>
 <p><strong>hidden_size: int</strong></p>
@@ -520,20 +508,20 @@ The shapes of the biases (hidden_size).</p>
 <p><strong>inner_activation: str</strong></p>
 <blockquote>
 <div><p>Inner activation function used at input and forget gate. Can be one of the following option:
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
-Defaults to &#8216;SIGMOID&#8217;.</p>
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
+Defaults to ‘SIGMOID’.</p>
 </div></blockquote>
 <p><strong>cell_state_update_activation: str</strong></p>
 <blockquote>
 <div><p>Cell state update activation function used at the cell state update gate.
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
-Defaults to &#8216;TANH&#8217;.</p>
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
+Defaults to ‘TANH’.</p>
 </div></blockquote>
 <p><strong>output_activation: str</strong></p>
 <blockquote>
 <div><p>Activation function used at the output gate. Can be one of the following option:
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
-Defaults to &#8216;TANH&#8217;.</p>
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
+Defaults to ‘TANH’.</p>
 </div></blockquote>
 <p><strong>peep: [numpy.array] | None</strong></p>
 <blockquote>
@@ -619,7 +607,7 @@ protobuf message for more information about input and output blob dimensions.</p
 </div></blockquote>
 <p><strong>border_mode: str</strong></p>
 <blockquote>
-<div><p>Option for the padding type and output blob shape. Can be either &#8216;valid&#8217; or &#8216;same&#8217;.
+<div><p>Option for the padding type and output blob shape. Can be either ‘valid’ or ‘same’.
 Kindly refer to NeuralNetwork.proto for details.</p>
 </div></blockquote>
 <p><strong>groups: int</strong></p>
@@ -676,12 +664,12 @@ Defaults to [1,1]</p>
 </div></blockquote>
 <p><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></p>
 <blockquote>
-<div><p>values of height (top, bottom) and width (left, right) padding to be used if border_more is &#8220;valid&#8221;.</p>
+<div><p>values of height (top, bottom) and width (left, right) padding to be used if border_more is “valid”.</p>
 </div></blockquote>
 <p><strong>same_padding_asymmetry_mode</strong> : str.</p>
 <blockquote>
-<div><p>Type of asymmetric padding to be used when  border_mode is &#8216;same&#8217;. 
-Can be either &#8216;BOTTOM_RIGHT_HEAVY&#8217; or  &#8216;TOP_LEFT_HEAVY&#8217;. 
+<div><p>Type of asymmetric padding to be used when  border_mode is ‘same’. 
+Can be either ‘BOTTOM_RIGHT_HEAVY’ or  ‘TOP_LEFT_HEAVY’. 
 Kindly refer to NeuralNetwork.proto for details.</p>
 </div></blockquote>
 <p><strong>Depthwise convolution is a special case of convolution, where we have:</strong></p>
@@ -818,21 +806,21 @@ or a list of 2 strings (2-input crop layer).</p>
 <blockquote>
 <div><p>A string specifying the mode of the elementwise layer. It can be one of the following:</p>
 <ul class="simple">
-<li>&#8216;CONCAT&#8217;: concatenate input blobs along the channel axis.</li>
-<li>&#8216;SEQUENCE_CONCAT&#8217;: concatenate input blobs along the sequence axis.</li>
-<li>&#8216;ADD&#8217;: perform an element-wise summation over the input blobs.</li>
-<li>&#8216;MULTIPLY&#8217;: perform an element-wise multiplication over the input blobs.</li>
-<li>&#8216;DOT&#8217;: compute the dot product of the two input blobs. In this mode, the length of input_names should be 2.</li>
-<li>&#8216;COS&#8217;: compute the cosine similarity of the two input blobs. In this mode, the length of input_names should be 2.</li>
-<li>&#8216;MAX&#8217;: compute the element-wise maximum over the input blobs.</li>
-<li>&#8216;MIN&#8217;: compute the element-wise minimum over the input blobs.</li>
-<li>&#8216;AVE&#8217;: compute the element-wise average over the input blobs.</li>
+<li>‘CONCAT’: concatenate input blobs along the channel axis.</li>
+<li>‘SEQUENCE_CONCAT’: concatenate input blobs along the sequence axis.</li>
+<li>‘ADD’: perform an element-wise summation over the input blobs.</li>
+<li>‘MULTIPLY’: perform an element-wise multiplication over the input blobs.</li>
+<li>‘DOT’: compute the dot product of the two input blobs. In this mode, the length of input_names should be 2.</li>
+<li>‘COS’: compute the cosine similarity of the two input blobs. In this mode, the length of input_names should be 2.</li>
+<li>‘MAX’: compute the element-wise maximum over the input blobs.</li>
+<li>‘MIN’: compute the element-wise minimum over the input blobs.</li>
+<li>‘AVE’: compute the element-wise average over the input blobs.</li>
 </ul>
 </div></blockquote>
 <p><strong>alpha: float</strong></p>
 <blockquote class="last">
-<div><p>if mode == &#8216;ADD&#8217; and there is only one input_name, alpha is added to the input
-if mode == &#8216;MULTIPLY&#8217; and there is only one input_name, alpha is multiplied to the input</p>
+<div><p>if mode == ‘ADD’ and there is only one input_name, alpha is added to the input
+if mode == ‘MULTIPLY’ and there is only one input_name, alpha is multiplied to the input</p>
 </div></blockquote>
 </td>
 </tr>
@@ -976,15 +964,15 @@ If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size
 <p><strong>activation: str</strong></p>
 <blockquote>
 <div><p>Activation function used at the output gate. Can be one of the following option:
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
-Defaults to &#8216;TANH&#8217;. 
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
+Defaults to ‘TANH’. 
 See add_activation for more detailed description.</p>
 </div></blockquote>
 <p><strong>inner_activation: str</strong></p>
 <blockquote>
 <div><p>Inner activation function used at update and reset gates. Can be one of the following option:
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
-Defaults to &#8216;SIGMOID_HARD&#8217;.
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
+Defaults to ‘SIGMOID_HARD’.
 See add_activation for more detailed description.</p>
 </div></blockquote>
 <p><strong>input_names: [str]</strong></p>
@@ -1148,7 +1136,7 @@ the square root of the sum of squares of all elements of the input along C, H an
 <dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn">
 <code class="descname">add_lrn</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>alpha</em>, <em>beta</em>, <em>local_size</em>, <em>k=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a LRN (local response normalization) layer. Please see the LRNLayerParams message in Core ML neural network
-protobuf for more information about the operation of this layer. Supports &#8220;across&#8221; channels normalization.</p>
+protobuf for more information about the operation of this layer. Supports “across” channels normalization.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1290,7 +1278,7 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 </div></blockquote>
 <p><strong>value: float</strong></p>
 <blockquote>
-<div><p>Value of the elements padded. Used only when padding_type = &#8216;constant&#8217;</p>
+<div><p>Value of the elements padded. Used only when padding_type = ‘constant’</p>
 </div></blockquote>
 <p><strong>input_name: str</strong></p>
 <blockquote>
@@ -1302,7 +1290,7 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 </div></blockquote>
 <p><strong>padding_type: str</strong></p>
 <blockquote class="last">
-<div><p>Type of the padding. Can be one of &#8216;constant&#8217;, &#8216;reflection&#8217; or &#8216;replication&#8217;</p>
+<div><p>Type of the padding. Can be one of ‘constant’, ‘reflection’ or ‘replication’</p>
 </div></blockquote>
 </td>
 </tr>
@@ -1392,11 +1380,11 @@ the output is the same as the input.</p>
 </div></blockquote>
 <p><strong>layer_type: str</strong></p>
 <blockquote>
-<div><p>Type of pooling performed. Can either be &#8216;MAX&#8217;, &#8216;AVERAGE&#8217; or &#8216;L2&#8217;.</p>
+<div><p>Type of pooling performed. Can either be ‘MAX’, ‘AVERAGE’ or ‘L2’.</p>
 </div></blockquote>
 <p><strong>padding_type: str</strong></p>
 <blockquote>
-<div><p>Option for the type of pading and output blob shape. Can be either &#8216;VALID&#8217; , &#8216;SAME&#8217; or &#8216;INCLUDE_LAST_PIXEL&#8217;. 
+<div><p>Option for the type of pading and output blob shape. Can be either ‘VALID’ , ‘SAME’ or ‘INCLUDE_LAST_PIXEL’. 
 Kindly refer to NeuralNetwork.proto for details.</p>
 </div></blockquote>
 <p><strong>input_name: str</strong></p>
@@ -1409,7 +1397,7 @@ Kindly refer to NeuralNetwork.proto for details.</p>
 </div></blockquote>
 <p><strong>exclude_pad_area: boolean</strong></p>
 <blockquote>
-<div><p>Whether to exclude padded area in the &#8216;AVERAGE&#8217; pooling operation. Defaults to True.</p>
+<div><p>Whether to exclude padded area in the ‘AVERAGE’ pooling operation. Defaults to True.</p>
 <ul class="simple">
 <li>If True, the value of the padded area will be excluded.</li>
 <li>If False, the padded area will be included.</li>
@@ -1420,7 +1408,7 @@ Kindly refer to NeuralNetwork.proto for details.</p>
 <blockquote>
 <div><p>Whether the pooling operation is global. Defaults to False.</p>
 <ul class="simple">
-<li>If True, the pooling operation is global &#8211; the pooling region is of the same size of the input blob.</li>
+<li>If True, the pooling operation is global – the pooling region is of the same size of the input blob.</li>
 </ul>
 <p>Parameters height, width, stride_height, stride_width will be ignored.</p>
 <ul class="simple">
@@ -1429,12 +1417,12 @@ Kindly refer to NeuralNetwork.proto for details.</p>
 </div></blockquote>
 <p><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></p>
 <blockquote>
-<div><p>values of height (top, bottom) and width (left, right) padding to be used if padding type is &#8220;VALID&#8221; or &#8220;INCLUDE_LAST_PIXEL&#8221;.</p>
+<div><p>values of height (top, bottom) and width (left, right) padding to be used if padding type is “VALID” or “INCLUDE_LAST_PIXEL”.</p>
 </div></blockquote>
 <p><strong>same_padding_asymmetry_mode</strong> : str.</p>
 <blockquote class="last">
-<div><p>Type of asymmetric padding to be used when  padding_type = &#8216;SAME&#8217;. 
-Can be either &#8216;BOTTOM_RIGHT_HEAVY&#8217; or  &#8216;TOP_LEFT_HEAVY&#8217;. 
+<div><p>Type of asymmetric padding to be used when  padding_type = ‘SAME’. 
+Can be either ‘BOTTOM_RIGHT_HEAVY’ or  ‘TOP_LEFT_HEAVY’. 
 Kindly refer to NeuralNetwork.proto for details.</p>
 </div></blockquote>
 </td>
@@ -1471,18 +1459,18 @@ along dimension(s) specified by the parameter axis.</p>
 <p><strong>axis: str</strong></p>
 <blockquote>
 <div><p>dimensions along which the reduction operation is applied.
-Allowed values: &#8216;CHW&#8217;, &#8216;HW&#8217;, &#8216;C&#8217;, &#8216;H&#8217;, &#8216;W&#8217;</p>
+Allowed values: ‘CHW’, ‘HW’, ‘C’, ‘H’, ‘W’</p>
 </div></blockquote>
 <p><strong>mode: str</strong></p>
 <blockquote>
 <div><p>Reduction operation to be applied.
 Allowed values:
-&#8216;sum&#8217;, &#8216;avg&#8217;, &#8216;prod&#8217;, &#8216;logsum&#8217;, &#8216;sumsquare&#8217;, &#8216;L1&#8217;, &#8216;L2&#8217;, &#8216;max&#8217;, &#8216;min&#8217;, &#8216;argmax&#8217;.
-&#8216;argmax&#8217; is only suuported with axis values &#8216;C&#8217;, &#8216;H&#8217; and &#8216;W&#8217;.</p>
+‘sum’, ‘avg’, ‘prod’, ‘logsum’, ‘sumsquare’, ‘L1’, ‘L2’, ‘max’, ‘min’, ‘argmax’.
+‘argmax’ is only suuported with axis values ‘C’, ‘H’ and ‘W’.</p>
 </div></blockquote>
 <p><strong>epsilon: float</strong></p>
 <blockquote class="last">
-<div><p>number that is added to the input when &#8216;logsum&#8217; function is applied.</p>
+<div><p>number that is added to the input when ‘logsum’ function is applied.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -1497,7 +1485,7 @@ Allowed values:
 <dl class="method">
 <dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_reorganize_data">
 <code class="descname">add_reorganize_data</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>mode='SPACE_TO_DEPTH'</em>, <em>block_size=2</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_reorganize_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a data reorganization layer of type &#8220;SPACE_TO_DEPTH&#8221; or &#8220;DEPTH_TO_SPACE&#8221;.</p>
+<dd><p>Add a data reorganization layer of type “SPACE_TO_DEPTH” or “DEPTH_TO_SPACE”.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1517,19 +1505,19 @@ Allowed values:
 <p><strong>mode: str</strong></p>
 <blockquote>
 <div><ul class="simple">
-<li>If mode == &#8216;SPACE_TO_DEPTH&#8217;: data is moved from the spatial to the channel dimension.
+<li>If mode == ‘SPACE_TO_DEPTH’: data is moved from the spatial to the channel dimension.
 Input is spatially divided into non-overlapping blocks of size block_size X block_size  
 and data from each block is moved to the channel dimension.    
 Output CHW dimensions are: [C * block_size * block_size, H/block_size, C/block_size].</li>
-<li>If mode == &#8216;DEPTH_TO_SPACE&#8217;: data is moved from the channel to the spatial dimension.
-Reverse of the operation &#8216;SPACE_TO_DEPTH&#8217;.
+<li>If mode == ‘DEPTH_TO_SPACE’: data is moved from the channel to the spatial dimension.
+Reverse of the operation ‘SPACE_TO_DEPTH’.
 Output CHW dimensions are: [C/(block_size * block_size), H * block_size, C * block_size].</li>
 </ul>
 </div></blockquote>
 <p><strong>block_size: int</strong></p>
 <blockquote class="last">
-<div><p>Must be greater than 1. Must divide H and W, when mode is &#8216;SPACE_TO_DEPTH&#8217;. (block_size * block_size)
-must divide C when mode is &#8216;DEPTH_TO_SPACE&#8217;.</p>
+<div><p>Must be greater than 1. Must divide H and W, when mode is ‘SPACE_TO_DEPTH’. (block_size * block_size)
+must divide C when mode is ‘DEPTH_TO_SPACE’.</p>
 </div></blockquote>
 </td>
 </tr>
@@ -1682,15 +1670,15 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 </div></blockquote>
 <p><strong>W_h: numpy.array</strong></p>
 <blockquote>
-<div><p>Weights of the recurrent layer&#8217;s hidden state. Must be of shape (hidden_size, hidden_size).</p>
+<div><p>Weights of the recurrent layer’s hidden state. Must be of shape (hidden_size, hidden_size).</p>
 </div></blockquote>
 <p><strong>W_x: numpy.array</strong></p>
 <blockquote>
-<div><p>Weights of the recurrent layer&#8217;s input. Must be of shape (hidden_size, input_size).</p>
+<div><p>Weights of the recurrent layer’s input. Must be of shape (hidden_size, input_size).</p>
 </div></blockquote>
 <p><strong>b: numpy.array | None</strong></p>
 <blockquote>
-<div><p>Bias of the recurrent layer&#8217;s output. If None, bias is ignored. Otherwise it must be of shape (hidden_size, ).</p>
+<div><p>Bias of the recurrent layer’s output. If None, bias is ignored. Otherwise it must be of shape (hidden_size, ).</p>
 </div></blockquote>
 <p><strong>hidden_size: int</strong></p>
 <blockquote>
@@ -1703,7 +1691,7 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 <p><strong>activation: str</strong></p>
 <blockquote>
 <div><p>Activation function name. Can be one of the following option:
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
 See add_activation for more detailed description.</p>
 </div></blockquote>
 <p><strong>input_names: [str]</strong></p>
@@ -1765,7 +1753,7 @@ start_index is included, while end_index is exclusive.</p>
 <blockquote>
 <div><dl class="docutils">
 <dt>axis along which input is sliced.</dt>
-<dd><p class="first last">allowed values: &#8216;channel&#8217;, &#8216;height&#8217;, &#8216;width&#8217;</p>
+<dd><p class="first last">allowed values: ‘channel’, ‘height’, ‘width’</p>
 </dd>
 </dl>
 </div></blockquote>
@@ -1858,8 +1846,8 @@ to produce multiple outputs.</p>
 <dd><p>Add a Unary layer. Applies the specified function (mode) to all the elements of the input.
 Please see the UnaryFunctionLayerParams message in Core ML neural network
 protobuf for more information about the operation of this layer.   
-Prior to the application of the function the input can be scaled and shifted by using the &#8216;scale&#8217;,
-&#8216;shift&#8217; parameters.</p>
+Prior to the application of the function the input can be scaled and shifted by using the ‘scale’,
+‘shift’ parameters.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1879,11 +1867,11 @@ Prior to the application of the function the input can be scaled and shifted by 
 <p><strong>mode: str</strong></p>
 <blockquote>
 <div><p>Unary function.  
-Allowed values: &#8216;sqrt&#8217;, &#8216;rsqrt&#8217;, &#8216;inverse&#8217;, &#8216;power&#8217;, &#8216;exp&#8217;, &#8216;log&#8217;, &#8216;abs&#8217;, threshold&#8217;.</p>
+Allowed values: ‘sqrt’, ‘rsqrt’, ‘inverse’, ‘power’, ‘exp’, ‘log’, ‘abs’, threshold’.</p>
 </div></blockquote>
 <p><strong>alpha: float</strong></p>
 <blockquote>
-<div><p>constant used in with modes &#8216;power&#8217; and &#8216;threshold&#8217;.</p>
+<div><p>constant used in with modes ‘power’ and ‘threshold’.</p>
 </div></blockquote>
 <p><strong>shift, scale: float</strong></p>
 <blockquote>
@@ -1917,20 +1905,20 @@ Allowed values: &#8216;sqrt&#8217;, &#8216;rsqrt&#8217;, &#8216;inverse&#8217;, 
 </div></blockquote>
 <p><strong>W_h: [numpy.array]</strong></p>
 <blockquote>
-<div><p>List of recursion weight matrices. The ordering is [R_i, R_f, R_z, R_o],
-where R_i, R_f, R_z, R_o are weight matrices at input gate, forget gate, cell gate and output gate.
+<div><p>List of recursion weight matrices. The ordering is [R_i, R_f, R_o, R_z],
+where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, hidden_size).</p>
 </div></blockquote>
 <p><strong>W_x: [numpy.array]</strong></p>
 <blockquote>
-<div><p>List of input weight matrices. The ordering is [W_i, W_f, W_z, W_o],
-where W_i, W_f, W_z, W_o are weight matrices at input gate, forget gate, cell gate and output gate.
+<div><p>List of input weight matrices. The ordering is [W_i, W_f, W_o, W_z],
+where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, input_size).</p>
 </div></blockquote>
 <p><strong>b: [numpy.array] | None</strong></p>
 <blockquote>
-<div><p>List of biases. The ordering is [b_i, b_f, b_z, b_o],
-where b_i, b_f, b_z, b_o are biases at input gate, forget gate, cell gate and output gate.
+<div><p>List of biases. The ordering is [b_i, b_f, b_o, b_z],
+where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
 If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).</p>
 </div></blockquote>
 <p><strong>hidden_size: int</strong></p>
@@ -1952,17 +1940,17 @@ If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size
 <p><strong>inner_activation: str</strong></p>
 <blockquote>
 <div><p>Inner activation function used at input and forget gate. Can be one of the following option:
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].</p>
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].</p>
 </div></blockquote>
 <p><strong>cell_state_update_activation: str</strong></p>
 <blockquote>
 <div><p>Cell state update activation function used at the cell state update gate.
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].</p>
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].</p>
 </div></blockquote>
 <p><strong>output_activation: str</strong></p>
 <blockquote>
 <div><p>Activation function used at the output gate. Can be one of the following option:
-[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].</p>
+[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].</p>
 </div></blockquote>
 <p><strong>peep: [numpy.array] | None</strong></p>
 <blockquote>
@@ -2040,8 +2028,8 @@ If not provided, it is defaulted to 50.0.</p>
 <p><strong>mode: str</strong></p>
 <blockquote class="last">
 <div><p>Following values are supported:
-&#8216;NN&#8217;: nearest neighbour
-&#8216;BILINEAR&#8217; : bilinear interpolation</p>
+‘NN’: nearest neighbour
+‘BILINEAR’ : bilinear interpolation</p>
 </div></blockquote>
 </td>
 </tr>
@@ -2069,7 +2057,7 @@ neural network to labels in a classifier.</p>
 <p><strong>predicted_feature_name: str</strong></p>
 <blockquote>
 <div><p>Name of the output feature for the class labels exposed in the
-Core ML neural network classifier.  Defaults to &#8216;class_output&#8217;.</p>
+Core ML neural network classifier.  Defaults to ‘class_output’.</p>
 </div></blockquote>
 <p><strong>prediction_blob: str</strong></p>
 <blockquote class="last">
@@ -2164,11 +2152,13 @@ as output_names.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>image_input_names: [str]</strong></p>
 <blockquote>
-<div><p>Name if input blobs that are images</p>
+<div><p>Name of input blobs that are images</p>
 </div></blockquote>
 <p><strong>is_bgr: boolean | dict()</strong></p>
 <blockquote>
-<div><p>Image pixel order (RGB or BGR)</p>
+<div><p>Channel order for input blobs that are images. BGR if True else RGB.
+To specify a different value for each image input,
+provide a dictionary with input names as keys.</p>
 </div></blockquote>
 <p><strong>red_bias: float | dict()</strong></p>
 <blockquote>
@@ -2248,7 +2238,7 @@ as output_names.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.7',
+            VERSION:'0.8',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -2258,7 +2248,7 @@ as output_names.</p>
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

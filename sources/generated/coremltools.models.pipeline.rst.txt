@@ -1,17 +1,9 @@
-coremltools.models.pipeline
-===========================
+coremltools\.models\.pipeline
+=============================
 
 .. automodule:: coremltools.models.pipeline
 
    
-   
-   .. rubric:: Functions
-
-   .. autosummary::
-   
-      set_classifier_interface_params
-      set_regressor_interface_params
-      set_transform_interface_params
    
    
 

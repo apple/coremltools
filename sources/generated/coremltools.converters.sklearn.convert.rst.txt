@@ -1,5 +1,5 @@
-coremltools.converters.sklearn.convert
-======================================
+coremltools\.converters\.sklearn\.convert
+=========================================
 
 .. currentmodule:: coremltools.converters.sklearn
 

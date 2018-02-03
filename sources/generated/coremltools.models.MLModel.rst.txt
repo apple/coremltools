@@ -1,5 +1,5 @@
-coremltools.models.MLModel
-==========================
+coremltools\.models\.MLModel
+============================
 
 .. currentmodule:: coremltools.models
 
@@ -21,16 +21,5 @@ coremltools.models.MLModel
    
 
    
-   
-   .. rubric:: Attributes
-
-   .. autosummary::
-   
-      ~MLModel.author
-      ~MLModel.input_description
-      ~MLModel.license
-      ~MLModel.output_description
-      ~MLModel.short_description
-      ~MLModel.user_defined_metadata
    
    
