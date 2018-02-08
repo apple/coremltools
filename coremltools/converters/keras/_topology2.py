@@ -171,7 +171,18 @@ class NetGraph(object):
         if hasattr(self.model, 'output_layers'):
             # find corresponding output layers in CoreML model
             # assume output layers are not shared
-            for kl in self.model.output_layers:
+            # Helper function to recursively extract output layers
+            # even if the model has a layer which is a nested model
+            def extract_output_layers(keras_model):
+                output_layers = []
+                for layer in keras_model.output_layers:
+                    if hasattr(layer,'output_layers'):
+                        output_layers.extend(extract_output_layers(layer))
+                    else:
+                        output_layers.append(layer)
+                return output_layers
+
+            for kl in extract_output_layers(self.model):
                 coreml_layers = self.get_coreml_layers(kl)
                 if len(coreml_layers) > 0:
                     for cl in coreml_layers:
