@@ -281,7 +281,7 @@ class TreeEnsembleRegressor(TreeEnsembleBase):
             Name(s) of the input features, given as a list of `('name', datatype)`
             tuples.  The features are one of :py:class:`models.datatypes.Int64`, 
             :py:class:`datatypes.Double`, or :py:class:`models.datatypes.Array`.  
-            Feature indices in the nodes are counted sequentually from 0 through 
+            Feature indices in the nodes are counted sequentially from 0 through 
             the features. 
         
         target:  (default = None)
@@ -342,7 +342,7 @@ class TreeEnsembleClassifier(TreeEnsembleBase):
             Name(s) of the input features, given as a list of `('name', datatype)`
             tuples.  The features are one of :py:class:`models.datatypes.Int64`, 
             :py:class:`datatypes.Double`, or :py:class:`models.datatypes.Array`.  
-            Feature indices in the nodes are counted sequentually from 0 through 
+            Feature indices in the nodes are counted sequentially from 0 through 
             the features. 
         
         class_labels: [list]

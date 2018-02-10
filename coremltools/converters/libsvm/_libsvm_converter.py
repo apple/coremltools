@@ -73,7 +73,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     if isinstance(feature_names, str):
         # input will be a single array
         if input_length == 'auto':
-            print("[WARNING] Infering an input lenght of %d. If this is not correct,"
+            print("[WARNING] Infering an input length of %d. If this is not correct,"
                   " use the 'input_length' parameter." % inferred_length)
             input_length = inferred_length
         elif inferred_length > input_length:

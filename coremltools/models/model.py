@@ -88,7 +88,7 @@ class MLModel(object):
     - Model parameters: The set of parameters required to represent a specific instance of the model.
     - Metadata: Information about the origin, license, and author of the model.
 
-    With this class, you can inspect a CoreML model, modifiy metadata, and make
+    With this class, you can inspect a CoreML model, modify metadata, and make
     predictions for the purposes of testing (on select platforms).
 
     Examples

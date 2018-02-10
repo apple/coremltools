@@ -29,7 +29,7 @@ def convert(model, input_names='input', target_name='target',
         Name of the input column(s).
         If a single string is used (the default) the input will be an array. The
         length of the array will be inferred from the model, this can be overridden
-        using the 'input_lenght' parameter.
+        using the 'input_length' parameter.
 
     target: str
         Name of the output column.
@@ -82,7 +82,7 @@ def convert(model, input_names='input', target_name='target',
         raise TypeError("Expected 'target_name' of type str (got %s)" % type(libsvm_model))
 
     if input_length != 'auto' and not isinstance(input_length, int):
-        raise TypeError("Expected 'input_lenght' of type int, got %s" % type(input_length))
+        raise TypeError("Expected 'input_length' of type int, got %s" % type(input_length))
 
     if input_length != 'auto' and not isinstance(input_names, _string_types):
         raise ValueError("'input_length' should not be used unless the input will be only one array.")

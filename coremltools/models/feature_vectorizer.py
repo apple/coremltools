@@ -33,7 +33,7 @@ def create_feature_vectorizer(input_features, output_feature_name,
         keys, and the number of dimensions to expand it into must be given by 
         `known_size_map`. 
         
-        Feature indices in the final array are counted sequentually from the 
+        Feature indices in the final array are counted sequentially from the 
         from 0 through the total number of features. 
 
 

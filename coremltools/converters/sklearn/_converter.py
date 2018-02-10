@@ -55,7 +55,7 @@ def convert(sk_obj, input_features = None,
         -   Single string: In this case, the input is assumed to be a single
             array, with the number of dimensions set using num_dimensions.
 
-        -   List of strings: In this case, the overall input dimentions to the
+        -   List of strings: In this case, the overall input dimensions to the
             scikit-learn model is assumed to be the length of the list.  If
             neighboring names are identical, they are assumed to be an input
             array of that length.  For example:

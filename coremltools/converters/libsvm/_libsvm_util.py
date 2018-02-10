@@ -17,7 +17,7 @@ def load_model(model_path):
     Parameters
     ----------
     model_path: str
-        Path on disk where the libsvm model representaiton is.
+        Path on disk where the libsvm model representation is.
 
     Returns
     -------
