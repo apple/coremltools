@@ -29,7 +29,7 @@ class Pipeline(object):
 
     def __init__(self, input_features, output_features):
         """
-        Create a pipleine of models to be executed sequentially.
+        Create a pipeline of models to be executed sequentially.
 
         Parameters
         ----------
@@ -89,7 +89,7 @@ class PipelineRegressor(Pipeline):
 
     def __init__(self, input_features, output_features):
         """
-        Create a set of pipleine models given a set of model specs.  The final 
+        Create a set of pipeline models given a set of model specs.  The final 
         output model must be a regression model. 
 
         Parameters
@@ -148,7 +148,7 @@ class PipelineClassifier(Pipeline):
 
     def __init__(self, input_features, class_labels, output_features=None):
         """
-        Create a set of pipleine models given a set of model specs.  The last 
+        Create a set of pipeline models given a set of model specs.  The last 
         model in this list must be a classifier model. 
 
         Parameters
@@ -160,7 +160,7 @@ class PipelineClassifier(Pipeline):
 
         class_labels: [list]
             A list of string or integer class labels to use in making predictions. 
-            This list must match the class labels in the model outputing the categorical
+            This list must match the class labels in the model outputting the categorical
             predictedFeatureName
 
         output_features: [list]

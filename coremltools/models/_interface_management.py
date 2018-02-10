@@ -100,7 +100,7 @@ def set_classifier_interface_params(spec, features, class_labels,
     return spec
 
 def set_regressor_interface_params(spec, features, output_features):
-    """ Common utilities to set the regresson interface params.
+    """ Common utilities to set the regressor interface params.
     """
     if output_features is None:
         output_features = [("predicted_class", datatypes.Double())]

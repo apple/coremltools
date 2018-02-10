@@ -82,7 +82,7 @@ def convert(model, input_features, output_features):
 
     pline = Pipeline(input_features, output_features)
 
-    # Track the overall packing index, which determins the output ordering. 
+    # Track the overall packing index, which determines the output ordering. 
     pack_idx = 0
 
     # First, go through all the columns that are encoded. The sklearn OHE puts

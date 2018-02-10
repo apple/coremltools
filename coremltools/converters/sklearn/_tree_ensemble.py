@@ -105,7 +105,7 @@ def convert_tree_ensemble(model, input_features,
 
     This currently supports:
       * Decision tree regression
-      * Gradient bosted tree regression
+      * Gradient boosted tree regression
       * Random forest regression
       * Decision tree classifier.
       * Gradient boosted tree classifier.

@@ -29,7 +29,7 @@ def _set_recurrent_activation(param, activation):
     elif activation == 'RELU':
         param.ReLU.MergeFromString(b'')
     else:
-        raise TypeError("Unsupported activation type with Recurrrent layer: %s." % activation)
+        raise TypeError("Unsupported activation type with Recurrent layer: %s." % activation)
 
 class NeuralNetworkBuilder(object):
     """
@@ -37,7 +37,7 @@ class NeuralNetworkBuilder(object):
 
     The NeuralNetworkBuilder constructs a Core ML neural network specification
     layer by layer. The layers should be added in such an order that the inputs
-    to each layer (refered to as blobs) of each layer has been previously
+    to each layer (referred to as blobs) of each layer has been previously
     defined.  The builder can also set pre-processing steps to handle
     specialized input format (e.g. images), and set class labels for neural
     network classifiers.
@@ -261,7 +261,7 @@ class NeuralNetworkBuilder(object):
 
         if len(spec.description.output) == 0:
             raise ValueError(
-                "Model should have atleast one output (the probabilities) to automatically make it a classifier.")
+                "Model should have at least one output (the probabilities) to automatically make it a classifier.")
         probOutput = spec.description.output[0]
         probOutput.type.dictionaryType.MergeFromString(b'')
         if len(class_labels) == 0:
@@ -716,7 +716,7 @@ class NeuralNetworkBuilder(object):
         elif mode == 'AVE':
             spec_layer.average.MergeFromString(b'')
         else:
-            raise ValueError("Unspported elementwise mode %s" % mode)
+            raise ValueError("Unsupported elementwise mode %s" % mode)
 
     def add_upsample(self, name, scaling_factor_h, scaling_factor_w, input_name, output_name, mode = 'NN'):
         """
@@ -759,7 +759,7 @@ class NeuralNetworkBuilder(object):
         elif mode == 'BILINEAR':
             spec_layer_params.mode = _NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value('BILINEAR')
         else:
-            raise ValueError("Unspported upsampling mode %s" % mode)   
+            raise ValueError("Unsupported upsampling mode %s" % mode)   
 
     def add_scale(self, name, W, b, has_bias, input_name, output_name, shape_scale = [1], shape_bias = [1]):
         """
@@ -1068,7 +1068,7 @@ class NeuralNetworkBuilder(object):
         layer_type: str
             Type of pooling performed. Can either be 'MAX', 'AVERAGE' or 'L2'.
         padding_type: str
-            Option for the type of pading and output blob shape. Can be either 'VALID' , 'SAME' or 'INCLUDE_LAST_PIXEL'. 
+            Option for the type of padding and output blob shape. Can be either 'VALID' , 'SAME' or 'INCLUDE_LAST_PIXEL'. 
             Kindly refer to NeuralNetwork.proto for details. 
         input_name: str
             The input blob name of this layer.
@@ -1494,7 +1494,7 @@ class NeuralNetworkBuilder(object):
         forget_bias: boolean
             If True, a vector of 1s is added to forget gate bias.
         coupled_input_forget_gate: boolean
-            If True, the inpute gate and forget gate is coupled. i.e. forget gate is not used.
+            If True, the input gate and forget gate is coupled. i.e. forget gate is not used.
         cell_clip_threshold: float
             The limit on the maximum and minimum values on the cell state.
             If not provided, it is defaulted to 50.0.
@@ -1648,7 +1648,7 @@ class NeuralNetworkBuilder(object):
         forget_bias: boolean
             If True, a vector of 1s is added to forget gate bias. Defaults to False.
         coupled_input_forget_gate : boolean
-            If True, the inpute gate and forget gate is coupled. i.e. forget gate is not used.
+            If True, the input gate and forget gate is coupled. i.e. forget gate is not used.
             Defaults to False.
         cell_clip_threshold : float
             The limit on the maximum and minimum values on the cell state.
