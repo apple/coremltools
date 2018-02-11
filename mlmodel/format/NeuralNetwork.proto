@@ -639,7 +639,7 @@ message ConvolutionLayerParams {
     /**
      * Group convolution, i.e. weight reuse along channel axis.
      * Input and kernels are divided into g groups
-     * and convolution / deconvoltuion is applied within the groups independently.
+     * and convolution / deconvolution is applied within the groups independently.
      * If not set or 0, it is set to the default value 1.
      */
     uint64 nGroups = 10;
@@ -1532,7 +1532,7 @@ message PermuteLayerParams {
  * mode == DEPTH_TO_SPACE
  *  ``[C_out, H_out, W_out]`` : ``[C/(blockSize * blockSize), H * blockSize, W * blockSize]``.
  *  Square of blockSize must divide C.
- *  Reverse of SPACE_TO_DEPTH. Data is moved from the channel dimension to the spatial dimenions.
+ *  Reverse of SPACE_TO_DEPTH. Data is moved from the channel dimension to the spatial dimensions.
  *
  */
 message ReorganizeDataLayerParams {
@@ -1570,7 +1570,7 @@ message SliceLayerParams {
 
     uint64 startIndex = 1; /// start of the sliced section. Inclusive.
     int64 endIndex = 2; /// end of sliced section. Exclusive.
-    uint64 stride = 3; /// The step size. Must be postive.
+    uint64 stride = 3; /// The step size. Must be positive.
 
     enum SliceAxis {
         CHANNEL_AXIS = 0;
