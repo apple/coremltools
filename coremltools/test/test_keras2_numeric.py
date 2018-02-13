@@ -2050,6 +2050,18 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
     def test_tiny_xception_half_precision(self):
         return self.test_tiny_xception(model_precision=_MLMODEL_HALF_PRECISION)
+        
+    def test_nested_model_giving_output(self):
+        base_model = Sequential()
+        base_model.add(Conv2D(32, (1, 1), input_shape=(4, 4, 3)))
+
+        top_model = Sequential()
+        top_model.add(Flatten(input_shape=base_model.output_shape[1:]))
+        top_model.add(Dense(16, activation='relu'))
+        top_model.add(Dense(1, activation='sigmoid'))
+
+        model = Model(inputs=base_model.input, outputs=top_model(base_model.output))
+        self._test_keras_model(model)
 
 @pytest.mark.slow
 @pytest.mark.keras2
