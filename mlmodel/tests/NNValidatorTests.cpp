@@ -181,7 +181,8 @@ int testNNValidatorAllOptional() {
     
     innerProductParams->set_hasbias(false);
     
-    ML_ASSERT_BAD(validate<MLModelType_neuralNetwork>(m1));
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
     
     return 0;
 }
@@ -194,6 +195,8 @@ int testNNValidatorMissingInput() {
     auto *topIn = m1.mutable_description()->add_input();
     topIn->set_name("E");
     topIn->mutable_type()->mutable_multiarraytype();
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
     auto *out = m1.mutable_description()->add_output();
     out->set_name("D");
     out->mutable_type()->mutable_multiarraytype();
@@ -214,7 +217,7 @@ int testNNValidatorMissingInput() {
     ip2->set_name("ip2");
 
     Specification::NeuralNetworkLayer *ip3 = nn->add_layers();
-    Specification::InnerProductLayerParams *innerProductParams3 = ip1->mutable_innerproduct();
+    Specification::InnerProductLayerParams *innerProductParams3 = ip3->mutable_innerproduct();
 
     innerProductParams3->set_hasbias(false);
     
@@ -245,6 +248,12 @@ int testNNValidatorMissingOutput() {
     auto *topIn = m1.mutable_description()->add_input();
     topIn->set_name("A");
     topIn->mutable_type()->mutable_multiarraytype();
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("E");
+    out->mutable_type()->mutable_multiarraytype();
     
     auto *nn = m1.mutable_neuralnetwork();
     
@@ -262,7 +271,7 @@ int testNNValidatorMissingOutput() {
     ip2->set_name("ip2");
     
     Specification::NeuralNetworkLayer *ip3 = nn->add_layers();
-    Specification::InnerProductLayerParams *innerProductParams3 = ip1->mutable_innerproduct();
+    Specification::InnerProductLayerParams *innerProductParams3 = ip3->mutable_innerproduct();
     
     innerProductParams3->set_hasbias(false);
     
@@ -292,6 +301,9 @@ int testNNValidatorLoop() {
     auto *topIn = m1.mutable_description()->add_input();
     topIn->set_name("A");
     topIn->mutable_type()->mutable_multiarraytype();
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    
     auto *out = m1.mutable_description()->add_output();
     out->set_name("B");
     out->mutable_type()->mutable_multiarraytype();
@@ -312,7 +324,7 @@ int testNNValidatorLoop() {
     ip2->set_name("ip2");
 
     Specification::NeuralNetworkLayer *ip3 = nn->add_layers();
-    Specification::InnerProductLayerParams *innerProductParams3 = ip1->mutable_innerproduct();
+    Specification::InnerProductLayerParams *innerProductParams3 = ip3->mutable_innerproduct();
 
     innerProductParams3->set_hasbias(false);
     ip3->set_name("ip3");
@@ -347,7 +359,8 @@ int testNNValidatorBadInputs() {
     
     innerProductParams->set_hasbias(false);
     
-    ML_ASSERT_BAD(validate<MLModelType_neuralNetwork>(m1));
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
     
     return 0;
 }
@@ -359,6 +372,9 @@ int testRNNLayer() {
     auto *topIn = m1.mutable_description()->add_input();
     topIn->set_name("A");
     topIn->mutable_type()->mutable_multiarraytype();
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+
     auto *out = m1.mutable_description()->add_output();
     out->set_name("B");
     out->mutable_type()->mutable_multiarraytype();
@@ -387,6 +403,9 @@ int testRNNLayer2() {
     auto *topIn = m1.mutable_description()->add_input();
     topIn->set_name("input");
     topIn->mutable_type()->mutable_multiarraytype();
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+
     auto *out = m1.mutable_description()->add_output();
     out->set_name("output");
     out->mutable_type()->mutable_multiarraytype();
@@ -637,11 +656,13 @@ int testNNCompilerValidationBadProbBlob() {
     topIn->set_name("input");
     auto *shape = topIn->mutable_type()->mutable_multiarraytype();
     shape->add_shape(1);
+    topIn->mutable_type()->mutable_multiarraytype()->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
     
     auto *out = m1.mutable_description()->add_output();
     out->set_name("middle");
     auto *outshape = out->mutable_type()->mutable_multiarraytype();
     outshape->add_shape(1);
+    out->mutable_type()->mutable_multiarraytype()->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
     
     auto *out2 = m1.mutable_description()->add_output();
     out2->set_name("features");
@@ -650,6 +671,7 @@ int testNNCompilerValidationBadProbBlob() {
     auto *out3 = m1.mutable_description()->add_output();
     out3->set_name("probs");
     out3->mutable_type()->mutable_dictionarytype();
+    out3->mutable_type()->mutable_dictionarytype()->mutable_stringkeytype();
     
     std::string featureName = "features";
     m1.mutable_description()->set_predictedfeaturename(featureName);
