@@ -1614,14 +1614,14 @@ namespace CoreML {
             // already seen. Also, check that the same output isn't being produced in two different places.
             for (const auto& input: layer.input()) {
                 if (blobNameToProducingLayer.find(input) == blobNameToProducingLayer.end()) {
-                    std::string err = "Layer '" + std::string(layer.name()) + "' consumes a layer named '"
+                    std::string err = "Layer '" + std::string(layer.name()) + "' consumes an input named '"
                         + std::string(input) + "' which is not present in this network.";
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
                 }
             }
             for (const auto& output: layer.output()) {
                 if (blobNameToProducingLayer.find(output) != blobNameToProducingLayer.end()) {
-                    std::string err = "Layer '" + std::string(layer.name()) + "' produces a layer named '"
+                    std::string err = "Layer '" + std::string(layer.name()) + "' produces an output named '"
                         + std::string(output) + "' which is also an output produced by the layer '"
                         + blobNameToProducingLayer[output].name() + "'.";
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
