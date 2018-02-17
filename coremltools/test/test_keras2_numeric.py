@@ -751,6 +751,47 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         return self.test_tiny_separable_conv_same_fancy_depth_multiplier(
             model_precision=_MLMODEL_HALF_PRECISION)
 
+    def test_tiny_separable_conv_dilated(self, model_precision=_MLMODEL_FULL_PRECISION):
+        np.random.seed(1988)
+        input_dim = 10
+        input_shape = (input_dim, input_dim, 1)
+        num_kernels, kernel_height, kernel_width = 3, 5, 5
+
+        # Define a model
+        model = Sequential()
+        model.add(SeparableConv2D(input_shape = input_shape, dilation_rate=(2, 2),
+                                  filters = num_kernels, kernel_size = (kernel_height, kernel_width)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model, model_precision=model_precision)
+
+    def test_tiny_separable_conv_dilated_half_precision(self):
+        return self.test_tiny_separable_conv_dilated(model_precision=_MLMODEL_HALF_PRECISION)
+
+    def test_tiny_separable_conv_dilated_rect_random(self, model_precision=_MLMODEL_FULL_PRECISION):
+        np.random.seed(1988)
+        input_shape = (32, 20, 3)
+        num_kernels = 2
+        kernel_height = 3
+        kernel_width = 3
+
+        # Define a model
+        model = Sequential()
+        model.add(SeparableConv2D(input_shape = input_shape, dilation_rate=(2,2),
+                                  filters = num_kernels, kernel_size = (kernel_height, kernel_width)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model, model_precision=model_precision)
+
+    def test_tiny_separable_conv_dilated_rect_random_half_precision(self):
+        return self.test_tiny_separable_conv_dilated_rect_random(model_precision=_MLMODEL_HALF_PRECISION)
+
     def test_max_pooling_no_overlap(self):
         # no_overlap: pool_size = strides
         model = Sequential()

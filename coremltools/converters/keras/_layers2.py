@@ -422,7 +422,13 @@ def convert_separable_convolution(builder, layer, input_names, output_names, ker
 
     stride_height, stride_width = keras_layer.strides
 
-    intermediate_name = input_name + '_intermin_'
+    # Dilations
+    if (type(keras_layer.dilation_rate) is list) or (type(keras_layer.dilation_rate) is tuple):
+        dilations = [keras_layer.dilation_rate[0], keras_layer.dilation_rate[1]]
+    else:
+        dilations = [keras_layer.dilation_rate, keras_layer.dilation_rate]
+
+    intermediate_name = output_name + '_intermin_'
 
     builder.add_convolution(name = layer + '_step_1',
              kernel_channels = 1,
@@ -440,7 +446,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names, ker
              output_shape = None,
              input_name = input_name,
              output_name = intermediate_name, 
-             dilation_factors = [1,1])
+             dilation_factors = dilations)
 
     builder.add_convolution(name = layer + '_step_2',
              kernel_channels = input_channels * depth_mult,
