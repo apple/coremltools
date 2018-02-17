@@ -164,17 +164,23 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertIsNotNone(layer_0.innerProduct)
         self.assertEquals(len(layers), 2)
 
-    def test_convolution(self):
+    def test_convolution(self, with_dilations=False):
         """
         Test the conversion of 2D convolutional layer.
         """
         from keras.layers import Conv2D
 
+        dilation_rate = [1, 1]
+        if with_dilations:
+            dilation_rate = [2, 2]
+
         # Create a simple Keras model
         model = Sequential()
         model.add(Conv2D(input_shape=(64, 64, 3),
-                                filters=32, kernel_size=(5,5), activation=None, 
-                                padding='valid', strides=(1, 1), use_bias=True))
+                         filters=32, kernel_size=(5,5), activation=None,
+                         padding='valid', strides=(1, 1), use_bias=True,
+                         dilation_rate=dilation_rate))
+
         input_names = ['input']
         output_names = ['output']
         spec = keras.convert(model, input_names, output_names).get_spec()
@@ -196,6 +202,61 @@ class KerasSingleLayerTest(unittest.TestCase):
         layers = spec.neuralNetwork.layers
         layer_0 = layers[0]
         self.assertIsNotNone(layer_0.convolution)
+        self.assertEqual(layer_0.convolution.dilationFactor, dilation_rate)
+
+    def test_convolution_dilated(self):
+        """
+        Test the conversion of 2D convolutional layer with dilated kernels
+        """
+        self.test_convolution(with_dilations=True)
+
+    def test_separable_convolution(self, with_dilations=False):
+        """
+        Test the conversion of 2D depthwise separable convolutional layer.
+        """
+        from keras.layers import SeparableConv2D
+
+        dilation_rate = [1, 1]
+        if with_dilations:
+            dilation_rate = [2, 2]
+
+        # Create a simple Keras model
+        model = Sequential()
+        model.add(SeparableConv2D(input_shape=(64, 64, 3),
+                                  filters=32, kernel_size=(5,5), activation=None,
+                                  padding='valid', strides=(1, 1), use_bias=True,
+                                  dilation_rate=dilation_rate))
+
+        input_names = ['input']
+        output_names = ['output']
+        spec = keras.convert(model, input_names, output_names).get_spec()
+        self.assertIsNotNone(spec)
+
+        # Test the model class
+        self.assertIsNotNone(spec.description)
+        self.assertTrue(spec.HasField('neuralNetwork'))
+
+        # Test the inputs and outputs
+        self.assertEquals(len(spec.description.input), len(input_names))
+        self.assertEqual(sorted(input_names),
+                         sorted(map(lambda x: x.name, spec.description.input)))
+        self.assertEquals(len(spec.description.output), len(output_names))
+        self.assertEqual(sorted(output_names),
+                         sorted(map(lambda x: x.name, spec.description.output)))
+
+        # Test the layer parameters.
+        layers = spec.neuralNetwork.layers
+        layer_depthwise, layer_pointwise = layers[0], layers[1]
+
+        self.assertIsNotNone(layer_depthwise.convolution)
+        self.assertIsNotNone(layer_pointwise.convolution)
+        self.assertEqual(layer_depthwise.convolution.dilationFactor, dilation_rate)
+
+    def test_separable_convolution_dilated(self):
+        """
+        Test the conversion of 2D depthwise separable convolutional layer with dilated kernels.
+        """
+        self.test_separable_convolution(with_dilations=True)
 
     def test_upsample(self):
         """
