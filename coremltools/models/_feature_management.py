@@ -182,8 +182,8 @@ def process_or_validate_features(features, num_dimensions = None, feature_type_m
 
     original_features = copy(features)
 
-    if num_dimensions is not None and not isinstance(num_dimensions, int):
-        raise TypeError("num_dimensions must be None or an integer, not '%s'"
+    if num_dimensions is not None and not isinstance(num_dimensions, _integer_types):
+        raise TypeError("num_dimensions must be None, an integer or a long, not '%s'"
                 % str(type(num_dimensions)))
 
 
