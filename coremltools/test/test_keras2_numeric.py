@@ -236,6 +236,19 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Test the keras model
         self._test_keras_model(model)
 
+    def test_dense_selu(self):
+        np.random.seed(1988)
+
+        # Define a model
+        model = Sequential()
+        model.add(Dense(32, input_shape=(32,), activation='selu'))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_keras_model(model)
+
     def test_housenet_random(self):
         np.random.seed(1988)
         num_hidden = 2

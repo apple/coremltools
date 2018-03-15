@@ -57,6 +57,8 @@ def _get_activation_name_from_keras_layer(keras_layer):
             non_linearity = 'UNIT_ELU'
         elif act_name == 'linear':
             non_linearity = 'LINEAR'
+        elif act_name == 'selu':
+          non_linearity = 'SELU'
         else:
             non_linearity = 'CUSTOM'
 
@@ -217,6 +219,17 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
         # negate it back
         builder.add_activation(layer+'_neg2', 'LINEAR', clip_output_name, 
                 output_name,[-1.0, 0])
+        return
+
+    if non_linearity == 'SELU':
+        elu_output_name = output_name + '_elu'
+        builder.add_activation(layer+'__elu__', 'ELU', input_name, elu_output_name,
+                             params=1.6732)
+        builder.add_elementwise(layer,
+                          input_names=elu_output_name,
+                          output_name=output_name,
+                          mode='MULTIPLY',
+                          alpha=1.0507)
         return
 
     params = None
