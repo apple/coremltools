@@ -7,6 +7,9 @@ RUN yum -y update
 RUN yum -y install git.x86_64 openssl-devel zlib-devel* bzip2-devel vim-common which lapack-devel blas-devel sqlite-devel
 RUN yum -y groupinstall 'development tools'
 
+# Install visualization dependencies
+RUN yum -y install libX11-devel
+
 # Create a directory for building deps from source code and set up env vars
 WORKDIR /
 RUN mkdir src
@@ -23,9 +26,9 @@ RUN make -j16
 RUN make install
 
 WORKDIR /src
-RUN curl -O http://www.mpfr.org/mpfr-current/mpfr-4.0.0.tar.gz
-RUN tar xvf mpfr-4.0.0.tar.gz
-WORKDIR /src/mpfr-4.0.0
+RUN curl -O http://www.mpfr.org/mpfr-4.0.1/mpfr-4.0.1.tar.gz
+RUN tar xvf mpfr-4.0.1.tar.gz
+WORKDIR /src/mpfr-4.0.1
 RUN ./configure --prefix=/usr/local
 RUN make -j16
 RUN make install
@@ -71,6 +74,12 @@ WORKDIR /src
 RUN curl -O https://bootstrap.pypa.io/get-pip.py
 RUN python3 get-pip.py
 RUN pip3 install virtualenv
+
+# Install node.js from binary
+WORKDIR /opt
+RUN curl -O https://nodejs.org/dist/v8.9.4/node-v8.9.4-linux-x64.tar.xz
+RUN tar xvf node-v8.9.4-linux-x64.tar.xz
+ENV PATH="/opt/node-v8.9.4-linux-x64/bin:${PATH}"
 
 # Start at home directory
 WORKDIR /root
