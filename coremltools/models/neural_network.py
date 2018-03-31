@@ -48,6 +48,8 @@ class NeuralNetworkBuilder(object):
     Examples
     --------
     .. sourcecode:: python
+        from coremltools.models.neural_network import datatypes, NeuralNetworkBuilder
+        from coremltools.models.utils import save_spec
 
         # Create a neural network binary classifier that classifies 
         # 3-dimensional data points
@@ -56,7 +58,7 @@ class NeuralNetworkBuilder(object):
         >>> output_dim = (2,)
 
         # Specify input and output features
-        >>> input_features = [('data', datatypes.Array(*input_dim)]
+        >>> input_features = [('data', datatypes.Array(*input_dim))]
         >>> output_features = [('probs', datatypes.Array(*output_dim))]
 
         # Build a simple neural network with 1 inner product layer
