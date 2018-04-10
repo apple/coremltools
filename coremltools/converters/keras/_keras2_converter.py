@@ -267,7 +267,7 @@ def _convert(model,
         if len(dim) == 1:
             output_dims[idx] = dim
         elif len(dim) == 2:  # [Seq, D]
-            output_dims[idx] = (dim[1],)
+            output_dims[idx] = (dim[1], dim[0])
         elif len(dim) == 3:
             output_dims[idx] = (dim[2], dim[0], dim[1])
 
