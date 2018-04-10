@@ -216,8 +216,14 @@ def _reshape(layer, shape_dict):
     else:
         Seq, C, H, W = params.targetShape     
         
-    shape_dict[layer.output[0]] = (int(Seq), Batch, int(C), int(H), int(W))     
+    shape_dict[layer.output[0]] = (int(Seq), Batch, int(C), int(H), int(W))
 
+
+def _flatten(layer, shape_dict):
+    params = layer.permute
+    Seq, Batch, Cin, Hin, Win = shape_dict[layer.input[0]]
+
+    shape_dict[layer.output[0]] = (int(Seq), int(Batch), int(Cin*Hin*Win), 1, 1)
 
 def _permute(layer, shape_dict):
     params = layer.permute
@@ -379,7 +385,7 @@ _LAYER_REGISTERY = {
     'reduce': _reduce,
     'loadConstant': _load_constant,
     'reshape': _reshape,
-    'flatten': _dot,
+    'flatten': _flatten,
     'permute': _permute,
     'concat': _concat,
     'split': _split,

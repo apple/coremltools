@@ -181,7 +181,7 @@ def _convert(model,
     if isinstance(model, _string_types):
         model = _keras.models.load_model(model, custom_objects = custom_objects)
     elif isinstance(model, tuple):
-        model = _load_keras_model(model[0], model[1], custom_objects = custom_objects)
+        model = _load_keras_model(model[0], model[1])
     
     # Check valid versions
     _check_unsupported_layers(model, add_custom_layers)
