@@ -75,9 +75,7 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
     elif isinstance(keras_layer, _keras.layers.Concatenate):
         if len(keras_layer.input_shape[0]) == 3 and (keras_layer.axis == 1 or keras_layer.axis == -2):
             return 'SEQUENCE_CONCAT'
-        elif len(keras_layer.input_shape[0]) == 4 and (keras_layer.axis == 3 or keras_layer.axis == -1):
-            return 'CONCAT'
-        elif len(keras_layer.input_shape[0]) == 2 and (keras_layer.axis == 1 or keras_layer.axis == -1):
+        elif keras_layer.axis == len(keras_layer.input_shape[0])-1 or keras_layer.axis == -1:
             return 'CONCAT'
         else:
             raise ValueError('Only channel and sequence concatenation are supported.')
