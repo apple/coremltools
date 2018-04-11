@@ -37,10 +37,20 @@ exec_program(${PYTHON_CONFIG}
   ARGS "--includes"
   OUTPUT_VARIABLE PYTHON_CFLAGS)
 
+execute_process(
+    COMMAND ${PYTHON} -c "import numpy; print(numpy.get_include())"
+    RESULT_VARIABLE NUMPY_INCLUDE_STATUS
+    OUTPUT_VARIABLE NUMPY_INCLUDE)
+
+if("${NUMPY_INCLUDE}" STREQUAL "")
+    message(FATAL_ERROR "Could not find numpy include path. Exit status: ${NUMPY_INCLUDE_STATUS}")
+endif()
+
 message("Found python at ${PYTHON}")
 message("Found python version ${PYTHON_VERSION}")
 message("Found python-config at ${PYTHON_CONFIG}")
 message("Found python includes ${PYTHON_CFLAGS}")
+message("Found numpy include path at ${NUMPY_INCLUDE}")
 
 include_directories(
   .
@@ -49,6 +59,7 @@ include_directories(
   deps/protobuf/src
   deps/pybind11/include
   mlmodel/src
+  ${NUMPY_INCLUDE}
 )
 
 set(CMAKE_CXX_FLAGS " \
@@ -59,7 +70,6 @@ set(CMAKE_CXX_FLAGS " \
 
 if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc ")
-  include_directories(/Library/Frameworks/Python.framework/Versions/${PYTHON_VERSION}/lib/python${PYTHON_VERSION}/site-packages/numpy/core/include)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS " \
