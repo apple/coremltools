@@ -42,8 +42,8 @@ execute_process(
     RESULT_VARIABLE NUMPY_INCLUDE_STATUS
     OUTPUT_VARIABLE NUMPY_INCLUDE)
 
-if("${NUMPY_INCLUDE}" STREQUAL "")
-    message(FATAL_ERROR "Could not find numpy include path. Exit status: ${NUMPY_INCLUDE_STATUS}")
+if("${NUMPY_INCLUDE}" STREQUAL "" OR NOT NUMPY_INCLUDE_STATUS EQUAL 0)
+    message(FATAL_ERROR "Could not find numpy include path. Exit code: ${NUMPY_INCLUDE_STATUS}")
 endif()
 
 message("Found python at ${PYTHON}")
