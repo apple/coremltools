@@ -310,7 +310,7 @@ class MLModel(object):
             Examples
             --------
             >>> model = coreml.models.MLModel('HousePricer.mlmodel')
-            >>> model.visualize()
+            >>> model.visualize_spec()
             """
 
         spec = self._spec
@@ -409,6 +409,7 @@ class MLModel(object):
             print("Model is not of type Pipeline or Neural Network "
                   "and cannot be visualized")
             return
+
 
         import coremltools
         web_dir = _os.path.join(_os.path.dirname(coremltools.__file__),

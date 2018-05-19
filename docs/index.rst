@@ -178,7 +178,7 @@ Here is an example of visualizing the :code:`HousePricer.mlmodel`:
     model =  coremltools.models.MLModel('HousePricer.mlmodel')
 
     # Visualize the model
-    model.visualize()
+    model.visualize_spec()
 
 Model Specification
 ===================
