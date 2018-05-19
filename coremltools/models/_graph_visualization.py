@@ -101,8 +101,11 @@ def _layer_specific_info(layer):
             'dilationFactor': _json.dumps(str(layer.convolution.dilationFactor)),
             'isDeconvolution': _json.dumps(str(layer.convolution.isDeconvolution)),
             'paddingType' : _json.dumps(layer.convolution.WhichOneof('ConvolutionPaddingType')),
-            'desc': 'A layer that performs spatial convolution or deconvolution.'
+            'desc': 'A layer that performs spatial convolution'
         }
+        if _json.dumps(layer.convolution.isDeconvolution) == 'true':
+            info['type'] = 'deconvolution'
+            info['desc'] = 'A layer that performs spatial deconvolution'
 
     elif layer.WhichOneof('layer') == 'activation':
         params = layer.activation
@@ -133,13 +136,14 @@ def _layer_specific_info(layer):
         paddingType = params.WhichOneof('PoolingPaddingType')
         info = {
             'type': layer.WhichOneof('layer'),
-            'poolingType': _json.dumps(str(_NeuralNetwork_pb2.PoolingLayerParams.PoolingType.Name(params.type))),
             'desc': 'Spatial Pooling layer to reduce dimensions of input using the '
                     'specified kernel size and type.'
         }
         if params.globalPooling:
             info['globalPooling'] = 'True'
+            info['poolingType'] = 'global pooling'
         else:
+            info['poolingType'] = _json.dumps(_NeuralNetwork_pb2.PoolingLayerParams.PoolingType.Name(params.type))
             info['stride'] = _json.dumps(str(params.stride))
             info['kernelSize'] = _json.dumps(str(params.kernelSize))
             info['paddingType'] =  _json.dumps(paddingType)
@@ -540,7 +544,7 @@ def _pipeline_component_info(model, info):
                        ' by a unique identifier.\nEach node is either a branch or a leaf' \
                        ' node. A branch node evaluates a value according to a behavior;\n' \
                        'A tree must have exactly one root node, which has no parent node.'
-
+    # info["shapes"] = "sequence: {} batch: {} channels: {} height: {} weight: {}".format(model.)
     return info
 
 
@@ -568,21 +572,21 @@ def _neural_network_node_info(nn_spec, cy_nodes, child=False, parent=None):
             cy_nodes.append({
                 'data': {
                     'id': layer.name,
-                    'name': layer.WhichOneof('layer'),
+                    'name': info["type"],
                     'info': info,
                     'parent': parent
                 },
-                'classes': layer.WhichOneof('layer'),
+                'classes': info["type"],
             })
         else:
             info["name"] = layer.name
             cy_nodes.append({
                 'data': {
                     'id': layer.name,
-                    'name': layer.WhichOneof('layer'),
+                    'name': info["type"],
                     'info': info
                 },
-                'classes': layer.WhichOneof('layer'),
+                'classes': info["type"],
             })
 
     return cy_nodes
@@ -592,7 +596,8 @@ def _neural_network_nodes_and_edges(nn_spec,
                                     cy_nodes,
                                     cy_edges,
                                     spec_outputs,
-                                    input_spec
+                                    input_spec,
+                                    input_shape_dict=None
                                     ):
     """
 
@@ -638,7 +643,7 @@ def _neural_network_nodes_and_edges(nn_spec,
             'classes': 'output'
         })
 
-    shape_dict = _infer_shapes(nn_spec, input_spec)
+    shape_dict = _infer_shapes(nn_spec, input_spec, input_shape_dict=input_shape_dict)
     cy_nodes, cy_edges = _calculate_edges(cy_nodes, cy_edges, shape_dict)
 
     cy_data = cy_nodes + cy_edges
@@ -667,6 +672,8 @@ def _pipeline_nodes_and_edges(cy_nodes, cy_edges, pipeline_spec, spec_outputs):
     shape_dict = None
     for model in models:
         sub_model_type = model.WhichOneof('Type')
+        if not sub_model_type:
+            sub_model_type = 'input'
         info = {}
         input_names = []
         output_names = []
@@ -757,6 +764,7 @@ def _start_server(port, web_dir):
     None
 
     """
+    curr_dir = _os.path.abspath(_os.curdir)
     _os.chdir(web_dir)
     import subprocess
     import webbrowser
@@ -764,3 +772,6 @@ def _start_server(port, web_dir):
         port = _np.random.randint(8000, 9000)
     subprocess.Popen(['python', '-m', 'SimpleHTTPServer', str(port)])
     webbrowser.open_new_tab('localhost:{}'.format(str(port)))
+    print "Launched web browser"
+    _os.chdir(curr_dir)
+    return True

@@ -164,6 +164,13 @@ document.addEventListener('DOMContentLoaded', function() {
 					'background-image': 'icons/convolution.png'
 		    	}
 		    },
+			{
+			    selector: "node.deconvolution",
+			    style: {
+					'color': 'white',
+					'background-image': 'icons/convolution.png'
+		    	}
+		    },
 		    {
 			    selector: "node.pooling",
 			    style: {
@@ -426,16 +433,18 @@ document.addEventListener('DOMContentLoaded', function() {
 		    var keys = Object.keys(ele.data('info'));
 		    var div = document.getElementById('node-info');
 		    var content = '<br />';
-		    content += '<div class="subtitle">Parameters</div>';
+		    content += '<div class="subtitle" align="left">Parameters</div>';
 		    content += '<br />';
+			content += '<div align="left">';
 		    for (var i = keys.length - 1; i >= 0; i--) {
 		  	    if (keys[i] != 'desc') {
                     var val = ele.data('info')[keys[i]];
-                    content += keys[i].toUpperCase() + ' : ' + val.charAt(0).toUpperCase() + val.slice(1) + '<br />';
+                    content += keys[i] + ' : ' + val.charAt(0).toUpperCase() + val.slice(1) + '<br />';
                 }
             }
+			content += '</div>';
             if (ele.data('info')["desc"] != undefined) {
-                content += '<br /><br /><div class="subtitle">Description</div><br />';
+                content += '<br /><br /><div class="subtitle" align="left">Description</div><br />';
                 content += ele.data('info')["desc"] + '<br />';
             }
             div.innerHTML = content;

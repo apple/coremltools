@@ -162,6 +162,24 @@ by model type:
 | Pipelines                 | scikit-learn (0.18.1)                |
 +---------------------------+--------------------------------------+
 
+Model Visualization
+===================
+
+Core ML supports visualizing a converted model. This can be used to see all
+the building blocks of the model.
+
+Here is an example of visualizing the :code:`HousePricer.mlmodel`:
+
+.. code-block:: python
+
+    import coremltools
+
+    # Load the model
+    model =  coremltools.models.MLModel('HousePricer.mlmodel')
+
+    # Visualize the model
+    model.visualize()
+
 Model Specification
 ===================
 
