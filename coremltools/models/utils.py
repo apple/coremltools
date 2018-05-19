@@ -17,7 +17,6 @@ from .._deps import HAS_SKLEARN as _HAS_SKLEARN
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
 
-
 def _to_unicode(x):
     if isinstance(x, _six.binary_type):
         return x.decode()

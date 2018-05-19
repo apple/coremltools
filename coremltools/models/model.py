@@ -4,11 +4,8 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from copy import deepcopy as _deepcopy
-import platform as _platform
-import sys as _sys
 import json as _json
 import os as _os
-import subprocess
 from ._graph_visualization import \
     _neural_network_nodes_and_edges, \
     _pipeline_nodes_and_edges, _start_server
