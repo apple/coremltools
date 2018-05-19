@@ -771,6 +771,5 @@ def _start_server(port, web_dir):
         port = _np.random.randint(8000, 9000)
     subprocess.Popen(['python', '-m', 'SimpleHTTPServer', str(port)])
     webbrowser.open_new_tab('localhost:{}'.format(str(port)))
-    print "Launched web browser"
     _os.chdir(curr_dir)
     return True
