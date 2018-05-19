@@ -544,7 +544,6 @@ def _pipeline_component_info(model, info):
                        ' by a unique identifier.\nEach node is either a branch or a leaf' \
                        ' node. A branch node evaluates a value according to a behavior;\n' \
                        'A tree must have exactly one root node, which has no parent node.'
-    # info["shapes"] = "sequence: {} batch: {} channels: {} height: {} weight: {}".format(model.)
     return info
 
 
