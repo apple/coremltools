@@ -4,8 +4,11 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from copy import deepcopy as _deepcopy
-import platform as _platform
-import sys as _sys
+import json as _json
+import os as _os
+from ._graph_visualization import \
+    _neural_network_nodes_and_edges, \
+    _pipeline_nodes_and_edges, _start_server
 import tempfile as _tempfile
 
 from .utils import save_spec as _save_spec
@@ -281,3 +284,134 @@ class MLModel(object):
                 raise Exception('This model contains a custom neural network layer, so predict is not supported.')
             else:
                 raise Exception('Unable to load CoreML.framework. Cannot make predictions.')
+
+    def visualize_spec(self, port=None, input_shape_dict=None):
+        """
+            Visualize the model.
+
+            Parameters
+            ----------
+            port : int
+                if server is to be hosted on specific localhost port
+
+            input_shape_dict : dict
+                The shapes are calculated assuming the batch and sequence
+                are 1 i.e. (1, 1, C, H, W). If either is not 1, then provide
+                full input shape
+
+            Returns
+            -------
+
+            None
+
+            Examples
+            --------
+            >>> model = coreml.models.MLModel('HousePricer.mlmodel')
+            >>> model.visualize_spec()
+            """
+
+        spec = self._spec
+        model_type = spec.WhichOneof('Type')
+        model_description = spec.description
+        input_spec = model_description.input
+        output_spec = model_description.output
+
+        spec_inputs = []
+        for model_input in input_spec:
+            spec_inputs.append((model_input.name, str(model_input.type)))
+
+        spec_outputs = []
+        for model_output in output_spec:
+            spec_outputs.append((model_output.name, str(model_output.type)))
+
+        cy_nodes = []
+        cy_edges = []
+
+        cy_nodes.append({
+            'data': {
+                'id': 'input_node',
+                'name': '',
+                'info': {
+                    'type': 'input node'
+                },
+                'classes': 'input',
+
+            }
+        })
+
+        for model_input, input_type in spec_inputs:
+            cy_nodes.append({
+                'data': {
+                    'id': str(model_input),
+                    'name': str(model_input),
+                    'info': {
+                        'type': "\n".join(str(input_type).split("\n")),
+                        'inputs': str([]),
+                        'outputs': str([model_input])
+                    },
+                    'parent': 'input_node'
+                },
+                'classes': 'input'
+            })
+
+        if model_type == 'pipeline':
+            pipeline_spec = spec.pipeline
+            cy_data = _pipeline_nodes_and_edges(cy_nodes,
+                                                cy_edges,
+                                                pipeline_spec,
+                                                spec_outputs
+                                                )
+        elif model_type == 'pipelineRegressor':
+            pipeline_spec = spec.pipelineRegressor.pipeline
+            cy_data = _pipeline_nodes_and_edges(cy_nodes,
+                                                cy_edges,
+                                                pipeline_spec,
+                                                spec_outputs
+                                                )
+        elif model_type == 'pipelineClassifier':
+            pipeline_spec = spec.pipelineClassifier.pipeline
+            cy_data = _pipeline_nodes_and_edges(cy_nodes,
+                                                cy_edges,
+                                                pipeline_spec,
+                                                spec_outputs
+                                                )
+        elif model_type == 'neuralNetwork':
+            nn_spec = spec.neuralNetwork
+            cy_data = _neural_network_nodes_and_edges(nn_spec,
+                                                      cy_nodes,
+                                                      cy_edges,
+                                                      spec_outputs,
+                                                      input_spec,
+                                                      input_shape_dict=input_shape_dict
+                                                      )
+        elif model_type == 'neuralNetworkClassifier':
+            nn_spec = spec.neuralNetworkClassifier
+            cy_data = _neural_network_nodes_and_edges(nn_spec,
+                                                      cy_nodes,
+                                                      cy_edges,
+                                                      spec_outputs,
+                                                      input_spec,
+                                                      input_shape_dict=input_shape_dict
+                                                      )
+        elif model_type == 'neuralNetworkRegressor':
+            nn_spec = spec.neuralNetworkRegressor
+            cy_data = _neural_network_nodes_and_edges(nn_spec,
+                                                      cy_nodes,
+                                                      cy_edges,
+                                                      spec_outputs,
+                                                      input_spec,
+                                                      input_shape_dict=input_shape_dict
+                                                      )
+        else:
+            print("Model is not of type Pipeline or Neural Network "
+                  "and cannot be visualized")
+            return
+
+
+        import coremltools
+        web_dir = _os.path.join(_os.path.dirname(coremltools.__file__),
+                                'graph_visualization')
+        with open('{}/model.json'.format(web_dir), 'w') as file:
+            _json.dump(cy_data, file)
+
+        _start_server(port, web_dir)

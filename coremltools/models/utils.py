@@ -6,20 +6,16 @@
 """
 Utilities for the entire package.
 """
-import json as _json
 import math as _math
 import numpy as _np
 import os as _os
 import six as _six
 
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
-from ._graph_visualization import \
-    _neural_network_nodes_and_edges, \
-    _pipeline_nodes_and_edges, _start_server
+
 
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
-
 
 def _to_unicode(x):
     if isinstance(x, _six.binary_type):
@@ -783,124 +779,6 @@ def evaluate_transformer(model, input_data, reference_output,
     if verbose:
         print("results: %s" % ret)
     return ret
-
-
-def visualize_spec(spec, port=None):
-    """
-
-    Function to create a graph visualization of the mlmodel
-
-    Parameters
-    ----------
-    spec: mlmodel spec
-    port: if server is to be hosted on specific localhost port
-
-    Returns
-    -------
-
-    None
-
-    """
-    model_type = spec.WhichOneof('Type')
-    model_description = spec.description
-    input_spec = model_description.input
-    output_spec = model_description.output
-
-    spec_inputs = []
-    for model_input in input_spec:
-        spec_inputs.append((model_input.name, str(model_input.type)))
-
-    spec_outputs = []
-    for model_output in output_spec:
-        spec_outputs.append((model_output.name, str(model_output.type)))
-
-    cy_nodes = []
-    cy_edges = []
-
-    cy_nodes.append({
-        'data': {
-            'id': 'input_node',
-            'name': '',
-            'info': {
-                'type': 'input node'
-            },
-            'classes': 'input',
-
-        }
-    })
-
-
-    for model_input, input_type in spec_inputs:
-        cy_nodes.append({
-            'data': {
-                'id': str(model_input),
-                'name': str(model_input),
-                'info': {
-                    'type': "\n".join(str(input_type).split("\n")),
-                    'inputs': str([]),
-                    'outputs': str([model_input])
-                },
-                'parent': 'input_node'
-            },
-            'classes': 'input'
-        })
-
-    if model_type == 'pipeline':
-        pipeline_spec = spec.pipeline
-        cy_data = _pipeline_nodes_and_edges(cy_nodes,
-                                            cy_edges,
-                                            pipeline_spec,
-                                            spec_outputs
-                                            )
-    elif model_type == 'pipelineRegressor':
-        pipeline_spec = spec.pipelineRegressor.pipeline
-        cy_data = _pipeline_nodes_and_edges(cy_nodes,
-                                            cy_edges,
-                                            pipeline_spec,
-                                            spec_outputs
-                                            )
-    elif model_type == 'pipelineClassifier':
-        pipeline_spec = spec.pipelineClassifier.pipeline
-        cy_data = _pipeline_nodes_and_edges(cy_nodes,
-                                            cy_edges,
-                                            pipeline_spec,
-                                            spec_outputs
-                                            )
-    elif model_type == 'neuralNetwork':
-        nn_spec = spec.neuralNetwork
-        cy_data = _neural_network_nodes_and_edges(nn_spec,
-                                                  cy_nodes,
-                                                  cy_edges,
-                                                  spec_outputs,
-                                                  input_spec
-                                                  )
-    elif model_type == 'neuralNetworkClassifier':
-        nn_spec = spec.neuralNetworkClassifier
-        cy_data = _neural_network_nodes_and_edges(nn_spec,
-                                                  cy_nodes,
-                                                  cy_edges,
-                                                  spec_outputs,
-                                                  input_spec
-                                                  )
-    elif model_type == 'neuralNetworkRegressor':
-        nn_spec = spec.neuralNetworkRegressor
-        cy_data = _neural_network_nodes_and_edges(nn_spec,
-                                                  cy_nodes,
-                                                  cy_edges,
-                                                  spec_outputs,
-                                                  input_spec
-                                                  )
-    else:
-        print("Model is not of type Pipeline or Neural Network "
-              "and cannot be visualized")
-        return
-
-    import coremltools
-    web_dir = _os.path.join(_os.path.dirname(coremltools.__file__),
-                            'graph_visualization')
-    with open('{}/model.json'.format(web_dir), 'w') as file:
-        _json.dump(cy_data, file)
-    _start_server(port, web_dir)
 
 
 def has_custom_layer(spec):
