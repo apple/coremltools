@@ -153,7 +153,8 @@ def _convert(model,
             class_labels = None, 
             predicted_feature_name = None,
             predicted_probabilities_output = '',
-            custom_objects = None):
+            custom_objects = None,
+            arrays_type = 'double'):
     
     if not(_HAS_KERAS_TF):
         raise RuntimeError('keras not found or unsupported version or backend found. keras conversion API is disabled.')
@@ -254,8 +255,8 @@ def _convert(model,
         elif len(dim) == 3:
             output_dims[idx] = (dim[2], dim[1], dim[0])
 
-    input_types = [datatypes.Array(*dim) for dim in input_dims]
-    output_types = [datatypes.Array(*dim) for dim in output_dims]
+    input_types = [datatypes.Array(arrays_type, *dim) for dim in input_dims]
+    output_types = [datatypes.Array(arrays_type, *dim) for dim in output_dims]
 
     # Some of the feature handling is sensitive about string vs. unicode
     input_names = map(str, input_names)
@@ -339,7 +340,8 @@ def convertToSpec(model,
                   predicted_probabilities_output = '',
                   add_custom_layers = False,
                   custom_conversion_functions = None,
-                  custom_objects=None):
+                  custom_objects = None,
+                  arrays_type = 'double'):
 
     """
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
@@ -522,7 +524,8 @@ def convertToSpec(model,
                          class_labels=class_labels,
                          predicted_feature_name=predicted_feature_name,
                          predicted_probabilities_output=predicted_probabilities_output,
-                         custom_objects=custom_objects)
+                         custom_objects=custom_objects,
+                         arrays_type=arrays_type)
     elif _HAS_KERAS2_TF:
         from . import _keras2_converter
         spec = _keras2_converter._convert(model=model,
@@ -540,7 +543,8 @@ def convertToSpec(model,
                                            predicted_probabilities_output=predicted_probabilities_output,
                                            add_custom_layers=add_custom_layers,
                                            custom_conversion_functions=custom_conversion_functions,
-                                           custom_objects=custom_objects)
+                                           custom_objects=custom_objects,
+                                           arrays_type=arrays_type)
     else:
         raise RuntimeError(
             'Keras not found or unsupported version or backend found. keras conversion API is disabled.')
@@ -564,6 +568,7 @@ def convert(model,
                   class_labels = None,
                   predicted_feature_name = None,
                   model_precision = _MLMODEL_FULL_PRECISION,
+                  arrays_type = 'double',
                   predicted_probabilities_output = '',
                   add_custom_layers = False,
                   custom_conversion_functions = None):
@@ -742,7 +747,8 @@ def convert(model,
                       model_precision,
                       predicted_probabilities_output,
                       add_custom_layers,
-                      custom_conversion_functions=custom_conversion_functions)
+                      custom_conversion_functions=custom_conversion_functions,
+                      arrays_type=arrays_type)
 
     return _MLModel(spec)
 

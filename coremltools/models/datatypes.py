@@ -50,13 +50,14 @@ class Array(_DatatypeBase):
     """
     Array Data Type
     """
-    def __init__(self, *dimensions):
+    def __init__(self, elem_data_type='double', *dimensions):
         """
         Constructs a Array, given its dimensions
 
         Parameters
         ----------
         dimensions: ints | longs
+        elem_data_type: float64 | float32 | int64
 
         Examples
         --------
@@ -74,6 +75,8 @@ class Array(_DatatypeBase):
         num_elements = 1
         for d in self.dimensions:
             num_elements *= d
+
+        self.elem_data_type = elem_data_type.lower()
 
         _DatatypeBase.__init__(self, "Array",
                 "Array({%s})" % (",".join("%d" % d for d in self.dimensions)),
@@ -125,6 +128,10 @@ _simple_type_remap = {int : Int64(),
                     'Double' : Double(),
                     'Int64' : Int64(),
                     'String' : String()}
+
+_array_type_remap = {'double': _FeatureTypes_pb2.ArrayFeatureType.DOUBLE,
+                     'float32': _FeatureTypes_pb2.ArrayFeatureType.FLOAT32,
+                     'int32': _FeatureTypes_pb2.ArrayFeatureType.INT32}
 
 
 def _is_valid_datatype(datatype_instance):
@@ -199,7 +206,11 @@ def _set_datatype(proto_type_obj, datatype_instance):
 
     elif isinstance(datatype_instance, Array):
         proto_type_obj.multiArrayType.MergeFromString(b'')
-        proto_type_obj.multiArrayType.dataType = Model_pb2.ArrayFeatureType.DOUBLE
+
+        if datatype_instance.elem_data_type not in _array_type_remap:
+            raise ValueError("Array datatype not recognized.")
+
+        proto_type_obj.multiArrayType.dataType = _array_type_remap[datatype_instance.elem_data_type]
 
         for n in datatype_instance.dimensions:
             proto_type_obj.multiArrayType.shape.append(n)

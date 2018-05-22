@@ -169,7 +169,8 @@ def _convert(model,
             predicted_probabilities_output = '',
             add_custom_layers = False,
             custom_conversion_functions = None,
-            custom_objects=None):
+            custom_objects = None,
+            arrays_type = 'double'):
 
     # Check Keras format
     if _keras.backend.image_data_format() == 'channels_first':
@@ -271,8 +272,8 @@ def _convert(model,
         elif len(dim) == 3:
             output_dims[idx] = (dim[2], dim[0], dim[1])
 
-    input_types = [datatypes.Array(*dim) for dim in input_dims]
-    output_types = [datatypes.Array(*dim) for dim in output_dims]
+    input_types = [datatypes.Array(arrays_type, *dim) for dim in input_dims]
+    output_types = [datatypes.Array(arrays_type, *dim) for dim in output_dims]
 
     # Some of the feature handling is sensitive about string vs. unicode
     input_names = map(str, input_names)
