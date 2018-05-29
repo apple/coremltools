@@ -67,6 +67,12 @@ document.addEventListener('DOMContentLoaded', function() {
 					'background-image': 'icons/dictVectorizer.png'
 		    	}
 		    },
+			{
+			    selector: "node.custom",
+			    style: {
+					'background-image': 'icons/custom.png'
+		    	}
+		    },
             {
 			    selector: "node.featureVectorizer",
 			    style: {
