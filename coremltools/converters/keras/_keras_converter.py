@@ -456,6 +456,10 @@ def convertToSpec(model,
         Provide a string of the name of the custom function as a key.
         Provide a function as a value.
 
+    arrays_type: str
+        Specifies data type for inputs that are treated as MultiArrays (N-D Arrays).
+        Could be one of: 'double', 'float32', 'int32'.
+
     Returns
     -------
     model: MLModel

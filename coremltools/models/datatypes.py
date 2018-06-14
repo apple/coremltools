@@ -52,12 +52,12 @@ class Array(_DatatypeBase):
     """
     def __init__(self, elem_data_type='double', *dimensions):
         """
-        Constructs a Array, given its dimensions
+        Constructs a Array, given its data type and dimensions.
 
         Parameters
         ----------
         dimensions: ints | longs
-        elem_data_type: float64 | float32 | int64
+        elem_data_type: double | float32 | int32
 
         Examples
         --------
