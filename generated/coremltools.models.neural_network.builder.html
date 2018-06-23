@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network &mdash; coremltools 0.8 documentation</title>
+  <title>coremltools.models.neural_network.builder &mdash; coremltools 2.0b1 documentation</title>
   
 
   
@@ -35,10 +35,12 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 0.8 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 2.0b1 documentation" href="../index.html"/>
         <link rel="up" title="Models" href="../coremltools.models.html"/>
-        <link rel="next" title="coremltools.models.pipeline" href="coremltools.models.pipeline.html"/>
-        <link rel="prev" title="coremltools.models.MLModel" href="coremltools.models.MLModel.html"/> 
+        <link rel="next" title="coremltools.models.neural_network.flexible_shape_utils" href="coremltools.models.neural_network.flexible_shape_utils.html"/>
+        <link rel="prev" title="coremltools.models.tree_ensemble" href="coremltools.models.tree_ensemble.html"/>
+    <link href="../static/style.css" rel="stylesheet" type="text/css">
+
 
   
   <script src="../static/js/modernizr.min.js"></script>
@@ -67,7 +69,7 @@
             
             
               <div class="version">
-                0.8
+                2.0b1
               </div>
             
           
@@ -95,9 +97,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.models.neural_network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
@@ -147,13 +151,13 @@
         
           <li><a href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a> &raquo;</li>
         
-      <li>coremltools.models.neural_network</li>
+      <li>coremltools.models.neural_network.builder</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../sources/generated/coremltools.models.neural_network.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../sources/generated/coremltools.models.neural_network.builder.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -166,8 +170,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-coremltools.models.neural_network">
-<span id="coremltools-models-neural-network"></span><h1>coremltools.models.neural_network<a class="headerlink" href="#module-coremltools.models.neural_network" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-coremltools.models.neural_network.builder">
+<span id="coremltools-models-neural-network-builder"></span><h1>coremltools.models.neural_network.builder<a class="headerlink" href="#module-coremltools.models.neural_network.builder" title="Permalink to this headline">¶</a></h1>
 <p>Neural network builder class to construct Core ML models.</p>
 <p class="rubric">Classes</p>
 <table border="1" class="longtable docutils">
@@ -176,18 +180,18 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder" title="coremltools.models.neural_network.NeuralNetworkBuilder"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkBuilder</span></code></a>(input_features,&nbsp;…[,&nbsp;mode])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkBuilder</span></code></a>(input_features,&nbsp;…[,&nbsp;mode])</td>
 <td>Neural network builder class to construct Core ML models.</td>
 </tr>
 </tbody>
 </table>
 <dl class="class">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder">
-<em class="property">class </em><code class="descclassname">coremltools.models.neural_network.</code><code class="descname">NeuralNetworkBuilder</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em>, <em>mode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder">
+<em class="property">class </em><code class="descclassname">coremltools.models.neural_network.builder.</code><code class="descname">NeuralNetworkBuilder</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em>, <em>mode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Neural network builder class to construct Core ML models.</p>
 <p>The NeuralNetworkBuilder constructs a Core ML neural network specification
 layer by layer. The layers should be added in such an order that the inputs
-to each layer (refered to as blobs) of each layer has been previously
+to each layer (referred to as blobs) of each layer has been previously
 defined.  The builder can also set pre-processing steps to handle
 specialized input format (e.g. images), and set class labels for neural
 network classifiers.</p>
@@ -198,28 +202,9 @@ on neural network layers, blobs, and parameters.</p>
 <p class="last"><code class="xref py py-obj docutils literal"><span class="pre">MLModel</span></code>, <code class="xref py py-obj docutils literal"><span class="pre">datatypes</span></code>, <code class="xref py py-obj docutils literal"><span class="pre">save_spec</span></code></p>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Create a neural network binary classifier that classifies </span>
-<span class="c1"># 3-dimensional data points</span>
-<span class="c1"># Specify input and output dimensions</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">input_dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">output_dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,)</span>
-
-<span class="c1"># Specify input and output features</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="o">*</span><span class="n">input_dim</span><span class="p">)]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">output_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;probs&#39;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="o">*</span><span class="n">output_dim</span><span class="p">))]</span>
-
-<span class="c1"># Build a simple neural network with 1 inner product layer</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span> <span class="o">=</span> <span class="n">NeuralNetworkBuilder</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span><span class="o">.</span><span class="n">add_inner_product</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;ip_layer&#39;</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">weights</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">bias</span><span class="p">,</span> <span class="n">input_channels</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">output_channels</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
-<span class="o">...</span> <span class="n">has_bias</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">input_name</span> <span class="o">=</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">output_name</span> <span class="o">=</span> <span class="s1">&#39;probs&#39;</span><span class="p">)</span>
-
-<span class="c1"># save the spec by the builder</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">save_spec</span><span class="p">(</span><span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;network.mlmodel&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em>, <em>mode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.__init__" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em>, <em>mode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a NeuralNetworkBuilder object and set protobuf specification interface.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -251,7 +236,7 @@ spec will be constructed.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels"><code class="xref py py-obj docutils literal"><span class="pre">set_class_labels</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels"><code class="xref py py-obj docutils literal"><span class="pre">set_class_labels</span></code></a></p>
 </div>
 <p class="rubric">Examples</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Construct a builder that builds a neural network classifier with a 299x299x3</span>
@@ -264,8 +249,8 @@ spec will be constructed.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation">
-<code class="descname">add_activation</code><span class="sig-paren">(</span><em>name</em>, <em>non_linearity</em>, <em>input_name</em>, <em>output_name</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation">
+<code class="descname">add_activation</code><span class="sig-paren">(</span><em>name</em>, <em>non_linearity</em>, <em>input_name</em>, <em>output_name</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an activation layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -361,13 +346,13 @@ beta are applied to all channels.</li>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_softmax" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_softmax"><code class="xref py py-obj docutils literal"><span class="pre">add_softmax</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_softmax" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_softmax"><code class="xref py py-obj docutils literal"><span class="pre">add_softmax</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_batchnorm">
-<code class="descname">add_batchnorm</code><span class="sig-paren">(</span><em>name</em>, <em>channels</em>, <em>gamma</em>, <em>beta</em>, <em>mean=None</em>, <em>variance=None</em>, <em>input_name='data'</em>, <em>output_name='out'</em>, <em>compute_mean_var=False</em>, <em>instance_normalization=False</em>, <em>epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_batchnorm" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_batchnorm">
+<code class="descname">add_batchnorm</code><span class="sig-paren">(</span><em>name</em>, <em>channels</em>, <em>gamma</em>, <em>beta</em>, <em>mean=None</em>, <em>variance=None</em>, <em>input_name=’data’</em>, <em>output_name=’out’</em>, <em>compute_mean_var=False</em>, <em>instance_normalization=False</em>, <em>epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_batchnorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Batch Normalization layer. Batch Normalization operation is
 defined as:</p>
 <p><cite>y = gamma * (x - mean) / sqrt(variance + epsilon) + beta</cite>
@@ -399,13 +384,13 @@ instance normalization i.e., mean and variance are computed from the single inpu
 </dl>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product"><code class="xref py py-obj docutils literal"><span class="pre">add_inner_product</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product"><code class="xref py py-obj docutils literal"><span class="pre">add_inner_product</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_bias">
-<code class="descname">add_bias</code><span class="sig-paren">(</span><em>name, b, input_name, output_name, shape_bias=[1]</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_bias" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bias">
+<code class="descname">add_bias</code><span class="sig-paren">(</span><em>name, b, input_name, output_name, shape_bias=[1]</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bias" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add bias layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -437,13 +422,13 @@ instance normalization i.e., mean and variance are computed from the single inpu
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_scale" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_scale"><code class="xref py py-obj docutils literal"><span class="pre">add_scale</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_scale" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_scale"><code class="xref py py-obj docutils literal"><span class="pre">add_scale</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm">
-<code class="descname">add_bidirlstm</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>W_h_back</em>, <em>W_x_back</em>, <em>b_back</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>inner_activation='SIGMOID'</em>, <em>cell_state_update_activation='TANH'</em>, <em>output_activation='TANH'</em>, <em>peep=None</em>, <em>peep_back=None</em>, <em>output_all=False</em>, <em>forget_bias=False</em>, <em>coupled_input_forget_gate=False</em>, <em>cell_clip_threshold=50000.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm">
+<code class="descname">add_bidirlstm</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>W_h_back</em>, <em>W_x_back</em>, <em>b_back</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>inner_activation=’SIGMOID’</em>, <em>cell_state_update_activation=’TANH’</em>, <em>output_activation=’TANH’</em>, <em>peep=None</em>, <em>peep_back=None</em>, <em>output_all=False</em>, <em>forget_bias=False</em>, <em>coupled_input_forget_gate=False</em>, <em>cell_clip_threshold=50000.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Bi-directional LSTM layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -549,7 +534,7 @@ The shapes of the peephole vectors are (hidden_size,). Defaults to None.</p>
 </div></blockquote>
 <p><strong>coupled_input_forget_gate</strong> : boolean</p>
 <blockquote>
-<div><p>If True, the inpute gate and forget gate is coupled. i.e. forget gate is not used.
+<div><p>If True, the input gate and forget gate is coupled. i.e. forget gate is not used.
 Defaults to False.</p>
 </div></blockquote>
 <p><strong>cell_clip_threshold</strong> : float</p>
@@ -563,13 +548,13 @@ Defaults to 50.0.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn"><code class="xref py py-obj docutils literal"><span class="pre">add_simple_rnn</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm"><code class="xref py py-obj docutils literal"><span class="pre">add_unilstm</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm"><code class="xref py py-obj docutils literal"><span class="pre">add_bidirlstm</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn"><code class="xref py py-obj docutils literal"><span class="pre">add_simple_rnn</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm"><code class="xref py py-obj docutils literal"><span class="pre">add_unilstm</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm"><code class="xref py py-obj docutils literal"><span class="pre">add_bidirlstm</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution">
-<code class="descname">add_convolution</code><span class="sig-paren">(</span><em>name, kernel_channels, output_channels, height, width, stride_height, stride_width, border_mode, groups, W, b, has_bias, is_deconv=False, output_shape=None, input_name='data', output_name='out', dilation_factors=[1, 1], padding_top=0, padding_bottom=0, padding_left=0, padding_right=0, same_padding_asymmetry_mode='BOTTOM_RIGHT_HEAVY'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution">
+<code class="descname">add_convolution</code><span class="sig-paren">(</span><em>name, kernel_channels, output_channels, height, width, stride_height, stride_width, border_mode, groups, W, b, has_bias, is_deconv=False, output_shape=None, input_name=’data’, output_name=’out’, dilation_factors=[1, 1], padding_top=0, padding_bottom=0, padding_left=0, padding_right=0, same_padding_asymmetry_mode=’BOTTOM_RIGHT_HEAVY’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a convolution layer to the network.</p>
 <p>Please see the ConvolutionLayerParams in Core ML neural network
 protobuf message for more information about input and output blob dimensions.</p>
@@ -685,13 +670,13 @@ W : [Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_batchnorm" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_batchnorm"><code class="xref py py-obj docutils literal"><span class="pre">add_batchnorm</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_batchnorm" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_batchnorm"><code class="xref py py-obj docutils literal"><span class="pre">add_batchnorm</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_crop">
-<code class="descname">add_crop</code><span class="sig-paren">(</span><em>name</em>, <em>left</em>, <em>right</em>, <em>top</em>, <em>bottom</em>, <em>offset</em>, <em>input_names</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_crop" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop">
+<code class="descname">add_crop</code><span class="sig-paren">(</span><em>name</em>, <em>left</em>, <em>right</em>, <em>top</em>, <em>bottom</em>, <em>offset</em>, <em>input_names</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a cropping layer to the model.
 The cropping layer have two functional modes:</p>
 <blockquote>
@@ -750,13 +735,13 @@ or a list of 2 strings (2-input crop layer).</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_padding" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_padding"><code class="xref py py-obj docutils literal"><span class="pre">add_padding</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_padding" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_padding"><code class="xref py py-obj docutils literal"><span class="pre">add_padding</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_custom">
-<code class="descname">add_custom</code><span class="sig-paren">(</span><em>name</em>, <em>input_names</em>, <em>output_names</em>, <em>custom_proto_spec=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_custom" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_custom">
+<code class="descname">add_custom</code><span class="sig-paren">(</span><em>name</em>, <em>input_names</em>, <em>output_names</em>, <em>custom_proto_spec=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_custom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a custom layer.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -785,8 +770,8 @@ or a list of 2 strings (2-input crop layer).</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise">
-<code class="descname">add_elementwise</code><span class="sig-paren">(</span><em>name</em>, <em>input_names</em>, <em>output_name</em>, <em>mode</em>, <em>alpha=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise">
+<code class="descname">add_elementwise</code><span class="sig-paren">(</span><em>name</em>, <em>input_names</em>, <em>output_name</em>, <em>mode</em>, <em>alpha=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an element-wise operation layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -828,13 +813,13 @@ if mode == ‘MULTIPLY’ and there is only one input_name, alpha is multiplied 
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_upsample" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_upsample"><code class="xref py py-obj docutils literal"><span class="pre">add_upsample</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_sequence_repeat" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_sequence_repeat"><code class="xref py py-obj docutils literal"><span class="pre">add_sequence_repeat</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample"><code class="xref py py-obj docutils literal"><span class="pre">add_upsample</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_sequence_repeat" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_sequence_repeat"><code class="xref py py-obj docutils literal"><span class="pre">add_sequence_repeat</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_embedding">
-<code class="descname">add_embedding</code><span class="sig-paren">(</span><em>name</em>, <em>W</em>, <em>b</em>, <em>input_dim</em>, <em>output_channels</em>, <em>has_bias</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_embedding" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_embedding">
+<code class="descname">add_embedding</code><span class="sig-paren">(</span><em>name</em>, <em>W</em>, <em>b</em>, <em>input_dim</em>, <em>output_channels</em>, <em>has_bias</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_embedding" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an embedding layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -882,13 +867,13 @@ if mode == ‘MULTIPLY’ and there is only one input_name, alpha is multiplied 
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product"><code class="xref py py-obj docutils literal"><span class="pre">add_inner_product</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product"><code class="xref py py-obj docutils literal"><span class="pre">add_inner_product</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten">
-<code class="descname">add_flatten</code><span class="sig-paren">(</span><em>name</em>, <em>mode</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten">
+<code class="descname">add_flatten</code><span class="sig-paren">(</span><em>name</em>, <em>mode</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a flatten layer. Only flattens the channel, height and width axis. Leaves the sequence axis as is.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -919,13 +904,13 @@ if mode == ‘MULTIPLY’ and there is only one input_name, alpha is multiplied 
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_permute" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_permute"><code class="xref py py-obj docutils literal"><span class="pre">add_permute</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape"><code class="xref py py-obj docutils literal"><span class="pre">add_reshape</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute"><code class="xref py py-obj docutils literal"><span class="pre">add_permute</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape"><code class="xref py py-obj docutils literal"><span class="pre">add_reshape</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_gru">
-<code class="descname">add_gru</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>activation='TANH'</em>, <em>inner_activation='SIGMOID_HARD'</em>, <em>output_all=False</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_gru" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru">
+<code class="descname">add_gru</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>activation=’TANH’</em>, <em>inner_activation=’SIGMOID_HARD’</em>, <em>output_all=False</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Gated-Recurrent Unit (GRU) layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1005,13 +990,13 @@ See add_activation for more detailed description.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn"><code class="xref py py-obj docutils literal"><span class="pre">add_simple_rnn</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm"><code class="xref py py-obj docutils literal"><span class="pre">add_unilstm</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm"><code class="xref py py-obj docutils literal"><span class="pre">add_bidirlstm</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn"><code class="xref py py-obj docutils literal"><span class="pre">add_simple_rnn</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm"><code class="xref py py-obj docutils literal"><span class="pre">add_unilstm</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm"><code class="xref py py-obj docutils literal"><span class="pre">add_bidirlstm</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product">
-<code class="descname">add_inner_product</code><span class="sig-paren">(</span><em>name</em>, <em>W</em>, <em>b</em>, <em>input_channels</em>, <em>output_channels</em>, <em>has_bias</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product">
+<code class="descname">add_inner_product</code><span class="sig-paren">(</span><em>name</em>, <em>W</em>, <em>b</em>, <em>input_channels</em>, <em>output_channels</em>, <em>has_bias</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an inner product layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1059,13 +1044,13 @@ See add_activation for more detailed description.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_embedding" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_embedding"><code class="xref py py-obj docutils literal"><span class="pre">add_embedding</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_embedding" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_embedding"><code class="xref py py-obj docutils literal"><span class="pre">add_embedding</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_l2_normalize">
-<code class="descname">add_l2_normalize</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_l2_normalize" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_l2_normalize">
+<code class="descname">add_l2_normalize</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_l2_normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add L2 normalize layer. Normalizes the input by the L2 norm, i.e. divides by the 
 the square root of the sum of squares of all elements of the input along C, H and W dimensions.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1094,13 +1079,13 @@ the square root of the sum of squares of all elements of the input along C, H an
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_mvn" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_mvn"><code class="xref py py-obj docutils literal"><span class="pre">add_mvn</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn"><code class="xref py py-obj docutils literal"><span class="pre">add_lrn</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_mvn" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_mvn"><code class="xref py py-obj docutils literal"><span class="pre">add_mvn</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn"><code class="xref py py-obj docutils literal"><span class="pre">add_lrn</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_load_constant">
-<code class="descname">add_load_constant</code><span class="sig-paren">(</span><em>name</em>, <em>output_name</em>, <em>constant_value</em>, <em>shape</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_load_constant" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_load_constant">
+<code class="descname">add_load_constant</code><span class="sig-paren">(</span><em>name</em>, <em>output_name</em>, <em>constant_value</em>, <em>shape</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_load_constant" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a load constant layer.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1128,13 +1113,13 @@ the square root of the sum of squares of all elements of the input along C, H an
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise"><code class="xref py py-obj docutils literal"><span class="pre">add_elementwise</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise"><code class="xref py py-obj docutils literal"><span class="pre">add_elementwise</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn">
-<code class="descname">add_lrn</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>alpha</em>, <em>beta</em>, <em>local_size</em>, <em>k=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn">
+<code class="descname">add_lrn</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>alpha</em>, <em>beta</em>, <em>local_size</em>, <em>k=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a LRN (local response normalization) layer. Please see the LRNLayerParams message in Core ML neural network
 protobuf for more information about the operation of this layer. Supports “across” channels normalization.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1175,13 +1160,13 @@ protobuf for more information about the operation of this layer. Supports “acr
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_l2_normalize" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_l2_normalize"><code class="xref py py-obj docutils literal"><span class="pre">add_l2_normalize</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_mvn" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_mvn"><code class="xref py py-obj docutils literal"><span class="pre">add_mvn</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_l2_normalize" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_l2_normalize"><code class="xref py py-obj docutils literal"><span class="pre">add_l2_normalize</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_mvn" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_mvn"><code class="xref py py-obj docutils literal"><span class="pre">add_mvn</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_mvn">
-<code class="descname">add_mvn</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>across_channels=True</em>, <em>normalize_variance=True</em>, <em>epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_mvn" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_mvn">
+<code class="descname">add_mvn</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>across_channels=True</em>, <em>normalize_variance=True</em>, <em>epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_mvn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an MVN (mean variance normalization) layer. Computes mean, variance and normalizes the input.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1218,13 +1203,13 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_l2_normalize" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_l2_normalize"><code class="xref py py-obj docutils literal"><span class="pre">add_l2_normalize</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn"><code class="xref py py-obj docutils literal"><span class="pre">add_lrn</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_l2_normalize" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_l2_normalize"><code class="xref py py-obj docutils literal"><span class="pre">add_l2_normalize</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn"><code class="xref py py-obj docutils literal"><span class="pre">add_lrn</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_optionals">
-<code class="descname">add_optionals</code><span class="sig-paren">(</span><em>optionals_in</em>, <em>optionals_out</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_optionals" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_optionals">
+<code class="descname">add_optionals</code><span class="sig-paren">(</span><em>optionals_in</em>, <em>optionals_out</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_optionals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add optional inputs and outputs to the model spec.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1244,13 +1229,13 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_padding">
-<code class="descname">add_padding</code><span class="sig-paren">(</span><em>name</em>, <em>left=0</em>, <em>right=0</em>, <em>top=0</em>, <em>bottom=0</em>, <em>value=0</em>, <em>input_name='data'</em>, <em>output_name='out'</em>, <em>padding_type='constant'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_padding" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_padding">
+<code class="descname">add_padding</code><span class="sig-paren">(</span><em>name</em>, <em>left=0</em>, <em>right=0</em>, <em>top=0</em>, <em>bottom=0</em>, <em>value=0</em>, <em>input_name=’data’</em>, <em>output_name=’out’</em>, <em>padding_type=’constant’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_padding" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a padding layer to the model. Kindly refer to NeuralNetwork.proto for details.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1298,13 +1283,13 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_crop" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_crop"><code class="xref py py-obj docutils literal"><span class="pre">add_crop</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop"><code class="xref py py-obj docutils literal"><span class="pre">add_crop</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling"><code class="xref py py-obj docutils literal"><span class="pre">add_pooling</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_permute">
-<code class="descname">add_permute</code><span class="sig-paren">(</span><em>name</em>, <em>dim</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_permute" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute">
+<code class="descname">add_permute</code><span class="sig-paren">(</span><em>name</em>, <em>dim</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a permute layer. Assumes that the input has dimensions in the order [Seq, C, H, W]</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1346,13 +1331,13 @@ the output is the same as the input.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten"><code class="xref py py-obj docutils literal"><span class="pre">add_flatten</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape"><code class="xref py py-obj docutils literal"><span class="pre">add_reshape</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten"><code class="xref py py-obj docutils literal"><span class="pre">add_flatten</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape"><code class="xref py py-obj docutils literal"><span class="pre">add_reshape</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling">
-<code class="descname">add_pooling</code><span class="sig-paren">(</span><em>name</em>, <em>height</em>, <em>width</em>, <em>stride_height</em>, <em>stride_width</em>, <em>layer_type</em>, <em>padding_type</em>, <em>input_name</em>, <em>output_name</em>, <em>exclude_pad_area=True</em>, <em>is_global=False</em>, <em>padding_top=0</em>, <em>padding_bottom=0</em>, <em>padding_left=0</em>, <em>padding_right=0</em>, <em>same_padding_asymmetry_mode='BOTTOM_RIGHT_HEAVY'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling">
+<code class="descname">add_pooling</code><span class="sig-paren">(</span><em>name</em>, <em>height</em>, <em>width</em>, <em>stride_height</em>, <em>stride_width</em>, <em>layer_type</em>, <em>padding_type</em>, <em>input_name</em>, <em>output_name</em>, <em>exclude_pad_area=True</em>, <em>is_global=False</em>, <em>padding_top=0</em>, <em>padding_bottom=0</em>, <em>padding_left=0</em>, <em>padding_right=0</em>, <em>same_padding_asymmetry_mode=’BOTTOM_RIGHT_HEAVY’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a pooling layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1384,7 +1369,7 @@ the output is the same as the input.</p>
 </div></blockquote>
 <p><strong>padding_type: str</strong></p>
 <blockquote>
-<div><p>Option for the type of pading and output blob shape. Can be either ‘VALID’ , ‘SAME’ or ‘INCLUDE_LAST_PIXEL’. 
+<div><p>Option for the type of padding and output blob shape. Can be either ‘VALID’ , ‘SAME’ or ‘INCLUDE_LAST_PIXEL’. 
 Kindly refer to NeuralNetwork.proto for details.</p>
 </div></blockquote>
 <p><strong>input_name: str</strong></p>
@@ -1431,13 +1416,13 @@ Kindly refer to NeuralNetwork.proto for details.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_reduce">
-<code class="descname">add_reduce</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>axis</em>, <em>mode</em>, <em>epsilon=1e-06</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_reduce" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reduce">
+<code class="descname">add_reduce</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>axis</em>, <em>mode</em>, <em>epsilon=1e-06</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reduce" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a reduce layer. Applies the function specified by the parameter mode, 
 along dimension(s) specified by the parameter axis.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1478,13 +1463,13 @@ Allowed values:
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_reorganize_data">
-<code class="descname">add_reorganize_data</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>mode='SPACE_TO_DEPTH'</em>, <em>block_size=2</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_reorganize_data" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reorganize_data">
+<code class="descname">add_reorganize_data</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>mode=’SPACE_TO_DEPTH’</em>, <em>block_size=2</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reorganize_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a data reorganization layer of type “SPACE_TO_DEPTH” or “DEPTH_TO_SPACE”.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1525,13 +1510,13 @@ must divide C when mode is ‘DEPTH_TO_SPACE’.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten"><code class="xref py py-obj docutils literal"><span class="pre">add_flatten</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape"><code class="xref py py-obj docutils literal"><span class="pre">add_reshape</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten"><code class="xref py py-obj docutils literal"><span class="pre">add_flatten</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape"><code class="xref py py-obj docutils literal"><span class="pre">add_reshape</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape">
-<code class="descname">add_reshape</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>target_shape</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape">
+<code class="descname">add_reshape</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>target_shape</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a reshape layer. Kindly refer to NeuralNetwork.proto for details.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1568,13 +1553,13 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten"><code class="xref py py-obj docutils literal"><span class="pre">add_flatten</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_permute" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_permute"><code class="xref py py-obj docutils literal"><span class="pre">add_permute</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten"><code class="xref py py-obj docutils literal"><span class="pre">add_flatten</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute"><code class="xref py py-obj docutils literal"><span class="pre">add_permute</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_scale">
-<code class="descname">add_scale</code><span class="sig-paren">(</span><em>name, W, b, has_bias, input_name, output_name, shape_scale=[1], shape_bias=[1]</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_scale" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_scale">
+<code class="descname">add_scale</code><span class="sig-paren">(</span><em>name, W, b, has_bias, input_name, output_name, shape_scale=[1], shape_bias=[1]</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add scale layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1618,13 +1603,13 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_bias" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_bias"><code class="xref py py-obj docutils literal"><span class="pre">add_bias</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bias" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bias"><code class="xref py py-obj docutils literal"><span class="pre">add_bias</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_sequence_repeat">
-<code class="descname">add_sequence_repeat</code><span class="sig-paren">(</span><em>name</em>, <em>nrep</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_sequence_repeat" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_sequence_repeat">
+<code class="descname">add_sequence_repeat</code><span class="sig-paren">(</span><em>name</em>, <em>nrep</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_sequence_repeat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add sequence repeat layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1652,13 +1637,13 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_upsample" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_upsample"><code class="xref py py-obj docutils literal"><span class="pre">add_upsample</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise"><code class="xref py py-obj docutils literal"><span class="pre">add_elementwise</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample"><code class="xref py py-obj docutils literal"><span class="pre">add_upsample</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise"><code class="xref py py-obj docutils literal"><span class="pre">add_elementwise</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn">
-<code class="descname">add_simple_rnn</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>activation</em>, <em>input_names</em>, <em>output_names</em>, <em>output_all=False</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn">
+<code class="descname">add_simple_rnn</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>activation</em>, <em>input_names</em>, <em>output_names</em>, <em>output_all=False</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a simple recurrent layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1724,13 +1709,13 @@ See add_activation for more detailed description.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_gru" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_gru"><code class="xref py py-obj docutils literal"><span class="pre">add_gru</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm"><code class="xref py py-obj docutils literal"><span class="pre">add_unilstm</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm"><code class="xref py py-obj docutils literal"><span class="pre">add_bidirlstm</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru"><code class="xref py py-obj docutils literal"><span class="pre">add_gru</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm"><code class="xref py py-obj docutils literal"><span class="pre">add_unilstm</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm"><code class="xref py py-obj docutils literal"><span class="pre">add_bidirlstm</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_slice">
-<code class="descname">add_slice</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>axis</em>, <em>start_index=0</em>, <em>end_index=-1</em>, <em>stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_slice" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_slice">
+<code class="descname">add_slice</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>axis</em>, <em>start_index=0</em>, <em>end_index=-1</em>, <em>stride=1</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_slice" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a slice layer. Equivalent to to numpy slice [start_index:end_index:stride], 
 start_index is included, while end_index is exclusive.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1775,13 +1760,13 @@ start_index is included, while end_index is exclusive.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_permute" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_permute"><code class="xref py py-obj docutils literal"><span class="pre">add_permute</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape"><code class="xref py py-obj docutils literal"><span class="pre">add_reshape</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute"><code class="xref py py-obj docutils literal"><span class="pre">add_permute</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape"><code class="xref py py-obj docutils literal"><span class="pre">add_reshape</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_softmax">
-<code class="descname">add_softmax</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_softmax" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_softmax">
+<code class="descname">add_softmax</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_softmax" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a softmax layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1805,13 +1790,13 @@ start_index is included, while end_index is exclusive.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product"><code class="xref py py-obj docutils literal"><span class="pre">add_inner_product</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product"><code class="xref py py-obj docutils literal"><span class="pre">add_inner_product</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution"><code class="xref py py-obj docutils literal"><span class="pre">add_convolution</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_split">
-<code class="descname">add_split</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_names</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_split" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_split">
+<code class="descname">add_split</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_names</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_split" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Split layer that uniformly splits the input along the channel dimension 
 to produce multiple outputs.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1836,13 +1821,13 @@ to produce multiple outputs.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise"><code class="xref py py-obj docutils literal"><span class="pre">add_elementwise</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise"><code class="xref py py-obj docutils literal"><span class="pre">add_elementwise</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_unary">
-<code class="descname">add_unary</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>mode</em>, <em>alpha=1.0</em>, <em>shift=0</em>, <em>scale=1.0</em>, <em>epsilon=1e-06</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_unary" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unary">
+<code class="descname">add_unary</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>mode</em>, <em>alpha=1.0</em>, <em>shift=0</em>, <em>scale=1.0</em>, <em>epsilon=1e-06</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Unary layer. Applies the specified function (mode) to all the elements of the input.
 Please see the UnaryFunctionLayerParams message in Core ML neural network
 protobuf for more information about the operation of this layer.   
@@ -1887,13 +1872,13 @@ Allowed values: ‘sqrt’, ‘rsqrt’, ‘inverse’, ‘power’, ‘exp’, 
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm">
-<code class="descname">add_unilstm</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>inner_activation='SIGMOID'</em>, <em>cell_state_update_activation='TANH'</em>, <em>output_activation='TANH'</em>, <em>peep=None</em>, <em>output_all=False</em>, <em>forget_bias=False</em>, <em>coupled_input_forget_gate=False</em>, <em>cell_clip_threshold=50000.0</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm">
+<code class="descname">add_unilstm</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>inner_activation=’SIGMOID’</em>, <em>cell_state_update_activation=’TANH’</em>, <em>output_activation=’TANH’</em>, <em>peep=None</em>, <em>output_all=False</em>, <em>forget_bias=False</em>, <em>coupled_input_forget_gate=False</em>, <em>cell_clip_threshold=50000.0</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Uni-directional LSTM layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1972,7 +1957,7 @@ The shapes of the peephole vectors are (hidden_size,).</p>
 </div></blockquote>
 <p><strong>coupled_input_forget_gate: boolean</strong></p>
 <blockquote>
-<div><p>If True, the inpute gate and forget gate is coupled. i.e. forget gate is not used.</p>
+<div><p>If True, the input gate and forget gate is coupled. i.e. forget gate is not used.</p>
 </div></blockquote>
 <p><strong>cell_clip_threshold: float</strong></p>
 <blockquote>
@@ -1993,13 +1978,13 @@ If not provided, it is defaulted to 50.0.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn"><code class="xref py py-obj docutils literal"><span class="pre">add_simple_rnn</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_gru" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_gru"><code class="xref py py-obj docutils literal"><span class="pre">add_gru</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm"><code class="xref py py-obj docutils literal"><span class="pre">add_bidirlstm</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation"><code class="xref py py-obj docutils literal"><span class="pre">add_activation</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn"><code class="xref py py-obj docutils literal"><span class="pre">add_simple_rnn</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru"><code class="xref py py-obj docutils literal"><span class="pre">add_gru</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm"><code class="xref py py-obj docutils literal"><span class="pre">add_bidirlstm</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.add_upsample">
-<code class="descname">add_upsample</code><span class="sig-paren">(</span><em>name</em>, <em>scaling_factor_h</em>, <em>scaling_factor_w</em>, <em>input_name</em>, <em>output_name</em>, <em>mode='NN'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_upsample" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample">
+<code class="descname">add_upsample</code><span class="sig-paren">(</span><em>name</em>, <em>scaling_factor_h</em>, <em>scaling_factor_w</em>, <em>input_name</em>, <em>output_name</em>, <em>mode=’NN’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add upsample layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2037,13 +2022,13 @@ If not provided, it is defaulted to 50.0.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_sequence_repeat" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_sequence_repeat"><code class="xref py py-obj docutils literal"><span class="pre">add_sequence_repeat</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise" title="coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise"><code class="xref py py-obj docutils literal"><span class="pre">add_elementwise</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_sequence_repeat" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_sequence_repeat"><code class="xref py py-obj docutils literal"><span class="pre">add_sequence_repeat</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise"><code class="xref py py-obj docutils literal"><span class="pre">add_elementwise</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels">
-<code class="descname">set_class_labels</code><span class="sig-paren">(</span><em>class_labels</em>, <em>predicted_feature_name='classLabel'</em>, <em>prediction_blob=''</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels">
+<code class="descname">set_class_labels</code><span class="sig-paren">(</span><em>class_labels</em>, <em>predicted_feature_name=’classLabel’</em>, <em>prediction_blob=”</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set class labels to the model spec to make it a neural network classifier.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2072,13 +2057,13 @@ assumed.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_pre_processing_parameters" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_pre_processing_parameters"><code class="xref py py-obj docutils literal"><span class="pre">set_pre_processing_parameters</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters"><code class="xref py py-obj docutils literal"><span class="pre">set_pre_processing_parameters</span></code></a></p>
 </div>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.set_input">
-<code class="descname">set_input</code><span class="sig-paren">(</span><em>input_names</em>, <em>input_dims</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_input" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input">
+<code class="descname">set_input</code><span class="sig-paren">(</span><em>input_names</em>, <em>input_dims</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the inputs of the network spec.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2099,7 +2084,7 @@ is the same as input_names.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels"><code class="xref py py-obj docutils literal"><span class="pre">set_class_labels</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels"><code class="xref py py-obj docutils literal"><span class="pre">set_class_labels</span></code></a></p>
 </div>
 <p class="rubric">Examples</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Set the neural network spec inputs to be 3 dimensional vector data1 and</span>
@@ -2110,8 +2095,8 @@ is the same as input_names.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.set_output">
-<code class="descname">set_output</code><span class="sig-paren">(</span><em>output_names</em>, <em>output_dims</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_output" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output">
+<code class="descname">set_output</code><span class="sig-paren">(</span><em>output_names</em>, <em>output_dims</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the outputs of the network spec.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2132,7 +2117,7 @@ as output_names.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels"><code class="xref py py-obj docutils literal"><span class="pre">set_class_labels</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels"><code class="xref py py-obj docutils literal"><span class="pre">set_class_labels</span></code></a></p>
 </div>
 <p class="rubric">Examples</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Set the neural network spec outputs to be 3 dimensional vector feature1 and</span>
@@ -2143,8 +2128,8 @@ as output_names.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="coremltools.models.neural_network.NeuralNetworkBuilder.set_pre_processing_parameters">
-<code class="descname">set_pre_processing_parameters</code><span class="sig-paren">(</span><em>image_input_names=[]</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_pre_processing_parameters" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters">
+<code class="descname">set_pre_processing_parameters</code><span class="sig-paren">(</span><em>image_input_names=[]</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add pre-processing parameters to the neural network object</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2186,7 +2171,7 @@ provide a dictionary with input names as keys.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels" title="coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels"><code class="xref py py-obj docutils literal"><span class="pre">set_class_labels</span></code></a></p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input"><code class="xref py py-obj docutils literal"><span class="pre">set_input</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output"><code class="xref py py-obj docutils literal"><span class="pre">set_output</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels"><code class="xref py py-obj docutils literal"><span class="pre">set_class_labels</span></code></a></p>
 </div>
 </dd></dl>
 
@@ -2204,10 +2189,10 @@ provide a dictionary with input names as keys.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="coremltools.models.pipeline.html" class="btn btn-neutral float-right" title="coremltools.models.pipeline" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="coremltools.models.neural_network.flexible_shape_utils.html" class="btn btn-neutral float-right" title="coremltools.models.neural_network.flexible_shape_utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="coremltools.models.MLModel.html" class="btn btn-neutral" title="coremltools.models.MLModel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="coremltools.models.tree_ensemble.html" class="btn btn-neutral" title="coremltools.models.tree_ensemble" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -2216,7 +2201,7 @@ provide a dictionary with input names as keys.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc..
+        &copy; Copyright 2018, Apple Inc..
 
     </p>
   </div>
@@ -2238,7 +2223,7 @@ provide a dictionary with input names as keys.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.8',
+            VERSION:'2.0b1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -2248,7 +2233,7 @@ provide a dictionary with input names as keys.</p>
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

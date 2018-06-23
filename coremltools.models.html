@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Models &mdash; coremltools 0.8 documentation</title>
+  <title>Models &mdash; coremltools 2.0b1 documentation</title>
   
 
   
@@ -35,9 +35,11 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="coremltools 0.8 documentation" href="index.html"/>
+    <link rel="top" title="coremltools 2.0b1 documentation" href="index.html"/>
         <link rel="next" title="coremltools.models.MLModel" href="generated/coremltools.models.MLModel.html"/>
-        <link rel="prev" title="coremltools.converters.xgboost.convert" href="generated/coremltools.converters.xgboost.convert.html"/> 
+        <link rel="prev" title="coremltools.converters.xgboost.convert" href="generated/coremltools.converters.xgboost.convert.html"/>
+    <link href="static/style.css" rel="stylesheet" type="text/css">
+
 
   
   <script src="static/js/modernizr.min.js"></script>
@@ -66,7 +68,7 @@
             
             
               <div class="version">
-                0.8
+                2.0b1
               </div>
             
           
@@ -94,9 +96,11 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">Models</span></code></a><ul>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.html">coremltools.models.neural_network</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
@@ -163,8 +167,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="models">
-<h1><code class="xref py py-mod docutils literal"><span class="pre">Models</span></code><a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-coremltools.models">
+<span id="models"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">Models</span></code><a class="headerlink" href="#module-coremltools.models" title="Permalink to this headline">¶</a></h1>
 <table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
@@ -174,14 +178,28 @@
 <tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.MLModel.html#coremltools.models.MLModel" title="coremltools.models.MLModel"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.MLModel</span></code></a></td>
 <td>This class defines the minimal interface to a CoreML object in Python.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.neural_network.html#module-coremltools.models.neural_network" title="coremltools.models.neural_network"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.neural_network</span></code></a></td>
-<td>Neural network builder class to construct Core ML models.</td>
-</tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.pipeline.html#module-coremltools.models.pipeline" title="coremltools.models.pipeline"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.pipeline</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.pipeline.html#module-coremltools.models.pipeline" title="coremltools.models.pipeline"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.pipeline</span></code></a></td>
 <td>Pipeline utils for this package.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.tree_ensemble.html#module-coremltools.models.tree_ensemble" title="coremltools.models.tree_ensemble"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.tree_ensemble</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.tree_ensemble.html#module-coremltools.models.tree_ensemble" title="coremltools.models.tree_ensemble"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.tree_ensemble</span></code></a></td>
 <td>Tree ensemble builder class to construct CoreML models.</td>
+</tr>
+</tbody>
+</table>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.neural_network.builder.html#module-coremltools.models.neural_network.builder" title="coremltools.models.neural_network.builder"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.neural_network.builder</span></code></a></td>
+<td>Neural network builder class to construct Core ML models.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.neural_network.flexible_shape_utils.html#module-coremltools.models.neural_network.flexible_shape_utils" title="coremltools.models.neural_network.flexible_shape_utils"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.neural_network.flexible_shape_utils</span></code></a></td>
+<td>Utilities to annotate Neural Network Features with flexible shape information.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.neural_network.quantization_utils.html#module-coremltools.models.neural_network.quantization_utils" title="coremltools.models.neural_network.quantization_utils"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.neural_network.quantization_utils</span></code></a></td>
+<td>Utilities to compress Neural Network Models.</td>
 </tr>
 </tbody>
 </table>
@@ -209,7 +227,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc..
+        &copy; Copyright 2018, Apple Inc..
 
     </p>
   </div>
@@ -231,7 +249,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.8',
+            VERSION:'2.0b1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -241,7 +259,7 @@
       <script type="text/javascript" src="static/jquery.js"></script>
       <script type="text/javascript" src="static/underscore.js"></script>
       <script type="text/javascript" src="static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.pipeline &mdash; coremltools 0.8 documentation</title>
+  <title>coremltools.models.pipeline &mdash; coremltools 2.0b1 documentation</title>
   
 
   
@@ -35,10 +35,12 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 0.8 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 2.0b1 documentation" href="../index.html"/>
         <link rel="up" title="Models" href="../coremltools.models.html"/>
         <link rel="next" title="coremltools.models.tree_ensemble" href="coremltools.models.tree_ensemble.html"/>
-        <link rel="prev" title="coremltools.models.neural_network" href="coremltools.models.neural_network.html"/> 
+        <link rel="prev" title="coremltools.models.MLModel" href="coremltools.models.MLModel.html"/>
+    <link href="../static/style.css" rel="stylesheet" type="text/css">
+
 
   
   <script src="../static/js/modernizr.min.js"></script>
@@ -67,7 +69,7 @@
             
             
               <div class="version">
-                0.8
+                2.0b1
               </div>
             
           
@@ -95,9 +97,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.html">coremltools.models.neural_network</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.models.pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
@@ -199,7 +203,7 @@ may be used directly for a sequence of feature transformer objects.</p>
 <dl class="method">
 <dt id="coremltools.models.pipeline.Pipeline.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a pipleine of models to be executed sequentially.</p>
+<dd><p>Create a pipeline of models to be executed sequentially.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -256,7 +260,7 @@ a discrete categorical output feature as its ‘predicted feature’.</p>
 <dl class="method">
 <dt id="coremltools.models.pipeline.PipelineClassifier.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>input_features</em>, <em>class_labels</em>, <em>output_features=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a set of pipleine models given a set of model specs.  The last 
+<dd><p>Create a set of pipeline models given a set of model specs.  The last 
 model in this list must be a classifier model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -271,7 +275,7 @@ tuples.  The datatypes entry can be any of the data types defined in the
 <p><strong>class_labels: [list]</strong></p>
 <blockquote>
 <div><p>A list of string or integer class labels to use in making predictions. 
-This list must match the class labels in the model outputing the categorical
+This list must match the class labels in the model outputting the categorical
 predictedFeatureName</p>
 </div></blockquote>
 <p><strong>output_features: [list]</strong></p>
@@ -321,7 +325,7 @@ a real valued output feature as its ‘predicted feature’.</p>
 <dl class="method">
 <dt id="coremltools.models.pipeline.PipelineRegressor.__init__">
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>input_features</em>, <em>output_features</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a set of pipleine models given a set of model specs.  The final 
+<dd><p>Create a set of pipeline models given a set of model specs.  The final 
 output model must be a regression model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -384,7 +388,7 @@ of the pipeline, or match the outputs of a previous model.</p>
         <a href="coremltools.models.tree_ensemble.html" class="btn btn-neutral float-right" title="coremltools.models.tree_ensemble" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="coremltools.models.neural_network.html" class="btn btn-neutral" title="coremltools.models.neural_network" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="coremltools.models.MLModel.html" class="btn btn-neutral" title="coremltools.models.MLModel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -393,7 +397,7 @@ of the pipeline, or match the outputs of a previous model.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc..
+        &copy; Copyright 2018, Apple Inc..
 
     </p>
   </div>
@@ -415,7 +419,7 @@ of the pipeline, or match the outputs of a previous model.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.8',
+            VERSION:'2.0b1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -425,7 +429,7 @@ of the pipeline, or match the outputs of a previous model.</p>
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

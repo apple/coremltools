@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Feature Engineering &mdash; mlmodel 1.0.0 documentation</title>
+  <title>Feature Engineering &mdash; mlmodel 3.0.0 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 1.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Data Structures &amp; Feature Types" href="DataStructuresAndFeatureTypes.html"/>
+    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
+        <link rel="next" title="Custom Models" href="CustomModel.html"/>
         <link rel="prev" title="Support Vector Machines" href="SVM.html"/> 
 
   
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.0.0
+                3.0.0
               </div>
             
           
@@ -93,6 +93,9 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Model.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TextClassifier.html">Text Classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WordTagger.html">Word Tagger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VisionFeaturePrint.html">Vision Feature Print</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
@@ -105,8 +108,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#featurevectorizer">FeatureVectorizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dictvectorizer">DictVectorizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#arrayfeatureextractor">ArrayFeatureExtractor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nonmaximumsuppression">NonMaximumSuppression</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
 </ul>
 
@@ -358,11 +363,11 @@ parameter.</p>
 <p>Uses an index mapping to convert a dictionary to an array.</p>
 <p>The output array will be equal in length to the index mapping vector parameter.
 All keys in the input dictionary must be present in the index mapping vector.</p>
-<p>For each item in the input dictionary, insert its value in the ouput array.
+<p>For each item in the input dictionary, insert its value in the output array.
 The position of the insertion is determined by the position of the item’s key
 in the index mapping. Any keys not present in the input dictionary, will be
 zero in the output array.</p>
-<p>For example: if the <code class="docutils literal"><span class="pre">stringToIndex</span></code> paramter is set to <code class="docutils literal"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;c&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;z&quot;]</span></code>,
+<p>For example: if the <code class="docutils literal"><span class="pre">stringToIndex</span></code> parameter is set to <code class="docutils literal"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;c&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;z&quot;]</span></code>,
 then an input of <code class="docutils literal"><span class="pre">{&quot;a&quot;:</span> <span class="pre">4,</span> <span class="pre">&quot;c&quot;:</span> <span class="pre">8}</span></code> will produce an output of <code class="docutils literal"><span class="pre">[4,</span> <span class="pre">8,</span> <span class="pre">0,</span> <span class="pre">0]</span></code>.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DictVectorizer</span> <span class="p">{</span>
     <span class="k">oneof</span> <span class="n">Map</span> <span class="p">{</span>
@@ -385,6 +390,52 @@ Indexes are zero-based.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="nonmaximumsuppression">
+<h2>NonMaximumSuppression<a class="headerlink" href="#nonmaximumsuppression" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto"><div class="highlight"><pre><span></span>message NonMaximumSuppression {
+    // Suppression methods:
+    message PickTop {
+        bool perClass = 1;
+    }
+
+    oneof SuppressionMethod {
+        PickTop pickTop = 1;
+    }
+
+    oneof ClassLabels {
+        StringVector stringClassLabels = 100;
+        Int64Vector int64ClassLabels = 101;
+    }
+
+    double iouThreshold = 110;
+
+           it means there is a 60% (0.2 + 0.4) confidence that an object is
+           present)
+    double confidenceThreshold = 111;
+
+    string confidenceInputFeatureName = 200;
+
+    string coordinatesInputFeatureName = 201;
+
+    string iouThresholdInputFeatureName = 202;
+
+    string confidenceThresholdInputFeatureName = 203;
+
+    string confidenceOutputFeatureName = 210;
+
+    string coordinatesOutputFeatureName = 211;
+}
+</pre></div>
+</div>
+<div class="section" id="nonmaximumsuppression-picktop">
+<h3>NonMaximumSuppression.PickTop<a class="headerlink" href="#nonmaximumsuppression-picktop" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PickTop</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="na">perClass</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
 </div>
 
 
@@ -397,7 +448,7 @@ Indexes are zero-based.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="DataStructuresAndFeatureTypes.html" class="btn btn-neutral float-right" title="Data Structures &amp; Feature Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="CustomModel.html" class="btn btn-neutral float-right" title="Custom Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="SVM.html" class="btn btn-neutral" title="Support Vector Machines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -431,7 +482,7 @@ Indexes are zero-based.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'3.0.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

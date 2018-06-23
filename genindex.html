@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; coremltools 0.8 documentation</title>
+  <title>Index &mdash; coremltools 2.0b1 documentation</title>
   
 
   
@@ -36,7 +36,9 @@
         <link rel="index" title="Index"
               href="#"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="coremltools 0.8 documentation" href="index.html"/> 
+    <link rel="top" title="coremltools 2.0b1 documentation" href="index.html"/>
+    <link href="static/style.css" rel="stylesheet" type="text/css">
+
 
   
   <script src="static/js/modernizr.min.js"></script>
@@ -65,7 +67,7 @@
             
             
               <div class="version">
-                0.8
+                2.0b1
               </div>
             
           
@@ -164,13 +166,17 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
  
 </div>
@@ -180,7 +186,19 @@
       <li><a href="generated/coremltools.models.MLModel.html#coremltools.models.MLModel.__init__">__init__() (coremltools.models.MLModel method)</a>, <a href="generated/coremltools.models.MLModel.html#coremltools.models.MLModel.__init__">[1]</a>
 
       <ul>
-        <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.__init__">(coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+        <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.__init__">(coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
+</li>
+        <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize.__init__">(coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize method)</a>
+</li>
+        <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange.__init__">(coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange method)</a>
+</li>
+        <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape.__init__">(coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape method)</a>
+</li>
+        <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.__init__">(coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange method)</a>
+</li>
+        <li><a href="generated/coremltools.models.neural_network.quantization_utils.html#coremltools.models.neural_network.quantization_utils.ModelMetrics.__init__">(coremltools.models.neural_network.quantization_utils.ModelMetrics method)</a>
+</li>
+        <li><a href="generated/coremltools.models.neural_network.quantization_utils.html#coremltools.models.neural_network.quantization_utils.OutputMetric.__init__">(coremltools.models.neural_network.quantization_utils.OutputMetric method)</a>
 </li>
         <li><a href="generated/coremltools.models.pipeline.html#coremltools.models.pipeline.Pipeline.__init__">(coremltools.models.pipeline.Pipeline method)</a>
 </li>
@@ -201,40 +219,46 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_activation">add_activation() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_activation">add_activation() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_batchnorm">add_batchnorm() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_batchnorm">add_batchnorm() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_bias">add_bias() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bias">add_bias() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_bidirlstm">add_bidirlstm() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm">add_bidirlstm() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
       <li><a href="generated/coremltools.models.tree_ensemble.html#coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node">add_branch_node() (coremltools.models.tree_ensemble.TreeEnsembleBase method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_convolution">add_convolution() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution">add_convolution() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_crop">add_crop() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop">add_crop() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_custom">add_custom() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_custom">add_custom() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_elementwise">add_elementwise() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_elementwise">add_elementwise() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_embedding">add_embedding() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_embedding">add_embedding() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_flatten">add_flatten() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_image_sizes">add_enumerated_image_sizes() (in module coremltools.models.neural_network.flexible_shape_utils)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_gru">add_gru() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_multiarray_shapes">add_enumerated_multiarray_shapes() (in module coremltools.models.neural_network.flexible_shape_utils)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_inner_product">add_inner_product() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten">add_flatten() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_l2_normalize">add_l2_normalize() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru">add_gru() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product">add_inner_product() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_l2_normalize">add_l2_normalize() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
       <li><a href="generated/coremltools.models.tree_ensemble.html#coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node">add_leaf_node() (coremltools.models.tree_ensemble.TreeEnsembleBase method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_load_constant">add_load_constant() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_load_constant">add_load_constant() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_lrn">add_lrn() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn">add_lrn() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="generated/coremltools.models.pipeline.html#coremltools.models.pipeline.Pipeline.add_model">add_model() (coremltools.models.pipeline.Pipeline method)</a>
 
       <ul>
@@ -243,41 +267,39 @@
         <li><a href="generated/coremltools.models.pipeline.html#coremltools.models.pipeline.PipelineRegressor.add_model">(coremltools.models.pipeline.PipelineRegressor method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_mvn">add_mvn() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_mvn">add_mvn() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_optionals">add_optionals() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_optionals">add_optionals() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_padding">add_padding() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_padding">add_padding() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_permute">add_permute() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_permute">add_permute() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_pooling">add_pooling() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling">add_pooling() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_reduce">add_reduce() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reduce">add_reduce() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_reorganize_data">add_reorganize_data() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reorganize_data">add_reorganize_data() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_reshape">add_reshape() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reshape">add_reshape() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_scale">add_scale() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_scale">add_scale() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_sequence_repeat">add_sequence_repeat() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_sequence_repeat">add_sequence_repeat() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_simple_rnn">add_simple_rnn() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_simple_rnn">add_simple_rnn() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_slice">add_slice() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_slice">add_slice() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_softmax">add_softmax() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_softmax">add_softmax() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_split">add_split() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_split">add_split() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_unary">add_unary() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unary">add_unary() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_unilstm">add_unilstm() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm">add_unilstm() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.add_upsample">add_upsample() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample">add_upsample() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -285,6 +307,10 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes">can_allow_multiple_input_shapes() (in module coremltools.models.neural_network.flexible_shape_utils)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.quantization_utils.html#coremltools.models.neural_network.quantization_utils.compare_models">compare_models() (in module coremltools.models.neural_network.quantization_utils)</a>
+</li>
       <li><a href="generated/coremltools.converters.caffe.convert.html#coremltools.converters.caffe.convert">convert() (in module coremltools.converters.caffe)</a>
 
       <ul>
@@ -297,13 +323,19 @@
         <li><a href="generated/coremltools.converters.xgboost.convert.html#coremltools.converters.xgboost.convert">(in module coremltools.converters.xgboost)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coremltools.utils.html#coremltools.models.utils.convert_neural_network_weights_to_fp16">convert_neural_network_weights_to_fp16() (in module coremltools.models.utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coremltools.converters.html#module-coremltools.converters">coremltools.converters (module)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#module-coremltools.models.neural_network">coremltools.models.neural_network (module)</a>
+      <li><a href="coremltools.models.html#module-coremltools.models">coremltools.models (module)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#module-coremltools.models.neural_network.builder">coremltools.models.neural_network.builder (module)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#module-coremltools.models.neural_network.flexible_shape_utils">coremltools.models.neural_network.flexible_shape_utils (module)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.quantization_utils.html#module-coremltools.models.neural_network.quantization_utils">coremltools.models.neural_network.quantization_utils (module)</a>
 </li>
       <li><a href="generated/coremltools.models.pipeline.html#module-coremltools.models.pipeline">coremltools.models.pipeline (module)</a>
 </li>
@@ -333,6 +365,8 @@
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges">get_allowed_shape_ranges() (in module coremltools.models.neural_network.flexible_shape_utils)</a>
+</li>
       <li><a href="coremltools.utils.html#coremltools.models.utils.get_custom_layer_names">get_custom_layer_names() (in module coremltools.models.utils)</a>
 </li>
   </ul></td>
@@ -348,6 +382,14 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="coremltools.utils.html#coremltools.models.utils.has_custom_layer">has_custom_layer() (in module coremltools.models.utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.isFlexible">isFlexible() (coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -369,13 +411,33 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="generated/coremltools.models.MLModel.html#coremltools.models.MLModel">MLModel (class in coremltools.models)</a>
 </li>
+      <li><a href="generated/coremltools.models.neural_network.quantization_utils.html#coremltools.models.neural_network.quantization_utils.ModelMetrics">ModelMetrics (class in coremltools.models.neural_network.quantization_utils)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder">NeuralNetworkBuilder (class in coremltools.models.neural_network)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder">NeuralNetworkBuilder (class in coremltools.models.neural_network.builder)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize">NeuralNetworkImageSize (class in coremltools.models.neural_network.flexible_shape_utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange">NeuralNetworkImageSizeRange (class in coremltools.models.neural_network.flexible_shape_utils)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape">NeuralNetworkMultiArrayShape (class in coremltools.models.neural_network.flexible_shape_utils)</a>
+</li>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange">NeuralNetworkMultiArrayShapeRange (class in coremltools.models.neural_network.flexible_shape_utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/coremltools.models.neural_network.quantization_utils.html#coremltools.models.neural_network.quantization_utils.OutputMetric">OutputMetric (class in coremltools.models.neural_network.quantization_utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -392,6 +454,14 @@
       <li><a href="generated/coremltools.models.pipeline.html#coremltools.models.pipeline.PipelineRegressor">PipelineRegressor (class in coremltools.models.pipeline)</a>
 </li>
       <li><a href="generated/coremltools.models.MLModel.html#coremltools.models.MLModel.predict">predict() (coremltools.models.MLModel method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/coremltools.models.neural_network.quantization_utils.html#coremltools.models.neural_network.quantization_utils.quantize_weights">quantize_weights() (in module coremltools.models.neural_network.quantization_utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -415,19 +485,19 @@
 </li>
       <li><a href="coremltools.utils.html#coremltools.models.utils.save_spec">save_spec() (in module coremltools.models.utils)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.set_class_labels">set_class_labels() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels">set_class_labels() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
       <li><a href="generated/coremltools.models.tree_ensemble.html#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value">set_default_prediction_value() (coremltools.models.tree_ensemble.TreeEnsembleBase method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.set_input">set_input() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input">set_input() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.set_output">set_output() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output">set_output() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
       <li><a href="generated/coremltools.models.tree_ensemble.html#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform">set_post_evaluation_transform() (coremltools.models.tree_ensemble.TreeEnsembleBase method)</a>
 </li>
-      <li><a href="generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.set_pre_processing_parameters">set_pre_processing_parameters() (coremltools.models.neural_network.NeuralNetworkBuilder method)</a>
+      <li><a href="generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters">set_pre_processing_parameters() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -446,10 +516,22 @@
   </ul></td>
 </tr></table>
 
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.update_image_size_range">update_image_size_range() (in module coremltools.models.neural_network.flexible_shape_utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated/coremltools.models.neural_network.flexible_shape_utils.html#coremltools.models.neural_network.flexible_shape_utils.update_multiarray_shape_range">update_multiarray_shape_range() (in module coremltools.models.neural_network.flexible_shape_utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="coremltools.utils.html#coremltools.models.utils.visualize_spec">visualize_spec() (in module coremltools.models.utils)</a>
+      <li><a href="generated/coremltools.models.MLModel.html#coremltools.models.MLModel.visualize_spec">visualize_spec() (coremltools.models.MLModel method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -468,7 +550,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc..
+        &copy; Copyright 2018, Apple Inc..
 
     </p>
   </div>
@@ -490,7 +572,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.8',
+            VERSION:'2.0b1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -500,7 +582,7 @@
       <script type="text/javascript" src="static/jquery.js"></script>
       <script type="text/javascript" src="static/underscore.js"></script>
       <script type="text/javascript" src="static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

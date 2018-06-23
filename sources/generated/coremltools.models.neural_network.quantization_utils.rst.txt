@@ -1,0 +1,33 @@
+coremltools\.models\.neural\_network\.quantization\_utils
+=========================================================
+
+.. automodule:: coremltools.models.neural_network.quantization_utils
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      compare_models
+      quantize_spec_weights
+      quantize_weights
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      ModelMetrics
+      NoiseMetrics
+      OutputMetric
+      TopKMetrics
+   
+   
+
+   
+   
+   

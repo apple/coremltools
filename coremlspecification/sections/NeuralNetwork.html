@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Neural Networks &mdash; mlmodel 1.0.0 documentation</title>
+  <title>Neural Networks &mdash; mlmodel 3.0.0 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 1.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Tree Ensembles" href="TreeEnsembles.html"/>
+    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
+        <link rel="next" title="Text Classifier" href="TextClassifier.html"/>
         <link rel="prev" title="Models" href="Model.html"/> 
 
   
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.0.0
+                3.0.0
               </div>
             
           
@@ -116,6 +116,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#validpadding">ValidPadding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#samepadding">SamePadding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#weightparams">WeightParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#quantizationparams">QuantizationParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linearquantizationparams">LinearQuantizationParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#lookuptablequantizationparams">LookUpTableQuantizationParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#convolutionlayerparams">ConvolutionLayerParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#innerproductlayerparams">InnerProductLayerParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#embeddinglayerparams">EmbeddingLayerParams</a></li>
@@ -158,10 +161,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#neuralnetworkregressor">NeuralNetworkRegressor</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="TextClassifier.html">Text Classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WordTagger.html">Word Tagger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VisionFeaturePrint.html">Vision Feature Print</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
 </ul>
 
@@ -760,7 +767,40 @@ and can represent 1-, 2-, 3-, or 4-dimensional data.</p>
 
     <span class="kt">bytes</span> <span class="na">rawValue</span>  <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
 
+    <span class="n">QuantizationParams</span> <span class="na">quantization</span> <span class="o">=</span> <span class="mi">40</span><span class="p">;</span>
+
 <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="quantizationparams">
+<h2>QuantizationParams<a class="headerlink" href="#quantizationparams" title="Permalink to this headline">¶</a></h2>
+<p>Quantization parameters.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">QuantizationParams</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">numberOfBits</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">oneof</span> <span class="n">QuantizationType</span> <span class="p">{</span>
+        <span class="n">LinearQuantizationParams</span> <span class="na">linearQuantization</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
+        <span class="n">LookUpTableQuantizationParams</span> <span class="na">lookupTableQuantization</span> <span class="o">=</span> <span class="mi">102</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="linearquantizationparams">
+<h2>LinearQuantizationParams<a class="headerlink" href="#linearquantizationparams" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearQuantizationParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">scale</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">bias</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="lookuptablequantizationparams">
+<h2>LookUpTableQuantizationParams<a class="headerlink" href="#lookuptablequantizationparams" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto"><div class="highlight"><pre><span></span>message LookUpTableQuantizationParams {
+    (2^numberOfBits) Elements.
+    repeated float floatValue = 1;
+}
 </pre></div>
 </div>
 </div>
@@ -1007,7 +1047,8 @@ Only symmetric padding is supported with this option.</p>
 <code class="docutils literal"><span class="pre">(top=2,</span> <span class="pre">left=2,</span> <span class="pre">bottom=0,</span> <span class="pre">right=0)</span></code>
 with each of the supported types:</p>
 <ul>
-<li><p class="first"><code class="docutils literal"><span class="pre">PaddingConstant</span></code> (<code class="docutils literal"><span class="pre">value</span> <span class="pre">=</span> <span class="pre">0</span></code>):</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">PaddingConstant</span></code> (<code class="docutils literal"><span class="pre">value</span> <span class="pre">=</span> <span class="pre">0</span></code>):
+.. code:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>  <span class="p">:</span>  <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>  <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>
               <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>  <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">0</span>
               <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
@@ -1016,7 +1057,8 @@ with each of the supported types:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">PaddingReflection</span></code>:</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">PaddingReflection</span></code>:
+.. code:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>  <span class="p">:</span>  <span class="mi">11</span>  <span class="mi">10</span>  <span class="mi">9</span>  <span class="mi">10</span>  <span class="mi">11</span>  <span class="mi">12</span>
               <span class="mi">7</span>   <span class="mi">6</span>   <span class="mi">5</span>  <span class="mi">6</span>   <span class="mi">7</span>   <span class="mi">8</span>
               <span class="mi">3</span>   <span class="mi">2</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
@@ -1025,7 +1067,8 @@ with each of the supported types:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first"><code class="docutils literal"><span class="pre">PaddingReplication</span></code>:</p>
+<li><p class="first"><code class="docutils literal"><span class="pre">PaddingReplication</span></code>:
+.. code:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]</span>  <span class="p">:</span>  <span class="mi">1</span>   <span class="mi">1</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
               <span class="mi">1</span>   <span class="mi">1</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
               <span class="mi">1</span>   <span class="mi">1</span>   <span class="mi">1</span>  <span class="mi">2</span>   <span class="mi">3</span>   <span class="mi">4</span>
@@ -1480,11 +1523,9 @@ the output is a reverse of the input: <code class="docutils literal"><span class
 <li>If <code class="docutils literal"><span class="pre">axis</span></code> is not set, or is set to <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>,
 the output is the same as the input.</li>
 </ul>
-<div class="highlight-proto"><div class="highlight"><pre><span></span>message PermuteLayerParams {
-      The order in which to permute the dimensions.
-      Must have length 4 and a permutation of ``[0, 1, 2, 3]``.
-    repeated uint64 axis = 1;
-}
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PermuteLayerParams</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </div>
@@ -1506,12 +1547,11 @@ blockSize must divide H and W.
 Data is moved from the spatial dimensions to the channel dimension. Input is spatially divided into
 non-overlapping blocks of size blockSize X blockSize and data from each block is moved into the
 channel dimension.</dd>
+<dt>mode == DEPTH_TO_SPACE</dt>
+<dd><code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code> : <code class="docutils literal"><span class="pre">[C/(blockSize</span> <span class="pre">*</span> <span class="pre">blockSize),</span> <span class="pre">H</span> <span class="pre">*</span> <span class="pre">blockSize,</span> <span class="pre">W</span> <span class="pre">*</span> <span class="pre">blockSize]</span></code>.
+Square of blockSize must divide C.
+Reverse of SPACE_TO_DEPTH. Data is moved from the channel dimension to the spatial dimensions.</dd>
 </dl>
-<p>mode == DEPTH_TO_SPACE
-<code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code> : <code class="docutils literal"><span class="pre">[C/(blockSize</span> <span class="pre">*</span> <span class="pre">blockSize),</span> <span class="pre">H</span> <span class="pre">*</span> <span class="pre">blockSize,</span> <span class="pre">W</span> <span class="pre">*</span> <span class="pre">blockSize]</span></code>.</p>
-<blockquote>
-<div>Square of blockSize must divide C.
-Reverse of SPACE_TO_DEPTH. Data is moved from the channel dimension to the spatial dimenions.</div></blockquote>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ReorganizeDataLayerParams</span> <span class="p">{</span>
 
     <span class="kd">enum</span> <span class="n">ReorganizationType</span> <span class="p">{</span>
@@ -1554,6 +1594,7 @@ and so on, where N is the length of the dimension to be sliced.</p>
         <span class="na">WIDTH_AXIS</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
     <span class="p">}</span>
     <span class="n">SliceAxis</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -2333,7 +2374,7 @@ where <code class="docutils literal"><span class="pre">x_i</span></code> are vec
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="TreeEnsembles.html" class="btn btn-neutral float-right" title="Tree Ensembles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="TextClassifier.html" class="btn btn-neutral float-right" title="Text Classifier" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="Model.html" class="btn btn-neutral" title="Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -2367,7 +2408,7 @@ where <code class="docutils literal"><span class="pre">x_i</span></code> are vec
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'3.0.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

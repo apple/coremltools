@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Data Structures &amp; Feature Types &mdash; mlmodel 1.0.0 documentation</title>
+  <title>Data Structures &amp; Feature Types &mdash; mlmodel 3.0.0 documentation</title>
   
 
   
@@ -35,8 +35,8 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 1.0.0 documentation" href="../index.html"/>
-        <link rel="prev" title="Feature Engineering" href="FeatureEngineering.html"/> 
+    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
+        <link rel="prev" title="Custom Models" href="CustomModel.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                1.0.0
+                3.0.0
               </div>
             
           
@@ -92,10 +92,14 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Model.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TextClassifier.html">Text Classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WordTagger.html">Word Tagger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VisionFeaturePrint.html">Vision Feature Print</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Data Structures &amp; Feature Types</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#stringtoint64map">StringToInt64Map</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#int64tostringmap">Int64ToStringMap</a></li>
@@ -107,9 +111,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#int64featuretype">Int64FeatureType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#doublefeaturetype">DoubleFeatureType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#stringfeaturetype">StringFeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sizerange">SizeRange</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#imagefeaturetype">ImageFeatureType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#arrayfeaturetype">ArrayFeatureType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dictionaryfeaturetype">DictionaryFeatureType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sequencefeaturetype">SequenceFeatureType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#featuretype">FeatureType</a></li>
 </ul>
 </li>
@@ -187,50 +193,6 @@ to a 64-bit integer.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<div class="section" id="stringtoint64map-mapentry">
-<h3>StringToInt64Map.MapEntry<a class="headerlink" href="#stringtoint64map-mapentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
-<span class="c1">//</span>
-<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
-<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
-
-<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
-<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
-
-<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
-
-<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
-
-<span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
 </div>
 <div class="section" id="int64tostringmap">
 <h2>Int64ToStringMap<a class="headerlink" href="#int64tostringmap" title="Permalink to this headline">¶</a></h2>
@@ -240,50 +202,6 @@ to a string.</p>
     <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-</div>
-<div class="section" id="int64tostringmap-mapentry">
-<h3>Int64ToStringMap.MapEntry<a class="headerlink" href="#int64tostringmap-mapentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
-<span class="c1">//</span>
-<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
-<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
-
-<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
-<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
-
-<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
-
-<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
-
-<span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
 </div>
 </div>
 <div class="section" id="stringtodoublemap">
@@ -295,50 +213,6 @@ to a double-precision floating point number.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<div class="section" id="stringtodoublemap-mapentry">
-<h3>StringToDoubleMap.MapEntry<a class="headerlink" href="#stringtodoublemap-mapentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
-<span class="c1">//</span>
-<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
-<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
-
-<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
-<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
-
-<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
-
-<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
-
-<span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
 </div>
 <div class="section" id="int64todoublemap">
 <h2>Int64ToDoubleMap<a class="headerlink" href="#int64todoublemap" title="Permalink to this headline">¶</a></h2>
@@ -348,50 +222,6 @@ to a double-precision floating point number.</p>
     <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-</div>
-<div class="section" id="int64todoublemap-mapentry">
-<h3>Int64ToDoubleMap.MapEntry<a class="headerlink" href="#int64todoublemap-mapentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
-<span class="c1">//</span>
-<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
-<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
-
-<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
-<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
-
-<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
-
-<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
-
-<span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
 </div>
 </div>
 <div class="section" id="stringvector">
@@ -442,6 +272,15 @@ to a double-precision floating point number.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="sizerange">
+<h2>SizeRange<a class="headerlink" href="#sizerange" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SizeRange</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">lowerBound</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">upperBound</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// negative value means unbound otherwise upperbound is included in range</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="imagefeaturetype">
 <h2>ImageFeatureType<a class="headerlink" href="#imagefeaturetype" title="Permalink to this headline">¶</a></h2>
 <p>The image feature type.</p>
@@ -449,33 +288,190 @@ to a double-precision floating point number.</p>
     <span class="c1">// Assumes raw (decompressed) format</span>
     <span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
         <span class="na">INVALID_COLOR_SPACE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bit pixel: 0=black, 255=white</span>
-        <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bit pixel: RGBA with A channel ignored</span>
-        <span class="na">BGR</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>       <span class="c1">// 32 bit pixel: BGRA with A channel ignored</span>
+        <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bits per pixel</span>
+        <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: RGBA with A channel ignored</span>
+        <span class="na">BGR</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: BGRA with A channel ignored</span>
     <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">ImageSize</span> <span class="p">{</span>
+        <span class="kt">uint64</span> <span class="na">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="kt">uint64</span> <span class="na">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">EnumeratedImageSizes</span> <span class="p">{</span>
+        <span class="k">repeated</span> <span class="n">ImageSize</span> <span class="na">sizes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">ImageSizeRange</span> <span class="p">{</span>
+        <span class="n">SizeRange</span> <span class="na">widthRange</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">SizeRange</span> <span class="na">heightRange</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// The required or default image size is width x height</span>
+    <span class="c1">//</span>
+    <span class="c1">// If specificationVersion &lt;= 2 or SizeFlexibility is empty,</span>
+    <span class="c1">// width x height is the required fixed image size</span>
+    <span class="c1">//</span>
+    <span class="c1">// If SizeFlexibility is present, width x height indicate a &quot;default&quot;</span>
+    <span class="c1">// image size which must be consistent with the flexibilty specified</span>
 
     <span class="kt">int64</span> <span class="na">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">int64</span> <span class="na">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="c1">// For specification version &gt;= 3 you can specify image size flexibility.</span>
+
+    <span class="k">oneof</span> <span class="n">SizeFlexibility</span> <span class="p">{</span>
+
+        <span class="c1">// Use enumeratedSizes for a set of distinct fixed sizes</span>
+        <span class="c1">// e.g. portrait or landscape: [80 x 100, 100 x 8]</span>
+        <span class="c1">//</span>
+        <span class="c1">// If the width x height fields above are specified then they must be</span>
+        <span class="c1">// one of the sizes listed.</span>
+        <span class="c1">//</span>
+        <span class="c1">// If width and height are not specified above then the default width</span>
+        <span class="c1">// and height will be enumeratedSizes[0]</span>
+        <span class="c1">//</span>
+        <span class="c1">// Must be non-empty</span>
+
+        <span class="n">EnumeratedImageSizes</span> <span class="na">enumeratedSizes</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+
+        <span class="c1">// Use imageSizeRange to allow for ranges of values</span>
+        <span class="c1">// e.g. any image greater than 10 x 20: [10..&lt;max] x [20..&lt;max]</span>
+        <span class="c1">//</span>
+        <span class="c1">// If width and height are specified above they must fall in the range</span>
+        <span class="c1">// specified in imageSizeRange. They will be treated as the default size.</span>
+        <span class="c1">//</span>
+        <span class="c1">// If width and height are not specified above then the default width</span>
+        <span class="c1">// and height will be imageSizeRange.widthRange.lowerBound x imageSizeRange.heightRange.lowerBound</span>
+
+        <span class="n">ImageSizeRange</span> <span class="na">imageSizeRange</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+    <span class="p">}</span>
+
     <span class="n">ColorSpace</span> <span class="na">colorSpace</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
+</div>
+<div class="section" id="imagefeaturetype-imagesize">
+<h3>ImageFeatureType.ImageSize<a class="headerlink" href="#imagefeaturetype-imagesize" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageSize</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imagefeaturetype-enumeratedimagesizes">
+<h3>ImageFeatureType.EnumeratedImageSizes<a class="headerlink" href="#imagefeaturetype-enumeratedimagesizes" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EnumeratedImageSizes</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">ImageSize</span> <span class="na">sizes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imagefeaturetype-imagesizerange">
+<h3>ImageFeatureType.ImageSizeRange<a class="headerlink" href="#imagefeaturetype-imagesizerange" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageSizeRange</span> <span class="p">{</span>
+    <span class="n">SizeRange</span> <span class="na">widthRange</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">SizeRange</span> <span class="na">heightRange</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="arrayfeaturetype">
 <h2>ArrayFeatureType<a class="headerlink" href="#arrayfeaturetype" title="Permalink to this headline">¶</a></h2>
 <p>The array feature type.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ArrayFeatureType</span> <span class="p">{</span>
-    <span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
+
+<span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
         <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
         <span class="na">FLOAT32</span> <span class="o">=</span> <span class="mi">65568</span><span class="p">;</span> <span class="c1">// 0x10000 | 32</span>
         <span class="na">DOUBLE</span> <span class="o">=</span> <span class="mi">65600</span><span class="p">;</span>  <span class="c1">// 0x10000 | 64</span>
         <span class="na">INT32</span> <span class="o">=</span> <span class="mi">131104</span><span class="p">;</span>  <span class="c1">// 0x20000 | 32</span>
     <span class="p">}</span>
 
+    <span class="c1">// The required or default shape</span>
+    <span class="c1">//</span>
+    <span class="c1">// If specificationVersion &lt;= 2 or ShapeFlexibility is empty,</span>
+    <span class="c1">// shape is the required fixed shape</span>
+    <span class="c1">//</span>
+    <span class="c1">// If ShapeFlexibility is present, shape indicate a &quot;default&quot;</span>
+    <span class="c1">// shape which must be consistent with the flexibilty specified</span>
+    <span class="c1">//</span>
+    <span class="c1">// For neural networks, shape must be of length 1 or 3, representing input shape [C] or [C,H,W], respectively.</span>
     <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
     <span class="n">ArrayDataType</span> <span class="na">dataType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kd">message</span> <span class="nc">Shape</span> <span class="p">{</span>
+        <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">EnumeratedShapes</span> <span class="p">{</span>
+        <span class="k">repeated</span> <span class="n">Shape</span> <span class="na">shapes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">ShapeRange</span> <span class="p">{</span>
+        <span class="c1">// sizeRanges.size() must be length 1 or 3</span>
+        <span class="c1">// sizeRanges[d] specifies the allowed range for dimension d</span>
+        <span class="k">repeated</span> <span class="n">SizeRange</span> <span class="na">sizeRanges</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// For specification version &gt;= 3 you can specify image size flexibility.</span>
+
+    <span class="k">oneof</span> <span class="n">ShapeFlexibility</span> <span class="p">{</span>
+
+        <span class="c1">// Use enumeratedShapes for a set of distinct fixed shapes</span>
+        <span class="c1">//</span>
+        <span class="c1">// If the shape field is specified then it must be</span>
+        <span class="c1">// one of the enumerated shapes.</span>
+        <span class="c1">// If shape is not specifed, the &quot;default&quot; shape will be considered</span>
+        <span class="c1">// enumeratedShapes[0]</span>
+        <span class="c1">//</span>
+        <span class="c1">// Must be non-empty</span>
+
+        <span class="n">EnumeratedShapes</span> <span class="na">enumeratedShapes</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+
+        <span class="c1">// Use shapeRange to allow the size of each dimension vary within</span>
+        <span class="c1">// indpendently specified ranges</span>
+        <span class="c1">//</span>
+        <span class="c1">// If you specify shape above it must fall in the range</span>
+        <span class="c1">// specified in shapeRanges. It will be treated as the default shape.</span>
+        <span class="c1">//</span>
+        <span class="c1">// If you don&#39;t specify shape above then the default shape will</span>
+        <span class="c1">// have shape[d] = shapeRange.sizeRanges[d].lowerBound</span>
+
+        <span class="n">ShapeRange</span> <span class="na">shapeRange</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+
+    <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
+</div>
+<div class="section" id="arrayfeaturetype-shape">
+<h3>ArrayFeatureType.Shape<a class="headerlink" href="#arrayfeaturetype-shape" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Shape</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="arrayfeaturetype-enumeratedshapes">
+<h3>ArrayFeatureType.EnumeratedShapes<a class="headerlink" href="#arrayfeaturetype-enumeratedshapes" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EnumeratedShapes</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">Shape</span> <span class="na">shapes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="arrayfeaturetype-shaperange">
+<h3>ArrayFeatureType.ShapeRange<a class="headerlink" href="#arrayfeaturetype-shaperange" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ShapeRange</span> <span class="p">{</span>
+    <span class="c1">// sizeRanges.size() must be length 1 or 3</span>
+    <span class="c1">// sizeRanges[d] specifies the allowed range for dimension d</span>
+    <span class="k">repeated</span> <span class="n">SizeRange</span> <span class="na">sizeRanges</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="dictionaryfeaturetype">
@@ -486,6 +482,22 @@ to a double-precision floating point number.</p>
         <span class="n">Int64FeatureType</span> <span class="na">int64KeyType</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
         <span class="n">StringFeatureType</span> <span class="na">stringKeyType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
     <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sequencefeaturetype">
+<h2>SequenceFeatureType<a class="headerlink" href="#sequencefeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The Sequence feature type.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SequenceFeatureType</span> <span class="p">{</span>
+
+    <span class="k">oneof</span> <span class="n">Type</span> <span class="p">{</span>
+        <span class="n">Int64FeatureType</span> <span class="na">int64Type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">StringFeatureType</span> <span class="na">stringType</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Range of allowed size/length/count of sequence</span>
+    <span class="n">SizeRange</span> <span class="na">sizeRange</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -501,6 +513,7 @@ to a double-precision floating point number.</p>
         <span class="n">ImageFeatureType</span> <span class="na">imageType</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
         <span class="n">ArrayFeatureType</span> <span class="na">multiArrayType</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
         <span class="n">DictionaryFeatureType</span> <span class="na">dictionaryType</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+        <span class="n">SequenceFeatureType</span> <span class="na">sequenceType</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
     <span class="p">}</span>
 
     <span class="kt">bool</span> <span class="na">isOptional</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
@@ -510,11 +523,11 @@ to a double-precision floating point number.</p>
 <div class="section" id="arrayfeaturetype-arraydatatype">
 <h3>ArrayFeatureType.ArrayDataType<a class="headerlink" href="#arrayfeaturetype-arraydatatype" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
-    <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="na">FLOAT32</span> <span class="o">=</span> <span class="mi">65568</span><span class="p">;</span> <span class="c1">// 0x10000 | 32</span>
-    <span class="na">DOUBLE</span> <span class="o">=</span> <span class="mi">65600</span><span class="p">;</span>  <span class="c1">// 0x10000 | 64</span>
-    <span class="na">INT32</span> <span class="o">=</span> <span class="mi">131104</span><span class="p">;</span>  <span class="c1">// 0x20000 | 32</span>
-<span class="p">}</span>
+        <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">FLOAT32</span> <span class="o">=</span> <span class="mi">65568</span><span class="p">;</span> <span class="c1">// 0x10000 | 32</span>
+        <span class="na">DOUBLE</span> <span class="o">=</span> <span class="mi">65600</span><span class="p">;</span>  <span class="c1">// 0x10000 | 64</span>
+        <span class="na">INT32</span> <span class="o">=</span> <span class="mi">131104</span><span class="p">;</span>  <span class="c1">// 0x20000 | 32</span>
+    <span class="p">}</span>
 </pre></div>
 </div>
 </div>
@@ -522,9 +535,9 @@ to a double-precision floating point number.</p>
 <h3>ImageFeatureType.ColorSpace<a class="headerlink" href="#imagefeaturetype-colorspace" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
     <span class="na">INVALID_COLOR_SPACE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bit pixel: 0=black, 255=white</span>
-    <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bit pixel: RGBA with A channel ignored</span>
-    <span class="na">BGR</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>       <span class="c1">// 32 bit pixel: BGRA with A channel ignored</span>
+    <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bits per pixel</span>
+    <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: RGBA with A channel ignored</span>
+    <span class="na">BGR</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: BGRA with A channel ignored</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -543,7 +556,7 @@ to a double-precision floating point number.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="FeatureEngineering.html" class="btn btn-neutral" title="Feature Engineering" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="CustomModel.html" class="btn btn-neutral" title="Custom Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -574,7 +587,7 @@ to a double-precision floating point number.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.0',
+            VERSION:'3.0.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

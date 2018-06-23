@@ -9,15 +9,6 @@ coremltools\.models\.MLModel
    .. automethod:: __init__
 
    
-   .. rubric:: Methods
-
-   .. autosummary::
-   
-      ~MLModel.__init__
-      ~MLModel.get_spec
-      ~MLModel.predict
-      ~MLModel.save
-   
    
 
    
