@@ -30,8 +30,13 @@
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include <google/protobuf/map.h>  // IWYU pragma: export
 #include <google/protobuf/map_field_lite.h>
+#include "VisionFeaturePrint.pb.h"  // IWYU pragma: export
+#include "TextClassifier.pb.h"  // IWYU pragma: export
+#include "WordTagger.pb.h"  // IWYU pragma: export
 #include "ArrayFeatureExtractor.pb.h"  // IWYU pragma: export
+#include "BayesianProbitRegressor.pb.h"  // IWYU pragma: export
 #include "CategoricalMapping.pb.h"  // IWYU pragma: export
+#include "CustomModel.pb.h"  // IWYU pragma: export
 #include "DictVectorizer.pb.h"  // IWYU pragma: export
 #include "FeatureTypes.pb.h"  // IWYU pragma: export
 #include "FeatureVectorizer.pb.h"  // IWYU pragma: export
@@ -43,6 +48,7 @@
 #include "Normalizer.pb.h"  // IWYU pragma: export
 #include "OneHotEncoder.pb.h"  // IWYU pragma: export
 #include "Scaler.pb.h"  // IWYU pragma: export
+#include "NonMaximumSuppression.pb.h"  // IWYU pragma: export
 #include "SVM.pb.h"  // IWYU pragma: export
 #include "TreeEnsemble.pb.h"  // IWYU pragma: export
 // @@protoc_insertion_point(includes)
@@ -99,12 +105,33 @@ extern ArrayFeatureExtractorDefaultTypeInternal _ArrayFeatureExtractor_default_i
 class ArrayFeatureType;
 class ArrayFeatureTypeDefaultTypeInternal;
 extern ArrayFeatureTypeDefaultTypeInternal _ArrayFeatureType_default_instance_;
+class ArrayFeatureType_EnumeratedShapes;
+class ArrayFeatureType_EnumeratedShapesDefaultTypeInternal;
+extern ArrayFeatureType_EnumeratedShapesDefaultTypeInternal _ArrayFeatureType_EnumeratedShapes_default_instance_;
+class ArrayFeatureType_Shape;
+class ArrayFeatureType_ShapeDefaultTypeInternal;
+extern ArrayFeatureType_ShapeDefaultTypeInternal _ArrayFeatureType_Shape_default_instance_;
+class ArrayFeatureType_ShapeRange;
+class ArrayFeatureType_ShapeRangeDefaultTypeInternal;
+extern ArrayFeatureType_ShapeRangeDefaultTypeInternal _ArrayFeatureType_ShapeRange_default_instance_;
 class AverageLayerParams;
 class AverageLayerParamsDefaultTypeInternal;
 extern AverageLayerParamsDefaultTypeInternal _AverageLayerParams_default_instance_;
 class BatchnormLayerParams;
 class BatchnormLayerParamsDefaultTypeInternal;
 extern BatchnormLayerParamsDefaultTypeInternal _BatchnormLayerParams_default_instance_;
+class BayesianProbitRegressor;
+class BayesianProbitRegressorDefaultTypeInternal;
+extern BayesianProbitRegressorDefaultTypeInternal _BayesianProbitRegressor_default_instance_;
+class BayesianProbitRegressor_FeatureValueWeight;
+class BayesianProbitRegressor_FeatureValueWeightDefaultTypeInternal;
+extern BayesianProbitRegressor_FeatureValueWeightDefaultTypeInternal _BayesianProbitRegressor_FeatureValueWeight_default_instance_;
+class BayesianProbitRegressor_FeatureWeight;
+class BayesianProbitRegressor_FeatureWeightDefaultTypeInternal;
+extern BayesianProbitRegressor_FeatureWeightDefaultTypeInternal _BayesianProbitRegressor_FeatureWeight_default_instance_;
+class BayesianProbitRegressor_Gaussian;
+class BayesianProbitRegressor_GaussianDefaultTypeInternal;
+extern BayesianProbitRegressor_GaussianDefaultTypeInternal _BayesianProbitRegressor_Gaussian_default_instance_;
 class BiDirectionalLSTMLayerParams;
 class BiDirectionalLSTMLayerParamsDefaultTypeInternal;
 extern BiDirectionalLSTMLayerParamsDefaultTypeInternal _BiDirectionalLSTMLayerParams_default_instance_;
@@ -141,6 +168,15 @@ extern CustomLayerParams_CustomLayerParamValueDefaultTypeInternal _CustomLayerPa
 class CustomLayerParams_ParametersEntry;
 class CustomLayerParams_ParametersEntryDefaultTypeInternal;
 extern CustomLayerParams_ParametersEntryDefaultTypeInternal _CustomLayerParams_ParametersEntry_default_instance_;
+class CustomModel;
+class CustomModelDefaultTypeInternal;
+extern CustomModelDefaultTypeInternal _CustomModel_default_instance_;
+class CustomModel_CustomModelParamValue;
+class CustomModel_CustomModelParamValueDefaultTypeInternal;
+extern CustomModel_CustomModelParamValueDefaultTypeInternal _CustomModel_CustomModelParamValue_default_instance_;
+class CustomModel_ParametersEntry;
+class CustomModel_ParametersEntryDefaultTypeInternal;
+extern CustomModel_ParametersEntryDefaultTypeInternal _CustomModel_ParametersEntry_default_instance_;
 class DenseSupportVectors;
 class DenseSupportVectorsDefaultTypeInternal;
 extern DenseSupportVectorsDefaultTypeInternal _DenseSupportVectors_default_instance_;
@@ -201,6 +237,15 @@ extern IdentityDefaultTypeInternal _Identity_default_instance_;
 class ImageFeatureType;
 class ImageFeatureTypeDefaultTypeInternal;
 extern ImageFeatureTypeDefaultTypeInternal _ImageFeatureType_default_instance_;
+class ImageFeatureType_EnumeratedImageSizes;
+class ImageFeatureType_EnumeratedImageSizesDefaultTypeInternal;
+extern ImageFeatureType_EnumeratedImageSizesDefaultTypeInternal _ImageFeatureType_EnumeratedImageSizes_default_instance_;
+class ImageFeatureType_ImageSize;
+class ImageFeatureType_ImageSizeDefaultTypeInternal;
+extern ImageFeatureType_ImageSizeDefaultTypeInternal _ImageFeatureType_ImageSize_default_instance_;
+class ImageFeatureType_ImageSizeRange;
+class ImageFeatureType_ImageSizeRangeDefaultTypeInternal;
+extern ImageFeatureType_ImageSizeRangeDefaultTypeInternal _ImageFeatureType_ImageSizeRange_default_instance_;
 class Imputer;
 class ImputerDefaultTypeInternal;
 extern ImputerDefaultTypeInternal _Imputer_default_instance_;
@@ -243,9 +288,15 @@ extern LSTMWeightParamsDefaultTypeInternal _LSTMWeightParams_default_instance_;
 class LinearKernel;
 class LinearKernelDefaultTypeInternal;
 extern LinearKernelDefaultTypeInternal _LinearKernel_default_instance_;
+class LinearQuantizationParams;
+class LinearQuantizationParamsDefaultTypeInternal;
+extern LinearQuantizationParamsDefaultTypeInternal _LinearQuantizationParams_default_instance_;
 class LoadConstantLayerParams;
 class LoadConstantLayerParamsDefaultTypeInternal;
 extern LoadConstantLayerParamsDefaultTypeInternal _LoadConstantLayerParams_default_instance_;
+class LookUpTableQuantizationParams;
+class LookUpTableQuantizationParamsDefaultTypeInternal;
+extern LookUpTableQuantizationParamsDefaultTypeInternal _LookUpTableQuantizationParams_default_instance_;
 class MaxLayerParams;
 class MaxLayerParamsDefaultTypeInternal;
 extern MaxLayerParamsDefaultTypeInternal _MaxLayerParams_default_instance_;
@@ -291,6 +342,12 @@ extern NeuralNetworkPreprocessingDefaultTypeInternal _NeuralNetworkPreprocessing
 class NeuralNetworkRegressor;
 class NeuralNetworkRegressorDefaultTypeInternal;
 extern NeuralNetworkRegressorDefaultTypeInternal _NeuralNetworkRegressor_default_instance_;
+class NonMaximumSuppression;
+class NonMaximumSuppressionDefaultTypeInternal;
+extern NonMaximumSuppressionDefaultTypeInternal _NonMaximumSuppression_default_instance_;
+class NonMaximumSuppression_PickTop;
+class NonMaximumSuppression_PickTopDefaultTypeInternal;
+extern NonMaximumSuppression_PickTopDefaultTypeInternal _NonMaximumSuppression_PickTop_default_instance_;
 class Normalizer;
 class NormalizerDefaultTypeInternal;
 extern NormalizerDefaultTypeInternal _Normalizer_default_instance_;
@@ -330,6 +387,9 @@ extern PoolingLayerParamsDefaultTypeInternal _PoolingLayerParams_default_instanc
 class PoolingLayerParams_ValidCompletePadding;
 class PoolingLayerParams_ValidCompletePaddingDefaultTypeInternal;
 extern PoolingLayerParams_ValidCompletePaddingDefaultTypeInternal _PoolingLayerParams_ValidCompletePadding_default_instance_;
+class QuantizationParams;
+class QuantizationParamsDefaultTypeInternal;
+extern QuantizationParamsDefaultTypeInternal _QuantizationParams_default_instance_;
 class RBFKernel;
 class RBFKernelDefaultTypeInternal;
 extern RBFKernelDefaultTypeInternal _RBFKernel_default_instance_;
@@ -351,6 +411,9 @@ extern ScaleLayerParamsDefaultTypeInternal _ScaleLayerParams_default_instance_;
 class Scaler;
 class ScalerDefaultTypeInternal;
 extern ScalerDefaultTypeInternal _Scaler_default_instance_;
+class SequenceFeatureType;
+class SequenceFeatureTypeDefaultTypeInternal;
+extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_instance_;
 class SequenceRepeatLayerParams;
 class SequenceRepeatLayerParamsDefaultTypeInternal;
 extern SequenceRepeatLayerParamsDefaultTypeInternal _SequenceRepeatLayerParams_default_instance_;
@@ -360,6 +423,9 @@ extern SigmoidKernelDefaultTypeInternal _SigmoidKernel_default_instance_;
 class SimpleRecurrentLayerParams;
 class SimpleRecurrentLayerParamsDefaultTypeInternal;
 extern SimpleRecurrentLayerParamsDefaultTypeInternal _SimpleRecurrentLayerParams_default_instance_;
+class SizeRange;
+class SizeRangeDefaultTypeInternal;
+extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
 class SliceLayerParams;
 class SliceLayerParamsDefaultTypeInternal;
 extern SliceLayerParamsDefaultTypeInternal _SliceLayerParams_default_instance_;
@@ -432,6 +498,20 @@ extern ValidPaddingDefaultTypeInternal _ValidPadding_default_instance_;
 class WeightParams;
 class WeightParamsDefaultTypeInternal;
 extern WeightParamsDefaultTypeInternal _WeightParams_default_instance_;
+namespace CoreMLModels {
+class TextClassifier;
+class TextClassifierDefaultTypeInternal;
+extern TextClassifierDefaultTypeInternal _TextClassifier_default_instance_;
+class VisionFeaturePrint;
+class VisionFeaturePrintDefaultTypeInternal;
+extern VisionFeaturePrintDefaultTypeInternal _VisionFeaturePrint_default_instance_;
+class VisionFeaturePrint_Scene;
+class VisionFeaturePrint_SceneDefaultTypeInternal;
+extern VisionFeaturePrint_SceneDefaultTypeInternal _VisionFeaturePrint_Scene_default_instance_;
+class WordTagger;
+class WordTaggerDefaultTypeInternal;
+extern WordTaggerDefaultTypeInternal _WordTagger_default_instance_;
+}  // namespace CoreMLModels
 }  // namespace Specification
 }  // namespace CoreML
 
@@ -1128,11 +1208,13 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     kSupportVectorRegressor = 301,
     kTreeEnsembleRegressor = 302,
     kNeuralNetworkRegressor = 303,
+    kBayesianProbitRegressor = 304,
     kGlmClassifier = 400,
     kSupportVectorClassifier = 401,
     kTreeEnsembleClassifier = 402,
     kNeuralNetworkClassifier = 403,
     kNeuralNetwork = 500,
+    kCustomModel = 555,
     kOneHotEncoder = 600,
     kImputer = 601,
     kFeatureVectorizer = 602,
@@ -1141,7 +1223,11 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     kCategoricalMapping = 606,
     kNormalizer = 607,
     kArrayFeatureExtractor = 609,
+    kNonMaximumSuppression = 610,
     kIdentity = 900,
+    kTextClassifier = 2000,
+    kWordTagger = 2001,
+    kVisionFeaturePrint = 2002,
     TYPE_NOT_SET = 0,
   };
 
@@ -1271,6 +1357,15 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::NeuralNetworkRegressor* release_neuralnetworkregressor();
   void set_allocated_neuralnetworkregressor(::CoreML::Specification::NeuralNetworkRegressor* neuralnetworkregressor);
 
+  // .CoreML.Specification.BayesianProbitRegressor bayesianProbitRegressor = 304;
+  bool has_bayesianprobitregressor() const;
+  void clear_bayesianprobitregressor();
+  static const int kBayesianProbitRegressorFieldNumber = 304;
+  const ::CoreML::Specification::BayesianProbitRegressor& bayesianprobitregressor() const;
+  ::CoreML::Specification::BayesianProbitRegressor* mutable_bayesianprobitregressor();
+  ::CoreML::Specification::BayesianProbitRegressor* release_bayesianprobitregressor();
+  void set_allocated_bayesianprobitregressor(::CoreML::Specification::BayesianProbitRegressor* bayesianprobitregressor);
+
   // .CoreML.Specification.GLMClassifier glmClassifier = 400;
   bool has_glmclassifier() const;
   void clear_glmclassifier();
@@ -1315,6 +1410,15 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::NeuralNetwork* mutable_neuralnetwork();
   ::CoreML::Specification::NeuralNetwork* release_neuralnetwork();
   void set_allocated_neuralnetwork(::CoreML::Specification::NeuralNetwork* neuralnetwork);
+
+  // .CoreML.Specification.CustomModel customModel = 555;
+  bool has_custommodel() const;
+  void clear_custommodel();
+  static const int kCustomModelFieldNumber = 555;
+  const ::CoreML::Specification::CustomModel& custommodel() const;
+  ::CoreML::Specification::CustomModel* mutable_custommodel();
+  ::CoreML::Specification::CustomModel* release_custommodel();
+  void set_allocated_custommodel(::CoreML::Specification::CustomModel* custommodel);
 
   // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
   bool has_onehotencoder() const;
@@ -1388,6 +1492,15 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::ArrayFeatureExtractor* release_arrayfeatureextractor();
   void set_allocated_arrayfeatureextractor(::CoreML::Specification::ArrayFeatureExtractor* arrayfeatureextractor);
 
+  // .CoreML.Specification.NonMaximumSuppression nonMaximumSuppression = 610;
+  bool has_nonmaximumsuppression() const;
+  void clear_nonmaximumsuppression();
+  static const int kNonMaximumSuppressionFieldNumber = 610;
+  const ::CoreML::Specification::NonMaximumSuppression& nonmaximumsuppression() const;
+  ::CoreML::Specification::NonMaximumSuppression* mutable_nonmaximumsuppression();
+  ::CoreML::Specification::NonMaximumSuppression* release_nonmaximumsuppression();
+  void set_allocated_nonmaximumsuppression(::CoreML::Specification::NonMaximumSuppression* nonmaximumsuppression);
+
   // .CoreML.Specification.Identity identity = 900;
   bool has_identity() const;
   void clear_identity();
@@ -1396,6 +1509,33 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::Identity* mutable_identity();
   ::CoreML::Specification::Identity* release_identity();
   void set_allocated_identity(::CoreML::Specification::Identity* identity);
+
+  // .CoreML.Specification.CoreMLModels.TextClassifier textClassifier = 2000;
+  bool has_textclassifier() const;
+  void clear_textclassifier();
+  static const int kTextClassifierFieldNumber = 2000;
+  const ::CoreML::Specification::CoreMLModels::TextClassifier& textclassifier() const;
+  ::CoreML::Specification::CoreMLModels::TextClassifier* mutable_textclassifier();
+  ::CoreML::Specification::CoreMLModels::TextClassifier* release_textclassifier();
+  void set_allocated_textclassifier(::CoreML::Specification::CoreMLModels::TextClassifier* textclassifier);
+
+  // .CoreML.Specification.CoreMLModels.WordTagger wordTagger = 2001;
+  bool has_wordtagger() const;
+  void clear_wordtagger();
+  static const int kWordTaggerFieldNumber = 2001;
+  const ::CoreML::Specification::CoreMLModels::WordTagger& wordtagger() const;
+  ::CoreML::Specification::CoreMLModels::WordTagger* mutable_wordtagger();
+  ::CoreML::Specification::CoreMLModels::WordTagger* release_wordtagger();
+  void set_allocated_wordtagger(::CoreML::Specification::CoreMLModels::WordTagger* wordtagger);
+
+  // .CoreML.Specification.CoreMLModels.VisionFeaturePrint visionFeaturePrint = 2002;
+  bool has_visionfeatureprint() const;
+  void clear_visionfeatureprint();
+  static const int kVisionFeaturePrintFieldNumber = 2002;
+  const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint& visionfeatureprint() const;
+  ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* mutable_visionfeatureprint();
+  ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* release_visionfeatureprint();
+  void set_allocated_visionfeatureprint(::CoreML::Specification::CoreMLModels::VisionFeaturePrint* visionfeatureprint);
 
   TypeCase Type_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.Model)
@@ -1407,11 +1547,13 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   void set_has_supportvectorregressor();
   void set_has_treeensembleregressor();
   void set_has_neuralnetworkregressor();
+  void set_has_bayesianprobitregressor();
   void set_has_glmclassifier();
   void set_has_supportvectorclassifier();
   void set_has_treeensembleclassifier();
   void set_has_neuralnetworkclassifier();
   void set_has_neuralnetwork();
+  void set_has_custommodel();
   void set_has_onehotencoder();
   void set_has_imputer();
   void set_has_featurevectorizer();
@@ -1420,7 +1562,11 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   void set_has_categoricalmapping();
   void set_has_normalizer();
   void set_has_arrayfeatureextractor();
+  void set_has_nonmaximumsuppression();
   void set_has_identity();
+  void set_has_textclassifier();
+  void set_has_wordtagger();
+  void set_has_visionfeatureprint();
 
   inline bool has_Type() const;
   void clear_Type();
@@ -1438,11 +1584,13 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     ::CoreML::Specification::SupportVectorRegressor* supportvectorregressor_;
     ::CoreML::Specification::TreeEnsembleRegressor* treeensembleregressor_;
     ::CoreML::Specification::NeuralNetworkRegressor* neuralnetworkregressor_;
+    ::CoreML::Specification::BayesianProbitRegressor* bayesianprobitregressor_;
     ::CoreML::Specification::GLMClassifier* glmclassifier_;
     ::CoreML::Specification::SupportVectorClassifier* supportvectorclassifier_;
     ::CoreML::Specification::TreeEnsembleClassifier* treeensembleclassifier_;
     ::CoreML::Specification::NeuralNetworkClassifier* neuralnetworkclassifier_;
     ::CoreML::Specification::NeuralNetwork* neuralnetwork_;
+    ::CoreML::Specification::CustomModel* custommodel_;
     ::CoreML::Specification::OneHotEncoder* onehotencoder_;
     ::CoreML::Specification::Imputer* imputer_;
     ::CoreML::Specification::FeatureVectorizer* featurevectorizer_;
@@ -1451,7 +1599,11 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     ::CoreML::Specification::CategoricalMapping* categoricalmapping_;
     ::CoreML::Specification::Normalizer* normalizer_;
     ::CoreML::Specification::ArrayFeatureExtractor* arrayfeatureextractor_;
+    ::CoreML::Specification::NonMaximumSuppression* nonmaximumsuppression_;
     ::CoreML::Specification::Identity* identity_;
+    ::CoreML::Specification::CoreMLModels::TextClassifier* textclassifier_;
+    ::CoreML::Specification::CoreMLModels::WordTagger* wordtagger_;
+    ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* visionfeatureprint_;
   } Type_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -2569,6 +2721,54 @@ inline void Model::set_allocated_neuralnetworkregressor(::CoreML::Specification:
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.neuralNetworkRegressor)
 }
 
+// .CoreML.Specification.BayesianProbitRegressor bayesianProbitRegressor = 304;
+inline bool Model::has_bayesianprobitregressor() const {
+  return Type_case() == kBayesianProbitRegressor;
+}
+inline void Model::set_has_bayesianprobitregressor() {
+  _oneof_case_[0] = kBayesianProbitRegressor;
+}
+inline void Model::clear_bayesianprobitregressor() {
+  if (has_bayesianprobitregressor()) {
+    delete Type_.bayesianprobitregressor_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::BayesianProbitRegressor& Model::bayesianprobitregressor() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.bayesianProbitRegressor)
+  return has_bayesianprobitregressor()
+      ? *Type_.bayesianprobitregressor_
+      : ::CoreML::Specification::BayesianProbitRegressor::default_instance();
+}
+inline ::CoreML::Specification::BayesianProbitRegressor* Model::mutable_bayesianprobitregressor() {
+  if (!has_bayesianprobitregressor()) {
+    clear_Type();
+    set_has_bayesianprobitregressor();
+    Type_.bayesianprobitregressor_ = new ::CoreML::Specification::BayesianProbitRegressor;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.bayesianProbitRegressor)
+  return Type_.bayesianprobitregressor_;
+}
+inline ::CoreML::Specification::BayesianProbitRegressor* Model::release_bayesianprobitregressor() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.bayesianProbitRegressor)
+  if (has_bayesianprobitregressor()) {
+    clear_has_Type();
+    ::CoreML::Specification::BayesianProbitRegressor* temp = Type_.bayesianprobitregressor_;
+    Type_.bayesianprobitregressor_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_bayesianprobitregressor(::CoreML::Specification::BayesianProbitRegressor* bayesianprobitregressor) {
+  clear_Type();
+  if (bayesianprobitregressor) {
+    set_has_bayesianprobitregressor();
+    Type_.bayesianprobitregressor_ = bayesianprobitregressor;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.bayesianProbitRegressor)
+}
+
 // .CoreML.Specification.GLMClassifier glmClassifier = 400;
 inline bool Model::has_glmclassifier() const {
   return Type_case() == kGlmClassifier;
@@ -2807,6 +3007,54 @@ inline void Model::set_allocated_neuralnetwork(::CoreML::Specification::NeuralNe
     Type_.neuralnetwork_ = neuralnetwork;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.neuralNetwork)
+}
+
+// .CoreML.Specification.CustomModel customModel = 555;
+inline bool Model::has_custommodel() const {
+  return Type_case() == kCustomModel;
+}
+inline void Model::set_has_custommodel() {
+  _oneof_case_[0] = kCustomModel;
+}
+inline void Model::clear_custommodel() {
+  if (has_custommodel()) {
+    delete Type_.custommodel_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::CustomModel& Model::custommodel() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.customModel)
+  return has_custommodel()
+      ? *Type_.custommodel_
+      : ::CoreML::Specification::CustomModel::default_instance();
+}
+inline ::CoreML::Specification::CustomModel* Model::mutable_custommodel() {
+  if (!has_custommodel()) {
+    clear_Type();
+    set_has_custommodel();
+    Type_.custommodel_ = new ::CoreML::Specification::CustomModel;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.customModel)
+  return Type_.custommodel_;
+}
+inline ::CoreML::Specification::CustomModel* Model::release_custommodel() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.customModel)
+  if (has_custommodel()) {
+    clear_has_Type();
+    ::CoreML::Specification::CustomModel* temp = Type_.custommodel_;
+    Type_.custommodel_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_custommodel(::CoreML::Specification::CustomModel* custommodel) {
+  clear_Type();
+  if (custommodel) {
+    set_has_custommodel();
+    Type_.custommodel_ = custommodel;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.customModel)
 }
 
 // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
@@ -3193,6 +3441,54 @@ inline void Model::set_allocated_arrayfeatureextractor(::CoreML::Specification::
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.arrayFeatureExtractor)
 }
 
+// .CoreML.Specification.NonMaximumSuppression nonMaximumSuppression = 610;
+inline bool Model::has_nonmaximumsuppression() const {
+  return Type_case() == kNonMaximumSuppression;
+}
+inline void Model::set_has_nonmaximumsuppression() {
+  _oneof_case_[0] = kNonMaximumSuppression;
+}
+inline void Model::clear_nonmaximumsuppression() {
+  if (has_nonmaximumsuppression()) {
+    delete Type_.nonmaximumsuppression_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::NonMaximumSuppression& Model::nonmaximumsuppression() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.nonMaximumSuppression)
+  return has_nonmaximumsuppression()
+      ? *Type_.nonmaximumsuppression_
+      : ::CoreML::Specification::NonMaximumSuppression::default_instance();
+}
+inline ::CoreML::Specification::NonMaximumSuppression* Model::mutable_nonmaximumsuppression() {
+  if (!has_nonmaximumsuppression()) {
+    clear_Type();
+    set_has_nonmaximumsuppression();
+    Type_.nonmaximumsuppression_ = new ::CoreML::Specification::NonMaximumSuppression;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.nonMaximumSuppression)
+  return Type_.nonmaximumsuppression_;
+}
+inline ::CoreML::Specification::NonMaximumSuppression* Model::release_nonmaximumsuppression() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.nonMaximumSuppression)
+  if (has_nonmaximumsuppression()) {
+    clear_has_Type();
+    ::CoreML::Specification::NonMaximumSuppression* temp = Type_.nonmaximumsuppression_;
+    Type_.nonmaximumsuppression_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_nonmaximumsuppression(::CoreML::Specification::NonMaximumSuppression* nonmaximumsuppression) {
+  clear_Type();
+  if (nonmaximumsuppression) {
+    set_has_nonmaximumsuppression();
+    Type_.nonmaximumsuppression_ = nonmaximumsuppression;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.nonMaximumSuppression)
+}
+
 // .CoreML.Specification.Identity identity = 900;
 inline bool Model::has_identity() const {
   return Type_case() == kIdentity;
@@ -3239,6 +3535,150 @@ inline void Model::set_allocated_identity(::CoreML::Specification::Identity* ide
     Type_.identity_ = identity;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.identity)
+}
+
+// .CoreML.Specification.CoreMLModels.TextClassifier textClassifier = 2000;
+inline bool Model::has_textclassifier() const {
+  return Type_case() == kTextClassifier;
+}
+inline void Model::set_has_textclassifier() {
+  _oneof_case_[0] = kTextClassifier;
+}
+inline void Model::clear_textclassifier() {
+  if (has_textclassifier()) {
+    delete Type_.textclassifier_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::CoreMLModels::TextClassifier& Model::textclassifier() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.textClassifier)
+  return has_textclassifier()
+      ? *Type_.textclassifier_
+      : ::CoreML::Specification::CoreMLModels::TextClassifier::default_instance();
+}
+inline ::CoreML::Specification::CoreMLModels::TextClassifier* Model::mutable_textclassifier() {
+  if (!has_textclassifier()) {
+    clear_Type();
+    set_has_textclassifier();
+    Type_.textclassifier_ = new ::CoreML::Specification::CoreMLModels::TextClassifier;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.textClassifier)
+  return Type_.textclassifier_;
+}
+inline ::CoreML::Specification::CoreMLModels::TextClassifier* Model::release_textclassifier() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.textClassifier)
+  if (has_textclassifier()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::TextClassifier* temp = Type_.textclassifier_;
+    Type_.textclassifier_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_textclassifier(::CoreML::Specification::CoreMLModels::TextClassifier* textclassifier) {
+  clear_Type();
+  if (textclassifier) {
+    set_has_textclassifier();
+    Type_.textclassifier_ = textclassifier;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.textClassifier)
+}
+
+// .CoreML.Specification.CoreMLModels.WordTagger wordTagger = 2001;
+inline bool Model::has_wordtagger() const {
+  return Type_case() == kWordTagger;
+}
+inline void Model::set_has_wordtagger() {
+  _oneof_case_[0] = kWordTagger;
+}
+inline void Model::clear_wordtagger() {
+  if (has_wordtagger()) {
+    delete Type_.wordtagger_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::CoreMLModels::WordTagger& Model::wordtagger() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.wordTagger)
+  return has_wordtagger()
+      ? *Type_.wordtagger_
+      : ::CoreML::Specification::CoreMLModels::WordTagger::default_instance();
+}
+inline ::CoreML::Specification::CoreMLModels::WordTagger* Model::mutable_wordtagger() {
+  if (!has_wordtagger()) {
+    clear_Type();
+    set_has_wordtagger();
+    Type_.wordtagger_ = new ::CoreML::Specification::CoreMLModels::WordTagger;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.wordTagger)
+  return Type_.wordtagger_;
+}
+inline ::CoreML::Specification::CoreMLModels::WordTagger* Model::release_wordtagger() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.wordTagger)
+  if (has_wordtagger()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::WordTagger* temp = Type_.wordtagger_;
+    Type_.wordtagger_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_wordtagger(::CoreML::Specification::CoreMLModels::WordTagger* wordtagger) {
+  clear_Type();
+  if (wordtagger) {
+    set_has_wordtagger();
+    Type_.wordtagger_ = wordtagger;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.wordTagger)
+}
+
+// .CoreML.Specification.CoreMLModels.VisionFeaturePrint visionFeaturePrint = 2002;
+inline bool Model::has_visionfeatureprint() const {
+  return Type_case() == kVisionFeaturePrint;
+}
+inline void Model::set_has_visionfeatureprint() {
+  _oneof_case_[0] = kVisionFeaturePrint;
+}
+inline void Model::clear_visionfeatureprint() {
+  if (has_visionfeatureprint()) {
+    delete Type_.visionfeatureprint_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint& Model::visionfeatureprint() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.visionFeaturePrint)
+  return has_visionfeatureprint()
+      ? *Type_.visionfeatureprint_
+      : ::CoreML::Specification::CoreMLModels::VisionFeaturePrint::default_instance();
+}
+inline ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* Model::mutable_visionfeatureprint() {
+  if (!has_visionfeatureprint()) {
+    clear_Type();
+    set_has_visionfeatureprint();
+    Type_.visionfeatureprint_ = new ::CoreML::Specification::CoreMLModels::VisionFeaturePrint;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.visionFeaturePrint)
+  return Type_.visionfeatureprint_;
+}
+inline ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* Model::release_visionfeatureprint() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.visionFeaturePrint)
+  if (has_visionfeatureprint()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* temp = Type_.visionfeatureprint_;
+    Type_.visionfeatureprint_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_visionfeatureprint(::CoreML::Specification::CoreMLModels::VisionFeaturePrint* visionfeatureprint) {
+  clear_Type();
+  if (visionfeatureprint) {
+    set_has_visionfeatureprint();
+    Type_.visionfeatureprint_ = visionfeatureprint;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.visionFeaturePrint)
 }
 
 inline bool Model::has_Type() const {

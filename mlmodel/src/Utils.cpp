@@ -27,7 +27,7 @@ google::protobuf::RepeatedPtrField<Specification::NeuralNetworkLayer> const *get
 }
 
 // Helper functions for determining model version
-bool CoreML::hasCustomLayer(Specification::Model& model) {
+bool CoreML::hasCustomLayer(const Specification::Model& model) {
     auto layers = getNNSpec(model);
     if (layers) {
         for (int i =0; i< layers->size(); i++){
@@ -40,172 +40,304 @@ bool CoreML::hasCustomLayer(Specification::Model& model) {
     return false;
 }
 
-std::vector<std::pair<std::string, std::string> > CoreML::getCustomLayerNamesAndDescriptions(const Specification::Model& model) {
-    std::vector<std::pair<std::string, std::string> > retval;
-    auto layers = getNNSpec(model);
-    if (layers) {
-        for (int i =0; i< layers->size(); i++){
-            const Specification::NeuralNetworkLayer& layer = (*layers)[i];
-            if (layer.layer_case() == Specification::NeuralNetworkLayer::kCustom) {
-                retval.push_back(std::make_pair(layer.custom().classname(), layer.custom().description()));
+
+inline void collectCustomLayerNamesAndDescriptions(const Specification::Model &model, std::vector<StringPair> *output) {
+
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                collectCustomLayerNamesAndDescriptions(m,output);
             }
-        }
-    }
-    return retval;
-}
-
-WeightParamType CoreML::getLSTMWeightParamType(const Specification::LSTMWeightParams& params) {
-    
-    // We assume all the weight param types are set correctly
-    WeightParamType retval = FLOAT32;
-    
-    if (valueType(params.inputgateweightmatrix()) == FLOAT16
-        || valueType(params.forgetgateweightmatrix()) == FLOAT16
-        || valueType(params.blockinputweightmatrix()) == FLOAT16
-        || valueType(params.outputgateweightmatrix()) == FLOAT16
-
-        || valueType(params.inputgaterecursionmatrix()) == FLOAT16
-        || valueType(params.forgetgaterecursionmatrix()) == FLOAT16
-        || valueType(params.blockinputrecursionmatrix()) == FLOAT16
-        || valueType(params.outputgaterecursionmatrix()) == FLOAT16
-
-        || valueType(params.inputgatebiasvector()) == FLOAT16
-        || valueType(params.forgetgatebiasvector()) == FLOAT16
-        || valueType(params.blockinputbiasvector()) == FLOAT16
-        || valueType(params.outputgatebiasvector()) == FLOAT16
-
-        || valueType(params.inputgatepeepholevector()) == FLOAT16
-        || valueType(params.forgetgatepeepholevector()) == FLOAT16
-        || valueType(params.outputgatepeepholevector()) == FLOAT16) {
-        retval = FLOAT16;
-    }
-    
-    return retval;
-    
-}
-
-
-WeightParamType CoreML::getWeightParamType(const Specification::NeuralNetworkLayer& layer) {
-    
-    WeightParamType retval = FLOAT32;
-    
-    switch (layer.layer_case()) {
-        case Specification::NeuralNetworkLayer::LayerCase::kConvolution:
-            
-            if (valueType(layer.convolution().weights()) == FLOAT16
-                || valueType(layer.convolution().bias()) == FLOAT16)
-                retval = FLOAT16;
             break;
-        case Specification::NeuralNetworkLayer::LayerCase::kInnerProduct:
-            if (valueType(layer.innerproduct().weights()) == FLOAT16
-                || valueType(layer.innerproduct().bias()) == FLOAT16)
-                retval = FLOAT16;
-            break;
-        case Specification::NeuralNetworkLayer::LayerCase::kBatchnorm:
-            if (valueType(layer.batchnorm().gamma()) == FLOAT16
-                || valueType(layer.batchnorm().beta()) == FLOAT16
-                || valueType(layer.batchnorm().mean()) == FLOAT16
-                || valueType(layer.batchnorm().variance()) == FLOAT16)
-                retval = FLOAT16;
-            break;
-        case Specification::NeuralNetworkLayer::LayerCase::kLoadConstant:
-            if (valueType(layer.loadconstant().data()) == FLOAT16)
-                retval = FLOAT16;
-            break;
-        case Specification::NeuralNetworkLayer::LayerCase::kScale:
-            if (valueType(layer.scale().scale()) == FLOAT16
-                || valueType(layer.scale().bias()) == FLOAT16)
-                retval = FLOAT16;
-            break;
-        case Specification::NeuralNetworkLayer::LayerCase::kSimpleRecurrent:
-            if (valueType(layer.simplerecurrent().weightmatrix()) == FLOAT16
-                || valueType(layer.simplerecurrent().recursionmatrix()) == FLOAT16
-                || valueType(layer.simplerecurrent().biasvector()) == FLOAT16)
-                retval = FLOAT16;
-                break;
-        case Specification::NeuralNetworkLayer::LayerCase::kGru:
-            if (valueType(layer.gru().updategateweightmatrix()) == FLOAT16
-                || valueType(layer.gru().resetgateweightmatrix()) == FLOAT16
-                || valueType(layer.gru().outputgateweightmatrix()) == FLOAT16
-                || valueType(layer.gru().updategaterecursionmatrix()) == FLOAT16
-                || valueType(layer.gru().resetgaterecursionmatrix()) == FLOAT16
-                || valueType(layer.gru().outputgaterecursionmatrix()) == FLOAT16
-                || valueType(layer.gru().updategatebiasvector()) == FLOAT16
-                || valueType(layer.gru().resetgatebiasvector()) == FLOAT16
-                || valueType(layer.gru().outputgatebiasvector()) == FLOAT16)
-                retval = FLOAT16;
-            break;
-        case Specification::NeuralNetworkLayer::LayerCase::kUniDirectionalLSTM:
-            retval = getLSTMWeightParamType(layer.unidirectionallstm().weightparams());
-            break;
-        case Specification::NeuralNetworkLayer::LayerCase::kEmbedding:
-            if (valueType(layer.embedding().weights()) == FLOAT16
-                || valueType(layer.embedding().bias()) == FLOAT16)
-                retval = FLOAT16;
-            break;
-        case Specification::NeuralNetworkLayer::LayerCase::kBiDirectionalLSTM: {
-            retval = getLSTMWeightParamType(layer.bidirectionallstm().weightparams(0));
-            if (retval == FLOAT32)
-                retval = getLSTMWeightParamType(layer.bidirectionallstm().weightparams(1));
-            break;
-        }
-        case Specification::NeuralNetworkLayer::LayerCase::kActivation:
-            if (layer.activation().NonlinearityType_case() == Specification::ActivationParams::NonlinearityTypeCase::kPReLU) {
-                retval = valueType(layer.activation().prelu().alpha());
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                collectCustomLayerNamesAndDescriptions(m,output);
             }
-            else if (layer.activation().NonlinearityType_case() == Specification::ActivationParams::NonlinearityTypeCase::kParametricSoftplus) {
-                retval = valueType(layer.activation().parametricsoftplus().alpha());
-                if (retval == FLOAT32) {
-                    retval = valueType(layer.activation().parametricsoftplus().beta());
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                collectCustomLayerNamesAndDescriptions(m,output);
+            }
+            break;
+        default:
+            auto layers = getNNSpec(model);
+            if (layers) {
+                for (int i =0; i< layers->size(); i++){
+                    const Specification::NeuralNetworkLayer& layer = (*layers)[i];
+                    if (layer.layer_case() == Specification::NeuralNetworkLayer::kCustom) {
+                        output->push_back(std::make_pair(layer.custom().classname(), layer.custom().description()));
+                    }
                 }
             }
             break;
-        case Specification::NeuralNetworkLayer::LayerCase::kPooling:
-        case Specification::NeuralNetworkLayer::LayerCase::kPadding:
-        case Specification::NeuralNetworkLayer::LayerCase::kConcat:
-        case Specification::NeuralNetworkLayer::LayerCase::kLrn:
-        case Specification::NeuralNetworkLayer::LayerCase::kSoftmax:
-        case Specification::NeuralNetworkLayer::LayerCase::kSplit:
-        case Specification::NeuralNetworkLayer::LayerCase::kAdd:
-        case Specification::NeuralNetworkLayer::LayerCase::kMultiply:
-        case Specification::NeuralNetworkLayer::LayerCase::kUnary:
-        case Specification::NeuralNetworkLayer::LayerCase::kUpsample:
-        case Specification::NeuralNetworkLayer::LayerCase::kBias:
-        case Specification::NeuralNetworkLayer::LayerCase::kL2Normalize:
-        case Specification::NeuralNetworkLayer::LayerCase::kReshape:
-        case Specification::NeuralNetworkLayer::LayerCase::kFlatten:
-        case Specification::NeuralNetworkLayer::LayerCase::kPermute:
-        case Specification::NeuralNetworkLayer::LayerCase::kReduce:
-        case Specification::NeuralNetworkLayer::LayerCase::kCrop:
-        case Specification::NeuralNetworkLayer::LayerCase::kAverage:
-        case Specification::NeuralNetworkLayer::LayerCase::kMax:
-        case Specification::NeuralNetworkLayer::LayerCase::kMin:
-        case Specification::NeuralNetworkLayer::LayerCase::kDot:
-        case Specification::NeuralNetworkLayer::LayerCase::kMvn:
-        case Specification::NeuralNetworkLayer::LayerCase::kSequenceRepeat:
-        case Specification::NeuralNetworkLayer::LayerCase::kReorganizeData:
-        case Specification::NeuralNetworkLayer::LayerCase::kSlice:
-        case Specification::NeuralNetworkLayer::kCustom:
-        case Specification::NeuralNetworkLayer::LAYER_NOT_SET:
-            break;
-    }
-    
-    return retval;
-    
+        }
 }
 
-bool CoreML::hasfp16Weights(Specification::Model& model) {
+std::vector<StringPair> CoreML::getCustomLayerNamesAndDescriptions(const Specification::Model& model) {
+    std::vector<std::pair<std::string, std::string> > retval;
+    collectCustomLayerNamesAndDescriptions(model, &retval);
+    return retval;
+}
 
-    // We assume here that the validator has already enforced that models don't fill in both
-    // the fp16 and float weight fields.
+inline void collectCustomModelNamesAndDescriptions(const Specification::Model &model, std::vector<StringPair> *output) {
+
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                collectCustomModelNamesAndDescriptions(m,output);
+            }
+            break;
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                collectCustomModelNamesAndDescriptions(m,output);
+            }
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                collectCustomModelNamesAndDescriptions(m,output);
+            }
+            break;
+        case Specification::Model::kCustomModel:
+            output->push_back(std::make_pair(model.custommodel().classname(),model.custommodel().description()));
+            break;
+        default:
+            break;
+    }
+}
+
+std::vector<std::pair<std::string, std::string> > CoreML::getCustomModelNamesAndDescriptions(const Specification::Model& model) {
+    std::vector<std::pair<std::string, std::string> > retval;
+    collectCustomModelNamesAndDescriptions(model,&retval);
+    return retval;
+}
+
+static inline bool isWeightParamOfType(const Specification::WeightParams &weight,
+                                       const WeightParamType& type) {
+    return valueType(weight) == type;
+}
+
+static bool hasLSTMWeightParamOfType(const Specification::LSTMWeightParams& params,
+                                               const WeightParamType& type) {
+
+    return (isWeightParamOfType(params.inputgateweightmatrix(), type) ||
+            isWeightParamOfType(params.forgetgateweightmatrix(), type) ||
+            isWeightParamOfType(params.blockinputweightmatrix(), type) ||
+            isWeightParamOfType(params.outputgateweightmatrix(), type) ||
+
+            isWeightParamOfType(params.inputgaterecursionmatrix(), type) ||
+            isWeightParamOfType(params.forgetgaterecursionmatrix(), type) ||
+            isWeightParamOfType(params.blockinputrecursionmatrix(), type) ||
+            isWeightParamOfType(params.outputgaterecursionmatrix(), type) ||
+
+            isWeightParamOfType(params.inputgatebiasvector(), type) ||
+            isWeightParamOfType(params.forgetgatebiasvector(), type) ||
+            isWeightParamOfType(params.blockinputbiasvector(), type) ||
+            isWeightParamOfType(params.outputgatebiasvector(), type) ||
+
+            isWeightParamOfType(params.inputgatepeepholevector(), type) ||
+            isWeightParamOfType(params.forgetgatepeepholevector(), type) ||
+            isWeightParamOfType(params.outputgatepeepholevector(), type));
+}
+
+bool CoreML::hasWeightOfType(const Specification::NeuralNetworkLayer& layer,
+                             const WeightParamType& type) {
+
+    switch (layer.layer_case()) {
+        case Specification::NeuralNetworkLayer::LayerCase::kConvolution:
+            return (isWeightParamOfType(layer.convolution().weights(),type) ||
+                    isWeightParamOfType(layer.convolution().bias(), type));
+
+        case Specification::NeuralNetworkLayer::LayerCase::kInnerProduct:
+            return (isWeightParamOfType(layer.innerproduct().weights(),type) ||
+                    isWeightParamOfType(layer.innerproduct().bias(), type));
+
+        case Specification::NeuralNetworkLayer::LayerCase::kBatchnorm:
+            return (isWeightParamOfType(layer.batchnorm().gamma(), type) ||
+                    isWeightParamOfType(layer.batchnorm().beta(), type) ||
+                    isWeightParamOfType(layer.batchnorm().mean(), type) ||
+                    isWeightParamOfType(layer.batchnorm().variance(), type));
+
+        case Specification::NeuralNetworkLayer::LayerCase::kLoadConstant:
+            return isWeightParamOfType(layer.loadconstant().data(), type);
+
+        case Specification::NeuralNetworkLayer::LayerCase::kScale:
+            return (isWeightParamOfType(layer.scale().scale(), type) ||
+                    isWeightParamOfType(layer.scale().bias(), type));
+
+        case Specification::NeuralNetworkLayer::LayerCase::kSimpleRecurrent:
+            return (isWeightParamOfType(layer.simplerecurrent().weightmatrix(), type) ||
+                    isWeightParamOfType(layer.simplerecurrent().recursionmatrix(), type) ||
+                    isWeightParamOfType(layer.simplerecurrent().biasvector(), type));
+
+        case Specification::NeuralNetworkLayer::LayerCase::kGru:
+            return (isWeightParamOfType(layer.gru().updategateweightmatrix(), type) ||
+                    isWeightParamOfType(layer.gru().resetgateweightmatrix(), type) ||
+                    isWeightParamOfType(layer.gru().outputgateweightmatrix(), type) ||
+                    isWeightParamOfType(layer.gru().updategaterecursionmatrix(), type) ||
+                    isWeightParamOfType(layer.gru().resetgaterecursionmatrix(), type) ||
+                    isWeightParamOfType(layer.gru().outputgaterecursionmatrix(), type) ||
+                    isWeightParamOfType(layer.gru().updategatebiasvector(), type) ||
+                    isWeightParamOfType(layer.gru().resetgatebiasvector(), type) ||
+                    isWeightParamOfType(layer.gru().outputgatebiasvector(), type));
+
+        case Specification::NeuralNetworkLayer::LayerCase::kEmbedding:
+            return (isWeightParamOfType(layer.embedding().weights(), type) ||
+                    isWeightParamOfType(layer.embedding().bias(), type));
+
+        case Specification::NeuralNetworkLayer::LayerCase::kUniDirectionalLSTM:
+            return hasLSTMWeightParamOfType(layer.unidirectionallstm().weightparams(), type);
+
+        case Specification::NeuralNetworkLayer::LayerCase::kBiDirectionalLSTM:
+            return (hasLSTMWeightParamOfType(layer.bidirectionallstm().weightparams(0), type) ||
+                    hasLSTMWeightParamOfType(layer.bidirectionallstm().weightparams(1), type));
+
+        case Specification::NeuralNetworkLayer::LayerCase::kActivation:
+            if(layer.activation().NonlinearityType_case() == Specification::ActivationParams::NonlinearityTypeCase::kPReLU) {
+                return isWeightParamOfType(layer.activation().prelu().alpha(), type);
+            } else if(layer.activation().NonlinearityType_case() == Specification::ActivationParams::NonlinearityTypeCase::kParametricSoftplus) {
+                return (isWeightParamOfType(layer.activation().parametricsoftplus().alpha(), type) ||
+                        isWeightParamOfType(layer.activation().parametricsoftplus().beta(), type));
+            }
+        default:
+            break;
+    }
+    return false;
+}
+
+bool CoreML::hasfp16Weights(const Specification::Model& model) {
+    // If any of the weight param is of type FP16, the model has FP16 weight
+    return hasWeightOfType(model, FLOAT16);
+}
+
+bool CoreML::hasUnsignedQuantizedWeights(const Specification::Model& model) {
+    return hasWeightOfType(model, QUINT);
+}
+
+bool CoreML::hasWeightOfType(const Specification::Model& model, const WeightParamType& wt) {
     auto layers = getNNSpec(model);
-    if (layers) {
-        for (int i =0; i< layers->size(); i++){
+    if(layers) {
+        for(int i =0; i< layers->size(); i++){
             const Specification::NeuralNetworkLayer& layer = (*layers)[i];
-            WeightParamType weights = getWeightParamType(layer);
-            if (weights == FLOAT16)
+            if(hasWeightOfType(layer,wt)) {
                 return true;
+            }
         }
     }
+    return false;
+}
+
+// We'll check if the model has ONLY the IOS12 shape specifications
+// if the old ones are also filled in with something plausible, then there is nothing
+// preventing us from running on older versions of Core ML.
+bool CoreML::hasOnlyFlexibleShapes(const Specification::Model& model) {
+    
+    auto inputs = model.description().input();
+    for (const auto& input: inputs) {
+        if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
+            if (input.type().multiarraytype().shape_size() == 0) {
+                return true;
+            }
+        }
+        else if (input.type().Type_case() == Specification::FeatureType::kImageType) {
+            // We'll only upgrade the spec here if the width or height are unset -- these should be some usable defaults
+            if (input.type().imagetype().width() == 0 || input.type().imagetype().height() == 0) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+// We also need a hasNonmaxSupression and hasBayesianProbitRegressor
+bool CoreML::hasIOS12Features(const Specification::Model& model) {
+    // New IOS12 features: flexible shapes, custom model, sequence feature type,
+    // text classifier, word tagger, vision feature print, unsigned integer quantization
+    bool result = false;
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                result = result || hasIOS12Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                result = result ||hasIOS12Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                result = result || hasIOS12Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        default:
+            return (hasOnlyFlexibleShapes(model) || hasCustomModel(model) || hasCategoricalSequences(model) ||
+                    hasAppleTextClassifier(model) || hasAppleWordTagger(model) ||
+                    hasAppleImageFeatureExtractor(model) || hasUnsignedQuantizedWeights(model) ||
+                    hasNonmaxSuppression(model) || hasBayesianProbitRegressor(model));
+    }
+    return false;
+}
+
+bool CoreML::hasCustomModel(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kCustomModel);
+}
+
+bool CoreML::hasAppleWordTagger(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kWordTagger);
+}
+
+bool CoreML::hasAppleTextClassifier(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kTextClassifier);
+}
+
+bool CoreML::hasAppleImageFeatureExtractor(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kVisionFeaturePrint);
+}
+
+bool CoreML::hasNonmaxSuppression(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kNonMaximumSuppression);
+}
+
+bool CoreML::hasBayesianProbitRegressor(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kBayesianProbitRegressor);
+}
+
+bool CoreML::hasCategoricalSequences(const Specification::Model& model) {
+
+    for (int i=0; i<model.description().input_size(); i++) {
+        auto &feature = model.description().input(i);
+        if (feature.type().Type_case() == Specification::FeatureType::kSequenceType) {
+            switch (feature.type().sequencetype().Type_case()) {
+                case Specification::SequenceFeatureType::kStringType:
+                case Specification::SequenceFeatureType::kInt64Type:
+                    return true;
+                default:
+                    break;
+            }
+        }
+    }
+
+    for (int i=0; i<model.description().output_size(); i++) {
+        auto &feature = model.description().output(i);
+        if (feature.type().Type_case() == Specification::FeatureType::kSequenceType) {
+            switch (feature.type().sequencetype().Type_case()) {
+                case Specification::SequenceFeatureType::kStringType:
+                case Specification::SequenceFeatureType::kInt64Type:
+                    return true;
+                default:
+                    break;
+            }
+        }
+    }
+
     return false;
 }

@@ -196,6 +196,23 @@ enum MLSamePaddingMode: int {
     MLSamePaddingModeTOP_LEFT_HEAVY = 1,
 };
 
+enum MLQuantizationParamsQuantizationType: int {
+    MLQuantizationParamsQuantizationType_linearQuantization = 101,
+    MLQuantizationParamsQuantizationType_lookupTableQuantization = 102,
+    MLQuantizationParamsQuantizationType_NOT_SET = 0,
+};
+
+static const char * MLQuantizationParamsQuantizationType_Name(MLQuantizationParamsQuantizationType x) {
+    switch (x) {
+        case MLQuantizationParamsQuantizationType_linearQuantization:
+            return "MLQuantizationParamsQuantizationType_linearQuantization";
+        case MLQuantizationParamsQuantizationType_lookupTableQuantization:
+            return "MLQuantizationParamsQuantizationType_lookupTableQuantization";
+        case MLQuantizationParamsQuantizationType_NOT_SET:
+            return "INVALID";
+    }
+}
+
 enum MLConvolutionLayerParamsConvolutionPaddingType: int {
     MLConvolutionLayerParamsConvolutionPaddingType_valid = 50,
     MLConvolutionLayerParamsConvolutionPaddingType_same = 51,

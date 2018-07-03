@@ -12,16 +12,23 @@
  *   - `NeuralNetwork`
  *
  * Regressors
- *   - `NeuralNetworkRegressor`
- *   - `TreeEnsembleRegressor`
- *   - `GLMRegressor`
- *   - `SupportVectorRegressor`
+ *   - ``GLMRegressor``
+ *   - ``SupportVectorRegressor``
+ *   - ``TreeEnsembleRegressor``
+ *   - ``NeuralNetworkRegressor``
+ *   - ``BayesianProbitRegressor``
  *
  * Classifiers
  *   - `NeuralNetworkClassifier`
  *   - `TreeEnsembleClassifier`
  *   - `GLMClassifier`
  *   - `SupportVectorClassifier`
+ *
+ * Other models
+ *   - `CustomModel`
+ *   - `TextClassifier`
+ *   - `WordTagger`
+ *   - `VisionFeaturePrint`
  *
  * Feature Engineering
  *   - `Imputer`
@@ -45,8 +52,13 @@
 syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 
+import public "VisionFeaturePrint.proto";
+import public "TextClassifier.proto";
+import public "WordTagger.proto";
 import public "ArrayFeatureExtractor.proto";
+import public "BayesianProbitRegressor.proto";
 import public "CategoricalMapping.proto";
+import public "CustomModel.proto";
 import public "DictVectorizer.proto";
 import public "FeatureTypes.proto";
 import public "FeatureVectorizer.proto";
@@ -58,6 +70,7 @@ import public "NeuralNetwork.proto";
 import public "Normalizer.proto";
 import public "OneHotEncoder.proto";
 import public "Scaler.proto";
+import public "NonMaximumSuppression.proto";
 import public "SVM.proto";
 import public "TreeEnsemble.proto";
 
@@ -156,6 +169,7 @@ message Model {
         SupportVectorRegressor supportVectorRegressor = 301;
         TreeEnsembleRegressor treeEnsembleRegressor = 302;
         NeuralNetworkRegressor neuralNetworkRegressor = 303;
+        BayesianProbitRegressor bayesianProbitRegressor = 304;
 
         // classifiers start at 400
         GLMClassifier glmClassifier = 400;
@@ -166,6 +180,9 @@ message Model {
         // generic models start at 500
         NeuralNetwork neuralNetwork = 500;
 
+        // Custom model
+        CustomModel customModel = 555;
+
         // feature engineering starts at 600
         OneHotEncoder oneHotEncoder = 600;
         Imputer imputer = 601;
@@ -175,10 +192,16 @@ message Model {
         CategoricalMapping categoricalMapping = 606;
         Normalizer normalizer = 607;
         ArrayFeatureExtractor arrayFeatureExtractor = 609;
+        NonMaximumSuppression nonMaximumSuppression = 610;
 
         // simple mathematical functions used for testing start at 900
         Identity identity = 900;
 
         // reserved until 1000
+
+        // CoreML provided models
+        CoreMLModels.TextClassifier textClassifier = 2000;
+        CoreMLModels.WordTagger wordTagger = 2001;
+        CoreMLModels.VisionFeaturePrint visionFeaturePrint = 2002;
     }
 }

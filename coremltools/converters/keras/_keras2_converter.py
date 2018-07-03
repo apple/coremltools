@@ -124,7 +124,7 @@ def _get_layer_converter_fn(layer, add_custom_layers = False):
         raise TypeError("Keras layer of type %s is not supported." % type(layer))
 
 
-def _load_keras_model(model_network_path, model_weight_path):
+def _load_keras_model(model_network_path, model_weight_path, custom_objects=None):
     """Load a keras model from disk
 
     Parameters
@@ -134,6 +134,10 @@ def _load_keras_model(model_network_path, model_weight_path):
 
     model_weight_path: str
         Path where the model network weights are (hd5 file)
+
+    custom_objects:
+        A dictionary of layers or other custom classes 
+        or functions used by the model
 
     Returns
     -------
@@ -147,8 +151,11 @@ def _load_keras_model(model_network_path, model_weight_path):
     loaded_model_json = json_file.read()
     json_file.close()
 
+    if not custom_objects:
+        custom_objects = {}
+
     # Load the model weights
-    loaded_model = model_from_json(loaded_model_json)
+    loaded_model = model_from_json(loaded_model_json, custom_objects=custom_objects)
     loaded_model.load_weights(model_weight_path)
 
     return loaded_model
@@ -169,7 +176,7 @@ def _convert(model,
             predicted_probabilities_output = '',
             add_custom_layers = False,
             custom_conversion_functions = None,
-            custom_objects=None):
+            custom_objects = None):
 
     # Check Keras format
     if _keras.backend.image_data_format() == 'channels_first':
@@ -178,6 +185,9 @@ def _convert(model,
             "converted properly.")
         _keras.backend.set_image_data_format('channels_last')
     
+    # Check custom conversion functions / custom objects
+    add_custom_layers = custom_conversion_functions is not None
+
     if isinstance(model, _string_types):
         model = _keras.models.load_model(model, custom_objects = custom_objects)
     elif isinstance(model, tuple):

@@ -8,8 +8,6 @@
 
 #include "../build/format/FeatureTypes_enums.h"
 
-#include "Export.hpp"
-
 namespace CoreML {
     namespace Specification {
         class FeatureType;
@@ -19,7 +17,7 @@ namespace CoreML {
      * Wrapper for Specification::DataType to enable high level logic around the proto
      * struct. Ex: conversion to string for error messages, comparison logic, etc.
      */
-    class EXPORT FeatureType {
+    class FeatureType {
     private:
         FeatureType(MLFeatureTypeType type);
         std::shared_ptr<Specification::FeatureType> m_type;

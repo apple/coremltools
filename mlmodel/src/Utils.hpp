@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <sstream>
+#include <limits>
 #include <unordered_map>
 #include <vector>
 
@@ -59,9 +60,8 @@ namespace CoreML {
         google::protobuf::io::IstreamInputStream rawInput(&in);
         google::protobuf::io::CodedInputStream codedInput(&rawInput);
 
-        // rdar://problem/30315415 -- support models up to 2GB
-        // this might be slow, but it will work.
-        codedInput.SetTotalBytesLimit((2048 * 1024 * 1024) - 1, -1);
+        // Support models up to 2GB
+        codedInput.SetTotalBytesLimit(std::numeric_limits<int>::max(), -1);
 
         if (!formatObj.ParseFromCodedStream(&codedInput)) {
             return Result(ResultType::FAILED_TO_DESERIALIZE,
@@ -81,18 +81,31 @@ namespace CoreML {
     }
     
     // Helper functions for determining model version
-    bool hasCustomLayer(Specification::Model& model);
-    
+    bool hasCustomLayer(const Specification::Model& model);
+
+    bool hasOnlyFlexibleShapes(const Specification::Model& model);
+    bool hasIOS12Features(const Specification::Model& model);
+
+    typedef std::pair<std::string,std::string> StringPair;
     // Returns a vector of pairs of strings, one pair per custom layer instance
-    // TODO: make it a set, and only display the custom layer type once?
-    std::vector<std::pair<std::string, std::string> > getCustomLayerNamesAndDescriptions(const Specification::Model& model);
+    std::vector<StringPair> getCustomLayerNamesAndDescriptions(const Specification::Model& model);
+    // Returns a vector of pairs of strings, one pair per custom model instance
+    std::vector<StringPair> getCustomModelNamesAndDescriptions(const Specification::Model& model);
 
-    bool hasfp16Weights(Specification::Model& model);
-    
-    // Returns the lowest precision weight type among the weights in the layer
-    WeightParamType getLSTMWeightParamType(const Specification::LSTMWeightParams& params);
-    WeightParamType getWeightParamType(const Specification::NeuralNetworkLayer& layer);
+    bool hasfp16Weights(const Specification::Model& model);
+    bool hasUnsignedQuantizedWeights(const Specification::Model& model);
+    bool hasWeightOfType(const Specification::Model& model, const WeightParamType& type);
+    bool hasWeightOfType(const Specification::NeuralNetworkLayer& layer, const WeightParamType& type);
 
+    bool hasCustomModel(const Specification::Model& model);
+    bool hasAppleWordTagger(const Specification::Model& model);
+    bool hasAppleTextClassifier(const Specification::Model& model);
+    bool hasAppleImageFeatureExtractor(const Specification::Model& model);
+    bool hasCategoricalSequences(const Specification::Model& model);
+    bool hasNonmaxSuppression(const Specification::Model& model);
+    bool hasBayesianProbitRegressor(const Specification::Model& model);
+
+    // We also need a hasNonmaxSupression and hasBayesianProbitRegressor
     static inline std::vector<float16> readFloat16Weights(const Specification::WeightParams& weights) {
 
         std::string weight_bytes = weights.float16value();

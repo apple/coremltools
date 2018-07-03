@@ -110,7 +110,7 @@ def _get_layer_converter_fn(layer):
         raise TypeError("Keras layer of type %s is not supported." % type(layer))
 
 
-def _load_keras_model(model_network_path, model_weight_path):
+def _load_keras_model(model_network_path, model_weight_path, custom_objects=None):
     """Load a keras model from disk
 
     Parameters
@@ -120,6 +120,10 @@ def _load_keras_model(model_network_path, model_weight_path):
 
     model_weight_path: str
         Path where the model network weights are (hd5 file)
+
+    custom_objects:
+        A dictionary of layers or other custom classes 
+        or functions used by the model
 
     Returns
     -------
@@ -134,8 +138,11 @@ def _load_keras_model(model_network_path, model_weight_path):
     json_file.close()
     loaded_model_json = json.loads(json_string)
 
+    if not custom_objects:
+        custom_objects = {}
+
     # Load the model weights
-    loaded_model = model_from_json(loaded_model_json)
+    loaded_model = model_from_json(loaded_model_json, custom_objects=custom_objects)
     loaded_model.load_weights(model_weight_path)
 
     return loaded_model

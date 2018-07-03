@@ -17,7 +17,7 @@
 namespace CoreML {
     
 
-class EXPORT DictVectorizer : public Model {
+class DictVectorizer : public Model {
     
 public:
     

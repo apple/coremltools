@@ -19,7 +19,7 @@ namespace Specification {
     class PipelineParameters;
 }
 
-class EXPORT Pipeline : public Model {
+class Pipeline : public Model {
 private:
   Pipeline(const std::string& description);
   Pipeline(const std::string& a, const std::string& b, const std::string& description, bool isClassifier);

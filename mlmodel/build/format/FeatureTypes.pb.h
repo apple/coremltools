@@ -35,6 +35,15 @@ namespace Specification {
 class ArrayFeatureType;
 class ArrayFeatureTypeDefaultTypeInternal;
 extern ArrayFeatureTypeDefaultTypeInternal _ArrayFeatureType_default_instance_;
+class ArrayFeatureType_EnumeratedShapes;
+class ArrayFeatureType_EnumeratedShapesDefaultTypeInternal;
+extern ArrayFeatureType_EnumeratedShapesDefaultTypeInternal _ArrayFeatureType_EnumeratedShapes_default_instance_;
+class ArrayFeatureType_Shape;
+class ArrayFeatureType_ShapeDefaultTypeInternal;
+extern ArrayFeatureType_ShapeDefaultTypeInternal _ArrayFeatureType_Shape_default_instance_;
+class ArrayFeatureType_ShapeRange;
+class ArrayFeatureType_ShapeRangeDefaultTypeInternal;
+extern ArrayFeatureType_ShapeRangeDefaultTypeInternal _ArrayFeatureType_ShapeRange_default_instance_;
 class DictionaryFeatureType;
 class DictionaryFeatureTypeDefaultTypeInternal;
 extern DictionaryFeatureTypeDefaultTypeInternal _DictionaryFeatureType_default_instance_;
@@ -47,9 +56,24 @@ extern FeatureTypeDefaultTypeInternal _FeatureType_default_instance_;
 class ImageFeatureType;
 class ImageFeatureTypeDefaultTypeInternal;
 extern ImageFeatureTypeDefaultTypeInternal _ImageFeatureType_default_instance_;
+class ImageFeatureType_EnumeratedImageSizes;
+class ImageFeatureType_EnumeratedImageSizesDefaultTypeInternal;
+extern ImageFeatureType_EnumeratedImageSizesDefaultTypeInternal _ImageFeatureType_EnumeratedImageSizes_default_instance_;
+class ImageFeatureType_ImageSize;
+class ImageFeatureType_ImageSizeDefaultTypeInternal;
+extern ImageFeatureType_ImageSizeDefaultTypeInternal _ImageFeatureType_ImageSize_default_instance_;
+class ImageFeatureType_ImageSizeRange;
+class ImageFeatureType_ImageSizeRangeDefaultTypeInternal;
+extern ImageFeatureType_ImageSizeRangeDefaultTypeInternal _ImageFeatureType_ImageSizeRange_default_instance_;
 class Int64FeatureType;
 class Int64FeatureTypeDefaultTypeInternal;
 extern Int64FeatureTypeDefaultTypeInternal _Int64FeatureType_default_instance_;
+class SequenceFeatureType;
+class SequenceFeatureTypeDefaultTypeInternal;
+extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_instance_;
+class SizeRange;
+class SizeRangeDefaultTypeInternal;
+extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;
@@ -314,6 +338,351 @@ class StringFeatureType : public ::google::protobuf::MessageLite /* @@protoc_ins
 };
 // -------------------------------------------------------------------
 
+class SizeRange : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.SizeRange) */ {
+ public:
+  SizeRange();
+  virtual ~SizeRange();
+
+  SizeRange(const SizeRange& from);
+
+  inline SizeRange& operator=(const SizeRange& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const SizeRange& default_instance();
+
+  static inline const SizeRange* internal_default_instance() {
+    return reinterpret_cast<const SizeRange*>(
+               &_SizeRange_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    3;
+
+  void Swap(SizeRange* other);
+
+  // implements Message ----------------------------------------------
+
+  inline SizeRange* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  SizeRange* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const SizeRange& from);
+  void MergeFrom(const SizeRange& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(SizeRange* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // uint64 lowerBound = 1;
+  void clear_lowerbound();
+  static const int kLowerBoundFieldNumber = 1;
+  ::google::protobuf::uint64 lowerbound() const;
+  void set_lowerbound(::google::protobuf::uint64 value);
+
+  // int64 upperBound = 2;
+  void clear_upperbound();
+  static const int kUpperBoundFieldNumber = 2;
+  ::google::protobuf::int64 upperbound() const;
+  void set_upperbound(::google::protobuf::int64 value);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.SizeRange)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::uint64 lowerbound_;
+  ::google::protobuf::int64 upperbound_;
+  mutable int _cached_size_;
+  friend struct protobuf_FeatureTypes_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ImageFeatureType_ImageSize : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ImageFeatureType.ImageSize) */ {
+ public:
+  ImageFeatureType_ImageSize();
+  virtual ~ImageFeatureType_ImageSize();
+
+  ImageFeatureType_ImageSize(const ImageFeatureType_ImageSize& from);
+
+  inline ImageFeatureType_ImageSize& operator=(const ImageFeatureType_ImageSize& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const ImageFeatureType_ImageSize& default_instance();
+
+  static inline const ImageFeatureType_ImageSize* internal_default_instance() {
+    return reinterpret_cast<const ImageFeatureType_ImageSize*>(
+               &_ImageFeatureType_ImageSize_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    4;
+
+  void Swap(ImageFeatureType_ImageSize* other);
+
+  // implements Message ----------------------------------------------
+
+  inline ImageFeatureType_ImageSize* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ImageFeatureType_ImageSize* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ImageFeatureType_ImageSize& from);
+  void MergeFrom(const ImageFeatureType_ImageSize& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ImageFeatureType_ImageSize* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // uint64 width = 1;
+  void clear_width();
+  static const int kWidthFieldNumber = 1;
+  ::google::protobuf::uint64 width() const;
+  void set_width(::google::protobuf::uint64 value);
+
+  // uint64 height = 2;
+  void clear_height();
+  static const int kHeightFieldNumber = 2;
+  ::google::protobuf::uint64 height() const;
+  void set_height(::google::protobuf::uint64 value);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.ImageFeatureType.ImageSize)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::uint64 width_;
+  ::google::protobuf::uint64 height_;
+  mutable int _cached_size_;
+  friend struct protobuf_FeatureTypes_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ImageFeatureType_EnumeratedImageSizes : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ImageFeatureType.EnumeratedImageSizes) */ {
+ public:
+  ImageFeatureType_EnumeratedImageSizes();
+  virtual ~ImageFeatureType_EnumeratedImageSizes();
+
+  ImageFeatureType_EnumeratedImageSizes(const ImageFeatureType_EnumeratedImageSizes& from);
+
+  inline ImageFeatureType_EnumeratedImageSizes& operator=(const ImageFeatureType_EnumeratedImageSizes& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const ImageFeatureType_EnumeratedImageSizes& default_instance();
+
+  static inline const ImageFeatureType_EnumeratedImageSizes* internal_default_instance() {
+    return reinterpret_cast<const ImageFeatureType_EnumeratedImageSizes*>(
+               &_ImageFeatureType_EnumeratedImageSizes_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    5;
+
+  void Swap(ImageFeatureType_EnumeratedImageSizes* other);
+
+  // implements Message ----------------------------------------------
+
+  inline ImageFeatureType_EnumeratedImageSizes* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ImageFeatureType_EnumeratedImageSizes* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ImageFeatureType_EnumeratedImageSizes& from);
+  void MergeFrom(const ImageFeatureType_EnumeratedImageSizes& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ImageFeatureType_EnumeratedImageSizes* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .CoreML.Specification.ImageFeatureType.ImageSize sizes = 1;
+  int sizes_size() const;
+  void clear_sizes();
+  static const int kSizesFieldNumber = 1;
+  const ::CoreML::Specification::ImageFeatureType_ImageSize& sizes(int index) const;
+  ::CoreML::Specification::ImageFeatureType_ImageSize* mutable_sizes(int index);
+  ::CoreML::Specification::ImageFeatureType_ImageSize* add_sizes();
+  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ImageFeatureType_ImageSize >*
+      mutable_sizes();
+  const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ImageFeatureType_ImageSize >&
+      sizes() const;
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.ImageFeatureType.EnumeratedImageSizes)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ImageFeatureType_ImageSize > sizes_;
+  mutable int _cached_size_;
+  friend struct protobuf_FeatureTypes_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ImageFeatureType_ImageSizeRange : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ImageFeatureType.ImageSizeRange) */ {
+ public:
+  ImageFeatureType_ImageSizeRange();
+  virtual ~ImageFeatureType_ImageSizeRange();
+
+  ImageFeatureType_ImageSizeRange(const ImageFeatureType_ImageSizeRange& from);
+
+  inline ImageFeatureType_ImageSizeRange& operator=(const ImageFeatureType_ImageSizeRange& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const ImageFeatureType_ImageSizeRange& default_instance();
+
+  static inline const ImageFeatureType_ImageSizeRange* internal_default_instance() {
+    return reinterpret_cast<const ImageFeatureType_ImageSizeRange*>(
+               &_ImageFeatureType_ImageSizeRange_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    6;
+
+  void Swap(ImageFeatureType_ImageSizeRange* other);
+
+  // implements Message ----------------------------------------------
+
+  inline ImageFeatureType_ImageSizeRange* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ImageFeatureType_ImageSizeRange* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ImageFeatureType_ImageSizeRange& from);
+  void MergeFrom(const ImageFeatureType_ImageSizeRange& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ImageFeatureType_ImageSizeRange* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // .CoreML.Specification.SizeRange widthRange = 1;
+  bool has_widthrange() const;
+  void clear_widthrange();
+  static const int kWidthRangeFieldNumber = 1;
+  const ::CoreML::Specification::SizeRange& widthrange() const;
+  ::CoreML::Specification::SizeRange* mutable_widthrange();
+  ::CoreML::Specification::SizeRange* release_widthrange();
+  void set_allocated_widthrange(::CoreML::Specification::SizeRange* widthrange);
+
+  // .CoreML.Specification.SizeRange heightRange = 2;
+  bool has_heightrange() const;
+  void clear_heightrange();
+  static const int kHeightRangeFieldNumber = 2;
+  const ::CoreML::Specification::SizeRange& heightrange() const;
+  ::CoreML::Specification::SizeRange* mutable_heightrange();
+  ::CoreML::Specification::SizeRange* release_heightrange();
+  void set_allocated_heightrange(::CoreML::Specification::SizeRange* heightrange);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.ImageFeatureType.ImageSizeRange)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::CoreML::Specification::SizeRange* widthrange_;
+  ::CoreML::Specification::SizeRange* heightrange_;
+  mutable int _cached_size_;
+  friend struct protobuf_FeatureTypes_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class ImageFeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ImageFeatureType) */ {
  public:
   ImageFeatureType();
@@ -328,12 +697,18 @@ class ImageFeatureType : public ::google::protobuf::MessageLite /* @@protoc_inse
 
   static const ImageFeatureType& default_instance();
 
+  enum SizeFlexibilityCase {
+    kEnumeratedSizes = 21,
+    kImageSizeRange = 31,
+    SIZEFLEXIBILITY_NOT_SET = 0,
+  };
+
   static inline const ImageFeatureType* internal_default_instance() {
     return reinterpret_cast<const ImageFeatureType*>(
                &_ImageFeatureType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    3;
+    7;
 
   void Swap(ImageFeatureType* other);
 
@@ -374,6 +749,10 @@ class ImageFeatureType : public ::google::protobuf::MessageLite /* @@protoc_inse
 
   // nested types ----------------------------------------------------
 
+  typedef ImageFeatureType_ImageSize ImageSize;
+  typedef ImageFeatureType_EnumeratedImageSizes EnumeratedImageSizes;
+  typedef ImageFeatureType_ImageSizeRange ImageSizeRange;
+
   typedef ImageFeatureType_ColorSpace ColorSpace;
   static const ColorSpace INVALID_COLOR_SPACE =
     ImageFeatureType_ColorSpace_INVALID_COLOR_SPACE;
@@ -413,13 +792,298 @@ class ImageFeatureType : public ::google::protobuf::MessageLite /* @@protoc_inse
   ::CoreML::Specification::ImageFeatureType_ColorSpace colorspace() const;
   void set_colorspace(::CoreML::Specification::ImageFeatureType_ColorSpace value);
 
+  // .CoreML.Specification.ImageFeatureType.EnumeratedImageSizes enumeratedSizes = 21;
+  bool has_enumeratedsizes() const;
+  void clear_enumeratedsizes();
+  static const int kEnumeratedSizesFieldNumber = 21;
+  const ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes& enumeratedsizes() const;
+  ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes* mutable_enumeratedsizes();
+  ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes* release_enumeratedsizes();
+  void set_allocated_enumeratedsizes(::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes* enumeratedsizes);
+
+  // .CoreML.Specification.ImageFeatureType.ImageSizeRange imageSizeRange = 31;
+  bool has_imagesizerange() const;
+  void clear_imagesizerange();
+  static const int kImageSizeRangeFieldNumber = 31;
+  const ::CoreML::Specification::ImageFeatureType_ImageSizeRange& imagesizerange() const;
+  ::CoreML::Specification::ImageFeatureType_ImageSizeRange* mutable_imagesizerange();
+  ::CoreML::Specification::ImageFeatureType_ImageSizeRange* release_imagesizerange();
+  void set_allocated_imagesizerange(::CoreML::Specification::ImageFeatureType_ImageSizeRange* imagesizerange);
+
+  SizeFlexibilityCase SizeFlexibility_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.ImageFeatureType)
  private:
+  void set_has_enumeratedsizes();
+  void set_has_imagesizerange();
+
+  inline bool has_SizeFlexibility() const;
+  void clear_SizeFlexibility();
+  inline void clear_has_SizeFlexibility();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::int64 width_;
   ::google::protobuf::int64 height_;
   int colorspace_;
+  union SizeFlexibilityUnion {
+    SizeFlexibilityUnion() {}
+    ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes* enumeratedsizes_;
+    ::CoreML::Specification::ImageFeatureType_ImageSizeRange* imagesizerange_;
+  } SizeFlexibility_;
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _oneof_case_[1];
+
+  friend struct protobuf_FeatureTypes_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ArrayFeatureType_Shape : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ArrayFeatureType.Shape) */ {
+ public:
+  ArrayFeatureType_Shape();
+  virtual ~ArrayFeatureType_Shape();
+
+  ArrayFeatureType_Shape(const ArrayFeatureType_Shape& from);
+
+  inline ArrayFeatureType_Shape& operator=(const ArrayFeatureType_Shape& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const ArrayFeatureType_Shape& default_instance();
+
+  static inline const ArrayFeatureType_Shape* internal_default_instance() {
+    return reinterpret_cast<const ArrayFeatureType_Shape*>(
+               &_ArrayFeatureType_Shape_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    8;
+
+  void Swap(ArrayFeatureType_Shape* other);
+
+  // implements Message ----------------------------------------------
+
+  inline ArrayFeatureType_Shape* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ArrayFeatureType_Shape* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ArrayFeatureType_Shape& from);
+  void MergeFrom(const ArrayFeatureType_Shape& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ArrayFeatureType_Shape* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated int64 shape = 1;
+  int shape_size() const;
+  void clear_shape();
+  static const int kShapeFieldNumber = 1;
+  ::google::protobuf::int64 shape(int index) const;
+  void set_shape(int index, ::google::protobuf::int64 value);
+  void add_shape(::google::protobuf::int64 value);
+  const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+      shape() const;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+      mutable_shape();
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.ArrayFeatureType.Shape)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int64 > shape_;
+  mutable int _shape_cached_byte_size_;
+  mutable int _cached_size_;
+  friend struct protobuf_FeatureTypes_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ArrayFeatureType_EnumeratedShapes : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ArrayFeatureType.EnumeratedShapes) */ {
+ public:
+  ArrayFeatureType_EnumeratedShapes();
+  virtual ~ArrayFeatureType_EnumeratedShapes();
+
+  ArrayFeatureType_EnumeratedShapes(const ArrayFeatureType_EnumeratedShapes& from);
+
+  inline ArrayFeatureType_EnumeratedShapes& operator=(const ArrayFeatureType_EnumeratedShapes& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const ArrayFeatureType_EnumeratedShapes& default_instance();
+
+  static inline const ArrayFeatureType_EnumeratedShapes* internal_default_instance() {
+    return reinterpret_cast<const ArrayFeatureType_EnumeratedShapes*>(
+               &_ArrayFeatureType_EnumeratedShapes_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    9;
+
+  void Swap(ArrayFeatureType_EnumeratedShapes* other);
+
+  // implements Message ----------------------------------------------
+
+  inline ArrayFeatureType_EnumeratedShapes* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ArrayFeatureType_EnumeratedShapes* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ArrayFeatureType_EnumeratedShapes& from);
+  void MergeFrom(const ArrayFeatureType_EnumeratedShapes& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ArrayFeatureType_EnumeratedShapes* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .CoreML.Specification.ArrayFeatureType.Shape shapes = 1;
+  int shapes_size() const;
+  void clear_shapes();
+  static const int kShapesFieldNumber = 1;
+  const ::CoreML::Specification::ArrayFeatureType_Shape& shapes(int index) const;
+  ::CoreML::Specification::ArrayFeatureType_Shape* mutable_shapes(int index);
+  ::CoreML::Specification::ArrayFeatureType_Shape* add_shapes();
+  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ArrayFeatureType_Shape >*
+      mutable_shapes();
+  const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ArrayFeatureType_Shape >&
+      shapes() const;
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.ArrayFeatureType.EnumeratedShapes)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ArrayFeatureType_Shape > shapes_;
+  mutable int _cached_size_;
+  friend struct protobuf_FeatureTypes_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class ArrayFeatureType_ShapeRange : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ArrayFeatureType.ShapeRange) */ {
+ public:
+  ArrayFeatureType_ShapeRange();
+  virtual ~ArrayFeatureType_ShapeRange();
+
+  ArrayFeatureType_ShapeRange(const ArrayFeatureType_ShapeRange& from);
+
+  inline ArrayFeatureType_ShapeRange& operator=(const ArrayFeatureType_ShapeRange& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const ArrayFeatureType_ShapeRange& default_instance();
+
+  static inline const ArrayFeatureType_ShapeRange* internal_default_instance() {
+    return reinterpret_cast<const ArrayFeatureType_ShapeRange*>(
+               &_ArrayFeatureType_ShapeRange_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    10;
+
+  void Swap(ArrayFeatureType_ShapeRange* other);
+
+  // implements Message ----------------------------------------------
+
+  inline ArrayFeatureType_ShapeRange* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ArrayFeatureType_ShapeRange* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ArrayFeatureType_ShapeRange& from);
+  void MergeFrom(const ArrayFeatureType_ShapeRange& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ArrayFeatureType_ShapeRange* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated .CoreML.Specification.SizeRange sizeRanges = 1;
+  int sizeranges_size() const;
+  void clear_sizeranges();
+  static const int kSizeRangesFieldNumber = 1;
+  const ::CoreML::Specification::SizeRange& sizeranges(int index) const;
+  ::CoreML::Specification::SizeRange* mutable_sizeranges(int index);
+  ::CoreML::Specification::SizeRange* add_sizeranges();
+  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::SizeRange >*
+      mutable_sizeranges();
+  const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::SizeRange >&
+      sizeranges() const;
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.ArrayFeatureType.ShapeRange)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::SizeRange > sizeranges_;
   mutable int _cached_size_;
   friend struct protobuf_FeatureTypes_2eproto::TableStruct;
 };
@@ -439,12 +1103,18 @@ class ArrayFeatureType : public ::google::protobuf::MessageLite /* @@protoc_inse
 
   static const ArrayFeatureType& default_instance();
 
+  enum ShapeFlexibilityCase {
+    kEnumeratedShapes = 21,
+    kShapeRange = 31,
+    SHAPEFLEXIBILITY_NOT_SET = 0,
+  };
+
   static inline const ArrayFeatureType* internal_default_instance() {
     return reinterpret_cast<const ArrayFeatureType*>(
                &_ArrayFeatureType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    4;
+    11;
 
   void Swap(ArrayFeatureType* other);
 
@@ -485,6 +1155,10 @@ class ArrayFeatureType : public ::google::protobuf::MessageLite /* @@protoc_inse
 
   // nested types ----------------------------------------------------
 
+  typedef ArrayFeatureType_Shape Shape;
+  typedef ArrayFeatureType_EnumeratedShapes EnumeratedShapes;
+  typedef ArrayFeatureType_ShapeRange ShapeRange;
+
   typedef ArrayFeatureType_ArrayDataType ArrayDataType;
   static const ArrayDataType INVALID_ARRAY_DATA_TYPE =
     ArrayFeatureType_ArrayDataType_INVALID_ARRAY_DATA_TYPE;
@@ -524,14 +1198,46 @@ class ArrayFeatureType : public ::google::protobuf::MessageLite /* @@protoc_inse
   ::CoreML::Specification::ArrayFeatureType_ArrayDataType datatype() const;
   void set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType value);
 
+  // .CoreML.Specification.ArrayFeatureType.EnumeratedShapes enumeratedShapes = 21;
+  bool has_enumeratedshapes() const;
+  void clear_enumeratedshapes();
+  static const int kEnumeratedShapesFieldNumber = 21;
+  const ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes& enumeratedshapes() const;
+  ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes* mutable_enumeratedshapes();
+  ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes* release_enumeratedshapes();
+  void set_allocated_enumeratedshapes(::CoreML::Specification::ArrayFeatureType_EnumeratedShapes* enumeratedshapes);
+
+  // .CoreML.Specification.ArrayFeatureType.ShapeRange shapeRange = 31;
+  bool has_shaperange() const;
+  void clear_shaperange();
+  static const int kShapeRangeFieldNumber = 31;
+  const ::CoreML::Specification::ArrayFeatureType_ShapeRange& shaperange() const;
+  ::CoreML::Specification::ArrayFeatureType_ShapeRange* mutable_shaperange();
+  ::CoreML::Specification::ArrayFeatureType_ShapeRange* release_shaperange();
+  void set_allocated_shaperange(::CoreML::Specification::ArrayFeatureType_ShapeRange* shaperange);
+
+  ShapeFlexibilityCase ShapeFlexibility_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.ArrayFeatureType)
  private:
+  void set_has_enumeratedshapes();
+  void set_has_shaperange();
+
+  inline bool has_ShapeFlexibility() const;
+  void clear_ShapeFlexibility();
+  inline void clear_has_ShapeFlexibility();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 > shape_;
   mutable int _shape_cached_byte_size_;
   int datatype_;
+  union ShapeFlexibilityUnion {
+    ShapeFlexibilityUnion() {}
+    ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes* enumeratedshapes_;
+    ::CoreML::Specification::ArrayFeatureType_ShapeRange* shaperange_;
+  } ShapeFlexibility_;
   mutable int _cached_size_;
+  ::google::protobuf::uint32 _oneof_case_[1];
+
   friend struct protobuf_FeatureTypes_2eproto::TableStruct;
 };
 // -------------------------------------------------------------------
@@ -561,7 +1267,7 @@ class DictionaryFeatureType : public ::google::protobuf::MessageLite /* @@protoc
                &_DictionaryFeatureType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    5;
+    12;
 
   void Swap(DictionaryFeatureType* other);
 
@@ -645,6 +1351,125 @@ class DictionaryFeatureType : public ::google::protobuf::MessageLite /* @@protoc
 };
 // -------------------------------------------------------------------
 
+class SequenceFeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.SequenceFeatureType) */ {
+ public:
+  SequenceFeatureType();
+  virtual ~SequenceFeatureType();
+
+  SequenceFeatureType(const SequenceFeatureType& from);
+
+  inline SequenceFeatureType& operator=(const SequenceFeatureType& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const SequenceFeatureType& default_instance();
+
+  enum TypeCase {
+    kInt64Type = 1,
+    kStringType = 3,
+    TYPE_NOT_SET = 0,
+  };
+
+  static inline const SequenceFeatureType* internal_default_instance() {
+    return reinterpret_cast<const SequenceFeatureType*>(
+               &_SequenceFeatureType_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    13;
+
+  void Swap(SequenceFeatureType* other);
+
+  // implements Message ----------------------------------------------
+
+  inline SequenceFeatureType* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  SequenceFeatureType* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const SequenceFeatureType& from);
+  void MergeFrom(const SequenceFeatureType& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(SequenceFeatureType* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // .CoreML.Specification.SizeRange sizeRange = 101;
+  bool has_sizerange() const;
+  void clear_sizerange();
+  static const int kSizeRangeFieldNumber = 101;
+  const ::CoreML::Specification::SizeRange& sizerange() const;
+  ::CoreML::Specification::SizeRange* mutable_sizerange();
+  ::CoreML::Specification::SizeRange* release_sizerange();
+  void set_allocated_sizerange(::CoreML::Specification::SizeRange* sizerange);
+
+  // .CoreML.Specification.Int64FeatureType int64Type = 1;
+  bool has_int64type() const;
+  void clear_int64type();
+  static const int kInt64TypeFieldNumber = 1;
+  const ::CoreML::Specification::Int64FeatureType& int64type() const;
+  ::CoreML::Specification::Int64FeatureType* mutable_int64type();
+  ::CoreML::Specification::Int64FeatureType* release_int64type();
+  void set_allocated_int64type(::CoreML::Specification::Int64FeatureType* int64type);
+
+  // .CoreML.Specification.StringFeatureType stringType = 3;
+  bool has_stringtype() const;
+  void clear_stringtype();
+  static const int kStringTypeFieldNumber = 3;
+  const ::CoreML::Specification::StringFeatureType& stringtype() const;
+  ::CoreML::Specification::StringFeatureType* mutable_stringtype();
+  ::CoreML::Specification::StringFeatureType* release_stringtype();
+  void set_allocated_stringtype(::CoreML::Specification::StringFeatureType* stringtype);
+
+  TypeCase Type_case() const;
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.SequenceFeatureType)
+ private:
+  void set_has_int64type();
+  void set_has_stringtype();
+
+  inline bool has_Type() const;
+  void clear_Type();
+  inline void clear_has_Type();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::CoreML::Specification::SizeRange* sizerange_;
+  union TypeUnion {
+    TypeUnion() {}
+    ::CoreML::Specification::Int64FeatureType* int64type_;
+    ::CoreML::Specification::StringFeatureType* stringtype_;
+  } Type_;
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _oneof_case_[1];
+
+  friend struct protobuf_FeatureTypes_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class FeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.FeatureType) */ {
  public:
   FeatureType();
@@ -666,6 +1491,7 @@ class FeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion
     kImageType = 4,
     kMultiArrayType = 5,
     kDictionaryType = 6,
+    kSequenceType = 7,
     TYPE_NOT_SET = 0,
   };
 
@@ -674,7 +1500,7 @@ class FeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion
                &_FeatureType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    6;
+    14;
 
   void Swap(FeatureType* other);
 
@@ -777,6 +1603,15 @@ class FeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion
   ::CoreML::Specification::DictionaryFeatureType* release_dictionarytype();
   void set_allocated_dictionarytype(::CoreML::Specification::DictionaryFeatureType* dictionarytype);
 
+  // .CoreML.Specification.SequenceFeatureType sequenceType = 7;
+  bool has_sequencetype() const;
+  void clear_sequencetype();
+  static const int kSequenceTypeFieldNumber = 7;
+  const ::CoreML::Specification::SequenceFeatureType& sequencetype() const;
+  ::CoreML::Specification::SequenceFeatureType* mutable_sequencetype();
+  ::CoreML::Specification::SequenceFeatureType* release_sequencetype();
+  void set_allocated_sequencetype(::CoreML::Specification::SequenceFeatureType* sequencetype);
+
   TypeCase Type_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.FeatureType)
  private:
@@ -786,6 +1621,7 @@ class FeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion
   void set_has_imagetype();
   void set_has_multiarraytype();
   void set_has_dictionarytype();
+  void set_has_sequencetype();
 
   inline bool has_Type() const;
   void clear_Type();
@@ -801,6 +1637,7 @@ class FeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion
     ::CoreML::Specification::ImageFeatureType* imagetype_;
     ::CoreML::Specification::ArrayFeatureType* multiarraytype_;
     ::CoreML::Specification::DictionaryFeatureType* dictionarytype_;
+    ::CoreML::Specification::SequenceFeatureType* sequencetype_;
   } Type_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -822,6 +1659,186 @@ class FeatureType : public ::google::protobuf::MessageLite /* @@protoc_insertion
 // -------------------------------------------------------------------
 
 // StringFeatureType
+
+// -------------------------------------------------------------------
+
+// SizeRange
+
+// uint64 lowerBound = 1;
+inline void SizeRange::clear_lowerbound() {
+  lowerbound_ = GOOGLE_ULONGLONG(0);
+}
+inline ::google::protobuf::uint64 SizeRange::lowerbound() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SizeRange.lowerBound)
+  return lowerbound_;
+}
+inline void SizeRange::set_lowerbound(::google::protobuf::uint64 value) {
+  
+  lowerbound_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SizeRange.lowerBound)
+}
+
+// int64 upperBound = 2;
+inline void SizeRange::clear_upperbound() {
+  upperbound_ = GOOGLE_LONGLONG(0);
+}
+inline ::google::protobuf::int64 SizeRange::upperbound() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SizeRange.upperBound)
+  return upperbound_;
+}
+inline void SizeRange::set_upperbound(::google::protobuf::int64 value) {
+  
+  upperbound_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SizeRange.upperBound)
+}
+
+// -------------------------------------------------------------------
+
+// ImageFeatureType_ImageSize
+
+// uint64 width = 1;
+inline void ImageFeatureType_ImageSize::clear_width() {
+  width_ = GOOGLE_ULONGLONG(0);
+}
+inline ::google::protobuf::uint64 ImageFeatureType_ImageSize::width() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ImageFeatureType.ImageSize.width)
+  return width_;
+}
+inline void ImageFeatureType_ImageSize::set_width(::google::protobuf::uint64 value) {
+  
+  width_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.ImageSize.width)
+}
+
+// uint64 height = 2;
+inline void ImageFeatureType_ImageSize::clear_height() {
+  height_ = GOOGLE_ULONGLONG(0);
+}
+inline ::google::protobuf::uint64 ImageFeatureType_ImageSize::height() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ImageFeatureType.ImageSize.height)
+  return height_;
+}
+inline void ImageFeatureType_ImageSize::set_height(::google::protobuf::uint64 value) {
+  
+  height_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.ImageSize.height)
+}
+
+// -------------------------------------------------------------------
+
+// ImageFeatureType_EnumeratedImageSizes
+
+// repeated .CoreML.Specification.ImageFeatureType.ImageSize sizes = 1;
+inline int ImageFeatureType_EnumeratedImageSizes::sizes_size() const {
+  return sizes_.size();
+}
+inline void ImageFeatureType_EnumeratedImageSizes::clear_sizes() {
+  sizes_.Clear();
+}
+inline const ::CoreML::Specification::ImageFeatureType_ImageSize& ImageFeatureType_EnumeratedImageSizes::sizes(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ImageFeatureType.EnumeratedImageSizes.sizes)
+  return sizes_.Get(index);
+}
+inline ::CoreML::Specification::ImageFeatureType_ImageSize* ImageFeatureType_EnumeratedImageSizes::mutable_sizes(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ImageFeatureType.EnumeratedImageSizes.sizes)
+  return sizes_.Mutable(index);
+}
+inline ::CoreML::Specification::ImageFeatureType_ImageSize* ImageFeatureType_EnumeratedImageSizes::add_sizes() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.ImageFeatureType.EnumeratedImageSizes.sizes)
+  return sizes_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ImageFeatureType_ImageSize >*
+ImageFeatureType_EnumeratedImageSizes::mutable_sizes() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.ImageFeatureType.EnumeratedImageSizes.sizes)
+  return &sizes_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ImageFeatureType_ImageSize >&
+ImageFeatureType_EnumeratedImageSizes::sizes() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.ImageFeatureType.EnumeratedImageSizes.sizes)
+  return sizes_;
+}
+
+// -------------------------------------------------------------------
+
+// ImageFeatureType_ImageSizeRange
+
+// .CoreML.Specification.SizeRange widthRange = 1;
+inline bool ImageFeatureType_ImageSizeRange::has_widthrange() const {
+  return this != internal_default_instance() && widthrange_ != NULL;
+}
+inline void ImageFeatureType_ImageSizeRange::clear_widthrange() {
+  if (GetArenaNoVirtual() == NULL && widthrange_ != NULL) delete widthrange_;
+  widthrange_ = NULL;
+}
+inline const ::CoreML::Specification::SizeRange& ImageFeatureType_ImageSizeRange::widthrange() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ImageFeatureType.ImageSizeRange.widthRange)
+  return widthrange_ != NULL ? *widthrange_
+                         : *::CoreML::Specification::SizeRange::internal_default_instance();
+}
+inline ::CoreML::Specification::SizeRange* ImageFeatureType_ImageSizeRange::mutable_widthrange() {
+  
+  if (widthrange_ == NULL) {
+    widthrange_ = new ::CoreML::Specification::SizeRange;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ImageFeatureType.ImageSizeRange.widthRange)
+  return widthrange_;
+}
+inline ::CoreML::Specification::SizeRange* ImageFeatureType_ImageSizeRange::release_widthrange() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.ImageFeatureType.ImageSizeRange.widthRange)
+  
+  ::CoreML::Specification::SizeRange* temp = widthrange_;
+  widthrange_ = NULL;
+  return temp;
+}
+inline void ImageFeatureType_ImageSizeRange::set_allocated_widthrange(::CoreML::Specification::SizeRange* widthrange) {
+  delete widthrange_;
+  widthrange_ = widthrange;
+  if (widthrange) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ImageFeatureType.ImageSizeRange.widthRange)
+}
+
+// .CoreML.Specification.SizeRange heightRange = 2;
+inline bool ImageFeatureType_ImageSizeRange::has_heightrange() const {
+  return this != internal_default_instance() && heightrange_ != NULL;
+}
+inline void ImageFeatureType_ImageSizeRange::clear_heightrange() {
+  if (GetArenaNoVirtual() == NULL && heightrange_ != NULL) delete heightrange_;
+  heightrange_ = NULL;
+}
+inline const ::CoreML::Specification::SizeRange& ImageFeatureType_ImageSizeRange::heightrange() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ImageFeatureType.ImageSizeRange.heightRange)
+  return heightrange_ != NULL ? *heightrange_
+                         : *::CoreML::Specification::SizeRange::internal_default_instance();
+}
+inline ::CoreML::Specification::SizeRange* ImageFeatureType_ImageSizeRange::mutable_heightrange() {
+  
+  if (heightrange_ == NULL) {
+    heightrange_ = new ::CoreML::Specification::SizeRange;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ImageFeatureType.ImageSizeRange.heightRange)
+  return heightrange_;
+}
+inline ::CoreML::Specification::SizeRange* ImageFeatureType_ImageSizeRange::release_heightrange() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.ImageFeatureType.ImageSizeRange.heightRange)
+  
+  ::CoreML::Specification::SizeRange* temp = heightrange_;
+  heightrange_ = NULL;
+  return temp;
+}
+inline void ImageFeatureType_ImageSizeRange::set_allocated_heightrange(::CoreML::Specification::SizeRange* heightrange) {
+  delete heightrange_;
+  heightrange_ = heightrange;
+  if (heightrange) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ImageFeatureType.ImageSizeRange.heightRange)
+}
 
 // -------------------------------------------------------------------
 
@@ -855,6 +1872,102 @@ inline void ImageFeatureType::set_height(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.height)
 }
 
+// .CoreML.Specification.ImageFeatureType.EnumeratedImageSizes enumeratedSizes = 21;
+inline bool ImageFeatureType::has_enumeratedsizes() const {
+  return SizeFlexibility_case() == kEnumeratedSizes;
+}
+inline void ImageFeatureType::set_has_enumeratedsizes() {
+  _oneof_case_[0] = kEnumeratedSizes;
+}
+inline void ImageFeatureType::clear_enumeratedsizes() {
+  if (has_enumeratedsizes()) {
+    delete SizeFlexibility_.enumeratedsizes_;
+    clear_has_SizeFlexibility();
+  }
+}
+inline  const ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes& ImageFeatureType::enumeratedsizes() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ImageFeatureType.enumeratedSizes)
+  return has_enumeratedsizes()
+      ? *SizeFlexibility_.enumeratedsizes_
+      : ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes::default_instance();
+}
+inline ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes* ImageFeatureType::mutable_enumeratedsizes() {
+  if (!has_enumeratedsizes()) {
+    clear_SizeFlexibility();
+    set_has_enumeratedsizes();
+    SizeFlexibility_.enumeratedsizes_ = new ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ImageFeatureType.enumeratedSizes)
+  return SizeFlexibility_.enumeratedsizes_;
+}
+inline ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes* ImageFeatureType::release_enumeratedsizes() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.ImageFeatureType.enumeratedSizes)
+  if (has_enumeratedsizes()) {
+    clear_has_SizeFlexibility();
+    ::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes* temp = SizeFlexibility_.enumeratedsizes_;
+    SizeFlexibility_.enumeratedsizes_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void ImageFeatureType::set_allocated_enumeratedsizes(::CoreML::Specification::ImageFeatureType_EnumeratedImageSizes* enumeratedsizes) {
+  clear_SizeFlexibility();
+  if (enumeratedsizes) {
+    set_has_enumeratedsizes();
+    SizeFlexibility_.enumeratedsizes_ = enumeratedsizes;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ImageFeatureType.enumeratedSizes)
+}
+
+// .CoreML.Specification.ImageFeatureType.ImageSizeRange imageSizeRange = 31;
+inline bool ImageFeatureType::has_imagesizerange() const {
+  return SizeFlexibility_case() == kImageSizeRange;
+}
+inline void ImageFeatureType::set_has_imagesizerange() {
+  _oneof_case_[0] = kImageSizeRange;
+}
+inline void ImageFeatureType::clear_imagesizerange() {
+  if (has_imagesizerange()) {
+    delete SizeFlexibility_.imagesizerange_;
+    clear_has_SizeFlexibility();
+  }
+}
+inline  const ::CoreML::Specification::ImageFeatureType_ImageSizeRange& ImageFeatureType::imagesizerange() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ImageFeatureType.imageSizeRange)
+  return has_imagesizerange()
+      ? *SizeFlexibility_.imagesizerange_
+      : ::CoreML::Specification::ImageFeatureType_ImageSizeRange::default_instance();
+}
+inline ::CoreML::Specification::ImageFeatureType_ImageSizeRange* ImageFeatureType::mutable_imagesizerange() {
+  if (!has_imagesizerange()) {
+    clear_SizeFlexibility();
+    set_has_imagesizerange();
+    SizeFlexibility_.imagesizerange_ = new ::CoreML::Specification::ImageFeatureType_ImageSizeRange;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ImageFeatureType.imageSizeRange)
+  return SizeFlexibility_.imagesizerange_;
+}
+inline ::CoreML::Specification::ImageFeatureType_ImageSizeRange* ImageFeatureType::release_imagesizerange() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.ImageFeatureType.imageSizeRange)
+  if (has_imagesizerange()) {
+    clear_has_SizeFlexibility();
+    ::CoreML::Specification::ImageFeatureType_ImageSizeRange* temp = SizeFlexibility_.imagesizerange_;
+    SizeFlexibility_.imagesizerange_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void ImageFeatureType::set_allocated_imagesizerange(::CoreML::Specification::ImageFeatureType_ImageSizeRange* imagesizerange) {
+  clear_SizeFlexibility();
+  if (imagesizerange) {
+    set_has_imagesizerange();
+    SizeFlexibility_.imagesizerange_ = imagesizerange;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ImageFeatureType.imageSizeRange)
+}
+
 // .CoreML.Specification.ImageFeatureType.ColorSpace colorSpace = 3;
 inline void ImageFeatureType::clear_colorspace() {
   colorspace_ = 0;
@@ -867,6 +1980,117 @@ inline void ImageFeatureType::set_colorspace(::CoreML::Specification::ImageFeatu
   
   colorspace_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.colorSpace)
+}
+
+inline bool ImageFeatureType::has_SizeFlexibility() const {
+  return SizeFlexibility_case() != SIZEFLEXIBILITY_NOT_SET;
+}
+inline void ImageFeatureType::clear_has_SizeFlexibility() {
+  _oneof_case_[0] = SIZEFLEXIBILITY_NOT_SET;
+}
+inline ImageFeatureType::SizeFlexibilityCase ImageFeatureType::SizeFlexibility_case() const {
+  return ImageFeatureType::SizeFlexibilityCase(_oneof_case_[0]);
+}
+// -------------------------------------------------------------------
+
+// ArrayFeatureType_Shape
+
+// repeated int64 shape = 1;
+inline int ArrayFeatureType_Shape::shape_size() const {
+  return shape_.size();
+}
+inline void ArrayFeatureType_Shape::clear_shape() {
+  shape_.Clear();
+}
+inline ::google::protobuf::int64 ArrayFeatureType_Shape::shape(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ArrayFeatureType.Shape.shape)
+  return shape_.Get(index);
+}
+inline void ArrayFeatureType_Shape::set_shape(int index, ::google::protobuf::int64 value) {
+  shape_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ArrayFeatureType.Shape.shape)
+}
+inline void ArrayFeatureType_Shape::add_shape(::google::protobuf::int64 value) {
+  shape_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.ArrayFeatureType.Shape.shape)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+ArrayFeatureType_Shape::shape() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.ArrayFeatureType.Shape.shape)
+  return shape_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+ArrayFeatureType_Shape::mutable_shape() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.ArrayFeatureType.Shape.shape)
+  return &shape_;
+}
+
+// -------------------------------------------------------------------
+
+// ArrayFeatureType_EnumeratedShapes
+
+// repeated .CoreML.Specification.ArrayFeatureType.Shape shapes = 1;
+inline int ArrayFeatureType_EnumeratedShapes::shapes_size() const {
+  return shapes_.size();
+}
+inline void ArrayFeatureType_EnumeratedShapes::clear_shapes() {
+  shapes_.Clear();
+}
+inline const ::CoreML::Specification::ArrayFeatureType_Shape& ArrayFeatureType_EnumeratedShapes::shapes(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ArrayFeatureType.EnumeratedShapes.shapes)
+  return shapes_.Get(index);
+}
+inline ::CoreML::Specification::ArrayFeatureType_Shape* ArrayFeatureType_EnumeratedShapes::mutable_shapes(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ArrayFeatureType.EnumeratedShapes.shapes)
+  return shapes_.Mutable(index);
+}
+inline ::CoreML::Specification::ArrayFeatureType_Shape* ArrayFeatureType_EnumeratedShapes::add_shapes() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.ArrayFeatureType.EnumeratedShapes.shapes)
+  return shapes_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ArrayFeatureType_Shape >*
+ArrayFeatureType_EnumeratedShapes::mutable_shapes() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.ArrayFeatureType.EnumeratedShapes.shapes)
+  return &shapes_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::ArrayFeatureType_Shape >&
+ArrayFeatureType_EnumeratedShapes::shapes() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.ArrayFeatureType.EnumeratedShapes.shapes)
+  return shapes_;
+}
+
+// -------------------------------------------------------------------
+
+// ArrayFeatureType_ShapeRange
+
+// repeated .CoreML.Specification.SizeRange sizeRanges = 1;
+inline int ArrayFeatureType_ShapeRange::sizeranges_size() const {
+  return sizeranges_.size();
+}
+inline void ArrayFeatureType_ShapeRange::clear_sizeranges() {
+  sizeranges_.Clear();
+}
+inline const ::CoreML::Specification::SizeRange& ArrayFeatureType_ShapeRange::sizeranges(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ArrayFeatureType.ShapeRange.sizeRanges)
+  return sizeranges_.Get(index);
+}
+inline ::CoreML::Specification::SizeRange* ArrayFeatureType_ShapeRange::mutable_sizeranges(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ArrayFeatureType.ShapeRange.sizeRanges)
+  return sizeranges_.Mutable(index);
+}
+inline ::CoreML::Specification::SizeRange* ArrayFeatureType_ShapeRange::add_sizeranges() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.ArrayFeatureType.ShapeRange.sizeRanges)
+  return sizeranges_.Add();
+}
+inline ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::SizeRange >*
+ArrayFeatureType_ShapeRange::mutable_sizeranges() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.ArrayFeatureType.ShapeRange.sizeRanges)
+  return &sizeranges_;
+}
+inline const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::SizeRange >&
+ArrayFeatureType_ShapeRange::sizeranges() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.ArrayFeatureType.ShapeRange.sizeRanges)
+  return sizeranges_;
 }
 
 // -------------------------------------------------------------------
@@ -917,6 +2141,111 @@ inline void ArrayFeatureType::set_datatype(::CoreML::Specification::ArrayFeature
   // @@protoc_insertion_point(field_set:CoreML.Specification.ArrayFeatureType.dataType)
 }
 
+// .CoreML.Specification.ArrayFeatureType.EnumeratedShapes enumeratedShapes = 21;
+inline bool ArrayFeatureType::has_enumeratedshapes() const {
+  return ShapeFlexibility_case() == kEnumeratedShapes;
+}
+inline void ArrayFeatureType::set_has_enumeratedshapes() {
+  _oneof_case_[0] = kEnumeratedShapes;
+}
+inline void ArrayFeatureType::clear_enumeratedshapes() {
+  if (has_enumeratedshapes()) {
+    delete ShapeFlexibility_.enumeratedshapes_;
+    clear_has_ShapeFlexibility();
+  }
+}
+inline  const ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes& ArrayFeatureType::enumeratedshapes() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ArrayFeatureType.enumeratedShapes)
+  return has_enumeratedshapes()
+      ? *ShapeFlexibility_.enumeratedshapes_
+      : ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes::default_instance();
+}
+inline ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes* ArrayFeatureType::mutable_enumeratedshapes() {
+  if (!has_enumeratedshapes()) {
+    clear_ShapeFlexibility();
+    set_has_enumeratedshapes();
+    ShapeFlexibility_.enumeratedshapes_ = new ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ArrayFeatureType.enumeratedShapes)
+  return ShapeFlexibility_.enumeratedshapes_;
+}
+inline ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes* ArrayFeatureType::release_enumeratedshapes() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.ArrayFeatureType.enumeratedShapes)
+  if (has_enumeratedshapes()) {
+    clear_has_ShapeFlexibility();
+    ::CoreML::Specification::ArrayFeatureType_EnumeratedShapes* temp = ShapeFlexibility_.enumeratedshapes_;
+    ShapeFlexibility_.enumeratedshapes_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void ArrayFeatureType::set_allocated_enumeratedshapes(::CoreML::Specification::ArrayFeatureType_EnumeratedShapes* enumeratedshapes) {
+  clear_ShapeFlexibility();
+  if (enumeratedshapes) {
+    set_has_enumeratedshapes();
+    ShapeFlexibility_.enumeratedshapes_ = enumeratedshapes;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ArrayFeatureType.enumeratedShapes)
+}
+
+// .CoreML.Specification.ArrayFeatureType.ShapeRange shapeRange = 31;
+inline bool ArrayFeatureType::has_shaperange() const {
+  return ShapeFlexibility_case() == kShapeRange;
+}
+inline void ArrayFeatureType::set_has_shaperange() {
+  _oneof_case_[0] = kShapeRange;
+}
+inline void ArrayFeatureType::clear_shaperange() {
+  if (has_shaperange()) {
+    delete ShapeFlexibility_.shaperange_;
+    clear_has_ShapeFlexibility();
+  }
+}
+inline  const ::CoreML::Specification::ArrayFeatureType_ShapeRange& ArrayFeatureType::shaperange() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ArrayFeatureType.shapeRange)
+  return has_shaperange()
+      ? *ShapeFlexibility_.shaperange_
+      : ::CoreML::Specification::ArrayFeatureType_ShapeRange::default_instance();
+}
+inline ::CoreML::Specification::ArrayFeatureType_ShapeRange* ArrayFeatureType::mutable_shaperange() {
+  if (!has_shaperange()) {
+    clear_ShapeFlexibility();
+    set_has_shaperange();
+    ShapeFlexibility_.shaperange_ = new ::CoreML::Specification::ArrayFeatureType_ShapeRange;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ArrayFeatureType.shapeRange)
+  return ShapeFlexibility_.shaperange_;
+}
+inline ::CoreML::Specification::ArrayFeatureType_ShapeRange* ArrayFeatureType::release_shaperange() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.ArrayFeatureType.shapeRange)
+  if (has_shaperange()) {
+    clear_has_ShapeFlexibility();
+    ::CoreML::Specification::ArrayFeatureType_ShapeRange* temp = ShapeFlexibility_.shaperange_;
+    ShapeFlexibility_.shaperange_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void ArrayFeatureType::set_allocated_shaperange(::CoreML::Specification::ArrayFeatureType_ShapeRange* shaperange) {
+  clear_ShapeFlexibility();
+  if (shaperange) {
+    set_has_shaperange();
+    ShapeFlexibility_.shaperange_ = shaperange;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ArrayFeatureType.shapeRange)
+}
+
+inline bool ArrayFeatureType::has_ShapeFlexibility() const {
+  return ShapeFlexibility_case() != SHAPEFLEXIBILITY_NOT_SET;
+}
+inline void ArrayFeatureType::clear_has_ShapeFlexibility() {
+  _oneof_case_[0] = SHAPEFLEXIBILITY_NOT_SET;
+}
+inline ArrayFeatureType::ShapeFlexibilityCase ArrayFeatureType::ShapeFlexibility_case() const {
+  return ArrayFeatureType::ShapeFlexibilityCase(_oneof_case_[0]);
+}
 // -------------------------------------------------------------------
 
 // DictionaryFeatureType
@@ -1025,6 +2354,154 @@ inline void DictionaryFeatureType::clear_has_KeyType() {
 }
 inline DictionaryFeatureType::KeyTypeCase DictionaryFeatureType::KeyType_case() const {
   return DictionaryFeatureType::KeyTypeCase(_oneof_case_[0]);
+}
+// -------------------------------------------------------------------
+
+// SequenceFeatureType
+
+// .CoreML.Specification.Int64FeatureType int64Type = 1;
+inline bool SequenceFeatureType::has_int64type() const {
+  return Type_case() == kInt64Type;
+}
+inline void SequenceFeatureType::set_has_int64type() {
+  _oneof_case_[0] = kInt64Type;
+}
+inline void SequenceFeatureType::clear_int64type() {
+  if (has_int64type()) {
+    delete Type_.int64type_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::Int64FeatureType& SequenceFeatureType::int64type() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SequenceFeatureType.int64Type)
+  return has_int64type()
+      ? *Type_.int64type_
+      : ::CoreML::Specification::Int64FeatureType::default_instance();
+}
+inline ::CoreML::Specification::Int64FeatureType* SequenceFeatureType::mutable_int64type() {
+  if (!has_int64type()) {
+    clear_Type();
+    set_has_int64type();
+    Type_.int64type_ = new ::CoreML::Specification::Int64FeatureType;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.SequenceFeatureType.int64Type)
+  return Type_.int64type_;
+}
+inline ::CoreML::Specification::Int64FeatureType* SequenceFeatureType::release_int64type() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.SequenceFeatureType.int64Type)
+  if (has_int64type()) {
+    clear_has_Type();
+    ::CoreML::Specification::Int64FeatureType* temp = Type_.int64type_;
+    Type_.int64type_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void SequenceFeatureType::set_allocated_int64type(::CoreML::Specification::Int64FeatureType* int64type) {
+  clear_Type();
+  if (int64type) {
+    set_has_int64type();
+    Type_.int64type_ = int64type;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SequenceFeatureType.int64Type)
+}
+
+// .CoreML.Specification.StringFeatureType stringType = 3;
+inline bool SequenceFeatureType::has_stringtype() const {
+  return Type_case() == kStringType;
+}
+inline void SequenceFeatureType::set_has_stringtype() {
+  _oneof_case_[0] = kStringType;
+}
+inline void SequenceFeatureType::clear_stringtype() {
+  if (has_stringtype()) {
+    delete Type_.stringtype_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::StringFeatureType& SequenceFeatureType::stringtype() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SequenceFeatureType.stringType)
+  return has_stringtype()
+      ? *Type_.stringtype_
+      : ::CoreML::Specification::StringFeatureType::default_instance();
+}
+inline ::CoreML::Specification::StringFeatureType* SequenceFeatureType::mutable_stringtype() {
+  if (!has_stringtype()) {
+    clear_Type();
+    set_has_stringtype();
+    Type_.stringtype_ = new ::CoreML::Specification::StringFeatureType;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.SequenceFeatureType.stringType)
+  return Type_.stringtype_;
+}
+inline ::CoreML::Specification::StringFeatureType* SequenceFeatureType::release_stringtype() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.SequenceFeatureType.stringType)
+  if (has_stringtype()) {
+    clear_has_Type();
+    ::CoreML::Specification::StringFeatureType* temp = Type_.stringtype_;
+    Type_.stringtype_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void SequenceFeatureType::set_allocated_stringtype(::CoreML::Specification::StringFeatureType* stringtype) {
+  clear_Type();
+  if (stringtype) {
+    set_has_stringtype();
+    Type_.stringtype_ = stringtype;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SequenceFeatureType.stringType)
+}
+
+// .CoreML.Specification.SizeRange sizeRange = 101;
+inline bool SequenceFeatureType::has_sizerange() const {
+  return this != internal_default_instance() && sizerange_ != NULL;
+}
+inline void SequenceFeatureType::clear_sizerange() {
+  if (GetArenaNoVirtual() == NULL && sizerange_ != NULL) delete sizerange_;
+  sizerange_ = NULL;
+}
+inline const ::CoreML::Specification::SizeRange& SequenceFeatureType::sizerange() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SequenceFeatureType.sizeRange)
+  return sizerange_ != NULL ? *sizerange_
+                         : *::CoreML::Specification::SizeRange::internal_default_instance();
+}
+inline ::CoreML::Specification::SizeRange* SequenceFeatureType::mutable_sizerange() {
+  
+  if (sizerange_ == NULL) {
+    sizerange_ = new ::CoreML::Specification::SizeRange;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.SequenceFeatureType.sizeRange)
+  return sizerange_;
+}
+inline ::CoreML::Specification::SizeRange* SequenceFeatureType::release_sizerange() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.SequenceFeatureType.sizeRange)
+  
+  ::CoreML::Specification::SizeRange* temp = sizerange_;
+  sizerange_ = NULL;
+  return temp;
+}
+inline void SequenceFeatureType::set_allocated_sizerange(::CoreML::Specification::SizeRange* sizerange) {
+  delete sizerange_;
+  sizerange_ = sizerange;
+  if (sizerange) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SequenceFeatureType.sizeRange)
+}
+
+inline bool SequenceFeatureType::has_Type() const {
+  return Type_case() != TYPE_NOT_SET;
+}
+inline void SequenceFeatureType::clear_has_Type() {
+  _oneof_case_[0] = TYPE_NOT_SET;
+}
+inline SequenceFeatureType::TypeCase SequenceFeatureType::Type_case() const {
+  return SequenceFeatureType::TypeCase(_oneof_case_[0]);
 }
 // -------------------------------------------------------------------
 
@@ -1318,6 +2795,54 @@ inline void FeatureType::set_allocated_dictionarytype(::CoreML::Specification::D
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FeatureType.dictionaryType)
 }
 
+// .CoreML.Specification.SequenceFeatureType sequenceType = 7;
+inline bool FeatureType::has_sequencetype() const {
+  return Type_case() == kSequenceType;
+}
+inline void FeatureType::set_has_sequencetype() {
+  _oneof_case_[0] = kSequenceType;
+}
+inline void FeatureType::clear_sequencetype() {
+  if (has_sequencetype()) {
+    delete Type_.sequencetype_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::SequenceFeatureType& FeatureType::sequencetype() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.FeatureType.sequenceType)
+  return has_sequencetype()
+      ? *Type_.sequencetype_
+      : ::CoreML::Specification::SequenceFeatureType::default_instance();
+}
+inline ::CoreML::Specification::SequenceFeatureType* FeatureType::mutable_sequencetype() {
+  if (!has_sequencetype()) {
+    clear_Type();
+    set_has_sequencetype();
+    Type_.sequencetype_ = new ::CoreML::Specification::SequenceFeatureType;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.FeatureType.sequenceType)
+  return Type_.sequencetype_;
+}
+inline ::CoreML::Specification::SequenceFeatureType* FeatureType::release_sequencetype() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.FeatureType.sequenceType)
+  if (has_sequencetype()) {
+    clear_has_Type();
+    ::CoreML::Specification::SequenceFeatureType* temp = Type_.sequencetype_;
+    Type_.sequencetype_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void FeatureType::set_allocated_sequencetype(::CoreML::Specification::SequenceFeatureType* sequencetype) {
+  clear_Type();
+  if (sequencetype) {
+    set_has_sequencetype();
+    Type_.sequencetype_ = sequencetype;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FeatureType.sequenceType)
+}
+
 // bool isOptional = 1000;
 inline void FeatureType::clear_isoptional() {
   isoptional_ = false;
@@ -1342,6 +2867,22 @@ inline FeatureType::TypeCase FeatureType::Type_case() const {
   return FeatureType::TypeCase(_oneof_case_[0]);
 }
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

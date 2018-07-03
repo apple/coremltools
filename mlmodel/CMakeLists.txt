@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.0.0)
 project(mlmodel)
 
 include_directories(
-    ../deps/protobuf/src
+  ..
+  ../deps/protobuf/src
 )
 
 set(CMAKE_CXX_FLAGS " \
@@ -28,9 +29,14 @@ add_library(mlmodel_test
     tests/TreeEnsembleTests.cpp
     tests/OneHotEncoderTests.cpp
     tests/InterfaceTests.cpp
+    tests/NNShaperTest.cpp
+    tests/NNShapeTests.cpp
     tests/NNValidatorTests.cpp
     tests/ModelContainerTests.cpp
     tests/SaveLoadTests.cpp
+    tests/BayesianProbitRegressionValidatorTests.cpp
+    tests/NNShapeTests.cpp
+    tests/NNShaperTest.cpp
 )
 
 set_property(TARGET mlmodel_test
@@ -55,7 +61,9 @@ add_library(mlmodel
     ../deps/protobuf/src/google/protobuf/io/zero_copy_stream_impl.cc
 
     build/format/ArrayFeatureExtractor.pb.cc
+    build/format/BayesianProbitRegressor.pb.cc
     build/format/CategoricalMapping.pb.cc
+    build/format/CustomModel.pb.cc
     build/format/DataStructures.pb.cc
     build/format/DictVectorizer.pb.cc
     build/format/FeatureTypes.pb.cc
@@ -66,11 +74,16 @@ add_library(mlmodel
     build/format/Imputer.pb.cc
     build/format/Model.pb.cc
     build/format/NeuralNetwork.pb.cc
+    build/format/NonMaximumSuppression.pb.cc
     build/format/Normalizer.pb.cc
     build/format/OneHotEncoder.pb.cc
     build/format/SVM.pb.cc
     build/format/Scaler.pb.cc
     build/format/TreeEnsemble.pb.cc
+    build/format/TextClassifier.pb.cc
+    build/format/VisionFeaturePrint.pb.cc
+    build/format/WordTagger.pb.cc
+
 
     src/Comparison.cpp
     src/DataType.cpp
@@ -79,7 +92,9 @@ add_library(mlmodel
     src/Utils.cpp
 
     src/ArrayFeatureExtractorValidator.cpp
+    src/BayesianProbitRegressionValidator.cpp
     src/CategoricalMappingValidator.cpp
+    src/CustomModelValidator.cpp
     src/DictVectorizerValidator.cpp
     src/FeatureVectorizerValidator.cpp
     src/IdentityValidator.cpp
@@ -87,12 +102,17 @@ add_library(mlmodel
     src/InterfaceValidators.cpp
     src/LinearModelValidator.cpp
     src/NeuralNetworkValidator.cpp
+    src/NonMaximumSuppressionValidator.cpp
     src/NormalizerValidator.cpp
     src/OneHotEncoderValidator.cpp
     src/PipelineValidator.cpp
     src/ScalarValidator.cpp
     src/SVMValidator.cpp
     src/TreeEnsembleValidator.cpp
+    src/TextClassifierValidator.cpp
+    src/VisionFeaturePrintValidator.cpp
+    src/WordTaggerValidator.cpp
+    src/QuantizationValidationUtils.cpp
 
     src/TreeEnsembleCommon.cpp
 
@@ -103,6 +123,10 @@ add_library(mlmodel
     src/transforms/FeatureVectorizer.cpp
     src/transforms/DictVectorizer.cpp
     src/transforms/OneHotEncoder.cpp
+
+    src/LayerShapeConstraints.cpp
+    src/NeuralNetworkShapes.cpp
+    src/QuantizationValidationUtils.cpp
 )
 
 set_property(TARGET mlmodel
@@ -133,7 +157,9 @@ add_custom_target(protosrc
     WORKING_DIRECTORY .
     COMMENT "Generating protobuf generated sources from .proto."
     SOURCES format/ArrayFeatureExtractor.proto
+        format/BayesianProbitRegressor.proto
         format/CategoricalMapping.proto
+        format/CustomModel.proto
         format/DataStructures.proto
         format/DictVectorizer.proto
         format/FeatureTypes.proto
@@ -144,10 +170,14 @@ add_custom_target(protosrc
         format/Imputer.proto
         format/Model.proto
         format/NeuralNetwork.proto
+        format/NonMaximumSuppression.proto
         format/Normalizer.proto
         format/OneHotEncoder.proto
         format/SVM.proto
         format/Scaler.proto
+        format/TextClassifier.proto
         format/TreeEnsemble.proto
+        format/VisionFeaturePrint.proto
+        format/WordTagger.proto
 )
 

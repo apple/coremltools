@@ -197,10 +197,11 @@ For more information, please take a look at the `Core ML model specification <ht
 
 External Tools
 ==============
-In addition to the conversion tools in this package, TensorFlow and MXNet have their own conversion tools:
+In addition to the conversion tools in this package, TensorFlow, MXNet and ONNX have their own conversion tools:
 
 - `TensorFlow <https://pypi.python.org/pypi/tfcoreml>`_
 - `MXNet <https://github.com/apache/incubator-mxnet/tree/master/tools/coreml>`_
+- `ONNX <https://github.com/onnx/onnx-coreml>`_
 
 Contents
 ========
@@ -211,3 +212,4 @@ Contents
    coremltools.converters.rst
    coremltools.models.rst
    coremltools.utils.rst
+

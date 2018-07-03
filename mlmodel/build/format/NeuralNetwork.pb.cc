@@ -119,6 +119,15 @@ class SamePaddingDefaultTypeInternal : public ::google::protobuf::internal::Expl
 } _SamePadding_default_instance_;
 class WeightParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<WeightParams> {
 } _WeightParams_default_instance_;
+class QuantizationParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<QuantizationParams> {
+  public:
+  const ::CoreML::Specification::LinearQuantizationParams* linearquantization_;
+  const ::CoreML::Specification::LookUpTableQuantizationParams* lookuptablequantization_;
+} _QuantizationParams_default_instance_;
+class LinearQuantizationParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<LinearQuantizationParams> {
+} _LinearQuantizationParams_default_instance_;
+class LookUpTableQuantizationParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<LookUpTableQuantizationParams> {
+} _LookUpTableQuantizationParams_default_instance_;
 class ConvolutionLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ConvolutionLayerParams> {
   public:
   const ::CoreML::Specification::ValidPadding* valid_;
@@ -315,6 +324,9 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
 };
 
 
@@ -343,6 +355,9 @@ void TableStruct::Shutdown() {
   _ValidPadding_default_instance_.Shutdown();
   _SamePadding_default_instance_.Shutdown();
   _WeightParams_default_instance_.Shutdown();
+  _QuantizationParams_default_instance_.Shutdown();
+  _LinearQuantizationParams_default_instance_.Shutdown();
+  _LookUpTableQuantizationParams_default_instance_.Shutdown();
   _ConvolutionLayerParams_default_instance_.Shutdown();
   _InnerProductLayerParams_default_instance_.Shutdown();
   _EmbeddingLayerParams_default_instance_.Shutdown();
@@ -419,6 +434,9 @@ void TableStruct::InitDefaultsImpl() {
   _ValidPadding_default_instance_.DefaultConstruct();
   _SamePadding_default_instance_.DefaultConstruct();
   _WeightParams_default_instance_.DefaultConstruct();
+  _QuantizationParams_default_instance_.DefaultConstruct();
+  _LinearQuantizationParams_default_instance_.DefaultConstruct();
+  _LookUpTableQuantizationParams_default_instance_.DefaultConstruct();
   _ConvolutionLayerParams_default_instance_.DefaultConstruct();
   _InnerProductLayerParams_default_instance_.DefaultConstruct();
   _EmbeddingLayerParams_default_instance_.DefaultConstruct();
@@ -473,6 +491,8 @@ void TableStruct::InitDefaultsImpl() {
       ::CoreML::Specification::WeightParams::internal_default_instance());
   _ValidPadding_default_instance_.get_mutable()->paddingamounts_ = const_cast< ::CoreML::Specification::BorderAmounts*>(
       ::CoreML::Specification::BorderAmounts::internal_default_instance());
+  _WeightParams_default_instance_.get_mutable()->quantization_ = const_cast< ::CoreML::Specification::QuantizationParams*>(
+      ::CoreML::Specification::QuantizationParams::internal_default_instance());
   _ConvolutionLayerParams_default_instance_.get_mutable()->weights_ = const_cast< ::CoreML::Specification::WeightParams*>(
       ::CoreML::Specification::WeightParams::internal_default_instance());
   _ConvolutionLayerParams_default_instance_.get_mutable()->bias_ = const_cast< ::CoreML::Specification::WeightParams*>(
@@ -10588,6 +10608,7 @@ void SamePadding::set_asymmetrymode(::CoreML::Specification::SamePadding_SamePad
 const int WeightParams::kFloatValueFieldNumber;
 const int WeightParams::kFloat16ValueFieldNumber;
 const int WeightParams::kRawValueFieldNumber;
+const int WeightParams::kQuantizationFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 WeightParams::WeightParams()
@@ -10612,12 +10633,18 @@ WeightParams::WeightParams(const WeightParams& from)
   if (from.rawvalue().size() > 0) {
     rawvalue_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.rawvalue_);
   }
+  if (from.has_quantization()) {
+    quantization_ = new ::CoreML::Specification::QuantizationParams(*from.quantization_);
+  } else {
+    quantization_ = NULL;
+  }
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.WeightParams)
 }
 
 void WeightParams::SharedCtor() {
   float16value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   rawvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  quantization_ = NULL;
   _cached_size_ = 0;
 }
 
@@ -10629,6 +10656,9 @@ WeightParams::~WeightParams() {
 void WeightParams::SharedDtor() {
   float16value_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   rawvalue_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (this != internal_default_instance()) {
+    delete quantization_;
+  }
 }
 
 void WeightParams::SetCachedSize(int size) const {
@@ -10654,6 +10684,10 @@ void WeightParams::Clear() {
   floatvalue_.Clear();
   float16value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   rawvalue_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (GetArenaNoVirtual() == NULL && quantization_ != NULL) {
+    delete quantization_;
+  }
+  quantization_ = NULL;
 }
 
 bool WeightParams::MergePartialFromCodedStream(
@@ -10708,6 +10742,18 @@ bool WeightParams::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.QuantizationParams quantization = 40;
+      case 40: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(322u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_quantization()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -10755,6 +10801,12 @@ void WeightParams::SerializeWithCachedSizes(
       30, this->rawvalue(), output);
   }
 
+  // .CoreML.Specification.QuantizationParams quantization = 40;
+  if (this->has_quantization()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      40, *this->quantization_, output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.WeightParams)
 }
 
@@ -10791,6 +10843,13 @@ size_t WeightParams::ByteSizeLong() const {
         this->rawvalue());
   }
 
+  // .CoreML.Specification.QuantizationParams quantization = 40;
+  if (this->has_quantization()) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->quantization_);
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -10819,6 +10878,9 @@ void WeightParams::MergeFrom(const WeightParams& from) {
 
     rawvalue_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.rawvalue_);
   }
+  if (from.has_quantization()) {
+    mutable_quantization()->::CoreML::Specification::QuantizationParams::MergeFrom(from.quantization());
+  }
 }
 
 void WeightParams::CopyFrom(const WeightParams& from) {
@@ -10840,6 +10902,7 @@ void WeightParams::InternalSwap(WeightParams* other) {
   floatvalue_.InternalSwap(&other->floatvalue_);
   float16value_.Swap(&other->float16value_);
   rawvalue_.Swap(&other->rawvalue_);
+  std::swap(quantization_, other->quantization_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -10984,6 +11047,980 @@ void WeightParams::set_allocated_rawvalue(::std::string* rawvalue) {
   }
   rawvalue_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), rawvalue);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.rawValue)
+}
+
+// .CoreML.Specification.QuantizationParams quantization = 40;
+bool WeightParams::has_quantization() const {
+  return this != internal_default_instance() && quantization_ != NULL;
+}
+void WeightParams::clear_quantization() {
+  if (GetArenaNoVirtual() == NULL && quantization_ != NULL) delete quantization_;
+  quantization_ = NULL;
+}
+const ::CoreML::Specification::QuantizationParams& WeightParams::quantization() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.WeightParams.quantization)
+  return quantization_ != NULL ? *quantization_
+                         : *::CoreML::Specification::QuantizationParams::internal_default_instance();
+}
+::CoreML::Specification::QuantizationParams* WeightParams::mutable_quantization() {
+  
+  if (quantization_ == NULL) {
+    quantization_ = new ::CoreML::Specification::QuantizationParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.WeightParams.quantization)
+  return quantization_;
+}
+::CoreML::Specification::QuantizationParams* WeightParams::release_quantization() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.WeightParams.quantization)
+  
+  ::CoreML::Specification::QuantizationParams* temp = quantization_;
+  quantization_ = NULL;
+  return temp;
+}
+void WeightParams::set_allocated_quantization(::CoreML::Specification::QuantizationParams* quantization) {
+  delete quantization_;
+  quantization_ = quantization;
+  if (quantization) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.quantization)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int QuantizationParams::kNumberOfBitsFieldNumber;
+const int QuantizationParams::kLinearQuantizationFieldNumber;
+const int QuantizationParams::kLookupTableQuantizationFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+QuantizationParams::QuantizationParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.QuantizationParams)
+}
+QuantizationParams::QuantizationParams(const QuantizationParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  numberofbits_ = from.numberofbits_;
+  clear_has_QuantizationType();
+  switch (from.QuantizationType_case()) {
+    case kLinearQuantization: {
+      mutable_linearquantization()->::CoreML::Specification::LinearQuantizationParams::MergeFrom(from.linearquantization());
+      break;
+    }
+    case kLookupTableQuantization: {
+      mutable_lookuptablequantization()->::CoreML::Specification::LookUpTableQuantizationParams::MergeFrom(from.lookuptablequantization());
+      break;
+    }
+    case QUANTIZATIONTYPE_NOT_SET: {
+      break;
+    }
+  }
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.QuantizationParams)
+}
+
+void QuantizationParams::SharedCtor() {
+  numberofbits_ = GOOGLE_ULONGLONG(0);
+  clear_has_QuantizationType();
+  _cached_size_ = 0;
+}
+
+QuantizationParams::~QuantizationParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.QuantizationParams)
+  SharedDtor();
+}
+
+void QuantizationParams::SharedDtor() {
+  if (has_QuantizationType()) {
+    clear_QuantizationType();
+  }
+}
+
+void QuantizationParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const QuantizationParams& QuantizationParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+QuantizationParams* QuantizationParams::New(::google::protobuf::Arena* arena) const {
+  QuantizationParams* n = new QuantizationParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void QuantizationParams::clear_QuantizationType() {
+// @@protoc_insertion_point(one_of_clear_start:CoreML.Specification.QuantizationParams)
+  switch (QuantizationType_case()) {
+    case kLinearQuantization: {
+      delete QuantizationType_.linearquantization_;
+      break;
+    }
+    case kLookupTableQuantization: {
+      delete QuantizationType_.lookuptablequantization_;
+      break;
+    }
+    case QUANTIZATIONTYPE_NOT_SET: {
+      break;
+    }
+  }
+  _oneof_case_[0] = QUANTIZATIONTYPE_NOT_SET;
+}
+
+
+void QuantizationParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.QuantizationParams)
+  numberofbits_ = GOOGLE_ULONGLONG(0);
+  clear_QuantizationType();
+}
+
+bool QuantizationParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.QuantizationParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(16383u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // uint64 numberOfBits = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &numberofbits_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.LinearQuantizationParams linearQuantization = 101;
+      case 101: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(810u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_linearquantization()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.LookUpTableQuantizationParams lookupTableQuantization = 102;
+      case 102: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(818u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_lookuptablequantization()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.QuantizationParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.QuantizationParams)
+  return false;
+#undef DO_
+}
+
+void QuantizationParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.QuantizationParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint64 numberOfBits = 1;
+  if (this->numberofbits() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->numberofbits(), output);
+  }
+
+  // .CoreML.Specification.LinearQuantizationParams linearQuantization = 101;
+  if (has_linearquantization()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      101, *QuantizationType_.linearquantization_, output);
+  }
+
+  // .CoreML.Specification.LookUpTableQuantizationParams lookupTableQuantization = 102;
+  if (has_lookuptablequantization()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      102, *QuantizationType_.lookuptablequantization_, output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.QuantizationParams)
+}
+
+size_t QuantizationParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.QuantizationParams)
+  size_t total_size = 0;
+
+  // uint64 numberOfBits = 1;
+  if (this->numberofbits() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt64Size(
+        this->numberofbits());
+  }
+
+  switch (QuantizationType_case()) {
+    // .CoreML.Specification.LinearQuantizationParams linearQuantization = 101;
+    case kLinearQuantization: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *QuantizationType_.linearquantization_);
+      break;
+    }
+    // .CoreML.Specification.LookUpTableQuantizationParams lookupTableQuantization = 102;
+    case kLookupTableQuantization: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *QuantizationType_.lookuptablequantization_);
+      break;
+    }
+    case QUANTIZATIONTYPE_NOT_SET: {
+      break;
+    }
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void QuantizationParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const QuantizationParams*>(&from));
+}
+
+void QuantizationParams::MergeFrom(const QuantizationParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.QuantizationParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.numberofbits() != 0) {
+    set_numberofbits(from.numberofbits());
+  }
+  switch (from.QuantizationType_case()) {
+    case kLinearQuantization: {
+      mutable_linearquantization()->::CoreML::Specification::LinearQuantizationParams::MergeFrom(from.linearquantization());
+      break;
+    }
+    case kLookupTableQuantization: {
+      mutable_lookuptablequantization()->::CoreML::Specification::LookUpTableQuantizationParams::MergeFrom(from.lookuptablequantization());
+      break;
+    }
+    case QUANTIZATIONTYPE_NOT_SET: {
+      break;
+    }
+  }
+}
+
+void QuantizationParams::CopyFrom(const QuantizationParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.QuantizationParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool QuantizationParams::IsInitialized() const {
+  return true;
+}
+
+void QuantizationParams::Swap(QuantizationParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void QuantizationParams::InternalSwap(QuantizationParams* other) {
+  std::swap(numberofbits_, other->numberofbits_);
+  std::swap(QuantizationType_, other->QuantizationType_);
+  std::swap(_oneof_case_[0], other->_oneof_case_[0]);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string QuantizationParams::GetTypeName() const {
+  return "CoreML.Specification.QuantizationParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// QuantizationParams
+
+// uint64 numberOfBits = 1;
+void QuantizationParams::clear_numberofbits() {
+  numberofbits_ = GOOGLE_ULONGLONG(0);
+}
+::google::protobuf::uint64 QuantizationParams::numberofbits() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.QuantizationParams.numberOfBits)
+  return numberofbits_;
+}
+void QuantizationParams::set_numberofbits(::google::protobuf::uint64 value) {
+  
+  numberofbits_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.QuantizationParams.numberOfBits)
+}
+
+// .CoreML.Specification.LinearQuantizationParams linearQuantization = 101;
+bool QuantizationParams::has_linearquantization() const {
+  return QuantizationType_case() == kLinearQuantization;
+}
+void QuantizationParams::set_has_linearquantization() {
+  _oneof_case_[0] = kLinearQuantization;
+}
+void QuantizationParams::clear_linearquantization() {
+  if (has_linearquantization()) {
+    delete QuantizationType_.linearquantization_;
+    clear_has_QuantizationType();
+  }
+}
+ const ::CoreML::Specification::LinearQuantizationParams& QuantizationParams::linearquantization() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.QuantizationParams.linearQuantization)
+  return has_linearquantization()
+      ? *QuantizationType_.linearquantization_
+      : ::CoreML::Specification::LinearQuantizationParams::default_instance();
+}
+::CoreML::Specification::LinearQuantizationParams* QuantizationParams::mutable_linearquantization() {
+  if (!has_linearquantization()) {
+    clear_QuantizationType();
+    set_has_linearquantization();
+    QuantizationType_.linearquantization_ = new ::CoreML::Specification::LinearQuantizationParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.QuantizationParams.linearQuantization)
+  return QuantizationType_.linearquantization_;
+}
+::CoreML::Specification::LinearQuantizationParams* QuantizationParams::release_linearquantization() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.QuantizationParams.linearQuantization)
+  if (has_linearquantization()) {
+    clear_has_QuantizationType();
+    ::CoreML::Specification::LinearQuantizationParams* temp = QuantizationType_.linearquantization_;
+    QuantizationType_.linearquantization_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void QuantizationParams::set_allocated_linearquantization(::CoreML::Specification::LinearQuantizationParams* linearquantization) {
+  clear_QuantizationType();
+  if (linearquantization) {
+    set_has_linearquantization();
+    QuantizationType_.linearquantization_ = linearquantization;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.QuantizationParams.linearQuantization)
+}
+
+// .CoreML.Specification.LookUpTableQuantizationParams lookupTableQuantization = 102;
+bool QuantizationParams::has_lookuptablequantization() const {
+  return QuantizationType_case() == kLookupTableQuantization;
+}
+void QuantizationParams::set_has_lookuptablequantization() {
+  _oneof_case_[0] = kLookupTableQuantization;
+}
+void QuantizationParams::clear_lookuptablequantization() {
+  if (has_lookuptablequantization()) {
+    delete QuantizationType_.lookuptablequantization_;
+    clear_has_QuantizationType();
+  }
+}
+ const ::CoreML::Specification::LookUpTableQuantizationParams& QuantizationParams::lookuptablequantization() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.QuantizationParams.lookupTableQuantization)
+  return has_lookuptablequantization()
+      ? *QuantizationType_.lookuptablequantization_
+      : ::CoreML::Specification::LookUpTableQuantizationParams::default_instance();
+}
+::CoreML::Specification::LookUpTableQuantizationParams* QuantizationParams::mutable_lookuptablequantization() {
+  if (!has_lookuptablequantization()) {
+    clear_QuantizationType();
+    set_has_lookuptablequantization();
+    QuantizationType_.lookuptablequantization_ = new ::CoreML::Specification::LookUpTableQuantizationParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.QuantizationParams.lookupTableQuantization)
+  return QuantizationType_.lookuptablequantization_;
+}
+::CoreML::Specification::LookUpTableQuantizationParams* QuantizationParams::release_lookuptablequantization() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.QuantizationParams.lookupTableQuantization)
+  if (has_lookuptablequantization()) {
+    clear_has_QuantizationType();
+    ::CoreML::Specification::LookUpTableQuantizationParams* temp = QuantizationType_.lookuptablequantization_;
+    QuantizationType_.lookuptablequantization_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void QuantizationParams::set_allocated_lookuptablequantization(::CoreML::Specification::LookUpTableQuantizationParams* lookuptablequantization) {
+  clear_QuantizationType();
+  if (lookuptablequantization) {
+    set_has_lookuptablequantization();
+    QuantizationType_.lookuptablequantization_ = lookuptablequantization;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.QuantizationParams.lookupTableQuantization)
+}
+
+bool QuantizationParams::has_QuantizationType() const {
+  return QuantizationType_case() != QUANTIZATIONTYPE_NOT_SET;
+}
+void QuantizationParams::clear_has_QuantizationType() {
+  _oneof_case_[0] = QUANTIZATIONTYPE_NOT_SET;
+}
+QuantizationParams::QuantizationTypeCase QuantizationParams::QuantizationType_case() const {
+  return QuantizationParams::QuantizationTypeCase(_oneof_case_[0]);
+}
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int LinearQuantizationParams::kScaleFieldNumber;
+const int LinearQuantizationParams::kBiasFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+LinearQuantizationParams::LinearQuantizationParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.LinearQuantizationParams)
+}
+LinearQuantizationParams::LinearQuantizationParams(const LinearQuantizationParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      scale_(from.scale_),
+      bias_(from.bias_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.LinearQuantizationParams)
+}
+
+void LinearQuantizationParams::SharedCtor() {
+  _cached_size_ = 0;
+}
+
+LinearQuantizationParams::~LinearQuantizationParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.LinearQuantizationParams)
+  SharedDtor();
+}
+
+void LinearQuantizationParams::SharedDtor() {
+}
+
+void LinearQuantizationParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const LinearQuantizationParams& LinearQuantizationParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+LinearQuantizationParams* LinearQuantizationParams::New(::google::protobuf::Arena* arena) const {
+  LinearQuantizationParams* n = new LinearQuantizationParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void LinearQuantizationParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.LinearQuantizationParams)
+  scale_.Clear();
+  bias_.Clear();
+}
+
+bool LinearQuantizationParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.LinearQuantizationParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated float scale = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, this->mutable_scale())));
+        } else if (static_cast< ::google::protobuf::uint8>(tag) ==
+                   static_cast< ::google::protobuf::uint8>(13u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 1, 10u, input, this->mutable_scale())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated float bias = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, this->mutable_bias())));
+        } else if (static_cast< ::google::protobuf::uint8>(tag) ==
+                   static_cast< ::google::protobuf::uint8>(21u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 1, 18u, input, this->mutable_bias())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.LinearQuantizationParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.LinearQuantizationParams)
+  return false;
+#undef DO_
+}
+
+void LinearQuantizationParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.LinearQuantizationParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated float scale = 1;
+  if (this->scale_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(1, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_scale_cached_byte_size_);
+    ::google::protobuf::internal::WireFormatLite::WriteFloatArray(
+      this->scale().data(), this->scale_size(), output);
+  }
+
+  // repeated float bias = 2;
+  if (this->bias_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(2, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_bias_cached_byte_size_);
+    ::google::protobuf::internal::WireFormatLite::WriteFloatArray(
+      this->bias().data(), this->bias_size(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.LinearQuantizationParams)
+}
+
+size_t LinearQuantizationParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.LinearQuantizationParams)
+  size_t total_size = 0;
+
+  // repeated float scale = 1;
+  {
+    unsigned int count = this->scale_size();
+    size_t data_size = 4UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _scale_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
+  // repeated float bias = 2;
+  {
+    unsigned int count = this->bias_size();
+    size_t data_size = 4UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _bias_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void LinearQuantizationParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const LinearQuantizationParams*>(&from));
+}
+
+void LinearQuantizationParams::MergeFrom(const LinearQuantizationParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.LinearQuantizationParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  scale_.MergeFrom(from.scale_);
+  bias_.MergeFrom(from.bias_);
+}
+
+void LinearQuantizationParams::CopyFrom(const LinearQuantizationParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.LinearQuantizationParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LinearQuantizationParams::IsInitialized() const {
+  return true;
+}
+
+void LinearQuantizationParams::Swap(LinearQuantizationParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void LinearQuantizationParams::InternalSwap(LinearQuantizationParams* other) {
+  scale_.InternalSwap(&other->scale_);
+  bias_.InternalSwap(&other->bias_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string LinearQuantizationParams::GetTypeName() const {
+  return "CoreML.Specification.LinearQuantizationParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// LinearQuantizationParams
+
+// repeated float scale = 1;
+int LinearQuantizationParams::scale_size() const {
+  return scale_.size();
+}
+void LinearQuantizationParams::clear_scale() {
+  scale_.Clear();
+}
+float LinearQuantizationParams::scale(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.LinearQuantizationParams.scale)
+  return scale_.Get(index);
+}
+void LinearQuantizationParams::set_scale(int index, float value) {
+  scale_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.LinearQuantizationParams.scale)
+}
+void LinearQuantizationParams::add_scale(float value) {
+  scale_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.LinearQuantizationParams.scale)
+}
+const ::google::protobuf::RepeatedField< float >&
+LinearQuantizationParams::scale() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.LinearQuantizationParams.scale)
+  return scale_;
+}
+::google::protobuf::RepeatedField< float >*
+LinearQuantizationParams::mutable_scale() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.LinearQuantizationParams.scale)
+  return &scale_;
+}
+
+// repeated float bias = 2;
+int LinearQuantizationParams::bias_size() const {
+  return bias_.size();
+}
+void LinearQuantizationParams::clear_bias() {
+  bias_.Clear();
+}
+float LinearQuantizationParams::bias(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.LinearQuantizationParams.bias)
+  return bias_.Get(index);
+}
+void LinearQuantizationParams::set_bias(int index, float value) {
+  bias_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.LinearQuantizationParams.bias)
+}
+void LinearQuantizationParams::add_bias(float value) {
+  bias_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.LinearQuantizationParams.bias)
+}
+const ::google::protobuf::RepeatedField< float >&
+LinearQuantizationParams::bias() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.LinearQuantizationParams.bias)
+  return bias_;
+}
+::google::protobuf::RepeatedField< float >*
+LinearQuantizationParams::mutable_bias() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.LinearQuantizationParams.bias)
+  return &bias_;
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int LookUpTableQuantizationParams::kFloatValueFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+LookUpTableQuantizationParams::LookUpTableQuantizationParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.LookUpTableQuantizationParams)
+}
+LookUpTableQuantizationParams::LookUpTableQuantizationParams(const LookUpTableQuantizationParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      floatvalue_(from.floatvalue_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.LookUpTableQuantizationParams)
+}
+
+void LookUpTableQuantizationParams::SharedCtor() {
+  _cached_size_ = 0;
+}
+
+LookUpTableQuantizationParams::~LookUpTableQuantizationParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.LookUpTableQuantizationParams)
+  SharedDtor();
+}
+
+void LookUpTableQuantizationParams::SharedDtor() {
+}
+
+void LookUpTableQuantizationParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const LookUpTableQuantizationParams& LookUpTableQuantizationParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+LookUpTableQuantizationParams* LookUpTableQuantizationParams::New(::google::protobuf::Arena* arena) const {
+  LookUpTableQuantizationParams* n = new LookUpTableQuantizationParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void LookUpTableQuantizationParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.LookUpTableQuantizationParams)
+  floatvalue_.Clear();
+}
+
+bool LookUpTableQuantizationParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.LookUpTableQuantizationParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // repeated float floatValue = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, this->mutable_floatvalue())));
+        } else if (static_cast< ::google::protobuf::uint8>(tag) ==
+                   static_cast< ::google::protobuf::uint8>(13u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 1, 10u, input, this->mutable_floatvalue())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.LookUpTableQuantizationParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.LookUpTableQuantizationParams)
+  return false;
+#undef DO_
+}
+
+void LookUpTableQuantizationParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.LookUpTableQuantizationParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated float floatValue = 1;
+  if (this->floatvalue_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(1, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_floatvalue_cached_byte_size_);
+    ::google::protobuf::internal::WireFormatLite::WriteFloatArray(
+      this->floatvalue().data(), this->floatvalue_size(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.LookUpTableQuantizationParams)
+}
+
+size_t LookUpTableQuantizationParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.LookUpTableQuantizationParams)
+  size_t total_size = 0;
+
+  // repeated float floatValue = 1;
+  {
+    unsigned int count = this->floatvalue_size();
+    size_t data_size = 4UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _floatvalue_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void LookUpTableQuantizationParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const LookUpTableQuantizationParams*>(&from));
+}
+
+void LookUpTableQuantizationParams::MergeFrom(const LookUpTableQuantizationParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.LookUpTableQuantizationParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  floatvalue_.MergeFrom(from.floatvalue_);
+}
+
+void LookUpTableQuantizationParams::CopyFrom(const LookUpTableQuantizationParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.LookUpTableQuantizationParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool LookUpTableQuantizationParams::IsInitialized() const {
+  return true;
+}
+
+void LookUpTableQuantizationParams::Swap(LookUpTableQuantizationParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void LookUpTableQuantizationParams::InternalSwap(LookUpTableQuantizationParams* other) {
+  floatvalue_.InternalSwap(&other->floatvalue_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string LookUpTableQuantizationParams::GetTypeName() const {
+  return "CoreML.Specification.LookUpTableQuantizationParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// LookUpTableQuantizationParams
+
+// repeated float floatValue = 1;
+int LookUpTableQuantizationParams::floatvalue_size() const {
+  return floatvalue_.size();
+}
+void LookUpTableQuantizationParams::clear_floatvalue() {
+  floatvalue_.Clear();
+}
+float LookUpTableQuantizationParams::floatvalue(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+  return floatvalue_.Get(index);
+}
+void LookUpTableQuantizationParams::set_floatvalue(int index, float value) {
+  floatvalue_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+}
+void LookUpTableQuantizationParams::add_floatvalue(float value) {
+  floatvalue_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+}
+const ::google::protobuf::RepeatedField< float >&
+LookUpTableQuantizationParams::floatvalue() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+  return floatvalue_;
+}
+::google::protobuf::RepeatedField< float >*
+LookUpTableQuantizationParams::mutable_floatvalue() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+  return &floatvalue_;
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -19828,13 +20865,13 @@ bool SliceLayerParams::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // uint64 startIndex = 1;
+      // int64 startIndex = 1;
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(8u)) {
 
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
                  input, &startindex_)));
         } else {
           goto handle_unusual;
@@ -19912,9 +20949,9 @@ void SliceLayerParams::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // uint64 startIndex = 1;
+  // int64 startIndex = 1;
   if (this->startindex() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->startindex(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->startindex(), output);
   }
 
   // int64 endIndex = 2;
@@ -19940,10 +20977,10 @@ size_t SliceLayerParams::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.SliceLayerParams)
   size_t total_size = 0;
 
-  // uint64 startIndex = 1;
+  // int64 startIndex = 1;
   if (this->startindex() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt64Size(
+      ::google::protobuf::internal::WireFormatLite::Int64Size(
         this->startindex());
   }
 
@@ -20030,15 +21067,15 @@ void SliceLayerParams::InternalSwap(SliceLayerParams* other) {
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // SliceLayerParams
 
-// uint64 startIndex = 1;
+// int64 startIndex = 1;
 void SliceLayerParams::clear_startindex() {
-  startindex_ = GOOGLE_ULONGLONG(0);
+  startindex_ = GOOGLE_LONGLONG(0);
 }
-::google::protobuf::uint64 SliceLayerParams::startindex() const {
+::google::protobuf::int64 SliceLayerParams::startindex() const {
   // @@protoc_insertion_point(field_get:CoreML.Specification.SliceLayerParams.startIndex)
   return startindex_;
 }
-void SliceLayerParams::set_startindex(::google::protobuf::uint64 value) {
+void SliceLayerParams::set_startindex(::google::protobuf::int64 value) {
   
   startindex_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.SliceLayerParams.startIndex)

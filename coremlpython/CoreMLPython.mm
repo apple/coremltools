@@ -3,6 +3,8 @@
 #import "CoreMLPython.h"
 #import "CoreMLPythonUtils.h"
 #import "Globals.hpp"
+#import "NeuralNetworkShapes.hpp"
+#import "Utils.hpp"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-prototypes"
@@ -73,9 +75,34 @@ py::dict Model::predict(const py::dict& input, bool useCPUOnly) {
 }
 
 int32_t Model::maximumSupportedSpecificationVersion() {
-    // Does this get the one from the public tools or the one from the framework in the OS?
-    // Looks like it's the OS framework version, which means this will work the way I want 
     return CoreML::MLMODEL_SPECIFICATION_VERSION;
+}
+
+NeuralNetworkShapeInformation::NeuralNetworkShapeInformation(const std::string& filename) {
+    CoreML::Specification::Model model;
+    Result r = CoreML::loadSpecificationPath(model, filename);
+    shaper = std::unique_ptr<NeuralNetworkShaper>(new NeuralNetworkShaper(model));
+}
+
+NeuralNetworkShapeInformation::NeuralNetworkShapeInformation(const std::string& filename, bool useInputAndOutputConstraints) {
+    CoreML::Specification::Model model;
+    Result r = CoreML::loadSpecificationPath(model, filename);
+    shaper = std::unique_ptr<NeuralNetworkShaper>(new NeuralNetworkShaper(model, useInputAndOutputConstraints));
+}
+
+void NeuralNetworkShapeInformation::init(const std::string& filename) {
+    CoreML::Specification::Model model;
+    Result r = CoreML::loadSpecificationPath(model, filename);
+    shaper.reset(new NeuralNetworkShaper(model));
+}
+
+py::dict NeuralNetworkShapeInformation::shape(const std::string& name) {
+    const ShapeConstraint& constraint = shaper->shape(name);
+    return Utils::shapeConstraintToPyDict(constraint);
+}
+
+void NeuralNetworkShapeInformation::print() const {
+    shaper->print();
 }
 
 PYBIND11_PLUGIN(libcoremlpython) {
@@ -85,6 +112,12 @@ PYBIND11_PLUGIN(libcoremlpython) {
         .def(py::init<const std::string&>())
         .def("predict", &Model::predict)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);
+
+    py::class_<NeuralNetworkShapeInformation>(m, "_NeuralNetworkShaperProxy")
+        .def(py::init<const std::string&>())
+        .def(py::init<const std::string&, bool>())
+        .def("shape", &NeuralNetworkShapeInformation::shape)
+        .def("print", &NeuralNetworkShapeInformation::print);
 
     return m.ptr();
 }

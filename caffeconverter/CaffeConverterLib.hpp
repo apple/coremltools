@@ -6,8 +6,6 @@
 //  Copyright © 2017 Apple Inc. All rights reserved.
 //
 
-#include "../mlmodel/src/Export.hpp"
-
 #include <map>
 #include <string>
 #include <set>
@@ -29,7 +27,7 @@
  * @param[in]  predictedFeatureName Name of the predicted feature.
  * \returns True if the conversion happened successfully.
  */
-void EXPORT convertCaffe(const std::string& srcModelPath,
+void convertCaffe(const std::string& srcModelPath,
                          const std::string& dstModelPath,
                          const std::map<std::string, std::string>& meanImageProtoPath = std::map<std::string, std::string>(),
                          const std::set<std::string>& imageInputs = std::set<std::string>(),

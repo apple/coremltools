@@ -318,7 +318,10 @@ class NetGraph(object):
     
     def _get_first_shared_layer(self):
         for idx, layer in enumerate(self.layer_list):
-            if (not _is_merge_layer(self.keras_layer_map[layer])) and len(self.get_predecessors(layer)) > 1:   # weight sharing criteria
+            keras_layer = self.keras_layer_map[layer]
+            if not _is_merge_layer(self.keras_layer_map[layer]) and \
+                len(self.get_predecessors(layer)) > 1 and \
+                len(keras_layer._inbound_nodes) > 1:
                 return idx
         return -1
     

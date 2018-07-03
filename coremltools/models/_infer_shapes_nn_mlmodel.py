@@ -457,6 +457,8 @@ def infer_shapes(nn_spec, input_spec, input_shape_dict = None):
         for inp in layer.input:
             assert inp in shape_dict, ('Input %s shape not cannot be determined' %(inp))
         layer_type = layer.WhichOneof('layer')
+        if layer_type == 'custom':
+            break
         layer_translator = _get_translator_function(layer_type)
         layer_translator(layer, shape_dict)
 

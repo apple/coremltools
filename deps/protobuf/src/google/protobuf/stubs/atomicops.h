@@ -71,6 +71,13 @@ typedef intptr_t Atomic64;
 typedef intptr_t Atomic32;
 typedef int64 Atomic64;
 #endif
+#elif defined(GOOGLE_PROTOBUF_ARCH_AARCH64)
+typedef int32 Atomic32;
+#if defined(GOOGLE_PROTOBUF_ARCH_64_BIT)
+typedef intptr_t Atomic64;
+#else /* for -arch arm64_32 */
+typedef int64 Atomic64;
+#endif
 #else
 typedef int32 Atomic32;
 #ifdef GOOGLE_PROTOBUF_ARCH_64_BIT

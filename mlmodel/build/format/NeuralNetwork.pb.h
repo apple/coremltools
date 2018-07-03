@@ -83,6 +83,15 @@ extern AddLayerParamsDefaultTypeInternal _AddLayerParams_default_instance_;
 class ArrayFeatureType;
 class ArrayFeatureTypeDefaultTypeInternal;
 extern ArrayFeatureTypeDefaultTypeInternal _ArrayFeatureType_default_instance_;
+class ArrayFeatureType_EnumeratedShapes;
+class ArrayFeatureType_EnumeratedShapesDefaultTypeInternal;
+extern ArrayFeatureType_EnumeratedShapesDefaultTypeInternal _ArrayFeatureType_EnumeratedShapes_default_instance_;
+class ArrayFeatureType_Shape;
+class ArrayFeatureType_ShapeDefaultTypeInternal;
+extern ArrayFeatureType_ShapeDefaultTypeInternal _ArrayFeatureType_Shape_default_instance_;
+class ArrayFeatureType_ShapeRange;
+class ArrayFeatureType_ShapeRangeDefaultTypeInternal;
+extern ArrayFeatureType_ShapeRangeDefaultTypeInternal _ArrayFeatureType_ShapeRange_default_instance_;
 class AverageLayerParams;
 class AverageLayerParamsDefaultTypeInternal;
 extern AverageLayerParamsDefaultTypeInternal _AverageLayerParams_default_instance_;
@@ -146,6 +155,15 @@ extern GRULayerParamsDefaultTypeInternal _GRULayerParams_default_instance_;
 class ImageFeatureType;
 class ImageFeatureTypeDefaultTypeInternal;
 extern ImageFeatureTypeDefaultTypeInternal _ImageFeatureType_default_instance_;
+class ImageFeatureType_EnumeratedImageSizes;
+class ImageFeatureType_EnumeratedImageSizesDefaultTypeInternal;
+extern ImageFeatureType_EnumeratedImageSizesDefaultTypeInternal _ImageFeatureType_EnumeratedImageSizes_default_instance_;
+class ImageFeatureType_ImageSize;
+class ImageFeatureType_ImageSizeDefaultTypeInternal;
+extern ImageFeatureType_ImageSizeDefaultTypeInternal _ImageFeatureType_ImageSize_default_instance_;
+class ImageFeatureType_ImageSizeRange;
+class ImageFeatureType_ImageSizeRangeDefaultTypeInternal;
+extern ImageFeatureType_ImageSizeRangeDefaultTypeInternal _ImageFeatureType_ImageSizeRange_default_instance_;
 class InnerProductLayerParams;
 class InnerProductLayerParamsDefaultTypeInternal;
 extern InnerProductLayerParamsDefaultTypeInternal _InnerProductLayerParams_default_instance_;
@@ -179,9 +197,15 @@ extern LSTMParamsDefaultTypeInternal _LSTMParams_default_instance_;
 class LSTMWeightParams;
 class LSTMWeightParamsDefaultTypeInternal;
 extern LSTMWeightParamsDefaultTypeInternal _LSTMWeightParams_default_instance_;
+class LinearQuantizationParams;
+class LinearQuantizationParamsDefaultTypeInternal;
+extern LinearQuantizationParamsDefaultTypeInternal _LinearQuantizationParams_default_instance_;
 class LoadConstantLayerParams;
 class LoadConstantLayerParamsDefaultTypeInternal;
 extern LoadConstantLayerParamsDefaultTypeInternal _LoadConstantLayerParams_default_instance_;
+class LookUpTableQuantizationParams;
+class LookUpTableQuantizationParamsDefaultTypeInternal;
+extern LookUpTableQuantizationParamsDefaultTypeInternal _LookUpTableQuantizationParams_default_instance_;
 class MaxLayerParams;
 class MaxLayerParamsDefaultTypeInternal;
 extern MaxLayerParamsDefaultTypeInternal _MaxLayerParams_default_instance_;
@@ -236,6 +260,9 @@ extern PoolingLayerParamsDefaultTypeInternal _PoolingLayerParams_default_instanc
 class PoolingLayerParams_ValidCompletePadding;
 class PoolingLayerParams_ValidCompletePaddingDefaultTypeInternal;
 extern PoolingLayerParams_ValidCompletePaddingDefaultTypeInternal _PoolingLayerParams_ValidCompletePadding_default_instance_;
+class QuantizationParams;
+class QuantizationParamsDefaultTypeInternal;
+extern QuantizationParamsDefaultTypeInternal _QuantizationParams_default_instance_;
 class ReduceLayerParams;
 class ReduceLayerParamsDefaultTypeInternal;
 extern ReduceLayerParamsDefaultTypeInternal _ReduceLayerParams_default_instance_;
@@ -251,12 +278,18 @@ extern SamePaddingDefaultTypeInternal _SamePadding_default_instance_;
 class ScaleLayerParams;
 class ScaleLayerParamsDefaultTypeInternal;
 extern ScaleLayerParamsDefaultTypeInternal _ScaleLayerParams_default_instance_;
+class SequenceFeatureType;
+class SequenceFeatureTypeDefaultTypeInternal;
+extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_instance_;
 class SequenceRepeatLayerParams;
 class SequenceRepeatLayerParamsDefaultTypeInternal;
 extern SequenceRepeatLayerParamsDefaultTypeInternal _SequenceRepeatLayerParams_default_instance_;
 class SimpleRecurrentLayerParams;
 class SimpleRecurrentLayerParamsDefaultTypeInternal;
 extern SimpleRecurrentLayerParamsDefaultTypeInternal _SimpleRecurrentLayerParams_default_instance_;
+class SizeRange;
+class SizeRangeDefaultTypeInternal;
+extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
 class SliceLayerParams;
 class SliceLayerParamsDefaultTypeInternal;
 extern SliceLayerParamsDefaultTypeInternal _SliceLayerParams_default_instance_;
@@ -3156,6 +3189,15 @@ class WeightParams : public ::google::protobuf::MessageLite /* @@protoc_insertio
   ::std::string* release_rawvalue();
   void set_allocated_rawvalue(::std::string* rawvalue);
 
+  // .CoreML.Specification.QuantizationParams quantization = 40;
+  bool has_quantization() const;
+  void clear_quantization();
+  static const int kQuantizationFieldNumber = 40;
+  const ::CoreML::Specification::QuantizationParams& quantization() const;
+  ::CoreML::Specification::QuantizationParams* mutable_quantization();
+  ::CoreML::Specification::QuantizationParams* release_quantization();
+  void set_allocated_quantization(::CoreML::Specification::QuantizationParams* quantization);
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.WeightParams)
  private:
 
@@ -3164,6 +3206,307 @@ class WeightParams : public ::google::protobuf::MessageLite /* @@protoc_insertio
   mutable int _floatvalue_cached_byte_size_;
   ::google::protobuf::internal::ArenaStringPtr float16value_;
   ::google::protobuf::internal::ArenaStringPtr rawvalue_;
+  ::CoreML::Specification::QuantizationParams* quantization_;
+  mutable int _cached_size_;
+  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class QuantizationParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.QuantizationParams) */ {
+ public:
+  QuantizationParams();
+  virtual ~QuantizationParams();
+
+  QuantizationParams(const QuantizationParams& from);
+
+  inline QuantizationParams& operator=(const QuantizationParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const QuantizationParams& default_instance();
+
+  enum QuantizationTypeCase {
+    kLinearQuantization = 101,
+    kLookupTableQuantization = 102,
+    QUANTIZATIONTYPE_NOT_SET = 0,
+  };
+
+  static inline const QuantizationParams* internal_default_instance() {
+    return reinterpret_cast<const QuantizationParams*>(
+               &_QuantizationParams_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    24;
+
+  void Swap(QuantizationParams* other);
+
+  // implements Message ----------------------------------------------
+
+  inline QuantizationParams* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  QuantizationParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const QuantizationParams& from);
+  void MergeFrom(const QuantizationParams& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(QuantizationParams* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // uint64 numberOfBits = 1;
+  void clear_numberofbits();
+  static const int kNumberOfBitsFieldNumber = 1;
+  ::google::protobuf::uint64 numberofbits() const;
+  void set_numberofbits(::google::protobuf::uint64 value);
+
+  // .CoreML.Specification.LinearQuantizationParams linearQuantization = 101;
+  bool has_linearquantization() const;
+  void clear_linearquantization();
+  static const int kLinearQuantizationFieldNumber = 101;
+  const ::CoreML::Specification::LinearQuantizationParams& linearquantization() const;
+  ::CoreML::Specification::LinearQuantizationParams* mutable_linearquantization();
+  ::CoreML::Specification::LinearQuantizationParams* release_linearquantization();
+  void set_allocated_linearquantization(::CoreML::Specification::LinearQuantizationParams* linearquantization);
+
+  // .CoreML.Specification.LookUpTableQuantizationParams lookupTableQuantization = 102;
+  bool has_lookuptablequantization() const;
+  void clear_lookuptablequantization();
+  static const int kLookupTableQuantizationFieldNumber = 102;
+  const ::CoreML::Specification::LookUpTableQuantizationParams& lookuptablequantization() const;
+  ::CoreML::Specification::LookUpTableQuantizationParams* mutable_lookuptablequantization();
+  ::CoreML::Specification::LookUpTableQuantizationParams* release_lookuptablequantization();
+  void set_allocated_lookuptablequantization(::CoreML::Specification::LookUpTableQuantizationParams* lookuptablequantization);
+
+  QuantizationTypeCase QuantizationType_case() const;
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.QuantizationParams)
+ private:
+  void set_has_linearquantization();
+  void set_has_lookuptablequantization();
+
+  inline bool has_QuantizationType() const;
+  void clear_QuantizationType();
+  inline void clear_has_QuantizationType();
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::uint64 numberofbits_;
+  union QuantizationTypeUnion {
+    QuantizationTypeUnion() {}
+    ::CoreML::Specification::LinearQuantizationParams* linearquantization_;
+    ::CoreML::Specification::LookUpTableQuantizationParams* lookuptablequantization_;
+  } QuantizationType_;
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _oneof_case_[1];
+
+  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class LinearQuantizationParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.LinearQuantizationParams) */ {
+ public:
+  LinearQuantizationParams();
+  virtual ~LinearQuantizationParams();
+
+  LinearQuantizationParams(const LinearQuantizationParams& from);
+
+  inline LinearQuantizationParams& operator=(const LinearQuantizationParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const LinearQuantizationParams& default_instance();
+
+  static inline const LinearQuantizationParams* internal_default_instance() {
+    return reinterpret_cast<const LinearQuantizationParams*>(
+               &_LinearQuantizationParams_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    25;
+
+  void Swap(LinearQuantizationParams* other);
+
+  // implements Message ----------------------------------------------
+
+  inline LinearQuantizationParams* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  LinearQuantizationParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const LinearQuantizationParams& from);
+  void MergeFrom(const LinearQuantizationParams& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LinearQuantizationParams* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated float scale = 1;
+  int scale_size() const;
+  void clear_scale();
+  static const int kScaleFieldNumber = 1;
+  float scale(int index) const;
+  void set_scale(int index, float value);
+  void add_scale(float value);
+  const ::google::protobuf::RepeatedField< float >&
+      scale() const;
+  ::google::protobuf::RepeatedField< float >*
+      mutable_scale();
+
+  // repeated float bias = 2;
+  int bias_size() const;
+  void clear_bias();
+  static const int kBiasFieldNumber = 2;
+  float bias(int index) const;
+  void set_bias(int index, float value);
+  void add_bias(float value);
+  const ::google::protobuf::RepeatedField< float >&
+      bias() const;
+  ::google::protobuf::RepeatedField< float >*
+      mutable_bias();
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.LinearQuantizationParams)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::RepeatedField< float > scale_;
+  mutable int _scale_cached_byte_size_;
+  ::google::protobuf::RepeatedField< float > bias_;
+  mutable int _bias_cached_byte_size_;
+  mutable int _cached_size_;
+  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
+class LookUpTableQuantizationParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.LookUpTableQuantizationParams) */ {
+ public:
+  LookUpTableQuantizationParams();
+  virtual ~LookUpTableQuantizationParams();
+
+  LookUpTableQuantizationParams(const LookUpTableQuantizationParams& from);
+
+  inline LookUpTableQuantizationParams& operator=(const LookUpTableQuantizationParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const LookUpTableQuantizationParams& default_instance();
+
+  static inline const LookUpTableQuantizationParams* internal_default_instance() {
+    return reinterpret_cast<const LookUpTableQuantizationParams*>(
+               &_LookUpTableQuantizationParams_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    26;
+
+  void Swap(LookUpTableQuantizationParams* other);
+
+  // implements Message ----------------------------------------------
+
+  inline LookUpTableQuantizationParams* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  LookUpTableQuantizationParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const LookUpTableQuantizationParams& from);
+  void MergeFrom(const LookUpTableQuantizationParams& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(LookUpTableQuantizationParams* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // repeated float floatValue = 1;
+  int floatvalue_size() const;
+  void clear_floatvalue();
+  static const int kFloatValueFieldNumber = 1;
+  float floatvalue(int index) const;
+  void set_floatvalue(int index, float value);
+  void add_floatvalue(float value);
+  const ::google::protobuf::RepeatedField< float >&
+      floatvalue() const;
+  ::google::protobuf::RepeatedField< float >*
+      mutable_floatvalue();
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.LookUpTableQuantizationParams)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::RepeatedField< float > floatvalue_;
+  mutable int _floatvalue_cached_byte_size_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -3194,7 +3537,7 @@ class ConvolutionLayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_ConvolutionLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    24;
+    27;
 
   void Swap(ConvolutionLayerParams* other);
 
@@ -3408,7 +3751,7 @@ class InnerProductLayerParams : public ::google::protobuf::MessageLite /* @@prot
                &_InnerProductLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    25;
+    28;
 
   void Swap(InnerProductLayerParams* other);
 
@@ -3520,7 +3863,7 @@ class EmbeddingLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
                &_EmbeddingLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    26;
+    29;
 
   void Swap(EmbeddingLayerParams* other);
 
@@ -3632,7 +3975,7 @@ class BatchnormLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
                &_BatchnormLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    27;
+    30;
 
   void Swap(BatchnormLayerParams* other);
 
@@ -3771,7 +4114,7 @@ class PoolingLayerParams_ValidCompletePadding : public ::google::protobuf::Messa
                &_PoolingLayerParams_ValidCompletePadding_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    28;
+    31;
 
   void Swap(PoolingLayerParams_ValidCompletePadding* other);
 
@@ -3863,7 +4206,7 @@ class PoolingLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_PoolingLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    29;
+    32;
 
   void Swap(PoolingLayerParams* other);
 
@@ -4045,7 +4388,7 @@ class PaddingLayerParams_PaddingConstant : public ::google::protobuf::MessageLit
                &_PaddingLayerParams_PaddingConstant_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    30;
+    33;
 
   void Swap(PaddingLayerParams_PaddingConstant* other);
 
@@ -4123,7 +4466,7 @@ class PaddingLayerParams_PaddingReflection : public ::google::protobuf::MessageL
                &_PaddingLayerParams_PaddingReflection_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    31;
+    34;
 
   void Swap(PaddingLayerParams_PaddingReflection* other);
 
@@ -4194,7 +4537,7 @@ class PaddingLayerParams_PaddingReplication : public ::google::protobuf::Message
                &_PaddingLayerParams_PaddingReplication_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    32;
+    35;
 
   void Swap(PaddingLayerParams_PaddingReplication* other);
 
@@ -4272,7 +4615,7 @@ class PaddingLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_PaddingLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    33;
+    36;
 
   void Swap(PaddingLayerParams* other);
 
@@ -4400,7 +4743,7 @@ class ConcatLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_ConcatLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    34;
+    37;
 
   void Swap(ConcatLayerParams* other);
 
@@ -4478,7 +4821,7 @@ class LRNLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_LRNLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    35;
+    38;
 
   void Swap(LRNLayerParams* other);
 
@@ -4577,7 +4920,7 @@ class SoftmaxLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_SoftmaxLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    36;
+    39;
 
   void Swap(SoftmaxLayerParams* other);
 
@@ -4648,7 +4991,7 @@ class SplitLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_SplitLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    37;
+    40;
 
   void Swap(SplitLayerParams* other);
 
@@ -4726,7 +5069,7 @@ class AddLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_AddLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    38;
+    41;
 
   void Swap(AddLayerParams* other);
 
@@ -4804,7 +5147,7 @@ class MultiplyLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_MultiplyLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    39;
+    42;
 
   void Swap(MultiplyLayerParams* other);
 
@@ -4882,7 +5225,7 @@ class UnaryFunctionLayerParams : public ::google::protobuf::MessageLite /* @@pro
                &_UnaryFunctionLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    40;
+    43;
 
   void Swap(UnaryFunctionLayerParams* other);
 
@@ -5015,7 +5358,7 @@ class UpsampleLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_UpsampleLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    41;
+    44;
 
   void Swap(UpsampleLayerParams* other);
 
@@ -5122,7 +5465,7 @@ class BiasLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_BiasLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    42;
+    45;
 
   void Swap(BiasLayerParams* other);
 
@@ -5217,7 +5560,7 @@ class ScaleLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_ScaleLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    43;
+    46;
 
   void Swap(ScaleLayerParams* other);
 
@@ -5343,7 +5686,7 @@ class LoadConstantLayerParams : public ::google::protobuf::MessageLite /* @@prot
                &_LoadConstantLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    44;
+    47;
 
   void Swap(LoadConstantLayerParams* other);
 
@@ -5438,7 +5781,7 @@ class L2NormalizeLayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_L2NormalizeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    45;
+    48;
 
   void Swap(L2NormalizeLayerParams* other);
 
@@ -5516,7 +5859,7 @@ class FlattenLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_FlattenLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    46;
+    49;
 
   void Swap(FlattenLayerParams* other);
 
@@ -5609,7 +5952,7 @@ class ReshapeLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_ReshapeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    47;
+    50;
 
   void Swap(ReshapeLayerParams* other);
 
@@ -5716,7 +6059,7 @@ class PermuteLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_PermuteLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    48;
+    51;
 
   void Swap(PermuteLayerParams* other);
 
@@ -5801,7 +6144,7 @@ class ReorganizeDataLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_ReorganizeDataLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    49;
+    52;
 
   void Swap(ReorganizeDataLayerParams* other);
 
@@ -5901,7 +6244,7 @@ class SliceLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_SliceLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    50;
+    53;
 
   void Swap(SliceLayerParams* other);
 
@@ -5961,11 +6304,11 @@ class SliceLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
 
   // accessors -------------------------------------------------------
 
-  // uint64 startIndex = 1;
+  // int64 startIndex = 1;
   void clear_startindex();
   static const int kStartIndexFieldNumber = 1;
-  ::google::protobuf::uint64 startindex() const;
-  void set_startindex(::google::protobuf::uint64 value);
+  ::google::protobuf::int64 startindex() const;
+  void set_startindex(::google::protobuf::int64 value);
 
   // int64 endIndex = 2;
   void clear_endindex();
@@ -5989,7 +6332,7 @@ class SliceLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::uint64 startindex_;
+  ::google::protobuf::int64 startindex_;
   ::google::protobuf::int64 endindex_;
   ::google::protobuf::uint64 stride_;
   int axis_;
@@ -6017,7 +6360,7 @@ class ReduceLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_ReduceLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    51;
+    54;
 
   void Swap(ReduceLayerParams* other);
 
@@ -6161,7 +6504,7 @@ class CropLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_CropLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    52;
+    55;
 
   void Swap(CropLayerParams* other);
 
@@ -6256,7 +6599,7 @@ class AverageLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_AverageLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    53;
+    56;
 
   void Swap(AverageLayerParams* other);
 
@@ -6327,7 +6670,7 @@ class MaxLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_MaxLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    54;
+    57;
 
   void Swap(MaxLayerParams* other);
 
@@ -6398,7 +6741,7 @@ class MinLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_MinLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    55;
+    58;
 
   void Swap(MinLayerParams* other);
 
@@ -6469,7 +6812,7 @@ class DotProductLayerParams : public ::google::protobuf::MessageLite /* @@protoc
                &_DotProductLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    56;
+    59;
 
   void Swap(DotProductLayerParams* other);
 
@@ -6547,7 +6890,7 @@ class MeanVarianceNormalizeLayerParams : public ::google::protobuf::MessageLite 
                &_MeanVarianceNormalizeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    57;
+    60;
 
   void Swap(MeanVarianceNormalizeLayerParams* other);
 
@@ -6639,7 +6982,7 @@ class SequenceRepeatLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_SequenceRepeatLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    58;
+    61;
 
   void Swap(SequenceRepeatLayerParams* other);
 
@@ -6717,7 +7060,7 @@ class SimpleRecurrentLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_SimpleRecurrentLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    59;
+    62;
 
   void Swap(SimpleRecurrentLayerParams* other);
 
@@ -6863,7 +7206,7 @@ class GRULayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_GRULayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    60;
+    63;
 
   void Swap(GRULayerParams* other);
 
@@ -7072,7 +7415,7 @@ class LSTMParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_
                &_LSTMParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    61;
+    64;
 
   void Swap(LSTMParams* other);
 
@@ -7185,7 +7528,7 @@ class LSTMWeightParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_LSTMWeightParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    62;
+    65;
 
   void Swap(LSTMWeightParams* other);
 
@@ -7406,7 +7749,7 @@ class UniDirectionalLSTMLayerParams : public ::google::protobuf::MessageLite /* 
                &_UniDirectionalLSTMLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    63;
+    66;
 
   void Swap(UniDirectionalLSTMLayerParams* other);
 
@@ -7531,7 +7874,7 @@ class BiDirectionalLSTMLayerParams : public ::google::protobuf::MessageLite /* @
                &_BiDirectionalLSTMLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    64;
+    67;
 
   void Swap(BiDirectionalLSTMLayerParams* other);
 
@@ -7674,7 +8017,7 @@ class CustomLayerParams_CustomLayerParamValue : public ::google::protobuf::Messa
                &_CustomLayerParams_CustomLayerParamValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    65;
+    68;
 
   void Swap(CustomLayerParams_CustomLayerParamValue* other);
 
@@ -7821,7 +8164,7 @@ class CustomLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_CustomLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    67;
+    70;
 
   void Swap(CustomLayerParams* other);
 
@@ -7966,7 +8309,7 @@ class NeuralNetworkClassifier : public ::google::protobuf::MessageLite /* @@prot
                &_NeuralNetworkClassifier_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    68;
+    71;
 
   void Swap(NeuralNetworkClassifier* other);
 
@@ -8110,7 +8453,7 @@ class NeuralNetworkRegressor : public ::google::protobuf::MessageLite /* @@proto
                &_NeuralNetworkRegressor_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    69;
+    72;
 
   void Swap(NeuralNetworkRegressor* other);
 
@@ -11703,6 +12046,266 @@ inline void WeightParams::set_allocated_rawvalue(::std::string* rawvalue) {
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.rawValue)
 }
 
+// .CoreML.Specification.QuantizationParams quantization = 40;
+inline bool WeightParams::has_quantization() const {
+  return this != internal_default_instance() && quantization_ != NULL;
+}
+inline void WeightParams::clear_quantization() {
+  if (GetArenaNoVirtual() == NULL && quantization_ != NULL) delete quantization_;
+  quantization_ = NULL;
+}
+inline const ::CoreML::Specification::QuantizationParams& WeightParams::quantization() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.WeightParams.quantization)
+  return quantization_ != NULL ? *quantization_
+                         : *::CoreML::Specification::QuantizationParams::internal_default_instance();
+}
+inline ::CoreML::Specification::QuantizationParams* WeightParams::mutable_quantization() {
+  
+  if (quantization_ == NULL) {
+    quantization_ = new ::CoreML::Specification::QuantizationParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.WeightParams.quantization)
+  return quantization_;
+}
+inline ::CoreML::Specification::QuantizationParams* WeightParams::release_quantization() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.WeightParams.quantization)
+  
+  ::CoreML::Specification::QuantizationParams* temp = quantization_;
+  quantization_ = NULL;
+  return temp;
+}
+inline void WeightParams::set_allocated_quantization(::CoreML::Specification::QuantizationParams* quantization) {
+  delete quantization_;
+  quantization_ = quantization;
+  if (quantization) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.quantization)
+}
+
+// -------------------------------------------------------------------
+
+// QuantizationParams
+
+// uint64 numberOfBits = 1;
+inline void QuantizationParams::clear_numberofbits() {
+  numberofbits_ = GOOGLE_ULONGLONG(0);
+}
+inline ::google::protobuf::uint64 QuantizationParams::numberofbits() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.QuantizationParams.numberOfBits)
+  return numberofbits_;
+}
+inline void QuantizationParams::set_numberofbits(::google::protobuf::uint64 value) {
+  
+  numberofbits_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.QuantizationParams.numberOfBits)
+}
+
+// .CoreML.Specification.LinearQuantizationParams linearQuantization = 101;
+inline bool QuantizationParams::has_linearquantization() const {
+  return QuantizationType_case() == kLinearQuantization;
+}
+inline void QuantizationParams::set_has_linearquantization() {
+  _oneof_case_[0] = kLinearQuantization;
+}
+inline void QuantizationParams::clear_linearquantization() {
+  if (has_linearquantization()) {
+    delete QuantizationType_.linearquantization_;
+    clear_has_QuantizationType();
+  }
+}
+inline  const ::CoreML::Specification::LinearQuantizationParams& QuantizationParams::linearquantization() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.QuantizationParams.linearQuantization)
+  return has_linearquantization()
+      ? *QuantizationType_.linearquantization_
+      : ::CoreML::Specification::LinearQuantizationParams::default_instance();
+}
+inline ::CoreML::Specification::LinearQuantizationParams* QuantizationParams::mutable_linearquantization() {
+  if (!has_linearquantization()) {
+    clear_QuantizationType();
+    set_has_linearquantization();
+    QuantizationType_.linearquantization_ = new ::CoreML::Specification::LinearQuantizationParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.QuantizationParams.linearQuantization)
+  return QuantizationType_.linearquantization_;
+}
+inline ::CoreML::Specification::LinearQuantizationParams* QuantizationParams::release_linearquantization() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.QuantizationParams.linearQuantization)
+  if (has_linearquantization()) {
+    clear_has_QuantizationType();
+    ::CoreML::Specification::LinearQuantizationParams* temp = QuantizationType_.linearquantization_;
+    QuantizationType_.linearquantization_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void QuantizationParams::set_allocated_linearquantization(::CoreML::Specification::LinearQuantizationParams* linearquantization) {
+  clear_QuantizationType();
+  if (linearquantization) {
+    set_has_linearquantization();
+    QuantizationType_.linearquantization_ = linearquantization;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.QuantizationParams.linearQuantization)
+}
+
+// .CoreML.Specification.LookUpTableQuantizationParams lookupTableQuantization = 102;
+inline bool QuantizationParams::has_lookuptablequantization() const {
+  return QuantizationType_case() == kLookupTableQuantization;
+}
+inline void QuantizationParams::set_has_lookuptablequantization() {
+  _oneof_case_[0] = kLookupTableQuantization;
+}
+inline void QuantizationParams::clear_lookuptablequantization() {
+  if (has_lookuptablequantization()) {
+    delete QuantizationType_.lookuptablequantization_;
+    clear_has_QuantizationType();
+  }
+}
+inline  const ::CoreML::Specification::LookUpTableQuantizationParams& QuantizationParams::lookuptablequantization() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.QuantizationParams.lookupTableQuantization)
+  return has_lookuptablequantization()
+      ? *QuantizationType_.lookuptablequantization_
+      : ::CoreML::Specification::LookUpTableQuantizationParams::default_instance();
+}
+inline ::CoreML::Specification::LookUpTableQuantizationParams* QuantizationParams::mutable_lookuptablequantization() {
+  if (!has_lookuptablequantization()) {
+    clear_QuantizationType();
+    set_has_lookuptablequantization();
+    QuantizationType_.lookuptablequantization_ = new ::CoreML::Specification::LookUpTableQuantizationParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.QuantizationParams.lookupTableQuantization)
+  return QuantizationType_.lookuptablequantization_;
+}
+inline ::CoreML::Specification::LookUpTableQuantizationParams* QuantizationParams::release_lookuptablequantization() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.QuantizationParams.lookupTableQuantization)
+  if (has_lookuptablequantization()) {
+    clear_has_QuantizationType();
+    ::CoreML::Specification::LookUpTableQuantizationParams* temp = QuantizationType_.lookuptablequantization_;
+    QuantizationType_.lookuptablequantization_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void QuantizationParams::set_allocated_lookuptablequantization(::CoreML::Specification::LookUpTableQuantizationParams* lookuptablequantization) {
+  clear_QuantizationType();
+  if (lookuptablequantization) {
+    set_has_lookuptablequantization();
+    QuantizationType_.lookuptablequantization_ = lookuptablequantization;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.QuantizationParams.lookupTableQuantization)
+}
+
+inline bool QuantizationParams::has_QuantizationType() const {
+  return QuantizationType_case() != QUANTIZATIONTYPE_NOT_SET;
+}
+inline void QuantizationParams::clear_has_QuantizationType() {
+  _oneof_case_[0] = QUANTIZATIONTYPE_NOT_SET;
+}
+inline QuantizationParams::QuantizationTypeCase QuantizationParams::QuantizationType_case() const {
+  return QuantizationParams::QuantizationTypeCase(_oneof_case_[0]);
+}
+// -------------------------------------------------------------------
+
+// LinearQuantizationParams
+
+// repeated float scale = 1;
+inline int LinearQuantizationParams::scale_size() const {
+  return scale_.size();
+}
+inline void LinearQuantizationParams::clear_scale() {
+  scale_.Clear();
+}
+inline float LinearQuantizationParams::scale(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.LinearQuantizationParams.scale)
+  return scale_.Get(index);
+}
+inline void LinearQuantizationParams::set_scale(int index, float value) {
+  scale_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.LinearQuantizationParams.scale)
+}
+inline void LinearQuantizationParams::add_scale(float value) {
+  scale_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.LinearQuantizationParams.scale)
+}
+inline const ::google::protobuf::RepeatedField< float >&
+LinearQuantizationParams::scale() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.LinearQuantizationParams.scale)
+  return scale_;
+}
+inline ::google::protobuf::RepeatedField< float >*
+LinearQuantizationParams::mutable_scale() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.LinearQuantizationParams.scale)
+  return &scale_;
+}
+
+// repeated float bias = 2;
+inline int LinearQuantizationParams::bias_size() const {
+  return bias_.size();
+}
+inline void LinearQuantizationParams::clear_bias() {
+  bias_.Clear();
+}
+inline float LinearQuantizationParams::bias(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.LinearQuantizationParams.bias)
+  return bias_.Get(index);
+}
+inline void LinearQuantizationParams::set_bias(int index, float value) {
+  bias_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.LinearQuantizationParams.bias)
+}
+inline void LinearQuantizationParams::add_bias(float value) {
+  bias_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.LinearQuantizationParams.bias)
+}
+inline const ::google::protobuf::RepeatedField< float >&
+LinearQuantizationParams::bias() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.LinearQuantizationParams.bias)
+  return bias_;
+}
+inline ::google::protobuf::RepeatedField< float >*
+LinearQuantizationParams::mutable_bias() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.LinearQuantizationParams.bias)
+  return &bias_;
+}
+
+// -------------------------------------------------------------------
+
+// LookUpTableQuantizationParams
+
+// repeated float floatValue = 1;
+inline int LookUpTableQuantizationParams::floatvalue_size() const {
+  return floatvalue_.size();
+}
+inline void LookUpTableQuantizationParams::clear_floatvalue() {
+  floatvalue_.Clear();
+}
+inline float LookUpTableQuantizationParams::floatvalue(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+  return floatvalue_.Get(index);
+}
+inline void LookUpTableQuantizationParams::set_floatvalue(int index, float value) {
+  floatvalue_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+}
+inline void LookUpTableQuantizationParams::add_floatvalue(float value) {
+  floatvalue_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+}
+inline const ::google::protobuf::RepeatedField< float >&
+LookUpTableQuantizationParams::floatvalue() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+  return floatvalue_;
+}
+inline ::google::protobuf::RepeatedField< float >*
+LookUpTableQuantizationParams::mutable_floatvalue() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.LookUpTableQuantizationParams.floatValue)
+  return &floatvalue_;
+}
+
 // -------------------------------------------------------------------
 
 // ConvolutionLayerParams
@@ -13773,15 +14376,15 @@ inline void ReorganizeDataLayerParams::set_blocksize(::google::protobuf::uint64 
 
 // SliceLayerParams
 
-// uint64 startIndex = 1;
+// int64 startIndex = 1;
 inline void SliceLayerParams::clear_startindex() {
-  startindex_ = GOOGLE_ULONGLONG(0);
+  startindex_ = GOOGLE_LONGLONG(0);
 }
-inline ::google::protobuf::uint64 SliceLayerParams::startindex() const {
+inline ::google::protobuf::int64 SliceLayerParams::startindex() const {
   // @@protoc_insertion_point(field_get:CoreML.Specification.SliceLayerParams.startIndex)
   return startindex_;
 }
-inline void SliceLayerParams::set_startindex(::google::protobuf::uint64 value) {
+inline void SliceLayerParams::set_startindex(::google::protobuf::int64 value) {
   
   startindex_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.SliceLayerParams.startIndex)
@@ -16390,6 +16993,12 @@ NeuralNetworkRegressor::preprocessing() const {
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

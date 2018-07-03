@@ -10,10 +10,21 @@
 #include "Validators.hpp"
 #include "ValidatorUtils-inl.hpp"
 #include "../build/format/Model.pb.h"
+#include "Globals.hpp"
 
 namespace CoreML {
 
-    Result validateFeatureDescription(const Specification::FeatureDescription& desc, bool isInput) {
+
+
+    Result validateSizeRange(const Specification::SizeRange &range) {
+        if (range.upperbound() > 0 && range.lowerbound() > static_cast<unsigned long long>(range.upperbound())) {
+            return Result(ResultType::INVALID_MODEL_INTERFACE,
+                          "Size range is invalid (" + std::to_string(range.lowerbound()) + ", " + std::to_string(range.upperbound()) + " ).");
+        }
+        return Result();
+    }
+
+    Result validateFeatureDescription(const Specification::FeatureDescription& desc, int modelVersion, bool isInput) {
         if (desc.name() == "") {
             return Result(ResultType::INVALID_MODEL_INTERFACE,
                           "Feature description must have a non-empty name.");
@@ -34,18 +45,111 @@ namespace CoreML {
 
             case Specification::FeatureType::kMultiArrayType:
             {
-                if (isInput && type.multiarraytype().shape_size() == 0) {
-                    return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                  "Description of multiarray feature '" + desc.name() + "' has an invalid shape. "
-                                  "The shape has zero-length or is missing.");
+                const auto &defaultShape = type.multiarraytype().shape();
+                bool hasExplicitDefault = (type.multiarraytype().shape_size() != 0);
+                bool hasImplictDefault = false;
+                // Newer versions use the updated shape constraints for images and multi-arrays
+                if (modelVersion >= MLMODEL_SPECIFICATION_VERSION_IOS12) {
+
+                    switch (type.multiarraytype().ShapeFlexibility_case()) {
+
+                        case Specification::ArrayFeatureType::kEnumeratedShapes: {
+
+                            hasImplictDefault = true;
+
+                            if (type.multiarraytype().enumeratedshapes().shapes_size() == 0) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of multiarray feature '" + desc.name() + "' has enumerated zero permitted sizes.");
+                            }
+
+                            for (auto &shape : type.multiarraytype().enumeratedshapes().shapes()) {
+                                if (shape.shape_size() == 0) {
+                                    return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                                  "Description of multiarray feature '" + desc.name() + "' has enumerated shapes with zero dimensions.");
+                                }
+                            }
+
+                            if (!hasExplicitDefault) {
+                                break;
+                            }
+
+                            bool foundDefault = false;
+                            for (auto &shape : type.multiarraytype().enumeratedshapes().shapes()) {
+                                if (shape.shape_size() != defaultShape.size()) { continue; }
+                                foundDefault = true;
+                                for (int d = 0; d < shape.shape_size(); d++) {
+                                    if (defaultShape[d] != shape.shape(d)) { foundDefault = false; break; }
+                                }
+                                if (foundDefault) { break; }
+                            }
+
+                            if (!foundDefault) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of multiarray feature '" + desc.name() + "' has a default shape specified " +
+                                              " which is not within the allowed enumerated shapes specified.");
+                            }
+
+                            break;
+                        }
+                        case Specification::ArrayFeatureType::kShapeRange: {
+
+                            hasImplictDefault = true;
+
+                            const auto& sizeRanges = type.multiarraytype().shaperange().sizeranges();
+                            for (int i = 0; i < sizeRanges.size(); i++) {
+                                const auto &range = sizeRanges[i];
+                                Result res = validateSizeRange(range);
+                                if (!res.good()) {
+                                    return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                                  "Description of multiarray feature '" + desc.name() +
+                                                  "' has an invalid range for dimension " + std::to_string(i) + ". " +
+                                                  res.message());
+                                }
+                            }
+
+                            if (!hasExplicitDefault) {
+                                break;
+                            }
+
+                            // Check if default is compatible
+                            if (defaultShape.size() != sizeRanges.size()) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of multiarray feature '" + desc.name() +
+                                              "' has a default " + std::to_string(defaultShape.size()) + "-d shape but a " +
+                                              std::to_string(sizeRanges.size()) + "-d shape range");
+                            }
+
+                             for (int i = 0; i < sizeRanges.size(); i++) {
+                                 if (defaultShape[i] < (int)sizeRanges[i].lowerbound() ||
+                                     (sizeRanges[i].upperbound() >= 0 && defaultShape[i] > sizeRanges[i].upperbound())) {
+
+                                     return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                                   "Description of multiarray feature '" + desc.name() +
+                                                   "' has a default shape that is out of the specified shape range");
+                                 }
+                             }
+
+                            break;
+                        }
+                        case Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET:
+                            break;
+                    }
+
                 }
 
-                for (int i=0; i < type.multiarraytype().shape_size(); i++) {
-                    const auto &value = type.multiarraytype().shape(i);
-                    if (value < 0) {
-                        return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                      "Description of multiarray feature '" + desc.name() + "' has an invalid shape. "
-                                      "Element " + std::to_string(i) + " has non-positive value " + std::to_string(value) + ".");
+                if (isInput && !hasExplicitDefault && !hasImplictDefault) {
+                    return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                  "Description of multiarray feature '" + desc.name() + "' has missing shape constraints.");
+                }
+
+                if (hasExplicitDefault) {
+                    for (int i=0; i < type.multiarraytype().shape_size(); i++) {
+                        const auto &value = type.multiarraytype().shape(i);
+                        if (value < 0) {
+                            return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                          "Description of multiarray feature '" + desc.name() + "' has an invalid shape. "
+                                          "Element " + std::to_string(i) + " has non-positive value " + std::to_string(value) + ".");
+                        }
                     }
                 }
 
@@ -60,6 +164,7 @@ namespace CoreML {
                                       "It must be specified as DOUBLE, FLOAT32 or INT32");
                 }
                 break;
+
             }
             case Specification::FeatureType::kDictionaryType:
                 switch (type.dictionarytype().KeyType_case()) {
@@ -72,18 +177,105 @@ namespace CoreML {
                 }
                 break;
 
-            case Specification::FeatureType::kImageType:
+            case Specification::FeatureType::kImageType: {
 
-                if (type.imagetype().width() <= 0) {
+                int64_t defaultWidth = type.imagetype().width();
+                int64_t defaultHeight = type.imagetype().height();
+                bool hasDefault = (defaultWidth > 0 && defaultHeight > 0);
+
+                if (modelVersion >= MLMODEL_SPECIFICATION_VERSION_IOS12) {
+
+                    switch (type.imagetype().SizeFlexibility_case()) {
+
+                        case Specification::ImageFeatureType::kEnumeratedSizes: {
+
+                            if (type.imagetype().enumeratedsizes().sizes_size() == 0) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of image feature '" + desc.name() + "' has enumerated zero permitted sizes.");
+                            }
+
+                            if (!hasDefault) {
+                                defaultWidth = (int64_t)type.imagetype().enumeratedsizes().sizes(0).width();
+                                defaultHeight = (int64_t)type.imagetype().enumeratedsizes().sizes(0).height();
+                                hasDefault = true;
+                                break;
+                            }
+
+                            bool foundDefault = false;
+                            for (auto &size : type.imagetype().enumeratedsizes().sizes()) {
+                                if (defaultWidth == (int64_t)size.width() && defaultHeight == (int64_t)size.height()) {
+                                    foundDefault = true;
+                                    break;
+                                }
+                            }
+
+                            if (!foundDefault) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of image feature '" + desc.name() + "' has a default size of " +
+                                              std::to_string(defaultWidth) + " x " + std::to_string(defaultHeight) +
+                                              " which is not within the allowed enumerated sizes specified.");
+                            }
+
+                            break;
+                        }
+                        case Specification::ImageFeatureType::kImageSizeRange:
+                        {
+                            const auto& widthRange = type.imagetype().imagesizerange().widthrange();
+                            Result res = validateSizeRange(widthRange);
+                            if (!res.good()) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of image feature '" + desc.name() + "' has an invalid flexible width range. "
+                                               + res.message());
+                            }
+
+                            const auto& heightRange = type.imagetype().imagesizerange().heightrange();
+                            res = validateSizeRange(heightRange);
+                            if (!res.good()) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of image feature '" + desc.name() + "' has an invalid flexible height range. "
+                                              + res.message());
+                            }
+
+                            if (!hasDefault) {
+                                defaultWidth = (int64_t)widthRange.lowerbound();
+                                defaultHeight = (int64_t)heightRange.lowerbound();
+                                hasDefault = true;
+                                break;
+                            }
+
+                            if (defaultWidth < (int64_t)widthRange.lowerbound() ||
+                                (widthRange.upperbound() >=0 && defaultWidth > widthRange.upperbound())) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of image feature '" + desc.name() + "' default width "
+                                              + std::to_string(defaultWidth) + " is not within specified flexible width range");
+                            }
+
+                            if (defaultHeight < (int64_t)heightRange.lowerbound() ||
+                                (heightRange.upperbound() >=0 && defaultHeight > heightRange.upperbound())) {
+                                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                              "Description of image feature '" + desc.name() + "' default height "
+                                              + std::to_string(defaultHeight) + " is not within specified flexible height range");
+                            }
+
+
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+
+                }
+
+                if (defaultWidth <= 0) {
                     return Result(ResultType::INVALID_MODEL_INTERFACE,
                                   "Description of image feature '" + desc.name() +
                                   "' has missing or non-positive width " + std::to_string(type.imagetype().width()) + ".");
                 }
 
-                if (type.imagetype().height() <= 0) {
+                if (defaultHeight <= 0) {
                     return Result(ResultType::INVALID_MODEL_INTERFACE,
                                   "Description of image feature '" + desc.name() +
-                                  "' has missing or non-positive height " + std::to_string(type.imagetype().width()) + ".");
+                                  "' has missing or non-positive height " + std::to_string(type.imagetype().height()) + ".");
                 }
 
                 switch (type.imagetype().colorspace()) {
@@ -97,7 +289,38 @@ namespace CoreML {
                                       "' has missing or invalid colorspace. It must be RGB, BGR or GRAYSCALE.");
                 }
                 break;
+            }
+            case Specification::FeatureType::kSequenceType: {
 
+                if (modelVersion < MLMODEL_SPECIFICATION_VERSION_IOS12) {
+                    return  Result(ResultType::INVALID_MODEL_INTERFACE,
+                                   "Sequence types are only valid in specification verison >= " + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS12)+
+                                   ". This model has version " + std::to_string(modelVersion));
+                }
+
+                // Validate size
+                Result res = validateSizeRange(type.sequencetype().sizerange());
+                if (!res.good()) {
+                    return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                  "Description of sequence feature '" + desc.name() + "' has invalid allowed sizes. "
+                                  + res.message());
+                }
+
+                // Validate type
+
+                switch (type.sequencetype().Type_case()) {
+                    case Specification::SequenceFeatureType::kInt64Type:
+                    case Specification::SequenceFeatureType::kStringType:
+                        break;
+                    case Specification::SequenceFeatureType::TYPE_NOT_SET:
+                        return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                      "Description of sequence feature '" + desc.name() + "' has invalid or missing type. "
+                                      "Only Int64 and String sequences are currently supported");
+
+
+                }
+                break;
+            }
             case Specification::FeatureType::TYPE_NOT_SET:
                 // these aren't equal to anything, even themselves
                 return Result(ResultType::INVALID_MODEL_INTERFACE,
@@ -108,7 +331,7 @@ namespace CoreML {
         return Result();
     }
 
-    Result validateFeatureDescriptions(const Specification::ModelDescription& interface) {
+    Result validateFeatureDescriptions(const Specification::ModelDescription& interface, int modelVersion) {
         // a model must have at least one input and one output
         if (interface.input_size() < 1) {
             return Result(ResultType::INVALID_MODEL_INTERFACE, "Models must have one or more inputs.");
@@ -118,12 +341,12 @@ namespace CoreML {
         }
 
         for (const auto& input : interface.input()) {
-            Result r = validateFeatureDescription(input,true);
+            Result r = validateFeatureDescription(input, modelVersion, true);
             if (!r.good()) { return r; }
         }
 
         for (const auto& output : interface.output()) {
-            Result r = validateFeatureDescription(output,false);
+            Result r = validateFeatureDescription(output, modelVersion, false);
             if (!r.good()) { return r; }
         }
 
@@ -131,9 +354,9 @@ namespace CoreML {
         return Result();
     }
 
-    Result validateModelDescription(const Specification::ModelDescription& interface) {
+    Result validateModelDescription(const Specification::ModelDescription& interface, int modelVersion) {
 
-        Result result = validateFeatureDescriptions(interface);
+        Result result = validateFeatureDescriptions(interface, modelVersion);
         if (!result.good()) {
             return result;
         }
@@ -143,7 +366,7 @@ namespace CoreML {
     }
 
 
-    Result validateRegressorInterface(const Specification::ModelDescription& description) {
+    Result validateRegressorInterface(const Specification::ModelDescription& description, int modelVersion) {
         
         if (description.predictedfeaturename() == "") {
             return Result(ResultType::INVALID_MODEL_INTERFACE,
@@ -151,7 +374,7 @@ namespace CoreML {
         }
         
         // Validate feature descriptions
-        Result result = validateFeatureDescriptions(description);
+        Result result = validateFeatureDescriptions(description, modelVersion);
         if (!result.good()) {
             return result;
         }

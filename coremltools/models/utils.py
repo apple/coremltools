@@ -14,6 +14,7 @@ import six as _six
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
 
 
+
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
 
@@ -112,13 +113,19 @@ def _get_nn_layers(spec):
     if spec.WhichOneof('Type') == 'pipeline':
         layers = []
         for model_spec in spec.pipeline.models:
-            layers = layers + _get_nn_layers(model_spec)
+            if not layers:
+                return _get_nn_layers(model_spec)
+            else:
+                layers.extend(_get_nn_layers(model_spec))
 
     elif spec.WhichOneof('Type') in ['pipelineClassifier',
                                         'pipelineRegressor']:
         layers = []
         for model_spec in spec.pipeline.models:
-            layers = layers + _get_nn_layers(model_spec)
+            if not layers:
+                return _get_nn_layers(model_spec)
+            else:
+                layers.extend(_get_nn_layers(model_spec))
 
     elif spec.neuralNetwork.layers:
         layers = spec.neuralNetwork.layers
@@ -127,9 +134,7 @@ def _get_nn_layers(spec):
     elif spec.neuralNetworkRegressor.layers:
         layers = spec.neuralNetworkRegressor.layers
 
-    outlayers = [layer for layer in layers]
-
-    return outlayers
+    return layers
 
 
 def _fp32_to_reversed_fp16_byte_array(fp32_arr):
@@ -342,7 +347,6 @@ def convert_neural_network_weights_to_fp16(full_precision_model):
     """
     Utility function to convert a full precision (float) MLModel to a
     half precision MLModel (float16).
-
     Parameter
     ----------
     full_precision_model: MLModel
@@ -350,18 +354,14 @@ def convert_neural_network_weights_to_fp16(full_precision_model):
         for only neural network models is supported. If a pipeline model is
         passed in then all embedded neural network models embedded within
         will be converted.
-
     Returns
     -------
     model: MLModel
         The converted half precision MLModel
-
     Examples
     --------
     .. sourcecode:: python
-
         >>> half_precision_model =  coremltools.utils.convert_neural_network_weights_to_fp16(model)
-
     """
     spec = full_precision_model.get_spec()
     return _get_model(convert_neural_network_spec_weights_to_fp16(spec))
@@ -891,3 +891,24 @@ def macos_version():
         return tuple([int(v) for v in ver_str.split('.')])
     else:
         return ()
+
+
+def _get_feature(spec, feature_name):
+    for input_feature in spec.description.input:
+        if input_feature.name == feature_name:
+            return input_feature
+
+    for output_feature in spec.description.output:
+        if output_feature.name == feature_name:
+            return output_feature
+
+    raise Exception('Feature with name {} does not exist'.format(feature_name))
+
+def _get_input_names(spec):
+    """
+    Returns a list of the names of the inputs to this model.
+    :param spec: The model protobuf specification
+    :return: [str] A list of input feature names
+    """
+    retval = [feature.name for feature in spec.description.input]
+    return retval

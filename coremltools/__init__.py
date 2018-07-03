@@ -31,6 +31,13 @@ SPECIFICATION_VERSION = 1
 _MINIMUM_CUSTOM_LAYER_SPEC_VERSION = 2
 _MINIMUM_FP16_SPEC_VERSION = 2
 
+# New versions for iOS 12.0 features. Models which use these features should have these
+# versions, but models created from this coremltools which do not use the features can
+# still have the basic version.
+_MINIMUM_CUSTOM_MODEL_SPEC_VERSION = 3
+_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION = 3
+_MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION = 3
+
 # expose sub packages as directories
 from . import converters
 from . import proto
