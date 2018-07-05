@@ -80,7 +80,8 @@ def _get_proxy_from_spec(filename):
             return _MLModelProxy(filename)
         except RuntimeError as e:
             warnings.warn(
-                "You will not be able to run predict() on this Core ML model. " + e, 
+                "You will not be able to run predict() on this Core ML model." +
+                "Underlying exception message was: " + str(e), 
                 RuntimeWarning)
             return None
     else:
