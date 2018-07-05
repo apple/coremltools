@@ -37,25 +37,28 @@ namespace CoreML {
      * Validate feature descriptions in interface have supported names and type info
      *
      * @param  interface Model interface
+     # @param modelVersion The version of the model for backwards compatibility
      * @return Result type of this operation.
      */
-    Result validateFeatureDescriptions(const Specification::ModelDescription& interface);
+    Result validateFeatureDescriptions(const Specification::ModelDescription& interface, int modelVersion);
 
     /*
      * Validate an individual feature description
      *
      * @param  feture description
+     # @param modelVersion The version of the model for backwards compatibility
      * @return Result type of this operation.
      */
-    Result validateFeatureDescription(const Specification::FeatureDescription& desc, bool isInput = true);
+    Result validateFeatureDescription(const Specification::FeatureDescription& desc, int modelVersion, bool isInput = true);
 
     /*
      * Validate model interface describes a valid transform
      *
      * @param  interface Model interface
+     # @param modelVersion The version of the model for backwards compatibility
      * @return Result type of this operation.
      */
-    Result validateModelDescription(const Specification::ModelDescription& interface);
+    Result validateModelDescription(const Specification::ModelDescription& interface, int modelVersion);
 
     /*
      * Validate model interface describes a valid regressor
@@ -63,9 +66,8 @@ namespace CoreML {
      * @param  interface Model interface
      * @return Result type of this operation.
      */
-    Result validateRegressorInterface(const Specification::ModelDescription& interface);
-    
-    
+    Result validateRegressorInterface(const Specification::ModelDescription& interface, int modelVersion);
+
     
     /*
      * Validate model interface describes a valid classifier
@@ -117,7 +119,7 @@ namespace CoreML {
         const Specification::ModelDescription& interface = model.description();
         
             // Validate feature descriptions
-        Result result = validateFeatureDescriptions(interface);
+        Result result = validateFeatureDescriptions(interface, model.specificationversion());
         if (!result.good()) {
             return result;
         }

@@ -10,7 +10,7 @@ with open(README) as f:
     long_description = f.read()
 
 setup(name='coremltools',
-    version='0.8',
+    version='2.0b1',
     description='Community Tools for CoreML',
     long_description=long_description,
     author='Apple Inc.',
@@ -27,6 +27,7 @@ setup(name='coremltools',
         'coremltools.converters.keras',
         'coremltools.graph_visualization',
         'coremltools.models',
+        'coremltools.models.neural_network',
         'coremltools.proto',
         'coremltools._scripts'
     ],

@@ -5,11 +5,21 @@
 #include <pybind11/numpy.h>
 
 #if PY_MAJOR_VERSION < 3
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmacro-redefined"
 #define PyBytes_Check(name) PyString_Check(name)
+#pragma clang diagnostic pop
 #define PyAnyInteger_Check(name) (PyLong_Check(name) || PyInt_Check(name))
+
 #else
+
 #include <numpy/arrayobject.h>
 #define PyAnyInteger_Check(name) (PyLong_Check(name) || (_import_array(), PyArray_IsScalar(name, Integer)))
+#if NPY_API_VERSION > 0xa
+#error "Please compile with numpy API version 0xa (e.g. numpy 1.10-1.12) for desired runtime compatibility"
+#endif
+
 #endif
 
 using namespace CoreML::Python;
@@ -505,10 +515,27 @@ py::object Utils::convertValueToPython(MLFeatureValue *value) {
             return py::str(value.stringValue.UTF8String);
         case MLFeatureTypeDictionary:
             return convertDictionaryValueToPython(value.dictionaryValue);
+        case MLFeatureTypeSequence:
+            // rdar://problem/38885937
+            throw std::runtime_error("convertValueToPython not implemented for MLFeatureTypeSequence");
+            return py::none();
         case MLFeatureTypeInvalid:
             assert(false);
             return py::none();
     }
-#pragma unused(value)
     return py::object();
+}
+
+
+
+py::dict Utils::shapeConstraintToPyDict(const ShapeConstraint& constraint) {
+    @autoreleasepool {
+        py::dict ret;
+        ret[py::str("S")] = py::make_tuple((int)constraint.sequenceRange().minimumValue(), (constraint.sequenceRange().maximumValue().isUnbound() ? -1 : (int)constraint.sequenceRange().maximumValue().value()));
+        ret[py::str("B")] = py::make_tuple((int)constraint.batchRange().minimumValue(), (constraint.batchRange().maximumValue().isUnbound() ? -1 : (int)constraint.batchRange().maximumValue().value()));
+        ret[py::str("C")] = py::make_tuple((int)constraint.channelRange().minimumValue(), (constraint.channelRange().maximumValue().isUnbound() ? -1 : (int)constraint.channelRange().maximumValue().value()));
+        ret[py::str("H")] = py::make_tuple((int)constraint.heightRange().minimumValue(), (constraint.heightRange().maximumValue().isUnbound() ? -1 : (int)constraint.heightRange().maximumValue().value()));
+        ret[py::str("W")] = py::make_tuple((int)constraint.widthRange().minimumValue(), (constraint.widthRange().maximumValue().isUnbound() ? -1 : (int)constraint.widthRange().maximumValue().value()));
+        return ret;
+    }
 }

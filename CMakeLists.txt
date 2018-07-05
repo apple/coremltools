@@ -37,20 +37,10 @@ exec_program(${PYTHON_CONFIG}
   ARGS "--includes"
   OUTPUT_VARIABLE PYTHON_CFLAGS)
 
-execute_process(
-    COMMAND ${PYTHON} -c "import numpy; print(numpy.get_include())"
-    RESULT_VARIABLE NUMPY_INCLUDE_STATUS
-    OUTPUT_VARIABLE NUMPY_INCLUDE)
-
-if("${NUMPY_INCLUDE}" STREQUAL "" OR NOT NUMPY_INCLUDE_STATUS EQUAL 0)
-    message(FATAL_ERROR "Could not find numpy include path. Exit code: ${NUMPY_INCLUDE_STATUS}")
-endif()
-
 message("Found python at ${PYTHON}")
 message("Found python version ${PYTHON_VERSION}")
 message("Found python-config at ${PYTHON_CONFIG}")
 message("Found python includes ${PYTHON_CFLAGS}")
-message("Found numpy include path at ${NUMPY_INCLUDE}")
 
 include_directories(
   .
@@ -59,7 +49,6 @@ include_directories(
   deps/protobuf/src
   deps/pybind11/include
   mlmodel/src
-  ${NUMPY_INCLUDE}
 )
 
 set(CMAKE_CXX_FLAGS " \
@@ -157,6 +146,21 @@ find_library(CORE_ML CoreML)
 find_library(FOUNDATION Foundation)
 
 if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
+  execute_process(
+      COMMAND ${PYTHON} -c "import numpy; print(numpy.get_include())"
+      RESULT_VARIABLE NUMPY_INCLUDE_STATUS
+      OUTPUT_VARIABLE NUMPY_INCLUDE)
+
+  if("${NUMPY_INCLUDE}" STREQUAL "" OR NOT NUMPY_INCLUDE_STATUS EQUAL 0)
+      message(FATAL_ERROR "Could not find numpy include path. Exit code: ${NUMPY_INCLUDE_STATUS}")
+  endif()
+
+  message("Found numpy include path at ${NUMPY_INCLUDE}")
+
+  include_directories(
+    ${NUMPY_INCLUDE}
+  )
+
   add_library(coremlpython
     SHARED
     coremlpython/CoreMLPython.mm
@@ -167,6 +171,7 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     coremlpython/CoreMLPythonUtils.h
   )
   target_link_libraries(coremlpython
+    mlmodel
     ${CORE_VIDEO}
     ${CORE_ML}
     ${FOUNDATION}
@@ -183,13 +188,14 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     POST_BUILD
     COMMAND cp $<TARGET_FILE:coremlpython> coremltools/libcoremlpython.so
   )
+
 else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
 endif()
 
 set(PYTHON_TAG "cp${PYTHON_MAJOR_VERSION}${PYTHON_MINOR_VERSION}")
 if(APPLE)
-  set(PLAT_NAME "macosx_10_13_intel;macosx_10_12_intel")
+  set(PLAT_NAME "macosx_10_14_intel;macosx_10_13_intel;macosx_10_12_intel")
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   set(PLAT_NAME "manylinux1_x86_64")
 else()

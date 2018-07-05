@@ -1,5 +1,6 @@
+*****************
 :mod:`Converters`
-=========================
+*****************
 
 Automatically convert models from popular machine learning libraries such as
 Keras, Caffe, scikit-learn, LibSVM, and XGboost to the Core ML format.

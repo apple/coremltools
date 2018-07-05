@@ -422,6 +422,19 @@ def _layer_specific_info(layer):
             'desc': 'A layer that performs softmax normalization.\n'
                     'Normalization is done along the channel axis.'
         }
+    elif layer.WhichOneof('layer') == 'custom':
+        info = {
+            'type': layer.WhichOneof('layer'),
+            'className': layer.custom.className,
+            'desc': 'A custom layer'
+        }
+        if layer.custom.parameters != {}:
+            for key in layer.custom.parameters.keys():
+                value = _get_custom_layer_value(layer.custom.parameters[key])
+                info[key] = value
+        if layer.custom.description:
+            info['desc'] = layer.custom.description
+
     else:
         info = {
             'type': layer.WhichOneof('layer')
@@ -431,6 +444,20 @@ def _layer_specific_info(layer):
     info['outputs'] = str(layer.output)
 
     return info
+
+def _get_custom_layer_value(parameter):
+
+    if 'intValue' in str(parameter):
+        return str(parameter.intValue)
+    elif 'doubleValue' in str(parameter):
+        return str(parameter.doubleValue)
+    elif 'boolValue' in str(parameter):
+        return str(parameter.boolValue)
+    elif 'longValue' in str(parameter):
+        return str(parameter.longValue)
+    elif 'stringValue' in str(parameter):
+        return str(parameter.stringValue)
+
 
 
 def _pipeline_component_info(model, info):

@@ -13,7 +13,7 @@ namespace CoreML {
  * specification that is gauranteed to load in an TreeEnsemble class.
  *
  */
-class EXPORT LinearModel : public Model {
+class LinearModel : public Model {
   public:
 
     LinearModel(const std::string& predictedValueOutput,

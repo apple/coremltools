@@ -12,8 +12,6 @@
 #include "../build/format/Model_enums.h"
 #include "../build/format/Normalizer_enums.h"
 
-#include "Export.hpp"
-
 namespace CoreML {
 
 namespace Specification {
@@ -27,7 +25,7 @@ namespace Specification {
  * saving and loading model specs, validating them, and incrementally building
  * them by adding transforms.
  */
-class EXPORT Model {
+class Model {
 private:
     static Result validateGeneric(const Specification::Model& model);
 
@@ -173,20 +171,20 @@ extern "C" {
 /**
  * C-Structs needed for integration with pure C.
  */
-typedef struct EXPORT _MLModelSpecification {
+typedef struct _MLModelSpecification {
     std::shared_ptr<CoreML::Specification::Model> cppFormat;
     _MLModelSpecification();
     _MLModelSpecification(const CoreML::Specification::Model&);
     _MLModelSpecification(const CoreML::Model&);
 } MLModelSpecification;
     
-typedef struct EXPORT _MLModelMetadataSpecification {
+typedef struct _MLModelMetadataSpecification {
     std::shared_ptr<CoreML::Specification::Metadata> cppMetadata;
     _MLModelMetadataSpecification();
     _MLModelMetadataSpecification(const CoreML::Specification::Metadata&);
 } MLModelMetadataSpecification;
 
-typedef struct EXPORT _MLModelDescriptionSpecification {
+typedef struct _MLModelDescriptionSpecification {
     std::shared_ptr<CoreML::Specification::ModelDescription> cppInterface;
     _MLModelDescriptionSpecification();
     _MLModelDescriptionSpecification(const CoreML::Specification::ModelDescription&);

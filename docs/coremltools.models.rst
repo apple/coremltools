@@ -1,7 +1,9 @@
+*************
 :mod:`Models`
-=========================
+*************
 
 .. automodule:: coremltools.models
+.. automodule:: coremltools.models.neural_networks
   :noindex:
 .. currentmodule:: coremltools.models
 
@@ -10,6 +12,14 @@
   :toctree: generated/
 
     coremltools.models.MLModel
-    coremltools.models.neural_network
     coremltools.models.pipeline
     coremltools.models.tree_ensemble
+
+
+.. autosummary::
+  :nosignatures:
+  :toctree: generated/
+
+    coremltools.models.neural_network.builder
+    coremltools.models.neural_network.flexible_shape_utils
+    coremltools.models.neural_network.quantization_utils

@@ -17,7 +17,7 @@ namespace CoreML {
         Result result;
 
         // Validate its a MLModel type.
-        result = validateModelDescription(description);
+        result = validateModelDescription(description, format.specificationversion());
         if (!result.good()) {
             return result;
         }

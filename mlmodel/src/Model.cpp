@@ -49,7 +49,7 @@ namespace CoreML {
         }
 
         // validate model interface
-        Result r = validateModelDescription(model.description());
+        Result r = validateModelDescription(model.description(), model.specificationversion());
         if (!r.good()) {
             return r;
         }
@@ -87,9 +87,15 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(imputer);
                 VALIDATE_MODEL_TYPE(dictVectorizer);
                 VALIDATE_MODEL_TYPE(scaler);
+                VALIDATE_MODEL_TYPE(nonMaximumSuppression);
                 VALIDATE_MODEL_TYPE(categoricalMapping);
                 VALIDATE_MODEL_TYPE(normalizer);
                 VALIDATE_MODEL_TYPE(identity);
+                VALIDATE_MODEL_TYPE(customModel);
+                VALIDATE_MODEL_TYPE(bayesianProbitRegressor);
+                VALIDATE_MODEL_TYPE(wordTagger);
+                VALIDATE_MODEL_TYPE(textClassifier);
+                VALIDATE_MODEL_TYPE(visionFeaturePrint);
             case MLModelType_NOT_SET:
                 return Result(ResultType::INVALID_MODEL_INTERFACE, "Model did not specify a valid model-parameter type.");
         }
@@ -119,12 +125,17 @@ namespace CoreML {
         return load(in, out);
     }
     
+    // We will only reduce the given specification version if possible. We never increase it here. 
     void Model::downgradeSpecificationVersion() {
-        if (!(hasCustomLayer(*m_spec) || hasfp16Weights(*m_spec))) {
-            // If there are no custom layers or fp16 weights, then the version 1 compiler can still
-            // process the model
+
+        if (m_spec->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS12 && !hasIOS12Features(*m_spec)) {
+            m_spec->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS11_2);
+        }
+        
+        if (m_spec->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11_2 && !(hasCustomLayer(*m_spec) || hasfp16Weights(*m_spec))) {
             m_spec->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS11);
         }
+        
     }
     
     Result Model::save(std::ostream& out) {

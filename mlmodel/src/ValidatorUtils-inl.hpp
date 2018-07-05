@@ -19,22 +19,10 @@ namespace CoreML {
     enum WeightParamType {
         FLOAT32, // float32 weights
         FLOAT16, // float16 weights
+        QUINT,   // smaller or equal to 8-bit unsigned integer
         UNSPECIFIED, // More then one type specified
         EMPTY // No populated fields
     };
-    
-    
-    inline WeightParamType valueType(const Specification::WeightParams &param)
-    {
-        if ((param.floatvalue_size() > 0) && param.float16value().size() == 0) {
-            return FLOAT32;
-        } else if ((param.floatvalue_size() == 0) && param.float16value().size() > 0) {
-            return FLOAT16;
-        } else if (param.floatvalue_size() > 0 && param.float16value().size() > 0) {
-            return UNSPECIFIED;
-        }
-        return EMPTY;
-    }
     
     // Returns true if the weight params object has only a single type encoded in it
     inline bool checkSingleWeightType(const Specification::WeightParams &param) {
@@ -48,7 +36,38 @@ namespace CoreML {
         
         return (numFilledIn == 1);
     }
+    
+    inline int numberOfWeightType(const Specification::WeightParams &param) {
+        int numFilledIn = 0;
+        if (param.floatvalue_size() > 0)
+            numFilledIn++;
+        if (param.float16value().size() > 0)
+            numFilledIn++;
+        if (param.rawvalue().size() > 0)
+            numFilledIn++;
+        
+        return numFilledIn;
+    }
 
+    inline WeightParamType valueType(const Specification::WeightParams &param) {
+        int nw = numberOfWeightType(param);
+        // Ensure only one field is set
+        if (nw > 1){
+            return UNSPECIFIED;
+        }
+        if (nw == 0){
+            return EMPTY;
+        }
+        if (param.floatvalue_size() > 0) {
+            return FLOAT32;
+        } else if (param.float16value().size() > 0) {
+            return FLOAT16;
+        } else if (param.rawvalue().size() > 0 && param.has_quantization()){
+            return QUINT;
+        }
+        return EMPTY;
+    }
+    
     /*
      * Utility that make sures the feature types are valid.
      *
@@ -164,7 +183,25 @@ namespace CoreML {
         return 0;
 
     };
-
     
+    static inline int getWeightParamSizeInBytes(const Specification::WeightParams& weights) {
+        WeightParamType paramValueType = valueType(weights);
+        switch (paramValueType) {
+            case FLOAT32:
+                return static_cast<int>(weights.floatvalue_size() * (int)sizeof(float));
+            case FLOAT16:
+                return (static_cast<int>(weights.float16value().size()));
+            case QUINT:
+                return static_cast<int>(weights.rawvalue().size());
+            case EMPTY:
+            case UNSPECIFIED:
+            default:
+                break;
+        }
+        return 0;
+    };
+
+    Result validateSizeRange(const Specification::SizeRange & range);
+
 }
 #endif /* ValidatorUtils_h */
