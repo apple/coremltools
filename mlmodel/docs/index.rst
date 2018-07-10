@@ -15,8 +15,12 @@ feature engineering model types, and predictive model types.
 
     sections/Model.rst
     sections/NeuralNetwork.rst
+    sections/TextClassifier.rst
+    sections/WordTagger.rst
+    sections/VisionFeaturePrint.rst
     sections/TreeEnsembles.rst
     sections/GLM.rst
     sections/SVM.rst
     sections/FeatureEngineering.rst
+    sections/CustomModel.rst
     sections/DataStructuresAndFeatureTypes.rst

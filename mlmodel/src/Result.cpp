@@ -13,7 +13,7 @@ namespace CoreML {
     m_type(type), m_message(m_prefix + message) { }
 
   bool Result::good() const {
-    return m_type == ResultType::NO_ERROR;
+      return (m_type == ResultType::NO_ERROR || m_type == ResultType::POTENTIALLY_INVALID_NEURAL_NETWORK_SHAPES);
   }
 
   const ResultType& Result::type() const {

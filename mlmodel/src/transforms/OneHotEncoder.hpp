@@ -8,7 +8,7 @@
 
 namespace CoreML {
     
-    class EXPORT OneHotEncoder : public Model {
+    class OneHotEncoder : public Model {
     
     public:
 

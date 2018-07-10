@@ -32,9 +32,12 @@ enum class ResultType {
 
     // Invalid protobuf model parameters
     INVALID_MODEL_PARAMETERS,
+
+    // NN shaper failure, not necessarily an error
+    POTENTIALLY_INVALID_NEURAL_NETWORK_SHAPES
 };
 
-class EXPORT Result {
+class Result {
 
   private:
     ResultType m_type = ResultType::NO_ERROR;

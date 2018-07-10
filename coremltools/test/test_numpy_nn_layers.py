@@ -556,6 +556,12 @@ class SimpleTest(CorrectnessTest):
             numpy_preds = x + b
             self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
             self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
+
+            # Test half precision case
+            coreml_fp16_model = coremltools.utils.convert_neural_network_weights_to_fp16(coreml_model)
+            coreml_preds = coreml_fp16_model.predict(coreml_input)['output']
+            self.assertTrue(self._compare_shapes(numpy_preds, coreml_preds))
+            self.assertTrue(self._compare_predictions(numpy_preds, coreml_preds))
         
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)    

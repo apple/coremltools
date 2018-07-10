@@ -9,6 +9,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreML/CoreML.h>
+#import "LayerShapeConstraints.hpp"
 
 namespace py = pybind11;
 
@@ -33,6 +34,9 @@ namespace CoreML {
             py::object convertArrayValueToPython(MLMultiArray *value);
             py::object convertDictionaryValueToPython(NSDictionary<NSObject *,NSNumber *> * value);
             py::object convertImageValueToPython(CVPixelBufferRef value);
+
+            py::dict shapeConstraintToPyDict(const ShapeConstraint& constraint);
+
         }
     }
 }

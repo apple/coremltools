@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace CoreML {
-    class EXPORT NeuralNetwork : public Model {
+    class NeuralNetwork : public Model {
     public:
         // This should only return the names of NN blobs which are to be outputs. This does not
         // require them to be dangling blobs.

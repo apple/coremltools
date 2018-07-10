@@ -16,3 +16,5 @@ Feature Engineering
 .. include:: ../reference/DictVectorizer.rst
 
 .. include:: ../reference/ArrayFeatureExtractor.rst
+
+.. include:: ../reference/NonMaximumSuppression.rst

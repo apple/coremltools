@@ -10,7 +10,8 @@
 #include "Validators.hpp"
 #include "ValidatorUtils-inl.hpp"
 #include "transforms/NeuralNetwork.hpp"
-
+#include "NeuralNetworkShapes.hpp"
+#include "QuantizationValidationUtils.hpp"
 
 #include <algorithm>
 #include <sstream>
@@ -65,57 +66,95 @@ namespace CoreML {
         }
     }
     
+    static Result validateGeneralWeightParams(const CoreML::Specification::WeightParams& weight,
+                                                const uint64_t expectedUnits,
+                                                const uint64_t outChannels,
+                                                const std::string& layerClassName,
+                                                const std::string& layerName,
+                                                const std::string& weightName){
+        // Validate a 2D WeightParam
+        Result r;
+        WeightParamType wType = valueType(weight);
+        uint64_t size = 0;
+        if (wType == FLOAT32 || wType == FLOAT16){
+            if (wType == FLOAT32){
+                size = static_cast<uint64_t>(weight.floatvalue().size());
+            } else {
+                size = static_cast<uint64_t>(weight.float16value().size()/2);
+            }
+            if (size != expectedUnits){
+                const std::string err = layerClassName + "Layer '" + layerName + "' has incorrect " +
+                        weightName + " size " + std::to_string(size) + " (expected " +
+                        std::to_string(expectedUnits) + ").";
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            }
+        } else if (wType == QUINT){
+            if (!CoreML::hasSufficientBytesInQuantizedWeightParam(weight, expectedUnits)){
+                const std::string err = layerClassName + "Layer '" + layerName +
+                        "' has insufficient bytes for quantized " + weightName + " with " +
+                        std::to_string(expectedUnits) + "units.";
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            }
+            if (!CoreML::hasValidQuantizationParams(weight, (int) outChannels)){
+                const std::string err = layerClassName + "Layer '" + layerName +
+                "' has invalid quantization parameters for quantized " + weightName + ".";
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            }
+        } else if (wType == UNSPECIFIED){
+            const std::string err = layerClassName + "Layer '" + layerName + "' has unspecified " + weightName + ".";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        } else { // EMPTY
+            const std::string err = layerClassName + "Layer '" + layerName + "' has empty " + weightName + ".";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+        return r;
+    }
+    
+    static bool isWeightParamTypeCompatible(const std::vector<WeightParamType>& weightTypes){
+        int nfp32 = 0, nfp16 = 0; // number of FP32/16 weight blobs
+        for (auto& wt : weightTypes){
+            if (wt == FLOAT32){
+                nfp32++;
+            } else if (wt == FLOAT16){
+                nfp16++;
+            } // else do nothing - quantization assumed to be always compatible
+            if (nfp32 * nfp16 > 0){
+                return false;
+            }
+        }
+        return true;
+    }
+    
     static Result validateLSTMWeightParams(const Specification::LSTMWeightParams& lstmWeightParams, const Specification::LSTMParams lstmParams) {
         bool has_peephole_vector = lstmParams.haspeepholevectors();
         bool has_bias_vector = lstmParams.hasbiasvectors();
         
         // Validate all weightParam types match
-        WeightParamType weightMatrixValueType, recursionMatrixValueType, biasVectorValueType, peepholeVectorType;
-        weightMatrixValueType = valueType(lstmWeightParams.inputgateweightmatrix());
-        recursionMatrixValueType = valueType(lstmWeightParams.inputgaterecursionmatrix());
-        biasVectorValueType = valueType(lstmWeightParams.inputgatebiasvector());
-        peepholeVectorType = valueType(lstmWeightParams.inputgatepeepholevector());
-        
-        if ( (weightMatrixValueType != recursionMatrixValueType ) ||
-            (has_bias_vector && (weightMatrixValueType != biasVectorValueType)) ||
-            (has_peephole_vector && (weightMatrixValueType != peepholeVectorType)) ||
-            weightMatrixValueType == UNSPECIFIED || recursionMatrixValueType == UNSPECIFIED) {
-            std::string err = "LSTM weight parameters have inconsistent field value types. Types should match and should be either half or full precision";
+        std::vector<CoreML::WeightParamType> weightTypes;
+        weightTypes.push_back(valueType(lstmWeightParams.inputgateweightmatrix()));
+        weightTypes.push_back(valueType(lstmWeightParams.forgetgateweightmatrix()));
+        weightTypes.push_back(valueType(lstmWeightParams.blockinputweightmatrix()));
+        weightTypes.push_back(valueType(lstmWeightParams.outputgateweightmatrix()));
+        weightTypes.push_back(valueType(lstmWeightParams.inputgaterecursionmatrix()));
+        weightTypes.push_back(valueType(lstmWeightParams.forgetgaterecursionmatrix()));
+        weightTypes.push_back(valueType(lstmWeightParams.blockinputrecursionmatrix()));
+        weightTypes.push_back(valueType(lstmWeightParams.outputgaterecursionmatrix()));
+        if(has_bias_vector){
+            weightTypes.push_back(valueType(lstmWeightParams.inputgatebiasvector()));
+            weightTypes.push_back(valueType(lstmWeightParams.forgetgatebiasvector()));
+            weightTypes.push_back(valueType(lstmWeightParams.blockinputbiasvector()));
+            weightTypes.push_back(valueType(lstmWeightParams.outputgatebiasvector()));
+        }
+        if(has_peephole_vector){
+            weightTypes.push_back(valueType(lstmWeightParams.inputgatepeepholevector()));
+            weightTypes.push_back(valueType(lstmWeightParams.forgetgatepeepholevector()));
+            weightTypes.push_back(valueType(lstmWeightParams.outputgatepeepholevector()));
+        }
+        if(!isWeightParamTypeCompatible(weightTypes)){
+            const std::string err = "LSTM weight parameters have inconsistent field value types. "
+                    "Types should match and should be either half or full precision";
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
-        
-        // Check that fields within each parameter are consistent
-        if ( (valueType(lstmWeightParams.forgetgateweightmatrix()) != weightMatrixValueType) ||
-             (valueType(lstmWeightParams.blockinputweightmatrix()) != weightMatrixValueType) ||
-             (valueType(lstmWeightParams.outputgateweightmatrix()) != weightMatrixValueType)) {
-            std::string err = "LSTM weight params has invalid weight matrix fields. Field value types should match and should be either half or full precision";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        
-        if ( (valueType(lstmWeightParams.forgetgaterecursionmatrix()) != recursionMatrixValueType) ||
-             (valueType(lstmWeightParams.blockinputrecursionmatrix()) != recursionMatrixValueType) ||
-             (valueType(lstmWeightParams.outputgaterecursionmatrix()) != recursionMatrixValueType)) {
-            std::string err = "LSTM weight params has invalid recursion matrix fields. Field value types should match and should be either half or full precision";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        
-        if (has_bias_vector) {
-            if ( (valueType(lstmWeightParams.forgetgatebiasvector()) != biasVectorValueType) ||
-                 (valueType(lstmWeightParams.blockinputbiasvector()) != biasVectorValueType) ||
-                 (valueType(lstmWeightParams.outputgatebiasvector()) != biasVectorValueType)) {
-                std::string err = "LSTM weight params has invalid bias vector fields. Field value types should match and should be either half or full precision";
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-        }
-        
-        if (has_peephole_vector) {
-            if ( (valueType(lstmWeightParams.forgetgatepeepholevector()) != peepholeVectorType) ||
-                 (valueType(lstmWeightParams.outputgatepeepholevector()) != peepholeVectorType)) {
-                std::string err = "LSTM weight params has invalid peephole vector fields. Field value types should match and should be either half or full precision";
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-        }
-
         return Result();
     }
 
@@ -257,22 +296,24 @@ namespace CoreML {
         weightsValueType = valueType(params.weights());
         biasValueType = valueType(params.bias());
         
-        // Only float32 or float16 parameters can be populated at any time
-        if ( (weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED) || (has_bias && (weightsValueType != biasValueType)) ) {
-            std::string err = "Convolution layer '" + layer.name() + "'  has invalid weights/bias fields. Field value types should match and should either be half or full precision.";
+        // Check weight/bias value types. Only float32 or float16 parameters can be populated at any time
+        if ( (weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
+            std::string err = "Convolution layer '" + layer.name() + "'  has invalid weights/bias fields.";
             r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             return r;
         }
-        
-        // Get populated weight and bias sizes
-        uint64_t weight_size;
-        if (weightsValueType == FLOAT32) {
-            weight_size = static_cast<uint64_t>(params.weights().floatvalue().size());
-        } else {
-            weight_size = params.weights().float16value().size() / 2;
+        if (has_bias){
+            if ((weightsValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
+                (weightsValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)){
+                r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Convolution layer " + layer.name() +
+                           "has unmatched precisions of weights/bias They should either be half or full precision.");
+                return r;
+            }
         }
         
-        uint64_t expected_weight_size;
+        // Get populated weight and bias sizes
+        // Check weights
+        uint64_t expected_weight_size = 0;
         // conv: outputChannels, kernelChannels, kernelHeight, kernelWidth
         // deconv: kernelChannels, outputChannels / nGroups, kernelHeight, kernelWidth
         if (is_deconv) {
@@ -281,35 +322,58 @@ namespace CoreML {
         else {
             expected_weight_size = outputChannels * kernelChannels * kernelHeight * kernelWidth;
         }
-        
-        if (weight_size != expected_weight_size) {
-            if (is_deconv) {
-                std::string err = "Convolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(kernelChannels) + " x " + std::to_string(outputChannels/nGroups) + " x " + std::to_string(kernelHeight) + " x " + std::to_string(kernelWidth) + " convolution.";
-                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                return r;
-            }
-            else {
-                std::string err = "Convolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(outputChannels) + " x " + std::to_string(kernelChannels) + " x " + std::to_string(kernelHeight) + " x " + std::to_string(kernelWidth) + " convolution.";
-                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                return r;
-            }
-        }
-        
-        if (has_bias) {
-            uint64_t bias_size;
+        uint64_t weight_size = 0;
+        if (weightsValueType == FLOAT32 || weightsValueType == FLOAT16) {
             if (weightsValueType == FLOAT32) {
-                bias_size = static_cast<uint64_t>(params.bias().floatvalue().size());
+                weight_size = static_cast<uint64_t>(params.weights().floatvalue().size());
             } else {
-                bias_size = static_cast<uint64_t>(params.bias().float16value().size() / 2);
+                weight_size = static_cast<uint64_t>(params.weights().float16value().size() / 2);
             }
-            if (outputChannels != bias_size) {
-                std::string err = "Convolution layer '" + layer.name() + "' has a bias vector of size " +
-                std::to_string(bias_size) + " but should be " + std::to_string(outputChannels) + ".";
-                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            if (weight_size != expected_weight_size) {
+                if (is_deconv) {
+                    std::string err = "Deconvolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(kernelChannels) + " x " + std::to_string(outputChannels/nGroups) + " x " + std::to_string(kernelHeight) + " x " + std::to_string(kernelWidth) + " convolution.";
+                    r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+                    return r;
+                }
+                else {
+                    std::string err = "Convolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(outputChannels) + " x " + std::to_string(kernelChannels) + " x " + std::to_string(kernelHeight) + " x " + std::to_string(kernelWidth) + " convolution.";
+                    r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+                    return r;
+                }
+            }
+        } // if (weightsValueType == FLOAT32 || weightsValueType == FLOAT16)
+        else if (weightsValueType == QUINT) {
+            r = validateGeneralWeightParams(params.weights(), expected_weight_size, outputChannels, "Convolution", layer.name(), "weight");
+            if (!r.good()) return r;
+        } else { // EMPTY
+            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() + "has not specified weights.");
+            return r;
+        }
+
+        // Check the bias
+        uint64_t bias_size = 0;
+        if (has_bias) {
+            if (biasValueType == FLOAT32 || biasValueType == FLOAT16){
+                if (biasValueType == FLOAT32){
+                    bias_size = static_cast<uint64_t>(params.bias().floatvalue().size());
+                } else {
+                    bias_size = static_cast<uint64_t>(params.bias().float16value().size() / 2);
+                }
+                if (bias_size != outputChannels) {
+                    std::string err = "Convolution layer '" + layer.name() + "' has a bias vector of size " +
+                    std::to_string(bias_size) + " but should be " + std::to_string(outputChannels) + ".";
+                    r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+                    return r;
+                }
+            } else if (biasValueType == QUINT){
+                // quantization of bias vector should be 1
+                r = validateGeneralWeightParams(params.bias(), outputChannels, 1, "Convolution", layer.name(), "bias");
+                if (!r.good()) return r;
+            } else { // EMPTY
+                r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() + "has not specified bias.");
                 return r;
             }
         }
-        
         return r;
     }
 
@@ -333,48 +397,71 @@ namespace CoreML {
         WeightParamType weightsValueType, biasValueType;
         weightsValueType = valueType(params.weights());
         biasValueType = valueType(params.bias());
-
-        // Only float32 or float16 parameters can be populated at any time. Both bias and weights should have the same value types
-        if ( (weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED) || (has_bias && (weightsValueType != biasValueType)) ) {
-            std::string err = "Inner product layer '" + layer.name() + "' has invalid weights/bias fields. Field value types should match and should either be half or full precision.";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        
+        // Check for weight and bias value type
+        if ((weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
+            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Inner product layer '" + layer.name() + "' has invalid weights/bias fields.");
             return r;
+        }
+        // Check that weight and bias should both be FP16/32, or quantized
+        if (has_bias){
+            if ((weightsValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
+                (weightsValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)){
+                r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Inner product layer '" + layer.name() +
+                        "has unmatched precisions of weights/bias They should either be half or full precision.");
+                return r;
+            }
         }
         
-        uint64_t bias_size;
-        if (weightsValueType == FLOAT32) {
-            bias_size = static_cast<uint64_t>(params.bias().floatvalue().size());
-        } else {
-            bias_size = static_cast<uint64_t>(params.bias().float16value().size() / 2);
+        // Check weights
+        uint64_t weight_size = 0;
+        if (weightsValueType == FLOAT32 || weightsValueType == FLOAT16){
+            if (weightsValueType == FLOAT32) {
+                weight_size = static_cast<uint64_t>(params.weights().floatvalue().size());
+            } else {
+                weight_size = static_cast<uint64_t>(params.weights().float16value().size() / 2);
+            }
+            if (num_inputs * num_outputs != weight_size) {
+                r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layer.name() +
+                        " has incorrect weight matrix size " + std::to_string(weight_size) +
+                        " to encode a " + std::to_string(num_inputs) + " x " +
+                        std::to_string(num_outputs) + " inner product.");
+                return r;
+            }
+        } else if (weightsValueType == QUINT){
+            r = validateGeneralWeightParams(params.weights(), num_inputs * num_outputs, num_outputs,
+                                            "Inner Product", layer.name(), "weight");
+            if (!r.good()) return r;
         }
-
-        if (has_bias && bias_size != num_outputs) {
-            std::string err = "Layer '" + layer.name() + "' has incorrect bias vector size " + std::to_string(bias_size) + " (expected " + std::to_string(num_outputs) + ").";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
-        }
-        else if (!has_bias && bias_size > 0) {
+        
+        // Check the bias
+        uint64_t bias_size = 0;
+        if (has_bias){
+            if (biasValueType == FLOAT32 || biasValueType == FLOAT16){
+                if (biasValueType == FLOAT32){
+                    bias_size = static_cast<uint64_t>(params.bias().floatvalue().size());
+                } else {
+                    bias_size = static_cast<uint64_t>(params.bias().float16value().size() / 2);
+                }
+                if (bias_size != num_outputs) {
+                    std::string err = "Layer '" + layer.name() + "' has incorrect bias vector size " +
+                            std::to_string(bias_size) + " (expected " + std::to_string(num_outputs) + ").";
+                    r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+                    return r;
+                }
+            } else if (biasValueType == QUINT){
+                r = validateGeneralWeightParams(params.bias(), num_outputs, 1, "Inner Product",
+                                                layer.name(), "bias");
+                if (!r.good()) return r;
+            }
+        } else if (!has_bias && bias_size > 0) {
             std::string err = "Bias vector being ignored since \"hasBias\" flag not set.";
             r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             return r;
         }
-
-        uint64_t weight_size = 0;
-        if (weightsValueType == FLOAT32) {
-            weight_size = static_cast<uint64_t>(params.weights().floatvalue().size());
-        } else {
-            weight_size = static_cast<uint64_t>(params.weights().float16value().size() / 2);
-        }
-        
-        if (num_inputs * num_outputs != weight_size) {
-            std::string err = "Layer '" + layer.name() + " has incorrect weight matrix size " + std::to_string(weight_size) + " to encode a " + std::to_string(num_inputs) + " x " + std::to_string(num_outputs) + " inner product.";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
-        }
-
         return r;
     }
-
+    
     //    BatchnormLayerParams batchnorm = 6;
     static Result validateBatchnormLayer(const Specification::NeuralNetworkLayer& layer) {
 
@@ -383,67 +470,40 @@ namespace CoreML {
         if (r.good()) {
             r = validateOutputCount(layer, 1, 1);
         }
-
-        if (r.good()) {
-            bool has_f32_params = ((valueType(layer.batchnorm().gamma()) == FLOAT32) || (valueType(layer.batchnorm().beta()) == FLOAT32) ||
-                                   (valueType(layer.batchnorm().mean()) == FLOAT32)  || (valueType(layer.batchnorm().variance()) == FLOAT32));
-            
-            bool has_f16_params = ((valueType(layer.batchnorm().gamma()) == FLOAT16) || (valueType(layer.batchnorm().beta()) == FLOAT16) ||
-                                   (valueType(layer.batchnorm().mean()) == FLOAT16)  || (valueType(layer.batchnorm().variance()) == FLOAT16));
-            
-            bool invalid_params = ((valueType(layer.batchnorm().gamma()) == UNSPECIFIED) || (valueType(layer.batchnorm().beta()) == UNSPECIFIED) ||
-                                   (valueType(layer.batchnorm().mean()) == UNSPECIFIED)  || (valueType(layer.batchnorm().variance()) == UNSPECIFIED));
-
-            
-            if ((has_f32_params && has_f16_params) || invalid_params) {
-                std::string err = "Batchnorm layer '" + layer.name() + "' parameters have values for both full and half precision. Parameters "
-                "should either be specified in half or full precision, mixed parameters are not supported.";
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-            
-            int gamma_size, beta_size, mean_size, variance_size, num_channels;
-            
-            num_channels = static_cast<int>(layer.batchnorm().channels());
-            if (has_f32_params) {
-                gamma_size = layer.batchnorm().gamma().floatvalue_size();
-                beta_size = layer.batchnorm().beta().floatvalue_size();
-                mean_size = layer.batchnorm().mean().floatvalue_size();
-                variance_size = layer.batchnorm().variance().floatvalue_size();
-            } else {
-                gamma_size = static_cast<int>(layer.batchnorm().gamma().float16value().size()) / 2;
-                beta_size = static_cast<int>(layer.batchnorm().beta().float16value().size()) / 2;
-                mean_size = static_cast<int>(layer.batchnorm().mean().float16value().size()) / 2;
-                variance_size = static_cast<int>(layer.batchnorm().variance().float16value().size()) / 2;
-            }
-
-            if (num_channels != gamma_size) {
-                std::string err = "Batchnorm layer '" + layer.name() + "' has incorrect gamma size " + std::to_string(gamma_size)
-                + " (expected " + std::to_string(num_channels) + ").";
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-
-            if (num_channels != beta_size) {
-                std::string err = "Batchnorm layer '" + layer.name() + "' has incorrect beta size " + std::to_string(beta_size)
-                + " (expected " + std::to_string(num_channels) + ").";
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-
-            // These don't need to be provided if they are computed
-            if (!layer.batchnorm().computemeanvar()) {
-                if (num_channels != mean_size) {
-                    std::string err = "Batchnorm layer '" + layer.name() + "' has incorrect mean size " + std::to_string(mean_size)
-                    + " (expected " + std::to_string(num_channels) + ").";
-                    return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                }
-
-                if (num_channels != variance_size) {
-                    std::string err = "Batchnorm layer '" + layer.name() + "' has incorrect variance size " + std::to_string(variance_size)
-                    + " (expected " + std::to_string(num_channels) + ").";
-                    return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                }
-            }
+        if (!r.good()){
+            return r;
         }
-
+        
+        // Check parameters types
+        bool has_f32_params = ((valueType(layer.batchnorm().gamma()) == FLOAT32) || (valueType(layer.batchnorm().beta()) == FLOAT32) ||
+                               (valueType(layer.batchnorm().mean()) == FLOAT32)  || (valueType(layer.batchnorm().variance()) == FLOAT32));
+        bool has_f16_params = ((valueType(layer.batchnorm().gamma()) == FLOAT16) || (valueType(layer.batchnorm().beta()) == FLOAT16) ||
+                               (valueType(layer.batchnorm().mean()) == FLOAT16)  || (valueType(layer.batchnorm().variance()) == FLOAT16));
+        bool invalid_params = ((valueType(layer.batchnorm().gamma()) == UNSPECIFIED) || (valueType(layer.batchnorm().beta()) == UNSPECIFIED) ||
+                               (valueType(layer.batchnorm().mean()) == UNSPECIFIED)  || (valueType(layer.batchnorm().variance()) == UNSPECIFIED));
+        if ((has_f32_params && has_f16_params) || invalid_params) {
+            std::string err = "Batchnorm layer '" + layer.name() + "' parameters have values for both full and half precision. Parameters "
+            "should either be specified in half or full precision, mixed parameters are not supported.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+        
+        // Check parameters length
+        uint64_t num_channels = static_cast<uint64_t>(layer.batchnorm().channels());
+        r = validateGeneralWeightParams(layer.batchnorm().gamma(), num_channels, 1, "BatchNorm", layer.name(), "gamma");
+        if (!r.good()) return r;
+        r = validateGeneralWeightParams(layer.batchnorm().beta(), num_channels, 1, "BatchNorm", layer.name(), "beta");
+        if (!r.good()) return r;
+        // Check existence of mean / variance
+        if (!layer.batchnorm().computemeanvar()) {
+            if (valueType(layer.batchnorm().mean()) == EMPTY || valueType(layer.batchnorm().mean()) == EMPTY){
+                const std::string err = "Batchnorm layer '" + layer.name() + "' is missing mean and variance.";
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            }
+            r = validateGeneralWeightParams(layer.batchnorm().mean(), num_channels, 1, "BatchNorm", layer.name(), "mean");
+            if (!r.good()) return r;
+            r = validateGeneralWeightParams(layer.batchnorm().variance(), num_channels, 1, "BatchNorm", layer.name(), "variance");
+            if (!r.good()) return r;
+        }
         return r;
     }
 
@@ -580,7 +640,6 @@ namespace CoreML {
         }
         
         const auto& params = layer.bias();
-        
         WeightParamType paramType = valueType(params.bias());
         
         // Only float32 or float16 parameters can be populated at any time
@@ -590,23 +649,17 @@ namespace CoreML {
             return r;
         }
 
-        uint64_t bias_size;
-        if (paramType == FLOAT32) {
-            bias_size = static_cast<uint64_t>(params.bias().floatvalue().size());
-        } else {
-            bias_size = static_cast<uint64_t>(params.bias().float16value().size() / 2);
-        }
-
         size_t total_shape = 1;
         for (int i = 0; i < params.shape_size(); i++) {
             total_shape *= params.shape(i);
         }
-
-        if (total_shape != bias_size) {
-            std::string err = "Bias layer '" + layer.name() + "' is a vector of length " + std::to_string(bias_size) + " but should be a vector of length " + std::to_string(total_shape) + ".";
-
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        // shape can be ``[1]``, ``[C]``, ``[1, H, W]`` or ``[C, H, W]``
+        if (params.shape_size() == 3 && params.shape(0) > 1){
+            r = validateGeneralWeightParams(params.bias(), total_shape, params.shape(0), "Bias", layer.name(), "bias");
+        } else {
+            r = validateGeneralWeightParams(params.bias(), total_shape, 1, "Bias", layer.name(), "bias");
         }
+        if (!r.good()) return r;
 
         if (params.shape_size() < 1 || params.shape_size() > 3) {
             std::string err = "Bias layer '" + layer.name() + "' cannot be " + std::to_string(params.shape_size()) + " dimensional. Must be 1D, 2D, or 3D.";
@@ -710,14 +763,15 @@ namespace CoreML {
             return r;
         }
         
-        uint64_t start = slice.startindex();
+        int64_t start = (int64_t)slice.startindex();
         int64_t end = slice.endindex();
-        if (end > 0 && end < static_cast<int64_t>(start)) {
+        if ((end > 0 && end < start )
+            || (end < 0 && start < 0 && start > end)) {
             std::string err = "Slice layer " + layer.name() + " has an end index before the start index.";
             r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             return r;
         }
-        
+
         return r;
     }
     
@@ -734,8 +788,6 @@ namespace CoreML {
         }
 
         const auto& params = layer.loadconstant();
-
-        uint64_t data_size;
         WeightParamType paramType = valueType(params.data());
         
         // Only float32 or float16 parameters can be populated at any time
@@ -744,30 +796,25 @@ namespace CoreML {
             r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             return r;
         }
-        
-        if (paramType == FLOAT32) {
-            data_size = static_cast<uint64_t>(params.data().floatvalue_size());
-        } else {
-            data_size = static_cast<uint64_t>(params.data().float16value().size() / 2);
-        }
-
         if (params.shape_size() != 3) {
             std::string err = "Load constant layer '" + layer.name() + "' must be a 3D constant.";
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
-
         size_t total_shape = 1;
         for (int i = 0; i < params.shape_size(); i++) {
             total_shape *= params.shape(i);
         }
-
-        if (total_shape != data_size) {
-            std::string err = "Load constant layer '" + layer.name() + "' encodes a data buffer of length " + std::to_string(data_size) + " but should be " + std::to_string(total_shape) + ".";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        if (params.shape_size() == 3 && params.shape(0) > 1){
+            r = validateGeneralWeightParams(params.data(), total_shape, params.shape(0), "LoadConstant", layer.name(), "constants");
+        } else {
+            r = validateGeneralWeightParams(params.data(), total_shape, 1, "LoadConstant", layer.name(), "constants");
         }
 
+        if (!r.good()) return r;
+        
         return Result();
     }
+    
     //    ScaleLayerParams scale = 25;
     static Result validateScaleLayer(const Specification::NeuralNetworkLayer& layer) {
         Result r;
@@ -786,55 +833,59 @@ namespace CoreML {
         scaleValueType = valueType(params.scale());
         biasValueType = valueType(params.bias());
         
-        // Only float32 or float16 parameters can be populated at any time. Both bias and weights should have the same value types
-        if ( (scaleValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED) || (has_bias && (scaleValueType != biasValueType)) ) {
-            std::string err = "Scale layer '" + layer.name() + "' has invalid scale/bias fields. Field value types should match and should either be half or full precision.";
+        // Check for scale and bias value type. Only float32 or float16 parameters can be populated at any time.
+        // Both bias and weights should have the same value types
+        if ( (scaleValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
+            std::string err = "Scale layer '" + layer.name() + "' has invalid scale/bias fields.";
             r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             return r;
         }
-        
-        uint64_t bias_size, scale_size;
-        if (scaleValueType == FLOAT32) {
-            bias_size = static_cast<uint64_t>(params.bias().floatvalue().size());
-            scale_size = static_cast<uint64_t>(params.scale().floatvalue().size());
-        } else {
-            bias_size = static_cast<uint64_t>(params.bias().float16value().size() / 2);
-            scale_size = static_cast<uint64_t>(params.scale().float16value().size() / 2);
-        }
-        
-        if (has_bias) {
-            
-            if (!(params.shapebias_size() == 1 || params.shapebias_size() == 3)) {
-                std::string err = "The bias vector for scale layer '" + layer.name() + "' is " + std::to_string(params.shapebias_size()) + " dimensional but should be either 1D or 3D.";
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-            
-            size_t total_bias_shape = 1;
-            for (int i = 0; i < params.shapebias_size(); i++) {
-                total_bias_shape *= params.shapebias(i);
-            }
-
-            if (total_bias_shape != bias_size) {
-                std::string err = "Scale layer '" + layer.name() + "' encodes a bias vector of length " + std::to_string(bias_size) + " but should be " + std::to_string(total_bias_shape) + ".";
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        if (has_bias){
+            if ((scaleValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
+                (scaleValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)){
+                const std::string err = "Scale layer '" + layer.name() +
+                        "' has invalid scale/bias fields. Field value types should match and should either be half or full precision.";
+                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+                return r;
             }
         }
         
-        if (!(params.shapescale_size() == 1 || params.shapescale_size() == 3)) {
-            std::string err = "The shape vector for the scale layer '" + layer.name() + "' is " + std::to_string(params.shapescale_size()) + " dimensional but should be 1D or 3D.";
+        // Checks scale shape and size
+        if (!(params.shapescale_size() == 1 || params.shapescale_size() == 3)) { // check shape
+            std::string err = "The shape vector for the scale layer '" + layer.name() + "' is " +
+                    std::to_string(params.shapescale_size()) + " dimensional but should be 1D or 3D.";
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
-        
         size_t total_scale_shape = 1;
         for (int i = 0; i < params.shapescale_size(); i++) {
             total_scale_shape *= params.shapescale(i);
         }
 
-        if (total_scale_shape != scale_size) {
-            std::string err = "Scale layer '" + layer.name() + "' encodes a scale vector of size " + std::to_string(scale_size) + " but should be " + std::to_string(total_scale_shape) + ".";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        if (params.shapescale_size() == 3 && params.shapescale(0) > 1){
+            r = validateGeneralWeightParams(params.scale(), total_scale_shape, params.shapescale(0), "Scale", layer.name(), "scale");
+        } else {
+            r = validateGeneralWeightParams(params.scale(), total_scale_shape, 1, "Scale", layer.name(), "scale");
         }
-
+        if (!r.good()) return r;
+        
+        // Checks bias shape and size
+        if (has_bias) {
+            if (!(params.shapebias_size() == 1 || params.shapebias_size() == 3)) {
+                std::string err = "The bias vector for scale layer '" + layer.name() + "' is " +
+                        std::to_string(params.shapebias_size()) + " dimensional but should be either 1D or 3D.";
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            }
+            size_t total_bias_shape = 1;
+            for (int i = 0; i < params.shapebias_size(); i++) {
+                total_bias_shape *= params.shapebias(i);
+            }
+            if (params.shapebias_size() == 3 && params.shapebias(0) > 1){
+                r = validateGeneralWeightParams(params.bias(), total_bias_shape, params.shapebias(0), "Scale", layer.name(), "bias");
+            } else {
+                r = validateGeneralWeightParams(params.bias(), total_bias_shape, 1, "Scale", layer.name(), "bias");
+            }
+            if (!r.good()) return r;
+        }
         return Result();
     }
 
@@ -851,64 +902,49 @@ namespace CoreML {
             return r;
         }
 
-//        //size of the input vectors
-//        uint64 inputVectorSize = 1;
-//        //size of the output
-//        uint64 outputVectorSize = 2;
-//
-//        ActivationParams activation = 3; //typical value used = sigmoid
-//        // isOutputASequence: if false output is the result after final state update. If true, output is a sequence, containing outputs at all time steps
-//        bool isOutputASequence = 4;
-//
-//        bool hasBiasVector = 5; //if False no bias is added
-//
-//        //Weights matrices:
-//        repeated float weightMatrix = 6; //W
-//        repeated float recursionMatrix = 7; //R
-//        //Bias:
-//        repeated float biasVector = 8; //b
-//
-//        bool reverseInput = 100;
-
         const auto& params = layer.simplerecurrent();
-        
         bool hasBiasVector = params.hasbiasvector();
         WeightParamType weightMatrixValueType, recursionMatrixValueType, biasVectorValueType;
         weightMatrixValueType = valueType(params.weightmatrix());
         recursionMatrixValueType = valueType(params.recursionmatrix());
         biasVectorValueType = valueType(params.biasvector());
         
-        // Verify all params are of same type
-        if ( (weightMatrixValueType == UNSPECIFIED) || (hasBiasVector && biasVectorValueType == UNSPECIFIED) ||
-            (hasBiasVector && (weightMatrixValueType != biasVectorValueType)) || (weightMatrixValueType != recursionMatrixValueType) ) {
-            std::string err = "Simple recurrent layer '" + layer.name() + "' has invalid weightMatrix/recusionMatrix/Bias fields. Field value types should match and should either be half or full precision.";
+        // Verify all weights are of valid type
+        if((weightMatrixValueType == UNSPECIFIED) || recursionMatrixValueType == UNSPECIFIED || (hasBiasVector && biasVectorValueType == UNSPECIFIED)){
+            std::string err = "Simple recurrent layer '" + layer.name() + "' has invalid weightMatrix/recusionMatrix/Bias fields.";
             r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             return r;
         }
+        // Verify either weightMatrix, recursionMatrix, and biasVector are all FP32 or FP16, or one of them is quantized
+        if (weightMatrixValueType != QUINT && recursionMatrixValueType != QUINT){
+            if (weightMatrixValueType != recursionMatrixValueType ||
+                (hasBiasVector && biasVectorValueType != QUINT && weightMatrixValueType != biasVectorValueType) ){
+                std::string err = "Simple recurrent layer '" + layer.name() + "' has invalid weightMatrix/recusionMatrix/Bias fields. "
+                "Field value types should match and should either be half or full precision.";
+                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+                return r;
+            }
+        }
         
-        uint64_t weight_matrix_in_size = static_cast<uint64_t>(getWeightParamSize(params.weightmatrix()));
-        uint64_t recursion_matrix_in_size = static_cast<uint64_t>(getWeightParamSize(params.recursionmatrix()));
-        uint64_t bias_vector_in_size =  static_cast<uint64_t>(getWeightParamSize(params.biasvector()));
-
-        // Check the size of the input matrices
+        // Check weight matrix size
+        // input matrix
         uint64_t input_matrix_size = params.inputvectorsize() * params.outputvectorsize();
-        if (input_matrix_size != weight_matrix_in_size) {
-            std::string err = "Simple recurrent layer '" + layer.name() + "' expects an input matrix of size " + std::to_string(params.inputvectorsize()) + " x " + std::to_string(params.outputvectorsize()) + " but provides " + std::to_string(params.weightmatrix().floatvalue().size()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-
-        // Check the size of the recurrent matrices
+        r = validateGeneralWeightParams(params.weightmatrix(), input_matrix_size,
+                                        params.outputvectorsize(),
+                                        "SimpleRNN", layer.name(), "WeightMatrix");
+        if (!r.good()) return r;
+        // recurrent matrix
         uint64_t recurrent_matrix_size = params.outputvectorsize() * params.outputvectorsize();
-        if (recurrent_matrix_size != recursion_matrix_in_size) {
-            std::string err = "Simple recurrent layer' " + layer.name() + "' expects a recursion matrix of size " + std::to_string(params.outputvectorsize()) + " x " + std::to_string(params.outputvectorsize()) + " but provides " + std::to_string(params.recursionmatrix().floatvalue().size()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        r = validateGeneralWeightParams(params.recursionmatrix(), recurrent_matrix_size,
+                                        params.outputvectorsize(), "SimpleRNN",
+                                        layer.name(), "RecursionMatrix");
+        if (!r.good()) return r;
+        // bias
+        if (hasBiasVector){
+            r = validateGeneralWeightParams(params.biasvector(), params.outputvectorsize(), 1,
+                                            "SimpleRNN", layer.name(), "BiasVector");
+            if (!r.good()) return r;
         }
-
-        if (hasBiasVector && bias_vector_in_size != params.outputvectorsize()) {
-            std::string err = "Simple recurrent layer '" + layer.name() + "' has a bias vector of size " + std::to_string(params.biasvector().floatvalue().size()) + " but provides " + std::to_string(params.outputvectorsize()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-
         // Validate the activations as well
         return validateRecurrentActivationParams(layer.simplerecurrent().activation());
 
@@ -930,78 +966,70 @@ namespace CoreML {
         const auto& params = layer.gru();
         bool hasBiasVectors = params.hasbiasvectors();
         
-        // Validate all weightParam types match
+        // Validate that all weightParam types match
         WeightParamType gateWeightMatrixValueType, gateRecursionMatrixValueType, gateBiasVectorValueType;
         gateWeightMatrixValueType = valueType(params.updategateweightmatrix());
         gateRecursionMatrixValueType = valueType(params.updategaterecursionmatrix());
         gateBiasVectorValueType = valueType(params.updategatebiasvector());
         
-        if ( (valueType(params.resetgateweightmatrix()) != gateWeightMatrixValueType) || (valueType(params.outputgateweightmatrix()) != gateWeightMatrixValueType) ) {
-            std::string err = "GRU layer '" + layer.name() + "' has invalid weight matrix fields. Field value types should match and should be either half or full precision";
+        std::vector<CoreML::WeightParamType> weightTypeList;
+        weightTypeList.push_back(valueType(params.updategateweightmatrix()));
+        weightTypeList.push_back(valueType(params.updategaterecursionmatrix()));
+        weightTypeList.push_back(valueType(params.resetgateweightmatrix()));
+        weightTypeList.push_back(valueType(params.resetgaterecursionmatrix()));
+        weightTypeList.push_back(valueType(params.outputgateweightmatrix()));
+        weightTypeList.push_back(valueType(params.outputgaterecursionmatrix()));
+        if(hasBiasVectors){
+            weightTypeList.push_back(valueType(params.updategatebiasvector()));
+            weightTypeList.push_back(valueType(params.resetgatebiasvector()));
+            weightTypeList.push_back(valueType(params.outputgatebiasvector()));
+        }
+        if(!isWeightParamTypeCompatible(weightTypeList)){
+            const std::string err = "GRU layer '" + layer.name() + "' has invalid weight/recursion matrix or bias fields. "
+            "Field value types should match and should be either half or full precision";
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
+        // allen-continue
         
-        if ((valueType(params.resetgaterecursionmatrix()) != gateRecursionMatrixValueType) || (valueType(params.outputgaterecursionmatrix()) != gateRecursionMatrixValueType)) {
-            std::string err = "GRU layer '" + layer.name() + "' has invalid recursion matrix fields. Field value types should match and should be either half or full precision";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        
-        if (hasBiasVectors) {
-            if ((valueType(params.resetgatebiasvector()) != gateBiasVectorValueType) || (valueType(params.outputgatebiasvector()) != gateBiasVectorValueType)) {
-                std::string err = "GRU layer '" + layer.name() + "' has invalid bias vector fields. Field value types should match and should be either half or full precision";
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-        }
-        
-        if ( gateWeightMatrixValueType != gateRecursionMatrixValueType || (hasBiasVectors && (gateRecursionMatrixValueType != gateBiasVectorValueType))) {
-            std::string err = "GRU layer '" + layer.name() + "' has inconsistent weight/recursion/bias fields. Field value types should match and should be either half or full precision";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
 
         // Check the size of the input matrices
-        uint64_t input_matrix_size = params.inputvectorsize() * params.outputvectorsize();
-        if (input_matrix_size != static_cast<uint64_t>(getWeightParamSize(params.updategateweightmatrix())) ) {
-            std::string err = "GRU layer '" + layer.name() + "' expects an update gate weight matrix of size " + std::to_string(params.inputvectorsize()) + " x " + std::to_string(params.outputvectorsize()) + " but provides " + std::to_string(params.updategateweightmatrix().floatvalue().size()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (input_matrix_size != static_cast<uint64_t>(getWeightParamSize(params.resetgateweightmatrix())) ) {
-            std::string err = "GRU layer '" + layer.name() + "' expects a reset gate matrix of size " + std::to_string(params.inputvectorsize()) + " x " + std::to_string(params.outputvectorsize()) + " but provides " + std::to_string(params.resetgateweightmatrix().floatvalue().size()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (input_matrix_size != static_cast<uint64_t>(getWeightParamSize(params.outputgateweightmatrix())) ) {
-            std::string err = "GRU layer '" + layer.name() + "' expects an output gate matrix of size " + std::to_string(params.inputvectorsize()) + " x " + std::to_string(params.outputvectorsize()) + " but provides " + std::to_string(params.outputgateweightmatrix().floatvalue().size()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
+        const uint64_t input_matrix_size = params.inputvectorsize() * params.outputvectorsize();
+        const uint64_t outSize = params.outputvectorsize();
+        r = validateGeneralWeightParams(params.updategateweightmatrix(), input_matrix_size,
+                                          outSize, "GRU", layer.name(), "update gate weight matrix");
+        if (!r.good()) return r;
+        r = validateGeneralWeightParams(params.resetgateweightmatrix(), input_matrix_size,
+                                          outSize, "GRU", layer.name(), "reset gate weight matrix");
+        if (!r.good()) return r;
+        r = validateGeneralWeightParams(params.outputgateweightmatrix(), input_matrix_size,
+                                          outSize, "GRU", layer.name(), "output gate weight matrix");
+        if (!r.good()) return r;
 
         // Check the size of the recurrent matrices
-        uint64_t recurrent_matrix_size = params.outputvectorsize() * params.outputvectorsize();
-        if (recurrent_matrix_size != static_cast<uint64_t>(getWeightParamSize(params.updategaterecursionmatrix())) ) {
-            std::string err = "GRU layer '" + layer.name() + "' expects an update gate recursion matrix of size " + std::to_string(params.outputvectorsize()) + " x " + std::to_string(params.outputvectorsize()) + " but provides " + std::to_string(params.updategaterecursionmatrix().floatvalue().size()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        const uint64_t recurrent_matrix_size = params.outputvectorsize() * params.outputvectorsize();
+        r = validateGeneralWeightParams(params.updategaterecursionmatrix(), recurrent_matrix_size,
+                                          outSize, "GRU", layer.name(), "update gate recursion matrix");
+        if (!r.good()) return r;
+        r = validateGeneralWeightParams(params.resetgaterecursionmatrix(), recurrent_matrix_size,
+                                          outSize, "GRU", layer.name(), "reset gate recursion matrix");
+        if (!r.good()) return r;
+        r = validateGeneralWeightParams(params.outputgaterecursionmatrix(), recurrent_matrix_size,
+                                          outSize, "GRU", layer.name(), "output gate recursion matrix");
+        if (!r.good()) return r;
+        
+        if (hasBiasVectors){
+            const uint64_t bias_size = params.outputvectorsize();
+            r = validateGeneralWeightParams(params.updategatebiasvector(), bias_size, 1,
+                                            "GRU", layer.name(), "update gate bias vector");
+            if (!r.good()) return r;
+            r = validateGeneralWeightParams(params.resetgatebiasvector(), bias_size, 1,
+                                            "GRU", layer.name(), "reset gate bias vector");
+            if (!r.good()) return r;
+            r = validateGeneralWeightParams(params.outputgatebiasvector(), bias_size, 1,
+                                            "GRU", layer.name(), "output gate bias vector");
+            if (!r.good()) return r;
         }
-        if (recurrent_matrix_size != static_cast<uint64_t>(getWeightParamSize(params.resetgaterecursionmatrix())) ) {
-            std::string err = "GRU layer '" + layer.name() + "' expects a reset gate recursion matrix of size " + std::to_string(params.outputvectorsize()) + " x " + std::to_string(params.outputvectorsize()) + " but provides " + std::to_string(params.resetgaterecursionmatrix().floatvalue().size()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (recurrent_matrix_size != static_cast<uint64_t>(getWeightParamSize(params.outputgaterecursionmatrix())) ) {
-            std::string err = "GRU layer '" + layer.name() + "' expects an output gate recursion matrix of size " + std::to_string(params.outputvectorsize()) + " x " + std::to_string(params.outputvectorsize()) + " but provides " + std::to_string(params.outputgaterecursionmatrix().floatvalue().size()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-
-        // Check the size of the biases
-        if (hasBiasVectors && static_cast<uint64_t>(getWeightParamSize(params.updategatebiasvector())) != params.outputvectorsize()) {
-            std::string err = "GRU layer '" + layer.name() + "' has an update bias vector of size " + std::to_string(params.updategatebiasvector().floatvalue().size()) + " but expects size " + std::to_string(params.outputvectorsize()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (hasBiasVectors && static_cast<uint64_t>(getWeightParamSize(params.resetgatebiasvector())) != params.outputvectorsize()) {
-            std::string err = "GRU layer '" + layer.name() + "' has a reset bias vector of size " + std::to_string(params.resetgatebiasvector().floatvalue().size()) + " but expects size " + std::to_string(params.outputvectorsize()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (hasBiasVectors && static_cast<uint64_t>(getWeightParamSize(params.outputgatebiasvector())) != params.outputvectorsize()) {
-            std::string err = "GRU layer '" + layer.name() + "' has an output bias vector of size " + std::to_string(params.outputgatebiasvector().floatvalue().size()) + " but expects size " + std::to_string(params.outputvectorsize()) + " parameters.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-
+        
         // Now check the activations
         for (const auto& activation : params.activations()) {
             r = validateRecurrentActivationParams(activation);
@@ -1038,62 +1066,68 @@ namespace CoreML {
         }
         
         Specification::UniDirectionalLSTMLayerParams recurrent = layer.unidirectionallstm();
-        int x = static_cast<int> (recurrent.inputvectorsize());
-        int h = static_cast<int> (recurrent.outputvectorsize());
+        uint64_t x = recurrent.inputvectorsize();
+        uint64_t h = recurrent.outputvectorsize();
     
-        std::string err;
-        if (h <= 0){
-            err = std::string("Unidirectional LSTM layer:" + layer.name() + " has invalid output size = " + std::to_string(h));
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (x <= 0){
-            err = std::string("Unidirectional LSTM layer:" + layer.name() + " has invalid input size = " + std::to_string(x));
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        
         if (recurrent.activations_size() != 3){
-            err = std::string("Unidirectional LSTM layer:" + layer.name() + " must provide 3 activations");
+            const std::string err = std::string("Unidirectional LSTM layer:" + layer.name() + " must provide 3 activations");
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
         
-        if (getWeightParamSize(recurrent.weightparams().inputgateweightmatrix())  != h*x ||
-            getWeightParamSize(recurrent.weightparams().forgetgateweightmatrix()) != h*x ||
-            getWeightParamSize(recurrent.weightparams().blockinputweightmatrix()) != h*x ||
-            getWeightParamSize(recurrent.weightparams().outputgateweightmatrix()) != h*x
-            ) {
-            err = std::string("Unidirectional LSTM layer:" + layer.name() + " weight matrix size is incorrect");
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (getWeightParamSize(recurrent.weightparams().inputgaterecursionmatrix())  != h*h ||
-            getWeightParamSize(recurrent.weightparams().forgetgaterecursionmatrix()) != h*h ||
-            getWeightParamSize(recurrent.weightparams().blockinputrecursionmatrix()) != h*h ||
-            getWeightParamSize(recurrent.weightparams().outputgaterecursionmatrix()) != h*h
-            ){
-            err = std::string("Unidirectional LSTM layer:" + layer.name() + " recursion matrix size is incorrect");
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        
+        // Check weight matrices' sizes
+        r = validateGeneralWeightParams(recurrent.weightparams().inputgateweightmatrix(), h*x, h,
+                                        "Unidirectional LSTM", layer.name(), "input gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(recurrent.weightparams().forgetgateweightmatrix(), h*x, h,
+                                        "Unidirectional LSTM", layer.name(), "forget gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(recurrent.weightparams().blockinputweightmatrix(), h*x, h,
+                                        "Unidirectional LSTM", layer.name(), "block input gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(recurrent.weightparams().outputgateweightmatrix(), h*x, h,
+                                        "Unidirectional LSTM", layer.name(), "output gate weight matrix");
+        if(!r.good()) return r;
+        // Check recursion matrices' sizes
+        r = validateGeneralWeightParams(recurrent.weightparams().inputgaterecursionmatrix(), h*h, h,
+                                        "Unidirectional LSTM", layer.name(), "input gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(recurrent.weightparams().forgetgaterecursionmatrix(), h*h, h,
+                                        "Unidirectional LSTM", layer.name(), "forget gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(recurrent.weightparams().blockinputrecursionmatrix(), h*h, h,
+                                        "Unidirectional LSTM", layer.name(), "block input gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(recurrent.weightparams().outputgaterecursionmatrix(), h*h, h,
+                                        "Unidirectional LSTM", layer.name(), "output gate recursion matrix");
+        if(!r.good()) return r;
+        // Check bias vectors
         if (recurrent.params().hasbiasvectors()) {
-            if (getWeightParamSize(recurrent.weightparams().inputgatebiasvector())  != h ||
-                getWeightParamSize(recurrent.weightparams().forgetgatebiasvector()) != h ||
-                getWeightParamSize(recurrent.weightparams().blockinputbiasvector()) != h ||
-                getWeightParamSize(recurrent.weightparams().outputgatebiasvector()) != h
-                ) {
-                err = std::string("Unidirectional LSTM layer:" + layer.name() + " bias vector size is incorrect");
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
+            r = validateGeneralWeightParams(recurrent.weightparams().inputgatebiasvector(), h, 1,
+                                            "Unidirectional LSTM", layer.name(), "input gate bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(recurrent.weightparams().forgetgatebiasvector(), h, 1,
+                                            "Unidirectional LSTM", layer.name(), "forget gate bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(recurrent.weightparams().blockinputbiasvector(), h, 1,
+                                            "Unidirectional LSTM", layer.name(), "block input bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(recurrent.weightparams().outputgatebiasvector(), h, 1,
+                                            "Unidirectional LSTM", layer.name(), "output gate bias vector");
+            if(!r.good()) return r;
+        }
+        // Check peephole vectors
+        if (recurrent.params().haspeepholevectors()){
+            r = validateGeneralWeightParams(recurrent.weightparams().inputgatepeepholevector(), h, 1,
+                                            "Unidirectional LSTM", layer.name(), "input gate peep hole vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(recurrent.weightparams().forgetgatepeepholevector(), h, 1,
+                                            "Unidirectional LSTM", layer.name(), "forget gate peep hole vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(recurrent.weightparams().outputgatepeepholevector(), h, 1,
+                                            "Unidirectional LSTM", layer.name(), "output gate peep hole vector");
+            if(!r.good()) return r;
         }
         
-        if (recurrent.params().haspeepholevectors()){
-            if (getWeightParamSize(recurrent.weightparams().inputgatepeepholevector())  != h ||
-                getWeightParamSize(recurrent.weightparams().forgetgatepeepholevector()) != h ||
-                getWeightParamSize(recurrent.weightparams().outputgatepeepholevector()) != h
-                ) {
-                err = std::string("Unidirectional LSTM layer:" + layer.name() + " peephole vector size is incorrect");
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-        }
-
         return r;
     }
 
@@ -1143,80 +1177,111 @@ namespace CoreML {
         }
 
         // Verify weights and biases sizes
-        int h = static_cast<int> (recurrent.outputvectorsize());
-        int x = static_cast<int> (recurrent.inputvectorsize());
+        uint64_t h = recurrent.outputvectorsize();
+        uint64_t x = recurrent.inputvectorsize();
         const Specification::LSTMWeightParams& weightParamsF = recurrent.weightparams(0);
         const Specification::LSTMWeightParams& weightParamsB = recurrent.weightparams(1);
 
-        if (getWeightParamSize(weightParamsF.inputgateweightmatrix())  != h*x ||
-            getWeightParamSize(weightParamsF.forgetgateweightmatrix()) != h*x ||
-            getWeightParamSize(weightParamsF.blockinputweightmatrix()) != h*x ||
-            getWeightParamSize(weightParamsF.outputgateweightmatrix()) != h*x
-            ) {
-            err = std::string("Bidirectional LSTM layer:" + layer.name() + " forward lstm weight matrix size is incorrect");
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (getWeightParamSize(weightParamsF.inputgaterecursionmatrix())  != h*h ||
-            getWeightParamSize(weightParamsF.forgetgaterecursionmatrix()) != h*h ||
-            getWeightParamSize(weightParamsF.blockinputrecursionmatrix()) != h*h ||
-            getWeightParamSize(weightParamsF.outputgaterecursionmatrix()) != h*h
-            ) {
-            err = std::string("Bidirectional LSTM layer:" + layer.name() + " forward lstm recursion matrix size is incorrect");
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
+        // Check forward weight matrices' sizes
+        r = validateGeneralWeightParams(weightParamsF.inputgateweightmatrix(), h*x, h,
+                                        "Bidirectional LSTM", layer.name(), "forward input gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsF.forgetgateweightmatrix(), h*x, h,
+                                        "Bidirectional LSTM", layer.name(), "forward forget gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsF.blockinputweightmatrix(), h*x, h,
+                                        "Bidirectional LSTM", layer.name(), "forward block input gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsF.outputgateweightmatrix(), h*x, h,
+                                        "Bidirectional LSTM", layer.name(), "forward output gate weight matrix");
+        if(!r.good()) return r;
+        // Check forward recursion matrices' sizes
+        r = validateGeneralWeightParams(weightParamsF.inputgaterecursionmatrix(), h*h, h,
+                                        "Bidirectional LSTM", layer.name(), "forward input gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsF.forgetgaterecursionmatrix(), h*h, h,
+                                        "Bidirectional LSTM", layer.name(), "forward forget gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsF.blockinputrecursionmatrix(), h*h, h,
+                                        "Bidirectional LSTM", layer.name(), "forward block input gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsF.outputgaterecursionmatrix(), h*h, h,
+                                        "Bidirectional LSTM", layer.name(), "forward output gate recursion matrix");
+        if(!r.good()) return r;
+        // Check backward weight matrices' sizes
+        r = validateGeneralWeightParams(weightParamsB.inputgateweightmatrix(), h*x, h,
+                                        "Bidirectional LSTM", layer.name(), "backward input gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsB.forgetgateweightmatrix(), h*x, h,
+                                        "Bidirectional LSTM", layer.name(), "backward forget gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsB.blockinputweightmatrix(), h*x, h,
+                                        "Bidirectional LSTM", layer.name(), "backward block input gate weight matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsB.outputgateweightmatrix(), h*x, h,
+                                        "Bidirectional LSTM", layer.name(), "backward output gate weight matrix");
+        if(!r.good()) return r;
+        // Check backward recursion matrices' sizes
+        r = validateGeneralWeightParams(weightParamsB.inputgaterecursionmatrix(), h*h, h,
+                                        "Bidirectional LSTM", layer.name(), "backward input gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsB.forgetgaterecursionmatrix(), h*h, h,
+                                        "Bidirectional LSTM", layer.name(), "backward forget gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsB.blockinputrecursionmatrix(), h*h, h,
+                                        "Bidirectional LSTM", layer.name(), "backward block input gate recursion matrix");
+        if(!r.good()) return r;
+        r = validateGeneralWeightParams(weightParamsB.outputgaterecursionmatrix(), h*h, h,
+                                        "Bidirectional LSTM", layer.name(), "backward output gate recursion matrix");
+        if(!r.good()) return r;
         
-        if (getWeightParamSize(weightParamsB.inputgateweightmatrix())  != h*x ||
-            getWeightParamSize(weightParamsB.forgetgateweightmatrix()) != h*x ||
-            getWeightParamSize(weightParamsB.blockinputweightmatrix()) != h*x ||
-            getWeightParamSize(weightParamsB.outputgateweightmatrix()) != h*x
-            ) {
-            err = std::string("Bidirectional LSTM layer:" + layer.name() + " backward lstm weight matrix size is incorrect");
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        if (getWeightParamSize(weightParamsB.inputgaterecursionmatrix())  != h*h ||
-            getWeightParamSize(weightParamsB.forgetgaterecursionmatrix()) != h*h ||
-            getWeightParamSize(weightParamsB.blockinputrecursionmatrix()) != h*h ||
-            getWeightParamSize(weightParamsB.outputgaterecursionmatrix()) != h*h
-            ) {
-            err = std::string("Bidirectional LSTM layer:" + layer.name() + " backward lstm recursion matrix size is incorrect");
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
-        
+        // Check bias vectors
         if (recurrent.params().hasbiasvectors()) {
-            if (getWeightParamSize(weightParamsF.inputgatebiasvector())  != h ||
-                getWeightParamSize(weightParamsF.forgetgatebiasvector()) != h ||
-                getWeightParamSize(weightParamsF.blockinputbiasvector()) != h ||
-                getWeightParamSize(weightParamsF.outputgatebiasvector()) != h
-                ) {
-                err = std::string("Bidirectional LSTM layer:" + layer.name() + " forward lstm bias vector size is incorrect");
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-            
-            if (getWeightParamSize(weightParamsB.inputgatebiasvector())  != h ||
-                getWeightParamSize(weightParamsB.forgetgatebiasvector()) != h ||
-                getWeightParamSize(weightParamsB.blockinputbiasvector()) != h ||
-                getWeightParamSize(weightParamsB.outputgatebiasvector()) != h
-                ) {
-                err = std::string("Bidirectional LSTM layer:" + layer.name() + " backward lstm bias vector size is incorrect");
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
+            r = validateGeneralWeightParams(weightParamsF.inputgatebiasvector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "forward input gate bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsF.forgetgatebiasvector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "forward forget gate bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsF.blockinputbiasvector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "forward block input bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsF.outputgatebiasvector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "forward output gate bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsB.inputgatebiasvector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "backward input gate bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsB.forgetgatebiasvector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "backward forget gate bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsB.blockinputbiasvector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "backward block input bias vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsB.outputgatebiasvector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "backward output gate bias vector");
+            if(!r.good()) return r;
         }
-        
+        // Check peephole vectors
         if (recurrent.params().haspeepholevectors()){
-            if (getWeightParamSize(weightParamsF.inputgatepeepholevector())  != h ||
-                getWeightParamSize(weightParamsF.forgetgatepeepholevector()) != h ||
-                getWeightParamSize(weightParamsF.outputgatepeepholevector()) != h
-                ) {
-                err = std::string("Bidirectional LSTM layer:" + layer.name() + " forward lstm peephole vector size is incorrect");
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
-            if (getWeightParamSize(weightParamsB.inputgatepeepholevector())  != h ||
-                getWeightParamSize(weightParamsB.forgetgatepeepholevector()) != h ||
-                getWeightParamSize(weightParamsB.outputgatepeepholevector()) != h
-                ) {
-                err = std::string("Bidirectional LSTM layer:" + layer.name() + " backward lstm peephole vector size is incorrect");
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            }
+            r = validateGeneralWeightParams(weightParamsF.inputgatepeepholevector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "forward input gate peephole vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsF.forgetgatepeepholevector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "forward forget gate peephole vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsF.outputgatepeepholevector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "forward output gate peephole vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsB.inputgatepeepholevector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "backward input gate peephole vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsB.forgetgatepeepholevector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "backward forget gate peephole vector");
+            if(!r.good()) return r;
+            r = validateGeneralWeightParams(weightParamsB.outputgatepeepholevector(), h, 1,
+                                            "Bidirectional LSTM", layer.name(), "backward output gate peephole vector");
+            if(!r.good()) return r;
         }
         return r;
     }
@@ -1286,31 +1351,28 @@ namespace CoreML {
         biasValueType = valueType(params.bias());
         
         // Only float32 or float16 parameters can be populated at any time
-        if ( (weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED) || (has_bias && (weightsValueType != biasValueType)) ) {
+        if ((weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)){
             std::string err = "Embedding layer '" + layer.name() + "' has invalid weights/bias fields. Field value types should match and should either be half or full precision.";
             r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             return r;
         }
         
-        uint64_t weights_size, bias_size;
-        if (weightsValueType == FLOAT32) {
-            weights_size = static_cast<uint64_t>(params.weights().floatvalue().size());
-            bias_size = static_cast<uint64_t>(params.bias().floatvalue().size());
-        } else {
-            weights_size = static_cast<uint64_t>(params.weights().float16value().size() / 2);
-            bias_size = static_cast<uint64_t>(params.bias().float16value().size() / 2);
+        if (has_bias){
+            if ((weightsValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
+                (weightsValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)){
+                r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Embedding layer '" + layer.name() +
+                           "has unmatched precisions of weights/bias They should either be half or full precision.");
+                return r;
+            }
         }
-        
-        if (input_dim * output_channels != weights_size) {
-            std::string err = "Embedding layer '" + layer.name() + "' requires a weight matrix of size " + std::to_string(output_channels) + " but has " + std::to_string(weights_size) + " parameters.";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
-        }
-        
-        if (params.hasbias() && output_channels != bias_size) {
-            std::string err = "Embedding layer '" + layer.name() + "' has " + std::to_string(params.bias().floatvalue_size()) + " bias vector parameters but should be " + std::to_string(output_channels) + ".";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
+        // Validate weight and bias sizes
+        r = validateGeneralWeightParams(params.weights(), input_dim * output_channels, output_channels,
+                                        "Embedding", layer.name(), "weight");
+        if (!r.good()) return r;
+        if (has_bias){
+            r = validateGeneralWeightParams(params.bias(), output_channels, 1,
+                                            "Embedding", layer.name(), "bias");
+            if (!r.good()) return r;
         }
         
         return r;
@@ -1554,48 +1616,55 @@ namespace CoreML {
                              }
 
         
-        // For each named data blob, which node produced it
-        std::map<std::string, Specification::NeuralNetworkLayer> blobNameToProducingLayer;
-
-        // For each named data blob, the shape it expects
-        // This is only K,H,W, since sequence and batch sizes are not specified by the proto
-        std::map<std::string, std::vector<int> > blobNameToShape;
-
-        // For input blobs, we'll give them a dummy producing layer
-        std::string inputName = "__input";
-        Specification::NeuralNetworkLayer dummyInputLayer;
-        dummyInputLayer.set_name(inputName);
+        // For each named data blob, the name of the node which produced it
+        std::map<std::string, std::string> blobNameToProducingLayerName;
 
         for (const auto& input: interface.input()) {
-            blobNameToProducingLayer[input.name()] = dummyInputLayer;
-            if (input.type().Type_case() == Specification::FeatureType::kImageType) {
-                std::vector<int> shape(3);
-                if (input.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace::ImageFeatureType_ColorSpace_GRAYSCALE) {
-                    shape[0] = 1;
-                }
-                else if (input.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace::ImageFeatureType_ColorSpace_RGB) {
-                    shape[0] = 3;
-                } else if (input.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace::ImageFeatureType_ColorSpace_BGR) {
-                    shape[0] = 3;
-                }
-                else {
-                    return Result(ResultType::INVALID_MODEL_INTERFACE, "Unsupported color space for the image inputs (should be RGB, BGR, or Grayscale).");
-                }
-                shape[1] = static_cast<int>(input.type().imagetype().height());
-                shape[2] = static_cast<int>(input.type().imagetype().width());
-                blobNameToShape[input.name()] = shape;
-            }
-            else { // Array
-                // we already checked that it's already an array or image
-                
+            // For input blobs, we'll give them a dummy producing layer name
+            blobNameToProducingLayerName[input.name()] = "__input";
+            if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
                 // only vector-like (rank 1) or image-like (rank 3) inputs are allowed
-                if (!(input.type().multiarraytype().shape().size() == 1
-                    || input.type().multiarraytype().shape().size() == 3)) {
+
+                bool validShapeFound = false;
+                if (input.type().multiarraytype().shape().size() > 0) {
+                    if (!(input.type().multiarraytype().shape().size() == 1
+                          || input.type().multiarraytype().shape().size() == 3)) {
+                        return Result(ResultType::INVALID_MODEL_INTERFACE, "Input MLMultiArray to neural networks must have dimension 1 (vector) or 3 (image-like arrays).");
+                    }
+                    else {
+                        validShapeFound = true;
+                    }
+                }
+
+                bool flexibilityIsRank1or3 = true;
+                switch (input.type().multiarraytype().ShapeFlexibility_case()) {
+                    case CoreML::Specification::ArrayFeatureType::kEnumeratedShapes:
+                        for (const auto &shape : input.type().multiarraytype().enumeratedshapes().shapes()) {
+                            if(shape.shape_size() != 1 && shape.shape_size() != 3) {
+                                flexibilityIsRank1or3 = false;
+                                break;
+                            }
+                        }
+                        break;
+                    case CoreML::Specification::ArrayFeatureType::kShapeRange:
+                        flexibilityIsRank1or3 = (input.type().multiarraytype().shaperange().sizeranges_size() == 1 ||
+                                                 input.type().multiarraytype().shaperange().sizeranges_size() == 3);
+                        break;
+                    case CoreML::Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET:
+                        flexibilityIsRank1or3 = false;
+                        break;
+                }
+
+                if (!flexibilityIsRank1or3 && !validShapeFound) {
+                    return Result(ResultType::INVALID_MODEL_INTERFACE, "Input MLMultiArray to neural networks must have dimension 1 (vector) or 3 (image-like arrays).");
+                } else if (flexibilityIsRank1or3) {
+                    validShapeFound = true;
+                }
+
+                
+                if (!validShapeFound) {
                     return Result(ResultType::INVALID_MODEL_INTERFACE, "Input MLMultiArray to neural networks must have dimension 1 (vector) or 3 (image-like arrays).");
                 }
-                
-                blobNameToShape[input.name()] = std::vector<int>(input.type().multiarraytype().shape().begin(),
-                                                                 input.type().multiarraytype().shape().end());
             }
         }
 
@@ -1613,25 +1682,34 @@ namespace CoreML {
             // Check for topological defects: the layer's input must have been produced by a blob we have
             // already seen. Also, check that the same output isn't being produced in two different places.
             for (const auto& input: layer.input()) {
-                if (blobNameToProducingLayer.find(input) == blobNameToProducingLayer.end()) {
+                if (blobNameToProducingLayerName.find(input) == blobNameToProducingLayerName.end()) {
                     std::string err = "Layer '" + std::string(layer.name()) + "' consumes an input named '"
                         + std::string(input) + "' which is not present in this network.";
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
                 }
             }
             for (const auto& output: layer.output()) {
-                if (blobNameToProducingLayer.find(output) != blobNameToProducingLayer.end()) {
+                if (blobNameToProducingLayerName.find(output) != blobNameToProducingLayerName.end()) {
                     std::string err = "Layer '" + std::string(layer.name()) + "' produces an output named '"
                         + std::string(output) + "' which is also an output produced by the layer '"
-                        + blobNameToProducingLayer[output].name() + "'.";
+                        + blobNameToProducingLayerName[output] + "'.";
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
                 }
-                blobNameToProducingLayer[output] = layer;
+                blobNameToProducingLayerName[output] = layer.name();
                 outputBlobNames.insert(output);
             }
 
         } // loop over layers
-        
+
+        // Compute the shapes
+        try {
+            NeuralNetworkShaper shaper(interface, nn.layers());
+        }
+        catch(std::runtime_error& e) {
+            std::string err = std::string("Error determining network blob shapes: ") + std::string(e.what());
+            return Result(ResultType::POTENTIALLY_INVALID_NEURAL_NETWORK_SHAPES, err);
+        }
+
         return Result();
         
     }
@@ -1681,7 +1759,7 @@ namespace CoreML {
     template <>
     Result validate<MLModelType_neuralNetworkRegressor>(const Specification::Model& format) {
         // must have regressor parameters
-        Result r = validateRegressorInterface(format.description());
+        Result r = validateRegressorInterface(format.description(), format.specificationversion());
         if (!r.good()) {
             return r;
         }

@@ -9,6 +9,7 @@
 #include "MLModelTests.hpp"
 #include "../src/Format.hpp"
 #include "../src/Model.hpp"
+#include "../src/NeuralNetworkShapes.hpp"
 
 #include "framework/TestUtils.hpp"
 
@@ -38,6 +39,9 @@ int testNNValidatorSimple() {
     innerProductLayer->add_input("input");
     innerProductLayer->add_output("output");
     Specification::InnerProductLayerParams *innerProductParams = innerProductLayer->mutable_innerproduct();
+    innerProductParams->set_inputchannels(1);
+    innerProductParams->set_outputchannels(1);
+    innerProductParams->mutable_weights()->add_floatvalue(1.0);
 
     innerProductParams->set_hasbias(false);
     
@@ -580,6 +584,9 @@ int testNNCompilerValidation() {
     innerProductLayer->add_input("input");
     innerProductLayer->add_output("middle");
     Specification::InnerProductLayerParams *innerProductParams = innerProductLayer->mutable_innerproduct();
+    innerProductParams->set_inputchannels(1);
+    innerProductParams->set_outputchannels(1);
+    innerProductParams->mutable_weights()->add_floatvalue(1.0);
     innerProductParams->set_hasbias(false);
     
     Specification::NeuralNetworkLayer *innerProductLayer2 = nn->add_layers();
@@ -587,6 +594,9 @@ int testNNCompilerValidation() {
     innerProductLayer2->add_output("output");
     Specification::InnerProductLayerParams *innerProductParams2 = innerProductLayer2->mutable_innerproduct();
     innerProductParams2->set_hasbias(false);
+    innerProductParams2->set_inputchannels(1);
+    innerProductParams2->set_outputchannels(1);
+    innerProductParams2->mutable_weights()->add_floatvalue(1.0);
     
     Result res = validate<MLModelType_neuralNetworkClassifier>(m1);
     ML_ASSERT_GOOD(res);
@@ -634,6 +644,9 @@ int testNNCompilerValidationGoodProbBlob() {
     innerProductLayer->add_input("input");
     innerProductLayer->add_output("middle");
     Specification::InnerProductLayerParams *innerProductParams = innerProductLayer->mutable_innerproduct();
+    innerProductParams->set_inputchannels(1);
+    innerProductParams->set_outputchannels(1);
+    innerProductParams->mutable_weights()->add_floatvalue(1.0);
     innerProductParams->set_hasbias(false);
     
     Specification::NeuralNetworkLayer *innerProductLayer2 = nn->add_layers();
@@ -641,7 +654,10 @@ int testNNCompilerValidationGoodProbBlob() {
     innerProductLayer2->add_output("output");
     Specification::InnerProductLayerParams *innerProductParams2 = innerProductLayer2->mutable_innerproduct();
     innerProductParams2->set_hasbias(false);
-    
+    innerProductParams2->set_inputchannels(1);
+    innerProductParams2->set_outputchannels(1);
+    innerProductParams2->mutable_weights()->add_floatvalue(1.0);
+
     Result res = validate<MLModelType_neuralNetworkClassifier>(m1);
     ML_ASSERT_GOOD(res);
     return 0;
@@ -932,6 +948,8 @@ int testValidDeconvolution() {
     params->set_hasbias(true);
     
     params->set_isdeconvolution(true);
+    params->add_outputshape(110);
+    params->add_outputshape(110);
     
     (void)params->mutable_valid();
     
@@ -1567,11 +1585,15 @@ int testValidCrop2() {
     topIn->set_name("input");
     auto *shape = topIn->mutable_type()->mutable_multiarraytype();
     shape->add_shape(1);
+    shape->add_shape(234);
+    shape->add_shape(332);
     
     auto *topIn2 = m1.mutable_description()->add_input();
     topIn2->set_name("input2");
     auto* shape2 = topIn2->mutable_type()->mutable_multiarraytype();
     shape2->add_shape(2);
+    shape2->add_shape(10);
+    shape2->add_shape(11);
     
     auto *out3 = m1.mutable_description()->add_output();
     out3->set_name("probs");
@@ -1589,6 +1611,19 @@ int testValidCrop2() {
     
     Result res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_GOOD(res);
+    
+    NeuralNetworkShaper shaper(m1);
+    ML_ASSERT(shaper.isValid());
+
+    ML_ASSERT(shaper.shape("probs").channelRange().minimum().value() == 1);
+    ML_ASSERT(shaper.shape("probs").channelRange().maximum().value() == 1);
+
+    ML_ASSERT(shaper.shape("probs").heightRange().minimum().value() == 10);
+    ML_ASSERT(shaper.shape("probs").heightRange().maximum().value() == 10);
+
+    ML_ASSERT(shaper.shape("probs").widthRange().minimum().value() == 11);
+    ML_ASSERT(shaper.shape("probs").widthRange().maximum().value() == 11);
+    
     return 0;
 }
 
@@ -1621,6 +1656,54 @@ int testInvalidCrop2() {
     
     Result res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_BAD(res);
+    return 0;
+}
+
+int testInvalidCrop3() {
+    
+    Specification::Model m1;
+    
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    auto *chanShape = shape->mutable_shaperange()->add_sizeranges();
+    chanShape->set_lowerbound(6);
+    chanShape->set_upperbound(6);
+    auto *heightRange = shape->mutable_shaperange()->add_sizeranges();
+    heightRange->set_lowerbound(100);
+    heightRange->set_upperbound(1000);
+    auto *widthRange = shape->mutable_shaperange()->add_sizeranges();
+    widthRange->set_lowerbound(5);
+    widthRange->set_upperbound(15);
+
+
+    shape->add_shape(234);
+    shape->add_shape(332);
+    
+    auto *topIn2 = m1.mutable_description()->add_input();
+    topIn2->set_name("input2");
+    auto* shape2 = topIn2->mutable_type()->mutable_multiarraytype();
+    shape2->add_shape(2);
+    shape2->add_shape(10);
+    shape2->add_shape(11);
+    
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+    
+    const auto nn = m1.mutable_neuralnetwork();
+    
+    Specification::NeuralNetworkLayer *cropLayer = nn->add_layers();
+    cropLayer->add_input("input");
+    cropLayer->add_input("input2");
+    cropLayer->add_output("probs");
+    auto *params = cropLayer->mutable_crop();
+    params->add_offset(1);
+    params->add_offset(2);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    
     return 0;
 }
 
@@ -1762,7 +1845,7 @@ int testValidCustom() {
     
     // We'll also test that the spec version is correct here
     Model mlmodel = Model(m1);
-    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION);
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11_2);
 
     return 0;
 }
@@ -1920,12 +2003,10 @@ int testSpecDowngradefp16() {
     
     int num_weights = output_channels * (kernel_channels / nGroups) * kernel_height * kernel_width;
     for (int i = 0; i < num_weights; i++) {
-//        params->mutable_weights()->add_floatvalue(1.0);
         params->mutable_weights()->set_float16value(std::string(num_weights*2, 'a'));
     }
     
     for (int i = 0; i < output_channels; i++) {
-//        params->mutable_bias()->add_floatvalue(1.0);
         params->mutable_bias()->set_float16value(std::string(output_channels*2, 'b'));
     }
     
@@ -1935,7 +2016,84 @@ int testSpecDowngradefp16() {
 
     Model mlmodel = Model(m1);
     
-    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION);
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11_2);
+    
+    return 0;
+    
+}
+
+int testSpecDowngradeFlexibleShapes() {
+    
+    Specification::Model m1;
+    m1.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS12);
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *array_type = topIn->mutable_type()->mutable_multiarraytype();
+    array_type->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    
+    auto *array_shape1_range = array_type->mutable_shaperange()->add_sizeranges();
+    array_shape1_range->set_lowerbound(10);
+    array_shape1_range->set_upperbound(10);
+
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("probs");
+    auto *outvec = out->mutable_type()->mutable_multiarraytype();
+    outvec->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    
+    const auto nn = m1.mutable_neuralnetwork();
+    
+    Specification::NeuralNetworkLayer *layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("probs");
+    
+    auto *params = layer->mutable_unary();
+    params->set_type(Specification::UnaryFunctionLayerParams::ABS);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+    
+    Model mlmodel = Model(m1);
+    
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS12);
+    
+    return 0;
+    
+}
+
+
+int testSpecDowngradeFlexibleShapes2() {
+    
+    Specification::Model m1;
+    m1.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS12);
+    
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *array_type = topIn->mutable_type()->mutable_multiarraytype();
+    array_type->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    
+    array_type->add_shape(10);
+    
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("probs");
+    auto *outvec = out->mutable_type()->mutable_multiarraytype();
+    outvec->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    
+    const auto nn = m1.mutable_neuralnetwork();
+    
+    Specification::NeuralNetworkLayer *layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("probs");
+    
+    auto *params = layer->mutable_unary();
+    params->set_type(Specification::UnaryFunctionLayerParams::ABS);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+    
+    Model mlmodel = Model(m1);
+    
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11);
     
     return 0;
     

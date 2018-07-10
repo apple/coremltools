@@ -132,7 +132,7 @@ namespace CoreML {
         }
 
         // Must have a regressor interface (since GLMRegressor is an MLRegressor)
-        result = validateRegressorInterface(description);
+        result = validateRegressorInterface(description, format.specificationversion());
         if (!result.good()) {
             return result;
         }

@@ -5,6 +5,7 @@
 
 import coremltools.models._feature_management as fm
 import coremltools.models.datatypes as dt
+import six
 import unittest
 from coremltools._deps import HAS_SKLEARN
 
@@ -20,14 +21,8 @@ class FeatureManagementTests(unittest.TestCase):
         self.assertTrue(fm.is_valid_feature_list(out))
 
     def test_single_array(self):
-
-        self.assertEquals(
-            fm.process_or_validate_features("a", num_dimensions = 10),
-            [("a", dt.Array(10))])
-
-    def test_num_dimensions_long_is_accepted(self):
-
-        self.assertEquals(
-            fm.process_or_validate_features("a", num_dimensions = 10L),
-            [("a", dt.Array(10))])
-
+        # test both int and long as input to num_dimensions
+        for t in six.integer_types:
+            self.assertEquals(
+                fm.process_or_validate_features("a", num_dimensions = t(10)),
+                [("a", dt.Array(10))])

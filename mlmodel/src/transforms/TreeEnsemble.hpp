@@ -18,7 +18,7 @@ namespace CoreML {
         class TreeEnsembleRegressor;
     }
 
-    class EXPORT TreeEnsembleBase : public Model {
+    class TreeEnsembleBase : public Model {
     protected:
 
         // Init from one of the parent classes.
@@ -151,7 +151,7 @@ namespace CoreML {
      * specification that is gauranteed to load in an TreeEnsembleSpec class.
      *
      */
-    class EXPORT TreeEnsembleClassifier : public TreeEnsembleBase {
+    class TreeEnsembleClassifier : public TreeEnsembleBase {
     public:
         TreeEnsembleClassifier(const std::string& predictedClassOutputName,
                                const std::string& classProbabilityOutputName,
@@ -174,7 +174,7 @@ namespace CoreML {
     };
 
 
-    class EXPORT TreeEnsembleRegressor : public TreeEnsembleBase {
+    class TreeEnsembleRegressor : public TreeEnsembleBase {
     public:
         /** Initialize the TreeEnsembleSpec in regression mode.
          *

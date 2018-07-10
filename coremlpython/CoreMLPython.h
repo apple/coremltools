@@ -6,6 +6,7 @@
 #pragma clang diagnostic pop
 
 #import <CoreML/CoreML.h>
+#import "NeuralNetworkShapes.hpp"
 
 namespace py = pybind11;
 
@@ -26,5 +27,20 @@ namespace CoreML {
             std::string toString() const;
         };
 
+
+        class NeuralNetworkShapeInformation {
+        private:
+            std::unique_ptr<NeuralNetworkShaper> shaper;
+        public:
+            NeuralNetworkShapeInformation(const std::string& filename);
+            NeuralNetworkShapeInformation(const std::string& filename, bool useInputAndOutputConstraints);
+            void init(const std::string& filename);
+            py::dict shape(const std::string& name);
+            std::string toString() const;
+            void print() const;
+        };
+
+
     }
 }
+

@@ -39,11 +39,13 @@ class ModelDefaultTypeInternal : public ::google::protobuf::internal::Explicitly
   const ::CoreML::Specification::SupportVectorRegressor* supportvectorregressor_;
   const ::CoreML::Specification::TreeEnsembleRegressor* treeensembleregressor_;
   const ::CoreML::Specification::NeuralNetworkRegressor* neuralnetworkregressor_;
+  const ::CoreML::Specification::BayesianProbitRegressor* bayesianprobitregressor_;
   const ::CoreML::Specification::GLMClassifier* glmclassifier_;
   const ::CoreML::Specification::SupportVectorClassifier* supportvectorclassifier_;
   const ::CoreML::Specification::TreeEnsembleClassifier* treeensembleclassifier_;
   const ::CoreML::Specification::NeuralNetworkClassifier* neuralnetworkclassifier_;
   const ::CoreML::Specification::NeuralNetwork* neuralnetwork_;
+  const ::CoreML::Specification::CustomModel* custommodel_;
   const ::CoreML::Specification::OneHotEncoder* onehotencoder_;
   const ::CoreML::Specification::Imputer* imputer_;
   const ::CoreML::Specification::FeatureVectorizer* featurevectorizer_;
@@ -52,7 +54,11 @@ class ModelDefaultTypeInternal : public ::google::protobuf::internal::Explicitly
   const ::CoreML::Specification::CategoricalMapping* categoricalmapping_;
   const ::CoreML::Specification::Normalizer* normalizer_;
   const ::CoreML::Specification::ArrayFeatureExtractor* arrayfeatureextractor_;
+  const ::CoreML::Specification::NonMaximumSuppression* nonmaximumsuppression_;
   const ::CoreML::Specification::Identity* identity_;
+  const ::CoreML::Specification::CoreMLModels::TextClassifier* textclassifier_;
+  const ::CoreML::Specification::CoreMLModels::WordTagger* wordtagger_;
+  const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* visionfeatureprint_;
 } _Model_default_instance_;
 
 namespace protobuf_Model_2eproto {
@@ -93,8 +99,13 @@ void TableStruct::InitDefaultsImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::internal::InitProtobufDefaults();
+  ::CoreML::Specification::CoreMLModels::protobuf_VisionFeaturePrint_2eproto::InitDefaults();
+  ::CoreML::Specification::CoreMLModels::protobuf_TextClassifier_2eproto::InitDefaults();
+  ::CoreML::Specification::CoreMLModels::protobuf_WordTagger_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_ArrayFeatureExtractor_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_BayesianProbitRegressor_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_CategoricalMapping_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_CustomModel_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_DictVectorizer_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_FeatureTypes_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_FeatureVectorizer_2eproto::InitDefaults();
@@ -106,6 +117,7 @@ void TableStruct::InitDefaultsImpl() {
   ::CoreML::Specification::protobuf_Normalizer_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_OneHotEncoder_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Scaler_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_NonMaximumSuppression_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_SVM_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_TreeEnsemble_2eproto::InitDefaults();
   _Pipeline_default_instance_.DefaultConstruct();
@@ -136,8 +148,13 @@ void InitDefaults() {
 }
 void AddDescriptorsImpl() {
   InitDefaults();
+  ::CoreML::Specification::CoreMLModels::protobuf_VisionFeaturePrint_2eproto::AddDescriptors();
+  ::CoreML::Specification::CoreMLModels::protobuf_TextClassifier_2eproto::AddDescriptors();
+  ::CoreML::Specification::CoreMLModels::protobuf_WordTagger_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_ArrayFeatureExtractor_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_BayesianProbitRegressor_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_CategoricalMapping_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_CustomModel_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_DictVectorizer_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_FeatureTypes_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_FeatureVectorizer_2eproto::AddDescriptors();
@@ -149,6 +166,7 @@ void AddDescriptorsImpl() {
   ::CoreML::Specification::protobuf_Normalizer_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_OneHotEncoder_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Scaler_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_NonMaximumSuppression_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_SVM_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_TreeEnsemble_2eproto::AddDescriptors();
   ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
@@ -2504,11 +2522,13 @@ const int Model::kGlmRegressorFieldNumber;
 const int Model::kSupportVectorRegressorFieldNumber;
 const int Model::kTreeEnsembleRegressorFieldNumber;
 const int Model::kNeuralNetworkRegressorFieldNumber;
+const int Model::kBayesianProbitRegressorFieldNumber;
 const int Model::kGlmClassifierFieldNumber;
 const int Model::kSupportVectorClassifierFieldNumber;
 const int Model::kTreeEnsembleClassifierFieldNumber;
 const int Model::kNeuralNetworkClassifierFieldNumber;
 const int Model::kNeuralNetworkFieldNumber;
+const int Model::kCustomModelFieldNumber;
 const int Model::kOneHotEncoderFieldNumber;
 const int Model::kImputerFieldNumber;
 const int Model::kFeatureVectorizerFieldNumber;
@@ -2517,7 +2537,11 @@ const int Model::kScalerFieldNumber;
 const int Model::kCategoricalMappingFieldNumber;
 const int Model::kNormalizerFieldNumber;
 const int Model::kArrayFeatureExtractorFieldNumber;
+const int Model::kNonMaximumSuppressionFieldNumber;
 const int Model::kIdentityFieldNumber;
+const int Model::kTextClassifierFieldNumber;
+const int Model::kWordTaggerFieldNumber;
+const int Model::kVisionFeaturePrintFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Model::Model()
@@ -2569,6 +2593,10 @@ Model::Model(const Model& from)
       mutable_neuralnetworkregressor()->::CoreML::Specification::NeuralNetworkRegressor::MergeFrom(from.neuralnetworkregressor());
       break;
     }
+    case kBayesianProbitRegressor: {
+      mutable_bayesianprobitregressor()->::CoreML::Specification::BayesianProbitRegressor::MergeFrom(from.bayesianprobitregressor());
+      break;
+    }
     case kGlmClassifier: {
       mutable_glmclassifier()->::CoreML::Specification::GLMClassifier::MergeFrom(from.glmclassifier());
       break;
@@ -2587,6 +2615,10 @@ Model::Model(const Model& from)
     }
     case kNeuralNetwork: {
       mutable_neuralnetwork()->::CoreML::Specification::NeuralNetwork::MergeFrom(from.neuralnetwork());
+      break;
+    }
+    case kCustomModel: {
+      mutable_custommodel()->::CoreML::Specification::CustomModel::MergeFrom(from.custommodel());
       break;
     }
     case kOneHotEncoder: {
@@ -2621,8 +2653,24 @@ Model::Model(const Model& from)
       mutable_arrayfeatureextractor()->::CoreML::Specification::ArrayFeatureExtractor::MergeFrom(from.arrayfeatureextractor());
       break;
     }
+    case kNonMaximumSuppression: {
+      mutable_nonmaximumsuppression()->::CoreML::Specification::NonMaximumSuppression::MergeFrom(from.nonmaximumsuppression());
+      break;
+    }
     case kIdentity: {
       mutable_identity()->::CoreML::Specification::Identity::MergeFrom(from.identity());
+      break;
+    }
+    case kTextClassifier: {
+      mutable_textclassifier()->::CoreML::Specification::CoreMLModels::TextClassifier::MergeFrom(from.textclassifier());
+      break;
+    }
+    case kWordTagger: {
+      mutable_wordtagger()->::CoreML::Specification::CoreMLModels::WordTagger::MergeFrom(from.wordtagger());
+      break;
+    }
+    case kVisionFeaturePrint: {
+      mutable_visionfeatureprint()->::CoreML::Specification::CoreMLModels::VisionFeaturePrint::MergeFrom(from.visionfeatureprint());
       break;
     }
     case TYPE_NOT_SET: {
@@ -2702,6 +2750,10 @@ void Model::clear_Type() {
       delete Type_.neuralnetworkregressor_;
       break;
     }
+    case kBayesianProbitRegressor: {
+      delete Type_.bayesianprobitregressor_;
+      break;
+    }
     case kGlmClassifier: {
       delete Type_.glmclassifier_;
       break;
@@ -2720,6 +2772,10 @@ void Model::clear_Type() {
     }
     case kNeuralNetwork: {
       delete Type_.neuralnetwork_;
+      break;
+    }
+    case kCustomModel: {
+      delete Type_.custommodel_;
       break;
     }
     case kOneHotEncoder: {
@@ -2754,8 +2810,24 @@ void Model::clear_Type() {
       delete Type_.arrayfeatureextractor_;
       break;
     }
+    case kNonMaximumSuppression: {
+      delete Type_.nonmaximumsuppression_;
+      break;
+    }
     case kIdentity: {
       delete Type_.identity_;
+      break;
+    }
+    case kTextClassifier: {
+      delete Type_.textclassifier_;
+      break;
+    }
+    case kWordTagger: {
+      delete Type_.wordtagger_;
+      break;
+    }
+    case kVisionFeaturePrint: {
+      delete Type_.visionfeatureprint_;
       break;
     }
     case TYPE_NOT_SET: {
@@ -2896,6 +2968,18 @@ bool Model::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.BayesianProbitRegressor bayesianProbitRegressor = 304;
+      case 304: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(2434u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_bayesianprobitregressor()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       // .CoreML.Specification.GLMClassifier glmClassifier = 400;
       case 400: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
@@ -2950,6 +3034,18 @@ bool Model::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(4002u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_neuralnetwork()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.CustomModel customModel = 555;
+      case 555: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(4442u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_custommodel()));
         } else {
           goto handle_unusual;
         }
@@ -3052,12 +3148,60 @@ bool Model::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.NonMaximumSuppression nonMaximumSuppression = 610;
+      case 610: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(4882u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_nonmaximumsuppression()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       // .CoreML.Specification.Identity identity = 900;
       case 900: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(7202u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_identity()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.CoreMLModels.TextClassifier textClassifier = 2000;
+      case 2000: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16002u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_textclassifier()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.CoreMLModels.WordTagger wordTagger = 2001;
+      case 2001: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16010u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_wordtagger()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.CoreMLModels.VisionFeaturePrint visionFeaturePrint = 2002;
+      case 2002: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16018u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_visionfeatureprint()));
         } else {
           goto handle_unusual;
         }
@@ -3144,6 +3288,12 @@ void Model::SerializeWithCachedSizes(
       303, *Type_.neuralnetworkregressor_, output);
   }
 
+  // .CoreML.Specification.BayesianProbitRegressor bayesianProbitRegressor = 304;
+  if (has_bayesianprobitregressor()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      304, *Type_.bayesianprobitregressor_, output);
+  }
+
   // .CoreML.Specification.GLMClassifier glmClassifier = 400;
   if (has_glmclassifier()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
@@ -3172,6 +3322,12 @@ void Model::SerializeWithCachedSizes(
   if (has_neuralnetwork()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       500, *Type_.neuralnetwork_, output);
+  }
+
+  // .CoreML.Specification.CustomModel customModel = 555;
+  if (has_custommodel()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      555, *Type_.custommodel_, output);
   }
 
   // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
@@ -3222,10 +3378,34 @@ void Model::SerializeWithCachedSizes(
       609, *Type_.arrayfeatureextractor_, output);
   }
 
+  // .CoreML.Specification.NonMaximumSuppression nonMaximumSuppression = 610;
+  if (has_nonmaximumsuppression()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      610, *Type_.nonmaximumsuppression_, output);
+  }
+
   // .CoreML.Specification.Identity identity = 900;
   if (has_identity()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       900, *Type_.identity_, output);
+  }
+
+  // .CoreML.Specification.CoreMLModels.TextClassifier textClassifier = 2000;
+  if (has_textclassifier()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2000, *Type_.textclassifier_, output);
+  }
+
+  // .CoreML.Specification.CoreMLModels.WordTagger wordTagger = 2001;
+  if (has_wordtagger()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2001, *Type_.wordtagger_, output);
+  }
+
+  // .CoreML.Specification.CoreMLModels.VisionFeaturePrint visionFeaturePrint = 2002;
+  if (has_visionfeatureprint()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2002, *Type_.visionfeatureprint_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.Model)
@@ -3299,6 +3479,13 @@ size_t Model::ByteSizeLong() const {
           *Type_.neuralnetworkregressor_);
       break;
     }
+    // .CoreML.Specification.BayesianProbitRegressor bayesianProbitRegressor = 304;
+    case kBayesianProbitRegressor: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.bayesianprobitregressor_);
+      break;
+    }
     // .CoreML.Specification.GLMClassifier glmClassifier = 400;
     case kGlmClassifier: {
       total_size += 2 +
@@ -3332,6 +3519,13 @@ size_t Model::ByteSizeLong() const {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           *Type_.neuralnetwork_);
+      break;
+    }
+    // .CoreML.Specification.CustomModel customModel = 555;
+    case kCustomModel: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.custommodel_);
       break;
     }
     // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
@@ -3390,11 +3584,39 @@ size_t Model::ByteSizeLong() const {
           *Type_.arrayfeatureextractor_);
       break;
     }
+    // .CoreML.Specification.NonMaximumSuppression nonMaximumSuppression = 610;
+    case kNonMaximumSuppression: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.nonmaximumsuppression_);
+      break;
+    }
     // .CoreML.Specification.Identity identity = 900;
     case kIdentity: {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           *Type_.identity_);
+      break;
+    }
+    // .CoreML.Specification.CoreMLModels.TextClassifier textClassifier = 2000;
+    case kTextClassifier: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.textclassifier_);
+      break;
+    }
+    // .CoreML.Specification.CoreMLModels.WordTagger wordTagger = 2001;
+    case kWordTagger: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.wordtagger_);
+      break;
+    }
+    // .CoreML.Specification.CoreMLModels.VisionFeaturePrint visionFeaturePrint = 2002;
+    case kVisionFeaturePrint: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.visionfeatureprint_);
       break;
     }
     case TYPE_NOT_SET: {
@@ -3455,6 +3677,10 @@ void Model::MergeFrom(const Model& from) {
       mutable_neuralnetworkregressor()->::CoreML::Specification::NeuralNetworkRegressor::MergeFrom(from.neuralnetworkregressor());
       break;
     }
+    case kBayesianProbitRegressor: {
+      mutable_bayesianprobitregressor()->::CoreML::Specification::BayesianProbitRegressor::MergeFrom(from.bayesianprobitregressor());
+      break;
+    }
     case kGlmClassifier: {
       mutable_glmclassifier()->::CoreML::Specification::GLMClassifier::MergeFrom(from.glmclassifier());
       break;
@@ -3473,6 +3699,10 @@ void Model::MergeFrom(const Model& from) {
     }
     case kNeuralNetwork: {
       mutable_neuralnetwork()->::CoreML::Specification::NeuralNetwork::MergeFrom(from.neuralnetwork());
+      break;
+    }
+    case kCustomModel: {
+      mutable_custommodel()->::CoreML::Specification::CustomModel::MergeFrom(from.custommodel());
       break;
     }
     case kOneHotEncoder: {
@@ -3507,8 +3737,24 @@ void Model::MergeFrom(const Model& from) {
       mutable_arrayfeatureextractor()->::CoreML::Specification::ArrayFeatureExtractor::MergeFrom(from.arrayfeatureextractor());
       break;
     }
+    case kNonMaximumSuppression: {
+      mutable_nonmaximumsuppression()->::CoreML::Specification::NonMaximumSuppression::MergeFrom(from.nonmaximumsuppression());
+      break;
+    }
     case kIdentity: {
       mutable_identity()->::CoreML::Specification::Identity::MergeFrom(from.identity());
+      break;
+    }
+    case kTextClassifier: {
+      mutable_textclassifier()->::CoreML::Specification::CoreMLModels::TextClassifier::MergeFrom(from.textclassifier());
+      break;
+    }
+    case kWordTagger: {
+      mutable_wordtagger()->::CoreML::Specification::CoreMLModels::WordTagger::MergeFrom(from.wordtagger());
+      break;
+    }
+    case kVisionFeaturePrint: {
+      mutable_visionfeatureprint()->::CoreML::Specification::CoreMLModels::VisionFeaturePrint::MergeFrom(from.visionfeatureprint());
       break;
     }
     case TYPE_NOT_SET: {
@@ -3936,6 +4182,54 @@ void Model::set_allocated_neuralnetworkregressor(::CoreML::Specification::Neural
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.neuralNetworkRegressor)
 }
 
+// .CoreML.Specification.BayesianProbitRegressor bayesianProbitRegressor = 304;
+bool Model::has_bayesianprobitregressor() const {
+  return Type_case() == kBayesianProbitRegressor;
+}
+void Model::set_has_bayesianprobitregressor() {
+  _oneof_case_[0] = kBayesianProbitRegressor;
+}
+void Model::clear_bayesianprobitregressor() {
+  if (has_bayesianprobitregressor()) {
+    delete Type_.bayesianprobitregressor_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::BayesianProbitRegressor& Model::bayesianprobitregressor() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.bayesianProbitRegressor)
+  return has_bayesianprobitregressor()
+      ? *Type_.bayesianprobitregressor_
+      : ::CoreML::Specification::BayesianProbitRegressor::default_instance();
+}
+::CoreML::Specification::BayesianProbitRegressor* Model::mutable_bayesianprobitregressor() {
+  if (!has_bayesianprobitregressor()) {
+    clear_Type();
+    set_has_bayesianprobitregressor();
+    Type_.bayesianprobitregressor_ = new ::CoreML::Specification::BayesianProbitRegressor;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.bayesianProbitRegressor)
+  return Type_.bayesianprobitregressor_;
+}
+::CoreML::Specification::BayesianProbitRegressor* Model::release_bayesianprobitregressor() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.bayesianProbitRegressor)
+  if (has_bayesianprobitregressor()) {
+    clear_has_Type();
+    ::CoreML::Specification::BayesianProbitRegressor* temp = Type_.bayesianprobitregressor_;
+    Type_.bayesianprobitregressor_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_bayesianprobitregressor(::CoreML::Specification::BayesianProbitRegressor* bayesianprobitregressor) {
+  clear_Type();
+  if (bayesianprobitregressor) {
+    set_has_bayesianprobitregressor();
+    Type_.bayesianprobitregressor_ = bayesianprobitregressor;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.bayesianProbitRegressor)
+}
+
 // .CoreML.Specification.GLMClassifier glmClassifier = 400;
 bool Model::has_glmclassifier() const {
   return Type_case() == kGlmClassifier;
@@ -4174,6 +4468,54 @@ void Model::set_allocated_neuralnetwork(::CoreML::Specification::NeuralNetwork* 
     Type_.neuralnetwork_ = neuralnetwork;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.neuralNetwork)
+}
+
+// .CoreML.Specification.CustomModel customModel = 555;
+bool Model::has_custommodel() const {
+  return Type_case() == kCustomModel;
+}
+void Model::set_has_custommodel() {
+  _oneof_case_[0] = kCustomModel;
+}
+void Model::clear_custommodel() {
+  if (has_custommodel()) {
+    delete Type_.custommodel_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::CustomModel& Model::custommodel() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.customModel)
+  return has_custommodel()
+      ? *Type_.custommodel_
+      : ::CoreML::Specification::CustomModel::default_instance();
+}
+::CoreML::Specification::CustomModel* Model::mutable_custommodel() {
+  if (!has_custommodel()) {
+    clear_Type();
+    set_has_custommodel();
+    Type_.custommodel_ = new ::CoreML::Specification::CustomModel;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.customModel)
+  return Type_.custommodel_;
+}
+::CoreML::Specification::CustomModel* Model::release_custommodel() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.customModel)
+  if (has_custommodel()) {
+    clear_has_Type();
+    ::CoreML::Specification::CustomModel* temp = Type_.custommodel_;
+    Type_.custommodel_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_custommodel(::CoreML::Specification::CustomModel* custommodel) {
+  clear_Type();
+  if (custommodel) {
+    set_has_custommodel();
+    Type_.custommodel_ = custommodel;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.customModel)
 }
 
 // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
@@ -4560,6 +4902,54 @@ void Model::set_allocated_arrayfeatureextractor(::CoreML::Specification::ArrayFe
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.arrayFeatureExtractor)
 }
 
+// .CoreML.Specification.NonMaximumSuppression nonMaximumSuppression = 610;
+bool Model::has_nonmaximumsuppression() const {
+  return Type_case() == kNonMaximumSuppression;
+}
+void Model::set_has_nonmaximumsuppression() {
+  _oneof_case_[0] = kNonMaximumSuppression;
+}
+void Model::clear_nonmaximumsuppression() {
+  if (has_nonmaximumsuppression()) {
+    delete Type_.nonmaximumsuppression_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::NonMaximumSuppression& Model::nonmaximumsuppression() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.nonMaximumSuppression)
+  return has_nonmaximumsuppression()
+      ? *Type_.nonmaximumsuppression_
+      : ::CoreML::Specification::NonMaximumSuppression::default_instance();
+}
+::CoreML::Specification::NonMaximumSuppression* Model::mutable_nonmaximumsuppression() {
+  if (!has_nonmaximumsuppression()) {
+    clear_Type();
+    set_has_nonmaximumsuppression();
+    Type_.nonmaximumsuppression_ = new ::CoreML::Specification::NonMaximumSuppression;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.nonMaximumSuppression)
+  return Type_.nonmaximumsuppression_;
+}
+::CoreML::Specification::NonMaximumSuppression* Model::release_nonmaximumsuppression() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.nonMaximumSuppression)
+  if (has_nonmaximumsuppression()) {
+    clear_has_Type();
+    ::CoreML::Specification::NonMaximumSuppression* temp = Type_.nonmaximumsuppression_;
+    Type_.nonmaximumsuppression_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_nonmaximumsuppression(::CoreML::Specification::NonMaximumSuppression* nonmaximumsuppression) {
+  clear_Type();
+  if (nonmaximumsuppression) {
+    set_has_nonmaximumsuppression();
+    Type_.nonmaximumsuppression_ = nonmaximumsuppression;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.nonMaximumSuppression)
+}
+
 // .CoreML.Specification.Identity identity = 900;
 bool Model::has_identity() const {
   return Type_case() == kIdentity;
@@ -4606,6 +4996,150 @@ void Model::set_allocated_identity(::CoreML::Specification::Identity* identity) 
     Type_.identity_ = identity;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.identity)
+}
+
+// .CoreML.Specification.CoreMLModels.TextClassifier textClassifier = 2000;
+bool Model::has_textclassifier() const {
+  return Type_case() == kTextClassifier;
+}
+void Model::set_has_textclassifier() {
+  _oneof_case_[0] = kTextClassifier;
+}
+void Model::clear_textclassifier() {
+  if (has_textclassifier()) {
+    delete Type_.textclassifier_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::CoreMLModels::TextClassifier& Model::textclassifier() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.textClassifier)
+  return has_textclassifier()
+      ? *Type_.textclassifier_
+      : ::CoreML::Specification::CoreMLModels::TextClassifier::default_instance();
+}
+::CoreML::Specification::CoreMLModels::TextClassifier* Model::mutable_textclassifier() {
+  if (!has_textclassifier()) {
+    clear_Type();
+    set_has_textclassifier();
+    Type_.textclassifier_ = new ::CoreML::Specification::CoreMLModels::TextClassifier;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.textClassifier)
+  return Type_.textclassifier_;
+}
+::CoreML::Specification::CoreMLModels::TextClassifier* Model::release_textclassifier() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.textClassifier)
+  if (has_textclassifier()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::TextClassifier* temp = Type_.textclassifier_;
+    Type_.textclassifier_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_textclassifier(::CoreML::Specification::CoreMLModels::TextClassifier* textclassifier) {
+  clear_Type();
+  if (textclassifier) {
+    set_has_textclassifier();
+    Type_.textclassifier_ = textclassifier;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.textClassifier)
+}
+
+// .CoreML.Specification.CoreMLModels.WordTagger wordTagger = 2001;
+bool Model::has_wordtagger() const {
+  return Type_case() == kWordTagger;
+}
+void Model::set_has_wordtagger() {
+  _oneof_case_[0] = kWordTagger;
+}
+void Model::clear_wordtagger() {
+  if (has_wordtagger()) {
+    delete Type_.wordtagger_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::CoreMLModels::WordTagger& Model::wordtagger() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.wordTagger)
+  return has_wordtagger()
+      ? *Type_.wordtagger_
+      : ::CoreML::Specification::CoreMLModels::WordTagger::default_instance();
+}
+::CoreML::Specification::CoreMLModels::WordTagger* Model::mutable_wordtagger() {
+  if (!has_wordtagger()) {
+    clear_Type();
+    set_has_wordtagger();
+    Type_.wordtagger_ = new ::CoreML::Specification::CoreMLModels::WordTagger;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.wordTagger)
+  return Type_.wordtagger_;
+}
+::CoreML::Specification::CoreMLModels::WordTagger* Model::release_wordtagger() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.wordTagger)
+  if (has_wordtagger()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::WordTagger* temp = Type_.wordtagger_;
+    Type_.wordtagger_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_wordtagger(::CoreML::Specification::CoreMLModels::WordTagger* wordtagger) {
+  clear_Type();
+  if (wordtagger) {
+    set_has_wordtagger();
+    Type_.wordtagger_ = wordtagger;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.wordTagger)
+}
+
+// .CoreML.Specification.CoreMLModels.VisionFeaturePrint visionFeaturePrint = 2002;
+bool Model::has_visionfeatureprint() const {
+  return Type_case() == kVisionFeaturePrint;
+}
+void Model::set_has_visionfeatureprint() {
+  _oneof_case_[0] = kVisionFeaturePrint;
+}
+void Model::clear_visionfeatureprint() {
+  if (has_visionfeatureprint()) {
+    delete Type_.visionfeatureprint_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint& Model::visionfeatureprint() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.visionFeaturePrint)
+  return has_visionfeatureprint()
+      ? *Type_.visionfeatureprint_
+      : ::CoreML::Specification::CoreMLModels::VisionFeaturePrint::default_instance();
+}
+::CoreML::Specification::CoreMLModels::VisionFeaturePrint* Model::mutable_visionfeatureprint() {
+  if (!has_visionfeatureprint()) {
+    clear_Type();
+    set_has_visionfeatureprint();
+    Type_.visionfeatureprint_ = new ::CoreML::Specification::CoreMLModels::VisionFeaturePrint;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.visionFeaturePrint)
+  return Type_.visionfeatureprint_;
+}
+::CoreML::Specification::CoreMLModels::VisionFeaturePrint* Model::release_visionfeatureprint() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.visionFeaturePrint)
+  if (has_visionfeatureprint()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* temp = Type_.visionfeatureprint_;
+    Type_.visionfeatureprint_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_visionfeatureprint(::CoreML::Specification::CoreMLModels::VisionFeaturePrint* visionfeatureprint) {
+  clear_Type();
+  if (visionfeatureprint) {
+    set_has_visionfeatureprint();
+    Type_.visionfeatureprint_ = visionfeatureprint;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.visionFeaturePrint)
 }
 
 bool Model::has_Type() const {

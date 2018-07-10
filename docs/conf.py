@@ -44,7 +44,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'coremltools'
-copyright = u'2017, Apple Inc.'
+copyright = u'2018, Apple Inc.'
 author = u'Apple Inc.'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -56,7 +56,7 @@ import pkg_resources
 try:
     version = pkg_resources.require("coremltools")[0].version
 except:
-    version = "0.8"
+    version = "2.0b1"
 
 # The short X.Y version.
 version = version
@@ -88,7 +88,9 @@ html_theme = "sphinx_rtd_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    "navigation_depth": 2
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

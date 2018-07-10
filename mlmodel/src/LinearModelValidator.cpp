@@ -19,7 +19,7 @@ namespace CoreML {
         const Specification::ModelDescription& interface = format.description();
 
         // Must have a regressor interface (since GLMRegressor is an MLRegressor)
-        Result result = validateRegressorInterface(interface);
+        Result result = validateRegressorInterface(interface, format.specificationversion());
         if (!result.good()) {
             return result;
         }
@@ -71,7 +71,10 @@ namespace CoreML {
         // Check has a classifier interface
         Specification::ModelDescription interface = format.description();
         Result result = validateClassifierInterface(format, format.glmclassifier());
-
+        if (!result.good()) {
+            return result;
+        }
+        
         // Check that inputs are vectorizable
         result = validateDescriptionsAreAllVectorizableTypes(interface.input());
         if (!result.good()) {

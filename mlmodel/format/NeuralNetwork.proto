@@ -581,10 +581,44 @@ message WeightParams {
     bytes float16Value = 2;
 
     /**
-     * Raw value specification for smaller types. Currently only supported by custom layer implementations.
+     * Raw value specification for custom layers and quantized lower precisions.
      */
     bytes rawValue  = 30;
 
+	/**
+     * Quantization related parameters.
+     */
+    QuantizationParams quantization = 40;
+
+}
+
+/**
+ * Quantization parameters.
+ */
+message QuantizationParams {
+    uint64 numberOfBits = 1;
+    oneof QuantizationType {
+        LinearQuantizationParams linearQuantization = 101;
+        LookUpTableQuantizationParams lookupTableQuantization = 102;
+    }
+}
+
+message LinearQuantizationParams {
+    /**
+     * Stores scale and bias values corresponding to the quantized weights.
+     * Must be an array of 1 element, or an array of C elements, where C
+     * is number of output channels. For recurrent layers it is equal to
+     * the output vector size.
+     */
+    repeated float scale = 1;
+    repeated float bias = 2;
+}
+
+message LookUpTableQuantizationParams {
+    /* Stores look-up table quantization values. Must be an array of 
+    (2^numberOfBits) Elements.
+    */
+    repeated float floatValue = 1;
 }
 
 /// Layers
@@ -1568,7 +1602,7 @@ message ReorganizeDataLayerParams {
  */
 message SliceLayerParams {
 
-    uint64 startIndex = 1; /// start of the sliced section. Inclusive.
+    int64 startIndex = 1; /// start of the sliced section. Inclusive.
     int64 endIndex = 2; /// end of sliced section. Exclusive.
     uint64 stride = 3; /// The step size. Must be positive.
 
@@ -1578,6 +1612,7 @@ message SliceLayerParams {
         WIDTH_AXIS = 2;
     }
     SliceAxis axis = 4;
+
 }
 
 /**
