@@ -99,8 +99,14 @@ def _get_proxy_from_spec(filename):
         if _has_custom_layer(spec):
             # custom layers can't be supported directly by compiling and loading the model here
             return None
-
-        return _MLModelProxy(filename)
+        try:
+            return _MLModelProxy(filename)
+        except RuntimeError as e:
+            warnings.warn(
+                "You will not be able to run predict() on this Core ML model." +
+                "Underlying exception message was: " + str(e), 
+                RuntimeWarning)
+            return None
     else:
         return None
 

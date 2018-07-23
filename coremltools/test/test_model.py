@@ -134,5 +134,16 @@ class MLModelTest(unittest.TestCase):
             model.predict(1)
         self.spec.specificationVersion = 1
 
-
-
+    @unittest.skipIf(macos_version() >= (10, 13), 'Only supported on macOS 10.13-')
+    def test_MLModel_warning(self):
+        self.spec.specificationVersion = 3
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            model = MLModel(self.spec)
+            assert len(w) == 1
+            assert issubclass(w[-1].category, RuntimeWarning)
+            assert "not able to run predict()" in str(w[-1].message)
+        self.spec.specificationVersion = 1
+        model = MLModel(self.spec)
