@@ -19,14 +19,17 @@
 // Neither MSVC nor Intel support enough of C++14 yet (in particular, as of MSVC 2015 and ICC 17
 // beta, neither support extended constexpr, which we rely on in descr.h), so don't enable pybind
 // CPP14 features for them.
-#if !defined(_MSC_VER) && !defined(__INTEL_COMPILER)
-#  if __cplusplus >= 201402L
-#    define PYBIND11_CPP14
-#    if __cplusplus > 201402L /* Temporary: should be updated to >= the final C++17 value once known */
-#      define PYBIND11_CPP17
-#    endif
-#  endif
-#endif
+
+// Note: commented out for coremltools build, for compiler compatibility
+// Otherwise this seems to fail on C++11-compliant (but not C++14-compliant) clang/gcc.
+//#if !defined(_MSC_VER) && !defined(__INTEL_COMPILER)
+//#  if __cplusplus >= 201402L
+//#    define PYBIND11_CPP14
+//#    if __cplusplus > 201402L /* Temporary: should be updated to >= the final C++17 value once known */
+//#      define PYBIND11_CPP17
+//#    endif
+//#  endif
+//#endif
 
 #if !defined(PYBIND11_EXPORT)
 #  if defined(WIN32) || defined(_WIN32)
