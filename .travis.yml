@@ -1,0 +1,22 @@
+dist: trusty
+sudo: required
+language: c++
+cache: ccache
+compiler: clang
+
+addons:
+  apt:
+    update: true
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libstdc++6
+      - python-setuptools
+
+before_install:
+  - sudo easy_install pip
+  - sudo pip install virtualenv
+
+script:
+  - cmake .
+  - make -j2
