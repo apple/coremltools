@@ -18,7 +18,7 @@ addons:
       - libstdc++6
 
 install:
-  - pip install -r test_requirements.txt
+  - pip install -r test_requirements.pip
 
 script:
   - cmake .
