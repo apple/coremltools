@@ -4,6 +4,8 @@
 #include <pybind11/eval.h>
 #include <pybind11/numpy.h>
 
+#include <Availability.h>
+
 #if PY_MAJOR_VERSION < 3
 
 #pragma clang diagnostic push
@@ -515,10 +517,12 @@ py::object Utils::convertValueToPython(MLFeatureValue *value) {
             return py::str(value.stringValue.UTF8String);
         case MLFeatureTypeDictionary:
             return convertDictionaryValueToPython(value.dictionaryValue);
+#ifdef __MAC_10_14
         case MLFeatureTypeSequence:
             // rdar://problem/38885937
             throw std::runtime_error("convertValueToPython not implemented for MLFeatureTypeSequence");
             return py::none();
+#endif
         case MLFeatureTypeInvalid:
             assert(false);
             return py::none();

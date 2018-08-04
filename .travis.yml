@@ -1,8 +1,13 @@
 dist: trusty
 sudo: required
-language: c++
+language: python
 cache: ccache
 compiler: clang
+python:
+  - "2.7"
+  - "3.5"
+  - "3.6"
+  - "3.7"
 
 addons:
   apt:
@@ -11,12 +16,10 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - libstdc++6
-      - python-setuptools
 
-before_install:
-  - sudo easy_install pip
-  - sudo pip install virtualenv
+install:
+  - pip install -r test_requirements.txt
 
 script:
   - cmake .
-  - make -j2
+  - make -j2 pytest
