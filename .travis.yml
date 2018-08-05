@@ -18,6 +18,7 @@ addons:
       - libstdc++6
 
 install:
+  - pip install -U pip setuptools
   - pip install -r test_requirements.pip
 
 script:
