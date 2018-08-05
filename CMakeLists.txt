@@ -215,6 +215,7 @@ add_custom_target(dist
 )
 
 add_custom_target(pytest
+  COMMAND pip install -e .
   COMMAND pytest coremltools/test/
   DEPENDS dist
 )
