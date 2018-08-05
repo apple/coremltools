@@ -14,7 +14,7 @@ add_subdirectory(deps)
 add_subdirectory(mlmodel)
 
 if("${PYTHON}" STREQUAL "")
-  if("${TRAVIS_PYTHON_VERSION}" STREQUAL "2.7")
+  if("$ENV{TRAVIS_PYTHON_VERSION}" STREQUAL "2.7")
     find_program(PYTHON NAMES python)
   else()
     find_program(PYTHON NAMES python3 python)
