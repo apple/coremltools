@@ -14,7 +14,11 @@ add_subdirectory(deps)
 add_subdirectory(mlmodel)
 
 if("${PYTHON}" STREQUAL "")
-  find_program(PYTHON NAMES python3 python)
+  if("${TRAVIS_PYTHON_VERSION}" STREQUAL "2.7")
+    find_program(PYTHON NAMES python)
+  else()
+    find_program(PYTHON NAMES python3 python)
+  endif()
 endif()
 if("${PYTHON_MAJOR_VERSION}" STREQUAL "")
   exec_program(${PYTHON}
