@@ -216,6 +216,6 @@ add_custom_target(dist
 
 add_custom_target(pytest
   COMMAND pip install -e .
-  COMMAND pytest coremltools/test/
+  COMMAND pytest -m 'not slow' coremltools/test/
   DEPENDS dist
 )
