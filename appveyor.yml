@@ -4,3 +4,5 @@ build_script:
 artifacts:
   - path: "wheelhouse\\*.whl"
     name: Wheels
+environment:
+  CIBW_SKIP: cp27-* cp33-*
