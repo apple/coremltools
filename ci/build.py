@@ -15,7 +15,7 @@ def main():
     if pypi_password:
         from pathlib import Path
         Path('ci/.pypirc').rename(Path.home() / '.pypirc')
-        setup('upload', input=pypi_password, encoding='utf-8')
+        setup('upload', input=pypi_password.encode('utf-8'))
     else:
         setup()
 
