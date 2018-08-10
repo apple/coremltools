@@ -15,6 +15,7 @@
 #include "LayerShapeConstraints.hpp"
 #include "transforms/NeuralNetwork.hpp"
 #include <iostream>
+#include <functional>
 
 #define COREML_VALIDATOR_VERBOSE 0
 

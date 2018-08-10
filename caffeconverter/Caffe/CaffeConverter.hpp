@@ -13,10 +13,11 @@
 #include "MLModelSpecification.hpp"
 
 #include <stdio.h>
+#include <functional>
 
 namespace CoreMLConverter {
     
-    //struct to secify parameters taken by convert layer functions
+    //struct to specify parameters taken by convert layer functions
     struct ConvertLayerParameters {
         const caffe::NetParameter& prototxt;
         const caffe::NetParameter& protoweights;
