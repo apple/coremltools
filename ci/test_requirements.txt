@@ -3,7 +3,6 @@ Keras==2.2.2
 olefile==0.45.1
 pandas==0.23.4
 Pillow==5.2.0
-pybind11==2.2.3
 pytest==3.7.1
 scikit-learn==0.19.2
 tensorflow==1.10.0
