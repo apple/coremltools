@@ -16,6 +16,6 @@ class CustomVenv(venv.EnvBuilder):
         if not self.requirements:
             return
         def pip(*args):
-            subprocess.check_call([self.python, '-m', 'pip'] + list(args))
+            subprocess.run([self.python, '-m', 'pip', *args], check=True)
         pip('install', '-U', 'pip')
         pip('install', *self.requirements)
