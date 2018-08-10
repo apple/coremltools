@@ -1,0 +1,8 @@
+olefile==0.45.1
+Keras==2.2.2
+tensorflow==1.10.0
+pytest==3.7.1
+Pillow==5.2.0
+pandas==0.23.4
+scikit-learn==0.19.2
+h5py==2.8.0

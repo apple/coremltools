@@ -6,7 +6,7 @@ import traceback
 from custom_venv import CustomVenv
 
 def run_tests():
-    env = CustomVenv(clear=True, symlinks=True, with_pip=True, requirements=['-r', 'coremltools/test_requirements.pip'])
+    env = CustomVenv(clear=True, symlinks=True, with_pip=True, requirements=['-r', 'ci/test_requirements.txt'])
     env.create('venv')
     def python(*args):
         subprocess.check_call([env.python, '-m'] + list(args))
