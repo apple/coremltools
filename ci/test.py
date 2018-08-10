@@ -14,8 +14,8 @@ def run_tests():
 
 
 def main():
-    if sys.version_info[:2] == (3, 7):
-        print('Dependencies are unavailable for Python 3.7, tests are expected to fail')
+    if sys.version_info >= (3, 7) or sys.version_info < (3, 5) and os.name == 'nt':
+        print('Some dependencies are unavailable for this Python version in this system, tests are expected to fail')
         try:
             run_tests()
         except Exception:  # Don't fail the CI build

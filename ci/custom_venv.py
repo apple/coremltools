@@ -12,9 +12,9 @@ class CustomVenv(venv.EnvBuilder):
         super().__init__(*args, **kwargs)
 
     def post_setup(self, context):
+        self.python = context.env_exe
         if not self.requirements:
             return
-        self.python = context.env_exe
         def pip(*args):
             subprocess.check_call([self.python, '-m', 'pip'] + list(args))
         pip('install', '-U', 'pip')
