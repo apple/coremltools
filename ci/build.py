@@ -1,8 +1,21 @@
+import distutils.util
 import os
 import subprocess
 import sys
 
 from custom_venv import CustomVenv
+
+
+def get_platform():
+    return distutils.util.get_platform().replace('-', '_').replace('.', '_')
+
+
+def copy_credentials(password):
+    '''Set the PyPI configuration and get the password from a secured environment variable.'''
+    from pathlib import Path
+    with open('ci/.pypirc') as base_pypirc, (Path.home() / '.pypirc').open('w') as pypirc:
+        pypirc.write(base_pypirc.read())
+        pypirc.write('password: {}\n'.format(password))
 
 
 def main():
@@ -12,17 +25,14 @@ def main():
     def setup(*args):
         subprocess.run([
             env.python, '../patched_setup.py', 'bdist_wheel',
-            '--plat-name', 'win_amd64',
-            '--python-tag', 'py{}{}'.format(*sys.version_info[:2]), *args
+            '--plat-name', get_platform(),
+            '--python-tag', 'py{}{}'.format(*sys.version_info[:2]),
+            *args,
         ], cwd='coremltools', check=True)
 
     pypi_password = os.environ.get('pypi_password')
     if pypi_password:
-        # Set the PyPI configuration and get the password from the secured AppVeyor environment
-        from pathlib import Path
-        with open('ci/.pypirc') as base_pypirc, (Path.home() / '.pypirc').open('w') as pypirc:
-            pypirc.write(base_pypirc.read())
-            pypirc.write('password: {}\n'.format(pypi_password))
+        copy_credentials(pypi_password)
         setup('upload')
     else:
         # Build but don't upload if no password is provided
