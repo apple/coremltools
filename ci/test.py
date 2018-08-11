@@ -8,9 +8,7 @@ from custom_venv import CustomVenv
 def run_tests():
     env = CustomVenv(clear=True, symlinks=True, with_pip=True, requirements=['-r', 'ci/test_requirements.txt'])
     env.create('venv')
-    def python(*args):
-        subprocess.run([env.python, '-m', *args], check=True)
-    python('pytest', 'coremltools')
+    subprocess.run([env.python, '-m', 'pytest', 'coremltools'], check=True)
 
 
 def main():
