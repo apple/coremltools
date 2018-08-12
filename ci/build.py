@@ -26,7 +26,7 @@ def main():
         subprocess.run([
             env.python, '../patched_setup.py', 'bdist_wheel',
             '--plat-name', get_platform(),
-            '--python-tag', 'py{}{}'.format(*sys.version_info[:2]),
+            '--python-tag', 'cp{}{}'.format(*sys.version_info[:2]),
             *args,
         ], cwd='coremltools', check=True)
 
