@@ -5,7 +5,8 @@ import subprocess
 class CustomVenv(venv.EnvBuilder):
     '''Virtual environment for the installation.
 
-    Install wheel in the venv for packaging.
+    This class receives an additional "requirements" parameter, where PyPI packages can be
+    specified to be installed in the venv.
     '''
     def __init__(self, *args, **kwargs):
         self.requirements = kwargs.pop('requirements')

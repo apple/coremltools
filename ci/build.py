@@ -24,11 +24,11 @@ def main():
 
     def setup(*args):
         subprocess.run([
-            env.python, '../patched_setup.py', 'bdist_wheel',
+            env.python, 'setup.py', 'bdist_wheel',
             '--plat-name', get_platform(),
             '--python-tag', 'cp{}{}'.format(*sys.version_info[:2]),
             *args,
-        ], cwd='coremltools', check=True)
+        ], check=True)
 
     pypi_password = os.environ.get('pypi_password')
     if pypi_password:

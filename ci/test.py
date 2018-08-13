@@ -6,20 +6,16 @@ import traceback
 from custom_venv import CustomVenv
 
 
-def run(*command, **kwargs):
-    subprocess.run(command, cwd='coremltools', check=True, **kwargs)
-
-
 def run_tests():
-    env = CustomVenv(clear=True, symlinks=True, with_pip=True, requirements=['-r', 'coremltools/test_requirements.pip'])
+    env = CustomVenv(clear=True, symlinks=True, with_pip=True, requirements=['-r', 'test_requirements.pip'])
     env.create('venv')
 
     cmake_environment = os.environ.copy()
     cmake_environment['CMAKE_BUILD_TYPE'] = 'Release'
     cmake_environment['PATH'] = os.pathsep.join((os.path.dirname(env.python), cmake_environment['PATH']))
     cmake_environment['PYTHONPATH'] = os.pathsep.join((os.getcwd(), cmake_environment.get('PYTHONPATH', '')))
-    run('cmake', '.', env=cmake_environment)
-    run('cmake', '--build', '.', '--target', 'pytest', '--config', 'Release', env=cmake_environment)
+    subprocess.run(['cmake', '.'], check=True, env=cmake_environment)
+    subprocess.run(['cmake', '--build', '.', '--target', 'pytest', '--config', 'Release'], check=True, env=cmake_environment)
 
 
 def tests_should_pass():

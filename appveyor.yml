@@ -1,8 +1,24 @@
-build_script:
-  - pip install cibuildwheel==0.9.4
-  - cibuildwheel --output-dir wheelhouse
-artifacts:
-  - path: "wheelhouse\\*.whl"
-    name: Wheels
+image: Visual Studio 2017
+platform: x64
 environment:
-  CIBW_SKIP: cp27-* cp33-*
+  matrix:
+    - PYTHON: C:\Python35-x64
+    - PYTHON: C:\Python36-x64
+    - PYTHON: C:\Python37-x64
+  pypi_password:
+    secure: cYpe2KP3MIZ1fd9WPBCo3g==
+max_jobs: 10
+
+build: false
+test_script:
+  - git submodule update --init
+  - '%PYTHON%\python ci\test.py'
+after_test:
+  - git submodule update --init
+  - '%PYTHON%\python ci\build.py'
+
+artifacts:
+  - path: dist\*
+
+cache:
+  - '%LOCALAPPDATA%\pip\Cache'

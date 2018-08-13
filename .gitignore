@@ -13,6 +13,7 @@ cmake_install.cmake
 /build/
 /coremltools.egg-info/
 /dist/
+/venv/
 .DS_Store
 *.xcodeproj/
 mlmodel_test_runner
