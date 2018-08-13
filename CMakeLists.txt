@@ -198,8 +198,10 @@ if(APPLE)
   set(PLAT_NAME "macosx_10_14_intel;macosx_10_13_intel;macosx_10_12_intel")
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   set(PLAT_NAME "manylinux1_x86_64")
+elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Windows")
+  set(PLAT_NAME "win_amd64")
 else()
-  message(FATAL_ERROR "Unsupported build platform. Supported platforms are Linux and macOS.")
+  message(FATAL_ERROR "Unsupported build platform. Supported platforms are Linux, macOS and Windows.")
 endif()
 
 add_custom_target(dist
