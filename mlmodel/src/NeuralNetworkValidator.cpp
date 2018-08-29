@@ -1455,6 +1455,44 @@ namespace CoreML {
         return r;
     }
 
+    //    ResizeBilinear Layer
+    static Result validateResizeBilinearLayer(const Specification::NeuralNetworkLayer& layer) {
+        Result r;
+        r = validateInputCount(layer, 1, 1);
+        if (r.good()) {
+            r = validateOutputCount(layer, 1, 1);
+        }
+
+        const auto& params = layer.resizebilinear();
+        // target Size must be 2D if provided
+        if (!(params.targetsize_size() == 0 || params.targetsize_size() == 2)) {
+            std::string err = "Target Size in the resize bilinear layer '" + layer.name() + "' must be a vector of size 2 (i.e height, width) but is a vector of size " + std::to_string(params.targetsize_size()) + ".";
+            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            return r;
+        }
+
+        return r;
+    }
+
+    //    CropResize Layer
+    static Result validateCropResizeLayer(const Specification::NeuralNetworkLayer& layer) {
+        Result r;
+        r = validateInputCount(layer, 2, 2);
+        if (r.good()) {
+            r = validateOutputCount(layer, 1, 1);
+        }
+
+        const auto& params = layer.cropresize();
+        // target Size must be 2D if provided
+        if (!(params.targetsize_size() == 0 || params.targetsize_size() == 2)) {
+            std::string err = "Target Size in the crop resize layer '" + layer.name() + "' must be a vector of size 2 (i.e height, width) but is a vector of size " + std::to_string(params.targetsize_size()) + ".";
+            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            return r;
+        }
+
+        return r;
+    }
+
     static Result validateFailUnknownType(const Specification::NeuralNetworkLayer& layer) {
         return Result(ResultType::INVALID_MODEL_PARAMETERS, "Unsupported layer type (" + layer.GetTypeName() + ") for layer '" + layer.name() + "'.");
     }
@@ -1573,6 +1611,10 @@ namespace CoreML {
                 return validateSliceLayer;
             case Specification::NeuralNetworkLayer::LayerCase::kCustom:
                 return validateCustomLayer;
+            case Specification::NeuralNetworkLayer::LayerCase::kResizeBilinear:
+                return validateResizeBilinearLayer;
+            case Specification::NeuralNetworkLayer::LayerCase::kCropResize:
+                return validateCropResizeLayer;
             default:
                 return validateFailUnknownType;
         }

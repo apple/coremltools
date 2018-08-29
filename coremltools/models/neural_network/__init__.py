@@ -8,3 +8,4 @@ from .builder import *
 from . import optimization_utils
 from . import quantization_utils
 from . import flexible_shape_utils
+from . import printer
