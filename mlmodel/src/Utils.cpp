@@ -111,6 +111,37 @@ std::vector<std::pair<std::string, std::string> > CoreML::getCustomModelNamesAnd
     return retval;
 }
 
+
+void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
+
+    if (!pModel) { return; }
+
+    if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS12 && !hasIOS12Features(*pModel)) {
+        pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS11_2);
+    }
+
+    if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11_2 && !hasIOS11_2Features(*pModel)) {
+        pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS11);
+    }
+
+    ::CoreML::Specification::Pipeline *pipeline = NULL;
+    auto modelType = pModel->Type_case();
+    if (modelType == Specification::Model::kPipeline) {
+        pipeline = pModel->mutable_pipeline();
+    } else if (modelType == Specification::Model::kPipelineRegressor) {
+        pipeline = pModel->mutable_pipelineregressor()->mutable_pipeline();
+    } else if (modelType == Specification::Model::kPipelineClassifier) {
+        pipeline = pModel->mutable_pipelineclassifier()->mutable_pipeline();
+    }
+
+    if (pipeline) {
+        for (int i=0; i< pipeline->models_size(); i++) {
+            downgradeSpecificationVersion(pipeline->mutable_models(i));
+        }
+    }
+
+}
+
 static inline bool isWeightParamOfType(const Specification::WeightParams &weight,
                                        const WeightParamType& type) {
     return valueType(weight) == type;
@@ -229,26 +260,57 @@ bool CoreML::hasWeightOfType(const Specification::Model& model, const WeightPara
 // We'll check if the model has ONLY the IOS12 shape specifications
 // if the old ones are also filled in with something plausible, then there is nothing
 // preventing us from running on older versions of Core ML.
-bool CoreML::hasOnlyFlexibleShapes(const Specification::Model& model) {
+bool CoreML::hasFlexibleShapes(const Specification::Model& model) {
     
     auto inputs = model.description().input();
     for (const auto& input: inputs) {
         if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
-            if (input.type().multiarraytype().shape_size() == 0) {
+            if (input.type().multiarraytype().ShapeFlexibility_case() != Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET) {
                 return true;
             }
         }
         else if (input.type().Type_case() == Specification::FeatureType::kImageType) {
-            // We'll only upgrade the spec here if the width or height are unset -- these should be some usable defaults
-            if (input.type().imagetype().width() == 0 || input.type().imagetype().height() == 0) {
+            if (input.type().imagetype().SizeFlexibility_case() != Specification::ImageFeatureType::SIZEFLEXIBILITY_NOT_SET) {
                 return true;
             }
         }
     }
-    
     return false;
 }
-// We also need a hasNonmaxSupression and hasBayesianProbitRegressor
+
+bool CoreML::hasIOS11_2Features(const Specification::Model& model) {
+    bool result = false;
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                result = result || hasIOS11_2Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                result = result || hasIOS11_2Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                result = result || hasIOS11_2Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        default:
+            return (hasCustomLayer(model) || hasfp16Weights(model));
+    }
+    return false;
+}
+
 bool CoreML::hasIOS12Features(const Specification::Model& model) {
     // New IOS12 features: flexible shapes, custom model, sequence feature type,
     // text classifier, word tagger, vision feature print, unsigned integer quantization
@@ -279,10 +341,11 @@ bool CoreML::hasIOS12Features(const Specification::Model& model) {
             }
             break;
         default:
-            return (hasOnlyFlexibleShapes(model) || hasCustomModel(model) || hasCategoricalSequences(model) ||
+            return (hasFlexibleShapes(model) || hasCustomModel(model) || hasCategoricalSequences(model) ||
                     hasAppleTextClassifier(model) || hasAppleWordTagger(model) ||
                     hasAppleImageFeatureExtractor(model) || hasUnsignedQuantizedWeights(model) ||
-                    hasNonmaxSuppression(model) || hasBayesianProbitRegressor(model));
+                    hasNonmaxSuppression(model) || hasBayesianProbitRegressor(model) ||
+                    hasIOS12NewNeuralNetworkLayers(model));
     }
     return false;
 }
@@ -339,5 +402,54 @@ bool CoreML::hasCategoricalSequences(const Specification::Model& model) {
         }
     }
 
+    return false;
+}
+
+bool CoreML::hasIOS12NewNeuralNetworkLayers(const Specification::Model& model) {
+    auto layers = getNNSpec(model);
+    if (layers) {
+        for (int i=0; i< layers->size(); i++){
+            const Specification::NeuralNetworkLayer& layer = (*layers)[i];
+            if (layer.layer_case() == Specification::NeuralNetworkLayer::kResizeBilinear) {
+                return true;
+            }
+            if (layer.layer_case() == Specification::NeuralNetworkLayer::kCropResize) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool CoreML::hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc) {
+    bool result = false;
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                result = result || boolFunc(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                result = result || boolFunc(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                result = result || boolFunc(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        default:
+            return boolFunc(model);
+    }
     return false;
 }

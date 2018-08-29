@@ -47,6 +47,14 @@ _KERAS_SKIP_LAYERS = [
     _keras.layers.core.SpatialDropout2D,
 ]
 
+from distutils.version import StrictVersion as _StrictVersion
+
+if _keras.__version__ >= _StrictVersion('2.2.0'):
+    from keras.engine.input_layer import InputLayer
+else:
+    from keras.engine.topology import InputLayer
+
+
 def _to_list(x):
     if type(x) is not list: 
         return [x]
@@ -149,18 +157,25 @@ class NetGraph(object):
             self.input_layers = [None] * len(input_keras_layers)
             for layer in self.layer_list: 
                 keras_layer = self.keras_layer_map[layer]
-                if isinstance(keras_layer, _keras.engine.topology.InputLayer): 
+                if isinstance(keras_layer, InputLayer): 
                     if keras_layer in input_keras_layers:
                         idx = input_keras_layers.index(keras_layer)
                         self.input_layers[idx] = layer
+        elif hasattr(self.model, 'inputs'):
+            for ts in _to_list(self.model.inputs): 
+                # search for the InputLayer that matches this ts
+                for l in self.layer_list: 
+                    kl = self.keras_layer_map[l]
+                    if isinstance(kl, InputLayer) and kl.input == ts: 
+                        self.input_layers.append(l)
         elif len(in_nodes) <= 1:
             for ts in _to_list(self.model.input): 
                 # search for the InputLayer that matches this ts
                 for l in self.layer_list: 
                     kl = self.keras_layer_map[l]
-                    if isinstance(kl, _keras.engine.topology.InputLayer) and kl.input == ts: 
+                    if isinstance(kl, InputLayer) and kl.input == ts: 
                         self.input_layers.append(l)
-        else: 
+        else:
             raise ValueError("Input values cannot be identified.")
     
     def make_output_layers(self):
@@ -168,6 +183,7 @@ class NetGraph(object):
         Extract the ordering of output layers. 
         """
         self.output_layers = []
+        # import pytest; pytest.set_trace()
         if hasattr(self.model, 'output_layers'):
             # find corresponding output layers in CoreML model
             # assume output layers are not shared
@@ -190,10 +206,12 @@ class NetGraph(object):
         elif len(self.model.outputs) > 0:
             for model_output in self.model.outputs:
                 for l in self.layer_list:
-                    out_tensor = self.keras_layer_map[l].output
-                    if out_tensor == model_output:
-                        self.output_layers.append(l)
-
+                    k_layer = self.keras_layer_map[l]
+                    in_nodes = k_layer._inbound_nodes if hasattr(k_layer, '_inbound_nodes') else k_layer.inbound_nodes
+                    for idx in range(len(in_nodes)):
+                        out_tensor = k_layer.get_output_at(idx)
+                        if out_tensor == model_output or (out_tensor.name in model_output.name):
+                            self.output_layers.append(l)
         if len(self.output_layers) == 0:
             raise ValueError("No outputs can be identified")
     
@@ -217,7 +235,7 @@ class NetGraph(object):
         for layer in self.layer_list: 
             keras_layer = self.keras_layer_map[layer]
             # no need to generate InputLayers' blobs
-            if not isinstance(keras_layer, _keras.engine.topology.InputLayer):
+            if not isinstance(keras_layer, InputLayer):
                 # layer's input blob names depend on predecessors
                 preds = self.get_predecessors(layer)
                 for pred in preds: 
@@ -229,7 +247,7 @@ class NetGraph(object):
     
     def get_layer_blobs(self, layer):
         keras_layer = self.keras_layer_map[layer]
-        if isinstance(keras_layer, _keras.engine.topology.InputLayer):
+        if isinstance(keras_layer, InputLayer):
             return None, None
         else: 
             input_blobs = self.layers_inputs[layer]
@@ -319,9 +337,10 @@ class NetGraph(object):
     def _get_first_shared_layer(self):
         for idx, layer in enumerate(self.layer_list):
             keras_layer = self.keras_layer_map[layer]
+            inbound_nodes = keras_layer.inbound_nodes if hasattr(keras_layer, 'inbound_nodes') else keras_layer._inbound_nodes
             if not _is_merge_layer(self.keras_layer_map[layer]) and \
                 len(self.get_predecessors(layer)) > 1 and \
-                len(keras_layer._inbound_nodes) > 1:
+                len(inbound_nodes) > 1:
                 return idx
         return -1
     
@@ -425,7 +444,7 @@ class NetGraph(object):
         while idx < nb_layers: 
             layer = self.layer_list[idx]
             keras_layer = self.keras_layer_map[layer]
-            if isinstance(keras_layer, _keras.engine.topology.InputLayer) and \
+            if isinstance(keras_layer, InputLayer) and \
                     len(self.get_predecessors(layer)) > 0:
                 # these are internal input layers that needs to be taken out
                 self._remove_layer_and_reconnect(layer)

@@ -8,6 +8,7 @@
 #include <limits>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 #include "Globals.hpp"
 #include "Model.hpp"
@@ -79,11 +80,19 @@ namespace CoreML {
         formatObj = m.getProto();
         return Result();
     }
-    
+
+    /**
+     * If a model spec does not use features from later specification versions, this will
+     * set the spec version so that the model can be executed on older versions of
+     * Core ML. It applies recursively to sub models
+     */
+    void downgradeSpecificationVersion(Specification::Model *pModel);
+
     // Helper functions for determining model version
     bool hasCustomLayer(const Specification::Model& model);
 
-    bool hasOnlyFlexibleShapes(const Specification::Model& model);
+    bool hasFlexibleShapes(const Specification::Model& model);
+    bool hasIOS11_2Features(const Specification::Model& model);
     bool hasIOS12Features(const Specification::Model& model);
 
     typedef std::pair<std::string,std::string> StringPair;
@@ -104,6 +113,9 @@ namespace CoreML {
     bool hasCategoricalSequences(const Specification::Model& model);
     bool hasNonmaxSuppression(const Specification::Model& model);
     bool hasBayesianProbitRegressor(const Specification::Model& model);
+    bool hasIOS12NewNeuralNetworkLayers(const Specification::Model& model);
+
+    bool hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc);
 
     // We also need a hasNonmaxSupression and hasBayesianProbitRegressor
     static inline std::vector<float16> readFloat16Weights(const Specification::WeightParams& weights) {

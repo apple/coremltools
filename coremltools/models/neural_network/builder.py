@@ -13,7 +13,7 @@ from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from .._interface_management import set_transform_interface_params
 from .. import datatypes
 import numpy as np
-
+from quantization_utils import unpack_to_bytes, _convert_array_to_nbit_quantized_bytes
 
 def _set_recurrent_activation(param, activation):
     if activation == 'SIGMOID':
@@ -30,6 +30,54 @@ def _set_recurrent_activation(param, activation):
         param.ReLU.MergeFromString(b'')
     else:
         raise TypeError("Unsupported activation type with Recurrent layer: %s." % activation)
+
+def _verify_quantization_arguments(weight = bytes(),
+                                   output_channels = 1, **kwargs):
+
+    quantization_type = kwargs.get('quantization_type', "")
+    nbits = kwargs.get('nbits', 8)
+    quant_scale = kwargs.get('quant_scale', None)
+    quant_bias = kwargs.get('quant_bias', None)
+    quant_lut = kwargs.get('quant_lut', None)
+
+    if not isinstance(weight, bytes):
+        raise ValueError('Weight must be of type bytes() for quantization')
+
+    if quantization_type == 'linear':
+        if quant_scale is None or quant_bias is None:
+            raise ValueError("quant_scale and quant_bias parameters must be provided for linear quantization type")
+        if len(quant_scale) != 1 and len(quant_scale) != output_channels:
+            raise ValueError("quant_scale should be of type float or an array of length outputChannels")
+        if len(quant_bias) != 1 and len(quant_bias) != output_channels:
+            raise ValueError("quant_bias should be of type float or an array of length outputChannels")
+    elif quantization_type == 'lut':
+        if quant_lut is None:
+            raise ValueError("quant_lut must be provided for look up table quantization type")
+        if len(quant_lut) != 2 ** nbits:
+            raise ValueError("quant_lut must be an array of length 2^nbits")
+    else:
+        raise ValueError("quantization_type must be either linear or lut")
+
+    if quantization_type == 'linear' or 'lut':
+        if nbits > 8 or nbits < 1:
+            raise ValueError('nbits must be between 1 and 8')
+
+def _fill_quantized_weights(weights_message = None,
+                            W = bytes(), **kwargs):
+
+    weights_message.rawValue = bytes()
+    weights_message.rawValue += W
+    nbits = kwargs.get('nbits', 8)
+    weights_message.quantization.numberOfBits = nbits
+    quantization_type = kwargs.get('quantization_type', "")
+    if quantization_type == 'linear':
+        quant_scale = kwargs.get('quant_scale', [1.0])
+        quant_bias = kwargs.get('quant_bias', [0.0])
+        weights_message.quantization.linearQuantization.scale.extend(map(float, quant_scale))
+        weights_message.quantization.linearQuantization.bias.extend(map(float, quant_bias))
+    else:
+        quant_lut = kwargs.get('quant_lut', [0.0, 1.0])
+        weights_message.quantization.lookupTableQuantization.floatValue.extend(map(float, quant_lut))
 
 class NeuralNetworkBuilder(object):
     """
@@ -344,7 +392,7 @@ class NeuralNetworkBuilder(object):
 
 
     def add_inner_product(self, name, W, b, input_channels, output_channels, has_bias,
-                          input_name, output_name):
+                          input_name, output_name, **kwargs):
         """
         Add an inner product layer to the model.
 
@@ -352,8 +400,9 @@ class NeuralNetworkBuilder(object):
         ----------
         name: str
             The name of this layer
-        W: numpy.array
-            Weight matrix of shape (output_channels, input_channels).
+        W: numpy.array or bytes()
+            Weight matrix of shape (output_channels, input_channels)
+            If W is of type bytes(), i.e. quantized, other quantization related arguments must be provided as well (see below).    
         b: numpy.array
             Bias vector of shape (output_channels, ).
         input_channels: int
@@ -370,6 +419,24 @@ class NeuralNetworkBuilder(object):
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
+            
+        Quantization arguments expected in kwargs, when W is of type bytes(): 
+            
+            quantization_type : str
+                When weights are quantized (i.e. W is of type bytes()), this should be either "linear" or "lut".
+
+            nbits: int
+                Should be between 1 and 8 (inclusive). Number of bits per weight value. Only applicable when
+                weights are quantized.
+
+            quant_scale: numpy.array(dtype=numpy.float32)
+                scale vector to be used with linear quantization. Must be of length either 1 or output_channels.
+
+            quant_bias: numpy.array(dtype=numpy.float32)
+                bias vector to be used with linear quantization. Must be of length either 1 or output_channels.
+
+            quant_lut: numpy.array(dtype=numpy.float32)
+                the LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits.
 
         See Also
         --------
@@ -392,7 +459,13 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.hasBias = has_bias
 
         weights = spec_layer_params.weights
-        weights.floatValue.extend(map(float, W.flatten()))
+
+        if len(kwargs) == 0:
+            weights.floatValue.extend(map(float, W.flatten()))
+        else:
+            _verify_quantization_arguments(weight=W, output_channels=output_channels, **kwargs)
+            _fill_quantized_weights(weights_message=weights, W=W, **kwargs)
+
         if has_bias:
             bias = spec_layer_params.bias
             bias.floatValue.extend(map(float, b.flatten()))
@@ -897,7 +970,8 @@ class NeuralNetworkBuilder(object):
             input_name = 'data', output_name = 'out', 
             dilation_factors = [1,1],
             padding_top = 0, padding_bottom = 0, padding_left = 0, padding_right = 0,
-            same_padding_asymmetry_mode = 'BOTTOM_RIGHT_HEAVY'):
+            same_padding_asymmetry_mode = 'BOTTOM_RIGHT_HEAVY',
+            **kwargs):
         """
         Add a convolution layer to the network.
 
@@ -925,11 +999,13 @@ class NeuralNetworkBuilder(object):
             Kindly refer to NeuralNetwork.proto for details. 
         groups: int
             Number of kernel groups. Input is divided into groups along the channel axis. Each kernel group share the same weights. 
-        W: numpy.array
-            Weights of the convolution kernels.
+        W: numpy.array or bytes()
+            Weight of the convolution kernels.
 
             - If is_deconv is False, W should have shape (height, width, kernel_channels, output_channels), where kernel_channel = input_channels / groups
             - If is_deconv is True, W should have shape (height, width, kernel_channels, output_channels / groups), where kernel_channel = input_channels
+            
+            If W is of type bytes(), i.e. quantized, other quantization related arguments must be provided as well (see below).
 
         b: numpy.array
             Biases of the convolution kernels. b should have shape (outputChannels, ).
@@ -974,8 +1050,26 @@ class NeuralNetworkBuilder(object):
             output_channels = channel_multiplier * input_channels
             groups = input_channels
             W : [Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]
-                
+            
+            
+        Quantization arguments expected in kwargs, when W is of type bytes(): 
+            
+            quantization_type : str
+                When weights are quantized (i.e. W is of type bytes()), this should be either "linear" or "lut".
 
+            nbits: int
+                Should be between 1 and 8 (inclusive). Number of bits per weight value. Only applicable when
+                weights are quantized.
+
+            quant_scale: numpy.array(dtype=numpy.float32)
+                scale vector to be used with linear quantization. Must be of length either 1 or output_channels.
+
+            quant_bias: numpy.array(dtype=numpy.float32)
+                bias vector to be used with linear quantization. Must be of length either 1 or output_channels.
+
+            quant_lut: numpy.array(dtype=numpy.float32)
+                the LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits. 
+                
         See Also
         --------
         add_pooling, add_activation, add_batchnorm
@@ -1024,8 +1118,22 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.nGroups = groups
         spec_layer_params.hasBias = has_bias
 
-        # Assign weights
-        weights = spec_layer_params.weights
+        if len(kwargs) > 0:
+            _verify_quantization_arguments(weight = W, output_channels=output_channels, **kwargs)
+
+            nbits = kwargs.get('nbits', 8)
+            num_weights = (output_channels * kernel_channels * height * width) / groups
+            if nbits < 8:
+                byte_arr = np.frombuffer(W, dtype=np.uint8)
+                W = unpack_to_bytes(byte_arr, num_weights, nbits)
+            else:
+                W = np.frombuffer(W, dtype=np.uint8)
+
+            if is_deconv:
+                W = np.reshape(W, (height, width, kernel_channels, output_channels / groups))
+            else:
+                W = np.reshape(W, (height, width, kernel_channels, output_channels))
+
 
         # Weight alignment: MLModel Spec requires following weight arrangement: 
         # is_deconv == False ==> (output_channels, kernel_channels, height, width), where kernel_channel = input_channels / groups
@@ -1035,8 +1143,18 @@ class NeuralNetworkBuilder(object):
             Wt = Wt.flatten()
         else:
             Wt = W.transpose((2,3,0,1)).flatten()
-        for idx in range(Wt.size):
-            weights.floatValue.append(float(Wt[idx]))
+
+        # Assign weights
+        weights = spec_layer_params.weights
+        if len(kwargs) == 0: # no quantization
+            weights.floatValue.extend(map(float, Wt.flatten()))
+        else: # there is quantization
+            W_bytes = bytes()
+            if nbits == 8:
+                W_bytes += Wt.flatten().tobytes()
+            else:
+                W_bytes += _convert_array_to_nbit_quantized_bytes(Wt.flatten(), nbits).tobytes()
+            _fill_quantized_weights(weights_message = weights, W = W_bytes, **kwargs)
 
         # Assign biases
         if has_bias:
@@ -2489,6 +2607,150 @@ class NeuralNetworkBuilder(object):
         spec_layer.custom.MergeFromString(b'')
         if custom_proto_spec:
             spec_layer.custom.CopyFrom(custom_proto_spec)
+
+
+    def add_resize_bilinear(self, name, input_name, output_name, target_height=1, target_width=1,
+                            mode='ALIGN_ENDPOINTS_MODE'):
+        """
+        Add resize bilinear layer to the model. A layer that resizes the input to a given spatial size using bilinear interpolation. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        target_height: int
+            Output height dimension.
+        target_width: int
+            Output width dimension.
+        mode: str
+            Following values are supported: 'STRICT_ALIGN_ENDPOINTS_MODE', 'ALIGN_ENDPOINTS_MODE', 'UPSAMPLE_MODE', 'ROI_ALIGN_MODE'.
+            This parameter determines the sampling grid used for bilinear interpolation. Kindly refer to NeuralNetwork.proto for details. 
+
+        See Also
+        --------
+        add_upsample
+        """
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new inner-product layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+        spec_layer_params = spec_layer.resizeBilinear
+        spec_layer_params.targetSize.append(target_height)
+        spec_layer_params.targetSize.append(target_width)
+        if mode == 'ALIGN_ENDPOINTS_MODE':
+            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('ALIGN_ENDPOINTS_MODE')
+        elif mode == 'STRICT_ALIGN_ENDPOINTS_MODE':
+            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('STRICT_ALIGN_ENDPOINTS_MODE')
+        elif mode == 'UPSAMPLE_MODE':
+            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('UPSAMPLE_MODE')
+        elif mode == 'ROI_ALIGN_MODE':
+            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('ROI_ALIGN_MODE')
+        else:
+            raise ValueError("Unspported resize bilinear mode %s" % mode)
+
+    def add_crop_resize(self, name, input_names, output_name, target_height=1, target_width=1,
+                            mode='STRICT_ALIGN_ENDPOINTS_MODE',
+                            normalized_roi=False,
+                            box_indices_mode='CORNERS_HEIGHT_FIRST',
+                            spatial_scale=1.0):
+        """
+        Add crop resize layer to the model. A layer that extracts cropped spatial patches or RoIs (regions of interest) 
+        from the input and resizes them to a pre-specified size using bilinear interpolation. 
+        Note that RoI Align layer can be implemented with this layer followed by a pooling layer.
+        Kindly refer to NeuralNetwork.proto for details. 
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_names: [str]
+            Must be a list of two names: image feature map and crop indices/RoI input. 
+            First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``. This represents a batch of input image feature data with C channels.
+            The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``. This represents the bounding box coordinates for N patches/RoIs. 
+            N: number of patches/RoIs to be extracted
+            If RoI shape = [N, 1, 4, 1, 1]
+                    The channel axis corresponds to the four coordinates specifying the bounding box.
+                    All the N RoIs are extracted from all the batches of the input. 
+            If RoI shape = [N, 1, 5, 1, 1]
+                    The first element of the channel axis specifies the input batch id from which to extract the RoI and 
+					must be in the interval ``[0, Batch - 1]``. That is, n-th RoI is extracted from the RoI[n,0,0,0]-th input batch id. 
+                    The last four elements of the channel axis specify the bounding box coordinates. 
+        output_name: str
+            The output blob name of this layer.
+        target_height: int
+            Output height dimension.
+        target_width: int
+            Output width dimension.
+        mode: str
+            Following values are supported: 'STRICT_ALIGN_ENDPOINTS_MODE', 'ALIGN_ENDPOINTS_MODE', 'UPSAMPLE_MODE', 'ROI_ALIGN_MODE'.
+            This parameter determines the sampling grid used for bilinear interpolation. Kindly refer to NeuralNetwork.proto for details. 
+        normalized_roi: bool
+            If true the bounding box coordinates must be in the interval [0, 1].
+	        They are scaled by (input_height - 1), (input_width - 1), i.e. based on the input spatial dimensions.  
+	        If false the bounding box coordinates must be in the interval
+	        [0, input_height - 1] and [0, input_width - 1], respectively for height and width dimensions.
+	    box_indices_mode: str
+	        Following values are supported: 'CORNERS_HEIGHT_FIRST', 'CORNERS_WIDTH_FIRST', 'CENTER_SIZE_HEIGHT_FIRST', 'CENTER_SIZE_WIDTH_FIRST'
+	        Representation used to interpret the bounding box coordinates (RoI) input. Kindly refer to NeuralNetwork.proto for details.
+	        'CORNERS_HEIGHT_FIRST': [h_start, w_start, h_end, w_end]
+	        'CORNERS_WIDTH_FIRST': [w_start, h_start, w_end, h_end]
+	        'CENTER_SIZE_HEIGHT_FIRST': [h_center, w_center, box_height, box_width]
+            'CENTER_SIZE_WIDTH_FIRST': [w_center, h_center, box_width, box_height]
+        spatial_scale: float
+            Additional spatial scale that multiplies the bounding box coordinates. 
+            Generally used while implementing the RoI Align layer, 
+            which uses unnormalized RoI coordinates along with a spatial scale less than or equal to 1. 
+            
+            
+        See Also
+        --------
+        add_resize_bilinear, add_crop
+        """
+        spec = self.spec
+        nn_spec = self.nn_spec
+
+        # Add a new inner-product layer
+        spec_layer = nn_spec.layers.add()
+        spec_layer.name = name
+        if len(input_names) != 2:
+            raise ValueError("crop resize layer must have exactly two inputs")
+        for input_name in input_names:
+            spec_layer.input.append(input_name)
+        spec_layer.output.append(output_name)
+        spec_layer_params = spec_layer.cropResize
+        spec_layer_params.targetSize.append(target_height)
+        spec_layer_params.targetSize.append(target_width)
+        spec_layer_params.normalizedCoordinates = normalized_roi
+        spec_layer_params.spatialScale = spatial_scale
+        if mode == 'ALIGN_ENDPOINTS_MODE':
+            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('ALIGN_ENDPOINTS_MODE')
+        elif mode == 'STRICT_ALIGN_ENDPOINTS_MODE':
+            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('STRICT_ALIGN_ENDPOINTS_MODE')
+        elif mode == 'UPSAMPLE_MODE':
+            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('UPSAMPLE_MODE')
+        elif mode == 'ROI_ALIGN_MODE':
+            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('ROI_ALIGN_MODE')
+        else:
+            raise ValueError("Unuspported crop resize mode %s" % mode)
+
+        if box_indices_mode == 'CORNERS_HEIGHT_FIRST':
+            spec_layer_params.boxIndicesMode.boxMode = _NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value('CORNERS_HEIGHT_FIRST')
+        elif box_indices_mode == 'CORNERS_WIDTH_FIRST':
+            spec_layer_params.boxIndicesMode.boxMode = _NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value('CORNERS_WIDTH_FIRST')
+        elif box_indices_mode == 'CENTER_SIZE_HEIGHT_FIRST':
+            spec_layer_params.boxIndicesMode.boxMode = _NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value('CENTER_SIZE_HEIGHT_FIRST')
+        elif box_indices_mode == 'CENTER_SIZE_WIDTH_FIRST':
+            spec_layer_params.boxIndicesMode.boxMode = _NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value('CENTER_SIZE_WIDTH_FIRST')
+        else:
+            raise ValueError("Unsupported crop resize box indices mode %s" % box_indices_mode)
 
 
     def set_pre_processing_parameters(self, image_input_names = [], is_bgr = False,
