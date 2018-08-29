@@ -1749,7 +1749,7 @@ int testValidSlice1() {
     topIn->set_name("input");
     auto *shape = topIn->mutable_type()->mutable_multiarraytype();
     shape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
-    shape->add_shape(10);
+    shape->add_shape(17);
     shape->add_shape(11);
     shape->add_shape(12);
     

@@ -22,7 +22,12 @@ if HAS_KERAS2_TF:
     from keras.layers import SimpleRNN, LSTM, GRU
     from keras.layers.core import SpatialDropout1D, SpatialDropout2D
     from keras.layers.wrappers import Bidirectional, TimeDistributed
-    from keras.applications.mobilenet import DepthwiseConv2D, relu6
+    from distutils.version import StrictVersion as _StrictVersion
+    if keras.__version__ >= _StrictVersion('2.2.0'):
+        from keras.layers import DepthwiseConv2D
+        from keras_applications.mobilenet import relu6
+    else:
+        from keras.applications.mobilenet import DepthwiseConv2D, relu6
     from coremltools.converters import keras as kerasConverter
 
 
@@ -1444,8 +1449,35 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Set some random weights
         model.set_weights([np.random.rand(*w.shape)*0.2-0.1 for w in model.get_weights()])
 
-                                # Test the keras model
+        # Test the keras model
         self._test_model(model)
+
+
+    def test_bilstm_merge_modes(self):
+        # issue 157
+
+        def get_model(input_dim, fc_size, rnn_size, output_dim, merge_mode):
+            input_data = Input(name='the_input', shape=(None, input_dim))
+            x = TimeDistributed(Dense(fc_size,
+                                      name='fc1',
+                                      activation='relu', ))(input_data)
+            x = Bidirectional(LSTM(rnn_size,
+                                   return_sequences=True,
+                                   activation='relu',
+                                   kernel_initializer='he_normal'),
+                              merge_mode=merge_mode)(x)
+            y_pred = TimeDistributed(Dense(output_dim, name="y_pred", activation="softmax"))(x)
+            model = Model([input_data], [y_pred])
+            model.set_weights([np.random.rand(*w.shape) * 0.2 - 0.1 for w in model.get_weights()])
+            return model
+
+        input_dim = 26
+        fc_size = 512
+        rnn_size = 512
+        output_dim = 29
+        for merge_mode in ['concat','sum','mul','ave']:
+            model = get_model(input_dim, fc_size, rnn_size, output_dim, merge_mode)
+            self._test_model(model)
 
 
     def test_tiny_conv_elu_random(self):
@@ -1655,16 +1687,13 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         self._test_model(model)
 
     def test_tiny_permute(self):
-        model = Sequential()
-        model.add(Permute((3, 2, 1), input_shape=(4, 3, 2)))
-
         # When input blob is 3D array (D1, D2, D3), Keras assumes the axes' meaning is
-        # (D1=H,D2=W,D3=C), while CoreML assumes (D1=C,D2=H,D3=W). However,
-        # it's unclear after permutation, what the axes' meaning is for the output blob.
-        # Since permutation done on (H,W,C) blobs usually is usually followed by
-        # recurrent layers / Dense, we choose that the ouput axis order of CoreML is
-        # the same as Keras after permutation.
-        self._test_model(model, transpose_keras_result=False)
+        # (D1=H,D2=W,D3=C), while CoreML assumes (D1=C,D2=H,D3=W)
+        import itertools
+        for permute_order in list(itertools.permutations([1, 2, 3])):
+            model = Sequential()
+            model.add(Permute(permute_order, input_shape=(4, 3, 2)))
+            self._test_model(model, transpose_keras_result=True)
 
     def test_reshape_3d(self):
         model = Sequential()

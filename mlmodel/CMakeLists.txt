@@ -29,6 +29,7 @@ add_library(mlmodel_test
     tests/TreeEnsembleTests.cpp
     tests/OneHotEncoderTests.cpp
     tests/InterfaceTests.cpp
+    tests/UtilsTests.cpp
     tests/NNShaperTest.cpp
     tests/NNShapeTests.cpp
     tests/NNValidatorTests.cpp
