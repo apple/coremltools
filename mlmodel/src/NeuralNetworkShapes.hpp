@@ -64,7 +64,8 @@ namespace CoreML {
         void shapeUnidirectionalLSTMLayer(const Specification::NeuralNetworkLayer& specLayer);
         void shapeBidirectionalLSTMLayer(const Specification::NeuralNetworkLayer& specLayer);
         void shapeCustomLayer(const Specification::NeuralNetworkLayer& specLayer);
-
+        void shapeResizeBilinearLayer(const Specification::NeuralNetworkLayer& specLayer);
+        void shapeCropResizeLayer(const Specification::NeuralNetworkLayer& specLayer);
         void ProcessLayer(const Specification::NeuralNetworkLayer& layer);
         void PassColorsDown(const Specification::NeuralNetworkLayer& layer);
         void PassColorsUp(const Specification::NeuralNetworkLayer& layer);
