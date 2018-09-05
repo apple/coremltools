@@ -3,6 +3,14 @@ import keras as _keras
 import numpy as _np
 from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 
+from distutils.version import StrictVersion as _StrictVersion
+
+if _keras.__version__ >= _StrictVersion('2.2.0'):
+    from keras.layers import DepthwiseConv2D
+    from keras_applications.mobilenet import relu6
+else:
+    from keras.applications.mobilenet import DepthwiseConv2D, relu6
+
 
 def _get_recurrent_activation_name_from_keras(activation):
     if activation == _keras.activations.sigmoid:
@@ -309,7 +317,7 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
     groups = 1
     kernel_channels = channels
     # depth-wise convolution
-    if isinstance(keras_layer,_keras.applications.mobilenet.DepthwiseConv2D):
+    if isinstance(keras_layer, DepthwiseConv2D):
         groups = channels
         kernel_channels = 1
         depth_multiplier = keras_layer.depth_multiplier
@@ -836,11 +844,12 @@ def convert_permute(builder, layer, input_names, output_names, keras_layer):
     if len(keras_dims) == 3:
         # Keras input tensor interpret as (H,W,C)
         x = list(_np.array(keras_dims))
-        i1, i2, i3 = x.index(1), x.index(2), x.index(3)
-        x[i1], x[i2], x[i3] = 2, 3, 1
+        arr = [2, 3, 1]  # HWC in Keras
+        arr_permuted = [arr[x[0] - 1], arr[x[1] - 1], arr[x[2] - 1]]
+        arr_permuted = [arr_permuted[2], arr_permuted[0], arr_permuted[1]]  # coreml format: channel first
         # add a sequence axis
-        x = [0] + x
-        dim = tuple(x)
+        dim = [0] + arr_permuted
+        dim = tuple(dim)
     elif len(keras_dims) == 4:
         # Here we use Keras converter as a place holder for inserting
         # permutations - the values here are not valid Keras dim parameters
@@ -1069,7 +1078,7 @@ def convert_bidirectional(builder, layer, input_names, output_names, keras_layer
         raise TypeError('Bidirectional layers only supported with LSTM')
         
     if lstm_layer.go_backwards:
-        raise TypeError(' \'go_backwards\' mode not supported with Bidirectional layers')    
+        raise TypeError(' \'go_backwards\' mode not supported with Bidirectional layers')
 
     output_all = keras_layer.return_sequences
     hidden_size = lstm_layer.units
@@ -1129,6 +1138,14 @@ def convert_bidirectional(builder, layer, input_names, output_names, keras_layer
     inner_activation_str = _get_recurrent_activation_name_from_keras(lstm_layer.recurrent_activation)
     activation_str = _get_recurrent_activation_name_from_keras(lstm_layer.activation)
 
+    output_name_1 = output_names[0]
+    if hasattr(keras_layer, 'merge_mode'):
+        merge_mode = keras_layer.merge_mode
+        if merge_mode not in ['concat','sum','mul','ave']:
+            raise NotImplementedError('merge_mode \'%s\' in Bidirectional LSTM not supported currently' % merge_mode)
+        if merge_mode != 'concat':
+            output_name_1 += '_concatenated_bilstm_output'
+
     # Add to the network
     builder.add_bidirlstm(
         name = layer,
@@ -1137,12 +1154,28 @@ def convert_bidirectional(builder, layer, input_names, output_names, keras_layer
         hidden_size=hidden_size,
         input_size=input_size,
         input_names=input_names,
-        output_names=output_names,
+        output_names=[output_name_1] + output_names[1:],
         inner_activation = inner_activation_str,
         cell_state_update_activation = activation_str,
         output_activation = activation_str,
         forget_bias = lstm_layer.unit_forget_bias,
         output_all = output_all)
+
+    if output_name_1 != output_names[0]:
+        mode = 'CONCAT'
+        if merge_mode == 'sum':
+            mode = 'ADD'
+        elif merge_mode == 'ave':
+            mode = 'AVE'
+        elif merge_mode == 'mul':
+            mode = 'MULTIPLY'
+        builder.add_split(name = layer + '_split',
+                          input_name= output_name_1,
+                          output_names= [output_names[0] + '_forward', output_names[0] + '_backward'])
+        builder.add_elementwise(name = layer + '_elementwise',
+                                input_names = [output_names[0] + '_forward', output_names[0] + '_backward'],
+                                output_name = output_names[0],
+                                mode = mode)
 
 def convert_repeat_vector(builder, layer, input_names, output_names, keras_layer):
     # Keras RepeatVector only deals with 1D input

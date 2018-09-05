@@ -61,15 +61,20 @@ if _HAS_KERAS2_TF:
         _keras.layers.embeddings.Embedding:_layers2.convert_embedding,
         _keras.layers.core.RepeatVector:_layers2.convert_repeat_vector,
 
-        _keras.engine.topology.InputLayer:_layers2.default_skip,
         _keras.layers.core.Dropout:_layers2.default_skip,
         _keras.layers.core.SpatialDropout2D:_layers2.default_skip,
         _keras.layers.core.SpatialDropout1D:_layers2.default_skip,
         _keras.layers.wrappers.TimeDistributed:_layers2.default_skip,
-        
-        _keras.applications.mobilenet.DepthwiseConv2D:_layers2.convert_convolution,
-
     }
+    from distutils.version import StrictVersion as _StrictVersion
+    ## 2.2 Version check
+    if _keras.__version__ >= _StrictVersion('2.2.0'):
+         _KERAS_LAYER_REGISTRY[_keras.layers.DepthwiseConv2D] = _layers2.convert_convolution
+         _KERAS_LAYER_REGISTRY[_keras.engine.input_layer.InputLayer] = _layers2.default_skip
+    else:
+         _KERAS_LAYER_REGISTRY[_keras.applications.mobilenet.DepthwiseConv2D] = _layers2.convert_convolution
+         _KERAS_LAYER_REGISTRY[_keras.engine.topology.InputLayer] = _layers2.default_skip
+    # end if _HAS_KERAS2_TF
     
 
 def _is_merge_layer(layer):
