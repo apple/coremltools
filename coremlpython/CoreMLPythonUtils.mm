@@ -16,9 +16,6 @@
 
 #include <numpy/arrayobject.h>
 #define PyAnyInteger_Check(name) (PyLong_Check(name) || (_import_array(), PyArray_IsScalar(name, Integer)))
-#if NPY_API_VERSION > 0xa
-#error "Please compile with numpy API version 0xa (e.g. numpy 1.10-1.12) for desired runtime compatibility"
-#endif
 
 #endif
 
