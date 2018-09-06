@@ -420,7 +420,7 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
     ]
 
     # Bump up to appropriate spec version if required
-    if nbits > 8 and nbits != 16:
+    if nbits and nbits > 8 and nbits != 16:
         raise Exception('Only half precision (16-bit), 8-bit and lower '
                         'quantization is supported')
 
@@ -436,7 +436,7 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
     layers = _get_nn_layers(spec)
 
     # Perform optimization step
-    if nbits < 16 and qm != _QUANTIZATION_MODE_DEQUANTIZE:
+    if nbits and nbits < 16 and qm != _QUANTIZATION_MODE_DEQUANTIZE:
         print('Optimizing Neural Network before Quantization:')
         _optimize_nn(layers)
         print('Finished optimizing network. Quantizing neural network..')
