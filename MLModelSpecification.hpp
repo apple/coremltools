@@ -2,7 +2,7 @@
 //  MLModelSpecification.hpp
 //  CoreML
 //
-//  Project header for including libmlmodelspec along with protobuf defiinitions
+//  Project header for including libmlmodelspec along with protobuf definitions
 //
 //  Created by Michael Siracusa on 12/7/16.
 //  Copyright © 2016 Apple Inc. All rights reserved.
