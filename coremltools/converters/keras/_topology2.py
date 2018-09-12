@@ -506,6 +506,8 @@ class NetGraph(object):
                 k_layer = k_layer.layer
             if (isinstance(k_layer, _keras.layers.Conv2D) or 
                 isinstance(k_layer, _keras.layers.Conv1D) or 
+                isinstance(k_layer, _keras.layers.SeparableConv2D) or 
+                isinstance(k_layer, _keras.layers.SeparableConv1D) or 
                 isinstance(k_layer, _keras.layers.Dense)):
                 
                 func_name = k_layer.activation.func_name if six.PY2 else \
