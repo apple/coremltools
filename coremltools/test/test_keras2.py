@@ -210,7 +210,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         """
         self.test_convolution(with_dilations=True)
 
-    def test_separable_convolution(self, with_dilations=False):
+    def test_separable_convolution(self, with_dilations=False, activation=None):
         """
         Test the conversion of 2D depthwise separable convolutional layer.
         """
@@ -223,7 +223,8 @@ class KerasSingleLayerTest(unittest.TestCase):
         # Create a simple Keras model
         model = Sequential()
         model.add(SeparableConv2D(input_shape=(64, 64, 3),
-                                  filters=32, kernel_size=(5,5), activation=None,
+                                  filters=32, kernel_size=(5,5),
+                                  activation=activation,
                                   padding='valid', strides=(1, 1), use_bias=True,
                                   dilation_rate=dilation_rate))
 
@@ -251,12 +252,21 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertIsNotNone(layer_depthwise.convolution)
         self.assertIsNotNone(layer_pointwise.convolution)
         self.assertEqual(layer_depthwise.convolution.dilationFactor, dilation_rate)
+        if activation is not None:
+                self.assertIsNotNone(layers[2].activation)
+                self.assertTrue(layers[2].activation.HasField('ELU'))
 
     def test_separable_convolution_dilated(self):
         """
         Test the conversion of 2D depthwise separable convolutional layer with dilated kernels.
         """
         self.test_separable_convolution(with_dilations=True)
+
+    def test_separable_convolution_with_nonlinearity(self):
+        """
+        Test the conversion of 2D depthwise separable convolutional layer with nonlinearity.
+        """
+        self.test_separable_convolution(activation='elu')
 
     def test_upsample(self):
         """
