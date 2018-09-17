@@ -65,11 +65,10 @@ class LightGBMTreeClassifierTest(unittest.TestCase):
         self.assertEqual(spec.description.output[1].type.WhichOneof('Type'), 'dictionaryType')
         self.assertEqual(len(spec.description.input), 4)
 
-        input_type = spec.description.input[0]
-
-        self.assertEqual(input_type.type.WhichOneof('Type'), 'doubleType')
-        print('input_type name: {}'.format(input_type.name))
-        # self.assertEqual(input_type.name, 'data')  # TODO
+        for feature_index in range(4):
+            input_type = spec.description.input[feature_index]
+            self.assertEqual(input_type.type.WhichOneof('Type'), 'doubleType')
+            self.assertEqual(input_type.name, 'Column_{}'.format(feature_index))  # TODO
 
         # Test actual tree attributes
         tr = spec.treeEnsembleClassifier.treeEnsemble
@@ -81,16 +80,12 @@ class LightGBMTreeClassifierTest(unittest.TestCase):
         model = MLModel(spec)
         self.assertIsNotNone(model)
 
-        coreml_prediction = model.predict({'Column_0': [0.0, 0.0, 0.0, 0.0],
-                                           'Column_1': [], 'Column_2': [], 'Column_3': []})  # TODO: Fix this bug
-
+        coreml_prediction = model.predict({'Column_0': 0.0, 'Column_1': 0.0, 'Column_2': 0.0, 'Column_3': 0.0})
         lightgbm_prediction = self.lightgbm_model.predict([[0, 0, 0, 0]])
 
         print('CoreML prediction: {}, LightGBM prediction: {}'.format(coreml_prediction, lightgbm_prediction))
 
         self.assertAlmostEqual(coreml_prediction['classProbability'][1], lightgbm_prediction[0])
-
-
 
 if __name__ == '__main__':
     unittest.main()

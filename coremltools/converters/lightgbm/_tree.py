@@ -6,7 +6,8 @@
 from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
 from ...models import MLModel as _MLModel
 
-def convert(model, feature_names = None, target = 'target', force_32bit_float = True):
+
+def convert(model, feature_names = None, target = 'target'):
     """
     Convert a trained LightGBM model to Core ML format.
 
@@ -29,9 +30,6 @@ def convert(model, feature_names = None, target = 'target', force_32bit_float = 
     target: str
         Name of the output feature name exposed to the Core ML model.
 
-    force_32bit_float: bool
-        If True, then the resulting CoreML model will use 32 bit floats internally.
-
     Returns
     -------
     model:MLModel
@@ -41,12 +39,12 @@ def convert(model, feature_names = None, target = 'target', force_32bit_float = 
     --------
     .. sourcecode:: python
 
-		# Convert it with default input and output names
-   		>>> import coremltools
-		>>> coreml_model = coremltools.converters.lightgbm.convert(model)
+        # Convert it with default input and output names
+        >>> import coremltools
+        >>> coreml_model = coremltools.converters.lightgbm.convert(model)
 
-		# Saving the Core ML model to a file.
-		>>> coremltools.save('my_model.mlmodel')
+        # Saving the Core ML model to a file.
+        >>> coremltools.save('my_model.mlmodel')
     """
-    return _MLModel(_convert_tree_ensemble(model, feature_names, target, force_32bit_float = force_32bit_float))
+    return _MLModel(_convert_tree_ensemble(model, feature_names, target))
 
