@@ -42,49 +42,59 @@ class LightGBMTreeClassifierTest(unittest.TestCase):
             'verbose': 0
         }
 
+        # Build native LightGBM model
         self.lightgbm_model = lgb.train(params, lgb_train, num_boost_round=10, valid_sets=lgb_train)
 
-        # Load
+        # Do conversion
+        self.spec = lightgbm_converter(self.lightgbm_model, 'data', 'target').get_spec()
 
-    def test_interface(self):
-        spec = lightgbm_converter(self.lightgbm_model, 'data', 'target').get_spec()  # TODO: Should it respect target?
-        self.assertIsNotNone(spec)
+        # Load CoreML executable model from the converted CoreML LightGBM spec
+        self.model = MLModel(self.spec)
+
+    def test_spec_interface(self):
+        self.assertIsNotNone(self.spec)
 
         # Test the model class
-        self.assertIsNotNone(spec.description)
-        self.assertIsNotNone(spec.treeEnsembleClassifier)
+        self.assertIsNotNone(self.spec.description)
+        self.assertIsNotNone(self.spec.treeEnsembleClassifier)
 
         # Test the interface class
-        self.assertEqual(spec.description.predictedFeatureName, 'classLabel')
+        self.assertEqual(self.spec.description.predictedFeatureName, 'classLabel')
 
         # Test the inputs and outputs
-        self.assertEqual(len(spec.description.output), 2)
-        self.assertEqual(spec.description.output[0].name, 'classLabel')  # Should this be 'target'?
-        self.assertEqual(spec.description.output[1].name, 'classProbability')
-        self.assertEqual(spec.description.output[0].type.WhichOneof('Type'), 'int64Type')
-        self.assertEqual(spec.description.output[1].type.WhichOneof('Type'), 'dictionaryType')
-        self.assertEqual(len(spec.description.input), 4)
+        self.assertEqual(len(self.spec.description.output), 2)
+        self.assertEqual(self.spec.description.output[0].name, 'classLabel')  # Should this be 'target'?
+        self.assertEqual(self.spec.description.output[1].name, 'classProbability')
+        self.assertEqual(self.spec.description.output[0].type.WhichOneof('Type'), 'int64Type')
+        self.assertEqual(self.spec.description.output[1].type.WhichOneof('Type'), 'dictionaryType')
+        self.assertEqual(len(self.spec.description.input), 4)
 
         for feature_index in range(4):
-            input_type = spec.description.input[feature_index]
+            input_type = self.spec.description.input[feature_index]
             self.assertEqual(input_type.type.WhichOneof('Type'), 'doubleType')
-            self.assertEqual(input_type.name, 'Column_{}'.format(feature_index))  # TODO
+            self.assertEqual(input_type.name, 'Column_{}'.format(feature_index))
 
         # Test actual tree attributes
-        tr = spec.treeEnsembleClassifier.treeEnsemble
+        tr = self.spec.treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
         self.assertEqual(len(tr.nodes), 508)
 
-    def test_prediction(self):
-        spec = lightgbm_converter(self.lightgbm_model, 'data', 'target').get_spec()
-        model = MLModel(spec)
-        self.assertIsNotNone(model)
+    def test_loaded_model(self):
+        self.assertIsNotNone(self.model)
 
-        coreml_prediction = model.predict({'Column_0': 0.0, 'Column_1': 0.0, 'Column_2': 0.0, 'Column_3': 0.0})
+    def test_prediction1(self):
+        coreml_prediction = self.model.predict({'Column_0': 0.0, 'Column_1': 0.0, 'Column_2': 0.0, 'Column_3': 0.0})
         lightgbm_prediction = self.lightgbm_model.predict([[0, 0, 0, 0]])
+        self.assertAlmostEqual(coreml_prediction['classProbability'][1], lightgbm_prediction[0])
 
-        print('CoreML prediction: {}, LightGBM prediction: {}'.format(coreml_prediction, lightgbm_prediction))
+    def test_prediction2(self):
+        coreml_prediction = self.model.predict({'Column_0': 0.0, 'Column_1': -1.0, 'Column_2': 0.0, 'Column_3': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[0, -1, 0, 0]])
+        self.assertAlmostEqual(coreml_prediction['classProbability'][1], lightgbm_prediction[0])
 
+    def test_prediction3(self):
+        coreml_prediction = self.model.predict({'Column_0': 1.0, 'Column_1': -1.0, 'Column_2': 5.5, 'Column_3': 6.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[1, -1, 5.5, 6]])
         self.assertAlmostEqual(coreml_prediction['classProbability'][1], lightgbm_prediction[0])
 
 if __name__ == '__main__':
