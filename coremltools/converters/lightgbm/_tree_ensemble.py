@@ -141,7 +141,7 @@ def convert_tree_ensemble(model, feature_names, target):
     features = lgbm_model_dict['feature_names']
 
     # Handle classifier model
-    if is_classifier(model):  # TODO: Only works if the model is passed in - not the dict
+    if is_classifier(model):
         # Determine class labels
         num_classes = lgbm_model_dict['num_class']
 
