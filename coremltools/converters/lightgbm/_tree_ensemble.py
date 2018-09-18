@@ -79,12 +79,20 @@ def recurse_tree(coreml_tree, lgbm_tree_dict, tree_id, node_id, current_global_n
         coreml_tree.add_leaf_node(tree_id, node_id, value, relative_hit_rate = relative_hit_rate)
 
 
+def is_classifier(lightgbm_model):
+    regressor_eval_algorithms = set(['l1', 'l2', 'l2_root', 'quantile', 'mape', 'huber', 'fair', 'poisson',
+                                     'gamma','gamma_deviance', 'tweedie', 'ndcg', 'map', 'auc'])
+    inner_eval_list = set(lightgbm_model._Booster__name_inner_eval)
+    # This is a classifier if any of the regressor algorithms are present in the _Booster__name_inner_eval
+    return regressor_eval_algorithms & inner_eval_list == set()
+
+
 def convert_tree_ensemble(model, feature_names, target):
     """Convert a generic tree model to the protobuf spec.
 
     This currently supports:
+      * Decision tree classifier (binary classifiers only - multi-class not yet supported)
       * Decision tree regression
-      * Decision tree classifier
 
     Parameters
     ----------
@@ -106,22 +114,25 @@ def convert_tree_ensemble(model, feature_names, target):
     """
     if not(_HAS_LIGHTGBM):
         raise RuntimeError('lightgbm not found. lightgbm conversion API is disabled.')
-    
-    import json
+
     import os
+    import json
+    import pickle
 
     if isinstance(model, _lightgbm.Booster):
         lgbm_model_dict = model.dump_model()  # Produces a python dict representing the model
 
-    elif isinstance(model, dict):
-        lgbm_model_dict = model
+    # elif isinstance(model, dict):
+    #     lgbm_model_dict = model
 
     # Path on the file system where the LightGBM model exists.
     elif isinstance(model, str):
         if not os.path.exists(model):
             raise TypeError("Invalid path %s." % model)
-        with open(model) as f:
-            lgbm_model_dict = json.load(f)
+        with open(model, 'rb') as f:
+            # lgbm_model_dict = json.load(f)
+            model = pickle.load(f)
+            lgbm_model_dict = model.dump_model()
 
     else:
         raise ValueError('Model object not recognized; must be one of: lightgbm.Booster, string path to model on disk,'
@@ -133,7 +144,8 @@ def convert_tree_ensemble(model, feature_names, target):
     features = lgbm_model_dict['feature_names']
 
     # Handle classifier model
-    if 'num_class' in lgbm_model_dict:
+    if is_classifier(model):  # TODO: Only works if the model is passed in - not the dict
+        print('classifier yo')
         # Determine class labels
         num_classes = lgbm_model_dict['num_class']
 
@@ -158,13 +170,14 @@ def convert_tree_ensemble(model, feature_names, target):
 
     # Handle regressor model
     else:
+        print('lightgbm/_tree_ensemble - regressor')
         coreml_tree = TreeEnsembleRegressor(feature_names, target)
 
         # LightGBM uses a 0 default_prediction_value
         coreml_tree.set_default_prediction_value(0.0)
 
         # LightGBM appears to always use a Logistic transformer for regressors
-        coreml_tree.set_post_evaluation_transform('Regression_Logistic')
+        # coreml_tree.set_post_evaluation_transform('Regression_Logistic')
 
         # Actually build the tree
         for lgbm_tree_id, lgbm_tree_dict in enumerate(trees):

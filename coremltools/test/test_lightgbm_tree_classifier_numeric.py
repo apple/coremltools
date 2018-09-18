@@ -9,6 +9,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from coremltools._deps import HAS_LIGHTGBM, HAS_SKLEARN
+from coremltools.models import MLModel
 
 if HAS_LIGHTGBM:
     from coremltools.converters.lightgbm import convert as lightgbm_converter
@@ -16,7 +17,7 @@ if HAS_LIGHTGBM:
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 @unittest.skipIf(not HAS_LIGHTGBM, 'Missing LightGBM. Skipping tests.')
-class LightGBMTreeBinaryClassifierTest(unittest.TestCase):
+class LightGBMTreeBinaryClassifierPredictionTest(unittest.TestCase):
     """
     Unit test class for testing LightGBM converter.
     """
@@ -49,38 +50,31 @@ class LightGBMTreeBinaryClassifierTest(unittest.TestCase):
         # Do conversion
         self.spec = lightgbm_converter(self.lightgbm_model, 'data', 'target').get_spec()
 
-    def test_spec_interface(self):
-        self.assertIsNotNone(self.spec)
+        # Load CoreML executable model from the converted CoreML LightGBM spec
+        self.model = MLModel(self.spec)
 
-        # Test the model class
-        self.assertIsNotNone(self.spec.description)
-        self.assertIsNotNone(self.spec.treeEnsembleClassifier)
+    def test_loaded_model(self):
+        self.assertIsNotNone(self.model)
 
-        # Test the interface class
-        self.assertEqual(self.spec.description.predictedFeatureName, 'classLabel')
+    def test_prediction1(self):
+        coreml_prediction = self.model.predict({'Column_0': 0.0, 'Column_1': 0.0, 'Column_2': 0.0, 'Column_3': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[0, 0, 0, 0]])
+        self.assertAlmostEqual(coreml_prediction['classProbability'][1], lightgbm_prediction[0])
 
-        # Test the inputs and outputs
-        self.assertEqual(len(self.spec.description.output), 2)
-        self.assertEqual(self.spec.description.output[0].name, 'classLabel')  # Should this be 'target'?
-        self.assertEqual(self.spec.description.output[1].name, 'classProbability')
-        self.assertEqual(self.spec.description.output[0].type.WhichOneof('Type'), 'int64Type')
-        self.assertEqual(self.spec.description.output[1].type.WhichOneof('Type'), 'dictionaryType')
-        self.assertEqual(len(self.spec.description.input), self.num_features)
+    def test_prediction2(self):
+        coreml_prediction = self.model.predict({'Column_0': 0.0, 'Column_1': -1.0, 'Column_2': 0.0, 'Column_3': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[0, -1, 0, 0]])
+        self.assertAlmostEqual(coreml_prediction['classProbability'][1], lightgbm_prediction[0])
 
-        for feature_index in range(self.num_features):
-            input_type = self.spec.description.input[feature_index]
-            self.assertEqual(input_type.type.WhichOneof('Type'), 'doubleType')
-            self.assertEqual(input_type.name, 'Column_{}'.format(feature_index))
-
-        # Test actual tree attributes
-        tr = self.spec.treeEnsembleClassifier.treeEnsemble
-        self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 508)
+    def test_prediction3(self):
+        coreml_prediction = self.model.predict({'Column_0': 1.0, 'Column_1': -1.0, 'Column_2': 5.5, 'Column_3': 6.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[1, -1, 5.5, 6]])
+        self.assertAlmostEqual(coreml_prediction['classProbability'][1], lightgbm_prediction[0])
 
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 @unittest.skipIf(not HAS_LIGHTGBM, 'Missing LightGBM. Skipping tests.')
-class LightGBMTreeRegressorTest(unittest.TestCase):
+class LightGBMTreeRegressorPredictionTest(unittest.TestCase):
     """
     Unit test class for testing LightGBM converter.
     """
@@ -112,39 +106,45 @@ class LightGBMTreeRegressorTest(unittest.TestCase):
                                         valid_sets=lgb_train_reg)
 
         # Do conversion
-        self.spec = lightgbm_converter(self.lightgbm_model, ['Column_0', 'Column_1', 'Column_2'], 'target').get_spec()
+        self.spec = lightgbm_converter(self.lightgbm_model,
+                                       ['Column_0', 'Column_1', 'Column_2'],
+                                       'target123').get_spec()
 
-    def test_spec_interface(self):
-        self.assertIsNotNone(self.spec)
+        # Load CoreML executable model from the converted CoreML LightGBM spec
+        self.model = MLModel(self.spec)
 
-        # Test the model class
-        self.assertIsNotNone(self.spec.description)
-        self.assertIsNotNone(self.spec.treeEnsembleClassifier)
+    def test_loaded_model(self):
+        self.assertIsNotNone(self.model)
 
-        # Test the interface class
-        self.assertEqual(self.spec.description.predictedFeatureName, 'target')
+    def test_prediction1(self):
+        """regressor([0, 0, 0]) -> -0.21527121893057433"""
+        coreml_prediction = self.model.predict({'Column_0': 0.0, 'Column_1': 0.0, 'Column_2': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[0, 0, 0]])
+        self.assertAlmostEqual(coreml_prediction['target123'], lightgbm_prediction[0])
 
-        # Test the inputs and outputs
-        self.assertEqual(len(self.spec.description.output), 1)
-        self.assertEqual(self.spec.description.output[0].name, 'target')  # Should this be 'target'?
-        self.assertEqual(self.spec.description.output[0].type.WhichOneof('Type'), 'doubleType')
-        self.assertEqual(len(self.spec.description.input), self.num_features)
+    def test_prediction2(self):
+        """regressor([1, 2, 3]) -> 129.5898800010246"""
+        coreml_prediction = self.model.predict({'Column_0': 1.0, 'Column_1': 2.0, 'Column_2': 3.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[1, 2, 3]])
+        self.assertAlmostEqual(coreml_prediction['target123'], lightgbm_prediction[0])
 
-        for feature_index in range(self.num_features):
-            input_type = self.spec.description.input[feature_index]
-            self.assertEqual(input_type.type.WhichOneof('Type'), 'doubleType')
-            self.assertEqual(input_type.name, 'Column_{}'.format(feature_index))
+    def test_prediction3(self):
+        """regressor([1, 2, 0]) -> 129.5898800010246"""
+        coreml_prediction = self.model.predict({'Column_0': 1.0, 'Column_1': 2.0, 'Column_2': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[1, 2, 0]])
+        self.assertAlmostEqual(coreml_prediction['target123'], lightgbm_prediction[0])
 
-        # Test actual tree attributes
-        tr = self.spec.treeEnsembleRegressor.treeEnsemble
-        self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 610)
+    def test_prediction4(self):
+        """regressor([2, 1, 0]) -> 118.24945326331657"""
+        coreml_prediction = self.model.predict({'Column_0': 2.0, 'Column_1': 1.0, 'Column_2': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[2, 1, 0]])
+        self.assertAlmostEqual(coreml_prediction['target123'], lightgbm_prediction[0])
 
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 @unittest.skipIf(not HAS_LIGHTGBM, 'Missing LightGBM. Skipping tests.')
 @unittest.skip(reason='Multi-class not yet working; blocked on https://github.com/Microsoft/LightGBM/issues/1675')
-class LightGBMTreeMulticlassClassifierTest(unittest.TestCase):
+class LightGBMTreeMulticlassClassifierPredictionTest(unittest.TestCase):
     """
     Unit test class for testing LightGBM converter.
     """
@@ -180,38 +180,13 @@ class LightGBMTreeMulticlassClassifierTest(unittest.TestCase):
                                         valid_sets=lgb_train_multiclass)
 
         # Do conversion
-        print('hit1')
         self.spec = lightgbm_converter(self.lightgbm_model, 'data', 'target').get_spec()
-        print('hit2')
-        print(self.spec)
 
-    def test_spec_interface(self):
-        self.assertIsNotNone(self.spec)
+        # Load CoreML executable model from the converted CoreML LightGBM spec
+        self.model = MLModel(self.spec)
 
-        # Test the model class
-        self.assertIsNotNone(self.spec.description)
-        self.assertIsNotNone(self.spec.treeEnsembleClassifier)
-
-        # Test the interface class
-        self.assertEqual(self.spec.description.predictedFeatureName, 'classLabel')
-
-        # Test the inputs and outputs
-        self.assertEqual(len(self.spec.description.output), 2)
-        self.assertEqual(self.spec.description.output[0].name, 'classLabel')  # Should this be 'target'?
-        self.assertEqual(self.spec.description.output[1].name, 'classProbability')
-        self.assertEqual(self.spec.description.output[0].type.WhichOneof('Type'), 'int64Type')
-        self.assertEqual(self.spec.description.output[1].type.WhichOneof('Type'), 'dictionaryType')
-        self.assertEqual(len(self.spec.description.input), self.num_features)
-
-        for feature_index in range(self.num_classes):
-            input_type = self.spec.description.input[feature_index]
-            self.assertEqual(input_type.type.WhichOneof('Type'), 'doubleType')
-            self.assertEqual(input_type.name, 'Column_{}'.format(feature_index))
-
-        # Test actual tree attributes
-        tr = self.spec.treeEnsembleClassifier.treeEnsemble
-        self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 508)
+    def test_loaded_model(self):
+        self.assertIsNotNone(self.model)
 
 
 if __name__ == '__main__':
