@@ -53,6 +53,13 @@ except:
     HAS_XGBOOST = False
 
 # ---------------------------------------------------------------------------------------
+HAS_LIGHTGBM = True
+try:
+    import lightgbm
+except:
+    HAS_LIGHTGBM = False
+
+# ---------------------------------------------------------------------------------------
 HAS_KERAS_TF = True
 HAS_KERAS2_TF = True
 KERAS_MIN_VERSION = '1.2.2'
