@@ -143,7 +143,6 @@ class LightGBMTreeRegressorPredictionTest(unittest.TestCase):
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 @unittest.skipIf(not HAS_LIGHTGBM, 'Missing LightGBM. Skipping tests.')
-@unittest.skip(reason='Multi-class not yet working; blocked on https://github.com/Microsoft/LightGBM/issues/1675')
 class LightGBMTreeMulticlassClassifierPredictionTest(unittest.TestCase):
     """
     Unit test class for testing LightGBM converter.
@@ -180,7 +179,7 @@ class LightGBMTreeMulticlassClassifierPredictionTest(unittest.TestCase):
                                         valid_sets=lgb_train_multiclass)
 
         # Do conversion
-        self.spec = lightgbm_converter(self.lightgbm_model, 'data', 'target').get_spec()
+        self.spec = lightgbm_converter(self.lightgbm_model, 'data', None).get_spec()
 
         # Load CoreML executable model from the converted CoreML LightGBM spec
         self.model = MLModel(self.spec)
@@ -188,6 +187,50 @@ class LightGBMTreeMulticlassClassifierPredictionTest(unittest.TestCase):
     def test_loaded_model(self):
         self.assertIsNotNone(self.model)
 
+    def test_prediction1(self):
+        """multiclass([0, 0, 0]) -> [0.44128488, 0.15541033, 0.24996637, 0.15333842]"""
+        coreml_prediction = self.model.predict({'Column_0': 0.0, 'Column_1': 0.0, 'Column_2': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[0, 0, 0]])
+
+        # Check probabilities
+        for class_id in range(len(lightgbm_prediction)):
+            lgbm_pred_for_class = lightgbm_prediction[0][class_id]
+            coreml_pred_for_class = coreml_prediction['classProbability'][class_id]
+            self.assertAlmostEqual(lgbm_pred_for_class, coreml_pred_for_class)
+
+        # Check label
+        lightgbm_predicted_class = max(enumerate(lightgbm_prediction[0]), key=lambda x: x[1])[0]
+        self.assertEqual(lightgbm_predicted_class, coreml_prediction['classLabel'])
+
+    def test_prediction2(self):
+        """multiclass([-1, 0, 0]) -> [0.18612569, 0.27207182, 0.28398856, 0.25781393]"""
+        coreml_prediction = self.model.predict({'Column_0': -1.0, 'Column_1': 0.0, 'Column_2': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[-1, 0, 0]])
+
+        # Check probabilities
+        for class_id in range(len(lightgbm_prediction)):
+            lgbm_pred_for_class = lightgbm_prediction[0][class_id]
+            coreml_pred_for_class = coreml_prediction['classProbability'][class_id]
+            self.assertAlmostEqual(lgbm_pred_for_class, coreml_pred_for_class)
+
+        # Check label
+        lightgbm_predicted_class = max(enumerate(lightgbm_prediction[0]), key=lambda x: x[1])[0]
+        self.assertEqual(lightgbm_predicted_class, coreml_prediction['classLabel'])
+
+    def test_prediction3(self):
+        """multiclass([-1, 5, 0]) -> [0.11954505, 0.11977181, 0.57066349, 0.19001964]"""
+        coreml_prediction = self.model.predict({'Column_0': -1.0, 'Column_1': 5.0, 'Column_2': 0.0})
+        lightgbm_prediction = self.lightgbm_model.predict([[-1, 5, 0]])
+
+        # Check probabilities
+        for class_id in range(len(lightgbm_prediction)):
+            lgbm_pred_for_class = lightgbm_prediction[0][class_id]
+            coreml_pred_for_class = coreml_prediction['classProbability'][class_id]
+            self.assertAlmostEqual(lgbm_pred_for_class, coreml_pred_for_class)
+
+        # Check label
+        lightgbm_predicted_class = max(enumerate(lightgbm_prediction[0]), key=lambda x: x[1])[0]
+        self.assertEqual(lightgbm_predicted_class, coreml_prediction['classLabel'])
 
 if __name__ == '__main__':
     unittest.main()

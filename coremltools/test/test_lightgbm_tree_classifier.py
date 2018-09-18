@@ -143,7 +143,6 @@ class LightGBMTreeRegressorTest(unittest.TestCase):
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 @unittest.skipIf(not HAS_LIGHTGBM, 'Missing LightGBM. Skipping tests.')
-@unittest.skip(reason='Multi-class not yet working; blocked on https://github.com/Microsoft/LightGBM/issues/1675')
 class LightGBMTreeMulticlassClassifierTest(unittest.TestCase):
     """
     Unit test class for testing LightGBM converter.
@@ -203,7 +202,7 @@ class LightGBMTreeMulticlassClassifierTest(unittest.TestCase):
         self.assertEqual(self.spec.description.output[1].type.WhichOneof('Type'), 'dictionaryType')
         self.assertEqual(len(self.spec.description.input), self.num_features)
 
-        for feature_index in range(self.num_classes):
+        for feature_index in range(self.num_features):
             input_type = self.spec.description.input[feature_index]
             self.assertEqual(input_type.type.WhichOneof('Type'), 'doubleType')
             self.assertEqual(input_type.name, 'Column_{}'.format(feature_index))
@@ -211,7 +210,7 @@ class LightGBMTreeMulticlassClassifierTest(unittest.TestCase):
         # Test actual tree attributes
         tr = self.spec.treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 508)
+        self.assertEqual(len(tr.nodes), 2358)
 
 
 if __name__ == '__main__':

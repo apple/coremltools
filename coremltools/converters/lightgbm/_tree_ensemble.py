@@ -19,7 +19,7 @@ LIGHTGBM_DECISION_TYPE_MAP = {
 }
 
 
-def recurse_tree(coreml_tree, lgbm_tree_dict, tree_id, node_id, current_global_node_id):
+def recurse_tree(coreml_tree, lgbm_tree_dict, tree_id, node_id, current_global_node_id, class_id=None):
     """Traverse through the tree and append to the tree spec."""
     relative_hit_rate = None
 
@@ -67,21 +67,25 @@ def recurse_tree(coreml_tree, lgbm_tree_dict, tree_id, node_id, current_global_n
         # Recurse
         if left_child:
             recurse_tree(coreml_tree, lgbm_tree_dict['left_child'], tree_id,
-                         left_child_id, current_global_node_id)
+                         left_child_id, current_global_node_id, class_id = class_id)
         if right_child:
             recurse_tree(coreml_tree, lgbm_tree_dict['right_child'], tree_id,
-                         right_child_id, current_global_node_id)
+                         right_child_id, current_global_node_id, class_id = class_id)
 
     # Leaf node
     else:
         value = lgbm_tree_dict['leaf_value']
+        if class_id:
+            value = {class_id: value}
 
         coreml_tree.add_leaf_node(tree_id, node_id, value, relative_hit_rate = relative_hit_rate)
 
 
 def is_classifier(lightgbm_model):
-    regressor_eval_algorithms = set(['l1', 'l2', 'l2_root', 'quantile', 'mape', 'huber', 'fair', 'poisson',
-                                     'gamma','gamma_deviance', 'tweedie', 'ndcg', 'map', 'auc'])
+    """Determines if the lightgbm model is a classifier or regressor.
+    This is not pretty, but I didn't see a better way to discriminate between the two."""
+    regressor_eval_algorithms = {'l1', 'l2', 'l2_root', 'quantile', 'mape', 'huber', 'fair', 'poisson',
+                                 'gamma', 'gamma_deviance', 'tweedie', 'ndcg', 'map', 'auc'}
     inner_eval_list = set(lightgbm_model._Booster__name_inner_eval)
     # This is a classifier if any of the regressor algorithms are present in the _Booster__name_inner_eval
     return regressor_eval_algorithms & inner_eval_list == set()
@@ -91,8 +95,8 @@ def convert_tree_ensemble(model, feature_names, target):
     """Convert a generic tree model to the protobuf spec.
 
     This currently supports:
-      * Decision tree classifier (binary classifiers only - multi-class not yet supported)
-      * Decision tree regression
+      * Classifier
+      * Regressor
 
     Parameters
     ----------
@@ -116,38 +120,32 @@ def convert_tree_ensemble(model, feature_names, target):
         raise RuntimeError('lightgbm not found. lightgbm conversion API is disabled.')
 
     import os
-    import json
     import pickle
 
     if isinstance(model, _lightgbm.Booster):
         lgbm_model_dict = model.dump_model()  # Produces a python dict representing the model
-
-    # elif isinstance(model, dict):
-    #     lgbm_model_dict = model
 
     # Path on the file system where the LightGBM model exists.
     elif isinstance(model, str):
         if not os.path.exists(model):
             raise TypeError("Invalid path %s." % model)
         with open(model, 'rb') as f:
-            # lgbm_model_dict = json.load(f)
             model = pickle.load(f)
             lgbm_model_dict = model.dump_model()
 
     else:
-        raise ValueError('Model object not recognized; must be one of: lightgbm.Booster, string path to model on disk,'
-                         'or dict representing the model (produced by lightgbm_model.dump_json()).')
+        raise ValueError('Model object not recognized; must be one of: lightgbm.Booster, '
+                         'or string path to pickled model on disk.')
 
     trees = lgbm_model_dict['tree_info']
-
-    # features = process_or_validate_features(feature_names)
     features = lgbm_model_dict['feature_names']
 
     # Handle classifier model
     if is_classifier(model):  # TODO: Only works if the model is passed in - not the dict
-        print('classifier yo')
         # Determine class labels
         num_classes = lgbm_model_dict['num_class']
+
+        print('Number classes: {}'.format(num_classes))
 
         # num_class=1 is a special case indicating binary classification (which really means 2 classes)
         if num_classes == 1:
@@ -158,26 +156,48 @@ def convert_tree_ensemble(model, feature_names, target):
         coreml_tree = TreeEnsembleClassifier(features, class_labels=class_labels, output_features=None)
 
         # LightGBM uses a 0 default_prediction_value
-        coreml_tree.set_default_prediction_value(0.0)
+        if num_classes == 2:
+            # Binary classification
+            coreml_tree.set_default_prediction_value(0.0)
 
-        # LightGBM appears to always use a Logistic transformer for classifiers
-        coreml_tree.set_post_evaluation_transform('Regression_Logistic')
+            # LightGBM appears to always use a Logistic transformer for classifiers
+            coreml_tree.set_post_evaluation_transform('Regression_Logistic')
+        else:
+            # Multiclass classification. This is also how we inform the model of the number of classes.
+            coreml_tree.set_default_prediction_value([0.0] * num_classes)
+
+            # LightGBM multiclass uses SoftMax
+            coreml_tree.set_post_evaluation_transform('Classification_SoftMax')
 
         # Actually build the tree
         for lgbm_tree_id, lgbm_tree_dict in enumerate(trees):
+            if num_classes == 2:
+                class_id = None
+            else:
+                # If multiclass classification, the value needs to indicate which class is being acted upon,
+                # so it must be {class_id: value}. In LightGBM, multiclass classification is done as a series
+                # of All-vs-One trees. So, for example, if there are 4 classes and 40 trees, the first 10
+                # trees represent a binary classification between "Is this Class 0" or "Any other class".
+                #
+                # LightGBM simply cycles through the classes for each subsequent tree, so if there are 4 classes,
+                # tree 0 will be class 0, tree 1 will be class 1, tree 2 will be class 2, tree 3 will be class 3,
+                # tree 4 will be class 0, tree 5 will be class 1, tree 6 will be class 2, tree 7 will be class 3,
+                # etc.
+                class_id = lgbm_tree_id % num_classes
+
             recurse_tree(coreml_tree, lgbm_tree_dict['tree_structure'], lgbm_tree_id, node_id=0,
-                         current_global_node_id=[0])
+                         current_global_node_id=[0], class_id = class_id)
 
     # Handle regressor model
     else:
-        print('lightgbm/_tree_ensemble - regressor')
         coreml_tree = TreeEnsembleRegressor(feature_names, target)
 
         # LightGBM uses a 0 default_prediction_value
         coreml_tree.set_default_prediction_value(0.0)
 
+        # TODO: Do we need to look at the model to determine which transformer to use, or does it always use none?
         # LightGBM appears to always use a Logistic transformer for regressors
-        # coreml_tree.set_post_evaluation_transform('Regression_Logistic')
+        coreml_tree.set_post_evaluation_transform('NoTransform')
 
         # Actually build the tree
         for lgbm_tree_id, lgbm_tree_dict in enumerate(trees):
