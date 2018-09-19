@@ -84,6 +84,14 @@ def recurse_tree(coreml_tree, lgbm_tree_dict, tree_id, node_id, current_global_n
 def is_classifier(lightgbm_model):
     """Determines if the lightgbm model is a classifier or regressor.
     This is not pretty, but I didn't see a better way to discriminate between the two."""
+
+    if isinstance(lightgbm_model, _lightgbm.LGBMClassifier):
+        return True
+
+    elif isinstance(lightgbm_model, _lightgbm.LGBMRegressor):
+        return False
+
+    # If lightgbm.basic.Booster, it's more difficult to differentiate between classifiers and regressors...
     regressor_eval_algorithms = {'l1', 'l2', 'l2_root', 'quantile', 'mape', 'huber', 'fair', 'poisson',
                                  'gamma', 'gamma_deviance', 'tweedie', 'ndcg', 'map', 'auc'}
     inner_eval_list = set(lightgbm_model._Booster__name_inner_eval)
@@ -100,9 +108,8 @@ def convert_tree_ensemble(model, feature_names, target):
 
     Parameters
     ----------
-    model: str | Booster
-        Path on disk where the LightGBM JSON representation of the model is or
-        a handle to the LightGBM model.
+    model: str | lightgbm.basic.Booster | lightgbm.LGBMClassifier | lightgbm.LGBMRegressor
+        Lightgbm model object or path on disk to pickled model object.
 
     feature_names : list of strings or None
         Names of each of the features. When set to None, the feature names are
@@ -122,20 +129,23 @@ def convert_tree_ensemble(model, feature_names, target):
     import os
     import pickle
 
-    if isinstance(model, _lightgbm.Booster):
-        lgbm_model_dict = model.dump_model()  # Produces a python dict representing the model
-
-    # Path on the file system where the LightGBM model exists.
-    elif isinstance(model, str):
+    # If str, assume path to pickled model
+    if isinstance(model, str):
         if not os.path.exists(model):
             raise TypeError("Invalid path %s." % model)
+
         with open(model, 'rb') as f:
             model = pickle.load(f)
-            lgbm_model_dict = model.dump_model()
+
+    if isinstance(model, (_lightgbm.LGBMClassifier, _lightgbm.LGBMRegressor)):
+        lgbm_model_dict = model._Booster.dump_model()  # Produces a python dict representing the model
+
+    elif isinstance(model, _lightgbm.Booster):
+        lgbm_model_dict = model.dump_model()  # Produces a python dict representing the model
 
     else:
-        raise ValueError('Model object not recognized; must be one of: lightgbm.Booster, '
-                         'or string path to pickled model on disk.')
+        raise ValueError('Model object not recognized; must be one of: lightgbm.Booster, lightgbm.LGBMClassifier, '
+                         'lightgbm.LGBMRegressor, or string path to pickled model on disk.')
 
     trees = lgbm_model_dict['tree_info']
     features = lgbm_model_dict['feature_names']
@@ -144,8 +154,6 @@ def convert_tree_ensemble(model, feature_names, target):
     if is_classifier(model):
         # Determine class labels
         num_classes = lgbm_model_dict['num_class']
-
-        print('Number classes: {}'.format(num_classes))
 
         # num_class=1 is a special case indicating binary classification (which really means 2 classes)
         if num_classes == 1:
