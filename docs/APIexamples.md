@@ -1,4 +1,4 @@
-# General useful Code snippets
+# API Code snippets
 
 ## Converting between MLModel and Spec
  
@@ -55,7 +55,7 @@ if spec.WhichOneof('Type') == 'neuralNetworkClassifier':
 if spec.WhichOneof('Type') == 'neuralNetwork':
   nn = spec.neuralNetwork
 elif spec.WhichOneof('Type') == 'neuralNetworkRegressor':
- nn = spec.neuralNetworkRegressor
+  nn = spec.neuralNetworkRegressor
 else:
     raise ValueError('MLModel must have a neural network')
     
