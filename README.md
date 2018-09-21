@@ -83,7 +83,7 @@ make dist
 
 API Examples
 -------------
-[Useful code snippets](docs/APIExamples.md)
+[Code snippets](docs/APIExamples.md)
 
 
 Running Unit Tests
