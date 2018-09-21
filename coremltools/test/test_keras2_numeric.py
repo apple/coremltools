@@ -53,14 +53,14 @@ def _keras_transpose(x, is_sequence=False):
         return x
 
 
-def _get_coreml_model(model, input_names=['data'], output_names=['output'],
+def _get_coreml_model(model, input_names=['data'], output_names=['output'], input_name_shape_dict= {},
                       model_precision=_MLMODEL_FULL_PRECISION):
     """
     Get the coreml model from the Keras model.
     """
     # Convert the model
     from coremltools.converters import keras as keras_converter
-    model = keras_converter.convert(model, input_names, output_names,
+    model = keras_converter.convert(model, input_names, output_names, input_name_shape_dict = input_name_shape_dict,
                                     model_precision=model_precision)
     return model
 
@@ -92,18 +92,21 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
     def runTest(self):
         pass
 
-    def _get_coreml_model_params_and_test_input(self, model, mode,
-                                                one_dim_seq_flags):
+    def _get_coreml_model_params_and_test_input(self, model, mode, one_dim_seq_flags, input_name_shape_dict={}):
         # Generate data
         nb_inputs = len(model.inputs)
         if nb_inputs > 1:
             input_names = []; input_data = []; coreml_input = {}
             for i in range(nb_inputs):
-                input_shape = [1 if a is None else a for a in \
-                        model.input_shape[i]]
-                X = _generate_data(input_shape, mode)
                 feature_name = "data_%s" % i
                 input_names.append(feature_name)
+                if feature_name in input_name_shape_dict:
+                    input_shape = [1 if a is None else a for a in \
+                                   input_name_shape_dict[feature_name]]
+                else:
+                    input_shape = [1 if a is None else a for a in \
+                                   model.input_shape[i]]
+                X = _generate_data(input_shape, mode)
                 input_data.append(X)
                 if one_dim_seq_flags is None:
                     coreml_input[feature_name] = _keras_transpose(
@@ -112,8 +115,12 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
                     coreml_input[feature_name] = _keras_transpose(
                         X, one_dim_seq_flags[i]).astype('f').copy()
         else:
-            input_shape = [1 if a is None else a for a in model.input_shape]
             input_names = ['data']
+            if 'data' in input_name_shape_dict:
+                input_shape = [1 if a is None else a for a in input_name_shape_dict['data']]
+            else:
+                input_shape = [1 if a is None else a for a in model.input_shape]
+
             input_data = _generate_data(input_shape, mode)
             if one_dim_seq_flags is None:
                 coreml_input = {'data': _keras_transpose(input_data).astype(
@@ -125,7 +132,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         output_names = ['output'+str(i) for i in range(len(model.outputs))]
         return input_names, output_names, input_data, coreml_input
 
-    def _test_model(self, model, num_samples=1, mode='random', delta=1e-2,
+    def _test_model(self, model, input_name_shape_dict= {},num_samples=1, mode='random', delta=1e-2,
                     model_dir=None, transpose_keras_result=True,
                     one_dim_seq_flags=None,
                     model_precision=_MLMODEL_FULL_PRECISION):
@@ -141,8 +148,10 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         if model_dir is None:
             use_tmp_folder = True
             model_dir = tempfile.mkdtemp()
-        input_names, output_names, input_data, coreml_input = self._get_coreml_model_params_and_test_input(model, mode, one_dim_seq_flags)
-        coreml_model = _get_coreml_model(model, input_names, output_names,
+        input_names, output_names, input_data, coreml_input = self._get_coreml_model_params_and_test_input(model, mode,
+                                                                                                           one_dim_seq_flags,
+                                                                                                           input_name_shape_dict)
+        coreml_model = _get_coreml_model(model, input_names, output_names, input_name_shape_dict,
                                          model_precision=model_precision)
         
         if macos_version() >= (10, 13):
@@ -314,6 +323,23 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Test the keras model
         self._test_model(model, model_precision=model_precision)
 
+    def test_tiny_conv_random_input_shape_dict(self, model_precision=_MLMODEL_FULL_PRECISION):
+        np.random.seed(1988)
+        H, W, C = 10, 20, 5
+        input_shape = (None, H, W, C)
+        num_kernels, kernel_height, kernel_width = 3, 5, 5
+
+        # Define a model
+        model = Sequential()
+        model.add(Conv2D(input_shape=(None,None,C),
+                         filters=num_kernels, kernel_size=(kernel_height, kernel_width)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_model(model, input_name_shape_dict={'data':input_shape},model_precision=model_precision)
+
     def test_tiny_conv_random_half_precision(self):
         self.test_tiny_conv_random(model_precision=_MLMODEL_HALF_PRECISION)
 
@@ -390,6 +416,22 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Test the keras model
         self._test_model(model)
+
+    def test_tiny_conv1d_same_random_input_shape_dict(self):
+        np.random.seed(1988)
+        input_dim = 2
+        input_length = 10
+        filter_length = 3
+        nb_filters = 4
+        model = Sequential()
+        model.add(Conv1D(nb_filters, kernel_size = filter_length, padding = 'same',
+            input_shape=(None, input_dim)))
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Test the keras model
+        self._test_model(model, input_name_shape_dict={'data':(None,input_length,input_dim)})
 
     def test_large_input_length_conv1d_same_random(self, model_precision=_MLMODEL_FULL_PRECISION):
         np.random.seed(1988)

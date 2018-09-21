@@ -334,6 +334,7 @@ def convertToSpec(model,
                   input_names = None,
                   output_names = None,
                   image_input_names = None,
+                  input_name_shape_dict = {},
                   is_bgr = False,
                   red_bias = 0.0,
                   green_bias = 0.0,
@@ -382,6 +383,10 @@ def convertToSpec(model,
         Input names to the Keras model (a subset of the input_names
         parameter) that can be treated as images by Core ML. All other inputs
         are treated as MultiArrays (N-D Arrays).
+        
+    input_name_shape_dict: {str: [int]}
+        Optional Dictionary of input tensor names and their corresponding shapes expressed
+        as a list of ints
 
     is_bgr: bool | dict()
         Flag indicating the channel order the model internally uses to represent
@@ -536,6 +541,7 @@ def convertToSpec(model,
                                            input_names=input_names,
                                            output_names=output_names,
                                            image_input_names=image_input_names,
+                                           input_name_shape_dict=input_name_shape_dict,
                                            is_bgr=is_bgr,
                                            red_bias=red_bias,
                                            green_bias=green_bias,
@@ -562,6 +568,7 @@ def convert(model,
                   input_names = None,
                   output_names = None,
                   image_input_names = None,
+                  input_name_shape_dict = {},
                   is_bgr = False,
                   red_bias = 0.0,
                   green_bias = 0.0,
@@ -738,6 +745,7 @@ def convert(model,
                       input_names,
                       output_names,
                       image_input_names,
+                      input_name_shape_dict,
                       is_bgr,
                       red_bias,
                       green_bias,
