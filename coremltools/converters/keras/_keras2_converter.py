@@ -169,7 +169,8 @@ def _load_keras_model(model_network_path, model_weight_path, custom_objects=None
 def _convert(model, 
             input_names = None, 
             output_names = None, 
-            image_input_names = None, 
+            image_input_names = None,
+            input_name_shape_dict = {},
             is_bgr = False, 
             red_bias = 0.0, 
             green_bias = 0.0, 
@@ -236,7 +237,7 @@ def _convert(model,
     # (None, Seq, D) -> [Seq, 1, D, 1, 1]
     # (None, H, W, C) -> [C, H, W]
     # (D) -> [D]
-    # (Seq, D) -> [Seq, 1, 1, D, 1]
+    # (Seq, D) -> [Seq, 1, D, 1, 1]
     # (Batch, Sequence, D) -> [D]
 
     # Retrieve input shapes from model
@@ -246,30 +247,62 @@ def _convert(model,
     else:
         input_dims = [filter(None, model.input_shape)]
         unfiltered_shapes = [model.input_shape]
-            
+
     for idx, dim in enumerate(input_dims):
-        unfiltered_shape = unfiltered_shapes[idx]
-        dim = list(dim)
-        if len(dim) == 0:
-            # Used to be [None, None] before filtering; indicating unknown sequence length
-            input_dims[idx] = tuple([1])
-        elif len(dim) == 1:
-            s = graph.get_successors(inputs[idx])[0]
-            if isinstance(graph.get_keras_layer(s), _keras.layers.embeddings.Embedding):
-                # Embedding layer's special input (None, D) where D is actually sequence length
-                input_dims[idx] = (1,)
+        if input_names[idx] in input_name_shape_dict:
+            unfiltered_shape = input_name_shape_dict[input_names[idx]]
+            dim = list(filter(None,unfiltered_shape))
+        else:
+            unfiltered_shape = unfiltered_shapes[idx]
+            dim = list(input_dims[idx])
+
+        if len(unfiltered_shape) == 1:
+            if len(dim) == 1:
+                input_dims[idx] = dim  # dim is just a number
             else:
-                input_dims[idx] = dim # dim is just a number
-        elif len(dim) == 2:  # [Seq, D]
-            input_dims[idx] = (dim[1],)
-        elif len(dim) == 3: #H,W,C
-            if (len(unfiltered_shape) > 3):
-                # keras uses the reverse notation from us
-                input_dims[idx] = (dim[2], dim[0], dim[1])
-            else: # keras provided fixed batch and sequence length, so the input was (batch, sequence, channel)
+                errMsg =  "Invalid input shape for {}.\n".format(input_names[idx])
+                errMsg += "Please provide a finite channel value (D) using input_name_shape_dict arg "
+                errMsg += "with key = '{}' and value = [D]".format(input_names[idx])
+                raise ValueError(errMsg)
+
+        elif len(unfiltered_shape) == 2:
+            if len(dim) == 2:# [Seq, D]
+                input_dims[idx] = (dim[1],)
+            elif len(dim) == 1:
+                s = graph.get_successors(inputs[idx])[0]
+                if isinstance(graph.get_keras_layer(s), _keras.layers.embeddings.Embedding):
+                    # Embedding layer's special input (None, D) where D is actually sequence length
+                    input_dims[idx] = (1,)
+                else:
+                    input_dims[idx] = dim  # dim is just a number
+            else: # Used to be [None, None] before filtering; indicating unknown sequence length
+                input_dims[idx] = tuple([1])
+
+        elif len(unfiltered_shape) == 3:
+            if len(dim) == 3:# keras provided fixed batch and sequence length, so the input was (batch, sequence, channel)
                 input_dims[idx] = (dim[2],)
+            elif len(dim) == 2:# [None, Seq, D]
+                input_dims[idx] = (dim[1],)
+            elif len(dim) == 1:
+                input_dims[idx] = dim  # dim is just a number
+            else:
+                errMsg =  "Invalid input shape for {}.\n".format(input_names[idx])
+                errMsg += "Please provide a finite channel value (D) using "
+                errMsg += "input_name_shape_dict arg with key = '{}' and value = [None,None,D]".format(input_names[idx])
+                raise ValueError(errMsg)
+
+        elif len(unfiltered_shape) == 4:
+            if len(dim) == 3:# keras uses the reverse notation from CoreML
+                input_dims[idx] = (dim[2], dim[0], dim[1])
+            else:
+                errMsg =  "Invalid input shape for {}.\n".format(input_names[idx])
+                errMsg += "Please provide a finite height (H), width (W) & channel value (C) "
+                errMsg += "using input_name_shape_dict arg with key = '{}' and value = [None,H,W,C]\n".format(input_names[idx])
+                errMsg += "Converted .mlmodel can be modified to have flexible input shape using coremltools.models.neural_network.flexible_shape_utils"
+                raise ValueError(errMsg)
         else:
             raise ValueError("Input '%s' has input shape of length %d" % (input_names[idx], len(dim)))
+
 
     # Retrieve output shapes from model
     if type(model.output_shape) is list:
