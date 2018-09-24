@@ -6,3 +6,5 @@ Pillow==4.2.1
 pandas==0.19.1
 scikit-learn==0.19.1
 h5py==2.7.1
+lightgbm~=2.1.0
+

@@ -13,7 +13,7 @@ def convert(model, feature_names = None, target = 'target'):
 
     Parameters
     ----------
-    decision_tree : Booster
+    model : Booster
         A trained LightGBM tree model.
 
     feature_names: [str] | str
@@ -44,7 +44,7 @@ def convert(model, feature_names = None, target = 'target'):
         >>> coreml_model = coremltools.converters.lightgbm.convert(model)
 
         # Saving the Core ML model to a file.
-        >>> coremltools.save('my_model.mlmodel')
+        >>> coreml_model.save('my_model.mlmodel')
     """
     return _MLModel(_convert_tree_ensemble(model, feature_names, target))
 
