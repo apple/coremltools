@@ -81,6 +81,11 @@ To make a wheel/egg that you can distribute, you can do the following
 make dist 
 ```
 
+API Examples
+-------------
+[Code snippets](docs/APIExamples.md)
+
+
 Running Unit Tests
 -------------------
 In order to run unit tests, you need pytest, pandas, and h5py. 
