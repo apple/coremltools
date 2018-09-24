@@ -30,15 +30,15 @@ mlmodel = coremltools.models.MLModel(spec)
 spec = coremltools.models.utils.load_spec('path/to/the/model.mlmodel')
 ```
 
-## Visualizing the CoreML model
+## Visualizing Neural Network CoreML models
 ```python
 import coremltools
 
-mlmodel = coremltools.models.MLModel('path/to/the/model.mlmodel')
-mlmodel.visualize_spec()
+nn_mlmodel = coremltools.models.MLModel('path/to/the/model.mlmodel')
+nn_mlmodel.visualize_spec()
 
-# To print a succint description of the neural network
-spec = mlmodel.get_spec()
+# To print a succinct description of the neural network
+spec = nn_mlmodel.get_spec()
 from  coremltools.models.neural_network.printer import print_network_spec
 print_network_spec(spec)
 ```
