@@ -1,3 +1,4 @@
+# Created by Caleb Madrigal
 # Copyright (c) 2018, FireEye Inc. All rights reserved.
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
@@ -81,7 +82,7 @@ def recurse_tree(coreml_tree, lgbm_tree_dict, tree_id, node_id, current_global_n
         coreml_tree.add_leaf_node(tree_id, node_id, value, relative_hit_rate = relative_hit_rate)
 
 
-def is_classifier(lightgbm_model):
+def _is_classifier(lightgbm_model):
     """Determines if the lightgbm model is a classifier or regressor.
     This is not pretty, but I didn't see a better way to discriminate between the two."""
 
@@ -151,7 +152,7 @@ def convert_tree_ensemble(model, feature_names, target):
     features = lgbm_model_dict['feature_names']
 
     # Handle classifier model
-    if is_classifier(model):
+    if _is_classifier(model):
         # Determine class labels
         num_classes = lgbm_model_dict['num_class']
 
@@ -203,8 +204,7 @@ def convert_tree_ensemble(model, feature_names, target):
         # LightGBM uses a 0 default_prediction_value
         coreml_tree.set_default_prediction_value(0.0)
 
-        # TODO: Do we need to look at the model to determine which transformer to use, or does it always use none?
-        # LightGBM appears to always use a Logistic transformer for regressors
+        # LightGBM appears to always use no transform for regressors
         coreml_tree.set_post_evaluation_transform('NoTransform')
 
         # Actually build the tree

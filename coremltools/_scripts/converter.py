@@ -80,6 +80,19 @@ def _convert(args):
             print('error: coremlconverter: %s.' % str(e))
             return 1 # error
         return 0
+    elif args.srcModelFormat == 'lightgbm':
+        try:
+            if not args.inputNames:
+                args.inputNames = 'data'
+            if not args.outputNames:
+                args.outputNames = 'target'
+            model = args.srcModelPath
+            model = converters.lightgbm.convert(model, args.inputNames, args.outputNames)
+            model.save(args.dstModelPath)
+        except Exception as e:
+            print('error: coremlconverter: %s.' % str(e))
+            return 1 # error
+        return 0
     else:
         print('error: coremlconverter: Invalid srcModelFormat specified.')
         return 1
@@ -88,7 +101,7 @@ def _main():
     import argparse
 
     parser = argparse.ArgumentParser(description='Convert other model file formats to MLKit format (.mlmodel).')
-    parser.add_argument('--srcModelFormat', type=unicode, choices=['auto', 'caffe', 'keras'], default='auto', help='Format of model at srcModelPath (default is to auto-detect).')
+    parser.add_argument('--srcModelFormat', type=unicode, choices=['auto', 'caffe', 'keras', 'lightgbm'], default='auto', help='Format of model at srcModelPath (default is to auto-detect).')
     parser.add_argument('--srcModelPath', type=unicode, required=True, help='Path to the model file of the external tool (e.g caffe weights proto binary, keras h5 binary')
     parser.add_argument('--dstModelPath', type=unicode, required=True, help='Path to save the model in format .mlmodel')
     parser.add_argument('--caffeProtoTxtPath', type=unicode, default='', help='Path to the .prototxt file if network differs from the source file (optional)')
