@@ -3,7 +3,7 @@ Core ML Community Tools
 
 Core ML community tools contains all supporting tools for CoreML model
 conversion and validation. This includes Scikit Learn, LIBSVM, Caffe,
-Keras and XGBoost.
+Keras, XGBoost, and LightGBM.
 
 
 We recommend using virtualenv to use, install, or build coremltools. Be
@@ -57,6 +57,7 @@ you are converting models of these formats:
 - Xgboost (0.7+)
 - scikit-learn (0.17+)
 - libSVM
+- LightGBM (2.1.0+)
 
 
 Building from source
@@ -135,6 +136,12 @@ If you'd like to use the old keras version, you can:
 
 ```shell
 pip install keras==1.2.2 tensorflow
+```
+
+To install LightGBM (Version >= 2.1.0)
+
+```shell
+pip install lightgbm
 ```
 
 Finally, to run the most important unit tests, you can use:
