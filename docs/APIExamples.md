@@ -80,14 +80,17 @@ from coremltools.proto import FeatureTypes_pb2 as ft
 model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
 spec = model.get_spec()
 
-def _convert_multiarray_to_float32(feature):
+def _set_type_as_float32(feature):
   if feature.type.HasField('multiArrayType'):
     feature.type.multiArrayType.dataType = ft.ArrayFeatureType.FLOAT32
 
+# iterate over the inputs
 for input_ in spec.description.input:
-    _convert_multiarray_to_float32(input_)
+    _set_type_as_float32(input_)
+    
+# iterate over the outputs
 for output_ in spec.description.output:
-    _convert_multiarray_to_float32(output_)
+    _set_type_as_float32(output_)
 
 model = coremltools.models.MLModel(spec)
 model.save('path/to/the/saved/model.mlmodel')
