@@ -94,7 +94,7 @@ def _is_classifier(lightgbm_model):
 
     # If lightgbm.basic.Booster, it's more difficult to differentiate between classifiers and regressors...
     regressor_eval_algorithms = {'l1', 'l2', 'l2_root', 'quantile', 'mape', 'huber', 'fair', 'poisson',
-                                 'gamma', 'gamma_deviance', 'tweedie', 'ndcg', 'map', 'auc'}
+                                 'gamma', 'gamma_deviance', 'tweedie'}
     inner_eval_list = set(lightgbm_model._Booster__name_inner_eval)
     # This is a classifier if any of the regressor algorithms are present in the _Booster__name_inner_eval
     return regressor_eval_algorithms & inner_eval_list == set()
