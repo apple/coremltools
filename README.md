@@ -5,6 +5,13 @@ Core ML community tools contains all supporting tools for CoreML model
 conversion and validation. This includes Scikit Learn, LIBSVM, Caffe,
 Keras and XGBoost.
 
+API Examples
+-------------
+[Code snippets](docs/APIExamples.md)
+
+
+Installation
+------------
 
 We recommend using virtualenv to use, install, or build coremltools. Be
 sure to install virtualenv using your system pip.
@@ -12,9 +19,6 @@ sure to install virtualenv using your system pip.
 ```shell
 pip install virtualenv
 ```
-
-Installation
-------------
 
 The method for installing *coremltools* follows the
 [standard python package installation steps](https://packaging.python.org/installing/).
@@ -80,11 +84,6 @@ To make a wheel/egg that you can distribute, you can do the following
 ```shell
 make dist 
 ```
-
-API Examples
--------------
-[Code snippets](docs/APIExamples.md)
-
 
 Running Unit Tests
 -------------------

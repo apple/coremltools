@@ -68,3 +68,31 @@ print(nn.preprocessing)
 
 ```
 
+## Changing MLMultiArray input/output datatypes
+
+[Here](https://github.com/apple/coremltools/blob/d07421460f9f0ad1a2e9cf8b5248670358a24a1a/mlmodel/format/FeatureTypes.proto#L106 ) is the list of supported datatypes.
+For instance, change the datatype from 'double' to 'float32': 
+
+```python
+import coremltools
+from coremltools.proto import FeatureTypes_pb2 as ft
+
+model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
+spec = model.get_spec()
+
+def _set_type_as_float32(feature):
+  if feature.type.HasField('multiArrayType'):
+    feature.type.multiArrayType.dataType = ft.ArrayFeatureType.FLOAT32
+
+# iterate over the inputs
+for input_ in spec.description.input:
+    _set_type_as_float32(input_)
+    
+# iterate over the outputs
+for output_ in spec.description.output:
+    _set_type_as_float32(output_)
+
+model = coremltools.models.MLModel(spec)
+model.save('path/to/the/saved/model.mlmodel')
+
+```
