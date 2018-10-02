@@ -140,7 +140,19 @@ def convert_tree_ensemble(model, feature_names, target):
                          'lightgbm.LGBMRegressor, or string path to pickled model on disk.')
 
     trees = lgbm_model_dict['tree_info']
-    features = lgbm_model_dict['feature_names']
+    num_dimensions = len(lgbm_model_dict['feature_names'])
+
+    if feature_names:
+        if isinstance(feature_names, str):
+            features = {feature_names: range(num_dimensions)}
+        elif isinstance(feature_names, list) and len(feature_names) == num_dimensions:
+            features = feature_names
+        else:
+            raise ValueError('List of feature_names does not match the dimensionality of the model.')
+
+    # If no feature_names specified, extract them from the model
+    else:
+        features = lgbm_model_dict['feature_names']
 
     # Handle classifier model
     if _is_classifier(model):
@@ -153,7 +165,7 @@ def convert_tree_ensemble(model, feature_names, target):
 
         class_labels = range(num_classes)
 
-        coreml_tree = TreeEnsembleClassifier(features, class_labels=class_labels, output_features=None)
+        coreml_tree = TreeEnsembleClassifier(features, class_labels=class_labels, output_features=target)
 
         # LightGBM uses a 0 default_prediction_value
         if num_classes == 2:
@@ -190,7 +202,7 @@ def convert_tree_ensemble(model, feature_names, target):
 
     # Handle regressor model
     else:
-        coreml_tree = TreeEnsembleRegressor(feature_names, target)
+        coreml_tree = TreeEnsembleRegressor(features, target)
 
         # LightGBM uses a 0 default_prediction_value
         coreml_tree.set_default_prediction_value(0.0)
