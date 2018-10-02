@@ -5,10 +5,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-import os
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
 from coremltools._deps import HAS_LIGHTGBM, HAS_SKLEARN
 
 if HAS_LIGHTGBM:
@@ -180,10 +176,7 @@ class LightGBMTreeMulticlassClassifierTest(unittest.TestCase):
                                         valid_sets=lgb_train_multiclass)
 
         # Do conversion
-        print('hit1')
         self.spec = lightgbm_converter(self.lightgbm_model, 'data', 'target').get_spec()
-        print('hit2')
-        print(self.spec)
 
     def test_spec_interface(self):
         self.assertIsNotNone(self.spec)

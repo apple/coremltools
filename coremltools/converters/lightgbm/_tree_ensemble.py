@@ -127,14 +127,10 @@ def convert_tree_ensemble(model, feature_names, target):
     if not(_HAS_LIGHTGBM):
         raise RuntimeError('lightgbm not found. lightgbm conversion API is disabled.')
 
-    import os
     import pickle
 
     # If str, assume path to pickled model
     if isinstance(model, str):
-        if not os.path.exists(model):
-            raise TypeError("Invalid path %s." % model)
-
         with open(model, 'rb') as f:
             model = pickle.load(f)
 
