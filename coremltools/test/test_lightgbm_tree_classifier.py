@@ -58,7 +58,7 @@ class LightGBMTreeBinaryClassifierArrayInputTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEqual(len(self.spec.description.output), 2)
-        self.assertEqual(self.spec.description.output[0].name, 'target')  # Should this be 'target'?
+        self.assertEqual(self.spec.description.output[0].name, 'target')
         self.assertEqual(self.spec.description.output[1].name, 'classProbability')
         self.assertEqual(self.spec.description.output[0].type.WhichOneof('Type'), 'int64Type')
         self.assertEqual(self.spec.description.output[1].type.WhichOneof('Type'), 'dictionaryType')
@@ -121,7 +121,7 @@ class LightGBMTreeBinaryClassifierTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEqual(len(self.spec.description.output), 2)
-        self.assertEqual(self.spec.description.output[0].name, 'target')  # Should this be 'target'?
+        self.assertEqual(self.spec.description.output[0].name, 'target')
         self.assertEqual(self.spec.description.output[1].name, 'classProbability')
         self.assertEqual(self.spec.description.output[0].type.WhichOneof('Type'), 'int64Type')
         self.assertEqual(self.spec.description.output[1].type.WhichOneof('Type'), 'dictionaryType')
