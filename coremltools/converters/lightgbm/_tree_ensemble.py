@@ -22,12 +22,7 @@ LIGHTGBM_DECISION_TYPE_MAP = {
 
 def recurse_tree(coreml_tree, lgbm_tree_dict, tree_id, node_id, current_global_node_id, class_id=None):
     """Traverse through the tree and append to the tree spec."""
-    relative_hit_rate = None
-
-    try:
-        relative_hit_rate = lgbm_tree_dict['internal_count']
-    except KeyError:
-        pass
+    relative_hit_rate = lgbm_tree_dict.get('internal_count', None)
 
     # Branch node
     if 'leaf_value' not in lgbm_tree_dict:
