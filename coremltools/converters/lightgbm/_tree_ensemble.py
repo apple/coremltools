@@ -79,7 +79,10 @@ def recurse_tree(coreml_tree, lgbm_tree_dict, tree_id, node_id, current_global_n
 
 def _is_classifier(lightgbm_model):
     """Determines if the lightgbm model is a classifier or regressor.
-    This is not pretty, but I didn't see a better way to discriminate between the two."""
+    This is not pretty, but I didn't see a better way to discriminate between the two.
+
+    The reason for this is tracked here: https://github.com/Microsoft/LightGBM/issues/1700
+    """
 
     if isinstance(lightgbm_model, _lightgbm.LGBMClassifier):
         return True
@@ -111,7 +114,7 @@ def convert_tree_ensemble(model, feature_names, target):
         Names of each of the features. When set to None, the feature names are
         extracted from the model.
 
-    target: str,
+    target: str or None
         Name of the output column.
 
     Returns

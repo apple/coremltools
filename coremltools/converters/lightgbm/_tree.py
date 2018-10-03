@@ -8,7 +8,7 @@ from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
 from ...models import MLModel as _MLModel
 
 
-def convert(model, feature_names = None, target = 'target'):
+def convert(model, feature_names = None, target = None):
     """
     Convert a trained LightGBM model to Core ML format.
 
@@ -19,7 +19,7 @@ def convert(model, feature_names = None, target = 'target'):
 
     feature_names: [str] | str
         Names of input features that will be exposed in the Core ML model
-        interface.
+        interface. If not specified, defaults to 'input'
 
         Can be set to one of the following:
 
@@ -29,7 +29,9 @@ def convert(model, feature_names = None, target = 'target'):
           order as the LightGBM model.
 
     target: str
-        Name of the output feature name exposed to the Core ML model.
+        Name of the output feature name exposed to the Core ML model. If not
+        specified, defaults to 'predicted_class' for regressors and 'classLabel'
+        for classifiers.
 
     Returns
     -------

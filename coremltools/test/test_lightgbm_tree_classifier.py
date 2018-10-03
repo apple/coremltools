@@ -203,7 +203,7 @@ class LightGBMTreeRegressorTest(unittest.TestCase):
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 @unittest.skipIf(not HAS_LIGHTGBM, 'Missing LightGBM. Skipping tests.')
-class LightGBMTreeRegressorNoneFeatureInputTest(unittest.TestCase):
+class LightGBMTreeRegressorNoneFeatureInputAndOutputTest(unittest.TestCase):
     """
     Unit test class for testing LightGBM converter.
     """
@@ -235,7 +235,7 @@ class LightGBMTreeRegressorNoneFeatureInputTest(unittest.TestCase):
                                         valid_sets=lgb_train_reg)
 
         # Do conversion
-        self.spec = lightgbm_converter(self.lightgbm_model, None, 'target2').get_spec()
+        self.spec = lightgbm_converter(self.lightgbm_model).get_spec()
 
     def test_spec_interface(self):
         self.assertIsNotNone(self.spec)
@@ -245,11 +245,11 @@ class LightGBMTreeRegressorNoneFeatureInputTest(unittest.TestCase):
         self.assertIsNotNone(self.spec.treeEnsembleClassifier)
 
         # Test the interface class
-        self.assertEqual(self.spec.description.predictedFeatureName, 'target2')
+        self.assertEqual(self.spec.description.predictedFeatureName, 'predicted_class')
 
         # Test the inputs and outputs
         self.assertEqual(len(self.spec.description.output), 1)
-        self.assertEqual(self.spec.description.output[0].name, 'target2')
+        self.assertEqual(self.spec.description.output[0].name, 'predicted_class')
         self.assertEqual(self.spec.description.output[0].type.WhichOneof('Type'), 'doubleType')
         self.assertEqual(len(self.spec.description.input), self.num_features)
 
