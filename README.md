@@ -7,7 +7,9 @@ Keras and XGBoost.
 
 API Examples
 -------------
-[Code snippets](docs/APIExamples.md)
+[Code snippets](docs/APIExamples.md)  
+[CoreMLTools Documentation](https://apple.github.io/coremltools)  
+[CoreML Specification Documentation](https://apple.github.io/coremltools/coremlspecification/)
 
 
 Installation

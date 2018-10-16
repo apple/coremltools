@@ -20,6 +20,9 @@ spec = mlmodel.get_spec()
 # print input/output description for the model
 print(spec.description)
 
+# get the type of Model (NeuralNetwork, SupportVectorRegressor, Pipeline etc)
+print(spec.WhichOneof('Type'))
+
 # save out the model directly from the spec
 coremltools.models.utils.save_spec(spec,'path/to/the/saved/model.mlmodel')
 
