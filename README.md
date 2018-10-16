@@ -73,6 +73,14 @@ To build the project, you need [CMake](https://cmake.org) to configure the proje
 cmake .
 ```
 
+When several python virtual environments are installed, 
+it may be useful to use the following command instead, 
+to point to the correct intended version of python:
+
+```shell
+cmake . -DPYTHON=$(which python) -DPYTHON_CONFIG=$(which python-config)
+``` 
+
 after which you can use make to build the project
 
 ```shell
