@@ -115,6 +115,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#borderamounts">BorderAmounts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#validpadding">ValidPadding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#samepadding">SamePadding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#samplingmode">SamplingMode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#boxcoordinatesmode">BoxCoordinatesMode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#weightparams">WeightParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#quantizationparams">QuantizationParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#linearquantizationparams">LinearQuantizationParams</a></li>
@@ -133,6 +135,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#multiplylayerparams">MultiplyLayerParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#unaryfunctionlayerparams">UnaryFunctionLayerParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#upsamplelayerparams">UpsampleLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#resizebilinearlayerparams">ResizeBilinearLayerParams</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cropresizelayerparams">CropResizeLayerParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#biaslayerparams">BiasLayerParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#scalelayerparams">ScaleLayerParams</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#loadconstantlayerparams">LoadConstantLayerParams</a></li>
@@ -269,13 +273,13 @@ is to be understood as a 2-dimensional array,
 whose shape is denoted by <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">C]</span></code>,
 which is equivalent to a 4-dimensional array
 with the shape <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">C,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>. This axes order is important to
-remember while setting parameters for layers such as “reshape” and “permute”.</p>
+remember while setting parameters for layers such as &#8220;reshape&#8221; and &#8220;permute&#8221;.</p>
 <p>At runtime, all data blobs are internally represented
 as 5-dimensional blobs
 with the shape <code class="docutils literal"><span class="pre">[Seq_length,</span> <span class="pre">Batch,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</p>
 <p>A layer may process input data differently if operating over a sequence;
-details of this behavior is documented in the layer’s message.
-Otherwise, sequential data is processed like a batch —
+details of this behavior is documented in the layer&#8217;s message.
+Otherwise, sequential data is processed like a batch &#8212;
 that is, the sequence of inputs are processed independently and in parallel.</p>
 <p>The network input shape specified by <code class="docutils literal"><span class="pre">Model.description.input.type</span></code>
 must be compatible with the expected input shape
@@ -360,7 +364,7 @@ The mean image is subtracted from the input named
 <p>A rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/ab606f106b3907dd9cf2e39d81eab8f5555cb7fa.svg" alt="f(x) = \text{max}(0, x)"/></p>
+<p><span class="math">f(x) = \text{max}(0, x)</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationReLU</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
@@ -371,10 +375,10 @@ The mean image is subtracted from the input named
 <p>A leaky rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/6592568d3e36717cf5c883adc3f60a798c08ba33.svg" alt="f(x) = \begin{cases}
+<p><span class="math">f(x) = \begin{cases}
         x      &amp; \text{if } x \geq 0 \\
         \alpha x &amp; \text{if } x &lt; 0
-       \end{cases}"/></p>
+       \end{cases}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationLeakyReLU</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//negative slope value for leakyReLU</span>
 <span class="p">}</span>
@@ -386,7 +390,7 @@ The mean image is subtracted from the input named
 <p>A hyperbolic tangent activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/b109fc45368735d81a77d8ca3f2c43d9a95f1bbe.svg" alt="f(x) = \dfrac{1 - e^{-2x}}{1 + e^{-2x}}"/></p>
+<p><span class="math">f(x) = \dfrac{1 - e^{-2x}}{1 + e^{-2x}}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationTanh</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
@@ -397,7 +401,7 @@ The mean image is subtracted from the input named
 <p>A scaled hyperbolic tangent activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/cab70ed454830cdeb8a73bdc522956dd7cdc05f2.svg" alt="f(x) = \alpha \tanh(\beta x)"/></p>
+<p><span class="math">f(x) = \alpha \tanh(\beta x)</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationScaledTanh</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -410,7 +414,7 @@ The mean image is subtracted from the input named
 <p>A sigmoid activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/1a759d053c707bb90804faeb91325a660d612358.svg" alt="f(x) = \dfrac{1}{1 + e^{-x}}"/></p>
+<p><span class="math">f(x) = \dfrac{1}{1 + e^{-x}}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSigmoid</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
@@ -421,7 +425,7 @@ The mean image is subtracted from the input named
 <p>A linear activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/dec15e0ea196b6aa3fb08658ba8bb970daeccd42.svg" alt="f(x) = \alpha x + \beta"/></p>
+<p><span class="math">f(x) = \alpha x + \beta</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationLinear</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -434,7 +438,7 @@ The mean image is subtracted from the input named
 <p>A hard sigmoid activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/2f0065f9622c47b8f94db52369ac080a79c4329f.svg" alt="f(x) = \text{min}(\text{max}(\alpha x + \beta, 0), 1)"/></p>
+<p><span class="math">f(x) = \text{min}(\text{max}(\alpha x + \beta, 0), 1)</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSigmoidHard</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -450,10 +454,10 @@ applies different parameters in each channel dimension
 (shared across the <code class="docutils literal"><span class="pre">H</span></code> and <code class="docutils literal"><span class="pre">W</span></code> components).</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/2f9c271c95a3e79b5fe7976b208acf2c99da2c10.svg" alt="f(x_i) = \begin{cases}
+<p><span class="math">f(x_i) = \begin{cases}
              x_i          &amp; \text{if } x_i \geq 0 \\
              \alpha_i x_i &amp; \text{if } x_i &lt; 0
-         \end{cases} \;,\;i=1,...,C"/></p>
+         \end{cases} \;,\;i=1,...,C</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationPReLU</span> <span class="p">{</span>
     <span class="c1">// parameter of length C or 1.</span>
     <span class="c1">// If length is 1, same value is used for all channels</span>
@@ -467,10 +471,10 @@ applies different parameters in each channel dimension
 <p>An exponential linear unit (ELU) activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/9c6925635b8c7bea42d11c7233627d3cdd677c10.svg" alt="f(x) = \begin{cases}
+<p><span class="math">f(x) = \begin{cases}
         x              &amp; \text{if } x \geq 0 \\
         \alpha (e^x - 1) &amp; \text{if } x &lt; 0
-       \end{cases}"/></p>
+       \end{cases}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationELU</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -482,10 +486,10 @@ applies different parameters in each channel dimension
 <p>A thresholded rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/a6c6e2ceaa0f3eb0676346e844056e95ff73b49c.svg" alt="f(x) = \begin{cases}
+<p><span class="math">f(x) = \begin{cases}
         x &amp; \text{if } x \geq \alpha \\
         0 &amp; \text{if } x &lt; \alpha
-       \end{cases}"/></p>
+       \end{cases}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationThresholdedReLU</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -497,7 +501,7 @@ applies different parameters in each channel dimension
 <p>A softsign activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/0fb139e4eb58c12eaf4b62f1b422233e2e8b1c1a.svg" alt="f(x) = \dfrac{x}{1 + |x|}"/></p>
+<p><span class="math">f(x) = \dfrac{x}{1 + |x|}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSoftsign</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
@@ -508,7 +512,7 @@ applies different parameters in each channel dimension
 <p>A softplus activation function.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/ab2db7166067cd7306164117b335b22dd9fb59c9.svg" alt="f(x) = \text{log}(1 + e^x)"/></p>
+<p><span class="math">f(x) = \text{log}(1 + e^x)</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSoftplus</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
@@ -522,7 +526,7 @@ applies different parameters in each channel dimension
 (shared across the <code class="docutils literal"><span class="pre">H</span></code> and <code class="docutils literal"><span class="pre">W</span></code> components).</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/9ee4a0352980adb621b1b2deed038c41f1e2cc4e.svg" alt="f(x_i) = \alpha_i \text{log}(1 + e^{\beta_i x_i}) \;,\;i=1,...,C"/></p>
+<p><span class="math">f(x_i) = \alpha_i \text{log}(1 + e^{\beta_i x_i}) \;,\;i=1,...,C</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationParametricSoftplus</span> <span class="p">{</span>
     <span class="c1">// If length is 1, same value is used for all channels</span>
     <span class="n">WeightParams</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//parameter of length C or 1</span>
@@ -587,6 +591,9 @@ applies different parameters in each channel dimension
         <span class="n">CropLayerParams</span> <span class="na">crop</span> <span class="o">=</span> <span class="mi">190</span><span class="p">;</span>
         <span class="n">PaddingLayerParams</span> <span class="na">padding</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
         <span class="n">UpsampleLayerParams</span> <span class="na">upsample</span> <span class="o">=</span> <span class="mi">210</span><span class="p">;</span>
+
+        <span class="n">ResizeBilinearLayerParams</span> <span class="na">resizeBilinear</span> <span class="o">=</span> <span class="mi">211</span><span class="p">;</span>
+        <span class="n">CropResizeLayerParams</span> <span class="na">cropResize</span> <span class="o">=</span> <span class="mi">212</span><span class="p">;</span>
 
         <span class="n">UnaryFunctionLayerParams</span> <span class="na">unary</span> <span class="o">=</span> <span class="mi">220</span><span class="p">;</span>
 
@@ -699,9 +706,9 @@ output spatial shape <code class="docutils literal"><span class="pre">[H_out,</s
 </div>
 <p>The equivalent expressions hold true for <code class="docutils literal"><span class="pre">W_out</span></code> as well.</p>
 <p>By default, the values of <code class="docutils literal"><span class="pre">paddingAmounts</span></code> are set to <code class="docutils literal"><span class="pre">0</span></code>,
-which results in a “true” valid padding.
+which results in a &#8220;true&#8221; valid padding.
 If non-zero values are provided for <code class="docutils literal"><span class="pre">paddingAmounts</span></code>,
-“valid” convolution/pooling is performed within the spatially expanded input.</p>
+&#8220;valid&#8221; convolution/pooling is performed within the spatially expanded input.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ValidPadding</span> <span class="p">{</span>
     <span class="n">BorderAmounts</span> <span class="na">paddingAmounts</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -750,6 +757,59 @@ With Convolution or pooling:</p>
         <span class="na">TOP_LEFT_HEAVY</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="p">}</span>
     <span class="n">SamePaddingMode</span> <span class="na">asymmetryMode</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="samplingmode">
+<h2>SamplingMode<a class="headerlink" href="#samplingmode" title="Permalink to this headline">¶</a></h2>
+<p>Specifies how grid points are sampled from an interval.
+Without the loss of generality, assume the interval to be [0, X-1] from which N points are to be sampled.
+Here X may correspond to an input image&#8217;s height or width.
+All the methods can be expressed in terms of numpy&#8217;s linspace function, along with the constraint that grid points have to lie in the interval [0, X-1].
+Note: numpy.linspace(start = start, end = end, num = N, endpoint = True) corresponds to sampling
+N points uniformly from the interval [start, end], endpoints included.
+The methods vary in how the <code class="docutils literal"><span class="pre">start</span></code> and <code class="docutils literal"><span class="pre">end</span></code> values are computed.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SamplingMode</span> <span class="p">{</span>
+
+        <span class="kd">enum</span> <span class="n">Method</span> <span class="p">{</span>
+
+                <span class="na">STRICT_ALIGN_ENDPOINTS_MODE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+                <span class="na">ALIGN_ENDPOINTS_MODE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+                <span class="na">UPSAMPLE_MODE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+                <span class="na">ROI_ALIGN_MODE</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+        <span class="p">}</span>
+
+        <span class="n">Method</span> <span class="na">samplingMethod</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="boxcoordinatesmode">
+<h2>BoxCoordinatesMode<a class="headerlink" href="#boxcoordinatesmode" title="Permalink to this headline">¶</a></h2>
+<p>Specifies the convention used to specify four bounding box coordinates for an image of size (Height, Width).
+The (0,0) coordinate corresponds to the top-left corner of the image.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">BoxCoordinatesMode</span> <span class="p">{</span>
+
+        <span class="kd">enum</span> <span class="n">Coordinates</span> <span class="p">{</span>
+
+                <span class="na">CORNERS_HEIGHT_FIRST</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+        <span class="na">CORNERS_WIDTH_FIRST</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="na">CENTER_SIZE_HEIGHT_FIRST</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+        <span class="na">CENTER_SIZE_WIDTH_FIRST</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+        <span class="p">}</span>
+
+        <span class="n">Coordinates</span> <span class="na">boxMode</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -824,8 +884,8 @@ modified as follows:</p>
 </pre></div>
 </div>
 <p>Type of padding can be <code class="docutils literal"><span class="pre">valid</span></code> or <code class="docutils literal"><span class="pre">same</span></code>. Output spatial dimensions depend on the
-the type of padding. For details, refer to the descriptions of the messages “ValidPadding”
-and “SamePadding”. Padded values are all zeros.</p>
+the type of padding. For details, refer to the descriptions of the messages &#8220;ValidPadding&#8221;
+and &#8220;SamePadding&#8221;. Padded values are all zeros.</p>
 <p>For Deconvolution, <code class="docutils literal"><span class="pre">ConvolutionPaddingType</span></code> (<code class="docutils literal"><span class="pre">valid</span></code> or <code class="docutils literal"><span class="pre">same</span></code>) is ignored when <code class="docutils literal"><span class="pre">outputShape</span></code> is set.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ConvolutionLayerParams</span> <span class="p">{</span>
     <span class="kt">uint64</span> <span class="na">outputChannels</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -921,7 +981,7 @@ and repeated along the other axes, if present.</p>
 <p>Requires 1 input and produces 1 output.</p>
 <p>This operation is described by the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/292ab855c4a5cbaf9e0ecc52bb2d8d5b46ff11fd.svg" alt="y_i = \gamma_i \dfrac{ (x_i - \mu_i)}{\sqrt{\sigma_i^2 + \epsilon}} + \beta_i \;,\;i=1,....,C"/></p>
+<p><span class="math">y_i = \gamma_i \dfrac{ (x_i - \mu_i)}{\sqrt{\sigma_i^2 + \epsilon}} + \beta_i \;,\;i=1,....,C</span></p>
 </div><dl class="docutils">
 <dt>Input</dt>
 <dd>A blob with shape <code class="docutils literal"><span class="pre">[C]</span></code> or <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span></code>.</dd>
@@ -1168,9 +1228,9 @@ with each of the supported types:</p>
 </dl>
 <p>This layer is described by the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/17d3211ab09b0a7a64161c366971011422505079.svg" alt="x_i \leftarrow  \dfrac{x_i}{\left ( k + \dfrac{\alpha}{C} \sum_j x_j^2 \right )^\beta}"/></p>
-</div><p>where the summation is done over a <code class="docutils literal"><span class="pre">(localSize,</span> <span class="pre">1,</span> <span class="pre">1)</span></code> neighborhood —
-that is, over a window “across” channels in 1x1 spatial neighborhoods.</p>
+<p><span class="math">x_i \leftarrow  \dfrac{x_i}{\left ( k + \dfrac{\alpha}{C} \sum_j x_j^2 \right )^\beta}</span></p>
+</div><p>where the summation is done over a <code class="docutils literal"><span class="pre">(localSize,</span> <span class="pre">1,</span> <span class="pre">1)</span></code> neighborhood &#8212;
+that is, over a window &#8220;across&#8221; channels in 1x1 spatial neighborhoods.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LRNLayerParams</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -1197,7 +1257,7 @@ Normalization is done along the channel axis.</p>
 </dl>
 <p>This layer is described by the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/c45ae48b0db081249c0d6c55fa0096e90b500e97.svg" alt="x_i \leftarrow \dfrac{e^{x_i}}{\sum_i{e^{x_i}}}"/></p>
+<p><span class="math">x_i \leftarrow \dfrac{e^{x_i}}{\sum_i{e^{x_i}}}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SoftmaxLayerParams</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
@@ -1239,7 +1299,7 @@ to produce a specified number of outputs.</p>
 </dl>
 <p>If only one input is provided, scalar addition is performed:</p>
 <div class="math">
-<p><img src="../_images/math/de9c388093626925490b2a93ef1f1d7e4447a044.svg" alt="y = x + \alpha"/></p>
+<p><span class="math">y = x + \alpha</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">AddLayerParams</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -1261,7 +1321,7 @@ to produce a specified number of outputs.</p>
 </dl>
 <p>If only one input is provided, scalar multiplication is performed:</p>
 <div class="math">
-<p><img src="../_images/math/85f7d4196988904f39a829ae5e8e6116715c6c49.svg" alt="y = \alpha x"/></p>
+<p><span class="math">y = \alpha x</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">MultiplyLayerParams</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -1283,7 +1343,7 @@ to produce a specified number of outputs.</p>
 </dl>
 <p>The input is first modified by shifting and scaling:</p>
 <div class="math">
-<p><img src="../_images/math/fb1905eeee2851ae1364693113b3aaaecd3c0a40.svg" alt="x \leftarrow \text{scale} \cdot x + \text{shift}"/></p>
+<p><span class="math">x \leftarrow \text{scale} \cdot x + \text{shift}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UnaryFunctionLayerParams</span> <span class="p">{</span>
     <span class="kd">enum</span> <span class="n">Operation</span><span class="p">{</span>
         <span class="na">SQRT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -1331,6 +1391,89 @@ It supports two modes: nearest neighbour (default) and bilinear.</p>
     <span class="p">}</span>
 
     <span class="n">InterpolationMode</span> <span class="na">mode</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="resizebilinearlayerparams">
+<h2>ResizeBilinearLayerParams<a class="headerlink" href="#resizebilinearlayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that resizes the input to a pre-specified spatial size using bilinear interpolation.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ResizeBilinearLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 1 input and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>.</dd>
+<dt>Output</dt>
+<dd>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ResizeBilinearLayerParams</span> <span class="p">{</span>
+
+        <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">targetSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="n">SamplingMode</span> <span class="na">mode</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cropresizelayerparams">
+<h2>CropResizeLayerParams<a class="headerlink" href="#cropresizelayerparams" title="Permalink to this headline">¶</a></h2>
+<p>A layer that extracts cropped spatial patches or RoIs (regions of interest) from the input and resizes them to a pre-specified size using
+bilinear interpolation.
+Note that RoI Align layer can be implemented with this layer followed by a pooling layer.</p>
+<div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">CropResizeLayer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Requires 2 inputs and produces 1 output.</p>
+<dl class="docutils">
+<dt>Input</dt>
+<dd><dl class="first docutils">
+<dt>A blob with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>.</dt>
+<dd>This represents an image feature map.
+Note that the full batched input shape is <code class="docutils literal"><span class="pre">[Seq</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">Batch</span> <span class="pre">=</span> <span class="pre">Batch,</span> <span class="pre">C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code></dd>
+<dt>A second input with shape <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> or <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>.</dt>
+<dd>This represents the bounding box coordinates for N patches/RoIs.
+Note that the full batched shape is <code class="docutils literal"><span class="pre">[Seq</span> <span class="pre">=</span> <span class="pre">N,</span> <span class="pre">Batch</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">C</span> <span class="pre">=</span> <span class="pre">4</span> <span class="pre">or</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>
+That is, sequence dimension = N, channel dimension = 4 or 5.</dd>
+</dl>
+<p>N: number of patches/RoIs to be extracted
+If RoI shape = <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">1]</span></code></p>
+<blockquote>
+<div>The channel axis corresponds to the four coordinates specifying the bounding box.
+All the N RoIs are extracted from all the batches of the input.</div></blockquote>
+<dl class="last docutils">
+<dt>If RoI shape = <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code></dt>
+<dd><dl class="first docutils">
+<dt>The first element of the channel axis specifies the input batch id from which to extract the RoI and</dt>
+<dd>must be in the interval <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">Batch</span> <span class="pre">-</span> <span class="pre">1]</span></code>. That is, n-th RoI is extracted from the RoI[n,0,0,0]-th input batch id.</dd>
+</dl>
+<p class="last">The last four elements of the channel axis specify the bounding box coordinates.</p>
+</dd>
+</dl>
+</dd>
+<dt>Output</dt>
+<dd><dl class="first last docutils">
+<dt>A blob with shape <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">C,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>.</dt>
+<dd>This represents the output image feature map for each input RoI.
+Note that the full batched output shape is:
+- <code class="docutils literal"><span class="pre">[Seq</span> <span class="pre">=</span> <span class="pre">N,</span> <span class="pre">Batch</span> <span class="pre">=</span> <span class="pre">Batch,</span> <span class="pre">C,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code> if input RoI shape is <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>
+- <code class="docutils literal"><span class="pre">[Seq</span> <span class="pre">=</span> <span class="pre">N,</span> <span class="pre">Batch</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">C,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code> if input RoI shape is <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code></dd>
+</dl>
+</dd>
+</dl>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">CropResizeLayerParams</span> <span class="p">{</span>
+
+        <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">targetSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="kt">bool</span> <span class="na">normalizedCoordinates</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+        <span class="n">SamplingMode</span> <span class="na">mode</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+        <span class="n">BoxCoordinatesMode</span> <span class="na">boxIndicesMode</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
+        <span class="kt">float</span> <span class="na">spatialScale</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
 
 <span class="p">}</span>
 </pre></div>
@@ -1424,7 +1567,7 @@ the square root of the sum of squares of all elements of input.</p>
 </dl>
 <p>This layer is described by the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/e2d30fa44d55c7830d3242d6a1db48bc79f3d8c8.svg" alt="x_i \leftarrow \dfrac{x_i}{\sqrt{\sum{x_i^2} + \epsilon}}"/></p>
+<p><span class="math">x_i \leftarrow \dfrac{x_i}{\sqrt{\sum{x_i^2} + \epsilon}}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">L2NormalizeLayerParams</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">epsilon</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -1479,7 +1622,7 @@ and then reshaping it to the target shape;
 no data rearrangement is required.
 <code class="docutils literal"><span class="pre">CHANNEL_LAST</span></code> is equivalent to
 flattening the input to <code class="docutils literal"><span class="pre">[H</span> <span class="pre">*</span> <span class="pre">W</span> <span class="pre">*</span> <span class="pre">C,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> in channel last order,
-reshaping it to <code class="docutils literal"><span class="pre">[H_out,</span> <span class="pre">W_out,</span> <span class="pre">C_out]</span></code> (it is now in “H_out-major”” order),
+reshaping it to <code class="docutils literal"><span class="pre">[H_out,</span> <span class="pre">W_out,</span> <span class="pre">C_out]</span></code> (it is now in &#8220;H_out-major&#8221;&#8221; order),
 and then permuting it to <code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>;
 both the flattening and permuting requires the data to be rearranged.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ReshapeLayerParams</span> <span class="p">{</span>
@@ -1580,8 +1723,8 @@ Reverse of SPACE_TO_DEPTH. Data is moved from the channel dimension to the spati
 <p>Sliced section is taken from the interval <code class="docutils literal"><span class="pre">[startIndex,</span> <span class="pre">endIndex)</span></code>, i.e.
 startIndex is inclusive while endIndex is exclusive.
 stride must be positive and represents the step size for slicing.
-startIndex must be non-negative. Negative indexing is supported for endIndex: -1 denotes N, -2 denotes N-1
-and so on, where N is the length of the dimension to be sliced.</p>
+Negative indexing is supported for startIndex and endIndex.
+-1 denotes N-1, -2 denotes N-2 and so on, where N is the length of the dimension to be sliced.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SliceLayerParams</span> <span class="p">{</span>
 
     <span class="kt">int64</span> <span class="na">startIndex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -1831,8 +1974,8 @@ with shape <code class="docutils literal"><span class="pre">[Seq,</span> <span c
 </ul>
 <p>This layer is described by the following equation:</p>
 <div class="math">
-<p><img src="../_images/math/9f6eab30a7338afe218476ef56da3ca988eaad53.svg" alt="\boldsymbol{y_t} = f(\mathrm{clip}(W \boldsymbol{x_t} + \
-                                   R \boldsymbol{y_{t-1}} + b))"/></p>
+<p><span class="math">\boldsymbol{y_t} = f(\mathrm{clip}(W \boldsymbol{x_t} + \
+                                   R \boldsymbol{y_{t-1}} + b))</span></p>
 </div><ul class="simple">
 <li><code class="docutils literal"><span class="pre">W</span></code> is a 2-dimensional weight matrix
 (<code class="docutils literal"><span class="pre">[outputVectorSize,</span> <span class="pre">inputVectorSize]</span></code>, row-major)</li>
@@ -1885,32 +2028,32 @@ with shape <code class="docutils literal"><span class="pre">[Seq,</span> <span c
 <dl class="docutils">
 <dt>Update Gate</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/875c7235537f2add16b5fecc3c6cc1f3577b56ea.svg" alt="\boldsymbol{z_t} = \
+<p><span class="math">\boldsymbol{z_t} = \
     f(\mathrm{clip}(W_z \boldsymbol{x_t} + \
-                    R_z \boldsymbol{y_{t-1}} + b_z)"/></p>
+                    R_z \boldsymbol{y_{t-1}} + b_z)</span></p>
 </div></dd>
 <dt>Reset Gate</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/51f877c717b56c82efc9a88336ee126f0de2e9c4.svg" alt="\boldsymbol{r_t} = \
+<p><span class="math">\boldsymbol{r_t} = \
     f(\mathrm{clip}(W_r \boldsymbol{x_t} + \
-                    R_r \boldsymbol{y_{t-1}} + b_r))"/></p>
+                    R_r \boldsymbol{y_{t-1}} + b_r))</span></p>
 </div></dd>
 <dt>Cell Memory State</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/333b01d663321dcd702f97bba1d2f286eec8ad7f.svg" alt="\boldsymbol{c_t} = \
-    \boldsymbol{y_{t-1}} \odot \boldsymbol{r_t}"/></p>
+<p><span class="math">\boldsymbol{c_t} = \
+    \boldsymbol{y_{t-1}} \odot \boldsymbol{r_t}</span></p>
 </div></dd>
 <dt>Output Gate</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/53c8900b810d975194646cf61eae01b1c162964e.svg" alt="\boldsymbol{o_t} = \
+<p><span class="math">\boldsymbol{o_t} = \
     g(\mathrm{clip}(W_o \boldsymbol{x_t} + \
-                    R_o \boldsymbol{c_t} + b_o))"/></p>
+                    R_o \boldsymbol{c_t} + b_o))</span></p>
 </div></dd>
 <dt>Output</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/2281230890a5355211a0a8c5b030f3a3cd041d5b.svg" alt="\boldsymbol{y_t} = \
+<p><span class="math">\boldsymbol{y_t} = \
     (1 - \boldsymbol{z_t}) \odot \boldsymbol{o_t} + \
-     \boldsymbol{z_t} \odot \boldsymbol{y_{t-1}}"/></p>
+     \boldsymbol{z_t} \odot \boldsymbol{y_{t-1}}</span></p>
 </div></dd>
 </dl>
 <ul class="simple">
@@ -1958,41 +2101,41 @@ with shape <code class="docutils literal"><span class="pre">[Seq,</span> <span c
 <dl class="docutils">
 <dt>Input Gate</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/f14d451a13a666de358bedf34cb5ea0e66004d7d.svg" alt="\boldsymbol{i_t} = \
+<p><span class="math">\boldsymbol{i_t} = \
     f(\mathrm{clip}(W_i \boldsymbol{x_t} + \
                     R_i \boldsymbol{y_{t-1}} + \
-                    p_i \odot c_{t-1} + b_i))"/></p>
+                    p_i \odot c_{t-1} + b_i))</span></p>
 </div></dd>
 <dt>Forget Gate</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/bbc6a6043abdcbcc9710a90370048eec16ca1dfb.svg" alt="\boldsymbol{f_t} = \
+<p><span class="math">\boldsymbol{f_t} = \
     f(\mathrm{clip}(W_f \boldsymbol{x_t} + \
                     R_f \boldsymbol{y_{t-1}} + \
-                    p_f \odot c_{t-1} + b_f))"/></p>
+                    p_f \odot c_{t-1} + b_f))</span></p>
 </div></dd>
 <dt>Block Input</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/1a4d5bab67794c735cbb52288c7f49797b16995e.svg" alt="\boldsymbol{z_t} = \
+<p><span class="math">\boldsymbol{z_t} = \
     g(\mathrm{clip}(W_z \boldsymbol{x_t} + \
-                    R_z \boldsymbol{y_{t-1}} + b_z))"/></p>
+                    R_z \boldsymbol{y_{t-1}} + b_z))</span></p>
 </div></dd>
 <dt>Cell Memory State</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/04b942a784507b5dfe2029e0e06b2578ea96d813.svg" alt="\boldsymbol{c_t} = \
+<p><span class="math">\boldsymbol{c_t} = \
     \boldsymbol{c_{t-1}} \odot \boldsymbol{f_t} + \
-    \boldsymbol{i_t} \odot \boldsymbol{z_t}"/></p>
+    \boldsymbol{i_t} \odot \boldsymbol{z_t}</span></p>
 </div></dd>
 <dt>Output Gate</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/78ddf76bc7b14d346cb36e0382c3728cf0c290db.svg" alt="\boldsymbol{o_t} = \
+<p><span class="math">\boldsymbol{o_t} = \
     f(\mathrm{clip}(W_o \boldsymbol{x_t} + \
                     R_o \boldsymbol{y_{t-1}} + \
-                    p_o \odot c_t + b_o))"/></p>
+                    p_o \odot c_t + b_o))</span></p>
 </div></dd>
 <dt>Output</dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/e06a8d4f3ab4e366287a670dedb429b1818513f4.svg" alt="\boldsymbol{y_t} = \
-    h(\boldsymbol{c_t}) \odot \boldsymbol{o_t}"/></p>
+<p><span class="math">\boldsymbol{y_t} = \
+    h(\boldsymbol{c_t}) \odot \boldsymbol{o_t}</span></p>
 </div></dd>
 </dl>
 <ul class="simple">
@@ -2216,6 +2359,22 @@ where <code class="docutils literal"><span class="pre">x_i</span></code> are vec
 <span class="p">}</span>
 </pre></div>
 </div>
+<div class="section" id="boxcoordinatesmode-coordinates">
+<h3>BoxCoordinatesMode.Coordinates<a class="headerlink" href="#boxcoordinatesmode-coordinates" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">Coordinates</span> <span class="p">{</span>
+
+        <span class="na">CORNERS_HEIGHT_FIRST</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="na">CORNERS_WIDTH_FIRST</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="na">CENTER_SIZE_HEIGHT_FIRST</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+<span class="na">CENTER_SIZE_WIDTH_FIRST</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="flattenlayerparams-flattenorder">
 <h3>FlattenLayerParams.FlattenOrder<a class="headerlink" href="#flattenlayerparams-flattenorder" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">FlattenOrder</span> <span class="p">{</span>
@@ -2291,6 +2450,22 @@ where <code class="docutils literal"><span class="pre">x_i</span></code> are vec
 </pre></div>
 </div>
 </div>
+<div class="section" id="samplingmode-method">
+<h3>SamplingMode.Method<a class="headerlink" href="#samplingmode-method" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">Method</span> <span class="p">{</span>
+
+        <span class="na">STRICT_ALIGN_ENDPOINTS_MODE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+        <span class="na">ALIGN_ENDPOINTS_MODE</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="na">UPSAMPLE_MODE</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+        <span class="na">ROI_ALIGN_MODE</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="slicelayerparams-sliceaxis">
 <h3>SliceLayerParams.SliceAxis<a class="headerlink" href="#slicelayerparams-sliceaxis" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">SliceAxis</span> <span class="p">{</span>
@@ -2308,35 +2483,35 @@ where <code class="docutils literal"><span class="pre">x_i</span></code> are vec
 <dl class="docutils">
 <dt><code class="docutils literal"><span class="pre">SQRT</span></code></dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/1a27b6d8b45c9a79d65ed70edd8946f78fa346a4.svg" alt="f(x) = \sqrt{x}"/></p>
+<p><span class="math">f(x) = \sqrt{x}</span></p>
 </div></dd>
 <dt><code class="docutils literal"><span class="pre">RSQRT</span></code></dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/0e60b043151b37d6ddf4473a6651720dc6c7742f.svg" alt="f(x) = \dfrac{1}{\sqrt{x + \epsilon}}"/></p>
+<p><span class="math">f(x) = \dfrac{1}{\sqrt{x + \epsilon}}</span></p>
 </div></dd>
 <dt><code class="docutils literal"><span class="pre">INVERSE</span></code></dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/34a18386e34d26ed6da13860795d21b63aaa1f0e.svg" alt="f(x) = \dfrac{1}{x + \epsilon}"/></p>
+<p><span class="math">f(x) = \dfrac{1}{x + \epsilon}</span></p>
 </div></dd>
 <dt><code class="docutils literal"><span class="pre">POWER</span></code></dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/e41899fee1e932cdc8e8e39223449ebc029044dd.svg" alt="f(x) = x^\alpha"/></p>
+<p><span class="math">f(x) = x^\alpha</span></p>
 </div></dd>
 <dt><code class="docutils literal"><span class="pre">EXP</span></code></dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/b31675a00ac60b41a7062ba39b136315d28a9230.svg" alt="f(x) = e^x"/></p>
+<p><span class="math">f(x) = e^x</span></p>
 </div></dd>
 <dt><code class="docutils literal"><span class="pre">LOG</span></code></dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/d3a95844d7385ae0f08fd85ead71a57dbebedeca.svg" alt="f(x) = \log x"/></p>
+<p><span class="math">f(x) = \log x</span></p>
 </div></dd>
 <dt><code class="docutils literal"><span class="pre">ABS</span></code></dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/51be7daa25504c44e98824a38f4528e75523f6ba.svg" alt="f(x) = |x|"/></p>
+<p><span class="math">f(x) = |x|</span></p>
 </div></dd>
 <dt><code class="docutils literal"><span class="pre">THRESHOLD</span></code></dt>
 <dd><div class="first last math">
-<p><img src="../_images/math/f59a4e8ac6fc8c5eb8df8421a3a50bc6941c8fd8.svg" alt="f(x) = \text{max}(\alpha, x)"/></p>
+<p><span class="math">f(x) = \text{max}(\alpha, x)</span></p>
 </div></dd>
 </dl>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">Operation</span><span class="p">{</span>

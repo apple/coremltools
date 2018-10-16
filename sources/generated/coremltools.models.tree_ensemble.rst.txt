@@ -1,9 +1,16 @@
-coremltools\.models\.tree\_ensemble
-===================================
+coremltools.models.tree_ensemble
+================================
 
 .. automodule:: coremltools.models.tree_ensemble
 
    
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      set_classifier_interface_params
+      set_regressor_interface_params
    
    
 

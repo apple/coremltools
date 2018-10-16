@@ -187,7 +187,7 @@
 <p>A linear kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/ca807a379ae5dc11ced477419c2186de1eb55612.svg" alt="K(\boldsymbol{x}, \boldsymbol{x'}) = \boldsymbol{x}^T \boldsymbol{x'}"/></p>
+<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \boldsymbol{x}^T \boldsymbol{x'}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearKernel</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
@@ -198,8 +198,8 @@
 <p>A Gaussian radial basis function (RBF) kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/f154062eb1c5345fa8b94882044cae5a8df9c78e.svg" alt="K(\boldsymbol{x}, \boldsymbol{x'}) = \
-     \exp(-\gamma || \boldsymbol{x} - \boldsymbol{x'} ||^2 )"/></p>
+<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
+     \exp(-\gamma || \boldsymbol{x} - \boldsymbol{x'} ||^2 )</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">RBFKernel</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -211,8 +211,8 @@
 <p>A polynomial kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/940a579024f7c3c5e1696135b2a4500d7957fadb.svg" alt="K(\boldsymbol{x}, \boldsymbol{x'}) = \
-      (\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)^{degree}"/></p>
+<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
+      (\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)^{degree}</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PolyKernel</span> <span class="p">{</span>
     <span class="kt">int32</span> <span class="na">degree</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -226,8 +226,8 @@
 <p>A sigmoid kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/a32d058671bc020baee94849a7ae5d72c3413862.svg" alt="K(\boldsymbol{x}, \boldsymbol{x'}) = \
-      \tanh(\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)"/></p>
+<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
+      \tanh(\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)</span></p>
 </div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SigmoidKernel</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>

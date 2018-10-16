@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; coremltools 2.0b1 documentation</title>
+  <title>Utilities &mdash; coremltools 2.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="coremltools 2.0b1 documentation" href="index.html"/>
+    <link rel="top" title="coremltools 2.0 documentation" href="index.html"/>
         <link rel="prev" title="coremltools.models.neural_network.quantization_utils" href="generated/coremltools.models.neural_network.quantization_utils.html"/>
     <link href="static/style.css" rel="stylesheet" type="text/css">
 
@@ -67,7 +67,7 @@
             
             
               <div class="version">
-                2.0b1
+                2.0
               </div>
             
           
@@ -169,7 +169,7 @@
 <dd><p>Utility function to convert a full precision (float) MLModel to a
 half precision MLModel (float16).
 Parameter
-———-
+&#8212;&#8212;&#8212;-
 full_precision_model: MLModel</p>
 <blockquote>
 <div>Model which will be converted to half precision. Currently conversion
@@ -184,32 +184,30 @@ will be converted.</div></blockquote>
 
 <dl class="function">
 <dt id="coremltools.models.utils.evaluate_classifier">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target=’target’</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target='target'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate a CoreML classifier model and compare against predictions
 from the original framework (for testing correctness of conversion). Use
-this evaluation for models that don’t deal with probabilities.</p>
+this evaluation for models that don&#8217;t deal with probabilities.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: [str | MLModel]</strong></p>
-<blockquote>
-<div><p>File from where to load the model from (OR) a loaded
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filename: [str | MLModel]</strong></dt>
+<dd><p class="first last">File from where to load the model from (OR) a loaded
 version of the MLModel.</p>
-</div></blockquote>
-<p><strong>data: [str | Dataframe]</strong></p>
-<blockquote>
-<div><p>Test data on which to evaluate the models (dataframe,
+</dd>
+<dt><strong>data: [str | Dataframe]</strong></dt>
+<dd><p class="first last">Test data on which to evaluate the models (dataframe,
 or path to a csv file).</p>
-</div></blockquote>
-<p><strong>target: str</strong></p>
-<blockquote>
-<div><p>Column to interpret as the target column</p>
-</div></blockquote>
-<p><strong>verbose: bool</strong></p>
-<blockquote class="last">
-<div><p>Set to true for a more verbose output.</p>
-</div></blockquote>
+</dd>
+<dt><strong>target: str</strong></dt>
+<dd><p class="first last">Column to interpret as the target column</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt>
+<dd><p class="first last">Set to true for a more verbose output.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -228,30 +226,28 @@ or path to a csv file).</p>
 
 <dl class="function">
 <dt id="coremltools.models.utils.evaluate_classifier_with_probabilities">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier_with_probabilities</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>probabilities=’probabilities’</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier_with_probabilities</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>probabilities='probabilities'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate a classifier specification for testing.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: [str | Model]</strong></p>
-<blockquote>
-<div><p>File from where to load the model from (OR) a loaded
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filename: [str | Model]</strong></dt>
+<dd><p class="first last">File from where to load the model from (OR) a loaded
 version of the MLModel.</p>
-</div></blockquote>
-<p><strong>data: [str | Dataframe]</strong></p>
-<blockquote>
-<div><p>Test data on which to evaluate the models (dataframe,
+</dd>
+<dt><strong>data: [str | Dataframe]</strong></dt>
+<dd><p class="first last">Test data on which to evaluate the models (dataframe,
 or path to a csv file).</p>
-</div></blockquote>
-<p><strong>probabilities: str</strong></p>
-<blockquote>
-<div><p>Column to interpret as the probabilities column</p>
-</div></blockquote>
-<p><strong>verbose: bool</strong></p>
-<blockquote class="last">
-<div><p>Verbosity levels of the predictions.</p>
-</div></blockquote>
+</dd>
+<dt><strong>probabilities: str</strong></dt>
+<dd><p class="first last">Column to interpret as the probabilities column</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt>
+<dd><p class="first last">Verbosity levels of the predictions.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -260,32 +256,30 @@ or path to a csv file).</p>
 
 <dl class="function">
 <dt id="coremltools.models.utils.evaluate_regressor">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_regressor</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target=’target’</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_regressor" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_regressor</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target='target'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_regressor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate a CoreML regression model and compare against predictions
 from the original framework (for testing correctness of conversion)</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: [str | MLModel]</strong></p>
-<blockquote>
-<div><p>File path from which to load the MLModel from (OR) a loaded version of
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>filename: [str | MLModel]</strong></dt>
+<dd><p class="first last">File path from which to load the MLModel from (OR) a loaded version of
 MLModel.</p>
-</div></blockquote>
-<p><strong>data: [str | Dataframe]</strong></p>
-<blockquote>
-<div><p>Test data on which to evaluate the models (dataframe,
+</dd>
+<dt><strong>data: [str | Dataframe]</strong></dt>
+<dd><p class="first last">Test data on which to evaluate the models (dataframe,
 or path to a .csv file).</p>
-</div></blockquote>
-<p><strong>target: str</strong></p>
-<blockquote>
-<div><p>Name of the column in the dataframe that must be interpreted
+</dd>
+<dt><strong>target: str</strong></dt>
+<dd><p class="first last">Name of the column in the dataframe that must be interpreted
 as the target column.</p>
-</div></blockquote>
-<p><strong>verbose: bool</strong></p>
-<blockquote class="last">
-<div><p>Set to true for a more verbose output.</p>
-</div></blockquote>
+</dd>
+<dt><strong>verbose: bool</strong></dt>
+<dd><p class="first last">Set to true for a more verbose output.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -310,23 +304,21 @@ as the target column.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spec: [str | MLModel]</strong></p>
-<blockquote>
-<div><p>File from where to load the Model from (OR) a loaded
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>spec: [str | MLModel]</strong></dt>
+<dd><p class="first last">File from where to load the Model from (OR) a loaded
 version of MLModel.</p>
-</div></blockquote>
-<p><strong>input_data: list[dict]</strong></p>
-<blockquote>
-<div><p>Test data on which to evaluate the models.</p>
-</div></blockquote>
-<p><strong>reference_output: list[dict]</strong></p>
-<blockquote>
-<div><p>Expected results for the model.</p>
-</div></blockquote>
-<p><strong>verbose: bool</strong></p>
-<blockquote class="last">
-<div><p>Verbosity levels of the predictions.</p>
-</div></blockquote>
+</dd>
+<dt><strong>input_data: list[dict]</strong></dt>
+<dd><p class="first last">Test data on which to evaluate the models.</p>
+</dd>
+<dt><strong>reference_output: list[dict]</strong></dt>
+<dd><p class="first last">Expected results for the model.</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt>
+<dd><p class="first last">Verbosity levels of the predictions.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -351,9 +343,17 @@ version of MLModel.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>spec: mlmodel spec</strong></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>spec: mlmodel spec</strong></dt>
+<dd></dd>
+</dl>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">set(str) A set of unique className fields of custom layers that appear in the model.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>set(str) A set of unique className fields of custom layers that appear in the model.</strong></dt>
+<dd></dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -367,9 +367,17 @@ version of MLModel.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>spec: mlmodel spec</strong></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>spec: mlmodel spec</strong></dt>
+<dd></dd>
+</dl>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">[NN layer] A list of custom layer implementations</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>[NN layer] A list of custom layer implementations</strong></dt>
+<dd></dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -383,9 +391,17 @@ version of MLModel.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>spec: mlmodel spec</strong></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>spec: mlmodel spec</strong></dt>
+<dd></dd>
+</dl>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">True if the protobuf specification contains a neural network with a custom layer, False otherwise.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>True if the protobuf specification contains a neural network with a custom layer, False otherwise.</strong></dt>
+<dd></dd>
+</dl>
+</td>
 </tr>
 </tbody>
 </table>
@@ -399,17 +415,19 @@ version of MLModel.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: str</strong></p>
-<blockquote>
-<div><p>Location on disk (a valid filepath) from which the file is loaded
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>filename: str</strong></dt>
+<dd><p class="first last">Location on disk (a valid filepath) from which the file is loaded
 as a protobuf spec.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">model_spec: Model_pb</p>
-<blockquote class="last">
-<div><p>Protobuf representation of the model</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>model_spec: Model_pb</strong></dt>
+<dd><p class="first last">Protobuf representation of the model</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -439,29 +457,26 @@ version comparisons. On non-Macs, it returns an empty tuple.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spec: Model_pb</strong></p>
-<blockquote>
-<div><p>The specification containing the feature to rename.</p>
-</div></blockquote>
-<p><strong>current_name: str</strong></p>
-<blockquote>
-<div><p>Current name of the feature. If this feature doesn’t exist, the rename
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>spec: Model_pb</strong></dt>
+<dd><p class="first last">The specification containing the feature to rename.</p>
+</dd>
+<dt><strong>current_name: str</strong></dt>
+<dd><p class="first last">Current name of the feature. If this feature doesn&#8217;t exist, the rename
 is a no-op.</p>
-</div></blockquote>
-<p><strong>new_name: str</strong></p>
-<blockquote>
-<div><p>New name of the feature.</p>
-</div></blockquote>
-<p><strong>rename_inputs: bool</strong></p>
-<blockquote>
-<div><p>Search for <cite>current_name</cite> only in the input features (i.e ignore output
+</dd>
+<dt><strong>new_name: str</strong></dt>
+<dd><p class="first last">New name of the feature.</p>
+</dd>
+<dt><strong>rename_inputs: bool</strong></dt>
+<dd><p class="first last">Search for <cite>current_name</cite> only in the input features (i.e ignore output
 features)</p>
-</div></blockquote>
-<p><strong>rename_outputs: bool</strong></p>
-<blockquote class="last">
-<div><p>Search for <cite>current_name</cite> only in the output features (i.e ignore input
+</dd>
+<dt><strong>rename_outputs: bool</strong></dt>
+<dd><p class="first last">Search for <cite>current_name</cite> only in the output features (i.e ignore input
 features)</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -482,12 +497,20 @@ layers with className=oldname, then the spec is unchanged.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spec: mlmodel spec</strong></p>
-<p><strong>oldname: str The custom layer className to be replaced.</strong></p>
-<p><strong>newname: str The new className value to replace oldname</strong></p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>spec: mlmodel spec</strong></dt>
+<dd></dd>
+<dt><strong>oldname: str The custom layer className to be replaced.</strong></dt>
+<dd></dd>
+<dt><strong>newname: str The new className value to replace oldname</strong></dt>
+<dd></dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">An mlmodel spec.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>An mlmodel spec.</strong></dt>
+<dd></dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -502,14 +525,14 @@ layers with className=oldname, then the spec is unchanged.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>spec: Model_pb</strong></p>
-<blockquote>
-<div><p>Protobuf representation of the model</p>
-</div></blockquote>
-<p><strong>filename: str</strong></p>
-<blockquote class="last">
-<div><p>File path  where the spec gets saved.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>spec: Model_pb</strong></dt>
+<dd><p class="first last">Protobuf representation of the model</p>
+</dd>
+<dt><strong>filename: str</strong></dt>
+<dd><p class="first last">File path  where the spec gets saved.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -576,7 +599,7 @@ layers with className=oldname, then the spec is unchanged.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'2.0b1',
+            VERSION:'2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -586,7 +609,7 @@ layers with className=oldname, then the spec is unchanged.</p>
       <script type="text/javascript" src="static/jquery.js"></script>
       <script type="text/javascript" src="static/underscore.js"></script>
       <script type="text/javascript" src="static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

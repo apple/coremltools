@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.MLModel &mdash; coremltools 2.0b1 documentation</title>
+  <title>coremltools.models.MLModel &mdash; coremltools 2.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0b1 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
         <link rel="up" title="Models" href="../coremltools.models.html"/>
         <link rel="next" title="coremltools.models.pipeline" href="coremltools.models.pipeline.html"/>
         <link rel="prev" title="Models" href="../coremltools.models.html"/>
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                2.0b1
+                2.0
               </div>
             
           
@@ -227,10 +227,11 @@ predictions for the purposes of testing (on select platforms).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>model: str | Model_pb2</strong></p>
-<blockquote class="last">
-<div><p>If a string is given it should be the location of the .mlmodel to load.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>model: str | Model_pb2</strong></dt>
+<dd><p class="first last">If a string is given it should be the location of the .mlmodel to load.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -241,6 +242,57 @@ predictions for the purposes of testing (on select platforms).</p>
 </div>
 </dd></dl>
 
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.MLModel.__init__" title="coremltools.models.MLModel.__init__"><code class="xref py py-obj docutils literal"><span class="pre">__init__</span></code></a>(model)</td>
+<td>Construct an MLModel from a .mlmodel</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.MLModel.get_spec" title="coremltools.models.MLModel.get_spec"><code class="xref py py-obj docutils literal"><span class="pre">get_spec</span></code></a>()</td>
+<td>Get a deep copy of the protobuf specification of the model.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.MLModel.predict" title="coremltools.models.MLModel.predict"><code class="xref py py-obj docutils literal"><span class="pre">predict</span></code></a>(data[,&nbsp;useCPUOnly])</td>
+<td>Return predictions for the model.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.MLModel.save" title="coremltools.models.MLModel.save"><code class="xref py py-obj docutils literal"><span class="pre">save</span></code></a>(filename)</td>
+<td>Save the model to a .mlmodel format.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.MLModel.visualize_spec" title="coremltools.models.MLModel.visualize_spec"><code class="xref py py-obj docutils literal"><span class="pre">visualize_spec</span></code></a>([port,&nbsp;input_shape_dict])</td>
+<td>Visualize the model.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">author</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">input_description</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">license</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">output_description</span></code></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">short_description</span></code></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">user_defined_metadata</span></code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <dl class="method">
 <dt>
 <code class="descname">__init__</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span></dt>
@@ -249,10 +301,11 @@ predictions for the purposes of testing (on select platforms).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>model: str | Model_pb2</strong></p>
-<blockquote class="last">
-<div><p>If a string is given it should be the location of the .mlmodel to load.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>model: str | Model_pb2</strong></dt>
+<dd><p class="first last">If a string is given it should be the location of the .mlmodel to load.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -271,10 +324,11 @@ predictions for the purposes of testing (on select platforms).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">model: Model_pb2</p>
-<blockquote class="last">
-<div><p>Protobuf specification of the model.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>model: Model_pb2</strong></dt>
+<dd><p class="first last">Protobuf specification of the model.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -294,22 +348,23 @@ model as a dictionary.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data</strong> : dict[str, value]</p>
-<blockquote>
-<div><p>Dictionary of data to make predictions from where the keys are
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>data</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict[str, value]</span></dt>
+<dd><p class="first last">Dictionary of data to make predictions from where the keys are
 the names of the input features.</p>
-</div></blockquote>
-<p><strong>useCPUOnly</strong> : bool</p>
-<blockquote>
-<div><p>Set to true to restrict computation to use only the CPU. Defaults to False.</p>
-</div></blockquote>
+</dd>
+<dt><strong>useCPUOnly</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span></dt>
+<dd><p class="first last">Set to true to restrict computation to use only the CPU. Defaults to False.</p>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> : dict[str, value]</p>
-<blockquote class="last">
-<div><p>Predictions as a dictionary where each key is the output feature
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>out</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict[str, value]</span></dt>
+<dd><p class="first last">Predictions as a dictionary where each key is the output feature
 name.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -329,10 +384,11 @@ name.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>location</strong> : str</p>
-<blockquote class="last">
-<div><p>Target filename for the model.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>location</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">Target filename for the model.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -356,19 +412,22 @@ name.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>port</strong> : int</p>
-<blockquote>
-<div><p>if server is to be hosted on specific localhost port</p>
-</div></blockquote>
-<p><strong>input_shape_dict</strong> : dict</p>
-<blockquote>
-<div><p>The shapes are calculated assuming the batch and sequence
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>port</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">if server is to be hosted on specific localhost port</p>
+</dd>
+<dt><strong>input_shape_dict</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict</span></dt>
+<dd><p class="first last">The shapes are calculated assuming the batch and sequence
 are 1 i.e. (1, 1, C, H, W). If either is not 1, then provide
 full input shape</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>None</strong></dt>
+<dd></dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -428,7 +487,7 @@ full input shape</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'2.0b1',
+            VERSION:'2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -438,7 +497,7 @@ full input shape</p>
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

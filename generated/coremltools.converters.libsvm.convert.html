@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.converters.libsvm.convert &mdash; coremltools 2.0b1 documentation</title>
+  <title>coremltools.converters.libsvm.convert &mdash; coremltools 2.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0b1 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
         <link rel="up" title="Converters" href="../coremltools.converters.html"/>
         <link rel="next" title="coremltools.converters.sklearn.convert" href="coremltools.converters.sklearn.convert.html"/>
         <link rel="prev" title="coremltools.converters.keras.convert" href="coremltools.converters.keras.convert.html"/>
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                2.0b1
+                2.0
               </div>
             
           
@@ -173,45 +173,43 @@
 <h1>coremltools.converters.libsvm.convert<a class="headerlink" href="#coremltools-converters-libsvm-convert" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="coremltools.converters.libsvm.convert">
-<code class="descclassname">coremltools.converters.libsvm.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>input_names=’input’</em>, <em>target_name=’target’</em>, <em>probability=’classProbability’</em>, <em>input_length=’auto’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.libsvm.convert" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.converters.libsvm.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>input_names='input'</em>, <em>target_name='target'</em>, <em>probability='classProbability'</em>, <em>input_length='auto'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.libsvm.convert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a LIBSVM model to Core ML format.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>model: a libsvm model (C-SVC, nu-SVC, epsilon-SVR, or nu-SVR)</strong></p>
-<blockquote>
-<div><p>or string path to a saved model.</p>
-</div></blockquote>
-<p><strong>input_names: str | [str]</strong></p>
-<blockquote>
-<div><p>Name of the input column(s).
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>model: a libsvm model (C-SVC, nu-SVC, epsilon-SVR, or nu-SVR)</strong></dt>
+<dd><p class="first last">or string path to a saved model.</p>
+</dd>
+<dt><strong>input_names: str | [str]</strong></dt>
+<dd><p class="first last">Name of the input column(s).
 If a single string is used (the default) the input will be an array. The
 length of the array will be inferred from the model, this can be overridden
-using the ‘input_length’ parameter.</p>
-</div></blockquote>
-<p><strong>target: str</strong></p>
-<blockquote>
-<div><p>Name of the output column.</p>
-</div></blockquote>
-<p><strong>probability: str</strong></p>
-<blockquote>
-<div><p>Name of the output class probability column.
+using the &#8216;input_length&#8217; parameter.</p>
+</dd>
+<dt><strong>target: str</strong></dt>
+<dd><p class="first last">Name of the output column.</p>
+</dd>
+<dt><strong>probability: str</strong></dt>
+<dd><p class="first last">Name of the output class probability column.
 Only used for C-SVC and nu-SVC that have been trained with probability
 estimates enabled.</p>
-</div></blockquote>
-<p><strong>input_length: int</strong></p>
-<blockquote>
-<div><p>Set the length of the input array.
+</dd>
+<dt><strong>input_length: int</strong></dt>
+<dd><p class="first last">Set the length of the input array.
 This parameter should only be used when the input is an array (i.e. when
-‘input_name’ is a string).</p>
-</div></blockquote>
+&#8216;input_name&#8217; is a string).</p>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">model: MLModel</p>
-<blockquote class="last">
-<div><p>Model in Core ML format.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>model: MLModel</strong></dt>
+<dd><p class="first last">Model in Core ML format.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -281,7 +279,7 @@ This parameter should only be used when the input is an array (i.e. when
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'2.0b1',
+            VERSION:'2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -291,7 +289,7 @@ This parameter should only be used when the input is an array (i.e. when
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

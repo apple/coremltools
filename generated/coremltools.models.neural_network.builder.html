@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network.builder &mdash; coremltools 2.0b1 documentation</title>
+  <title>coremltools.models.neural_network.builder &mdash; coremltools 2.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0b1 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
         <link rel="up" title="Models" href="../coremltools.models.html"/>
         <link rel="next" title="coremltools.models.neural_network.flexible_shape_utils" href="coremltools.models.neural_network.flexible_shape_utils.html"/>
         <link rel="prev" title="coremltools.models.tree_ensemble" href="coremltools.models.tree_ensemble.html"/>
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                2.0b1
+                2.0
               </div>
             
           
@@ -173,6 +173,21 @@
   <div class="section" id="module-coremltools.models.neural_network.builder">
 <span id="coremltools-models-neural-network-builder"></span><h1>coremltools.models.neural_network.builder<a class="headerlink" href="#module-coremltools.models.neural_network.builder" title="Permalink to this headline">¶</a></h1>
 <p>Neural network builder class to construct Core ML models.</p>
+<p class="rubric">Functions</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_transform_interface_params</span></code>(spec,&nbsp;...[,&nbsp;...])</td>
+<td>Common utilities to set transform interface params.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">unpack_to_bytes</span></code>(byte_arr,&nbsp;num_weights,&nbsp;nbits)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Classes</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -180,7 +195,7 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkBuilder</span></code></a>(input_features,&nbsp;…[,&nbsp;mode])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkBuilder</span></code></a>(input_features,&nbsp;...[,&nbsp;mode])</td>
 <td>Neural network builder class to construct Core ML models.</td>
 </tr>
 </tbody>
@@ -210,26 +225,25 @@ on neural network layers, blobs, and parameters.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_features: [(str, datatypes.Array)]</strong></p>
-<blockquote>
-<div><p>List of input feature of the network. Each feature is a (name,
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>input_features: [(str, datatypes.Array)]</strong></dt>
+<dd><p class="first last">List of input feature of the network. Each feature is a (name,
 array) tuple, where name the name of the feature, and array
 is an datatypes.Array object describing the feature type.</p>
-</div></blockquote>
-<p><strong>output_features: [(str, datatypes.Array or None)]</strong></p>
-<blockquote>
-<div><p>List of output feature of the network. Each feature is a (name,
+</dd>
+<dt><strong>output_features: [(str, datatypes.Array or None)]</strong></dt>
+<dd><p class="first last">List of output feature of the network. Each feature is a (name,
 array) tuple, where name is the name of the feature, and array
 is an datatypes.Array object describing the feature type. 
 array can be None if not known.</p>
-</div></blockquote>
-<p><strong>mode: str (‘classifier’, ‘regressor’ or None)</strong></p>
-<blockquote class="last">
-<div><p>Mode (one of ‘classifier’, ‘regressor’, or None).</p>
-<p>When mode = ‘classifier’, a NeuralNetworkClassifier spec will be
-constructed.  When mode = ‘regressor’, a NeuralNetworkRegressor
+</dd>
+<dt><strong>mode: str (&#8216;classifier&#8217;, &#8216;regressor&#8217; or None)</strong></dt>
+<dd><p class="first">Mode (one of &#8216;classifier&#8217;, &#8216;regressor&#8217;, or None).</p>
+<p class="last">When mode = &#8216;classifier&#8217;, a NeuralNetworkClassifier spec will be
+constructed.  When mode = &#8216;regressor&#8217;, a NeuralNetworkRegressor
 spec will be constructed.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -256,90 +270,87 @@ spec will be constructed.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer</p>
-</div></blockquote>
-<p><strong>non_linearity: str</strong></p>
-<blockquote>
-<div><p>The non_linearity (activation) function of this layer. 
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer</p>
+</dd>
+<dt><strong>non_linearity: str</strong></dt>
+<dd><p class="first">The non_linearity (activation) function of this layer. 
 It can be one of the following:</p>
-<blockquote>
+<blockquote class="last">
 <div><ul>
-<li><p class="first">‘RELU’: Rectified Linear Unit (ReLU) function.</p>
+<li><p class="first">&#8216;RELU&#8217;: Rectified Linear Unit (ReLU) function.</p>
 </li>
-<li><p class="first">‘SIGMOID’: sigmoid function.</p>
+<li><p class="first">&#8216;SIGMOID&#8217;: sigmoid function.</p>
 </li>
-<li><p class="first">‘TANH’: tanh function.</p>
+<li><p class="first">&#8216;TANH&#8217;: tanh function.</p>
 </li>
-<li><p class="first">‘SCALED_TANH’: scaled tanh function, defined as:</p>
+<li><p class="first">&#8216;SCALED_TANH&#8217;: scaled tanh function, defined as:</p>
 <p><cite>f(x) = alpha * tanh(beta * x)</cite></p>
 <p>where alpha and beta are constant scalars.</p>
 </li>
-<li><p class="first">‘SOFTPLUS’: softplus function.</p>
+<li><p class="first">&#8216;SOFTPLUS&#8217;: softplus function.</p>
 </li>
-<li><p class="first">‘SOFTSIGN’: softsign function.</p>
+<li><p class="first">&#8216;SOFTSIGN&#8217;: softsign function.</p>
 </li>
-<li><p class="first">‘SIGMOID_HARD’: hard sigmoid function, defined as:</p>
+<li><p class="first">&#8216;SIGMOID_HARD&#8217;: hard sigmoid function, defined as:</p>
 <p><cite>f(x) = min(max(alpha * x + beta, -1), 1)</cite></p>
 <p>where alpha and beta are constant scalars.</p>
 </li>
-<li><p class="first">‘LEAKYRELU’: leaky relu function, defined as:</p>
+<li><p class="first">&#8216;LEAKYRELU&#8217;: leaky relu function, defined as:</p>
 <p><cite>f(x) = (x &gt;= 0) * x + (x &lt; 0) * alpha * x</cite></p>
 <p>where alpha is a constant scalar.</p>
 </li>
-<li><p class="first">‘PRELU’: Parametric ReLU function, defined as:</p>
+<li><p class="first">&#8216;PRELU&#8217;: Parametric ReLU function, defined as:</p>
 <p><cite>f(x) = (x &gt;= 0) * x + (x &lt; 0) * alpha * x</cite></p>
 <p>where alpha is a multi-dimensional array of same size as x.</p>
 </li>
-<li><p class="first">‘ELU’: Exponential linear unit function, defined as:</p>
+<li><p class="first">&#8216;ELU&#8217;: Exponential linear unit function, defined as:</p>
 <p><cite>f(x) = (x &gt;= 0) * x + (x &lt; 0) * (alpha * exp(x) - 1)</cite></p>
 <p>where alpha is a constant scalar.</p>
 </li>
-<li><p class="first">‘PARAMETRICSOFTPLUS’: Parametric softplus function, defined as:</p>
+<li><p class="first">&#8216;PARAMETRICSOFTPLUS&#8217;: Parametric softplus function, defined as:</p>
 <p><cite>f(x) = alpha * log(1 + exp(beta * x))</cite></p>
 <p>where alpha and beta are two multi-dimensional arrays of same size as x.</p>
 </li>
-<li><p class="first">‘THRESHOLDEDRELU’: Thresholded ReLU function, defined as:</p>
+<li><p class="first">&#8216;THRESHOLDEDRELU&#8217;: Thresholded ReLU function, defined as:</p>
 <p><cite>f(x) = (x &gt;= alpha) * x</cite></p>
 <p>where alpha is a constant scalar.</p>
 </li>
-<li><p class="first">‘LINEAR’: linear function.</p>
+<li><p class="first">&#8216;LINEAR&#8217;: linear function.</p>
 <blockquote>
 <div><p><cite>f(x) = alpha * x + beta</cite></p>
 </div></blockquote>
 </li>
 </ul>
 </div></blockquote>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>params: [float] | [numpy.array]</strong></p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>params: [float] | [numpy.array]</strong></dt>
+<dd><p class="first">Parameters for the activation, depending on non_linearity. Kindly refer to NeuralNetwork.proto for details.</p>
 <blockquote class="last">
-<div><p>Parameters for the activation, depending on non_linearity. Kindly refer to NeuralNetwork.proto for details.</p>
-<blockquote>
 <div><ul class="simple">
-<li>When non_linearity is one of [‘RELU’, ‘SIGMOID’, ‘TANH’, ‘SCALED_TANH’, ‘SOFTPLUS’, ‘SOFTSIGN’], params is ignored.</li>
-<li>When non_linearity is one of [‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’], param is a list of 2 floats
+<li>When non_linearity is one of [&#8216;RELU&#8217;, &#8216;SIGMOID&#8217;, &#8216;TANH&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SOFTPLUS&#8217;, &#8216;SOFTSIGN&#8217;], params is ignored.</li>
+<li>When non_linearity is one of [&#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;], param is a list of 2 floats
 [alpha, beta].</li>
-<li>When non_linearity is one of [‘LEAKYRELU’, ‘ELU’, ‘THRESHOLDEDRELU’], param is a list of 1 float
+<li>When non_linearity is one of [&#8216;LEAKYRELU&#8217;, &#8216;ELU&#8217;, &#8216;THRESHOLDEDRELU&#8217;], param is a list of 1 float
 [alpha].</li>
-<li>When non_linearity is ‘PRELU’, param is a list of 1 numpy array [alpha]. The shape of
+<li>When non_linearity is &#8216;PRELU&#8217;, param is a list of 1 numpy array [alpha]. The shape of
 alpha is (C,), where C is either the number of input channels or
 1. When C = 1, same alpha is applied to all channels.</li>
-<li>When non_linearity is ‘PARAMETRICSOFTPLUS’, param is a list of 2 numpy arrays [alpha,
+<li>When non_linearity is &#8216;PARAMETRICSOFTPLUS&#8217;, param is a list of 2 numpy arrays [alpha,
 beta]. The shape of alpha and beta is (C, ), where C is either
 the number of input channels or 1. When C = 1, same alpha and
 beta are applied to all channels.</li>
 </ul>
 </div></blockquote>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -352,7 +363,7 @@ beta are applied to all channels.</li>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_batchnorm">
-<code class="descname">add_batchnorm</code><span class="sig-paren">(</span><em>name</em>, <em>channels</em>, <em>gamma</em>, <em>beta</em>, <em>mean=None</em>, <em>variance=None</em>, <em>input_name=’data’</em>, <em>output_name=’out’</em>, <em>compute_mean_var=False</em>, <em>instance_normalization=False</em>, <em>epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_batchnorm" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_batchnorm</code><span class="sig-paren">(</span><em>name</em>, <em>channels</em>, <em>gamma</em>, <em>beta</em>, <em>mean=None</em>, <em>variance=None</em>, <em>input_name='data'</em>, <em>output_name='out'</em>, <em>compute_mean_var=False</em>, <em>instance_normalization=False</em>, <em>epsilon=1e-05</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_batchnorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Batch Normalization layer. Batch Normalization operation is
 defined as:</p>
 <p><cite>y = gamma * (x - mean) / sqrt(variance + epsilon) + beta</cite>
@@ -396,26 +407,23 @@ instance normalization i.e., mean and variance are computed from the single inpu
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>b: int | numpy.array</strong></p>
-<blockquote>
-<div><p>Bias to add to the input.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>shape_bias: [int]</strong></p>
-<blockquote class="last">
-<div><p>List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>b: int | numpy.array</strong></dt>
+<dd><p class="first last">Bias to add to the input.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>shape_bias: [int]</strong></dt>
+<dd><p class="first last">List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -428,120 +436,102 @@ instance normalization i.e., mean and variance are computed from the single inpu
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm">
-<code class="descname">add_bidirlstm</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>W_h_back</em>, <em>W_x_back</em>, <em>b_back</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>inner_activation=’SIGMOID’</em>, <em>cell_state_update_activation=’TANH’</em>, <em>output_activation=’TANH’</em>, <em>peep=None</em>, <em>peep_back=None</em>, <em>output_all=False</em>, <em>forget_bias=False</em>, <em>coupled_input_forget_gate=False</em>, <em>cell_clip_threshold=50000.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_bidirlstm</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>W_h_back</em>, <em>W_x_back</em>, <em>b_back</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>inner_activation='SIGMOID'</em>, <em>cell_state_update_activation='TANH'</em>, <em>output_activation='TANH'</em>, <em>peep=None</em>, <em>peep_back=None</em>, <em>output_all=False</em>, <em>forget_bias=False</em>, <em>coupled_input_forget_gate=False</em>, <em>cell_clip_threshold=50000.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Bi-directional LSTM layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>W_h: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_o, R_z],
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>W_h: [numpy.array]</strong></dt>
+<dd><p class="first last">List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_o, R_z],
 where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, hidden_size).</p>
-</div></blockquote>
-<p><strong>W_x: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_o, W_z],
+</dd>
+<dt><strong>W_x: [numpy.array]</strong></dt>
+<dd><p class="first last">List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_o, W_z],
 where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, input_size).</p>
-</div></blockquote>
-<p><strong>b: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of biases for the forward layer. The ordering is [b_i, b_f, b_o, b_z],
+</dd>
+<dt><strong>b: [numpy.array]</strong></dt>
+<dd><p class="first last">List of biases for the forward layer. The ordering is [b_i, b_f, b_o, b_z],
 where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
 If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).</p>
-</div></blockquote>
-<p><strong>W_h_back: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_o, R_z],
+</dd>
+<dt><strong>W_h_back: [numpy.array]</strong></dt>
+<dd><p class="first last">List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_o, R_z],
 where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, hidden_size).</p>
-</div></blockquote>
-<p><strong>W_x_back: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_o, W_z],
+</dd>
+<dt><strong>W_x_back: [numpy.array]</strong></dt>
+<dd><p class="first last">List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_o, W_z],
 where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, input_size).</p>
-</div></blockquote>
-<p><strong>b_back: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of biases for the backward layer. The ordering is [b_i, b_f, b_o, b_z],
+</dd>
+<dt><strong>b_back: [numpy.array]</strong></dt>
+<dd><p class="first last">List of biases for the backward layer. The ordering is [b_i, b_f, b_o, b_z],
 where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
 The shapes of the biases (hidden_size).</p>
-</div></blockquote>
-<p><strong>hidden_size: int</strong></p>
-<blockquote>
-<div><p>Number of hidden units. This is equal to the number of channels of output shape.</p>
-</div></blockquote>
-<p><strong>input_size: int</strong></p>
-<blockquote>
-<div><p>Number of the number of channels of input shape.</p>
-</div></blockquote>
-<p><strong>input_names: [str]</strong></p>
-<blockquote>
-<div><p>The input blob name list of this layer, in the order of [x, h_input, c_input, h_reverse_input, c_reverse_input].</p>
-</div></blockquote>
-<p><strong>output_names: [str]</strong></p>
-<blockquote>
-<div><p>The output blob name list of this layer, in the order of [y, h_output, c_output, h_reverse_output, c_reverse_output].</p>
-</div></blockquote>
-<p><strong>inner_activation: str</strong></p>
-<blockquote>
-<div><p>Inner activation function used at input and forget gate. Can be one of the following option:
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
-Defaults to ‘SIGMOID’.</p>
-</div></blockquote>
-<p><strong>cell_state_update_activation: str</strong></p>
-<blockquote>
-<div><p>Cell state update activation function used at the cell state update gate.
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
-Defaults to ‘TANH’.</p>
-</div></blockquote>
-<p><strong>output_activation: str</strong></p>
-<blockquote>
-<div><p>Activation function used at the output gate. Can be one of the following option:
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
-Defaults to ‘TANH’.</p>
-</div></blockquote>
-<p><strong>peep: [numpy.array] | None</strong></p>
-<blockquote>
-<div><p>List of peephole vectors for the forward layer. The ordering is [p_i, p_f, p_o],
+</dd>
+<dt><strong>hidden_size: int</strong></dt>
+<dd><p class="first last">Number of hidden units. This is equal to the number of channels of output shape.</p>
+</dd>
+<dt><strong>input_size: int</strong></dt>
+<dd><p class="first last">Number of the number of channels of input shape.</p>
+</dd>
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first last">The input blob name list of this layer, in the order of [x, h_input, c_input, h_reverse_input, c_reverse_input].</p>
+</dd>
+<dt><strong>output_names: [str]</strong></dt>
+<dd><p class="first last">The output blob name list of this layer, in the order of [y, h_output, c_output, h_reverse_output, c_reverse_output].</p>
+</dd>
+<dt><strong>inner_activation: str</strong></dt>
+<dd><p class="first last">Inner activation function used at input and forget gate. Can be one of the following option:
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
+Defaults to &#8216;SIGMOID&#8217;.</p>
+</dd>
+<dt><strong>cell_state_update_activation: str</strong></dt>
+<dd><p class="first last">Cell state update activation function used at the cell state update gate.
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
+Defaults to &#8216;TANH&#8217;.</p>
+</dd>
+<dt><strong>output_activation: str</strong></dt>
+<dd><p class="first last">Activation function used at the output gate. Can be one of the following option:
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
+Defaults to &#8216;TANH&#8217;.</p>
+</dd>
+<dt><strong>peep: [numpy.array] | None</strong></dt>
+<dd><p class="first last">List of peephole vectors for the forward layer. The ordering is [p_i, p_f, p_o],
 where p_i, p_f, and p_o are peephole vectors at input gate, forget gate, output gate.
 The shapes of the peephole vectors are (hidden_size,). Defaults to None.</p>
-</div></blockquote>
-<p><strong>peep_back: [numpy.array] | None</strong></p>
-<blockquote>
-<div><p>List of peephole vectors for the backward layer. The ordering is [p_i, p_f, p_o],
+</dd>
+<dt><strong>peep_back: [numpy.array] | None</strong></dt>
+<dd><p class="first last">List of peephole vectors for the backward layer. The ordering is [p_i, p_f, p_o],
 where p_i, p_f, and p_o are peephole vectors at input gate, forget gate, output gate.
 The shapes of the peephole vectors are (hidden_size,). Defaults to None.</p>
-</div></blockquote>
-<p><strong>output_all: boolean</strong></p>
-<blockquote>
-<div><p>Whether the LSTM layer should output at every time step. Defaults to False.</p>
-<ul class="simple">
+</dd>
+<dt><strong>output_all: boolean</strong></dt>
+<dd><p class="first">Whether the LSTM layer should output at every time step. Defaults to False.</p>
+<ul class="last simple">
 <li>If False, the output is the result after the final state update.</li>
 <li>If True, the output is a sequence, containing outputs at all time steps.</li>
 </ul>
-</div></blockquote>
-<p><strong>forget_bias: boolean</strong></p>
-<blockquote>
-<div><p>If True, a vector of 1s is added to forget gate bias. Defaults to False.</p>
-</div></blockquote>
-<p><strong>coupled_input_forget_gate</strong> : boolean</p>
-<blockquote>
-<div><p>If True, the input gate and forget gate is coupled. i.e. forget gate is not used.
+</dd>
+<dt><strong>forget_bias: boolean</strong></dt>
+<dd><p class="first last">If True, a vector of 1s is added to forget gate bias. Defaults to False.</p>
+</dd>
+<dt><strong>coupled_input_forget_gate</strong> <span class="classifier-delimiter">:</span> <span class="classifier">boolean</span></dt>
+<dd><p class="first last">If True, the input gate and forget gate is coupled. i.e. forget gate is not used.
 Defaults to False.</p>
-</div></blockquote>
-<p><strong>cell_clip_threshold</strong> : float</p>
-<blockquote class="last">
-<div><p>The limit on the maximum and minimum values on the cell state.
+</dd>
+<dt><strong>cell_clip_threshold</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first last">The limit on the maximum and minimum values on the cell state.
 Defaults to 50.0.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -554,7 +544,7 @@ Defaults to 50.0.</p>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution">
-<code class="descname">add_convolution</code><span class="sig-paren">(</span><em>name, kernel_channels, output_channels, height, width, stride_height, stride_width, border_mode, groups, W, b, has_bias, is_deconv=False, output_shape=None, input_name=’data’, output_name=’out’, dilation_factors=[1, 1], padding_top=0, padding_bottom=0, padding_left=0, padding_right=0, same_padding_asymmetry_mode=’BOTTOM_RIGHT_HEAVY’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_convolution</code><span class="sig-paren">(</span><em>name, kernel_channels, output_channels, height, width, stride_height, stride_width, border_mode, groups, W, b, has_bias, is_deconv=False, output_shape=None, input_name='data', output_name='out', dilation_factors=[1, 1], padding_top=0, padding_bottom=0, padding_left=0, padding_right=0, same_padding_asymmetry_mode='BOTTOM_RIGHT_HEAVY', **kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_convolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a convolution layer to the network.</p>
 <p>Please see the ConvolutionLayerParams in Core ML neural network
 protobuf message for more information about input and output blob dimensions.</p>
@@ -562,108 +552,111 @@ protobuf message for more information about input and output blob dimensions.</p
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>kernel_channels: int</strong></p>
-<blockquote>
-<div><p>Number of channels for the convolution kernels.</p>
-</div></blockquote>
-<p><strong>output_channels: int</strong></p>
-<blockquote>
-<div><p>Number of filter kernels. This is equal to the number of channels in the output blob.</p>
-</div></blockquote>
-<p><strong>height: int</strong></p>
-<blockquote>
-<div><p>Height of each kernel.</p>
-</div></blockquote>
-<p><strong>width: int</strong></p>
-<blockquote>
-<div><p>Width of each kernel.</p>
-</div></blockquote>
-<p><strong>stride_height: int</strong></p>
-<blockquote>
-<div><p>Stride along the height direction.</p>
-</div></blockquote>
-<p><strong>stride_width: int</strong></p>
-<blockquote>
-<div><p>Stride along the height direction.</p>
-</div></blockquote>
-<p><strong>border_mode: str</strong></p>
-<blockquote>
-<div><p>Option for the padding type and output blob shape. Can be either ‘valid’ or ‘same’.
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>kernel_channels: int</strong></dt>
+<dd><p class="first last">Number of channels for the convolution kernels.</p>
+</dd>
+<dt><strong>output_channels: int</strong></dt>
+<dd><p class="first last">Number of filter kernels. This is equal to the number of channels in the output blob.</p>
+</dd>
+<dt><strong>height: int</strong></dt>
+<dd><p class="first last">Height of each kernel.</p>
+</dd>
+<dt><strong>width: int</strong></dt>
+<dd><p class="first last">Width of each kernel.</p>
+</dd>
+<dt><strong>stride_height: int</strong></dt>
+<dd><p class="first last">Stride along the height direction.</p>
+</dd>
+<dt><strong>stride_width: int</strong></dt>
+<dd><p class="first last">Stride along the height direction.</p>
+</dd>
+<dt><strong>border_mode: str</strong></dt>
+<dd><p class="first last">Option for the padding type and output blob shape. Can be either &#8216;valid&#8217; or &#8216;same&#8217;.
 Kindly refer to NeuralNetwork.proto for details.</p>
-</div></blockquote>
-<p><strong>groups: int</strong></p>
-<blockquote>
-<div><p>Number of kernel groups. Input is divided into groups along the channel axis. Each kernel group share the same weights.</p>
-</div></blockquote>
-<p><strong>W: numpy.array</strong></p>
-<blockquote>
-<div><p>Weights of the convolution kernels.</p>
+</dd>
+<dt><strong>groups: int</strong></dt>
+<dd><p class="first last">Number of kernel groups. Input is divided into groups along the channel axis. Each kernel group share the same weights.</p>
+</dd>
+<dt><strong>W: numpy.array or bytes()</strong></dt>
+<dd><p class="first">Weight of the convolution kernels.</p>
 <ul class="simple">
 <li>If is_deconv is False, W should have shape (height, width, kernel_channels, output_channels), where kernel_channel = input_channels / groups</li>
 <li>If is_deconv is True, W should have shape (height, width, kernel_channels, output_channels / groups), where kernel_channel = input_channels</li>
 </ul>
-</div></blockquote>
-<p><strong>b: numpy.array</strong></p>
-<blockquote>
-<div><p>Biases of the convolution kernels. b should have shape (outputChannels, ).</p>
-</div></blockquote>
-<p><strong>has_bias: boolean</strong></p>
-<blockquote>
-<div><p>Whether bias is ignored.</p>
-<ul class="simple">
+<p class="last">If W is of type bytes(), i.e. quantized, other quantization related arguments must be provided as well (see below).</p>
+</dd>
+<dt><strong>b: numpy.array</strong></dt>
+<dd><p class="first last">Biases of the convolution kernels. b should have shape (outputChannels, ).</p>
+</dd>
+<dt><strong>has_bias: boolean</strong></dt>
+<dd><p class="first">Whether bias is ignored.</p>
+<ul class="last simple">
 <li>If True, bias is not ignored.</li>
 <li>If False, bias is ignored.</li>
 </ul>
-</div></blockquote>
-<p><strong>is_deconv: boolean</strong></p>
-<blockquote>
-<div><p>Whether the convolution layer is performing a convolution or a transposed convolution (deconvolution).</p>
-<ul class="simple">
+</dd>
+<dt><strong>is_deconv: boolean</strong></dt>
+<dd><p class="first">Whether the convolution layer is performing a convolution or a transposed convolution (deconvolution).</p>
+<ul class="last simple">
 <li>If True, the convolution layer is performing transposed convolution.</li>
 <li>If False, the convolution layer is performing regular convolution.</li>
 </ul>
-</div></blockquote>
-<p><strong>output_shape: tuple | None</strong></p>
-<blockquote>
-<div><p>Either None or a 2-tuple, specifying the output shape (output_height, output_width). Used only when is_deconv == True.
+</dd>
+<dt><strong>output_shape: tuple | None</strong></dt>
+<dd><p class="first last">Either None or a 2-tuple, specifying the output shape (output_height, output_width). Used only when is_deconv == True.
 When is_deconv == False, this parameter is ignored. 
 If it is None, the output shape is calculated automatically using the border_mode.
 Kindly refer to NeuralNetwork.proto for details.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>dilation_factors: [int]</strong></p>
-<blockquote>
-<div><p>Dilation factors across height and width directions. Must be a list of two positive integers. 
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>dilation_factors: [int]</strong></dt>
+<dd><p class="first last">Dilation factors across height and width directions. Must be a list of two positive integers. 
 Defaults to [1,1]</p>
-</div></blockquote>
-<p><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></p>
-<blockquote>
-<div><p>values of height (top, bottom) and width (left, right) padding to be used if border_more is “valid”.</p>
-</div></blockquote>
-<p><strong>same_padding_asymmetry_mode</strong> : str.</p>
-<blockquote>
-<div><p>Type of asymmetric padding to be used when  border_mode is ‘same’. 
-Can be either ‘BOTTOM_RIGHT_HEAVY’ or  ‘TOP_LEFT_HEAVY’. 
+</dd>
+<dt><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></dt>
+<dd><p class="first last">values of height (top, bottom) and width (left, right) padding to be used if border_more is &#8220;valid&#8221;.</p>
+</dd>
+<dt><strong>same_padding_asymmetry_mode</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str.</span></dt>
+<dd><p class="first last">Type of asymmetric padding to be used when  border_mode is &#8216;same&#8217;. 
+Can be either &#8216;BOTTOM_RIGHT_HEAVY&#8217; or  &#8216;TOP_LEFT_HEAVY&#8217;. 
 Kindly refer to NeuralNetwork.proto for details.</p>
-</div></blockquote>
-<p><strong>Depthwise convolution is a special case of convolution, where we have:</strong></p>
-<blockquote class="last">
-<div><p>kernel_channels = 1 (== input_channels / groups)
+</dd>
+<dt><strong>Depthwise convolution is a special case of convolution, where we have:</strong></dt>
+<dd><p class="first last">kernel_channels = 1 (== input_channels / groups)
 output_channels = channel_multiplier * input_channels
 groups = input_channels
 W : [Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]</p>
-</div></blockquote>
+</dd>
+<dt><strong>Quantization arguments expected in kwargs, when W is of type bytes():</strong></dt>
+<dd><dl class="first last docutils">
+<dt>quantization_type <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">When weights are quantized (i.e. W is of type bytes()), this should be either &#8220;linear&#8221; or &#8220;lut&#8221;.</p>
+</dd>
+<dt>nbits: int</dt>
+<dd><p class="first last">Should be between 1 and 8 (inclusive). Number of bits per weight value. Only applicable when
+weights are quantized.</p>
+</dd>
+<dt>quant_scale: numpy.array(dtype=numpy.float32)</dt>
+<dd><p class="first last">scale vector to be used with linear quantization. Must be of length either 1 or output_channels.</p>
+</dd>
+<dt>quant_bias: numpy.array(dtype=numpy.float32)</dt>
+<dd><p class="first last">bias vector to be used with linear quantization. Must be of length either 1 or output_channels.</p>
+</dd>
+<dt>quant_lut: numpy.array(dtype=numpy.float32)</dt>
+<dd><p class="first last">the LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -691,44 +684,38 @@ on the dimension of the second blob with an offset.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>left: int</strong></p>
-<blockquote>
-<div><p>Number of elements to be cropped on the left side of the input blob. 
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>left: int</strong></dt>
+<dd><p class="first last">Number of elements to be cropped on the left side of the input blob. 
 When the crop layer takes 2 inputs, this parameter is ignored.</p>
-</div></blockquote>
-<p><strong>right: int</strong></p>
-<blockquote>
-<div><p>Number of elements to be cropped on the right side of the input blob.
+</dd>
+<dt><strong>right: int</strong></dt>
+<dd><p class="first last">Number of elements to be cropped on the right side of the input blob.
 When the crop layer takes 2 inputs, this parameter is ignored.</p>
-</div></blockquote>
-<p><strong>top: int</strong></p>
-<blockquote>
-<div><p>Number of elements to be cropped on the top of the input blob.
+</dd>
+<dt><strong>top: int</strong></dt>
+<dd><p class="first last">Number of elements to be cropped on the top of the input blob.
 When the crop layer takes 2 inputs, this parameter is ignored.</p>
-</div></blockquote>
-<p><strong>bottom: int</strong></p>
-<blockquote>
-<div><p>Number of elements to be cropped on the bottom of the input blob.
+</dd>
+<dt><strong>bottom: int</strong></dt>
+<dd><p class="first last">Number of elements to be cropped on the bottom of the input blob.
 When the crop layer takes 2 inputs, this parameter is ignored.</p>
-</div></blockquote>
-<p><strong>offset: [int]</strong></p>
-<blockquote>
-<div><p>Offset along the height and width directions when the crop layer takes 2 inputs. Must be a list of length 2.
+</dd>
+<dt><strong>offset: [int]</strong></dt>
+<dd><p class="first last">Offset along the height and width directions when the crop layer takes 2 inputs. Must be a list of length 2.
 When the crop layer takes 1 input, this parameter is ignored.</p>
-</div></blockquote>
-<p><strong>input_names: [str]</strong></p>
-<blockquote>
-<div><p>The input blob name(s) of this layer. Must be either a list of 1 string (1 input crop layer),
+</dd>
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first last">The input blob name(s) of this layer. Must be either a list of 1 string (1 input crop layer),
 or a list of 2 strings (2-input crop layer).</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote class="last">
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -740,6 +727,88 @@ or a list of 2 strings (2-input crop layer).</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop_resize">
+<code class="descname">add_crop_resize</code><span class="sig-paren">(</span><em>name</em>, <em>input_names</em>, <em>output_name</em>, <em>target_height=1</em>, <em>target_width=1</em>, <em>mode='STRICT_ALIGN_ENDPOINTS_MODE'</em>, <em>normalized_roi=False</em>, <em>box_indices_mode='CORNERS_HEIGHT_FIRST'</em>, <em>spatial_scale=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop_resize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add crop resize layer to the model. A layer that extracts cropped spatial patches or RoIs (regions of interest) 
+from the input and resizes them to a pre-specified size using bilinear interpolation. 
+Note that RoI Align layer can be implemented with this layer followed by a pooling layer.
+Kindly refer to NeuralNetwork.proto for details.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first">Must be a list of two names: image feature map and crop indices/RoI input. 
+First input corresponds to a blob with shape <code class="docutils literal"><span class="pre">[1,</span> <span class="pre">Batch,</span> <span class="pre">C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>. This represents a batch of input image feature data with C channels.
+The second input shape must be <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> or <code class="docutils literal"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>. This represents the bounding box coordinates for N patches/RoIs. 
+N: number of patches/RoIs to be extracted
+If RoI shape = [N, 1, 4, 1, 1]</p>
+<blockquote>
+<div><p>The channel axis corresponds to the four coordinates specifying the bounding box.
+All the N RoIs are extracted from all the batches of the input.</p>
+</div></blockquote>
+<dl class="last docutils">
+<dt>If RoI shape = [N, 1, 5, 1, 1]</dt>
+<dd><dl class="first docutils">
+<dt>The first element of the channel axis specifies the input batch id from which to extract the RoI and </dt>
+<dd><p class="first last">must be in the interval <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">Batch</span> <span class="pre">-</span> <span class="pre">1]</span></code>. That is, n-th RoI is extracted from the RoI[n,0,0,0]-th input batch id.</p>
+</dd>
+</dl>
+<p class="last">The last four elements of the channel axis specify the bounding box coordinates.</p>
+</dd>
+</dl>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>target_height: int</strong></dt>
+<dd><p class="first last">Output height dimension.</p>
+</dd>
+<dt><strong>target_width: int</strong></dt>
+<dd><p class="first last">Output width dimension.</p>
+</dd>
+<dt><strong>mode: str</strong></dt>
+<dd><p class="first last">Following values are supported: &#8216;STRICT_ALIGN_ENDPOINTS_MODE&#8217;, &#8216;ALIGN_ENDPOINTS_MODE&#8217;, &#8216;UPSAMPLE_MODE&#8217;, &#8216;ROI_ALIGN_MODE&#8217;.
+This parameter determines the sampling grid used for bilinear interpolation. Kindly refer to NeuralNetwork.proto for details.</p>
+</dd>
+<dt><strong>normalized_roi: bool</strong></dt>
+<dd><dl class="first docutils">
+<dt>If true the bounding box coordinates must be in the interval [0, 1].</dt>
+<dd><p class="first last">They are scaled by (input_height - 1), (input_width - 1), i.e. based on the input spatial dimensions.  
+If false the bounding box coordinates must be in the interval
+[0, input_height - 1] and [0, input_width - 1], respectively for height and width dimensions.</p>
+</dd>
+<dt>box_indices_mode: str</dt>
+<dd><p class="first last">Following values are supported: &#8216;CORNERS_HEIGHT_FIRST&#8217;, &#8216;CORNERS_WIDTH_FIRST&#8217;, &#8216;CENTER_SIZE_HEIGHT_FIRST&#8217;, &#8216;CENTER_SIZE_WIDTH_FIRST&#8217;
+Representation used to interpret the bounding box coordinates (RoI) input. Kindly refer to NeuralNetwork.proto for details.
+&#8216;CORNERS_HEIGHT_FIRST&#8217;: [h_start, w_start, h_end, w_end]
+&#8216;CORNERS_WIDTH_FIRST&#8217;: [w_start, h_start, w_end, h_end]
+&#8216;CENTER_SIZE_HEIGHT_FIRST&#8217;: [h_center, w_center, box_height, box_width]</p>
+</dd>
+</dl>
+<p class="last">&#8216;CENTER_SIZE_WIDTH_FIRST&#8217;: [w_center, h_center, box_width, box_height]</p>
+</dd>
+<dt><strong>spatial_scale: float</strong></dt>
+<dd><p class="first last">Additional spatial scale that multiplies the bounding box coordinates. 
+Generally used while implementing the RoI Align layer, 
+which uses unnormalized RoI coordinates along with a spatial scale less than or equal to 1.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_resize_bilinear" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_resize_bilinear"><code class="xref py py-obj docutils literal"><span class="pre">add_resize_bilinear</span></code></a>, <a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_crop"><code class="xref py py-obj docutils literal"><span class="pre">add_crop</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_custom">
 <code class="descname">add_custom</code><span class="sig-paren">(</span><em>name</em>, <em>input_names</em>, <em>output_names</em>, <em>custom_proto_spec=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_custom" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a custom layer.</p>
@@ -747,22 +816,20 @@ or a list of 2 strings (2-input crop layer).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_names: [str]</strong></p>
-<blockquote>
-<div><p>The input blob names to this layer.</p>
-</div></blockquote>
-<p><strong>output_names: [str]</strong></p>
-<blockquote>
-<div><p>The output blob names from this layer.</p>
-</div></blockquote>
-<p><strong>custom_proto_spec: CustomLayerParams</strong></p>
-<blockquote class="last">
-<div><p>A protobuf CustomLayerParams message. This can also be left blank and filled in later.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first last">The input blob names to this layer.</p>
+</dd>
+<dt><strong>output_names: [str]</strong></dt>
+<dd><p class="first last">The output blob names from this layer.</p>
+</dd>
+<dt><strong>custom_proto_spec: CustomLayerParams</strong></dt>
+<dd><p class="first last">A protobuf CustomLayerParams message. This can also be left blank and filled in later.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -777,36 +844,36 @@ or a list of 2 strings (2-input crop layer).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>The name of this layer</strong></p>
-<p><strong>name: str</strong></p>
-<p><strong>input_names: [str]</strong></p>
-<blockquote>
-<div><p>A list of input blob names of this layer. The input blobs should have the same shape.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>mode: str</strong></p>
-<blockquote>
-<div><p>A string specifying the mode of the elementwise layer. It can be one of the following:</p>
-<ul class="simple">
-<li>‘CONCAT’: concatenate input blobs along the channel axis.</li>
-<li>‘SEQUENCE_CONCAT’: concatenate input blobs along the sequence axis.</li>
-<li>‘ADD’: perform an element-wise summation over the input blobs.</li>
-<li>‘MULTIPLY’: perform an element-wise multiplication over the input blobs.</li>
-<li>‘DOT’: compute the dot product of the two input blobs. In this mode, the length of input_names should be 2.</li>
-<li>‘COS’: compute the cosine similarity of the two input blobs. In this mode, the length of input_names should be 2.</li>
-<li>‘MAX’: compute the element-wise maximum over the input blobs.</li>
-<li>‘MIN’: compute the element-wise minimum over the input blobs.</li>
-<li>‘AVE’: compute the element-wise average over the input blobs.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>The name of this layer</strong></dt>
+<dd></dd>
+<dt><strong>name: str</strong></dt>
+<dd></dd>
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first last">A list of input blob names of this layer. The input blobs should have the same shape.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>mode: str</strong></dt>
+<dd><p class="first">A string specifying the mode of the elementwise layer. It can be one of the following:</p>
+<ul class="last simple">
+<li>&#8216;CONCAT&#8217;: concatenate input blobs along the channel axis.</li>
+<li>&#8216;SEQUENCE_CONCAT&#8217;: concatenate input blobs along the sequence axis.</li>
+<li>&#8216;ADD&#8217;: perform an element-wise summation over the input blobs.</li>
+<li>&#8216;MULTIPLY&#8217;: perform an element-wise multiplication over the input blobs.</li>
+<li>&#8216;DOT&#8217;: compute the dot product of the two input blobs. In this mode, the length of input_names should be 2.</li>
+<li>&#8216;COS&#8217;: compute the cosine similarity of the two input blobs. In this mode, the length of input_names should be 2.</li>
+<li>&#8216;MAX&#8217;: compute the element-wise maximum over the input blobs.</li>
+<li>&#8216;MIN&#8217;: compute the element-wise minimum over the input blobs.</li>
+<li>&#8216;AVE&#8217;: compute the element-wise average over the input blobs.</li>
 </ul>
-</div></blockquote>
-<p><strong>alpha: float</strong></p>
-<blockquote class="last">
-<div><p>if mode == ‘ADD’ and there is only one input_name, alpha is added to the input
-if mode == ‘MULTIPLY’ and there is only one input_name, alpha is multiplied to the input</p>
-</div></blockquote>
+</dd>
+<dt><strong>alpha: float</strong></dt>
+<dd><p class="first last">if mode == &#8216;ADD&#8217; and there is only one input_name, alpha is added to the input
+if mode == &#8216;MULTIPLY&#8217; and there is only one input_name, alpha is multiplied to the input</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -825,42 +892,36 @@ if mode == ‘MULTIPLY’ and there is only one input_name, alpha is multiplied 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer</p>
-</div></blockquote>
-<p><strong>W: numpy.array</strong></p>
-<blockquote>
-<div><p>Weight matrix of shape (output_channels, input_dim).</p>
-</div></blockquote>
-<p><strong>b: numpy.array</strong></p>
-<blockquote>
-<div><p>Bias vector of shape (output_channels, ).</p>
-</div></blockquote>
-<p><strong>input_dim: int</strong></p>
-<blockquote>
-<div><p>Size of the vocabulary (1 + maximum integer index of the words).</p>
-</div></blockquote>
-<p><strong>output_channels: int</strong></p>
-<blockquote>
-<div><p>Number of output channels.</p>
-</div></blockquote>
-<p><strong>has_bias: boolean</strong></p>
-<blockquote>
-<div><p>Whether the bias vector of this layer is ignored in the spec.</p>
-<ul class="simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer</p>
+</dd>
+<dt><strong>W: numpy.array</strong></dt>
+<dd><p class="first last">Weight matrix of shape (output_channels, input_dim).</p>
+</dd>
+<dt><strong>b: numpy.array</strong></dt>
+<dd><p class="first last">Bias vector of shape (output_channels, ).</p>
+</dd>
+<dt><strong>input_dim: int</strong></dt>
+<dd><p class="first last">Size of the vocabulary (1 + maximum integer index of the words).</p>
+</dd>
+<dt><strong>output_channels: int</strong></dt>
+<dd><p class="first last">Number of output channels.</p>
+</dd>
+<dt><strong>has_bias: boolean</strong></dt>
+<dd><p class="first">Whether the bias vector of this layer is ignored in the spec.</p>
+<ul class="last simple">
 <li>If True, the bias vector of this layer is not ignored.</li>
 <li>If False, the bias vector is ignored.</li>
 </ul>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote class="last">
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -879,25 +940,23 @@ if mode == ‘MULTIPLY’ and there is only one input_name, alpha is multiplied 
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>mode: int</strong></p>
-<blockquote>
-<div><ul class="simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>mode: int</strong></dt>
+<dd><ul class="first last simple">
 <li>If mode == 0, the flatten layer is in CHANNEL_FIRST mode.</li>
 <li>If mode == 1, the flatten layer is in CHANNEL_LAST mode.</li>
 </ul>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote class="last">
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -910,80 +969,70 @@ if mode == ‘MULTIPLY’ and there is only one input_name, alpha is multiplied 
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru">
-<code class="descname">add_gru</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>activation=’TANH’</em>, <em>inner_activation=’SIGMOID_HARD’</em>, <em>output_all=False</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_gru</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>activation='TANH'</em>, <em>inner_activation='SIGMOID_HARD'</em>, <em>output_all=False</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_gru" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Gated-Recurrent Unit (GRU) layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>W_h: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of recursion weight matrices. The ordering is [R_z, R_r, R_o],
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>W_h: [numpy.array]</strong></dt>
+<dd><p class="first last">List of recursion weight matrices. The ordering is [R_z, R_r, R_o],
 where R_z, R_r and R_o are weight matrices at update gate, reset gate and output gate.
 The shapes of these matrices are (hidden_size, hidden_size).</p>
-</div></blockquote>
-<p><strong>W_x: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of input weight matrices. The ordering is [W_z, W_r, W_o],
+</dd>
+<dt><strong>W_x: [numpy.array]</strong></dt>
+<dd><p class="first last">List of input weight matrices. The ordering is [W_z, W_r, W_o],
 where W_z, W_r, and W_o are weight matrices at update gate, reset gate and output gate.
 The shapes of these matrices are (hidden_size, input_size).</p>
-</div></blockquote>
-<p><strong>b: [numpy.array] | None</strong></p>
-<blockquote>
-<div><p>List of biases of the GRU layer. The ordering is [b_z, b_r, b_o],
+</dd>
+<dt><strong>b: [numpy.array] | None</strong></dt>
+<dd><p class="first last">List of biases of the GRU layer. The ordering is [b_z, b_r, b_o],
 where b_z, b_r, b_o are biases at update gate, reset gate and output gate.
 If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).</p>
-</div></blockquote>
-<p><strong>hidden_size: int</strong></p>
-<blockquote>
-<div><p>Number of hidden units. This is equal to the number of channels of output shape.</p>
-</div></blockquote>
-<p><strong>input_size: int</strong></p>
-<blockquote>
-<div><p>Number of the number of channels of input shape.</p>
-</div></blockquote>
-<p><strong>activation: str</strong></p>
-<blockquote>
-<div><p>Activation function used at the output gate. Can be one of the following option:
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
-Defaults to ‘TANH’. 
+</dd>
+<dt><strong>hidden_size: int</strong></dt>
+<dd><p class="first last">Number of hidden units. This is equal to the number of channels of output shape.</p>
+</dd>
+<dt><strong>input_size: int</strong></dt>
+<dd><p class="first last">Number of the number of channels of input shape.</p>
+</dd>
+<dt><strong>activation: str</strong></dt>
+<dd><p class="first last">Activation function used at the output gate. Can be one of the following option:
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
+Defaults to &#8216;TANH&#8217;. 
 See add_activation for more detailed description.</p>
-</div></blockquote>
-<p><strong>inner_activation: str</strong></p>
-<blockquote>
-<div><p>Inner activation function used at update and reset gates. Can be one of the following option:
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
-Defaults to ‘SIGMOID_HARD’.
+</dd>
+<dt><strong>inner_activation: str</strong></dt>
+<dd><p class="first last">Inner activation function used at update and reset gates. Can be one of the following option:
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
+Defaults to &#8216;SIGMOID_HARD&#8217;.
 See add_activation for more detailed description.</p>
-</div></blockquote>
-<p><strong>input_names: [str]</strong></p>
-<blockquote>
-<div><p>The input blob name list of this layer, in the order of [x, h_input].</p>
-</div></blockquote>
-<p><strong>output_names: [str]</strong></p>
-<blockquote>
-<div><p>The output blob name list of this layer, in the order of [y, h_output].</p>
-</div></blockquote>
-<p><strong>output_all: boolean</strong></p>
-<blockquote>
-<div><p>Whether the recurrent layer should output at every time step.</p>
-<ul class="simple">
+</dd>
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first last">The input blob name list of this layer, in the order of [x, h_input].</p>
+</dd>
+<dt><strong>output_names: [str]</strong></dt>
+<dd><p class="first last">The output blob name list of this layer, in the order of [y, h_output].</p>
+</dd>
+<dt><strong>output_all: boolean</strong></dt>
+<dd><p class="first">Whether the recurrent layer should output at every time step.</p>
+<ul class="last simple">
 <li>If False, the output is the result after the final state update.</li>
 <li>If True, the output is a sequence, containing outputs at all time steps.</li>
 </ul>
-</div></blockquote>
-<p><strong>reverse_input: boolean</strong></p>
-<blockquote class="last">
-<div><p>Whether the recurrent layer should process the input sequence in the reverse order.</p>
-<ul class="simple">
+</dd>
+<dt><strong>reverse_input: boolean</strong></dt>
+<dd><p class="first">Whether the recurrent layer should process the input sequence in the reverse order.</p>
+<ul class="last simple">
 <li>If False, the input sequence order is not reversed.</li>
 <li>If True, the input sequence order is reversed.</li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -996,48 +1045,63 @@ See add_activation for more detailed description.</p>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product">
-<code class="descname">add_inner_product</code><span class="sig-paren">(</span><em>name</em>, <em>W</em>, <em>b</em>, <em>input_channels</em>, <em>output_channels</em>, <em>has_bias</em>, <em>input_name</em>, <em>output_name</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_inner_product</code><span class="sig-paren">(</span><em>name</em>, <em>W</em>, <em>b</em>, <em>input_channels</em>, <em>output_channels</em>, <em>has_bias</em>, <em>input_name</em>, <em>output_name</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_inner_product" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add an inner product layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer</p>
-</div></blockquote>
-<p><strong>W: numpy.array</strong></p>
-<blockquote>
-<div><p>Weight matrix of shape (output_channels, input_channels).</p>
-</div></blockquote>
-<p><strong>b: numpy.array</strong></p>
-<blockquote>
-<div><p>Bias vector of shape (output_channels, ).</p>
-</div></blockquote>
-<p><strong>input_channels: int</strong></p>
-<blockquote>
-<div><p>Number of input channels.</p>
-</div></blockquote>
-<p><strong>output_channels: int</strong></p>
-<blockquote>
-<div><p>Number of output channels.</p>
-</div></blockquote>
-<p><strong>has_bias: boolean</strong></p>
-<blockquote>
-<div><p>Whether the bias vector of this layer is ignored in the spec.</p>
-<ul class="simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer</p>
+</dd>
+<dt><strong>W: numpy.array or bytes()</strong></dt>
+<dd><p class="first last">Weight matrix of shape (output_channels, input_channels)
+If W is of type bytes(), i.e. quantized, other quantization related arguments must be provided as well (see below).</p>
+</dd>
+<dt><strong>b: numpy.array</strong></dt>
+<dd><p class="first last">Bias vector of shape (output_channels, ).</p>
+</dd>
+<dt><strong>input_channels: int</strong></dt>
+<dd><p class="first last">Number of input channels.</p>
+</dd>
+<dt><strong>output_channels: int</strong></dt>
+<dd><p class="first last">Number of output channels.</p>
+</dd>
+<dt><strong>has_bias: boolean</strong></dt>
+<dd><p class="first">Whether the bias vector of this layer is ignored in the spec.</p>
+<ul class="last simple">
 <li>If True, the bias vector of this layer is not ignored.</li>
 <li>If False, the bias vector is ignored.</li>
 </ul>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote class="last">
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>Quantization arguments expected in kwargs, when W is of type bytes():</strong></dt>
+<dd><dl class="first last docutils">
+<dt>quantization_type <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">When weights are quantized (i.e. W is of type bytes()), this should be either &#8220;linear&#8221; or &#8220;lut&#8221;.</p>
+</dd>
+<dt>nbits: int</dt>
+<dd><p class="first last">Should be between 1 and 8 (inclusive). Number of bits per weight value. Only applicable when
+weights are quantized.</p>
+</dd>
+<dt>quant_scale: numpy.array(dtype=numpy.float32)</dt>
+<dd><p class="first last">scale vector to be used with linear quantization. Must be of length either 1 or output_channels.</p>
+</dd>
+<dt>quant_bias: numpy.array(dtype=numpy.float32)</dt>
+<dd><p class="first last">bias vector to be used with linear quantization. Must be of length either 1 or output_channels.</p>
+</dd>
+<dt>quant_lut: numpy.array(dtype=numpy.float32)</dt>
+<dd><p class="first last">the LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1057,22 +1121,20 @@ the square root of the sum of squares of all elements of the input along C, H an
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>epsilon: float</strong></p>
-<blockquote class="last">
-<div><p>small bias to avoid division by zero.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>epsilon: float</strong></dt>
+<dd><p class="first last">small bias to avoid division by zero.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1091,22 +1153,20 @@ the square root of the sum of squares of all elements of the input along C, H an
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>constant_value: numpy.array</strong></p>
-<blockquote>
-<div><p>value of the constant as a numpy array.</p>
-</div></blockquote>
-<p><strong>shape: [int]</strong></p>
-<blockquote class="last">
-<div><p>List of ints representing the shape of the constant. Must be of length 3: [C,H,W]</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>constant_value: numpy.array</strong></dt>
+<dd><p class="first last">value of the constant as a numpy array.</p>
+</dd>
+<dt><strong>shape: [int]</strong></dt>
+<dd><p class="first last">List of ints representing the shape of the constant. Must be of length 3: [C,H,W]</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1121,39 +1181,34 @@ the square root of the sum of squares of all elements of the input along C, H an
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn">
 <code class="descname">add_lrn</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>alpha</em>, <em>beta</em>, <em>local_size</em>, <em>k=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_lrn" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a LRN (local response normalization) layer. Please see the LRNLayerParams message in Core ML neural network
-protobuf for more information about the operation of this layer. Supports “across” channels normalization.</p>
+protobuf for more information about the operation of this layer. Supports &#8220;across&#8221; channels normalization.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>alpha: float</strong></p>
-<blockquote>
-<div><p>multiplicative constant in the denominator.</p>
-</div></blockquote>
-<p><strong>beta: float</strong></p>
-<blockquote>
-<div><p>exponent of the normalizing term in the denominator.</p>
-</div></blockquote>
-<p><strong>k: float</strong></p>
-<blockquote>
-<div><p>bias term in the denominator. Must be positive.</p>
-</div></blockquote>
-<p><strong>local_size: int</strong></p>
-<blockquote class="last">
-<div><p>size of the neighborhood along the channel axis.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>alpha: float</strong></dt>
+<dd><p class="first last">multiplicative constant in the denominator.</p>
+</dd>
+<dt><strong>beta: float</strong></dt>
+<dd><p class="first last">exponent of the normalizing term in the denominator.</p>
+</dd>
+<dt><strong>k: float</strong></dt>
+<dd><p class="first last">bias term in the denominator. Must be positive.</p>
+</dd>
+<dt><strong>local_size: int</strong></dt>
+<dd><p class="first last">size of the neighborhood along the channel axis.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1172,31 +1227,27 @@ protobuf for more information about the operation of this layer. Supports “acr
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>across_channels: boolean</strong></p>
-<blockquote>
-<div><p>If False, each channel plane is normalized separately
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>across_channels: boolean</strong></dt>
+<dd><p class="first last">If False, each channel plane is normalized separately
 If True, mean/variance is computed across all C, H and W dimensions</p>
-</div></blockquote>
-<p><strong>normalize_variance: boolean</strong></p>
-<blockquote>
-<div><p>If False, only mean subtraction is performed.</p>
-</div></blockquote>
-<p><strong>epsilon: float</strong></p>
-<blockquote class="last">
-<div><p>small bias to avoid division by zero.</p>
-</div></blockquote>
+</dd>
+<dt><strong>normalize_variance: boolean</strong></dt>
+<dd><p class="first last">If False, only mean subtraction is performed.</p>
+</dd>
+<dt><strong>epsilon: float</strong></dt>
+<dd><p class="first last">small bias to avoid division by zero.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1215,14 +1266,14 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>optionals_in: [str]</strong></p>
-<blockquote>
-<div><p>List of inputs that are optionals.</p>
-</div></blockquote>
-<p><strong>optionals_out: [str]</strong></p>
-<blockquote class="last">
-<div><p>List of outputs that are optionals.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>optionals_in: [str]</strong></dt>
+<dd><p class="first last">List of inputs that are optionals.</p>
+</dd>
+<dt><strong>optionals_out: [str]</strong></dt>
+<dd><p class="first last">List of outputs that are optionals.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1235,48 +1286,41 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_padding">
-<code class="descname">add_padding</code><span class="sig-paren">(</span><em>name</em>, <em>left=0</em>, <em>right=0</em>, <em>top=0</em>, <em>bottom=0</em>, <em>value=0</em>, <em>input_name=’data’</em>, <em>output_name=’out’</em>, <em>padding_type=’constant’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_padding" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_padding</code><span class="sig-paren">(</span><em>name</em>, <em>left=0</em>, <em>right=0</em>, <em>top=0</em>, <em>bottom=0</em>, <em>value=0</em>, <em>input_name='data'</em>, <em>output_name='out'</em>, <em>padding_type='constant'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_padding" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a padding layer to the model. Kindly refer to NeuralNetwork.proto for details.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>left: int</strong></p>
-<blockquote>
-<div><p>Number of elements to be padded on the left side of the input blob.</p>
-</div></blockquote>
-<p><strong>right: int</strong></p>
-<blockquote>
-<div><p>Number of elements to be padded on the right side of the input blob.</p>
-</div></blockquote>
-<p><strong>top: int</strong></p>
-<blockquote>
-<div><p>Number of elements to be padded on the top of the input blob.</p>
-</div></blockquote>
-<p><strong>bottom: int</strong></p>
-<blockquote>
-<div><p>Number of elements to be padded on the bottom of the input blob.</p>
-</div></blockquote>
-<p><strong>value: float</strong></p>
-<blockquote>
-<div><p>Value of the elements padded. Used only when padding_type = ‘constant’</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>padding_type: str</strong></p>
-<blockquote class="last">
-<div><p>Type of the padding. Can be one of ‘constant’, ‘reflection’ or ‘replication’</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>left: int</strong></dt>
+<dd><p class="first last">Number of elements to be padded on the left side of the input blob.</p>
+</dd>
+<dt><strong>right: int</strong></dt>
+<dd><p class="first last">Number of elements to be padded on the right side of the input blob.</p>
+</dd>
+<dt><strong>top: int</strong></dt>
+<dd><p class="first last">Number of elements to be padded on the top of the input blob.</p>
+</dd>
+<dt><strong>bottom: int</strong></dt>
+<dd><p class="first last">Number of elements to be padded on the bottom of the input blob.</p>
+</dd>
+<dt><strong>value: float</strong></dt>
+<dd><p class="first last">Value of the elements padded. Used only when padding_type = &#8216;constant&#8217;</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>padding_type: str</strong></dt>
+<dd><p class="first last">Type of the padding. Can be one of &#8216;constant&#8217;, &#8216;reflection&#8217; or &#8216;replication&#8217;</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1295,13 +1339,12 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>dim: tuple</strong></p>
-<blockquote>
-<div><p>The order in which to permute the input dimensions = [seq,C,H,W].
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>dim: tuple</strong></dt>
+<dd><p class="first">The order in which to permute the input dimensions = [seq,C,H,W].
 Must have length 4 and a permutation of <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>.</p>
 <p>examples:</p>
 <p>Lets say input has shape: [seq, C, H, W].</p>
@@ -1314,17 +1357,16 @@ with length <code class="docutils literal"><span class="pre">Seq</span></code> a
 then the output is a unit sequence of data with shape <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">1,</span> <span class="pre">Seq]</span></code>.</p>
 <p>If <code class="docutils literal"><span class="pre">dim</span></code> is set to <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1]</span></code>,
 the output is a reverse of the input: <code class="docutils literal"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W]</span> <span class="pre">-&gt;</span> <span class="pre">[W,</span> <span class="pre">H,</span> <span class="pre">C]</span></code>.</p>
-<p>If <code class="docutils literal"><span class="pre">dim</span></code> is not set, or is set to <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>,
+<p class="last">If <code class="docutils literal"><span class="pre">dim</span></code> is not set, or is set to <code class="docutils literal"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code>,
 the output is the same as the input.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote class="last">
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1337,79 +1379,68 @@ the output is the same as the input.</p>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling">
-<code class="descname">add_pooling</code><span class="sig-paren">(</span><em>name</em>, <em>height</em>, <em>width</em>, <em>stride_height</em>, <em>stride_width</em>, <em>layer_type</em>, <em>padding_type</em>, <em>input_name</em>, <em>output_name</em>, <em>exclude_pad_area=True</em>, <em>is_global=False</em>, <em>padding_top=0</em>, <em>padding_bottom=0</em>, <em>padding_left=0</em>, <em>padding_right=0</em>, <em>same_padding_asymmetry_mode=’BOTTOM_RIGHT_HEAVY’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_pooling</code><span class="sig-paren">(</span><em>name</em>, <em>height</em>, <em>width</em>, <em>stride_height</em>, <em>stride_width</em>, <em>layer_type</em>, <em>padding_type</em>, <em>input_name</em>, <em>output_name</em>, <em>exclude_pad_area=True</em>, <em>is_global=False</em>, <em>padding_top=0</em>, <em>padding_bottom=0</em>, <em>padding_left=0</em>, <em>padding_right=0</em>, <em>same_padding_asymmetry_mode='BOTTOM_RIGHT_HEAVY'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_pooling" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a pooling layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>height: int</strong></p>
-<blockquote>
-<div><p>Height of pooling region.</p>
-</div></blockquote>
-<p><strong>width: int</strong></p>
-<blockquote>
-<div><p>Width of pooling region.</p>
-</div></blockquote>
-<p><strong>stride_height: int</strong></p>
-<blockquote>
-<div><p>Stride along the height direction.</p>
-</div></blockquote>
-<p><strong>stride_width: int</strong></p>
-<blockquote>
-<div><p>Stride along the width direction.</p>
-</div></blockquote>
-<p><strong>layer_type: str</strong></p>
-<blockquote>
-<div><p>Type of pooling performed. Can either be ‘MAX’, ‘AVERAGE’ or ‘L2’.</p>
-</div></blockquote>
-<p><strong>padding_type: str</strong></p>
-<blockquote>
-<div><p>Option for the type of padding and output blob shape. Can be either ‘VALID’ , ‘SAME’ or ‘INCLUDE_LAST_PIXEL’. 
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>height: int</strong></dt>
+<dd><p class="first last">Height of pooling region.</p>
+</dd>
+<dt><strong>width: int</strong></dt>
+<dd><p class="first last">Width of pooling region.</p>
+</dd>
+<dt><strong>stride_height: int</strong></dt>
+<dd><p class="first last">Stride along the height direction.</p>
+</dd>
+<dt><strong>stride_width: int</strong></dt>
+<dd><p class="first last">Stride along the width direction.</p>
+</dd>
+<dt><strong>layer_type: str</strong></dt>
+<dd><p class="first last">Type of pooling performed. Can either be &#8216;MAX&#8217;, &#8216;AVERAGE&#8217; or &#8216;L2&#8217;.</p>
+</dd>
+<dt><strong>padding_type: str</strong></dt>
+<dd><p class="first last">Option for the type of padding and output blob shape. Can be either &#8216;VALID&#8217; , &#8216;SAME&#8217; or &#8216;INCLUDE_LAST_PIXEL&#8217;. 
 Kindly refer to NeuralNetwork.proto for details.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>exclude_pad_area: boolean</strong></p>
-<blockquote>
-<div><p>Whether to exclude padded area in the ‘AVERAGE’ pooling operation. Defaults to True.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>exclude_pad_area: boolean</strong></dt>
+<dd><p class="first">Whether to exclude padded area in the &#8216;AVERAGE&#8217; pooling operation. Defaults to True.</p>
 <ul class="simple">
 <li>If True, the value of the padded area will be excluded.</li>
 <li>If False, the padded area will be included.</li>
 </ul>
-<p>This flag is only used with average pooling.</p>
-</div></blockquote>
-<p><strong>is_global: boolean</strong></p>
-<blockquote>
-<div><p>Whether the pooling operation is global. Defaults to False.</p>
+<p class="last">This flag is only used with average pooling.</p>
+</dd>
+<dt><strong>is_global: boolean</strong></dt>
+<dd><p class="first">Whether the pooling operation is global. Defaults to False.</p>
 <ul class="simple">
-<li>If True, the pooling operation is global – the pooling region is of the same size of the input blob.</li>
+<li>If True, the pooling operation is global &#8211; the pooling region is of the same size of the input blob.</li>
 </ul>
 <p>Parameters height, width, stride_height, stride_width will be ignored.</p>
-<ul class="simple">
+<ul class="last simple">
 <li>If False, the pooling operation is not global.</li>
 </ul>
-</div></blockquote>
-<p><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></p>
-<blockquote>
-<div><p>values of height (top, bottom) and width (left, right) padding to be used if padding type is “VALID” or “INCLUDE_LAST_PIXEL”.</p>
-</div></blockquote>
-<p><strong>same_padding_asymmetry_mode</strong> : str.</p>
-<blockquote class="last">
-<div><p>Type of asymmetric padding to be used when  padding_type = ‘SAME’. 
-Can be either ‘BOTTOM_RIGHT_HEAVY’ or  ‘TOP_LEFT_HEAVY’. 
+</dd>
+<dt><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></dt>
+<dd><p class="first last">values of height (top, bottom) and width (left, right) padding to be used if padding type is &#8220;VALID&#8221; or &#8220;INCLUDE_LAST_PIXEL&#8221;.</p>
+</dd>
+<dt><strong>same_padding_asymmetry_mode</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str.</span></dt>
+<dd><p class="first last">Type of asymmetric padding to be used when  padding_type = &#8216;SAME&#8217;. 
+Can be either &#8216;BOTTOM_RIGHT_HEAVY&#8217; or  &#8216;TOP_LEFT_HEAVY&#8217;. 
 Kindly refer to NeuralNetwork.proto for details.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1429,34 +1460,30 @@ along dimension(s) specified by the parameter axis.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>axis: str</strong></p>
-<blockquote>
-<div><p>dimensions along which the reduction operation is applied.
-Allowed values: ‘CHW’, ‘HW’, ‘C’, ‘H’, ‘W’</p>
-</div></blockquote>
-<p><strong>mode: str</strong></p>
-<blockquote>
-<div><p>Reduction operation to be applied.
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>axis: str</strong></dt>
+<dd><p class="first last">dimensions along which the reduction operation is applied.
+Allowed values: &#8216;CHW&#8217;, &#8216;HW&#8217;, &#8216;C&#8217;, &#8216;H&#8217;, &#8216;W&#8217;</p>
+</dd>
+<dt><strong>mode: str</strong></dt>
+<dd><p class="first last">Reduction operation to be applied.
 Allowed values:
-‘sum’, ‘avg’, ‘prod’, ‘logsum’, ‘sumsquare’, ‘L1’, ‘L2’, ‘max’, ‘min’, ‘argmax’.
-‘argmax’ is only suuported with axis values ‘C’, ‘H’ and ‘W’.</p>
-</div></blockquote>
-<p><strong>epsilon: float</strong></p>
-<blockquote class="last">
-<div><p>number that is added to the input when ‘logsum’ function is applied.</p>
-</div></blockquote>
+&#8216;sum&#8217;, &#8216;avg&#8217;, &#8216;prod&#8217;, &#8216;logsum&#8217;, &#8216;sumsquare&#8217;, &#8216;L1&#8217;, &#8216;L2&#8217;, &#8216;max&#8217;, &#8216;min&#8217;, &#8216;argmax&#8217;.
+&#8216;argmax&#8217; is only suuported with axis values &#8216;C&#8217;, &#8216;H&#8217; and &#8216;W&#8217;.</p>
+</dd>
+<dt><strong>epsilon: float</strong></dt>
+<dd><p class="first last">number that is added to the input when &#8216;logsum&#8217; function is applied.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1469,41 +1496,38 @@ Allowed values:
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reorganize_data">
-<code class="descname">add_reorganize_data</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>mode=’SPACE_TO_DEPTH’</em>, <em>block_size=2</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reorganize_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add a data reorganization layer of type “SPACE_TO_DEPTH” or “DEPTH_TO_SPACE”.</p>
+<code class="descname">add_reorganize_data</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>mode='SPACE_TO_DEPTH'</em>, <em>block_size=2</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_reorganize_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a data reorganization layer of type &#8220;SPACE_TO_DEPTH&#8221; or &#8220;DEPTH_TO_SPACE&#8221;.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>mode: str</strong></p>
-<blockquote>
-<div><ul class="simple">
-<li>If mode == ‘SPACE_TO_DEPTH’: data is moved from the spatial to the channel dimension.
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>mode: str</strong></dt>
+<dd><ul class="first last simple">
+<li>If mode == &#8216;SPACE_TO_DEPTH&#8217;: data is moved from the spatial to the channel dimension.
 Input is spatially divided into non-overlapping blocks of size block_size X block_size  
 and data from each block is moved to the channel dimension.    
 Output CHW dimensions are: [C * block_size * block_size, H/block_size, C/block_size].</li>
-<li>If mode == ‘DEPTH_TO_SPACE’: data is moved from the channel to the spatial dimension.
-Reverse of the operation ‘SPACE_TO_DEPTH’.
+<li>If mode == &#8216;DEPTH_TO_SPACE&#8217;: data is moved from the channel to the spatial dimension.
+Reverse of the operation &#8216;SPACE_TO_DEPTH&#8217;.
 Output CHW dimensions are: [C/(block_size * block_size), H * block_size, C * block_size].</li>
 </ul>
-</div></blockquote>
-<p><strong>block_size: int</strong></p>
-<blockquote class="last">
-<div><p>Must be greater than 1. Must divide H and W, when mode is ‘SPACE_TO_DEPTH’. (block_size * block_size)
-must divide C when mode is ‘DEPTH_TO_SPACE’.</p>
-</div></blockquote>
+</dd>
+<dt><strong>block_size: int</strong></dt>
+<dd><p class="first last">Must be greater than 1. Must divide H and W, when mode is &#8216;SPACE_TO_DEPTH&#8217;. (block_size * block_size)
+must divide C when mode is &#8216;DEPTH_TO_SPACE&#8217;.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1522,31 +1546,28 @@ must divide C when mode is ‘DEPTH_TO_SPACE’.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>target_shape: tuple</strong></p>
-<blockquote>
-<div><p>Shape of the output blob. The product of target_shape must be equal
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>target_shape: tuple</strong></dt>
+<dd><p class="first last">Shape of the output blob. The product of target_shape must be equal
 to the shape of the input blob.
 Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
-</div></blockquote>
-<p><strong>mode: int</strong></p>
-<blockquote>
-<div><ul class="simple">
+</dd>
+<dt><strong>mode: int</strong></dt>
+<dd><ul class="first last simple">
 <li>If mode == 0, the reshape layer is in CHANNEL_FIRST mode.</li>
 <li>If mode == 1, the reshape layer is in CHANNEL_LAST mode.</li>
 </ul>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote class="last">
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1558,6 +1579,45 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_resize_bilinear">
+<code class="descname">add_resize_bilinear</code><span class="sig-paren">(</span><em>name</em>, <em>input_name</em>, <em>output_name</em>, <em>target_height=1</em>, <em>target_width=1</em>, <em>mode='ALIGN_ENDPOINTS_MODE'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_resize_bilinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add resize bilinear layer to the model. A layer that resizes the input to a given spatial size using bilinear interpolation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>target_height: int</strong></dt>
+<dd><p class="first last">Output height dimension.</p>
+</dd>
+<dt><strong>target_width: int</strong></dt>
+<dd><p class="first last">Output width dimension.</p>
+</dd>
+<dt><strong>mode: str</strong></dt>
+<dd><p class="first last">Following values are supported: &#8216;STRICT_ALIGN_ENDPOINTS_MODE&#8217;, &#8216;ALIGN_ENDPOINTS_MODE&#8217;, &#8216;UPSAMPLE_MODE&#8217;, &#8216;ROI_ALIGN_MODE&#8217;.
+This parameter determines the sampling grid used for bilinear interpolation. Kindly refer to NeuralNetwork.proto for details.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample" title="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample"><code class="xref py py-obj docutils literal"><span class="pre">add_upsample</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_scale">
 <code class="descname">add_scale</code><span class="sig-paren">(</span><em>name, W, b, has_bias, input_name, output_name, shape_scale=[1], shape_bias=[1]</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add scale layer to the model.</p>
@@ -1565,38 +1625,32 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>W: int | numpy.array</strong></p>
-<blockquote>
-<div><p>Scale of the input.</p>
-</div></blockquote>
-<p><strong>b: int | numpy.array</strong></p>
-<blockquote>
-<div><p>Bias to add to the input.</p>
-</div></blockquote>
-<p><strong>has_bias: boolean</strong></p>
-<blockquote>
-<div><p>Whether the bias vector of this layer is ignored in the spec.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>shape_scale: [int]</strong></p>
-<blockquote>
-<div><p>List of ints that specifies the shape of the scale parameter. Can be [1] or [C] or [1,H,W] or [C,H,W].</p>
-</div></blockquote>
-<p><strong>shape_bias: [int]</strong></p>
-<blockquote class="last">
-<div><p>List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>W: int | numpy.array</strong></dt>
+<dd><p class="first last">Scale of the input.</p>
+</dd>
+<dt><strong>b: int | numpy.array</strong></dt>
+<dd><p class="first last">Bias to add to the input.</p>
+</dd>
+<dt><strong>has_bias: boolean</strong></dt>
+<dd><p class="first last">Whether the bias vector of this layer is ignored in the spec.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>shape_scale: [int]</strong></dt>
+<dd><p class="first last">List of ints that specifies the shape of the scale parameter. Can be [1] or [C] or [1,H,W] or [C,H,W].</p>
+</dd>
+<dt><strong>shape_bias: [int]</strong></dt>
+<dd><p class="first last">List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1615,22 +1669,20 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>nrep: int</strong></p>
-<blockquote>
-<div><p>Number of repetitions of the input blob along the sequence axis.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote class="last">
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>nrep: int</strong></dt>
+<dd><p class="first last">Number of repetitions of the input blob along the sequence axis.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1649,60 +1701,51 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>W_h: numpy.array</strong></p>
-<blockquote>
-<div><p>Weights of the recurrent layer’s hidden state. Must be of shape (hidden_size, hidden_size).</p>
-</div></blockquote>
-<p><strong>W_x: numpy.array</strong></p>
-<blockquote>
-<div><p>Weights of the recurrent layer’s input. Must be of shape (hidden_size, input_size).</p>
-</div></blockquote>
-<p><strong>b: numpy.array | None</strong></p>
-<blockquote>
-<div><p>Bias of the recurrent layer’s output. If None, bias is ignored. Otherwise it must be of shape (hidden_size, ).</p>
-</div></blockquote>
-<p><strong>hidden_size: int</strong></p>
-<blockquote>
-<div><p>Number of hidden units. This is equal to the number of channels of output shape.</p>
-</div></blockquote>
-<p><strong>input_size: int</strong></p>
-<blockquote>
-<div><p>Number of the number of channels of input shape.</p>
-</div></blockquote>
-<p><strong>activation: str</strong></p>
-<blockquote>
-<div><p>Activation function name. Can be one of the following option:
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>W_h: numpy.array</strong></dt>
+<dd><p class="first last">Weights of the recurrent layer&#8217;s hidden state. Must be of shape (hidden_size, hidden_size).</p>
+</dd>
+<dt><strong>W_x: numpy.array</strong></dt>
+<dd><p class="first last">Weights of the recurrent layer&#8217;s input. Must be of shape (hidden_size, input_size).</p>
+</dd>
+<dt><strong>b: numpy.array | None</strong></dt>
+<dd><p class="first last">Bias of the recurrent layer&#8217;s output. If None, bias is ignored. Otherwise it must be of shape (hidden_size, ).</p>
+</dd>
+<dt><strong>hidden_size: int</strong></dt>
+<dd><p class="first last">Number of hidden units. This is equal to the number of channels of output shape.</p>
+</dd>
+<dt><strong>input_size: int</strong></dt>
+<dd><p class="first last">Number of the number of channels of input shape.</p>
+</dd>
+<dt><strong>activation: str</strong></dt>
+<dd><p class="first last">Activation function name. Can be one of the following option:
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].
 See add_activation for more detailed description.</p>
-</div></blockquote>
-<p><strong>input_names: [str]</strong></p>
-<blockquote>
-<div><p>The input blob name list of this layer, in the order of [x, h_input].</p>
-</div></blockquote>
-<p><strong>output_name: [str]</strong></p>
-<blockquote>
-<div><p>The output blob name list of this layer, in the order of [y, h_output].</p>
-</div></blockquote>
-<p><strong>output_all: boolean</strong></p>
-<blockquote>
-<div><p>Whether the recurrent layer should output at every time step.</p>
-<ul class="simple">
+</dd>
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first last">The input blob name list of this layer, in the order of [x, h_input].</p>
+</dd>
+<dt><strong>output_name: [str]</strong></dt>
+<dd><p class="first last">The output blob name list of this layer, in the order of [y, h_output].</p>
+</dd>
+<dt><strong>output_all: boolean</strong></dt>
+<dd><p class="first">Whether the recurrent layer should output at every time step.</p>
+<ul class="last simple">
 <li>If False, the output is the result after the final state update.</li>
 <li>If True, the output is a sequence, containing outputs at all time steps.</li>
 </ul>
-</div></blockquote>
-<p><strong>reverse_input: boolean</strong></p>
-<blockquote class="last">
-<div><p>Whether the recurrent layer should process the input sequence in the reverse order.</p>
-<ul class="simple">
+</dd>
+<dt><strong>reverse_input: boolean</strong></dt>
+<dd><p class="first">Whether the recurrent layer should process the input sequence in the reverse order.</p>
+<ul class="last simple">
 <li>If False, the input sequence order is not reversed.</li>
 <li>If True, the input sequence order is reversed.</li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1722,38 +1765,33 @@ start_index is included, while end_index is exclusive.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>axis: str</strong></p>
-<blockquote>
-<div><dl class="docutils">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>axis: str</strong></dt>
+<dd><dl class="first last docutils">
 <dt>axis along which input is sliced.</dt>
-<dd><p class="first last">allowed values: ‘channel’, ‘height’, ‘width’</p>
+<dd><p class="first last">allowed values: &#8216;channel&#8217;, &#8216;height&#8217;, &#8216;width&#8217;</p>
 </dd>
 </dl>
-</div></blockquote>
-<p><strong>start_index: int</strong></p>
-<blockquote>
-<div><p>must be non-negative.</p>
-</div></blockquote>
-<p><strong>end_index: int</strong></p>
-<blockquote>
-<div><p>negative indexing is supported.</p>
-</div></blockquote>
-<p><strong>stride: int</strong></p>
-<blockquote class="last">
-<div><p>must be positive.</p>
-</div></blockquote>
+</dd>
+<dt><strong>start_index: int</strong></dt>
+<dd><p class="first last">must be non-negative.</p>
+</dd>
+<dt><strong>end_index: int</strong></dt>
+<dd><p class="first last">negative indexing is supported.</p>
+</dd>
+<dt><strong>stride: int</strong></dt>
+<dd><p class="first last">must be positive.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1772,18 +1810,17 @@ start_index is included, while end_index is exclusive.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote class="last">
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1803,18 +1840,17 @@ to produce multiple outputs.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_names: [str]</strong></p>
-<blockquote class="last">
-<div><p>List of output blob names of this layer.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_names: [str]</strong></dt>
+<dd><p class="first last">List of output blob names of this layer.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1831,41 +1867,36 @@ to produce multiple outputs.</p>
 <dd><p>Add a Unary layer. Applies the specified function (mode) to all the elements of the input.
 Please see the UnaryFunctionLayerParams message in Core ML neural network
 protobuf for more information about the operation of this layer.   
-Prior to the application of the function the input can be scaled and shifted by using the ‘scale’,
-‘shift’ parameters.</p>
+Prior to the application of the function the input can be scaled and shifted by using the &#8216;scale&#8217;,
+&#8216;shift&#8217; parameters.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>mode: str</strong></p>
-<blockquote>
-<div><p>Unary function.  
-Allowed values: ‘sqrt’, ‘rsqrt’, ‘inverse’, ‘power’, ‘exp’, ‘log’, ‘abs’, threshold’.</p>
-</div></blockquote>
-<p><strong>alpha: float</strong></p>
-<blockquote>
-<div><p>constant used in with modes ‘power’ and ‘threshold’.</p>
-</div></blockquote>
-<p><strong>shift, scale: float</strong></p>
-<blockquote>
-<div><p>input is modified by scale and shift prior to the application of the unary function.</p>
-</div></blockquote>
-<p><strong>epsilon: float</strong></p>
-<blockquote class="last">
-<div><p>small bias to prevent division by zero.</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>mode: str</strong></dt>
+<dd><p class="first last">Unary function.  
+Allowed values: &#8216;sqrt&#8217;, &#8216;rsqrt&#8217;, &#8216;inverse&#8217;, &#8216;power&#8217;, &#8216;exp&#8217;, &#8216;log&#8217;, &#8216;abs&#8217;, threshold&#8217;.</p>
+</dd>
+<dt><strong>alpha: float</strong></dt>
+<dd><p class="first last">constant used in with modes &#8216;power&#8217; and &#8216;threshold&#8217;.</p>
+</dd>
+<dt><strong>shift, scale: float</strong></dt>
+<dd><p class="first last">input is modified by scale and shift prior to the application of the unary function.</p>
+</dd>
+<dt><strong>epsilon: float</strong></dt>
+<dd><p class="first last">small bias to prevent division by zero.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1878,100 +1909,85 @@ Allowed values: ‘sqrt’, ‘rsqrt’, ‘inverse’, ‘power’, ‘exp’, 
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm">
-<code class="descname">add_unilstm</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>inner_activation=’SIGMOID’</em>, <em>cell_state_update_activation=’TANH’</em>, <em>output_activation=’TANH’</em>, <em>peep=None</em>, <em>output_all=False</em>, <em>forget_bias=False</em>, <em>coupled_input_forget_gate=False</em>, <em>cell_clip_threshold=50000.0</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_unilstm</code><span class="sig-paren">(</span><em>name</em>, <em>W_h</em>, <em>W_x</em>, <em>b</em>, <em>hidden_size</em>, <em>input_size</em>, <em>input_names</em>, <em>output_names</em>, <em>inner_activation='SIGMOID'</em>, <em>cell_state_update_activation='TANH'</em>, <em>output_activation='TANH'</em>, <em>peep=None</em>, <em>output_all=False</em>, <em>forget_bias=False</em>, <em>coupled_input_forget_gate=False</em>, <em>cell_clip_threshold=50000.0</em>, <em>reverse_input=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_unilstm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a Uni-directional LSTM layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>W_h: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of recursion weight matrices. The ordering is [R_i, R_f, R_o, R_z],
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>W_h: [numpy.array]</strong></dt>
+<dd><p class="first last">List of recursion weight matrices. The ordering is [R_i, R_f, R_o, R_z],
 where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, hidden_size).</p>
-</div></blockquote>
-<p><strong>W_x: [numpy.array]</strong></p>
-<blockquote>
-<div><p>List of input weight matrices. The ordering is [W_i, W_f, W_o, W_z],
+</dd>
+<dt><strong>W_x: [numpy.array]</strong></dt>
+<dd><p class="first last">List of input weight matrices. The ordering is [W_i, W_f, W_o, W_z],
 where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
 The shapes of these matrices are (hidden_size, input_size).</p>
-</div></blockquote>
-<p><strong>b: [numpy.array] | None</strong></p>
-<blockquote>
-<div><p>List of biases. The ordering is [b_i, b_f, b_o, b_z],
+</dd>
+<dt><strong>b: [numpy.array] | None</strong></dt>
+<dd><p class="first last">List of biases. The ordering is [b_i, b_f, b_o, b_z],
 where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
 If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).</p>
-</div></blockquote>
-<p><strong>hidden_size: int</strong></p>
-<blockquote>
-<div><p>Number of hidden units. This is equal to the number of channels of output shape.</p>
-</div></blockquote>
-<p><strong>input_size: int</strong></p>
-<blockquote>
-<div><p>Number of the number of channels of input shape.</p>
-</div></blockquote>
-<p><strong>input_names: [str]</strong></p>
-<blockquote>
-<div><p>The input blob name list of this layer, in the order of [x, h_input, c_input].</p>
-</div></blockquote>
-<p><strong>output_names: [str]</strong></p>
-<blockquote>
-<div><p>The output blob name list of this layer, in the order of [y, h_output, c_output].</p>
-</div></blockquote>
-<p><strong>inner_activation: str</strong></p>
-<blockquote>
-<div><p>Inner activation function used at input and forget gate. Can be one of the following option:
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].</p>
-</div></blockquote>
-<p><strong>cell_state_update_activation: str</strong></p>
-<blockquote>
-<div><p>Cell state update activation function used at the cell state update gate.
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].</p>
-</div></blockquote>
-<p><strong>output_activation: str</strong></p>
-<blockquote>
-<div><p>Activation function used at the output gate. Can be one of the following option:
-[‘RELU’, ‘TANH’, ‘SIGMOID’, ‘SCALED_TANH’, ‘SIGMOID_HARD’, ‘LINEAR’].</p>
-</div></blockquote>
-<p><strong>peep: [numpy.array] | None</strong></p>
-<blockquote>
-<div><p>List of peephole vectors. The ordering is [p_i, p_f, p_o],
+</dd>
+<dt><strong>hidden_size: int</strong></dt>
+<dd><p class="first last">Number of hidden units. This is equal to the number of channels of output shape.</p>
+</dd>
+<dt><strong>input_size: int</strong></dt>
+<dd><p class="first last">Number of the number of channels of input shape.</p>
+</dd>
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first last">The input blob name list of this layer, in the order of [x, h_input, c_input].</p>
+</dd>
+<dt><strong>output_names: [str]</strong></dt>
+<dd><p class="first last">The output blob name list of this layer, in the order of [y, h_output, c_output].</p>
+</dd>
+<dt><strong>inner_activation: str</strong></dt>
+<dd><p class="first last">Inner activation function used at input and forget gate. Can be one of the following option:
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].</p>
+</dd>
+<dt><strong>cell_state_update_activation: str</strong></dt>
+<dd><p class="first last">Cell state update activation function used at the cell state update gate.
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].</p>
+</dd>
+<dt><strong>output_activation: str</strong></dt>
+<dd><p class="first last">Activation function used at the output gate. Can be one of the following option:
+[&#8216;RELU&#8217;, &#8216;TANH&#8217;, &#8216;SIGMOID&#8217;, &#8216;SCALED_TANH&#8217;, &#8216;SIGMOID_HARD&#8217;, &#8216;LINEAR&#8217;].</p>
+</dd>
+<dt><strong>peep: [numpy.array] | None</strong></dt>
+<dd><p class="first last">List of peephole vectors. The ordering is [p_i, p_f, p_o],
 where p_i, p_f, and p_o are peephole vectors at input gate, forget gate, output gate.
 The shapes of the peephole vectors are (hidden_size,).</p>
-</div></blockquote>
-<p><strong>output_all: boolean</strong></p>
-<blockquote>
-<div><p>Whether the LSTM layer should output at every time step.</p>
-<ul class="simple">
+</dd>
+<dt><strong>output_all: boolean</strong></dt>
+<dd><p class="first">Whether the LSTM layer should output at every time step.</p>
+<ul class="last simple">
 <li>If False, the output is the result after the final state update.</li>
 <li>If True, the output is a sequence, containing outputs at all time steps.</li>
 </ul>
-</div></blockquote>
-<p><strong>forget_bias: boolean</strong></p>
-<blockquote>
-<div><p>If True, a vector of 1s is added to forget gate bias.</p>
-</div></blockquote>
-<p><strong>coupled_input_forget_gate: boolean</strong></p>
-<blockquote>
-<div><p>If True, the input gate and forget gate is coupled. i.e. forget gate is not used.</p>
-</div></blockquote>
-<p><strong>cell_clip_threshold: float</strong></p>
-<blockquote>
-<div><p>The limit on the maximum and minimum values on the cell state.
+</dd>
+<dt><strong>forget_bias: boolean</strong></dt>
+<dd><p class="first last">If True, a vector of 1s is added to forget gate bias.</p>
+</dd>
+<dt><strong>coupled_input_forget_gate: boolean</strong></dt>
+<dd><p class="first last">If True, the input gate and forget gate is coupled. i.e. forget gate is not used.</p>
+</dd>
+<dt><strong>cell_clip_threshold: float</strong></dt>
+<dd><p class="first last">The limit on the maximum and minimum values on the cell state.
 If not provided, it is defaulted to 50.0.</p>
-</div></blockquote>
-<p><strong>reverse_input: boolean</strong></p>
-<blockquote class="last">
-<div><p>Whether the LSTM layer should process the input sequence in the reverse order.</p>
-<ul class="simple">
+</dd>
+<dt><strong>reverse_input: boolean</strong></dt>
+<dd><p class="first">Whether the LSTM layer should process the input sequence in the reverse order.</p>
+<ul class="last simple">
 <li>If False, the input sequence order is not reversed.</li>
 <li>If True, the input sequence order is reversed.</li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -1984,38 +2000,34 @@ If not provided, it is defaulted to 50.0.</p>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample">
-<code class="descname">add_upsample</code><span class="sig-paren">(</span><em>name</em>, <em>scaling_factor_h</em>, <em>scaling_factor_w</em>, <em>input_name</em>, <em>output_name</em>, <em>mode=’NN’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_upsample</code><span class="sig-paren">(</span><em>name</em>, <em>scaling_factor_h</em>, <em>scaling_factor_w</em>, <em>input_name</em>, <em>output_name</em>, <em>mode='NN'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_upsample" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add upsample layer to the model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name: str</strong></p>
-<blockquote>
-<div><p>The name of this layer.</p>
-</div></blockquote>
-<p><strong>scaling_factor_h: int</strong></p>
-<blockquote>
-<div><p>Scaling factor on the vertical direction.</p>
-</div></blockquote>
-<p><strong>scaling_factor_w: int</strong></p>
-<blockquote>
-<div><p>Scaling factor on the horizontal direction.</p>
-</div></blockquote>
-<p><strong>input_name: str</strong></p>
-<blockquote>
-<div><p>The input blob name of this layer.</p>
-</div></blockquote>
-<p><strong>output_name: str</strong></p>
-<blockquote>
-<div><p>The output blob name of this layer.</p>
-</div></blockquote>
-<p><strong>mode: str</strong></p>
-<blockquote class="last">
-<div><p>Following values are supported:
-‘NN’: nearest neighbour
-‘BILINEAR’ : bilinear interpolation</p>
-</div></blockquote>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>name: str</strong></dt>
+<dd><p class="first last">The name of this layer.</p>
+</dd>
+<dt><strong>scaling_factor_h: int</strong></dt>
+<dd><p class="first last">Scaling factor on the vertical direction.</p>
+</dd>
+<dt><strong>scaling_factor_w: int</strong></dt>
+<dd><p class="first last">Scaling factor on the horizontal direction.</p>
+</dd>
+<dt><strong>input_name: str</strong></dt>
+<dd><p class="first last">The input blob name of this layer.</p>
+</dd>
+<dt><strong>output_name: str</strong></dt>
+<dd><p class="first last">The output blob name of this layer.</p>
+</dd>
+<dt><strong>mode: str</strong></dt>
+<dd><p class="first last">Following values are supported:
+&#8216;NN&#8217;: nearest neighbour
+&#8216;BILINEAR&#8217; : bilinear interpolation</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -2028,29 +2040,28 @@ If not provided, it is defaulted to 50.0.</p>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels">
-<code class="descname">set_class_labels</code><span class="sig-paren">(</span><em>class_labels</em>, <em>predicted_feature_name=’classLabel’</em>, <em>prediction_blob=”</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_class_labels</code><span class="sig-paren">(</span><em>class_labels</em>, <em>predicted_feature_name='classLabel'</em>, <em>prediction_blob=''</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set class labels to the model spec to make it a neural network classifier.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>class_labels: list[int or str]</strong></p>
-<blockquote>
-<div><p>A list of integers or strings that map the index of the output of a
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>class_labels: list[int or str]</strong></dt>
+<dd><p class="first last">A list of integers or strings that map the index of the output of a
 neural network to labels in a classifier.</p>
-</div></blockquote>
-<p><strong>predicted_feature_name: str</strong></p>
-<blockquote>
-<div><p>Name of the output feature for the class labels exposed in the
-Core ML neural network classifier.  Defaults to ‘class_output’.</p>
-</div></blockquote>
-<p><strong>prediction_blob: str</strong></p>
-<blockquote class="last">
-<div><p>If provided, then this is the name of the neural network blob which
+</dd>
+<dt><strong>predicted_feature_name: str</strong></dt>
+<dd><p class="first last">Name of the output feature for the class labels exposed in the
+Core ML neural network classifier.  Defaults to &#8216;class_output&#8217;.</p>
+</dd>
+<dt><strong>prediction_blob: str</strong></dt>
+<dd><p class="first last">If provided, then this is the name of the neural network blob which
 generates the probabilities for each class label (typically the output
 of a softmax layer). If not provided, then the last output layer is
 assumed.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -2069,15 +2080,15 @@ assumed.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>input_names: [str]</strong></p>
-<blockquote>
-<div><p>List of input names of the network.</p>
-</div></blockquote>
-<p><strong>input_dims: [tuple]</strong></p>
-<blockquote class="last">
-<div><p>List of input dimensions of the network. The ordering of input_dims
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>input_names: [str]</strong></dt>
+<dd><p class="first last">List of input names of the network.</p>
+</dd>
+<dt><strong>input_dims: [tuple]</strong></dt>
+<dd><p class="first last">List of input dimensions of the network. The ordering of input_dims
 is the same as input_names.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -2102,15 +2113,15 @@ is the same as input_names.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>output_names: [str]</strong></p>
-<blockquote>
-<div><p>List of output names of the network.</p>
-</div></blockquote>
-<p><strong>output_dims: [tuple]</strong></p>
-<blockquote class="last">
-<div><p>List of output dimensions of the network. The ordering of output_dims is the same
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>output_names: [str]</strong></dt>
+<dd><p class="first last">List of output names of the network.</p>
+</dd>
+<dt><strong>output_dims: [tuple]</strong></dt>
+<dd><p class="first last">List of output dimensions of the network. The ordering of output_dims is the same
 as output_names.</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -2135,36 +2146,31 @@ as output_names.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>image_input_names: [str]</strong></p>
-<blockquote>
-<div><p>Name of input blobs that are images</p>
-</div></blockquote>
-<p><strong>is_bgr: boolean | dict()</strong></p>
-<blockquote>
-<div><p>Channel order for input blobs that are images. BGR if True else RGB.
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>image_input_names: [str]</strong></dt>
+<dd><p class="first last">Name of input blobs that are images</p>
+</dd>
+<dt><strong>is_bgr: boolean | dict()</strong></dt>
+<dd><p class="first last">Channel order for input blobs that are images. BGR if True else RGB.
 To specify a different value for each image input,
 provide a dictionary with input names as keys.</p>
-</div></blockquote>
-<p><strong>red_bias: float | dict()</strong></p>
-<blockquote>
-<div><p>Image re-centering parameter (red channel)</p>
-</div></blockquote>
-<p><strong>blue_bias: float | dict()</strong></p>
-<blockquote>
-<div><p>Image re-centering parameter (blue channel)</p>
-</div></blockquote>
-<p><strong>green_bias: float | dict()</strong></p>
-<blockquote>
-<div><p>Image re-centering parameter (green channel)</p>
-</div></blockquote>
-<p><strong>gray_bias: float | dict()</strong></p>
-<blockquote>
-<div><p>Image re-centering parameter (for grayscale images)</p>
-</div></blockquote>
-<p><strong>image_scale: float | dict()</strong></p>
-<blockquote class="last">
-<div><p>Value by which to scale the images.</p>
-</div></blockquote>
+</dd>
+<dt><strong>red_bias: float | dict()</strong></dt>
+<dd><p class="first last">Image re-centering parameter (red channel)</p>
+</dd>
+<dt><strong>blue_bias: float | dict()</strong></dt>
+<dd><p class="first last">Image re-centering parameter (blue channel)</p>
+</dd>
+<dt><strong>green_bias: float | dict()</strong></dt>
+<dd><p class="first last">Image re-centering parameter (green channel)</p>
+</dd>
+<dt><strong>gray_bias: float | dict()</strong></dt>
+<dd><p class="first last">Image re-centering parameter (for grayscale images)</p>
+</dd>
+<dt><strong>image_scale: float | dict()</strong></dt>
+<dd><p class="first last">Value by which to scale the images.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -2223,7 +2229,7 @@ provide a dictionary with input names as keys.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'2.0b1',
+            VERSION:'2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,
@@ -2233,7 +2239,7 @@ provide a dictionary with input names as keys.</p>
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
