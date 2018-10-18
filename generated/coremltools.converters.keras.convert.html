@@ -173,7 +173,7 @@
 <h1>coremltools.converters.keras.convert<a class="headerlink" href="#coremltools-converters-keras-convert" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="coremltools.converters.keras.convert">
-<code class="descclassname">coremltools.converters.keras.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>input_names=None</em>, <em>output_names=None</em>, <em>image_input_names=None</em>, <em>input_name_shape_dict={}</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em>, <em>model_precision='float32'</em>, <em>predicted_probabilities_output=''</em>, <em>add_custom_layers=False</em>, <em>custom_conversion_functions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras.convert" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.converters.keras.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>input_names=None</em>, <em>output_names=None</em>, <em>image_input_names=None</em>, <em>input_name_shape_dict={}</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em>, <em>model_precision=’float32’</em>, <em>predicted_probabilities_output=’‘</em>, <em>add_custom_layers=False</em>, <em>custom_conversion_functions=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras.convert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a Keras model to Core ML protobuf specification (.mlmodel).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -194,7 +194,7 @@ stored in h5 file.</p>
 <dd><p class="first last">Optional name(s) that can be given to the inputs of the Keras model.
 These names will be used in the interface of the Core ML models to refer
 to the inputs of the Keras model. If not provided, the Keras inputs
-are named to [input1, input2, ..., inputN] in the Core ML model.  When
+are named to [input1, input2, …, inputN] in the Core ML model.  When
 multiple inputs are present, the input feature names are in the same
 order as the Keras inputs.</p>
 </dd>
@@ -202,7 +202,7 @@ order as the Keras inputs.</p>
 <dd><p class="first last">Optional name(s) that can be given to the outputs of the Keras model.
 These names will be used in the interface of the Core ML models to refer
 to the outputs of the Keras model. If not provided, the Keras outputs
-are named to [output1, output2, ..., outputN] in the Core ML model.
+are named to [output1, output2, …, outputN] in the Core ML model.
 When multiple outputs are present, output feature names are in the same
 order as the Keras inputs.</p>
 </dd>
@@ -262,11 +262,11 @@ strings.</p>
 </dd>
 <dt><strong>predicted_feature_name: str</strong></dt>
 <dd><p class="first last">Name of the output feature for the class labels exposed in the Core ML
-model (applies to classifiers only). Defaults to &#8216;classLabel&#8217;</p>
+model (applies to classifiers only). Defaults to ‘classLabel’</p>
 </dd>
 <dt><strong>model_precision: str</strong></dt>
 <dd><p class="first last">Precision at which model will be saved. Currently full precision (float) and half precision
-(float16) models are supported. Defaults to &#8216;_MLMODEL_FULL_PRECISION&#8217; (full precision).</p>
+(float16) models are supported. Defaults to ‘_MLMODEL_FULL_PRECISION’ (full precision).</p>
 </dd>
 <dt><strong>predicted_probabilities_output: str</strong></dt>
 <dd><p class="first last">Name of the neural network output to be interpreted as the predicted
@@ -275,7 +275,7 @@ softmax function. Defaults to the first output blob.</p>
 </dd>
 <dt><strong>add_custom_layers: bool</strong></dt>
 <dd><p class="first last">If yes, then unknown Keras layer types will be added to the model as
-&#8216;custom&#8217; layers, which must then be filled in as postprocessing.</p>
+‘custom’ layers, which must then be filled in as postprocessing.</p>
 </dd>
 <dt><strong>custom_conversion_functions: {str:(Layer -&gt; (dict, [weights])) }</strong></dt>
 <dd><p class="first last">A dictionary with keys corresponding to names of custom layers and values
@@ -388,7 +388,7 @@ while exposing them to Core ML.</p>
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

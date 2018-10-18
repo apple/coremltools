@@ -215,7 +215,7 @@ value in <code class="docutils literal"><span class="pre">imputedDoubleArray</sp
 <p>A scaling operation.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><span class="math">f(x) = scaleValue \cdot (x + shiftValue)</span></p>
+<p><img src="../_images/math/3f3f7780b96ea3108c3333a6564560f9d14f328e.svg" alt="f(x) = scaleValue \cdot (x + shiftValue)"/></p>
 </div><p>If the <code class="docutils literal"><span class="pre">scaleValue</span></code> is not given, the default value 1 is used.
 If the <code class="docutils literal"><span class="pre">shiftValue</span></code> is not given, the default value 0 is used.</p>
 <p>If <code class="docutils literal"><span class="pre">scaleValue</span></code> and <code class="docutils literal"><span class="pre">shiftValue</span></code> are each a single value
@@ -253,15 +253,15 @@ which have the corresponding formulas:</p>
 <dl class="docutils">
 <dt>Max</dt>
 <dd><div class="first last math">
-<p><span class="math">max(x_i)</span></p>
+<p><img src="../_images/math/639c1d9ea4ad72478f06fa60276fc691d0d055da.svg" alt="max(x_i)"/></p>
 </div></dd>
 <dt>L1</dt>
 <dd><div class="first last math">
-<p><span class="math">z = ||x||_1 = \sum_{i=1}^{n} |x_i|</span></p>
+<p><img src="../_images/math/9147e260a41c775234e687e3b99fc6566c277981.svg" alt="z = ||x||_1 = \sum_{i=1}^{n} |x_i|"/></p>
 </div></dd>
 <dt>L2</dt>
 <dd><div class="first last math">
-<p><span class="math">z = ||x||_2 = \sqrt{\sum_{i=1}^{n} x_i^2}</span></p>
+<p><img src="../_images/math/de8cd4ee9453cad71e85647b893a78375e55f516.svg" alt="z = ||x||_2 = \sqrt{\sum_{i=1}^{n} x_i^2}"/></p>
 </div></dd>
 </dl>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
@@ -364,7 +364,7 @@ parameter.</p>
 <p>The output array will be equal in length to the index mapping vector parameter.
 All keys in the input dictionary must be present in the index mapping vector.</p>
 <p>For each item in the input dictionary, insert its value in the output array.
-The position of the insertion is determined by the position of the item&#8217;s key
+The position of the insertion is determined by the position of the item’s key
 in the index mapping. Any keys not present in the input dictionary, will be
 zero in the output array.</p>
 <p>For example: if the <code class="docutils literal"><span class="pre">stringToIndex</span></code> parameter is set to <code class="docutils literal"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;c&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;z&quot;]</span></code>,
