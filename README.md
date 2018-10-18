@@ -5,9 +5,11 @@ Core ML community tools contains all supporting tools for CoreML model
 conversion and validation. This includes Scikit Learn, LIBSVM, Caffe,
 Keras and XGBoost.
 
-API Examples
--------------
-[Code snippets](docs/APIExamples.md)
+API 
+---
+[Example Code snippets](docs/APIExamples.md)  
+[CoreMLTools Documentation](https://apple.github.io/coremltools)  
+[CoreML Specification Documentation](https://apple.github.io/coremltools/coremlspecification/)
 
 
 Installation
@@ -70,6 +72,14 @@ To build the project, you need [CMake](https://cmake.org) to configure the proje
 ```shell
 cmake .
 ```
+
+When several python virtual environments are installed, 
+it may be useful to use the following command instead, 
+to point to the correct intended version of python:
+
+```shell
+cmake . -DPYTHON=$(which python) -DPYTHON_CONFIG=$(which python-config)
+``` 
 
 after which you can use make to build the project
 
