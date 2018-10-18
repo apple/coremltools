@@ -829,8 +829,7 @@ def _characterize_quantized_model_perf(fpmodel, qspec, sample_data):
 def compare_models(full_precision_model, quantized_model,
                               sample_data):
     """
-    Utility function to compare the performance of a full precision vs
-    quantized model
+    Utility function to compare the performance of a full precision vs quantized model
 
     :param full_precision_model: MLModel
         The full precision model with float32 weights
