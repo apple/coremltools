@@ -181,13 +181,13 @@ Only available in coremltools 2.0b1 and onwards</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.compare_models" title="coremltools.models.neural_network.quantization_utils.compare_models"><code class="xref py py-obj docutils literal"><span class="pre">compare_models</span></code></a>(full_precision_model,&nbsp;...)</td>
-<td>Utility function to compare the performance of a full precision vs</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.compare_models" title="coremltools.models.neural_network.quantization_utils.compare_models"><code class="xref py py-obj docutils literal"><span class="pre">compare_models</span></code></a>(full_precision_model,&nbsp;…)</td>
+<td>Utility function to compare the performance of a full precision vs quantized model</td>
 </tr>
 <tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">macos_version</span></code>()</td>
 <td>Returns macOS version as a tuple of integers, making it easy to do proper version comparisons.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">quantize_spec_weights</span></code>(spec,&nbsp;nbits,&nbsp;...)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">quantize_spec_weights</span></code>(spec,&nbsp;nbits,&nbsp;…)</td>
 <td></td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="coremltools.models.neural_network.quantization_utils.quantize_weights"><code class="xref py py-obj docutils literal"><span class="pre">quantize_weights</span></code></a>(full_precision_model,&nbsp;nbits)</td>
@@ -245,18 +245,17 @@ two model outputs</p>
 <dl class="function">
 <dt id="coremltools.models.neural_network.quantization_utils.compare_models">
 <code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">compare_models</code><span class="sig-paren">(</span><em>full_precision_model</em>, <em>quantized_model</em>, <em>sample_data</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.compare_models" title="Permalink to this definition">¶</a></dt>
-<dd><p>Utility function to compare the performance of a full precision vs
-quantized model</p>
+<dd><p>Utility function to compare the performance of a full precision vs quantized model</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>full_precision_model</strong> &#8211; MLModel
+<li><strong>full_precision_model</strong> – MLModel
 The full precision model with float32 weights</li>
-<li><strong>quantized_model</strong> &#8211; MLModel
+<li><strong>quantized_model</strong> – MLModel
 Quantized version of the model with quantized weights</li>
-<li><strong>sample_data</strong> &#8211; str | [dict]
+<li><strong>sample_data</strong> – str | [dict]
 Data used to characterize performance of the quantized model in
 comparison to the full precision model. Either a list of sample input
 dictionaries or an absolute path to a directory containing images.
@@ -275,7 +274,7 @@ provided.</li>
 
 <dl class="function">
 <dt id="coremltools.models.neural_network.quantization_utils.quantize_weights">
-<code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">quantize_weights</code><span class="sig-paren">(</span><em>full_precision_model</em>, <em>nbits</em>, <em>quantization_mode='linear'</em>, <em>sample_data=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">quantize_weights</code><span class="sig-paren">(</span><em>full_precision_model</em>, <em>nbits</em>, <em>quantization_mode=’linear’</em>, <em>sample_data=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility function to convert a full precision (float) MLModel to a
 nbit quantized MLModel (float16).</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -283,25 +282,25 @@ nbit quantized MLModel (float16).</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>full_precision_model</strong> &#8211; MLModel
+<li><strong>full_precision_model</strong> – MLModel
 Model which will be converted to half precision. Currently conversion
 for only neural network models is supported. If a pipeline model is
 passed in then all embedded neural network models embedded within
 will be converted.</li>
-<li><strong>nbits</strong> &#8211; Int
+<li><strong>nbits</strong> – Int
 Number of bits per quantized weight. Only 8-bit and lower
 quantization is supported</li>
-<li><strong>quantization_mode</strong> &#8211; <p>str
+<li><strong>quantization_mode</strong> – <p>str
 One of:</p>
 <blockquote>
 <div><dl class="docutils">
-<dt>&#8220;linear&#8221;:</dt>
+<dt>”linear”:</dt>
 <dd>Simple linear quantization with scale and bias</dd>
-<dt>&#8220;linear_lut&#8221;:</dt>
+<dt>”linear_lut”:</dt>
 <dd>Simple linear quantization represented as a lookup table</dd>
-<dt>&#8220;kmeans_lut&#8221;:</dt>
+<dt>”kmeans_lut”:</dt>
 <dd>LUT based quantization, where LUT is generated by K-Means clustering</dd>
-<dt>&#8220;custom_lut&#8221;:</dt>
+<dt>”custom_lut”:</dt>
 <dd>LUT quantization where LUT and quantized weight params are
 calculated using a custom function. If this mode is selected then
 a custom function must be passed in kwargs with key lut_function.
@@ -314,21 +313,21 @@ _get_linear_lookup_table_and_weight for a sample implementation.</dd>
 </dl>
 </div></blockquote>
 </li>
-<li><strong>sample_data</strong> &#8211; str | [dict]
+<li><strong>sample_data</strong> – str | [dict]
 Data used to characterize performance of the quantized model in
 comparison to the full precision model. Either a list of sample input
 dictionaries or an absolute path to a directory containing images.
 Path to a directory containing images is only valid for models with
 one image input. For all other models a list of sample inputs must be
 provided.</li>
-<li><strong>**kwargs</strong> &#8211; <p>See below</p>
+<li><strong>**kwargs</strong> – <p>See below</p>
 </li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name" colspan="2">Keyword Arguments:</th></tr>
 <tr class="field-even field"><td>&#160;</td><td class="field-body"><ul class="first simple">
-<li><em>lut_function</em> (<code class="docutils literal"><span class="pre">callable</span> <span class="pre">function</span></code>) &#8211;
+<li><em>lut_function</em> (<code class="docutils literal"><span class="pre">callable</span> <span class="pre">function</span></code>) –
 A callable function provided when quantization mode is set to
 _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE. See quantization_mode for
 more details</li>
@@ -404,7 +403,7 @@ otherwise the quantized model specification is returned</p>
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

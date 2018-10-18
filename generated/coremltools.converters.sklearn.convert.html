@@ -209,7 +209,7 @@ processing of input features.</p>
 </dd>
 <dt><strong>input_features: str | dict | list</strong></dt>
 <dd><p class="first">Optional name(s) that can be given to the inputs of the scikit-learn
-model. Defaults to &#8216;input&#8217;.</p>
+model. Defaults to ‘input’.</p>
 <p>Input features can be specified in a number of forms.</p>
 <ul class="last">
 <li><p class="first">Single string: In this case, the input is assumed to be a single
@@ -220,32 +220,32 @@ scikit-learn model is assumed to be the length of the list.  If
 neighboring names are identical, they are assumed to be an input
 array of that length.  For example:</p>
 <blockquote>
-<div><p>[&#8220;a&#8221;, &#8220;b&#8221;, &#8220;c&#8221;]</p>
+<div><p>[“a”, “b”, “c”]</p>
 </div></blockquote>
 <p>resolves to</p>
 <blockquote>
-<div><p>[(&#8220;a&#8221;, Double), (&#8220;b&#8221;, Double), (&#8220;c&#8221;, Double)].</p>
+<div><p>[(“a”, Double), (“b”, Double), (“c”, Double)].</p>
 </div></blockquote>
 <p>And:</p>
 <blockquote>
-<div><p>[&#8220;a&#8221;, &#8220;a&#8221;, &#8220;b&#8221;]</p>
+<div><p>[“a”, “a”, “b”]</p>
 </div></blockquote>
 <p>resolves to</p>
 <blockquote>
-<div><p>[(&#8220;a&#8221;, Array(2)), (&#8220;b&#8221;, Double)].</p>
+<div><p>[(“a”, Array(2)), (“b”, Double)].</p>
 </div></blockquote>
 </li>
 <li><p class="first">Dictionary: Where the keys are the names and the indices or ranges of
 feature indices.</p>
 <blockquote>
-<div><p>In this case, it&#8217;s presented as a mapping from keys to indices or
+<div><p>In this case, it’s presented as a mapping from keys to indices or
 ranges of contiguous indices.  For example,</p>
 <blockquote>
-<div><p>{&#8220;a&#8221; : 0, &#8220;b&#8221; : [2,3], &#8220;c&#8221; : 1}</p>
+<div><p>{“a” : 0, “b” : [2,3], “c” : 1}</p>
 </div></blockquote>
 <p>Resolves to</p>
 <blockquote>
-<div><p>[(&#8220;a&#8221;, Double), (&#8220;c&#8221;, Double), (&#8220;b&#8221;, Array(2))].</p>
+<div><p>[(“a”, Double), (“c”, Double), (“b”, Array(2))].</p>
 </div></blockquote>
 <p>Note that the ordering is determined by the indices.</p>
 </div></blockquote>
@@ -265,12 +265,12 @@ model.</p>
 <ul class="last simple">
 <li>If the scikit-learn model is a transformer, it is the name of the
 array feature output by the final sequence of the transformer
-(defaults to &#8220;output&#8221;).</li>
+(defaults to “output”).</li>
 <li>If it is a classifier, it should be a 2-tuple of names giving the top
 class prediction and the array of scores for each class (defaults to
-&#8220;classLabel&#8221; and &#8220;classScores&#8221;).</li>
+“classLabel” and “classScores”).</li>
 <li>If it is a regressor, it should give the name of the prediction value
-(defaults to &#8220;prediction&#8221;).</li>
+(defaults to “prediction”).</li>
 </ul>
 </dd>
 </dl>
@@ -362,7 +362,7 @@ class prediction and the array of scores for each class (defaults to
       <script type="text/javascript" src="../static/jquery.js"></script>
       <script type="text/javascript" src="../static/underscore.js"></script>
       <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
