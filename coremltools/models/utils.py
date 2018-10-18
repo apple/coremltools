@@ -347,6 +347,7 @@ def convert_neural_network_weights_to_fp16(full_precision_model):
     """
     Utility function to convert a full precision (float) MLModel to a
     half precision MLModel (float16).
+
     Parameter
     ----------
     full_precision_model: MLModel
@@ -354,14 +355,17 @@ def convert_neural_network_weights_to_fp16(full_precision_model):
         for only neural network models is supported. If a pipeline model is
         passed in then all embedded neural network models embedded within
         will be converted.
+
     Returns
     -------
     model: MLModel
         The converted half precision MLModel
+
     Examples
     --------
     .. sourcecode:: python
-        >>> half_precision_model =  coremltools.utils.convert_neural_network_weights_to_fp16(model)
+
+        >>> half_precision_model = coremltools.utils.convert_neural_network_weights_to_fp16(model)
     """
     spec = full_precision_model.get_spec()
     return _get_model(convert_neural_network_spec_weights_to_fp16(spec))
@@ -408,7 +412,7 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     --------
     .. sourcecode:: python
 
-        >>> metrics =  coremltools.utils.evaluate_regressor(spec, 'data_and_predictions.csv', 'target')
+        >>> metrics = coremltools.utils.evaluate_regressor(spec, 'data_and_predictions.csv', 'target')
         >>> print(metrics)
         {"samples": 10, "rmse": 0.0, max_error: 0.0}
     """

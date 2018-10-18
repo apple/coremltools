@@ -3,7 +3,7 @@
 *************
 
 .. automodule:: coremltools.models
-.. automodule:: coremltools.models.neural_networks
+.. automodule:: coremltools.models.neural_network
   :noindex:
 .. currentmodule:: coremltools.models
 
