@@ -23,7 +23,16 @@ if HAS_KERAS2_TF:
     from keras.layers.core import SpatialDropout1D, SpatialDropout2D
     from keras.layers.wrappers import Bidirectional, TimeDistributed
     from distutils.version import StrictVersion as _StrictVersion
-    if keras.__version__ >= _StrictVersion('2.2.0'):
+    if keras.__version__ >= _StrictVersion('2.2.1'):
+
+        # whats the correct solution here?
+        from keras.layers import DepthwiseConv2D
+        from keras.utils.generic_utils import CustomObjectScope
+
+        with CustomObjectScope({'relu6': keras.applications.mobilenet.relu6,
+                                'DepthwiseConv2D': keras.applications.mobilenet.DepthwiseConv2D})
+            
+    elif keras.__version__ >= _StrictVersion('2.2.0'):
         from keras.layers import DepthwiseConv2D
         from keras_applications.mobilenet import relu6
     else:
