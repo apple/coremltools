@@ -32,6 +32,9 @@ if HAS_KERAS2_TF:
 
 
 def _keras_transpose(x, is_sequence=False):
+    if len(x.shape) == 5:
+        # Keras input shape = [Batch, Seq, Height, Width, Channels]
+        x = np.transpose(x, [1,0,4,2,3])
     if len(x.shape) == 4:
         # Keras input shape = [Batch, Height, Width, Channels]
         x = np.transpose(x, [0,3,1,2])
@@ -148,9 +151,11 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         if model_dir is None:
             use_tmp_folder = True
             model_dir = tempfile.mkdtemp()
+
         input_names, output_names, input_data, coreml_input = self._get_coreml_model_params_and_test_input(model, mode,
                                                                                                            one_dim_seq_flags,
                                                                                                            input_name_shape_dict)
+
         coreml_model = _get_coreml_model(model, input_names, output_names, input_name_shape_dict,
                                          model_precision=model_precision)
         
@@ -2188,6 +2193,27 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
         model = Model(inputs=base_model.input, outputs=top_model(base_model.output))
         self._test_model(model)
+
+    # similar to issue 269
+    def test_time_distributed_conv(self):
+        model = Sequential()
+        model.add(
+            TimeDistributed(
+                Conv2D(64, (3, 3), activation='relu'),
+                input_shape=(1, 30, 30, 3)
+            )
+        )
+        model.add(TimeDistributed(MaxPooling2D((2, 2), strides=(1, 1))))
+        model.add(TimeDistributed(Conv2D(32, (4, 4), activation='relu')))
+        model.add(TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2))))
+        model.add(TimeDistributed(Conv2D(32, (4, 4), activation='relu')))
+        model.add(TimeDistributed(MaxPooling2D((2, 2), strides=(2, 2))))
+        model.add(TimeDistributed(Flatten()))
+        model.add(Dropout(0.5))
+        model.add(LSTM(32, return_sequences=False, dropout=0.5))
+        model.add(Dense(10, activation='sigmoid'))
+        self._test_model(model)
+
 
 @pytest.mark.slow
 @pytest.mark.keras2

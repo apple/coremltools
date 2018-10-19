@@ -289,19 +289,23 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
 
     # Get the weights from _keras.
     weightList = keras_layer.get_weights()
-    output_blob_shape = list(filter(None, keras_layer.output_shape))
-    output_channels = output_blob_shape[-1] 
     
     # Dimensions and weights
     if is_deconv: 
         height, width, n_filters, channels = weightList[0].shape
         W = weightList[0].transpose([0,1,3,2])
-        output_shape = output_blob_shape[:-1]
+        try:
+            output_blob_shape = list(filter(None, keras_layer.output_shape))
+            output_shape = output_blob_shape[:-1]
+        except:
+            output_shape = None
     else: 
         height, width, channels, n_filters = weightList[0].shape
         W = weightList[0]
         output_shape = None
     b = weightList[1] if has_bias else None
+
+    output_channels = n_filters
 
     stride_height, stride_width = keras_layer.strides
 
@@ -322,6 +326,7 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
         kernel_channels = 1
         depth_multiplier = keras_layer.depth_multiplier
         W = _np.reshape(W,(height, width,1,channels * depth_multiplier))
+        output_channels = channels * depth_multiplier
 
     builder.add_convolution(name = layer,
              kernel_channels = kernel_channels,
@@ -429,7 +434,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names, ker
     # Get the weights from _keras.
     weight_list = keras_layer.get_weights()
     output_blob_shape = list(filter(None, keras_layer.output_shape))
-    output_channels = output_blob_shape[-1] 
+    output_channels = output_blob_shape[-1]
     
     # D: depth mutliplier
     # w[0] is (H,W,Cin,D)
@@ -559,19 +564,23 @@ def convert_flatten(builder, layer, input_names, output_names, keras_layer):
 
     # using keras_layer.input.shape have a "?" (Dimension[None] at the front),
     # making a 3D tensor with unknown batch size 4D
-    in_shape = keras_layer.input_shape
-    if len(in_shape) == 4:
-        blob_order = 1
-    if len(in_shape) == 3 and in_shape[0] is None:
-        # handling Keras rank-3 tensor (Batch, Sequence, Channels)
-        permute_output_name = output_name + '__permute__'
-        builder.add_permute(name=layer+'__permute__', dim=(2,1,0,3),
-            input_name=input_name, output_name=permute_output_name)
-        builder.add_flatten(name=layer, mode=1,
-            input_name=permute_output_name, output_name=output_name)
-    else:
-        builder.add_flatten(name=layer, mode=blob_order, input_name=input_name,
-                output_name=output_name)
+
+    try:
+        in_shape = keras_layer.input_shape
+        if len(in_shape) == 4:
+            blob_order = 1
+        if len(in_shape) == 3 and in_shape[0] is None:
+            # handling Keras rank-3 tensor (Batch, Sequence, Channels)
+            permute_output_name = output_name + '__permute__'
+            builder.add_permute(name=layer+'__permute__', dim=(2,1,0,3),
+                input_name=input_name, output_name=permute_output_name)
+            builder.add_flatten(name=layer, mode=1,
+                input_name=permute_output_name, output_name=output_name)
+        else:
+            builder.add_flatten(name=layer, mode=blob_order, input_name=input_name,
+                    output_name=output_name)
+    except:
+        builder.add_flatten(name=layer, mode=1, input_name=input_name, output_name=output_name)
 
 def convert_merge(builder, layer, input_names, output_names, keras_layer):
     """
