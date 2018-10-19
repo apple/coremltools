@@ -7,7 +7,10 @@ from distutils.version import StrictVersion as _StrictVersion
 
 if _keras.__version__ >= _StrictVersion('2.2.0'):
     from keras.layers import DepthwiseConv2D
-    from keras_applications.mobilenet import relu6
+    if _keras.__version__ <= _StrictVersion('2.2.1'):
+        from keras_applications.mobilenet import relu6
+    else:
+        relu6 = lambda x: _keras.activations.relu(x, max_value=6.0)
 else:
     from keras.applications.mobilenet import DepthwiseConv2D, relu6
 
