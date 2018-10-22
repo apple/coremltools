@@ -5,15 +5,13 @@ from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 
 from distutils.version import StrictVersion as _StrictVersion
 
-if _keras.__version__ >= _StrictVersion('2.2.0'):
+if _keras.__version__ >= _StrictVersion('2.2.1'):
     from keras.layers import DepthwiseConv2D
-    if _keras.__version__ <= _StrictVersion('2.2.1'):
-        from keras_applications.mobilenet import relu6
-    else:
-        relu6 = lambda x: _keras.activations.relu(x, max_value=6.0)
+elif _keras.__version__ >= _StrictVersion('2.2.0'):
+    from keras.layers import DepthwiseConv2D
+    from keras_applications.mobilenet import relu6
 else:
     from keras.applications.mobilenet import DepthwiseConv2D, relu6
-
 
 def _get_recurrent_activation_name_from_keras(activation):
     if activation == _keras.activations.sigmoid:
@@ -267,6 +265,42 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
             non_linearity = non_linearity,
             input_name = input_name, output_name = output_name,
             params = params)
+
+def convert_advanced_relu(builder, layer, input_names, output_names, keras_layer):
+    """
+    Convert an ReLU layer with maximum value from keras to coreml.
+
+    Parameters
+    ----------
+    keras_layer: layer
+        A keras layer object.
+
+    builder: NeuralNetworkBuilder
+        A neural network builder object.
+    """
+    # Get input and output names
+    input_name, output_name = (input_names[0], output_names[0])
+    alpha = keras_layer.max_value
+
+    if keras_layer.max_value is None:
+        builder.add_activation(layer, 'RELU', input_name, output_name)
+        return
+
+    # No direct support of RELU with max-activation value - use negate and
+    # clip layers
+    relu_output_name = output_name + '_relu'
+    builder.add_activation(layer, 'RELU', input_name, relu_output_name)
+    # negate it
+    neg_output_name = relu_output_name + '_neg'
+    builder.add_activation(layer+'__neg__', 'LINEAR', relu_output_name,
+            neg_output_name,[-1.0, 0])
+    # apply threshold
+    clip_output_name = relu_output_name + '_clip'
+    builder.add_unary(layer+'__clip__', neg_output_name, clip_output_name,
+            'threshold', alpha = -6.0)
+    # negate it back
+    builder.add_activation(layer+'_neg2', 'LINEAR', clip_output_name,
+            output_name,[-1.0, 0])
 
 def convert_convolution(builder, layer, input_names, output_names, keras_layer):
     """

@@ -71,6 +71,8 @@ if _HAS_KERAS2_TF:
     if _keras.__version__ >= _StrictVersion('2.2.0'):
          _KERAS_LAYER_REGISTRY[_keras.layers.DepthwiseConv2D] = _layers2.convert_convolution
          _KERAS_LAYER_REGISTRY[_keras.engine.input_layer.InputLayer] = _layers2.default_skip
+         if _keras.__version__ >= _StrictVersion('2.2.1'):
+             _KERAS_LAYER_REGISTRY[_keras.layers.advanced_activations.ReLU] = _layers2.convert_advanced_relu
     else:
          _KERAS_LAYER_REGISTRY[_keras.applications.mobilenet.DepthwiseConv2D] = _layers2.convert_convolution
          _KERAS_LAYER_REGISTRY[_keras.engine.topology.InputLayer] = _layers2.default_skip
