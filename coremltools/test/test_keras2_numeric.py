@@ -23,7 +23,9 @@ if HAS_KERAS2_TF:
     from keras.layers.core import SpatialDropout1D, SpatialDropout2D
     from keras.layers.wrappers import Bidirectional, TimeDistributed
     from distutils.version import StrictVersion as _StrictVersion
-    if keras.__version__ >= _StrictVersion('2.2.0'):
+    if keras.__version__ >= _StrictVersion('2.2.1'):
+        from keras.layers import DepthwiseConv2D, ReLU
+    elif keras.__version__ >= _StrictVersion('2.2.0'):
         from keras.layers import DepthwiseConv2D
         from keras_applications.mobilenet import relu6
     else:
@@ -2114,29 +2116,35 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         self._test_model(model, mode='random_zero_mean', delta=1e-2)
 
     def test_tiny_mobilenet_arch(self, model_precision=_MLMODEL_FULL_PRECISION):
+        def ReLU6(x, name):
+            if keras.__version__ >= _StrictVersion('2.2.1'):
+                return ReLU(6., name=name)(x)
+            else:
+                return Activation(relu6, name=name)(x)
 
-        
         img_input = Input(shape=(32,32,3))
         x = Conv2D(4, (3,3), padding='same', use_bias=False, strides=(2,2), name='conv1')(img_input)
         x = BatchNormalization(axis=-1, name='conv1_bn')(x)
-        x = Activation(relu6, name='conv1_relu')(x)
-        
+        x = ReLU6(x, name='conv1_relu')
+
         x = DepthwiseConv2D((3, 3), padding='same', depth_multiplier=1, strides=(1,1),
                 use_bias=False, name='conv_dw_1')(x)
         x = BatchNormalization(axis=-1, name='conv_dw_1_bn')(x)
-        x = Activation(relu6, name='conv_dw_1_relu')(x)
+        x = ReLU6(x, name='conv_dw_1_relu')
+
         x = Conv2D(8, (1, 1), padding='same', use_bias=False, strides=(1, 1), name='conv_pw_1')(x)
         x = BatchNormalization(axis=-1, name='conv_pw_1_bn')(x)
-        x = Activation(relu6, name='conv_pw_1_relu')(x)
-        
+        x = ReLU6(x, name='conv_pw_1_relu')
+
         x = DepthwiseConv2D((3, 3), padding='same', depth_multiplier=1, strides=(2,2),
                 use_bias=False, name='conv_dw_2')(x)
         x = BatchNormalization(axis=-1, name='conv_dw_2_bn')(x)
-        x = Activation(relu6, name='conv_dw_2_relu')(x)
+        x = ReLU6(x, name='conv_dw_2_relu')
+
         x = Conv2D(8, (1, 1), padding='same', use_bias=False, strides=(2, 2), name='conv_pw_2')(x)
         x = BatchNormalization(axis=-1, name='conv_pw_2_bn')(x)
-        x = Activation(relu6, name='conv_pw_2_relu')(x)
-        
+        x = ReLU6(x, name='conv_pw_2_relu')
+
         model = Model(inputs=[img_input], outputs=[x])
 
         self._test_model(model, delta=1e-2, model_precision=model_precision)
