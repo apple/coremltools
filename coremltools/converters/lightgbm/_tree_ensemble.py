@@ -147,15 +147,15 @@ def convert_tree_ensemble(model, feature_names, target):
 
     if feature_names:
         if isinstance(feature_names, str):
-            features = {feature_names: range(num_dimensions)}
+            features = {feature_names: tuple(range(num_dimensions))}
         elif isinstance(feature_names, list) and len(feature_names) == num_dimensions:
-            features = feature_names
+            features = tuple(feature_names)
         else:
             raise ValueError('List of feature_names does not match the dimensionality of the model.')
 
     # If no feature_names specified, extract them from the model
     else:
-        features = lgbm_model_dict['feature_names']
+        features = tuple([str(feat_name) for feat_name in lgbm_model_dict['feature_names']])
 
     # Handle classifier model
     if _is_classifier(model):
