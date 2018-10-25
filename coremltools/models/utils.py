@@ -175,7 +175,8 @@ def _convert_nn_spec_to_half_precision(spec):
         'lrn', 'crop', 'padding', 'upsample', 'unary', 'add',
         'multiply', 'average', 'max', 'min', 'dot', 'reduce',
         'reshape', 'flatten', 'permute', 'concat', 'split',
-        'sequenceRepeat', 'reorganizeData', 'slice', 'custom'
+        'sequenceRepeat', 'reorganizeData', 'slice', 'custom',
+        'resizeBilinear', 'cropResize'
     ]
 
     quantized_layers = [
