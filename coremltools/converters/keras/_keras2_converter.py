@@ -241,6 +241,7 @@ def _convert(model,
     # (D) -> [D]
     # (Seq, D) -> [Seq, 1, D, 1, 1]
     # (Batch, Sequence, D) -> [D]
+    # (Batch, Seq, H, W, C) -> (C,H,W)
 
     # Retrieve input shapes from model
     if type(model.input_shape) is list:
@@ -301,6 +302,13 @@ def _convert(model,
                 errMsg += "Please provide a finite height (H), width (W) & channel value (C) "
                 errMsg += "using input_name_shape_dict arg with key = '{}' and value = [None,H,W,C]\n".format(input_names[idx])
                 errMsg += "Converted .mlmodel can be modified to have flexible input shape using coremltools.models.neural_network.flexible_shape_utils"
+                raise ValueError(errMsg)
+
+        elif len(unfiltered_shape) == 5:
+            if len(dim) == 4:# keras uses the reverse notation from CoreML
+                input_dims[idx] = (dim[-1], dim[-3], dim[-2])
+            else:
+                errMsg = "Invalid input shape for input: {}, shape:{}.\n".format(input_names[idx], str(unfiltered_shape))
                 raise ValueError(errMsg)
         else:
             raise ValueError("Input '%s' has input shape of length %d" % (input_names[idx], len(dim)))
