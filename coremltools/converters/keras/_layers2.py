@@ -9,7 +9,7 @@ if _keras.__version__ >= _StrictVersion('2.2.1'):
     from keras.layers import DepthwiseConv2D
 elif _keras.__version__ >= _StrictVersion('2.2.0'):
     from keras.layers import DepthwiseConv2D
-    from keras_applications.mobilenet import relu6
+    from keras.applications.mobilenet import relu6
 else:
     from keras.applications.mobilenet import DepthwiseConv2D, relu6
 
