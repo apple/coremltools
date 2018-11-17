@@ -797,6 +797,6 @@ def _start_server(port, web_dir):
     if port is None:
         port = _np.random.randint(8000, 9000)
     subprocess.Popen(['python', '-m', 'SimpleHTTPServer', str(port)])
-    webbrowser.open_new_tab('localhost:{}'.format(str(port)))
+    webbrowser.open_new_tab('http://localhost:{}'.format(str(port)))
     _os.chdir(curr_dir)
     return True
