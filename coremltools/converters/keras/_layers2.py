@@ -864,11 +864,18 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer):
         else:
             raise ValueError("Unrecognized upsample factor format %s" % (str(keras_layer.size)))
 
+    # Add bilinear upsampling, available in Keras 2.2.3 and above.
+    interpolation_method = getattr(keras_layer, 'interpolation', '')
+    mode = 'NN'
+    if interpolation_method == 'bilinear':
+        mode = 'BILINEAR'
+
     builder.add_upsample(name = layer,
-             scaling_factor_h = fh,
-             scaling_factor_w = fw,
-             input_name = input_name,
-             output_name = output_name)
+                         scaling_factor_h = fh,
+                         scaling_factor_w = fw,
+                         input_name = input_name,
+                         output_name = output_name,
+                         mode = mode)
 
 def convert_permute(builder, layer, input_names, output_names, keras_layer):
     """
