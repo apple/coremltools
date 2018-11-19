@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ...models.tree_ensemble import TreeEnsembleRegressor as _TreeEnsembleRegressor
+from ...models.tree_ensemble import TreeEnsembleRegressor as _TreeEnsembleRegressor, TreeEnsembleClassifier
 
 from ..._deps import HAS_XGBOOST as _HAS_XGBOOST
 
