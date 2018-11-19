@@ -154,3 +154,34 @@ def convert_tree_ensemble(model, feature_names, target, force_32bit_float):
                 feature_map = feature_map, force_32bit_float = force_32bit_float)
 
     return mlkit_tree.spec
+
+
+def convert_tree_ensemble_classifier(model, feature_names, target, force_32bit_float, class_labels=None, n_classes=None):
+    #TODO: find a way to obtain n_class from the xgboost model string
+    if isinstance(model, (_xgboost.core.Booster, str)):
+        if n_classes is None and class_labels is None:
+            raise ValueError("You must provide class_labels or n_classes when not providing the XGBClassifier")
+        elif n_classes is None:
+            n_classes = len(class_labels)
+        elif class_labels is None:
+            class_labels = = range(n_classes)
+    elif isinstance(model, _xgboost.XGBClassifier):
+        n_classes = model.n_classes_
+        if len(class_labels) != n_classes:
+            raise ValueError("Number of classes in model (%d) does not match "
+                             "length of supplied class list (%d)."
+                             % (n_classes, len(class_labels)))
+    if n_classes == 2:
+        # if we have only 2 classes we only have one sequence of estimators
+        base_prediction = [0.0]
+    else:
+        base_prediction = [0.0 for c in range(n_classes)]
+    # target here is the equivalent of output_features in scikit learn
+    coreml_tree = TreeEnsembleClassifier(input_features, class_labels, output_features)
+    coreml_tree.set_default_prediction_value(base_prediction)
+    for xgb_tree_id, xgb_tree_str in enumerate(xgb_model_str):
+        #TODO: find a way to verify this
+        tree_index = xgb_tree_id % n_classes
+        xgb_tree_json = json.loads(xgb_tree_str)
+        recurse_json(mlkit_tree, xgb_tree_json, xgb_tree_id, node_id = 0,
+                feature_map = feature_map, force_32bit_float = force_32bit_float, mode="classifier", tree_index=tree_index)
