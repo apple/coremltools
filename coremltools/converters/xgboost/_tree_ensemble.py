@@ -121,9 +121,9 @@ def convert_tree_ensemble(
     """
     if not(_HAS_XGBOOST):
         raise RuntimeError('xgboost not found. xgboost conversion API is disabled.')
-    accepted_modes = {"regressor", "classifier"}
+    accepted_modes = ["regressor", "classifier"]
     if mode not in accepted_modes:
-        raise ValueError(f"mode should be in {accepted_modes}")
+        raise ValueError("mode should be in %s" % accepted_modes)
     import json
     import os
     feature_map = None
