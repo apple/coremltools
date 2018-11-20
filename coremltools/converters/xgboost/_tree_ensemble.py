@@ -31,10 +31,10 @@ def recurse_json(mlkit_tree, xgb_tree_json, tree_id, node_id, feature_map,
         feature_index = split_name if not feature_map else feature_map[split_name]
 
         # xgboost internally uses float32, but the parsing from json pulls it out
-        # as a 64bit double.  To trigger the internal float32 detection in the 
-        # tree ensemble compiler, we need to explicitly cast it to a float 32 
-        # value, then back to the 64 bit float that protobuf expects.  This is 
-        # controlled with the force_32bit_float flag. 
+        # as a 64bit double.  To trigger the internal float32 detection in the
+        # tree ensemble compiler, we need to explicitly cast it to a float 32
+        # value, then back to the 64 bit float that protobuf expects.  This is
+        # controlled with the force_32bit_float flag.
         feature_value = xgb_tree_json['split_condition']
 
         if force_32bit_float:
@@ -104,7 +104,7 @@ def convert_tree_ensemble(model, feature_names, target, force_32bit_float):
     """
     if not(_HAS_XGBOOST):
         raise RuntimeError('xgboost not found. xgboost conversion API is disabled.')
-    
+
     import json
     import os
     feature_map = None
@@ -160,7 +160,6 @@ def convert_tree_ensemble(model, feature_names, target, force_32bit_float):
 
 
 def convert_tree_ensemble_classifier(model, feature_names, target, force_32bit_float, class_labels=None, n_classes=None):
-    #TODO: find a way to obtain n_class from the xgboost model string
     if isinstance(model, (_xgboost.core.Booster, str)):
         if n_classes is None and class_labels is None:
             raise ValueError("You must provide class_labels or n_classes when not providing the XGBClassifier")
