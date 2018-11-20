@@ -214,9 +214,10 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
 
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
-class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
+@unittest.skipIf(not HAS_XGBOOST, 'Skipping, no xgboost')
+class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
     """
-    Unit test class for testing scikit-learn converter.
+    Unit test class for testing xgboost converter.
     """
 
     @classmethod
