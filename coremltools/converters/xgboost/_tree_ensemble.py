@@ -197,8 +197,8 @@ def convert_tree_ensemble(
         else:
             base_prediction = [0.0 for c in range(n_classes)]
         # target here is the equivalent of output_features in scikit learn
-        coreml_tree = TreeEnsembleClassifier(feature_names, class_labels, target)
-        coreml_tree.set_default_prediction_value(base_prediction)
+        mlkit_tree = TreeEnsembleClassifier(feature_names, class_labels, target)
+        mlkit_tree.set_default_prediction_value(base_prediction)
     else:
         mlkit_tree = _TreeEnsembleRegressor(feature_names, target)
         mlkit_tree.set_default_prediction_value(0.5)
