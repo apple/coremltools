@@ -198,6 +198,7 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
                sorted(map(lambda x: x.name, spec.description.input)))
 
         # Test the linear regression parameters.
+        self.assertEqual(len(spec.pipelineClassifier.pipeline.models), 2)
         tr = spec.pipelineClassifier.pipeline.models[1].treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
 
