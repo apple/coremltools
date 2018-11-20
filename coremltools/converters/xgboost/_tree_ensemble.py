@@ -73,7 +73,7 @@ def recurse_json(mlkit_tree, xgb_tree_json, tree_id, node_id, feature_map,
     # Now recurse
     if "children" in xgb_tree_json:
         for child in xgb_tree_json["children"]:
-            recurse_json(mlkit_tree, child, tree_id, child['nodeid'], feature_map, force_32bit_float)
+            recurse_json(mlkit_tree, child, tree_id, child['nodeid'], feature_map, force_32bit_float, mode=mode, tree_index=tree_index)
 
 def convert_tree_ensemble(model, feature_names, target, force_32bit_float):
     """Convert a generic tree model to the protobuf spec.
