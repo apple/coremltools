@@ -198,8 +198,7 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
                sorted(map(lambda x: x.name, spec.description.input)))
 
         # Test the linear regression parameters.
-        self.assertEqual(len(spec.pipelineClassifier.pipeline.models), 2)
-        tr = spec.pipelineClassifier.pipeline.models[1].treeEnsembleClassifier.treeEnsemble
+        tr = spec.treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
 
     def test_conversion_bad_inputs(self):
@@ -230,20 +229,27 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         import numpy as np
 
         scikit_data = load_boston()
-        self.xgb_model = xgboost.XGBClassifier()
         t = scikit_data.target
         target = np.digitize(t, np.histogram(t)[1]) - 1
-        self.xgb_model.fit(scikit_data.data, target)
+        dtrain = xgboost.DMatrix(scikit_data.data, label=target, feature_names=scikit_data.feature_names)
+        self.xgb_model = xgboost.train({}, dtrain)
         self.target = target
 
         # Save the data and the model
         self.scikit_data = scikit_data
+        self.n_classes = len(np.unique(self.target))
 
     def test_conversion(self):
 
         input_names = self.scikit_data.feature_names
         output_name = 'target'
-        spec = xgb_converter.convert(self.xgb_model, input_names, output_name, mode="classifier").get_spec()
+        spec = xgb_converter.convert(
+            self.xgb_model,
+            input_names,
+            output_name,
+            mode="classifier",
+            n_classes=self.n_classes,
+        ).get_spec()
         self.assertIsNotNone(spec)
 
         # Test the model class
@@ -260,8 +266,8 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         self.assertEqual(sorted(input_names),
                sorted(map(lambda x: x.name, spec.description.input)))
 
-        self.assertEqual(len(spec.pipelineClassifier.pipeline.models), 2)
-        tr = spec.pipelineClassifier.pipeline.models[-1].treeEnsembleClassifier.treeEnsemble
+        # Test the linear regression parameters.
+        tr = spec.treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
 
 
@@ -270,10 +276,10 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
 
         output_name = 'target'
         feature_names = self.scikit_data.feature_names
-        n_classes = len(np.unique(self.target))
+
 
         xgb_model_json = tempfile.mktemp('xgb_tree_model_classifier.json')
-        xgb_json_out = self.xgb_model.get_booster().get_dump(with_stats=True, dump_format='json')
+        xgb_json_out = self.xgb_model.get_dump(with_stats=True, dump_format='json')
         with open(xgb_model_json, 'w') as f:
             json.dump(xgb_json_out, f)
         spec = xgb_converter.convert(
@@ -281,7 +287,7 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
             feature_names,
             output_name,
             mode="classifier",
-            n_classes=n_classes,
+            n_classes=self.n_classes,
         ).get_spec()
         self.assertIsNotNone(spec)
 
@@ -300,7 +306,7 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         for input_type in spec.description.input:
             self.assertEqual(input_type.type.WhichOneof('Type'),
                     'doubleType')
-        self.assertEqual(sorted(self.feature_names),
+        self.assertEqual(sorted(self.scikit_data.feature_names),
                sorted(map(lambda x: x.name, spec.description.input)))
 
         # Test the linear regression parameters.
