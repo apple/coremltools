@@ -269,7 +269,7 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
 
         output_name = 'target'
         feature_names = self.scikit_data.feature_names
-        n_classes = np.unique(self.target)
+        n_classes = len(np.unique(self.target))
 
         xgb_model_json = tempfile.mktemp('xgb_tree_model_classifier.json')
         xgb_json_out = self.xgb_model.get_booster().get_dump(with_stats=True, dump_format='json')
