@@ -107,9 +107,11 @@ def convert_tree_ensemble(
 
     mode: str in ['regressor', 'classifier']
         Mode of the tree model.
+
     class_labels: list[int] or None
         List of classes. When set to None, the class labels are just the range from
         0 to n_classes - 1.
+
     n_classes: int or None
         Number of classes in classification. When set to None, the number of
         classes is expected from the model or class_labels should be provided.
