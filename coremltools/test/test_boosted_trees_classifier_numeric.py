@@ -151,7 +151,7 @@ class BoostedTreeClassificationBostonHousingXGboostNumericTest(unittest.TestCase
         xgb_model.fit(self.X, self.target)
 
         # Convert the model
-        spec = skl_converter.convert(xgb_model, self.feature_names, self.output_name)
+        spec = xgb_converter.convert(xgb_model, self.feature_names, self.output_name, mode="classifier")
 
         if macos_version() >= (10, 13):
             # Get predictions
