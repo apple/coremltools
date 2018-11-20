@@ -268,7 +268,7 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         import numpy as np
 
         output_name = 'target'
-        feature_names = self.feature_names
+        feature_names = self.scikit_data.feature_names
         n_classes = np.unique(self.target)
 
         xgb_model_json = tempfile.mktemp('xgb_tree_model_classifier.json')
