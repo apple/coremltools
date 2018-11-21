@@ -198,6 +198,8 @@ def convert_tree_ensemble(
         # target here is the equivalent of output_features in scikit learn
         mlkit_tree = TreeEnsembleClassifier(feature_names, class_labels, target)
         mlkit_tree.set_default_prediction_value(base_prediction)
+        if n_classes == 2:
+            mlkit_tree.set_post_evaluation_transform("Regression_Logistic")
     else:
         mlkit_tree = _TreeEnsembleRegressor(feature_names, target)
         mlkit_tree.set_default_prediction_value(0.5)
@@ -210,5 +212,4 @@ def convert_tree_ensemble(
         xgb_tree_json = json.loads(xgb_tree_str)
         recurse_json(mlkit_tree, xgb_tree_json, xgb_tree_id, node_id = 0,
                 feature_map = feature_map, force_32bit_float = force_32bit_float, mode=mode, tree_index=tree_index, n_classes=n_classes)
-
     return mlkit_tree.spec
