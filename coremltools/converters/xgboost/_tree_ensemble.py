@@ -13,7 +13,7 @@ if _HAS_XGBOOST:
     import xgboost as _xgboost
 
 def recurse_json(mlkit_tree, xgb_tree_json, tree_id, node_id, feature_map,
-        force_32bit_float, mode="regressor", tree_index=0):
+        force_32bit_float, mode="regressor", tree_index=0, n_classes=2):
     """Traverse through the tree and append to the tree spec.
     """
     relative_hit_rate = None
@@ -60,11 +60,10 @@ def recurse_json(mlkit_tree, xgb_tree_json, tree_id, node_id, feature_map,
 
     else:
         value = xgb_tree_json["leaf"]
-
         if force_32bit_float:
             value = float(_np.float32(value))
 
-        if mode == "classifier":
+        if mode == "classifier" and n_classes > 2:
             value = {tree_index: value}
 
         mlkit_tree.add_leaf_node(tree_id, node_id, value,
@@ -73,7 +72,7 @@ def recurse_json(mlkit_tree, xgb_tree_json, tree_id, node_id, feature_map,
     # Now recurse
     if "children" in xgb_tree_json:
         for child in xgb_tree_json["children"]:
-            recurse_json(mlkit_tree, child, tree_id, child['nodeid'], feature_map, force_32bit_float, mode=mode, tree_index=tree_index)
+            recurse_json(mlkit_tree, child, tree_id, child['nodeid'], feature_map, force_32bit_float, mode=mode, tree_index=tree_index, n_classes=n_classes)
 
 def convert_tree_ensemble(
         model,
@@ -210,6 +209,6 @@ def convert_tree_ensemble(
             tree_index = 0
         xgb_tree_json = json.loads(xgb_tree_str)
         recurse_json(mlkit_tree, xgb_tree_json, xgb_tree_id, node_id = 0,
-                feature_map = feature_map, force_32bit_float = force_32bit_float, mode=mode, tree_index=tree_index)
+                feature_map = feature_map, force_32bit_float = force_32bit_float, mode=mode, tree_index=tree_index, n_classes=n_classes)
 
     return mlkit_tree.spec
