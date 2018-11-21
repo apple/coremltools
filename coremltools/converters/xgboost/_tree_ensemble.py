@@ -204,7 +204,7 @@ def convert_tree_ensemble(
         mlkit_tree.set_default_prediction_value(0.5)
 
     for xgb_tree_id, xgb_tree_str in enumerate(xgb_model_str):
-        if mode == "classifier":
+        if mode == "classifier" and n_classes > 2:
             tree_index = xgb_tree_id % n_classes
         else:
             tree_index = 0
