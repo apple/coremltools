@@ -99,3 +99,41 @@ model = coremltools.models.MLModel(spec)
 model.save('path/to/the/saved/model.mlmodel')
 
 ```
+
+## Prediction with an image input
+
+An mlmodel that takes an input of type image requires a PIL image during the prediction call.
+
+```python
+import coremltools
+import numpy as np
+import PIL.Image
+
+model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
+
+Height = 20 # use the correct input image height 
+Width = 60 # use the correct input image width
+
+
+# Scenario 1: load an image from disk
+def load_image(path, resize_to=None):
+    # resize_to: (Width, Height)
+    img = PIL.Image.open(path)
+    if resize_to is not None:
+        img = img.resize(resize_to, PIL.Image.ANTIALIAS)
+    img_np = np.array(img).astype(np.float32)
+    return img_np, img
+
+# load the image and resize using PIL utilities 
+_, img = load_image('/path/to/image.jpg' ,resize_to=(Width, Height))
+out_dict = model.predict({'image': img})
+
+# Scenario 2: load an image from a numpy array
+shape = (Height, Width, 3)  # height x width x RGB
+data = np.zeros(shape, dtype=np.uint8)
+# manipulate numpy data
+pil_img = PIL.Image.fromarray(data)
+out_dict = model.predict({'image': pil_img})
+
+```
+
