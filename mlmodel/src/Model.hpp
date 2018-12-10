@@ -20,28 +20,11 @@ namespace Specification {
     class Metadata;
 }
 
-/**
- * The primary interface to the whole model spec .  Provides functionality for
- * saving and loading model specs, validating them, and incrementally building
- * them by adding transforms.
- */
-class Model {
-private:
-    static Result validateGeneric(const Specification::Model& model);
-
-protected:
-    std::shared_ptr<Specification::Model> m_spec;
-    
-public:
-    Model();
-    Model(const std::string& description);
-    Model(const Specification::Model& proto);
-    Model(const Model& other);
-    virtual ~Model();
-
-    // operator overloads
-    bool operator== (const Model& other) const;
-    bool operator!= (const Model& other) const;
+namespace Model {
+    void initModel(CoreML::Specification::Model* model, const std::string& description);
+    void initClassifier(CoreML::Specification::Model* model, const std::string& predictedClassOutput, const std::string& predictedProbabilitiesOutput, const std::string& description);
+    void initRegressor(CoreML::Specification::Model* model, const std::string& predictedValueOutput, const std::string& description);
+    Result validateGeneric(const Specification::Model& model);
 
     /**
      * Deserializes a MLModel from an std::istream.
@@ -51,8 +34,7 @@ public:
      *        MLModel if successful.
      * @return the result of the load operation, with ResultType::NO_ERROR on success.
      */
-    static Result load(std::istream& stream,
-                       Model& out);
+    Result load(CoreML::Specification::Model* out, std::istream& stream);
     
     /**
      * Deserializes a MLModel from a file given by a path.
@@ -62,44 +44,30 @@ public:
      * @return the result of the load operation, with ResultType::NO_ERROR on
      * success.
      */
-    static Result load(const std::string& path,
-                       Model& out);
-    
+    Result load(CoreML::Specification::Model* out, const std::string& path);
+
     /**
      * Serializes a MLModel to an std::ostream.
      *
      * @param stream the output stream.
      * @return the result of the save operation, with ResultType::NO_ERROR on success.
      */
-    Result save(std::ostream& stream);
-    
+    Result save(const CoreML::Specification::Model& model, std::ostream& stream);
+
     /**
      * Serializes a MLModel to a file given by a path.
      *
      * @param path the output file path.
      * @return result of save operation, with ResultType::NO_ERROR on success.
      */
-    Result save(const std::string& path);
-    
+    Result save(const CoreML::Specification::Model& model, const std::string& path);
 
-    const std::string& shortDescription() const;
-    MLModelType modelType() const;
-    std::string modelTypeName() const;
-    
-    /**
-     * Get the schema (name, type) for the inputs of this transform.
-     *
-     * @return input schema for outputs in this transform.
-     */
-    SchemaType inputSchema() const;
-    
-    /**
-     * Get the output schema (name, type) for the inputs of this transform.
-     *
-     * @return output schema for outputs in this transform.
-     */
-    SchemaType outputSchema() const;
-    
+    MLModelType modelType(const CoreML::Specification::Model& model);
+    std::string modelTypeName(const CoreML::Specification::Model& model);
+
+    SchemaType inputSchema(const CoreML::Specification::Model& model);
+    SchemaType outputSchema(const CoreML::Specification::Model& model);
+
     /**
      * Enforces type invariant conditions.
      *
@@ -118,7 +86,7 @@ public:
      * @return a Result corresponding to whether featureType is contained
      *         in allowedFeatureTypes.
      */
-    static Result enforceTypeInvariant(const std::vector<FeatureType>&
+    Result enforceTypeInvariant(const std::vector<FeatureType>&
                                        allowedFeatureTypes, FeatureType featureType);
     
     
@@ -128,9 +96,8 @@ public:
      *
      * @return ResultType::NO_ERROR if the transform is valid.
      */
-    static Result validate(const Specification::Model& model);
-    Result validate() const;
-    
+    Result validate(const Specification::Model& model);
+
     /**
      * Add an input to the transform-spec.
      *
@@ -138,7 +105,7 @@ public:
      * @param featureType Type of the feature added.
      * @return Result type of this operation.
      */
-    virtual Result addInput(const std::string& featureName, FeatureType featureType);
+    Result addInput(Specification::Model* model, const std::string& featureName, FeatureType featureType);
     
     /**
      * Add an output to the transform-spec.
@@ -147,23 +114,14 @@ public:
      * @param outputType Type of the feature added.
      * @return Result type of this operation.
      */
-    virtual Result addOutput(const std::string& outputName, FeatureType outputType);
-    
-    /**
-     * If a model does not use features from later specification versions, this will
-     * set the spec version so that the model can be executed on older versions of
-     * Core ML.
-     */
-    void downgradeSpecificationVersion();
-    
-    // TODO -- This seems like a giant hack. This is leaking abstractions.
-    const Specification::Model& getProto() const;
-    Specification::Model& getProto();
-    
+    Result addOutput(Specification::Model* model, const std::string& outputName, FeatureType outputType);
+
     // string representation (text description)
-    std::string toString() const;
-    void toStringStream(std::stringstream& ss) const;
-  };
+    std::string toString(const CoreML::Specification::Model& model);
+    void toStringStream(const CoreML::Specification::Model& model, std::stringstream& ss);
+
+} // namespace Model
+
 }
 
 extern "C" {
@@ -175,7 +133,6 @@ typedef struct _MLModelSpecification {
     std::shared_ptr<CoreML::Specification::Model> cppFormat;
     _MLModelSpecification();
     _MLModelSpecification(const CoreML::Specification::Model&);
-    _MLModelSpecification(const CoreML::Model&);
 } MLModelSpecification;
     
 typedef struct _MLModelMetadataSpecification {

@@ -53,8 +53,7 @@ namespace CoreML {
             }
 
             // validate the model itself and bail out if it's invalid
-            Model wrapper(model);
-            Result r = wrapper.validate();
+            Result r = Model::validate(model);
             if (!r.good()) { return r; }
 
             // Now add in the outputs of this model to the mix.

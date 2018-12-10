@@ -18,11 +18,10 @@ namespace CoreML {
         class TreeEnsembleRegressor;
     }
 
-    class TreeEnsembleBase : public Model {
+    class TreeEnsembleBase {
     protected:
-
-        // Init from one of the parent classes.
-        TreeEnsembleBase(Model&& model_spec, bool isClassifier);
+        std::unique_ptr<Specification::Model> m_spec;
+        TreeEnsembleBase(const std::string& description, bool isClassifier);
 
     public:
 
@@ -45,6 +44,11 @@ namespace CoreML {
         ////////////////////////////////////////////////////////////////////////////////
 
         virtual ~TreeEnsembleBase();
+
+        /**
+         * Gives access to the underlying protobuf
+         */
+        CoreML::Specification::Model& getProto();
 
         /**
          *  All of the leaf values are added to this value to form the base prediction

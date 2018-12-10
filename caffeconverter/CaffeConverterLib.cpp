@@ -81,7 +81,7 @@ void convertCaffe(const std::string& srcPath,
                     predictedFeatureName);
     
     // Save the format to the model path.
-    Result r = saveSpecificationPath(modelSpec, dstPath);
+    Result r = Model::save(modelSpec, dstPath);
     if (!r.good()) {
         throw std::runtime_error(r.message());
     }

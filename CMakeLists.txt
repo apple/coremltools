@@ -1,5 +1,22 @@
 cmake_minimum_required(VERSION 3.0.0)
 
+#xcodebuild -version -sdk macosx Path
+find_program(XCODEBUILD xcodebuild)
+if(XCODEBUILD)
+  exec_program(${XCODEBUILD}
+    ARGS "-version -sdk macosx Path"
+    OUTPUT_VARIABLE XCODE_SDK_PATH)
+  set(CMAKE_OSX_SYSROOT ${XCODE_SDK_PATH})
+endif()
+
+find_program(SW_VERS sw_vers)
+if(SW_VERS)
+  exec_program(${SW_VERS}
+    ARGS "-productVersion"
+    OUTPUT_VARIABLE OSX_VERSION)
+  set(CMAKE_OSX_DEPLOYMENT_TARGET ${OSX_VERSION})
+endif()
+
 set(CMAKE_OSX_ARCHITECTURES x86_64)
 
 project(coremltools)

@@ -48,12 +48,6 @@ namespace CoreML {
     }
 
 
-    static inline Result saveSpecificationPath(const Specification::Model& formatObj,
-                                               const std::string& path) {
-        Model m(formatObj);
-        return m.save(path);
-    }
-
     template <typename T>
     static inline  Result loadSpecification(T& formatObj,
                                             std::istream& in) {
@@ -71,20 +65,12 @@ namespace CoreML {
         
         return Result();
     }
-    
-    static inline Result loadSpecificationPath(Specification::Model& formatObj,
-                                               const std::string& path) {
-        Model m;
-        Result r = CoreML::Model::load(path, m);
-        if (!r.good()) { return r; }
-        formatObj = m.getProto();
-        return Result();
-    }
 
     /**
      * If a model spec does not use features from later specification versions, this will
      * set the spec version so that the model can be executed on older versions of
      * Core ML. It applies recursively to sub models
+     * We will only reduce the given specification version if possible. We never increase it here. 
      */
     void downgradeSpecificationVersion(Specification::Model *pModel);
 

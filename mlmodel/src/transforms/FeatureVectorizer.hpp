@@ -12,28 +12,15 @@
 #include "../Model.hpp"
 
 namespace CoreML {
+  namespace Specification {
+    class FeatureVectorizer;
+  }
+
+  namespace FeatureVectorizer {
+    Result add(CoreML::Specification::FeatureVectorizer* fv, const std::string& input_feature, size_t input_dimension);
+    std::vector<std::pair<std::string, size_t> > get_inputs(const CoreML::Specification::FeatureVectorizer& fv);
+  }
   
-  class FeatureVectorizer : public Model {
-  public:
-    
-    /*  Initialize as a generic transform.
-     */
-    explicit FeatureVectorizer(const std::string& description);
-    
-    /**
-     * Construct from proto.
-     */
-    explicit FeatureVectorizer(const Specification::Model &modelSpec);
-    
-    // Destructor.
-    virtual ~FeatureVectorizer();
-    
-    /** Adds in a transform MLModel.
-     */
-    Result add(const std::string& input_feature, size_t input_dimension);
- 
-    std::vector<std::pair<std::string, size_t> > get_inputs() const;
-  };
 }
 
 

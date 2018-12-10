@@ -10,27 +10,18 @@
 #define DictVectorizer_h
 
 #include "../Result.hpp"
-#include "../Model.hpp"
 #include "../../build/format/OneHotEncoder_enums.h"
 
+#include <string>
 
 namespace CoreML {
-    
-
-class DictVectorizer : public Model {
-    
-public:
-    
-    explicit DictVectorizer(const std::string& description = "");
-    
-    Result addInput(const std::string& featureName, FeatureType featureType) override;
-    
-    Result setHandleUnknown(MLHandleUnknown state);
-    
-    Result setFeatureEncoding(const std::vector<int64_t>& container);
-    
-    Result setFeatureEncoding(const std::vector<std::string>& container);
-};
-
+    namespace Specification {
+        class DictVectorizer;
+    }
+    namespace DictVectorizer {
+        Result setFeatureEncoding(CoreML::Specification::DictVectorizer* dictVectorizer, const std::vector<int64_t>& container);
+        Result setFeatureEncoding(CoreML::Specification::DictVectorizer* dictVectorizer, const std::vector<std::string>& container);
+    }
 }
+
 #endif /* DictVectorizer_h */

@@ -1,6 +1,7 @@
 #include "MLModelTests.hpp"
 #include "../src/Model.hpp"
 #include "../src/Format.hpp"
+#include "../src/Utils.hpp"
 
 #include "framework/TestUtils.hpp"
 
@@ -67,16 +68,16 @@ int testSpecDowngradePipeline() {
     glm->mutable_stringclasslabels()->add_vector("dog");
 
     // Constructing an CoreML::Model should downgrade spec on load
-    Model model(spec);
+    CoreML::downgradeSpecificationVersion(&spec);
 
     // Top level should be IOS 12 because it contains vision feature print
-    ML_ASSERT_EQ(model.getProto().specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS12);
+    ML_ASSERT_EQ(spec.specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS12);
 
     // First model in pipeline is vision feature print and should have IOS12 spec version
-    ML_ASSERT_EQ(model.getProto().pipelineclassifier().pipeline().models(0).specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS12);
+    ML_ASSERT_EQ(spec.pipelineclassifier().pipeline().models(0).specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS12);
 
     // Second model is just a GLM which has support in IOS 11
-    ML_ASSERT_EQ(model.getProto().pipelineclassifier().pipeline().models(1).specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS11);
+    ML_ASSERT_EQ(spec.pipelineclassifier().pipeline().models(1).specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS11);
 
     return 0;
 }

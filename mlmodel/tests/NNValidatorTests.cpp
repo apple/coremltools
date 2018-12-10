@@ -1844,8 +1844,7 @@ int testValidCustom() {
     ML_ASSERT_GOOD(res);
     
     // We'll also test that the spec version is correct here
-    Model mlmodel = Model(m1);
-    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11_2);
+    ML_ASSERT(m1.specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11_2);
 
     return 0;
 }
@@ -1956,9 +1955,7 @@ int testSpecDowngrade() {
     Result res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_GOOD(res);
     
-    Model mlmodel = Model(m1);
-    
-    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11);
+    ML_ASSERT(m1.specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11);
     
     return 0;
     
@@ -2014,9 +2011,7 @@ int testSpecDowngradefp16() {
     Result res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_GOOD(res);
 
-    Model mlmodel = Model(m1);
-    
-    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11_2);
+    ML_ASSERT(m1.specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11_2);
     
     return 0;
     
@@ -2053,9 +2048,7 @@ int testSpecDowngradeFlexibleShapes() {
     Result res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_GOOD(res);
     
-    Model mlmodel = Model(m1);
-    
-    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS12);
+    ML_ASSERT(m1.specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS12);
     
     return 0;
     
@@ -2091,9 +2084,7 @@ int testSpecDowngradeFlexibleShapes2() {
     Result res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_GOOD(res);
     
-    Model mlmodel = Model(m1);
-    
-    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11);
+    ML_ASSERT(m1.specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS11);
     
     return 0;
     

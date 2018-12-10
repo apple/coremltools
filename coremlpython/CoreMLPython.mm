@@ -3,6 +3,7 @@
 #import "CoreMLPython.h"
 #import "CoreMLPythonUtils.h"
 #import "Globals.hpp"
+#import "Model.hpp"
 #import "NeuralNetworkShapes.hpp"
 #import "Utils.hpp"
 
@@ -80,19 +81,19 @@ int32_t Model::maximumSupportedSpecificationVersion() {
 
 NeuralNetworkShapeInformation::NeuralNetworkShapeInformation(const std::string& filename) {
     CoreML::Specification::Model model;
-    Result r = CoreML::loadSpecificationPath(model, filename);
+    Result r = CoreML::Model::load(&model, filename);
     shaper = std::unique_ptr<NeuralNetworkShaper>(new NeuralNetworkShaper(model));
 }
 
 NeuralNetworkShapeInformation::NeuralNetworkShapeInformation(const std::string& filename, bool useInputAndOutputConstraints) {
     CoreML::Specification::Model model;
-    Result r = CoreML::loadSpecificationPath(model, filename);
+    Result r = CoreML::Model::load(&model, filename);
     shaper = std::unique_ptr<NeuralNetworkShaper>(new NeuralNetworkShaper(model, useInputAndOutputConstraints));
 }
 
 void NeuralNetworkShapeInformation::init(const std::string& filename) {
     CoreML::Specification::Model model;
-    Result r = CoreML::loadSpecificationPath(model, filename);
+    Result r = CoreML::Model::load(&model, filename);
     shaper.reset(new NeuralNetworkShaper(model));
 }
 

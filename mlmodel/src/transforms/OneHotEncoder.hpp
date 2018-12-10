@@ -7,31 +7,18 @@
 
 
 namespace CoreML {
-    
-    class OneHotEncoder : public Model {
-    
-    public:
+namespace Model {
 
-        explicit OneHotEncoder(const std::string& description = "");
-        
-        Result addInput(const std::string& featureName, FeatureType featureType) override;
+    Result setHandleUnknown(CoreML::Specification::OneHotEncoder* ohe, MLHandleUnknown state);
+    Result setUseSparse(CoreML::Specification::OneHotEncoder* ohe, bool state);
+    Result setFeatureEncoding(CoreML::Specification::OneHotEncoder* ohe, const std::vector<int64_t>& container);
+    Result setFeatureEncoding(CoreML::Specification::OneHotEncoder* ohe, const std::vector<std::string>& container);
+    Result getHandleUnknown(CoreML::Specification::OneHotEncoder* ohe, MLHandleUnknown *state);
+    Result getUseSparse(CoreML::Specification::OneHotEncoder* ohe, bool *state);
+    Result getFeatureEncoding(CoreML::Specification::OneHotEncoder* ohe, std::vector<int64_t>& container);
+    Result getFeatureEncoding(CoreML::Specification::OneHotEncoder* ohe, std::vector<std::string>& container);
 
-        Result setHandleUnknown(MLHandleUnknown state);
-
-        Result setUseSparse(bool state);
-    
-        Result setFeatureEncoding(const std::vector<int64_t>& container);
-        
-        Result setFeatureEncoding(const std::vector<std::string>& container);
-
-        Result getHandleUnknown(MLHandleUnknown *state);
-    
-        Result getUseSparse(bool *state);
-    
-        Result getFeatureEncoding(std::vector<int64_t>& container);
-        
-        Result getFeatureEncoding(std::vector<std::string>& container);
-    };
-}
+} // namespace Model
+} // namespace CoreML
 
 #endif

@@ -7,28 +7,15 @@
 #include <unordered_map>
 
 namespace CoreML {
-    
-    Model::Model() {
-        m_spec = std::make_shared<Specification::Model>();
-        m_spec->set_specificationversion(MLMODEL_SPECIFICATION_VERSION);
-    }
-    
-    Model::Model(const Specification::Model& proto) {
-        m_spec = std::make_shared<Specification::Model>(proto);
-        // We need to check this here because the proto could be overly strict
-        downgradeSpecificationVersion();
-    }
-    
-    Model::Model(const std::string& description)
-    : Model::Model() {
-        Specification::Metadata* metadata = m_spec->mutable_description()->mutable_metadata();
+namespace Model {
+    void initRegressor(CoreML::Specification::Model* model, const std::string& predictedValueOutput, const std::string& description) {
+        model->set_specificationversion(MLMODEL_SPECIFICATION_VERSION);
+        model->mutable_description()->set_predictedfeaturename(predictedValueOutput);
+        Specification::Metadata* metadata = model->mutable_description()->mutable_metadata();
         metadata->set_shortdescription(description);
     }
-    
-    Model::Model(const Model& other) = default;
-    Model::~Model() = default;
 
-    Result Model::validateGeneric(const Specification::Model& model) {
+    Result validateGeneric(const Specification::Model& model) {
         // make sure compat version fields are filled in
         if (model.specificationversion() == 0) {
             return Result(ResultType::INVALID_COMPATIBILITY_VERSION,
@@ -61,7 +48,7 @@ namespace CoreML {
     case MLModelType_ ## TYPE: \
         return ::CoreML::validate<MLModelType_ ## TYPE>(model);
 
-    Result Model::validate(const Specification::Model& model) {
+    Result validate(const Specification::Model& model) {
         Result result = validateGeneric(model);
         if (!result.good()) { return result; }
 
@@ -101,64 +88,53 @@ namespace CoreML {
         }
     }
 
-    Result Model::validate() const {
-        return Model::validate(*m_spec);
-    }
-    
-    Result Model::load(std::istream& in, Model& out) {
+    Result load(Specification::Model* out, std::istream& in) {
         if (!in.good()) {
             return Result(ResultType::UNABLE_TO_OPEN_FILE,
                           "unable to open file for read");
         }
 
         
-        Result r = loadSpecification(*(out.m_spec), in);
+        Result r = loadSpecification(*out, in);
         if (!r.good()) { return r; }
         // validate on load
-        r = out.validate();
+        r = validate(*out);
 
         return r;
     }
     
-    Result Model::load(const std::string& path, Model& out) {
+    Result load(Specification::Model* out, const std::string& path) {
         std::ifstream in(path, std::ios::binary);
-        return load(in, out);
+        return load(out, in);
     }
     
-    // We will only reduce the given specification version if possible. We never increase it here. 
-    void Model::downgradeSpecificationVersion() {
-        CoreML::downgradeSpecificationVersion(m_spec.get());
-    }
     
-    Result Model::save(std::ostream& out) {
+    Result save(const Specification::Model& to_copy, std::ostream& out) {
         if (!out.good()) {
             return Result(ResultType::UNABLE_TO_OPEN_FILE,
                           "unable to open file for write");
         }
 
-        downgradeSpecificationVersion();
+        Specification::Model model = to_copy;
+        CoreML::downgradeSpecificationVersion(&model);
 
         // validate on save
-        Result r = validate();
+        Result r = validate(model);
         if (!r.good()) {
             return r;
         }
         
-        return saveSpecification(*m_spec, out);
+        return saveSpecification(model, out);
     }
     
-    Result Model::save(const std::string& path) {
+    Result save(const Specification::Model& model, const std::string& path) {
         std::ofstream out(path, std::ios::binary);
-        return save(out);
+        return save(model, out);
     }
 
-    const std::string& Model::shortDescription() const {
-        return m_spec->description().metadata().shortdescription();
-    }
-
-    SchemaType Model::inputSchema() const {
+    SchemaType inputSchema(const Specification::Model& model) {
         SchemaType inputs;
-        const Specification::ModelDescription& interface = m_spec->description();
+        const Specification::ModelDescription& interface = model.description();
         int size = interface.input_size();
         assert(size >= 0);
         inputs.reserve(static_cast<size_t>(size));
@@ -169,9 +145,9 @@ namespace CoreML {
         return inputs;
     }
     
-    SchemaType Model::outputSchema() const {
+    SchemaType outputSchema(const Specification::Model& model) {
         SchemaType outputs;
-        const Specification::ModelDescription& interface = m_spec->description();
+        const Specification::ModelDescription& interface = model.description();
         int size = interface.output_size();
         assert(size >= 0);
         outputs.reserve(static_cast<size_t>(size));
@@ -182,41 +158,35 @@ namespace CoreML {
         return outputs;
     }
     
-    Result Model::addInput(const std::string& featureName,
-                           FeatureType featureType) {
-        Specification::ModelDescription* interface = m_spec->mutable_description();
+    Result addInput(Specification::Model* model,
+                    const std::string& featureName,
+                    FeatureType featureType) {
+        Specification::ModelDescription* interface = model->mutable_description();
         Specification::FeatureDescription *arg = interface->add_input();
         arg->set_name(featureName);
         arg->set_allocated_type(featureType.allocateCopy());
         return Result();
     }
     
-    Result Model::addOutput(const std::string& targetName,
-                            FeatureType targetType) {
-        Specification::ModelDescription* interface = m_spec->mutable_description();
+    Result addOutput(Specification::Model* model,
+                     const std::string& targetName,
+                     FeatureType targetType) {
+        Specification::ModelDescription* interface = model->mutable_description();
         Specification::FeatureDescription *arg = interface->add_output();
         arg->set_name(targetName);
         arg->set_allocated_type(targetType.allocateCopy());
         return Result();
     }
     
-    MLModelType Model::modelType() const {
-        return static_cast<MLModelType>(m_spec->Type_case());
+    MLModelType modelType(const Specification::Model& model) {
+        return static_cast<MLModelType>(model.Type_case());
     }
 
-    std::string Model::modelTypeName() const {
-        return MLModelType_Name(modelType());
+    std::string modelTypeName(const Specification::Model& model) {
+        return MLModelType_Name(modelType(model));
     }
     
-    const Specification::Model& Model::getProto() const {
-        return *m_spec;
-    }
-    
-    Specification::Model& Model::getProto() {
-        return *m_spec;
-    }
-    
-    Result Model::enforceTypeInvariant(const std::vector<FeatureType>& allowedFeatureTypes,
+    Result enforceTypeInvariant(const std::vector<FeatureType>& allowedFeatureTypes,
                                        FeatureType featureType) {
         
         for (const FeatureType& t : allowedFeatureTypes) {
@@ -227,14 +197,6 @@ namespace CoreML {
         }
         
         return Result::featureTypeInvariantError(allowedFeatureTypes, featureType);
-    }
-    
-    bool Model::operator==(const Model& other) const {
-        return *m_spec == *(other.m_spec);
-    }
-    
-    bool Model::operator!=(const Model& other) const {
-        return !(*this == other);
     }
     
     static void writeFeatureDescription(std::stringstream& ss,
@@ -250,32 +212,34 @@ namespace CoreML {
         ss << "\n";
     }
     
-    void Model::toStringStream(std::stringstream& ss) const {
-        ss << "Spec version: " << m_spec->specificationversion() << "\n";
-        ss << "Model type: " << MLModelType_Name(static_cast<MLModelType>(m_spec->Type_case())) << "\n";
+    void toStringStream(const Specification::Model& model, std::stringstream& ss) {
+        ss << "Spec version: " << model.specificationversion() << "\n";
+        ss << "Model type: " << MLModelType_Name(static_cast<MLModelType>(model.Type_case())) << "\n";
         ss << "Interface:" << "\n";
         ss << "\t" << "Inputs:" << "\n";
-        for (const auto& input : m_spec->description().input()) {
+        for (const auto& input : model.description().input()) {
             writeFeatureDescription(ss, input);
         }
         ss << "\t" << "Outputs:" << "\n";
-        for (const auto& output : m_spec->description().output()) {
+        for (const auto& output : model.description().output()) {
             writeFeatureDescription(ss, output);
         }
-        if (m_spec->description().predictedfeaturename() != "") {
-            ss << "\t" << "Predicted feature name: " << m_spec->description().predictedfeaturename() << "\n";
+        if (model.description().predictedfeaturename() != "") {
+            ss << "\t" << "Predicted feature name: " << model.description().predictedfeaturename() << "\n";
         }
-        if (m_spec->description().predictedprobabilitiesname() != "") {
-            ss << "\t" << "Predicted probability name: " << m_spec->description().predictedprobabilitiesname() << "\n";
+        if (model.description().predictedprobabilitiesname() != "") {
+            ss << "\t" << "Predicted probability name: " << model.description().predictedprobabilitiesname() << "\n";
         }
     }
     
-    std::string Model::toString() const {
+    std::string toString(const Specification::Model& model) {
         std::stringstream ss;
-        toStringStream(ss);
+        toStringStream(model, ss);
         return ss.str();
     }
-}
+
+} // namespace Model
+} // namespace CoreML
 
 #pragma mark C exports
 
@@ -291,10 +255,6 @@ _MLModelSpecification::_MLModelSpecification()
 {
 }
 
-    _MLModelSpecification::_MLModelSpecification(const CoreML::Model& te) {
-  cppFormat.reset(new CoreML::Specification::Model(te.getProto()));
-}
-    
 _MLModelMetadataSpecification::_MLModelMetadataSpecification() : cppMetadata(new CoreML::Specification::Metadata())
 {
 }
@@ -313,4 +273,4 @@ _MLModelDescriptionSpecification::_MLModelDescriptionSpecification(const CoreML:
 {
 }
 
-}
+} // extern "C"

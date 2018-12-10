@@ -15,16 +15,17 @@
 #include <vector>
 
 namespace CoreML {
-    class NeuralNetwork : public Model {
-    public:
-        // This should only return the names of NN blobs which are to be outputs. This does not
-        // require them to be dangling blobs.
-        template<typename T>
-        static std::vector<std::string> outputNames(const Specification::Model& spec, const T&);
-    };
-    
+
+namespace Specification {
+    class NeuralNetworkClassifier;
+}
+
+namespace Model {
+
+    // This should only return the names of NN blobs which are to be outputs. This does not
+    // require them to be dangling blobs.
     template<typename T>
-    std::vector<std::string> NeuralNetwork::outputNames(const Specification::Model& spec, const T&) {
+    std::vector<std::string> outputNames(const Specification::Model& spec, const T&) {
         // We won't do correctness checking here, that's for the validator.
         std::unordered_set<std::string> layerOutputs;
         for (const auto& output : spec.description().output()) {
@@ -32,12 +33,12 @@ namespace CoreML {
         }
         return std::vector<std::string>(layerOutputs.begin(), layerOutputs.end());
     }
-    
+
     // The classifier is a special case. Here, we need to not count as layer names the predicted
     // feature name or predicted probabilities name. Additionally, we need to get the blob
     // corresponding to the layer that will generate the probabilities
     template<>
-    inline std::vector<std::string> NeuralNetwork::outputNames<Specification::NeuralNetworkClassifier>(const CoreML::Specification::Model& spec, const Specification::NeuralNetworkClassifier& nnClassifier) {
+    inline std::vector<std::string> outputNames<Specification::NeuralNetworkClassifier>(const CoreML::Specification::Model& spec, const Specification::NeuralNetworkClassifier& nnClassifier) {
         
         // We won't do correctness checking here, that's for the validator
         std::unordered_set<std::string> layerOutputs;
@@ -74,10 +75,8 @@ namespace CoreML {
         return std::vector<std::string>(layerOutputs.begin(), layerOutputs.end());
         
     }
-    
-    
-}
 
-
+} // namespace Model
+} // namespace CoreML
 
 #endif /* NeuralNetwork_hpp */

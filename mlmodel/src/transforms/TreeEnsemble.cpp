@@ -13,19 +13,24 @@
 
 namespace CoreML {
 
-    TreeEnsembleBase::TreeEnsembleBase(Model&& model_spec, bool isClassifier)
-    : Model(model_spec)
-    , tree_parameters(  isClassifier
+    TreeEnsembleBase::TreeEnsembleBase(const std::string& description, bool isClassifier)
+    : m_spec(new Specification::Model), tree_parameters(  isClassifier
                       ? m_spec->mutable_treeensembleclassifier()->mutable_treeensemble()
                       : m_spec->mutable_treeensembleregressor()->mutable_treeensemble())
     {
+        Specification::Metadata* metadata = m_spec->mutable_description()->mutable_metadata();
+        metadata->set_shortdescription(description);
+    }
+
+    CoreML::Specification::Model& TreeEnsembleBase::getProto() {
+        return *m_spec;
     }
 
     TreeEnsembleClassifier::TreeEnsembleClassifier
     (const std::string& predictedClassOutputName,
      const std::string& classProbabilityOutputName,
      const std::string& description)
-    : TreeEnsembleBase(Model(description), true /* isClassifier */),
+    : TreeEnsembleBase(description, true /* isClassifier */),
       tree_classifier_parameters(m_spec->mutable_treeensembleclassifier())
     {
         m_spec->mutable_description()->set_predictedfeaturename(predictedClassOutputName);
@@ -35,7 +40,7 @@ namespace CoreML {
     TreeEnsembleRegressor::TreeEnsembleRegressor
     (const std::string& predictedValueOutput,
      const std::string& description)
-    : TreeEnsembleBase(Model(description), false /* isClassifier */)
+    : TreeEnsembleBase(description, false /* isClassifier */)
     , tree_regressor_parameters(m_spec->mutable_treeensembleregressor())
     {
         m_spec->mutable_description()->set_predictedfeaturename(predictedValueOutput);

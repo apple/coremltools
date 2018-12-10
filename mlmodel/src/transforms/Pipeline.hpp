@@ -14,51 +14,22 @@
 
 namespace CoreML {
 
-// Forward declare structs to abstract way storage layouts.
 namespace Specification {
-    class PipelineParameters;
+  class Pipeline;
 }
 
-class Pipeline : public Model {
-private:
-  Pipeline(const std::string& description);
-  Pipeline(const std::string& a, const std::string& b, const std::string& description, bool isClassifier);
-
-public:
-  
-  /**
-   * Construct as a regressor.
-  */
-  static Pipeline Regressor(const std::string& predictedValueOutputName,
+namespace Model {
+  void initPipeline(CoreML::Specification::Model* model, const std::string& description);
+  void initPipelineRegressor(CoreML::Specification::Model* model,
+                            const std::string& predictedValueOutputName,
                             const std::string& description);
-
-  /**
-   * Construct as a classifier.
-   */
-  static Pipeline Classifier(const std::string& predictedClassName,
+  void initPipelineClassifier(CoreML::Specification::Model* model,
+                             const std::string& predictedClassName,
                              const std::string& probabilityName,
                              const std::string& description);
+  void addModelToPipeline(const Specification::Model& spec, Specification::Pipeline* pipeline);
+} // namespace Model
 
-
-  static Pipeline Transformer(const std::string& description);
-  /**
-   * Construct from proto.
-   */
-  Pipeline(const Specification::Model &modelSpec);
-
-  // Destructor.
-  virtual ~Pipeline();
-
-  /** Adds in a transform MLModel.
-   */
-  Result add(const Model& spec);
-
-  /**  Returns the pipeline
-   *
-   */
-  std::vector<Model> getPipeline() const;
-};
-
-}
+} // namespace CoreML
 
 #endif /* Pipeline_hpp */

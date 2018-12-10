@@ -12,12 +12,14 @@
 #include <cstdio>
 
 using namespace CoreML;
+using namespace CoreML::Model;
 
 int testLinearModelBasic() {
-    LinearModel lr("foo", "Linear regression model to predict Foo");
-    ML_ASSERT_GOOD(lr.addInput("x", FeatureType::Int64()));
-    ML_ASSERT_GOOD(lr.addInput("y", FeatureType::Double()));
-    ML_ASSERT_GOOD(lr.addInput("z", FeatureType::Int64()));
-    ML_ASSERT_GOOD(lr.addOutput("foo", FeatureType::Double()));
+    CoreML::Specification::Model model;
+    initRegressor(&model, "foo", "Linear regression model to predict foo");
+    ML_ASSERT_GOOD(addInput(&model, "x", FeatureType::Int64()));
+    ML_ASSERT_GOOD(addInput(&model, "y", FeatureType::Double()));
+    ML_ASSERT_GOOD(addInput(&model, "z", FeatureType::Int64()));
+    ML_ASSERT_GOOD(addOutput(&model, "foo", FeatureType::Double()));
     return 0;
 }
