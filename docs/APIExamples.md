@@ -137,3 +137,41 @@ out_dict = model.predict({'image': pil_img})
 
 ```
 
+## Building an mlmodel from scratch using Neural Network Builder
+
+We can use the neural network builder class to construct a CoreML model. Lets look at an example of 
+making a tiny 2 layer model with a convolution layer (with random weights) and an activation. 
+
+```python
+import coremltools
+import coremltools.models.datatypes as datatypes
+from coremltools.models import neural_network as neural_network
+import numpy as np
+
+input_features = [('data', datatypes.Array(*(3,10,10)))]
+output_features = [('output', None)]
+
+builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+
+builder.add_convolution(name='conv',
+                        kernel_channels=3,output_channels=3,
+                        height=1,width=1,
+                        stride_height=1,stride_width=1,
+                        border_mode='valid', groups = 1,
+                        W= np.random.rand(1,1,3,3),
+                        b= np.random.rand(3), has_bias=True,
+                        input_name='data', output_name='conv')
+
+builder.add_activation(name='prelu',
+                       non_linearity = 'PRELU',
+                       input_name='conv', output_name='output',
+                       params=np.array([1.0,2.0,3.0]))
+
+spec = builder.spec
+model = coremltools.models.MLModel(spec)
+model.save('conv_prelu.mlmodel')
+
+output_dict = model.predict({'data':np.ones((3,10,10))}, useCPUOnly=False)
+print(output_dict['output'].shape)
+print(output_dict['output'].flatten()[:3])
+```
