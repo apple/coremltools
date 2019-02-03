@@ -2735,3 +2735,10 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
 
     def test_clickbait_cnn_half_precision(self):
         return self.test_clickbait_cnn(model_precision=_MLMODEL_HALF_PRECISION)
+
+
+if __name__ == '__main__':
+    unittest.main()
+    #suite = unittest.TestSuite()
+    #suite.addTest(KerasBasicNumericCorrectnessTest("test_tiny_conv_upsample_1d_random"))
+    #unittest.TextTestRunner().run(suite)

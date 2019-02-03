@@ -754,6 +754,8 @@ def convert_padding(builder, layer, input_names, output_names, keras_layer):
         elif type(padding) is tuple:
             if type(padding[0]) is int:
                 left, right = padding
+            elif type(padding[0]) is tuple and len(padding[0]) == 2:
+                left, right = padding[0]
             else:
                 raise ValueError("Unrecognized padding option: %s" % (str(padding)))
         else: 
@@ -805,6 +807,8 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer):
         elif type(cropping) is tuple:
             if type(cropping[0]) is int:
                 left, right = cropping
+            elif type(cropping[0]) is tuple and len(cropping[0]) == 2:
+                left, right = cropping[0]
             else:
                 raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
         else: 
@@ -851,7 +855,12 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer):
     # Currently, we only support upsample of same dims
     fh = fw = 1
     if is_1d:
-        fh, fw = 1, keras_layer.size
+        if type(keras_layer.size) is tuple and len(keras_layer.size) == 1:
+            fh, fw = 1, keras_layer.size[0]
+        elif type(keras_layer.size) is int:
+            fh, fw = 1, keras_layer.size
+        else:
+            raise ValueError("Unrecognized upsample factor format %s" % (str(keras_layer.size)))
     else: 
         if type(keras_layer.size) is int:
             fh = fw = keras_layer.size
