@@ -1,13 +1,12 @@
 #ifndef __DICTVECTORIZER_ENUMS_H
 #define __DICTVECTORIZER_ENUMS_H
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
 enum MLDictVectorizerMap: int {
     MLDictVectorizerMap_stringToIndex = 1,
     MLDictVectorizerMap_int64ToIndex = 2,
     MLDictVectorizerMap_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLDictVectorizerMap_Name(MLDictVectorizerMap x) {
     switch (x) {
         case MLDictVectorizerMap_stringToIndex:
@@ -19,5 +18,4 @@ static const char * MLDictVectorizerMap_Name(MLDictVectorizerMap x) {
     }
 }
 
-#pragma clang diagnostic pop
 #endif

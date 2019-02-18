@@ -1,7 +1,5 @@
 #ifndef __FEATURETYPES_ENUMS_H
 #define __FEATURETYPES_ENUMS_H
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
 enum MLColorSpace: int {
     MLColorSpaceINVALID_COLOR_SPACE = 0,
     MLColorSpaceGRAYSCALE = 10,
@@ -15,6 +13,7 @@ enum MLImageFeatureTypeSizeFlexibility: int {
     MLImageFeatureTypeSizeFlexibility_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLImageFeatureTypeSizeFlexibility_Name(MLImageFeatureTypeSizeFlexibility x) {
     switch (x) {
         case MLImageFeatureTypeSizeFlexibility_enumeratedSizes:
@@ -39,6 +38,7 @@ enum MLArrayFeatureTypeShapeFlexibility: int {
     MLArrayFeatureTypeShapeFlexibility_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLArrayFeatureTypeShapeFlexibility_Name(MLArrayFeatureTypeShapeFlexibility x) {
     switch (x) {
         case MLArrayFeatureTypeShapeFlexibility_enumeratedShapes:
@@ -56,6 +56,7 @@ enum MLDictionaryFeatureTypeKeyType: int {
     MLDictionaryFeatureTypeKeyType_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLDictionaryFeatureTypeKeyType_Name(MLDictionaryFeatureTypeKeyType x) {
     switch (x) {
         case MLDictionaryFeatureTypeKeyType_int64KeyType:
@@ -73,6 +74,7 @@ enum MLSequenceFeatureTypeType: int {
     MLSequenceFeatureTypeType_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLSequenceFeatureTypeType_Name(MLSequenceFeatureTypeType x) {
     switch (x) {
         case MLSequenceFeatureTypeType_int64Type:
@@ -95,6 +97,7 @@ enum MLFeatureTypeType: int {
     MLFeatureTypeType_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLFeatureTypeType_Name(MLFeatureTypeType x) {
     switch (x) {
         case MLFeatureTypeType_int64Type:
@@ -116,5 +119,4 @@ static const char * MLFeatureTypeType_Name(MLFeatureTypeType x) {
     }
 }
 
-#pragma clang diagnostic pop
 #endif
