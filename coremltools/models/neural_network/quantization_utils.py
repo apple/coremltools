@@ -258,7 +258,7 @@ def _quantize_wp(wp, nbits, qm, axis=0, **kwargs):
             raise Exception('{}\nCall to Lookup Table function failed'
                             .format(e.message))
     elif qm == _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR:
-        lut, qw = _get_linear_lookup_table_and_weight_and_weight(nbits, wp)
+        lut, qw = _get_linear_lookup_table_and_weight(nbits, wp)
     else:
         raise NotImplementedError('Quantization method "{}" not supported'.format(qm))
 
