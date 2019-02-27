@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 """
-Utilities to annotate Neural Network Features with flexible shape information. 
+Utilities to annotate Neural Network Features with flexible shape information.
 Only available in coremltools 2.0b1 and onwards
 """
 
@@ -211,10 +211,10 @@ class NeuralNetworkMultiArrayShapeRange():
     def get_channel_range(self):
         return self.arrayShapeRange[_CHANNEL_KEY]
 
-    def get_width_range(self):
+    def get_height_range(self):
         return self.arrayShapeRange[_HEIGHT_KEY]
 
-    def get_height_range(self):
+    def get_width_range(self):
         return self.arrayShapeRange[_WIDTH_KEY]
 
     def isFlexible(self):
@@ -546,7 +546,7 @@ def update_multiarray_shape_range(spec, feature_name, shape_range):
         s = feature.type.multiArrayType.shapeRange.sizeRanges.add()
         s.lowerBound = shape_range.get_height_range().lowerBound
         s.upperBound = shape_range.get_height_range().upperBound
-        # Add height range
+        # Add width range
         s = feature.type.multiArrayType.shapeRange.sizeRanges.add()
         s.lowerBound = shape_range.get_width_range().lowerBound
         s.upperBound = shape_range.get_width_range().upperBound
