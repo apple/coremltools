@@ -118,6 +118,7 @@ add_library(mlmodel
     src/TreeEnsembleCommon.cpp
 
     src/transforms/LinearModel.cpp
+    src/transforms/LogisticModel.cpp
     src/transforms/Pipeline.cpp
     src/transforms/TreeEnsemble.cpp
     src/transforms/NeuralNetwork.cpp
