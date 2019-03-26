@@ -873,11 +873,20 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer):
         else:
             raise ValueError("Unrecognized upsample factor format %s" % (str(keras_layer.size)))
 
+    kerasmode2coreml = {'nearest': 'NN', 'bilinear': 'BILINEAR'}
+    interpolation = getattr(keras_layer, 'interpolation', 'nearest') # Defaults to 'nearest' for Keras < 2.2.3
+
+    if interpolation not in kerasmode2coreml:
+        raise ValueError('Only supported "nearest" or "bilinear" interpolation for upsampling layers.')
+
+    mode = kerasmode2coreml[keras_layer.interpolation]
+
     builder.add_upsample(name = layer,
              scaling_factor_h = fh,
              scaling_factor_w = fw,
              input_name = input_name,
-             output_name = output_name)
+             output_name = output_name,
+             mode = mode)
 
 def convert_permute(builder, layer, input_names, output_names, keras_layer):
     """
