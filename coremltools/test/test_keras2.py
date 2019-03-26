@@ -278,7 +278,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         model = Sequential()
         model.add(Conv2D(input_shape=(64, 64, 3), filters=32,
             kernel_size=(5,5)))
-        model.add(UpSampling2D(size = (2, 2), interpolation = 'nearest'))
+        model.add(UpSampling2D(size = (2, 2)))
         input_names = ['input']
         output_names = ['output']
         spec = keras.convert(model, input_names, output_names).get_spec()
@@ -308,7 +308,10 @@ class KerasSingleLayerTest(unittest.TestCase):
         model = Sequential()
         model.add(Conv2D(input_shape=(64, 64, 3), filters=32,
             kernel_size=(5,5)))
-        model.add(UpSampling2D(size = (2, 2), interpolation = 'bilinear'))
+        try:
+            model.add(UpSampling2D(size = (2, 2), interpolation = 'bilinear'))
+        except TypeError: # Early version of Keras, no support for 'interpolation'
+            return
         spec = keras.convert(model, input_names, output_names).get_spec()
         self.assertIsNotNone(spec)
         layer_1 = layers[1]
