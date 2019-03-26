@@ -278,7 +278,7 @@ class KerasSingleLayerTest(unittest.TestCase):
         model = Sequential()
         model.add(Conv2D(input_shape=(64, 64, 3), filters=32,
             kernel_size=(5,5)))
-        model.add(UpSampling2D(size = (2, 2)))
+        model.add(UpSampling2D(size = (2, 2), interpolation = 'nearest'))
         input_names = ['input']
         output_names = ['output']
         spec = keras.convert(model, input_names, output_names).get_spec()
@@ -302,6 +302,18 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertIsNotNone(layer_0.convolution)
         layer_1 = layers[1]
         self.assertIsNotNone(layer_1.upsample)
+        self.assertEquals(layer_1.upsample.mode, NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value('NN'))
+
+        # Test if BILINEAR mode works as well
+        model = Sequential()
+        model.add(Conv2D(input_shape=(64, 64, 3), filters=32,
+            kernel_size=(5,5)))
+        model.add(UpSampling2D(size = (2, 2), interpolation = 'bilinear'))
+        spec = keras.convert(model, input_names, output_names).get_spec()
+        self.assertIsNotNone(spec)
+        layer_1 = layers[1]
+        self.assertIsNotNone(layer_1.upsample)
+        self.assertEquals(layer_1.upsample.mode, NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value('BILINEAR'))
 
     def test_pooling(self):
         """
