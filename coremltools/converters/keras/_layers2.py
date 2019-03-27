@@ -879,7 +879,7 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer):
     if interpolation not in kerasmode2coreml:
         raise ValueError('Only supported "nearest" or "bilinear" interpolation for upsampling layers.')
 
-    mode = kerasmode2coreml[keras_layer.interpolation]
+    mode = kerasmode2coreml[interpolation]
 
     builder.add_upsample(name = layer,
              scaling_factor_h = fh,
