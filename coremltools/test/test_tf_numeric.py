@@ -86,7 +86,7 @@ class StressTest(CorrectnessTest):
                     y = tf.space_to_depth(x, params["block_size"])
                 else:
                     y = tf.depth_to_space(x, params["block_size"])
-            return sess.run(y, feed_dict={x: X})
+                return sess.run(y, feed_dict={x: X})
 
         '''
         Define Params
@@ -176,7 +176,7 @@ class StressTest(CorrectnessTest):
                 W = tf.constant(w, dtype=tf.float32, shape=[Kh, Kw, Cin, channel_multiplier])
                 y = tf.nn.depthwise_conv2d(x, W, strides=[1, params["stride"], params["stride"], 1],
                                            padding=params["padding"])
-            return sess.run(y, feed_dict={x: X})
+                return sess.run(y, feed_dict={x: X})
 
 
         '''
@@ -250,7 +250,7 @@ class StressTest(CorrectnessTest):
             with tf.Graph().as_default(), tf.Session() as sess:
                 x = tf.placeholder(tf.float32, shape=(params["batch"], params["H"], params["W"], params["ch"]))
                 y = tf.image.resize_bilinear(x, size = [params["Hnew"], params["Wnew"]], align_corners=params["align_corners"])
-            return sess.run(y, feed_dict={x: X})
+                return sess.run(y, feed_dict={x: X})
 
 
         '''
@@ -332,7 +332,7 @@ class StressTest(CorrectnessTest):
             with tf.Graph().as_default(), tf.Session() as sess:
                 x = tf.placeholder(tf.float32, shape=(batch, params["H"], params["W"], ch))
                 y = tf.image.crop_and_resize(x, boxes, box_ind, crop_size=[params["Hnew"], params["Wnew"]])
-            return sess.run(y, feed_dict={x: X})
+                return sess.run(y, feed_dict={x: X})
 
 
         '''
