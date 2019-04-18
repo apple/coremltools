@@ -30,7 +30,7 @@ class ShaperTest(unittest.TestCase):
 
         input_ = self.spec.description.input.add()
         input_.name = 'input'
-        input_.type.multiArrayType.MergeFromString('')
+        input_.type.multiArrayType.MergeFromString(b'')
         input_.type.multiArrayType.shape.append(channels)
         input_.type.multiArrayType.shape.append(height)
         input_.type.multiArrayType.shape.append(width)
@@ -38,7 +38,7 @@ class ShaperTest(unittest.TestCase):
 
         output_ = self.spec.description.output.add()
         output_.name = 'output'
-        output_.type.multiArrayType.MergeFromString('')
+        output_.type.multiArrayType.MergeFromString(b'')
         output_.type.multiArrayType.dataType = coremltools.proto.Model_pb2.ArrayFeatureType.DOUBLE
 
         # big stack of identity convolutions
@@ -61,7 +61,7 @@ class ShaperTest(unittest.TestCase):
                 layer.convolution.kernelChannels = channels
                 layer.convolution.kernelSize.append(1)
                 layer.convolution.kernelSize.append(1)
-                layer.convolution.same.MergeFromString('')
+                layer.convolution.same.MergeFromString(b'')
                 layer.convolution.hasBias = False
                 for i in range(0, channels):
                     for j in range(0, channels):
@@ -81,7 +81,7 @@ class ShaperTest(unittest.TestCase):
                 layer.convolution.kernelSize.append(1)
                 layer.convolution.kernelSize.append(1)
 
-                layer.convolution.same.MergeFromString('')
+                layer.convolution.same.MergeFromString(b'')
 
                 layer.convolution.hasBias = False
 

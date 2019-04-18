@@ -337,6 +337,8 @@ def _quantize_wp_field(wp, nbits, qm, shape, axis=0, **kwargs):
 
 
 def unpack_to_bytes(byte_arr, num_weights, nbits):
+    assert num_weights % 1 == 0
+    num_weights = int(num_weights)
     bit_arr = _decompose_bytes_to_bit_arr(byte_arr.flatten().tolist())
     bit_arr = _np.array(bit_arr[:num_weights * nbits]).reshape((num_weights, nbits))
     expo = 2**_np.array(list(reversed(range(0,nbits))))
