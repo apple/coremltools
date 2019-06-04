@@ -181,5 +181,3 @@ class CustomLayerUtilsTest(unittest.TestCase):
         self.assertEqual(names, {'notname1', 'name2'})
         #set it back for future tests
         replace_custom_layer_name(self.spec, 'notname1', 'name1')
-
-

@@ -1,4 +1,9 @@
+# Copyright (c) 2017-2019, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 from . import _utils
+import logging
 import keras as _keras
 import numpy as _np
 from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
@@ -84,6 +89,8 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
     elif isinstance(keras_layer, _keras.layers.Concatenate):
         if len(keras_layer.input_shape[0]) == 3 and (keras_layer.axis == 1 or keras_layer.axis == -2):
             return 'SEQUENCE_CONCAT'
+        if len(keras_layer.input_shape[0]) == 3 and (keras_layer.axis == 2 or keras_layer.axis == -1):
+            return 'CONCAT'
         elif len(keras_layer.input_shape[0]) == 4 and (keras_layer.axis == 3 or keras_layer.axis == -1):
             return 'CONCAT'
         elif len(keras_layer.input_shape[0]) == 2 and (keras_layer.axis == 1 or keras_layer.axis == -1):
@@ -134,7 +141,8 @@ def _check_data_format(keras_layer):
             raise ValueError("Converter currently supports data_format = "
                 "'channels_last' only.")        
 
-def convert_dense(builder, layer, input_names, output_names, keras_layer):
+def convert_dense(builder, layer, input_names, output_names, keras_layer,
+                  respect_train):
     """
     Convert a dense layer from keras to coreml.
 
@@ -145,6 +153,8 @@ def convert_dense(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether or not to carry over Keras' "trainable" parameter.
     """
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
@@ -163,8 +173,11 @@ def convert_dense(builder, layer, input_names, output_names, keras_layer):
             has_bias = has_bias,
             input_name = input_name,
             output_name = output_name)
+    if respect_train and keras_layer.trainable:
+        builder.make_updatable([layer])
 
-def convert_embedding(builder, layer, input_names, output_names, keras_layer):
+def convert_embedding(builder, layer, input_names, output_names, keras_layer,
+                      respect_train):
     """Convert a dense layer from keras to coreml.
 
     Parameters
@@ -174,6 +187,8 @@ def convert_embedding(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether to support Keras' "trainable" flag (unsupported).
     """
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
@@ -191,7 +206,13 @@ def convert_embedding(builder, layer, input_names, output_names, keras_layer):
                           input_name = input_name,
                           output_name = output_name)
 
-def convert_activation(builder, layer, input_names, output_names, keras_layer):
+    if respect_train and keras_layer.trainable:
+        logging.warning("Embedding layer '%s' is marked updatable, but Core "
+                        "ML does not yet support updating layers of this "
+                        "type. The layer will be frozen in Core ML.", layer)
+
+def convert_activation(builder, layer, input_names, output_names, keras_layer,
+                       respect_train):
     """
     Convert an activation layer from keras to coreml.
 
@@ -202,6 +223,8 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean,
+        Ignored.
     """
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
@@ -266,7 +289,8 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
             input_name = input_name, output_name = output_name,
             params = params)
 
-def convert_advanced_relu(builder, layer, input_names, output_names, keras_layer):
+def convert_advanced_relu(builder, layer, input_names, output_names,
+                          keras_layer, respect_train):
     """
     Convert an ReLU layer with maximum value from keras to coreml.
 
@@ -277,6 +301,8 @@ def convert_advanced_relu(builder, layer, input_names, output_names, keras_layer
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Ignored.
     """
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
@@ -301,7 +327,8 @@ def convert_advanced_relu(builder, layer, input_names, output_names, keras_layer
     builder.add_activation(layer+'_neg2', 'LINEAR', clip_output_name,
             output_name,[-1.0, 0])
 
-def convert_convolution(builder, layer, input_names, output_names, keras_layer):
+def convert_convolution(builder, layer, input_names, output_names, keras_layer,
+                        respect_train):
     """
     Convert convolution layer from keras to coreml.
 
@@ -312,6 +339,8 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether or not to carry over Keras' "trainable" parameter.
     """
     
     _check_data_format(keras_layer)
@@ -382,8 +411,12 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer):
              output_name = output_name, 
              dilation_factors = dilations)
 
+    if respect_train and keras_layer.trainable:
+        builder.make_updatable([layer])
 
-def convert_convolution1d(builder, layer, input_names, output_names, keras_layer):
+
+def convert_convolution1d(builder, layer, input_names, output_names,
+                          keras_layer, respect_train):
     """
     Convert convolution layer from keras to coreml.
 
@@ -394,6 +427,8 @@ def convert_convolution1d(builder, layer, input_names, output_names, keras_layer
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether to honor Keras' "trainable" flag.
     """
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
@@ -448,7 +483,11 @@ def convert_convolution1d(builder, layer, input_names, output_names, keras_layer
              output_name = output_name, 
              dilation_factors = dilations)
 
-def convert_separable_convolution(builder, layer, input_names, output_names, keras_layer):
+    if respect_train and keras_layer.trainable:
+        builder.make_updatable([layer])
+
+def convert_separable_convolution(builder, layer, input_names, output_names,
+                                  keras_layer, respect_train):
     """
     Convert separable convolution layer from keras to coreml.
 
@@ -459,6 +498,8 @@ def convert_separable_convolution(builder, layer, input_names, output_names, ker
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether to honor Keras' "trainable" flag.
     """
     _check_data_format(keras_layer)
     
@@ -528,7 +569,12 @@ def convert_separable_convolution(builder, layer, input_names, output_names, ker
              output_name = output_name, 
              dilation_factors = [1,1])
 
-def convert_batchnorm(builder, layer, input_names, output_names, keras_layer):
+    if respect_train and keras_layer.trainable:
+        builder.make_updatable([layer+'_step_1', layer+'_step_2'])
+
+
+def convert_batchnorm(builder, layer, input_names, output_names, keras_layer,
+                      respect_train):
     """
     Convert a Batch Normalization layer. 
     
@@ -538,6 +584,8 @@ def convert_batchnorm(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether to honor Keras' "trainable" flag (unsupported).
     """
 
     # Get input and output names
@@ -580,8 +628,14 @@ def convert_batchnorm(builder, layer, input_names, output_names, keras_layer):
         input_name = input_name,
         output_name = output_name)
 
+    if respect_train and keras_layer.trainable:
+        logging.warning("BatchNorm layer '%s' is marked updatable, but Core "
+                        "ML does not yet support updating layers of this "
+                        "type. The layer will be frozen in Core ML.", layer)
 
-def convert_flatten(builder, layer, input_names, output_names, keras_layer):
+
+def convert_flatten(builder, layer, input_names, output_names, keras_layer,
+                    respect_train):
     """
     Convert a flatten layer from keras to coreml.
     ----------
@@ -591,6 +645,8 @@ def convert_flatten(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Ignored.
     """
     input_name, output_name = (input_names[0], output_names[0])
 
@@ -618,7 +674,8 @@ def convert_flatten(builder, layer, input_names, output_names, keras_layer):
     except:
         builder.add_flatten(name=layer, mode=1, input_name=input_name, output_name=output_name)
 
-def convert_merge(builder, layer, input_names, output_names, keras_layer):
+def convert_merge(builder, layer, input_names, output_names, keras_layer,
+                  respect_train):
     """
     Convert concat layer from keras to coreml.
 
@@ -629,6 +686,8 @@ def convert_merge(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Ignored.
     """
     # Get input and output names
     output_name = output_names[0]
@@ -637,7 +696,8 @@ def convert_merge(builder, layer, input_names, output_names, keras_layer):
     builder.add_elementwise(name = layer, input_names = input_names,
             output_name = output_name, mode = mode)
 
-def convert_pooling(builder, layer, input_names, output_names, keras_layer):
+def convert_pooling(builder, layer, input_names, output_names, keras_layer,
+                    respect_train):
     """
     Convert pooling layer from keras to coreml.
 
@@ -648,6 +708,8 @@ def convert_pooling(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Ignored.
     """
     _check_data_format(keras_layer)
     # Get input and output names
@@ -677,7 +739,7 @@ def convert_pooling(builder, layer, input_names, output_names, keras_layer):
         padding_type = 'VALID'
     elif isinstance(keras_layer, _keras.layers.pooling.GlobalMaxPooling1D) or \
         isinstance(keras_layer, _keras.layers.pooling.GlobalAveragePooling1D):
-        # 1D global pooling: 1D global pooling seems problematic in the backend, 
+        # 1D global pooling: 1D global pooling seems problematic in the backend,
         # use this work-around
         global_pooling = False
         _, width, channels = keras_layer.input_shape
@@ -728,7 +790,8 @@ def convert_pooling(builder, layer, input_names, output_names, keras_layer):
         exclude_pad_area = True,
         is_global = global_pooling)
 
-def convert_padding(builder, layer, input_names, output_names, keras_layer):
+def convert_padding(builder, layer, input_names, output_names, keras_layer,
+                    respect_train):
     """
     Convert padding layer from keras to coreml.
     Keras only supports zero padding at this time.
@@ -739,6 +802,8 @@ def convert_padding(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Ignored.
     """
     _check_data_format(keras_layer)
     # Get input and output names
@@ -781,7 +846,8 @@ def convert_padding(builder, layer, input_names, output_names, keras_layer):
         input_name = input_name, output_name=output_name
         )
 
-def convert_cropping(builder, layer, input_names, output_names, keras_layer):
+def convert_cropping(builder, layer, input_names, output_names, keras_layer,
+                     respect_train):
     """
     Convert padding layer from keras to coreml.
     Keras only supports zero padding at this time.
@@ -792,6 +858,8 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Ignored.
     """
     
     _check_data_format(keras_layer)
@@ -834,7 +902,8 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer):
         input_names = [input_name], output_name=output_name
         )
 
-def convert_upsample(builder, layer, input_names, output_names, keras_layer):
+def convert_upsample(builder, layer, input_names, output_names, keras_layer,
+                     respect_train):
     """
     Convert convolution layer from keras to coreml.
 
@@ -845,6 +914,8 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Ignored.
     """
     _check_data_format(keras_layer)
     # Get input and output names
@@ -888,7 +959,8 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer):
              output_name = output_name,
              mode = mode)
 
-def convert_permute(builder, layer, input_names, output_names, keras_layer):
+def convert_permute(builder, layer, input_names, output_names, keras_layer,
+                    respect_train):
     """
     Convert a softmax layer from keras to coreml.
 
@@ -899,6 +971,8 @@ def convert_permute(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Ignored.
     """
     input_name, output_name = (input_names[0], output_names[0])
 
@@ -924,7 +998,12 @@ def convert_permute(builder, layer, input_names, output_names, keras_layer):
     builder.add_permute(name = layer, dim=dim, input_name = input_name,
             output_name = output_name)
 
-def convert_reshape(builder, layer, input_names, output_names, keras_layer):
+def convert_reshape(builder, layer, input_names, output_names, keras_layer,
+                    respect_train):
+    """
+    respect_train: boolean
+        Ignored.
+    """
 
     input_name, output_name = (input_names[0], output_names[0])
 
@@ -957,7 +1036,8 @@ def convert_reshape(builder, layer, input_names, output_names, keras_layer):
     else:
         _utils.raise_error_unsupported_categorical_option('input_shape', str(input_shape), 'reshape', layer)
 
-def convert_simple_rnn(builder, layer, input_names, output_names, keras_layer):
+def convert_simple_rnn(builder, layer, input_names, output_names, keras_layer,
+                       respect_train):
     """
     Convert an SimpleRNN layer from keras to coreml.
 
@@ -968,6 +1048,8 @@ def convert_simple_rnn(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether to honor Keras' "trainable" flag (unsupported).
     """
     # Get input and output names
     hidden_size = keras_layer.units
@@ -1003,7 +1085,13 @@ def convert_simple_rnn(builder, layer, input_names, output_names, keras_layer):
         output_all=output_all,
         reverse_input=reverse_input)
 
-def convert_lstm(builder, layer, input_names, output_names, keras_layer):
+    if respect_train and keras_layer.trainable:
+        logging.warning("RNN layer '%s' is marked updatable, but Core "
+                        "ML does not yet support updating layers of this "
+                        "type. The layer will be frozen in Core ML.", layer)
+
+def convert_lstm(builder, layer, input_names, output_names, keras_layer,
+                 respect_train):
     """
     Convert an LSTM layer from keras to coreml.
 
@@ -1014,6 +1102,8 @@ def convert_lstm(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether to honor Keras' "trainable" flag (unsupported).
     """
 
     hidden_size = keras_layer.units
@@ -1063,7 +1153,13 @@ def convert_lstm(builder, layer, input_names, output_names, keras_layer):
         forget_bias = keras_layer.unit_forget_bias,
         reverse_input = reverse_input)
 
-def convert_gru(builder, layer, input_names, output_names, keras_layer):
+    if respect_train and keras_layer.trainable:
+        logging.warning("LSTM layer '%s' is marked updatable, but Core "
+                        "ML does not yet support updating layers of this "
+                        "type. The layer will be frozen in Core ML.", layer)
+
+def convert_gru(builder, layer, input_names, output_names, keras_layer,
+                respect_train):
     """
     Convert a GRU layer from keras to coreml.
 
@@ -1074,6 +1170,8 @@ def convert_gru(builder, layer, input_names, output_names, keras_layer):
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether to honor Keras' "trainable" flag (unsupported).
     """
 
     hidden_size = keras_layer.units
@@ -1120,7 +1218,13 @@ def convert_gru(builder, layer, input_names, output_names, keras_layer):
        output_all = output_all,
        reverse_input = reverse_input)
 
-def convert_bidirectional(builder, layer, input_names, output_names, keras_layer):
+    if respect_train and keras_layer.trainable:
+        logging.warning("GRU layer '%s' is marked updatable, but Core "
+                        "ML does not yet support updating layers of this "
+                        "type. The layer will be frozen in Core ML.", layer)
+
+def convert_bidirectional(builder, layer, input_names, output_names,
+                          keras_layer, respect_train):
     """
     Convert a bidirectional layer from keras to coreml.
     Currently assumes the units are LSTMs.
@@ -1132,6 +1236,8 @@ def convert_bidirectional(builder, layer, input_names, output_names, keras_layer
 
     builder: NeuralNetworkBuilder
         A neural network builder object.
+    respect_train: boolean
+        Whether to honor Keras' "trainable" flag (unsupported).
     """
 
     input_size = keras_layer.input_shape[-1]
@@ -1240,7 +1346,18 @@ def convert_bidirectional(builder, layer, input_names, output_names, keras_layer
                                 output_name = output_names[0],
                                 mode = mode)
 
-def convert_repeat_vector(builder, layer, input_names, output_names, keras_layer):
+    if respect_train and keras_layer.trainable:
+        logging.warning("Bidirectional layer '%s' is marked updatable, but "
+                        "Core ML does not yet support updating layers of this "
+                        "type. The layer will be frozen in Core ML.", layer)
+
+
+def convert_repeat_vector(builder, layer, input_names, output_names,
+                          keras_layer, respect_train):
+    """
+    respect_train: boolean
+        Ignored.
+    """
     # Keras RepeatVector only deals with 1D input
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
@@ -1250,7 +1367,9 @@ def convert_repeat_vector(builder, layer, input_names, output_names, keras_layer
             input_name = input_name,
             output_name = output_name)
 
-
-def default_skip(builder, layer, input_names, output_names, keras_layer):
-    """ Layers that can be skipped (because they are train time only. """
+def default_skip(builder, layer, input_names, output_names, keras_layer,
+                 respect_train):
+    """
+    Layers that can be skipped.
+    """
     return

@@ -82,7 +82,7 @@ class _FeatureDescription(object):
         for f in self._fd_spec:
             yield f.name
 
-def _get_proxy_from_spec(filename):
+def _get_proxy_from_spec(filename, useCPUOnly):
     try:
         from ..libcoremlpython import _MLModelProxy
     except:
@@ -101,11 +101,11 @@ def _get_proxy_from_spec(filename):
             # custom layers can't be supported directly by compiling and loading the model here
             return None
         try:
-            return _MLModelProxy(filename)
+            return _MLModelProxy(filename, useCPUOnly)
         except RuntimeError as e:
             warnings.warn(
                 "You will not be able to run predict() on this Core ML model." +
-                "Underlying exception message was: " + str(e), 
+                " Underlying exception message was: " + str(e),
                 RuntimeWarning)
             return None
     else:
@@ -191,7 +191,7 @@ class MLModel(object):
     --------
     predict
     """
-    def __init__(self, model):
+    def __init__(self, model, useCPUOnly=False):
         """
         Construct an MLModel from a .mlmodel
 
@@ -199,6 +199,9 @@ class MLModel(object):
         ----------
         model: str | Model_pb2
             If a string is given it should be the location of the .mlmodel to load.
+
+        useCPUOnly : bool
+            Set to true to restrict loading of model on CPU Only. Defaults to False.
 
         Examples
         --------
@@ -208,12 +211,12 @@ class MLModel(object):
 
         if isinstance(model, str):
             self._spec = _load_spec(model)
-            self.__proxy__ = _get_proxy_from_spec(model)
+            self.__proxy__ = _get_proxy_from_spec(model, useCPUOnly)
         elif isinstance(model, _Model_pb2.Model):
             self._spec = model
             filename = _tempfile.mktemp(suffix = '.mlmodel')
             _save_spec(model, filename)
-            self.__proxy__ = _get_proxy_from_spec(filename)
+            self.__proxy__ = _get_proxy_from_spec(filename, useCPUOnly)
         else:
             raise TypeError("Expected model to be a .mlmodel file or a Model_pb2 object")
 

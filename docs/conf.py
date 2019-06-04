@@ -44,7 +44,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'coremltools'
-copyright = u'2018, Apple Inc.'
+copyright = u'2017-2019, Apple Inc.'
 author = u'Apple Inc.'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -56,7 +56,7 @@ import pkg_resources
 try:
     version = pkg_resources.require("coremltools")[0].version
 except:
-    version = "2.0b1"
+    version = "3.0b1"
 
 # The short X.Y version.
 version = version
@@ -175,4 +175,3 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
 
 def setup(app):
     app.connect('autodoc-skip-member', autodoc_skip_member)
-

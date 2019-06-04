@@ -14,7 +14,6 @@ from coremltools._deps import HAS_KERAS_TF, HAS_KERAS2_TF
 from coremltools.models.utils import macos_version
 import pytest
 
-
 if HAS_KERAS_TF or HAS_KERAS2_TF:
     from keras.models import Sequential
     from keras.layers import LSTM, GRU, SimpleRNN
@@ -29,15 +28,15 @@ def _get_mlkit_model_from_path(model, model_path):
 
 
 def generate_input(dim0, dim1, dim2):
-    input_data = np.random.rand(dim0, dim1, dim2).astype('f') #astype() should be removed after radar://31569743
+    input_data = np.random.rand(dim0, dim1, dim2).astype('f')  # astype() should be removed
     return input_data
 
 
 def valid_params(params):
     """Checks if this combination of parameters is allowed by Keras"""
     return not (
-        params['input_dims'][1] == 1 and
-        params['unroll']
+            params['input_dims'][1] == 1 and
+            params['unroll']
     )
 
 
@@ -48,24 +47,26 @@ class RecurrentLayerTest(unittest.TestCase):
 
     def setUp(self):
         self.params_dict = dict(
-            input_dims=[[1, 1, 1], [1, 1, 5], [1, 1, 10]],  # [1, x > 1, y] not added due to radars: 31741361[batch_size, time_steps, dimensions]
+            input_dims=[[1, 1, 1], [1, 1, 5], [1, 1, 10]],  # [1, x > 1, y] not added
             output_dim=[1, 5, 10, 20],
-            stateful = [False, True],
-            go_backwards=[False], #True],
+            stateful=[False, True],
+            go_backwards=[False],  # True],
             unroll=[False, True],
             return_sequences=[False, True],
             activation=['sigmoid', 'tanh', 'hard_sigmoid', 'linear']
         )
         self.base_layer_params = list(itertools.product(*self.params_dict.values()))
 
+
 class SimpleRNNLayer(RecurrentLayerTest):
     """
     Class for testing single RNN layer
     """
+
     def setUp(self):
         super(SimpleRNNLayer, self).setUp()
         self.simple_rnn_params_dict = dict(
-            dropout=[{'dropout_W': 0.,'dropout_U':0. }],
+            dropout=[{'dropout_W': 0., 'dropout_U': 0.}],
             regularizer=[{'W_regularizer': None, 'U_regularizer': None, 'b_regularizer': None}],
         )
         self.rnn_layer_params = list(itertools.product(*self.simple_rnn_params_dict.values()))
@@ -175,10 +176,11 @@ class LSTMLayer(RecurrentLayerTest):
     """
     Class for testing single RNN layer
     """
+
     def setUp(self):
         super(LSTMLayer, self).setUp()
         self.lstm_params_dict = dict(
-            dropout=[{'dropout_W': 0.,'dropout_U':0. }],
+            dropout=[{'dropout_W': 0., 'dropout_U': 0.}],
             regularizer=[{'W_regularizer': None, 'U_regularizer': None, 'b_regularizer': None}],
         )
         self.lstm_layer_params = list(itertools.product(*self.lstm_params_dict.values()))
@@ -289,10 +291,11 @@ class GRULayer(RecurrentLayerTest):
     """
     Class for testing GRU layer
     """
+
     def setUp(self):
         super(GRULayer, self).setUp()
         self.gru_params_dict = dict(
-            dropout=[{'dropout_W': 0.,'dropout_U':0. }],
+            dropout=[{'dropout_W': 0., 'dropout_U': 0.}],
             regularizer=[{'W_regularizer': None, 'U_regularizer': None, 'b_regularizer': None}],
         )
         self.gru_layer_params = list(itertools.product(*self.gru_params_dict.values()))

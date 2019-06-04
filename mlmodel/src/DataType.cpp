@@ -228,7 +228,7 @@ FeatureType FeatureType::T() { return FeatureType(U); }
                 defaultSize.push_back((int64_t)params.imagesizerange().widthrange().lowerbound());
                 defaultSize.push_back((int64_t)params.imagesizerange().heightrange().lowerbound());
                 break;
-            case Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET:
+            case Specification::ImageFeatureType::SIZEFLEXIBILITY_NOT_SET:
                 break;
         }
         return defaultSize;

@@ -80,7 +80,6 @@ class ShaperTest(unittest.TestCase):
 
                 layer.convolution.kernelSize.append(1)
                 layer.convolution.kernelSize.append(1)
-
                 layer.convolution.same.MergeFromString(b'')
 
                 layer.convolution.hasBias = False

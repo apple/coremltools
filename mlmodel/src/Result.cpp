@@ -10,7 +10,10 @@ namespace CoreML {
   Result::Result() : m_type(ResultType::NO_ERROR), m_message("not an error") { }
 
   Result::Result(ResultType type, const std::string& message) :
-    m_type(type), m_message(m_prefix + message) { }
+    m_type(type), m_message(m_prefix + message) {
+
+
+    }
 
   bool Result::good() const {
       return (m_type == ResultType::NO_ERROR || m_type == ResultType::POTENTIALLY_INVALID_NEURAL_NETWORK_SHAPES);

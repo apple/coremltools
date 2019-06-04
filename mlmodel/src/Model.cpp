@@ -53,6 +53,13 @@ namespace CoreML {
         if (!r.good()) {
             return r;
         }
+        
+        if (model.isupdatable()){
+            r = validateCanModelBeUpdatable(model);
+        }
+        if (!r.good()) {
+            return r;
+        }
 
         return validateOptional(model);
     }
@@ -96,6 +103,10 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(wordTagger);
                 VALIDATE_MODEL_TYPE(textClassifier);
                 VALIDATE_MODEL_TYPE(visionFeaturePrint);
+                VALIDATE_MODEL_TYPE(kNearestNeighborsClassifier);
+                VALIDATE_MODEL_TYPE(itemSimilarityRecommender);
+                VALIDATE_MODEL_TYPE(soundAnalysisPreprocessing);
+                VALIDATE_MODEL_TYPE(linkedModel);
             case MLModelType_NOT_SET:
                 return Result(ResultType::INVALID_MODEL_INTERFACE, "Model did not specify a valid model-parameter type.");
         }

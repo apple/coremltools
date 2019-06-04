@@ -3,7 +3,7 @@
 *************
 
 .. automodule:: coremltools.models
-.. automodule:: coremltools.models.neural_network
+.. automodule:: coremltools.models.neural_networks
   :noindex:
 .. currentmodule:: coremltools.models
 
@@ -23,3 +23,4 @@
     coremltools.models.neural_network.builder
     coremltools.models.neural_network.flexible_shape_utils
     coremltools.models.neural_network.quantization_utils
+	coremltools.models.neural_network.update_optimizer_utils

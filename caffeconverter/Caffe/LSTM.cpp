@@ -90,7 +90,7 @@ void CoreMLConverter::convertCaffeLSTM(CoreMLConverter::ConvertLayerParameters l
     //Copy weights
     //Input Weight Matrices
     int blobSize = caffeLayerWeights.blobs(0).data_size();
-    int64_t expectedSize = 4*hidden_size*input_size;
+    int64_t expectedSize = 4*((int64_t)hidden_size)*input_size;
     if (blobSize != expectedSize) {
         CoreMLConverter::errorInCaffeProto("Expected blob size = "+std::to_string(expectedSize)+" but found blob of size = "+std::to_string(blobSize)+" in caffe"
                           , caffeLayer.name(), "Recurrent");
@@ -119,7 +119,7 @@ void CoreMLConverter::convertCaffeLSTM(CoreMLConverter::ConvertLayerParameters l
     
     //biases
     blobSize = caffeLayerWeights.blobs(1).data_size();
-    expectedSize = 4*hidden_size;
+    expectedSize = 4*((int64_t)hidden_size);
     if (blobSize != expectedSize) {
         CoreMLConverter::errorInCaffeProto("Expected blob size = "+std::to_string(expectedSize)+" but found blob of size = "+std::to_string(blobSize)+" in caffe"
                           , caffeLayer.name(), "Recurrent");
@@ -148,7 +148,7 @@ void CoreMLConverter::convertCaffeLSTM(CoreMLConverter::ConvertLayerParameters l
     
     //Recursion matrices
     blobSize = caffeLayerWeights.blobs(2).data_size();
-    expectedSize = 4*hidden_size*hidden_size;
+    expectedSize = 4*((int64_t)hidden_size)*((int64_t)hidden_size);
     if (blobSize != expectedSize) {
         CoreMLConverter::errorInCaffeProto("Expected blob size = "+std::to_string(expectedSize)+" but found blob of size = "+std::to_string(blobSize)+" in caffe"
                           , caffeLayer.name(), "Recurrent");

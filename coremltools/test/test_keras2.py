@@ -312,8 +312,10 @@ class KerasSingleLayerTest(unittest.TestCase):
             model.add(UpSampling2D(size = (2, 2), interpolation = 'bilinear'))
         except TypeError: # Early version of Keras, no support for 'interpolation'
             return
+
         spec = keras.convert(model, input_names, output_names).get_spec()
         self.assertIsNotNone(spec)
+        layers = spec.neuralNetwork.layers
         layer_1 = layers[1]
         self.assertIsNotNone(layer_1.upsample)
         self.assertEquals(layer_1.upsample.mode, NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value('BILINEAR'))
@@ -1014,4 +1016,164 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertEquals(sorted(expected_output_names),
                sorted(map(lambda x: x.name, spec.description.output)))
 
-        
+    def test_updatable_model_flag_off(self):
+        """
+        Test to ensure that when respect_trainable is off, then we will ignore
+        any 'trainable' layers of the original network.
+        """
+        import coremltools
+        from keras.layers import Dense
+        from keras.losses import categorical_crossentropy
+        from keras.optimizers import SGD
+        input = ['data']
+        output = ['output']
+        # First, set respect_trainable to False and then check to make sure the
+        # converted model is NOT updatable.
+        not_updatable = Sequential()
+        not_updatable.add(Dense(128, input_shape=(16,)))
+        # layer is updatable, but the flag during convert is false, so that bit
+        # must get dropped on the floor.
+        not_updatable.add(Dense(10, name="foo", activation='softmax',
+                                trainable=True))
+        not_updatable.compile(loss=categorical_crossentropy,
+                              optimizer=SGD(lr=0.01), metrics=['accuracy'])
+        cml = coremltools.converters.keras.convert(
+            not_updatable, input, output, respect_trainable=False
+        )
+        spec = cml.get_spec()
+        self.assertFalse(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertFalse(layers[1].isUpdatable)
+
+    def test_updatable_model_flag_cce_sgd(self):
+        """
+        Test to ensure that respect_trainable is honored during convert of a
+        model with categorical cross entropy loss and SGD optimizer.
+        """
+        import coremltools
+        from keras.layers import Dense
+        from keras.losses import categorical_crossentropy
+        from keras.optimizers import SGD
+        input = ['data']
+        output = ['output']
+
+        # This should result in an updatable model.
+        updatable = Sequential()
+        updatable.add(Dense(128, input_shape=(16,)))
+        updatable.add(Dense(10, name="foo", activation='softmax',
+                            trainable=True))
+        updatable.compile(loss=categorical_crossentropy,
+                          optimizer=SGD(lr=1.0), metrics=['accuracy'])
+        cml = coremltools.converters.keras.convert(
+            updatable, input, output, respect_trainable=True
+        )
+        spec = cml.get_spec()
+        self.assertTrue(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertTrue(layers[1].isUpdatable)
+        self.assertEqual(len(spec.neuralNetwork.updateParams.lossLayers), 1)
+        sgdopt = spec.neuralNetwork.updateParams.optimizer.sgdOptimizer
+        self.assertEqual(sgdopt.learningRate.defaultValue, 1.0)
+        self.assertEqual(sgdopt.miniBatchSize.defaultValue, 16)
+        self.assertEqual(sgdopt.momentum.defaultValue, 0.0)
+
+    def test_updatable_model_flag_functional(self):
+        """
+        Test to ensure that respect_trainable is honored during convert of a
+        Keras model defined via the Keras functional API.
+        """
+        import coremltools
+        from keras.layers import Dense, Input
+        from keras.losses import categorical_crossentropy
+        from keras.optimizers import SGD
+        input = ['data']
+        output = ['output']
+
+        # This should result in an updatable model.
+        inputs = Input(shape=(16,))
+        d1 = Dense(128)(inputs)
+        d2 = Dense(10, name="foo", activation='softmax', trainable=True)(d1)
+        kmodel = Model(inputs=inputs, outputs=d2)
+        kmodel.compile(loss=categorical_crossentropy,
+                       optimizer=SGD(lr=1.0), metrics=['accuracy'])
+        cml = coremltools.converters.keras.convert(
+            kmodel, input, output, respect_trainable=True
+        )
+        spec = cml.get_spec()
+        self.assertTrue(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertTrue(layers[1].isUpdatable)
+        self.assertEqual(len(spec.neuralNetwork.updateParams.lossLayers), 1)
+        sgdopt = spec.neuralNetwork.updateParams.optimizer.sgdOptimizer
+        self.assertEqual(sgdopt.learningRate.defaultValue, 1.0)
+        self.assertEqual(sgdopt.miniBatchSize.defaultValue, 16)
+        self.assertEqual(sgdopt.momentum.defaultValue, 0.0)
+
+    def test_updatable_model_flag_mse_adam(self):
+        """
+        Test to ensure that respect_trainable is honored during convert of a
+        model with mean squared error loss and the Adam optimizer.
+        """
+        import coremltools
+        from keras.layers import Dense
+        from keras.losses import mean_squared_error
+        from keras.optimizers import Adam
+        input = ['data']
+        output = ['output']
+
+        # Again, this should give an updatable model.
+        updatable = Sequential()
+        updatable.add(Dense(128, input_shape=(16,)))
+        updatable.add(Dense(10, name="foo", activation='softmax',
+                            trainable=True))
+        updatable.compile(loss=mean_squared_error,
+                          optimizer=Adam(lr=1.0, beta_1=0.5, beta_2=0.75,
+                                         epsilon=0.25),
+                          metrics=['accuracy'])
+        cml = coremltools.converters.keras.convert(
+            updatable, input, output, respect_trainable=True
+        )
+        spec = cml.get_spec()
+        self.assertTrue(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertTrue(layers[1].isUpdatable)
+        self.assertEqual(len(spec.neuralNetwork.updateParams.lossLayers), 1)
+        adopt = spec.neuralNetwork.updateParams.optimizer.adamOptimizer
+        self.assertEqual(adopt.learningRate.defaultValue, 1.0)
+        self.assertEqual(adopt.beta1.defaultValue, 0.5)
+        self.assertEqual(adopt.beta2.defaultValue, 0.75)
+        self.assertEqual(adopt.eps.defaultValue, 0.25)
+
+    def test_updatable_model_flag_no_loss_optimizer(self):
+        """
+        Tests the 'respect_trainable' flag on models that have not been
+        compiled, and thus do not have a loss function or optimizer.
+        """
+        import coremltools
+        from keras.layers import Dense
+        from keras.losses import categorical_crossentropy
+        from keras.optimizers import SGD
+
+        updatable = Sequential()
+        updatable.add(Dense(128, input_shape=(16,)))
+        updatable.add(Dense(10, name="foo", activation='softmax',
+                            trainable=True))
+        input = ['data']
+        output = ['output']
+        cml = coremltools.converters.keras.convert(
+            updatable, input, output, respect_trainable=True
+        )
+        spec = cml.get_spec()
+        self.assertTrue(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertTrue(layers[1].isUpdatable)

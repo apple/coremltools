@@ -391,3 +391,4 @@ class StressTest(CorrectnessTest):
 
     def test_crop_resize_cpu_only(self):
         self.test_crop_resize(cpu_only=True)
+

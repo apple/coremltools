@@ -270,7 +270,6 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerActivation'
         )
 
-    #@unittest.skip("Add Test cases where group is not 1: Radar: 32739970")
     @pytest.mark.slow
     def test_convolutional_layer(self):
         self.run_case(
@@ -279,7 +278,6 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerConvolution'
         )
         
-    #@unittest.skip("Add Test cases where group and dilation are not 1 Radar: 32739970")    
     @pytest.mark.slow
     def test_deconvolution_layer(self):
         self.run_case(
@@ -324,7 +322,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerCrop'
         )
 
-    @unittest.skip(" Radar: 32877551")
+    @unittest.skip("32877551")
     def test_concat_layer(self):
         self.run_case(
             layer_type='concat',
@@ -348,7 +346,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerLRN',
         )
 
-    @unittest.skip(" Radar: 33056676") 
+    @unittest.skip("33056676")
     def test_mvn(self):
         self.run_case(
             layer_type='mvn',
@@ -391,7 +389,7 @@ class CaffeLayers(unittest.TestCase):
             output_layer='LayerEltwise',
         )
 
-    @unittest.skip("Radar: 32739970")  
+    @unittest.skip("32739970")
     def test_parameter(self):
         self.run_case(
             layer_type='parameter',

@@ -10,8 +10,9 @@ from ._feature_management import process_or_validate_features
 from ._feature_management import is_valid_feature_list
 from . import _feature_management as _fm
 
+
 def set_classifier_interface_params(spec, features, class_labels,
-        model_accessor_for_class_labels, output_features = None):
+        model_accessor_for_class_labels, output_features = None, training_features=None):
     """
     Common utilities to set the regression interface params.
     """
@@ -66,6 +67,10 @@ def set_classifier_interface_params(spec, features, class_labels,
         output_.name = cur_output_name
         datatypes._set_datatype(output_.type, output_type)
 
+    # Add training features
+    if training_features is not None:
+        spec = set_training_features(spec, training_features)
+
     # Worry about the class labels
     if pred_cl_type == datatypes.String():
         try:
@@ -99,7 +104,8 @@ def set_classifier_interface_params(spec, features, class_labels,
     # And we are done!
     return spec
 
-def set_regressor_interface_params(spec, features, output_features):
+
+def set_regressor_interface_params(spec, features, output_features, training_features=None):
     """ Common utilities to set the regressor interface params.
     """
     if output_features is None:
@@ -126,12 +132,17 @@ def set_regressor_interface_params(spec, features, output_features):
         input_.name = cur_input_name
         datatypes._set_datatype(input_.type, feature_type)
 
+    # Add training features
+    if training_features is not None:
+        spec = set_training_features(spec, training_features)
+
     output_ = spec.description.output.add()
     output_.name = prediction_name 
     datatypes._set_datatype(output_.type, 'Double')
     return spec
 
-def set_transform_interface_params(spec, input_features, output_features, are_optional = False):
+
+def set_transform_interface_params(spec, input_features, output_features, are_optional=False, training_features=None):
     """ Common utilities to set transform interface params.
     """
     input_features = _fm.process_or_validate_features(input_features)
@@ -149,5 +160,19 @@ def set_transform_interface_params(spec, input_features, output_features, are_op
         output_ = spec.description.output.add()
         output_.name = fname
         datatypes._set_datatype(output_.type, ftype)
+
+    # Add training features
+    if training_features is not None:
+        spec = set_training_features(spec, training_features)
+
+    return spec
+
+
+def set_training_features(spec, training_features):
+
+    for (fname, ftype) in training_features:
+        training_input_ = spec.description.trainingInput.add()
+        training_input_.name = fname
+        datatypes._set_datatype(training_input_.type, ftype)
 
     return spec
