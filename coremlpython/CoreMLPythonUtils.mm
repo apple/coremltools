@@ -157,6 +157,32 @@ static MLFeatureValue * convertValueToArray(const py::handle& handle) {
     return [MLFeatureValue featureValueWithMultiArray:array];
 }
 
+static MLFeatureValue * convertValueToSequence(const py::handle& handle) {
+#pragma unused (handle)
+    /*
+    if(!PyList_Check(handle.ptr())) {
+        throw std::runtime_error("Not a list.");
+    }
+
+    py::list buf = handle.cast<py::list>();
+
+    if(py::len(buf) == 0) {
+        return [MLSequence emptySequenceWithType:MLFeatureTypeInt64];
+    }
+
+    py::handle e = buf[0];
+
+    if(PyAnyInteger_Check(e)) {
+        NSArray<NSNumber*> * v;
+
+
+    }
+
+    MLSequence* seq =
+    */
+    return nil;
+}
+
 static void handleCVReturn(CVReturn status) {
     if (status != kCVReturnSuccess) {
         std::stringstream msg;
@@ -349,8 +375,13 @@ MLFeatureValue * Utils::convertValueToObjC(const py::handle& handle) {
         } catch(...) {}
     }
     
-    if(PyList_Check(handle.ptr()) || PyTuple_Check(handle.ptr())
-       || PyObject_CheckBuffer(handle.ptr())) {
+    if(PyList_Check(handle.ptr()) || PyTuple_Check(handle.ptr())) {
+        try {
+            return convertValueToSequence(handle);
+        } catch(...) {}
+    }
+
+    if(PyObject_CheckBuffer(handle.ptr())) {
         try {
             return convertValueToArray(handle);
         } catch(...) {}
@@ -441,7 +472,7 @@ py::object Utils::convertDictionaryValueToPython(NSDictionary<NSObject *,NSNumbe
         NSNumber *value = dict[key];
         ret[pykey] = py::float_([value doubleValue]);
     }
-    return ret;
+    return std::move(ret);
 }
 
 py::object Utils::convertImageValueToPython(CVPixelBufferRef value) {
@@ -498,6 +529,29 @@ py::object Utils::convertImageValueToPython(CVPixelBufferRef value) {
     return img;
 }
 
+py::object Utils::convertSequenceValueToPython(MLSequence *seq) {
+
+    if (seq == nil) {
+        return py::none();
+    }
+
+    py::list ret;
+
+    if(seq.type == MLFeatureTypeString) {
+        for(NSString* s in seq.stringValues) {
+            ret.append(py::str(s.UTF8String));
+        }
+    } else if(seq.type == MLFeatureTypeInt64) {
+        for(NSNumber* n in seq.stringValues) {
+            ret.append(py::int_(n.longLongValue) );
+        }
+    } else {
+        throw std::runtime_error("Error: Unrecognized sequence type.");
+    }
+
+    return std::move(ret);
+}
+
 py::object Utils::convertValueToPython(MLFeatureValue *value) {
     switch ([value type]) {
         case MLFeatureTypeInt64:
@@ -513,9 +567,11 @@ py::object Utils::convertValueToPython(MLFeatureValue *value) {
         case MLFeatureTypeDictionary:
             return convertDictionaryValueToPython(value.dictionaryValue);
         case MLFeatureTypeSequence:
-            // rdar://problem/38885937
-            throw std::runtime_error("convertValueToPython not implemented for MLFeatureTypeSequence");
-            return py::none();
+            if (@available(macOS 10.14, *)) {
+                return convertSequenceValueToPython(value.sequenceValue);
+            } else {
+                // Fallback on earlier versions
+            }
         case MLFeatureTypeInvalid:
             assert(false);
             return py::none();

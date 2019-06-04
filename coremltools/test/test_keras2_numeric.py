@@ -1615,6 +1615,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Get the coreml model
         self._test_model(model)
 
+
     def test_tiny_concat_seq_random(self):
         np.random.seed(1988)
         max_features = 10
@@ -1635,6 +1636,30 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Get the coreml model
         self._test_model(model, one_dim_seq_flags=[True])
+
+    def test_lstm_concat_dense_random(self):
+        np.random.seed(1988)
+        vocab_size = 1250
+        seq_length = 5
+        units = 32
+
+        # Define a model
+        input = Input(shape=(seq_length,))
+        pos = Input(shape=(seq_length, 1))
+        embedding = Embedding(vocab_size, 50, input_length=seq_length)(input)
+        concat = Concatenate(axis=2)([embedding, pos])
+        model = LSTM(units, return_sequences=True, stateful=False)(concat)
+        model = LSTM(units, return_sequences=False)(model)
+        model = Dense(100, activation='relu')(model)
+        model = Dense(vocab_size, activation='softmax')(model)
+
+        model = Model(inputs=[input, pos], outputs=model)
+
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        # Get the coreml model
+        self._test_model(model, one_dim_seq_flags=[True, True])
 
     def test_tiny_add_random(self):
         np.random.seed(1988)
@@ -2222,7 +2247,6 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         model.add(Dense(10, activation='sigmoid'))
         self._test_model(model)
 
-
 @pytest.mark.slow
 @pytest.mark.keras2
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
@@ -2740,5 +2764,5 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
 if __name__ == '__main__':
     unittest.main()
     #suite = unittest.TestSuite()
-    #suite.addTest(KerasBasicNumericCorrectnessTest("test_tiny_conv_upsample_1d_random"))
+    #suite.addTest(KerasBasicNumericCorrectnessTest("test_lstm_concat_dense_random"))
     #unittest.TextTestRunner().run(suite)

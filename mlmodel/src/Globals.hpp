@@ -7,7 +7,7 @@
 
 #include "DataType.hpp"
 
-#define MLMODEL_SPECIFICATION_VERSION MLMODEL_SPECIFICATION_VERSION_IOS12
+#define MLMODEL_SPECIFICATION_VERSION MLMODEL_SPECIFICATION_VERSION_IOS13
 
 namespace CoreML {
 
@@ -25,8 +25,13 @@ namespace CoreML {
     // - Text classifier
     // - Vision feature print
     // - New neural network layers (resizeBilinear, cropResize)
-    // - <fill in as we develope> ..
+    // - <fill in as we develop> ..
     static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS12 = 3;
+    
+    // Version 4 supports:
+    // - New NN layers, non rank 5 tensors 
+    // - <fill in as we develop> ..
+    static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS13 = 4;
 
 }
 

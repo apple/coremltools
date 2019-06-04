@@ -16,9 +16,9 @@ import sys, os
 from .optimization_utils import _optimize_nn
 
 from coremltools.models import (
-    _SUPPORTED_QUANTIZATION_MODES, 
-    _QUANTIZATION_MODE_DEQUANTIZE, 
-    _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR, 
+    _SUPPORTED_QUANTIZATION_MODES,
+    _QUANTIZATION_MODE_DEQUANTIZE,
+    _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
     _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
     _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
     _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
@@ -35,7 +35,7 @@ def _convert_1bit_array_to_byte_array(arr):
     """
     Convert bit array to byte array.
 
-    :param arr: list
+    arr: list
         Bits as a list where each element is an integer of 0 or 1
 
     Returns
@@ -78,7 +78,7 @@ def _decompose_bytes_to_bit_arr(arr):
     """
     Unpack bytes to bits
 
-    :param arr: list
+    arr: list
         Byte Stream, as a list of uint8 values
 
     Returns
@@ -97,10 +97,10 @@ def _get_linear_lookup_table_and_weight(nbits, wp):
     """
     Generate a linear lookup table.
 
-    :param nbits: int
+    nbits: int
         Number of bits to represent a quantized weight value
 
-    :param wp: numpy.array
+    wp: numpy.array
         Weight blob to be quantized
 
     Returns
@@ -121,10 +121,10 @@ def _get_kmeans_lookup_table_and_weight(nbits, w, init='k-means++', tol=1e-2, n_
     """
     Generate K-Means lookup table given a weight parameter field
 
-    :param nbits:
+    nbits:
         Number of bits for quantization
 
-    :param w:
+    w:
         Weight as numpy array
 
     Returns
@@ -152,13 +152,13 @@ def _quantize_channelwise_linear(weight, nbits, axis=0):
     """
     Linearly quantize weight blob.
 
-    :param weight: numpy.array
+    weight: numpy.array
         Weight to be quantized.
 
-    :param nbits: int
+    nbits: int
         Number of bits per weight element
 
-    :param axis: int
+    axis: int
         Axis of the weight blob to compute channel-wise quantization, can be 0 or 1
 
     Returns
@@ -216,13 +216,13 @@ def _quantize_wp(wp, nbits, qm, axis=0, **kwargs):
     """
     Quantize the weight blob
 
-    :param wp: numpy.array
+    wp: numpy.array
         Weight parameters
-    :param nbits: int
+    nbits: int
         Number of bits
-    :param qm:
+    qm:
         Quantization mode
-    :param lut_function: (``callable function``)
+    lut_function: (``callable function``)
         Python callable representing a look-up table
 
     Returns
@@ -236,7 +236,7 @@ def _quantize_wp(wp, nbits, qm, axis=0, **kwargs):
     quantized_wp: numpy.array
         Quantized weight of same shape as wp, with dtype numpy.uint8
     """
-    
+
     scale = bias = lut = None
     # Linear Quantization
     if qm == _QUANTIZATION_MODE_LINEAR_QUANTIZATION:
@@ -271,17 +271,17 @@ def _quantize_wp_field(wp, nbits, qm, shape, axis=0, **kwargs):
     """
     Quantize WeightParam field in Neural Network Protobuf
 
-    :param wp: MLModel.NeuralNetwork.WeightParam
+    wp: MLModel.NeuralNetwork.WeightParam
         WeightParam field
-    :param nbits: int
+    nbits: int
         Number of bits to be quantized
-    :param qm: str
+    qm: str
         Quantization mode
-    :param shape: tuple
+    shape: tuple
         Tensor shape held by wp
-    :param axis: int
+    axis: int
         Axis over which quantization is performed on, can be either 0 or 1
-    :param lut_function: (``callable function``)
+    lut_function: (``callable function``)
         Python callable representing a LUT table function
     """
 
@@ -355,7 +355,7 @@ def _dequantize_linear(weight_8bit, scale, bias, axis=0):
     if axis == 1:
         transposed_axis_order = (1,0) + tuple(range(2,rank))
         weight_8bit = _np.transpose(weight_8bit, transposed_axis_order)
-    
+
     num_channels = weight_8bit.shape[0]
     broadcast_shape = (num_channels, ) + (1,) * (rank - 1)
     scale = scale.reshape(broadcast_shape)
@@ -395,7 +395,7 @@ def _dequantize_wp(wp, shape, axis=0):
 
     weight_8bit = byte_arr if nbits == 8 else unpack_to_bytes(byte_arr, num_weights, nbits)
     weight_8bit = weight_8bit.reshape(shape)
-    
+
     if is_linear:
         scale = _np.array(wp.quantization.linearQuantization.scale)
         bias = _np.array(wp.quantization.linearQuantization.bias)
@@ -403,7 +403,7 @@ def _dequantize_wp(wp, shape, axis=0):
     else:
         lut = _np.array(wp.quantization.lookupTableQuantization.floatValue)
         dequantized_weight = _dequantize_lut(weight_8bit, lut)
-    
+
     wp.rawValue = bytes()
     wp.quantization.Clear()
     wp.floatValue.extend(dequantized_weight.flatten())
@@ -833,13 +833,13 @@ def compare_models(full_precision_model, quantized_model,
     """
     Utility function to compare the performance of a full precision vs quantized model
 
-    :param full_precision_model: MLModel
+    full_precision_model: MLModel
         The full precision model with float32 weights
 
-    :param quantized_model: MLModel
+    quantized_model: MLModel
         Quantized version of the model with quantized weights
 
-    :param sample_data: str | [dict]
+    sample_data: str | [dict]
         Data used to characterize performance of the quantized model in
         comparison to the full precision model. Either a list of sample input
         dictionaries or an absolute path to a directory containing images.
@@ -885,39 +885,36 @@ def quantize_weights(full_precision_model,
     Utility function to convert a full precision (float) MLModel to a
     nbit quantized MLModel (float16).
 
-    :param full_precision_model: MLModel
+    full_precision_model: MLModel
         Model which will be converted to half precision. Currently conversion
         for only neural network models is supported. If a pipeline model is
         passed in then all embedded neural network models embedded within
         will be converted.
+        
+    nbits: int
+        Number of bits per quantized weight. Only 8-bit and lower quantization is supported
 
-    :param nbits: Int
-        Number of bits per quantized weight. Only 8-bit and lower
-        quantization is supported
+    quantization_mode: str
+        One of the following:
 
-    :param quantization_mode: str
-        One of:
-         "linear":
+        "linear":
             Simple linear quantization with scale and bias
-
-         "linear_lut":
+        "linear_lut":
             Simple linear quantization represented as a lookup table
-
-         "kmeans_lut":
+        "kmeans_lut":
             LUT based quantization, where LUT is generated by K-Means clustering
-
-         "custom_lut":
+        "custom_lut":
             LUT quantization where LUT and quantized weight params are
             calculated using a custom function. If this mode is selected then
             a custom function must be passed in kwargs with key lut_function.
             The function must have input params (nbits, wp) where nbits is the
             number of quantization bits and wp is the list of weights for a
             given layer. The function should return two parameters (lut, qw)
-            where lut is an array of length (2^nbits)containing LUT values and
+            where lut is an array of length (2^n bits)containing LUT values and
             qw is the list of quantized weight parameters. See
-            _get_linear_lookup_table_and_weight for a sample implementation.
+            ``_get_linear_lookup_table_and_weight`` for a sample implementation.
 
-    :param sample_data: str | [dict]
+    sample_data: str | [dict]
         Data used to characterize performance of the quantized model in
         comparison to the full precision model. Either a list of sample input
         dictionaries or an absolute path to a directory containing images.
@@ -925,14 +922,11 @@ def quantize_weights(full_precision_model,
         one image input. For all other models a list of sample inputs must be
         provided.
 
-    :param **kwargs:
-        See below
-
-    :Keyword Arguments:
-        * *lut_function* (``callable function``) --
-          A callable function provided when quantization mode is set to
-          _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE. See quantization_mode for
-          more details
+    kwargs: keyword arguments
+            *lut_function* (``callable function``):
+                A callable function provided when quantization mode is set to
+                ``_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE``. See ``quantization_mode``
+                for more details.
 
     Returns
     -------
@@ -947,7 +941,6 @@ def quantize_weights(full_precision_model,
         >>> from coremltools.models.neural_network import quantization_utils
         >>> model = coremltools.models.MLModel('my_model.mlmodel')
         >>> quantized_model = quantization_utils.quantize_weights(model, 8, "linear")
-
     """
     qmode_mapping = {
         "linear": _QUANTIZATION_MODE_LINEAR_QUANTIZATION,

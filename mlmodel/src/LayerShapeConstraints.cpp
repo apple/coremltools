@@ -13,7 +13,8 @@ using namespace CoreML;
 
 RangeValue::RangeValue()
 :
-_isUnbound(true)
+_isUnbound(true),
+_val(0) // Fixes Coverity defects 80546--80552 Uninitialized scalar variable
 {}
 
 RangeValue::RangeValue(size_t val)

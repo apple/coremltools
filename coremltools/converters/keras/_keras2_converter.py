@@ -1,6 +1,13 @@
+# Copyright (c) 2017-2019, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import logging
 from six import string_types as _string_types
 
 from ...models.neural_network import NeuralNetworkBuilder as _NeuralNetworkBuilder
+from ...models.neural_network.update_optimizer_utils import AdamParams
+from ...models.neural_network.update_optimizer_utils import SgdParams
 from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from collections import OrderedDict as _OrderedDict
 from ...models import datatypes
@@ -167,6 +174,96 @@ def _load_keras_model(model_network_path, model_weight_path, custom_objects=None
 
     return loaded_model
 
+def _convert_training_info(model, builder, output_names):
+    """
+    Convert the training information from the given Keras 'model' into the Core
+    ML in 'builder'.
+
+    :param model: keras.model.Sequential
+        The source Keras model.
+    :param builder: NeutralNetworkBuilder
+        The target model that will gain the loss and optimizer.
+    :param output_names: list of str
+        The set of tensor names that are output from the layers in the Keras
+        model.
+    """
+    # Keras does not have a number of epochs compiled into the model, so we
+    # invent one here for ease of use.  1 makes the most sense, as the user
+    # can just invoke training repeatedly if they'd like to do more.
+    builder.set_epochs(1)
+    import keras
+    try:
+        if model.loss == keras.losses.categorical_crossentropy:
+            builder.set_categorical_cross_entropy_loss(
+                name='loss_layer', input=output_names[0]
+            )
+        elif model.loss == keras.losses.mean_squared_error:
+            builder.set_mean_squared_error_loss(
+                name='loss_layer', input=output_names[0]
+            )
+        else:
+            logging.warning("Loss " + str(model.loss) + " is not yet "
+                            "supported by Core ML. The loss layer will "
+                            "not be carried over. To train this model, "
+                            "you will need to manually add a supported "
+                            "loss layer.")
+    except AttributeError:
+        logging.warning("Core ML conversion was asked to respect trainable "
+                        "parameters from the Keras model, but the input "
+                        "model does not include a loss layer.")
+    try:
+        opt = model.optimizer
+    except AttributeError:
+        logging.warning("Core ML conversion was asked to respect trainable "
+                        "parameters from the Keras model, but could not read "
+                        "the optimizer from Keras.")
+        return
+
+    if model.optimizer:
+        # a dict of the parameters we need.
+        cfg = model.optimizer.get_config()
+        if 'decay' in cfg and cfg['decay'] != 0.0:
+            logging.warning("Keras optimizer has 'decay' set, which is "
+                            "not supported in Core ML. This parameter "
+                            "of the optimizer will be ignored. Clients "
+                            "can change the learning rate from within an "
+                            "MLUpdateTask callback to achieve the same "
+                            "effect.")
+        if isinstance(model.optimizer, keras.optimizers.SGD):
+            params = SgdParams(lr=cfg['lr'], momentum=cfg['momentum'])
+            if 'nesterov' in cfg and cfg['nesterov'] == True:
+                logging.warning("Keras SGD optimizer has 'nesterov' set, "
+                                "but this is not supported by Core ML. "
+                                "The parameter will be ignored.")
+            # Keras does not require a user to specify batch size up front,
+            # as Core ML does.  We need to choose something, let's be a bit
+            # wide to minimize the chance of user "surprise" when running.
+            params.set_batch(16, [1, 16, 32])
+            builder.set_sgd_optimizer(params)
+        elif isinstance(model.optimizer, keras.optimizers.Adam):
+            params = AdamParams(
+                lr=cfg['lr'], beta1=cfg['beta_1'], beta2=cfg['beta_2'],
+                eps=cfg['epsilon']
+            )
+            if 'amsgrad' in cfg and cfg['amsgrad'] == True:
+                logging.warning("Keras Adam optimizer has 'amsgrad' set, "
+                                "but this is not supported by Core ML. "
+                                "The parameter will be ignored.")
+            # Keras does not require a user to specify batch size up front,
+            # as Core ML does.  We need to choose something, let's be a bit
+            # wide to minimize the chance of user "surprise" when running.
+            params.set_batch(16, [1, 16, 32])
+            builder.set_adam_optimizer(params)
+        else:
+            logging.warning("Optimizer " + str(model.optimizer) + " is "
+                            "not yet supported by Core ML. The optimizer "
+                            "will not be carried over. To train this "
+                            "model, you will need to manually add a "
+                            "supported optimizer.")
+    else:
+        logging.warning("Core ML conversion was asked to respect "
+                        "trainable parameters from the Keras model, but "
+                        "the input model does not include an optimizer.")
 
 def _convert(model, 
             input_names = None, 
@@ -184,7 +281,10 @@ def _convert(model,
             predicted_probabilities_output = '',
             add_custom_layers = False,
             custom_conversion_functions = None,
-            custom_objects = None):
+            custom_objects = None,
+            input_shapes = None,
+            output_shapes = None,
+            respect_trainable = False):
 
     # Check Keras format
     if _keras.backend.image_data_format() == 'channels_first':
@@ -221,6 +321,7 @@ def _convert(model,
             input_names = [input_names]
     else: 
         input_names = ['input' + str(i+1) for i in range(len(inputs))]
+
     if output_names is not None: 
         if isinstance(output_names, _string_types):
             output_names = [output_names]
@@ -244,12 +345,16 @@ def _convert(model,
     # (Batch, Seq, H, W, C) -> (C,H,W)
 
     # Retrieve input shapes from model
-    if type(model.input_shape) is list:
-        input_dims = [filter(None, x) for x in model.input_shape]
-        unfiltered_shapes = model.input_shape
+    if len(model._inbound_nodes) > 1 and input_shapes is not None:
+        input_dims = [filter(None, x) for x in input_shapes]
+        unfiltered_shapes = input_shapes
     else:
-        input_dims = [filter(None, model.input_shape)]
-        unfiltered_shapes = [model.input_shape]
+        if type(model.input_shape) is list:
+            input_dims = [filter(None, x) for x in model.input_shape]
+            unfiltered_shapes = model.input_shape
+        else:
+            input_dims = [filter(None, model.input_shape)]
+            unfiltered_shapes = [model.input_shape]
 
     for idx, dim in enumerate(input_dims):
         if input_names[idx] in input_name_shape_dict:
@@ -315,10 +420,13 @@ def _convert(model,
 
 
     # Retrieve output shapes from model
-    if type(model.output_shape) is list:
-        output_dims = [filter(None, x) for x in model.output_shape]
+    if len(model._outbound_nodes) > 1 and output_shapes is not None:
+        output_dims = [filter(None, x) for x in output_shapes]
     else:
-        output_dims = [filter(None, model.output_shape[1:])]
+        if type(model.output_shape) is list:
+            output_dims = [filter(None, x) for x in model.output_shape]
+        else:
+            output_dims = [filter(None, model.output_shape[1:])]
 
     for idx, dim in enumerate(output_dims):
         dim = list(dim)
@@ -356,7 +464,8 @@ def _convert(model,
         input_names, output_names = graph.get_layer_blobs(layer)
         # this may be none if we're using custom layers
         if converter_func:
-            converter_func(builder, layer, input_names, output_names, keras_layer)
+            converter_func(builder, layer, input_names, output_names,
+                           keras_layer, respect_trainable)
         else:
             if _is_activation_layer(keras_layer):
                 import six
@@ -407,7 +516,11 @@ def _convert(model,
                                           gray_bias = gray_bias, 
                                           image_scale = image_scale)
 
+    # add in the loss and optimizer, if the network has it and that is
+    # appropriate given the flag.
+    if respect_trainable:
+        _convert_training_info(model, builder, output_names)
+
     # Return the protobuf spec
     spec = builder.spec
     return spec
-

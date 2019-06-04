@@ -43,6 +43,7 @@ from . import _imputer
 from . import _random_forest_classifier
 from . import _random_forest_regressor
 from . import _standard_scaler
+from . import _k_neighbors_classifier
 
 _PIPELINE_INTERNAL_FEATURE_NAME = "__feature_vector__"
 
@@ -65,7 +66,8 @@ _converter_module_list = [
         _decision_tree_classifier,
         _decision_tree_regressor,
         _gradient_boosting_classifier,
-        _gradient_boosting_regressor]
+        _gradient_boosting_regressor,
+        _k_neighbors_classifier]
 
 def _test_module(m):
     assert m.model_type in ["transformer", "regressor", "classifier"], m.__name__

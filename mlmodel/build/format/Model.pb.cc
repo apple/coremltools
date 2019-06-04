@@ -44,8 +44,11 @@ class ModelDefaultTypeInternal : public ::google::protobuf::internal::Explicitly
   const ::CoreML::Specification::SupportVectorClassifier* supportvectorclassifier_;
   const ::CoreML::Specification::TreeEnsembleClassifier* treeensembleclassifier_;
   const ::CoreML::Specification::NeuralNetworkClassifier* neuralnetworkclassifier_;
+  const ::CoreML::Specification::KNearestNeighborsClassifier* knearestneighborsclassifier_;
   const ::CoreML::Specification::NeuralNetwork* neuralnetwork_;
+  const ::CoreML::Specification::ItemSimilarityRecommender* itemsimilarityrecommender_;
   const ::CoreML::Specification::CustomModel* custommodel_;
+  const ::CoreML::Specification::LinkedModel* linkedmodel_;
   const ::CoreML::Specification::OneHotEncoder* onehotencoder_;
   const ::CoreML::Specification::Imputer* imputer_;
   const ::CoreML::Specification::FeatureVectorizer* featurevectorizer_;
@@ -59,6 +62,7 @@ class ModelDefaultTypeInternal : public ::google::protobuf::internal::Explicitly
   const ::CoreML::Specification::CoreMLModels::TextClassifier* textclassifier_;
   const ::CoreML::Specification::CoreMLModels::WordTagger* wordtagger_;
   const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* visionfeatureprint_;
+  const ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* soundanalysispreprocessing_;
 } _Model_default_instance_;
 
 namespace protobuf_Model_2eproto {
@@ -111,6 +115,7 @@ void TableStruct::InitDefaultsImpl() {
   ::CoreML::Specification::protobuf_FeatureVectorizer_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_GLMRegressor_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_GLMClassifier_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_NearestNeighbors_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Identity_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Imputer_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_NeuralNetwork_2eproto::InitDefaults();
@@ -120,6 +125,10 @@ void TableStruct::InitDefaultsImpl() {
   ::CoreML::Specification::protobuf_NonMaximumSuppression_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_SVM_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_TreeEnsemble_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_Parameters_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_ItemSimilarityRecommender_2eproto::InitDefaults();
+  ::CoreML::Specification::CoreMLModels::protobuf_SoundAnalysisPreprocessing_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_LinkedModel_2eproto::InitDefaults();
   _Pipeline_default_instance_.DefaultConstruct();
   _PipelineClassifier_default_instance_.DefaultConstruct();
   _PipelineRegressor_default_instance_.DefaultConstruct();
@@ -160,6 +169,7 @@ void AddDescriptorsImpl() {
   ::CoreML::Specification::protobuf_FeatureVectorizer_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_GLMRegressor_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_GLMClassifier_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_NearestNeighbors_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Identity_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Imputer_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_NeuralNetwork_2eproto::AddDescriptors();
@@ -169,6 +179,10 @@ void AddDescriptorsImpl() {
   ::CoreML::Specification::protobuf_NonMaximumSuppression_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_SVM_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_TreeEnsemble_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_Parameters_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_ItemSimilarityRecommender_2eproto::AddDescriptors();
+  ::CoreML::Specification::CoreMLModels::protobuf_SoundAnalysisPreprocessing_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_LinkedModel_2eproto::AddDescriptors();
   ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
 }
 
@@ -192,6 +206,7 @@ struct StaticDescriptorInitializer {
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Pipeline::kModelsFieldNumber;
+const int Pipeline::kNamesFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Pipeline::Pipeline()
@@ -206,6 +221,7 @@ Pipeline::Pipeline(const Pipeline& from)
   : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       models_(from.models_),
+      names_(from.names_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.Pipeline)
@@ -244,6 +260,7 @@ Pipeline* Pipeline::New(::google::protobuf::Arena* arena) const {
 void Pipeline::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.Pipeline)
   models_.Clear();
+  names_.Clear();
 }
 
 bool Pipeline::MergePartialFromCodedStream(
@@ -262,6 +279,23 @@ bool Pipeline::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(10u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                 input, add_models()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated string names = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_names()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->names(this->names_size() - 1).data(),
+            this->names(this->names_size() - 1).length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.Pipeline.names"));
         } else {
           goto handle_unusual;
         }
@@ -301,6 +335,16 @@ void Pipeline::SerializeWithCachedSizes(
       1, this->models(i), output);
   }
 
+  // repeated string names = 2;
+  for (int i = 0, n = this->names_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->names(i).data(), this->names(i).length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.Pipeline.names");
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      2, this->names(i), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.Pipeline)
 }
 
@@ -317,6 +361,14 @@ size_t Pipeline::ByteSizeLong() const {
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->models(i));
     }
+  }
+
+  // repeated string names = 2;
+  total_size += 1 *
+      ::google::protobuf::internal::FromIntSize(this->names_size());
+  for (int i = 0, n = this->names_size(); i < n; i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->names(i));
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -339,6 +391,7 @@ void Pipeline::MergeFrom(const Pipeline& from) {
   (void) cached_has_bits;
 
   models_.MergeFrom(from.models_);
+  names_.MergeFrom(from.names_);
 }
 
 void Pipeline::CopyFrom(const Pipeline& from) {
@@ -358,6 +411,7 @@ void Pipeline::Swap(Pipeline* other) {
 }
 void Pipeline::InternalSwap(Pipeline* other) {
   models_.InternalSwap(&other->models_);
+  names_.InternalSwap(&other->names_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -396,6 +450,75 @@ const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::Model >&
 Pipeline::models() const {
   // @@protoc_insertion_point(field_list:CoreML.Specification.Pipeline.models)
   return models_;
+}
+
+// repeated string names = 2;
+int Pipeline::names_size() const {
+  return names_.size();
+}
+void Pipeline::clear_names() {
+  names_.Clear();
+}
+const ::std::string& Pipeline::names(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pipeline.names)
+  return names_.Get(index);
+}
+::std::string* Pipeline::mutable_names(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Pipeline.names)
+  return names_.Mutable(index);
+}
+void Pipeline::set_names(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pipeline.names)
+  names_.Mutable(index)->assign(value);
+}
+#if LANG_CXX11
+void Pipeline::set_names(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pipeline.names)
+  names_.Mutable(index)->assign(std::move(value));
+}
+#endif
+void Pipeline::set_names(int index, const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  names_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.Pipeline.names)
+}
+void Pipeline::set_names(int index, const char* value, size_t size) {
+  names_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.Pipeline.names)
+}
+::std::string* Pipeline::add_names() {
+  // @@protoc_insertion_point(field_add_mutable:CoreML.Specification.Pipeline.names)
+  return names_.Add();
+}
+void Pipeline::add_names(const ::std::string& value) {
+  names_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.Pipeline.names)
+}
+#if LANG_CXX11
+void Pipeline::add_names(::std::string&& value) {
+  names_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:CoreML.Specification.Pipeline.names)
+}
+#endif
+void Pipeline::add_names(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  names_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:CoreML.Specification.Pipeline.names)
+}
+void Pipeline::add_names(const char* value, size_t size) {
+  names_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:CoreML.Specification.Pipeline.names)
+}
+const ::google::protobuf::RepeatedPtrField< ::std::string>&
+Pipeline::names() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.Pipeline.names)
+  return names_;
+}
+::google::protobuf::RepeatedPtrField< ::std::string>*
+Pipeline::mutable_names() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.Pipeline.names)
+  return &names_;
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -1961,6 +2084,7 @@ const int ModelDescription::kInputFieldNumber;
 const int ModelDescription::kOutputFieldNumber;
 const int ModelDescription::kPredictedFeatureNameFieldNumber;
 const int ModelDescription::kPredictedProbabilitiesNameFieldNumber;
+const int ModelDescription::kTrainingInputFieldNumber;
 const int ModelDescription::kMetadataFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
@@ -1977,6 +2101,7 @@ ModelDescription::ModelDescription(const ModelDescription& from)
       _internal_metadata_(NULL),
       input_(from.input_),
       output_(from.output_),
+      traininginput_(from.traininginput_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   predictedfeaturename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -2037,6 +2162,7 @@ void ModelDescription::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.ModelDescription)
   input_.Clear();
   output_.Clear();
+  traininginput_.Clear();
   predictedfeaturename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   predictedprobabilitiesname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (GetArenaNoVirtual() == NULL && metadata_ != NULL) {
@@ -2105,6 +2231,18 @@ bool ModelDescription::MergePartialFromCodedStream(
             this->predictedprobabilitiesname().data(), this->predictedprobabilitiesname().length(),
             ::google::protobuf::internal::WireFormatLite::PARSE,
             "CoreML.Specification.ModelDescription.predictedProbabilitiesName"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .CoreML.Specification.FeatureDescription trainingInput = 50;
+      case 50: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(402u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_traininginput()));
         } else {
           goto handle_unusual;
         }
@@ -2182,6 +2320,12 @@ void ModelDescription::SerializeWithCachedSizes(
       12, this->predictedprobabilitiesname(), output);
   }
 
+  // repeated .CoreML.Specification.FeatureDescription trainingInput = 50;
+  for (unsigned int i = 0, n = this->traininginput_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      50, this->traininginput(i), output);
+  }
+
   // .CoreML.Specification.Metadata metadata = 100;
   if (this->has_metadata()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
@@ -2214,6 +2358,17 @@ size_t ModelDescription::ByteSizeLong() const {
       total_size +=
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           this->output(i));
+    }
+  }
+
+  // repeated .CoreML.Specification.FeatureDescription trainingInput = 50;
+  {
+    unsigned int count = this->traininginput_size();
+    total_size += 2UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->traininginput(i));
     }
   }
 
@@ -2259,6 +2414,7 @@ void ModelDescription::MergeFrom(const ModelDescription& from) {
 
   input_.MergeFrom(from.input_);
   output_.MergeFrom(from.output_);
+  traininginput_.MergeFrom(from.traininginput_);
   if (from.predictedfeaturename().size() > 0) {
 
     predictedfeaturename_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.predictedfeaturename_);
@@ -2290,6 +2446,7 @@ void ModelDescription::Swap(ModelDescription* other) {
 void ModelDescription::InternalSwap(ModelDescription* other) {
   input_.InternalSwap(&other->input_);
   output_.InternalSwap(&other->output_);
+  traininginput_.InternalSwap(&other->traininginput_);
   predictedfeaturename_.Swap(&other->predictedfeaturename_);
   predictedprobabilitiesname_.Swap(&other->predictedprobabilitiesname_);
   std::swap(metadata_, other->metadata_);
@@ -2469,6 +2626,36 @@ void ModelDescription::set_allocated_predictedprobabilitiesname(::std::string* p
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ModelDescription.predictedProbabilitiesName)
 }
 
+// repeated .CoreML.Specification.FeatureDescription trainingInput = 50;
+int ModelDescription::traininginput_size() const {
+  return traininginput_.size();
+}
+void ModelDescription::clear_traininginput() {
+  traininginput_.Clear();
+}
+const ::CoreML::Specification::FeatureDescription& ModelDescription::traininginput(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ModelDescription.trainingInput)
+  return traininginput_.Get(index);
+}
+::CoreML::Specification::FeatureDescription* ModelDescription::mutable_traininginput(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ModelDescription.trainingInput)
+  return traininginput_.Mutable(index);
+}
+::CoreML::Specification::FeatureDescription* ModelDescription::add_traininginput() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.ModelDescription.trainingInput)
+  return traininginput_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >*
+ModelDescription::mutable_traininginput() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.ModelDescription.trainingInput)
+  return &traininginput_;
+}
+const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >&
+ModelDescription::traininginput() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.ModelDescription.trainingInput)
+  return traininginput_;
+}
+
 // .CoreML.Specification.Metadata metadata = 100;
 bool ModelDescription::has_metadata() const {
   return this != internal_default_instance() && metadata_ != NULL;
@@ -2515,6 +2702,7 @@ void ModelDescription::set_allocated_metadata(::CoreML::Specification::Metadata*
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Model::kSpecificationVersionFieldNumber;
 const int Model::kDescriptionFieldNumber;
+const int Model::kIsUpdatableFieldNumber;
 const int Model::kPipelineClassifierFieldNumber;
 const int Model::kPipelineRegressorFieldNumber;
 const int Model::kPipelineFieldNumber;
@@ -2527,8 +2715,11 @@ const int Model::kGlmClassifierFieldNumber;
 const int Model::kSupportVectorClassifierFieldNumber;
 const int Model::kTreeEnsembleClassifierFieldNumber;
 const int Model::kNeuralNetworkClassifierFieldNumber;
+const int Model::kKNearestNeighborsClassifierFieldNumber;
 const int Model::kNeuralNetworkFieldNumber;
+const int Model::kItemSimilarityRecommenderFieldNumber;
 const int Model::kCustomModelFieldNumber;
+const int Model::kLinkedModelFieldNumber;
 const int Model::kOneHotEncoderFieldNumber;
 const int Model::kImputerFieldNumber;
 const int Model::kFeatureVectorizerFieldNumber;
@@ -2542,6 +2733,7 @@ const int Model::kIdentityFieldNumber;
 const int Model::kTextClassifierFieldNumber;
 const int Model::kWordTaggerFieldNumber;
 const int Model::kVisionFeaturePrintFieldNumber;
+const int Model::kSoundAnalysisPreprocessingFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Model::Model()
@@ -2562,7 +2754,9 @@ Model::Model(const Model& from)
   } else {
     description_ = NULL;
   }
-  specificationversion_ = from.specificationversion_;
+  ::memcpy(&specificationversion_, &from.specificationversion_,
+    reinterpret_cast<char*>(&isupdatable_) -
+    reinterpret_cast<char*>(&specificationversion_) + sizeof(isupdatable_));
   clear_has_Type();
   switch (from.Type_case()) {
     case kPipelineClassifier: {
@@ -2613,12 +2807,24 @@ Model::Model(const Model& from)
       mutable_neuralnetworkclassifier()->::CoreML::Specification::NeuralNetworkClassifier::MergeFrom(from.neuralnetworkclassifier());
       break;
     }
+    case kKNearestNeighborsClassifier: {
+      mutable_knearestneighborsclassifier()->::CoreML::Specification::KNearestNeighborsClassifier::MergeFrom(from.knearestneighborsclassifier());
+      break;
+    }
     case kNeuralNetwork: {
       mutable_neuralnetwork()->::CoreML::Specification::NeuralNetwork::MergeFrom(from.neuralnetwork());
       break;
     }
+    case kItemSimilarityRecommender: {
+      mutable_itemsimilarityrecommender()->::CoreML::Specification::ItemSimilarityRecommender::MergeFrom(from.itemsimilarityrecommender());
+      break;
+    }
     case kCustomModel: {
       mutable_custommodel()->::CoreML::Specification::CustomModel::MergeFrom(from.custommodel());
+      break;
+    }
+    case kLinkedModel: {
+      mutable_linkedmodel()->::CoreML::Specification::LinkedModel::MergeFrom(from.linkedmodel());
       break;
     }
     case kOneHotEncoder: {
@@ -2673,6 +2879,10 @@ Model::Model(const Model& from)
       mutable_visionfeatureprint()->::CoreML::Specification::CoreMLModels::VisionFeaturePrint::MergeFrom(from.visionfeatureprint());
       break;
     }
+    case kSoundAnalysisPreprocessing: {
+      mutable_soundanalysispreprocessing()->::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing::MergeFrom(from.soundanalysispreprocessing());
+      break;
+    }
     case TYPE_NOT_SET: {
       break;
     }
@@ -2681,8 +2891,8 @@ Model::Model(const Model& from)
 }
 
 void Model::SharedCtor() {
-  ::memset(&description_, 0, reinterpret_cast<char*>(&specificationversion_) -
-    reinterpret_cast<char*>(&description_) + sizeof(specificationversion_));
+  ::memset(&description_, 0, reinterpret_cast<char*>(&isupdatable_) -
+    reinterpret_cast<char*>(&description_) + sizeof(isupdatable_));
   clear_has_Type();
   _cached_size_ = 0;
 }
@@ -2770,12 +2980,24 @@ void Model::clear_Type() {
       delete Type_.neuralnetworkclassifier_;
       break;
     }
+    case kKNearestNeighborsClassifier: {
+      delete Type_.knearestneighborsclassifier_;
+      break;
+    }
     case kNeuralNetwork: {
       delete Type_.neuralnetwork_;
       break;
     }
+    case kItemSimilarityRecommender: {
+      delete Type_.itemsimilarityrecommender_;
+      break;
+    }
     case kCustomModel: {
       delete Type_.custommodel_;
+      break;
+    }
+    case kLinkedModel: {
+      delete Type_.linkedmodel_;
       break;
     }
     case kOneHotEncoder: {
@@ -2830,6 +3052,10 @@ void Model::clear_Type() {
       delete Type_.visionfeatureprint_;
       break;
     }
+    case kSoundAnalysisPreprocessing: {
+      delete Type_.soundanalysispreprocessing_;
+      break;
+    }
     case TYPE_NOT_SET: {
       break;
     }
@@ -2844,7 +3070,8 @@ void Model::Clear() {
     delete description_;
   }
   description_ = NULL;
-  specificationversion_ = 0;
+  ::memset(&specificationversion_, 0, reinterpret_cast<char*>(&isupdatable_) -
+    reinterpret_cast<char*>(&specificationversion_) + sizeof(isupdatable_));
   clear_Type();
 }
 
@@ -2878,6 +3105,20 @@ bool Model::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(18u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_description()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool isUpdatable = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(80u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &isupdatable_)));
         } else {
           goto handle_unusual;
         }
@@ -3028,6 +3269,18 @@ bool Model::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.KNearestNeighborsClassifier kNearestNeighborsClassifier = 404;
+      case 404: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(3234u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_knearestneighborsclassifier()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       // .CoreML.Specification.NeuralNetwork neuralNetwork = 500;
       case 500: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
@@ -3040,12 +3293,36 @@ bool Model::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.ItemSimilarityRecommender itemSimilarityRecommender = 501;
+      case 501: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(4010u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_itemsimilarityrecommender()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       // .CoreML.Specification.CustomModel customModel = 555;
       case 555: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(4442u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_custommodel()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.LinkedModel linkedModel = 556;
+      case 556: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(4450u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_linkedmodel()));
         } else {
           goto handle_unusual;
         }
@@ -3208,6 +3485,18 @@ bool Model::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.CoreMLModels.SoundAnalysisPreprocessing soundAnalysisPreprocessing = 2003;
+      case 2003: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16026u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_soundanalysispreprocessing()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -3244,6 +3533,11 @@ void Model::SerializeWithCachedSizes(
   if (this->has_description()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2, *this->description_, output);
+  }
+
+  // bool isUpdatable = 10;
+  if (this->isupdatable() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(10, this->isupdatable(), output);
   }
 
   // .CoreML.Specification.PipelineClassifier pipelineClassifier = 200;
@@ -3318,16 +3612,34 @@ void Model::SerializeWithCachedSizes(
       403, *Type_.neuralnetworkclassifier_, output);
   }
 
+  // .CoreML.Specification.KNearestNeighborsClassifier kNearestNeighborsClassifier = 404;
+  if (has_knearestneighborsclassifier()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      404, *Type_.knearestneighborsclassifier_, output);
+  }
+
   // .CoreML.Specification.NeuralNetwork neuralNetwork = 500;
   if (has_neuralnetwork()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       500, *Type_.neuralnetwork_, output);
   }
 
+  // .CoreML.Specification.ItemSimilarityRecommender itemSimilarityRecommender = 501;
+  if (has_itemsimilarityrecommender()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      501, *Type_.itemsimilarityrecommender_, output);
+  }
+
   // .CoreML.Specification.CustomModel customModel = 555;
   if (has_custommodel()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       555, *Type_.custommodel_, output);
+  }
+
+  // .CoreML.Specification.LinkedModel linkedModel = 556;
+  if (has_linkedmodel()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      556, *Type_.linkedmodel_, output);
   }
 
   // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
@@ -3408,6 +3720,12 @@ void Model::SerializeWithCachedSizes(
       2002, *Type_.visionfeatureprint_, output);
   }
 
+  // .CoreML.Specification.CoreMLModels.SoundAnalysisPreprocessing soundAnalysisPreprocessing = 2003;
+  if (has_soundanalysispreprocessing()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2003, *Type_.soundanalysispreprocessing_, output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.Model)
 }
 
@@ -3427,6 +3745,11 @@ size_t Model::ByteSizeLong() const {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::Int32Size(
         this->specificationversion());
+  }
+
+  // bool isUpdatable = 10;
+  if (this->isupdatable() != 0) {
+    total_size += 1 + 1;
   }
 
   switch (Type_case()) {
@@ -3514,6 +3837,13 @@ size_t Model::ByteSizeLong() const {
           *Type_.neuralnetworkclassifier_);
       break;
     }
+    // .CoreML.Specification.KNearestNeighborsClassifier kNearestNeighborsClassifier = 404;
+    case kKNearestNeighborsClassifier: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.knearestneighborsclassifier_);
+      break;
+    }
     // .CoreML.Specification.NeuralNetwork neuralNetwork = 500;
     case kNeuralNetwork: {
       total_size += 2 +
@@ -3521,11 +3851,25 @@ size_t Model::ByteSizeLong() const {
           *Type_.neuralnetwork_);
       break;
     }
+    // .CoreML.Specification.ItemSimilarityRecommender itemSimilarityRecommender = 501;
+    case kItemSimilarityRecommender: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.itemsimilarityrecommender_);
+      break;
+    }
     // .CoreML.Specification.CustomModel customModel = 555;
     case kCustomModel: {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           *Type_.custommodel_);
+      break;
+    }
+    // .CoreML.Specification.LinkedModel linkedModel = 556;
+    case kLinkedModel: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.linkedmodel_);
       break;
     }
     // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
@@ -3619,6 +3963,13 @@ size_t Model::ByteSizeLong() const {
           *Type_.visionfeatureprint_);
       break;
     }
+    // .CoreML.Specification.CoreMLModels.SoundAnalysisPreprocessing soundAnalysisPreprocessing = 2003;
+    case kSoundAnalysisPreprocessing: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.soundanalysispreprocessing_);
+      break;
+    }
     case TYPE_NOT_SET: {
       break;
     }
@@ -3647,6 +3998,9 @@ void Model::MergeFrom(const Model& from) {
   }
   if (from.specificationversion() != 0) {
     set_specificationversion(from.specificationversion());
+  }
+  if (from.isupdatable() != 0) {
+    set_isupdatable(from.isupdatable());
   }
   switch (from.Type_case()) {
     case kPipelineClassifier: {
@@ -3697,12 +4051,24 @@ void Model::MergeFrom(const Model& from) {
       mutable_neuralnetworkclassifier()->::CoreML::Specification::NeuralNetworkClassifier::MergeFrom(from.neuralnetworkclassifier());
       break;
     }
+    case kKNearestNeighborsClassifier: {
+      mutable_knearestneighborsclassifier()->::CoreML::Specification::KNearestNeighborsClassifier::MergeFrom(from.knearestneighborsclassifier());
+      break;
+    }
     case kNeuralNetwork: {
       mutable_neuralnetwork()->::CoreML::Specification::NeuralNetwork::MergeFrom(from.neuralnetwork());
       break;
     }
+    case kItemSimilarityRecommender: {
+      mutable_itemsimilarityrecommender()->::CoreML::Specification::ItemSimilarityRecommender::MergeFrom(from.itemsimilarityrecommender());
+      break;
+    }
     case kCustomModel: {
       mutable_custommodel()->::CoreML::Specification::CustomModel::MergeFrom(from.custommodel());
+      break;
+    }
+    case kLinkedModel: {
+      mutable_linkedmodel()->::CoreML::Specification::LinkedModel::MergeFrom(from.linkedmodel());
       break;
     }
     case kOneHotEncoder: {
@@ -3757,6 +4123,10 @@ void Model::MergeFrom(const Model& from) {
       mutable_visionfeatureprint()->::CoreML::Specification::CoreMLModels::VisionFeaturePrint::MergeFrom(from.visionfeatureprint());
       break;
     }
+    case kSoundAnalysisPreprocessing: {
+      mutable_soundanalysispreprocessing()->::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing::MergeFrom(from.soundanalysispreprocessing());
+      break;
+    }
     case TYPE_NOT_SET: {
       break;
     }
@@ -3781,6 +4151,7 @@ void Model::Swap(Model* other) {
 void Model::InternalSwap(Model* other) {
   std::swap(description_, other->description_);
   std::swap(specificationversion_, other->specificationversion_);
+  std::swap(isupdatable_, other->isupdatable_);
   std::swap(Type_, other->Type_);
   std::swap(_oneof_case_[0], other->_oneof_case_[0]);
   std::swap(_cached_size_, other->_cached_size_);
@@ -3844,6 +4215,20 @@ void Model::set_allocated_description(::CoreML::Specification::ModelDescription*
     
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.description)
+}
+
+// bool isUpdatable = 10;
+void Model::clear_isupdatable() {
+  isupdatable_ = false;
+}
+bool Model::isupdatable() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.isUpdatable)
+  return isupdatable_;
+}
+void Model::set_isupdatable(bool value) {
+  
+  isupdatable_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Model.isUpdatable)
 }
 
 // .CoreML.Specification.PipelineClassifier pipelineClassifier = 200;
@@ -4422,6 +4807,54 @@ void Model::set_allocated_neuralnetworkclassifier(::CoreML::Specification::Neura
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.neuralNetworkClassifier)
 }
 
+// .CoreML.Specification.KNearestNeighborsClassifier kNearestNeighborsClassifier = 404;
+bool Model::has_knearestneighborsclassifier() const {
+  return Type_case() == kKNearestNeighborsClassifier;
+}
+void Model::set_has_knearestneighborsclassifier() {
+  _oneof_case_[0] = kKNearestNeighborsClassifier;
+}
+void Model::clear_knearestneighborsclassifier() {
+  if (has_knearestneighborsclassifier()) {
+    delete Type_.knearestneighborsclassifier_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::KNearestNeighborsClassifier& Model::knearestneighborsclassifier() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.kNearestNeighborsClassifier)
+  return has_knearestneighborsclassifier()
+      ? *Type_.knearestneighborsclassifier_
+      : ::CoreML::Specification::KNearestNeighborsClassifier::default_instance();
+}
+::CoreML::Specification::KNearestNeighborsClassifier* Model::mutable_knearestneighborsclassifier() {
+  if (!has_knearestneighborsclassifier()) {
+    clear_Type();
+    set_has_knearestneighborsclassifier();
+    Type_.knearestneighborsclassifier_ = new ::CoreML::Specification::KNearestNeighborsClassifier;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.kNearestNeighborsClassifier)
+  return Type_.knearestneighborsclassifier_;
+}
+::CoreML::Specification::KNearestNeighborsClassifier* Model::release_knearestneighborsclassifier() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.kNearestNeighborsClassifier)
+  if (has_knearestneighborsclassifier()) {
+    clear_has_Type();
+    ::CoreML::Specification::KNearestNeighborsClassifier* temp = Type_.knearestneighborsclassifier_;
+    Type_.knearestneighborsclassifier_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_knearestneighborsclassifier(::CoreML::Specification::KNearestNeighborsClassifier* knearestneighborsclassifier) {
+  clear_Type();
+  if (knearestneighborsclassifier) {
+    set_has_knearestneighborsclassifier();
+    Type_.knearestneighborsclassifier_ = knearestneighborsclassifier;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.kNearestNeighborsClassifier)
+}
+
 // .CoreML.Specification.NeuralNetwork neuralNetwork = 500;
 bool Model::has_neuralnetwork() const {
   return Type_case() == kNeuralNetwork;
@@ -4470,6 +4903,54 @@ void Model::set_allocated_neuralnetwork(::CoreML::Specification::NeuralNetwork* 
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.neuralNetwork)
 }
 
+// .CoreML.Specification.ItemSimilarityRecommender itemSimilarityRecommender = 501;
+bool Model::has_itemsimilarityrecommender() const {
+  return Type_case() == kItemSimilarityRecommender;
+}
+void Model::set_has_itemsimilarityrecommender() {
+  _oneof_case_[0] = kItemSimilarityRecommender;
+}
+void Model::clear_itemsimilarityrecommender() {
+  if (has_itemsimilarityrecommender()) {
+    delete Type_.itemsimilarityrecommender_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::ItemSimilarityRecommender& Model::itemsimilarityrecommender() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.itemSimilarityRecommender)
+  return has_itemsimilarityrecommender()
+      ? *Type_.itemsimilarityrecommender_
+      : ::CoreML::Specification::ItemSimilarityRecommender::default_instance();
+}
+::CoreML::Specification::ItemSimilarityRecommender* Model::mutable_itemsimilarityrecommender() {
+  if (!has_itemsimilarityrecommender()) {
+    clear_Type();
+    set_has_itemsimilarityrecommender();
+    Type_.itemsimilarityrecommender_ = new ::CoreML::Specification::ItemSimilarityRecommender;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.itemSimilarityRecommender)
+  return Type_.itemsimilarityrecommender_;
+}
+::CoreML::Specification::ItemSimilarityRecommender* Model::release_itemsimilarityrecommender() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.itemSimilarityRecommender)
+  if (has_itemsimilarityrecommender()) {
+    clear_has_Type();
+    ::CoreML::Specification::ItemSimilarityRecommender* temp = Type_.itemsimilarityrecommender_;
+    Type_.itemsimilarityrecommender_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_itemsimilarityrecommender(::CoreML::Specification::ItemSimilarityRecommender* itemsimilarityrecommender) {
+  clear_Type();
+  if (itemsimilarityrecommender) {
+    set_has_itemsimilarityrecommender();
+    Type_.itemsimilarityrecommender_ = itemsimilarityrecommender;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.itemSimilarityRecommender)
+}
+
 // .CoreML.Specification.CustomModel customModel = 555;
 bool Model::has_custommodel() const {
   return Type_case() == kCustomModel;
@@ -4516,6 +4997,54 @@ void Model::set_allocated_custommodel(::CoreML::Specification::CustomModel* cust
     Type_.custommodel_ = custommodel;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.customModel)
+}
+
+// .CoreML.Specification.LinkedModel linkedModel = 556;
+bool Model::has_linkedmodel() const {
+  return Type_case() == kLinkedModel;
+}
+void Model::set_has_linkedmodel() {
+  _oneof_case_[0] = kLinkedModel;
+}
+void Model::clear_linkedmodel() {
+  if (has_linkedmodel()) {
+    delete Type_.linkedmodel_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::LinkedModel& Model::linkedmodel() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.linkedModel)
+  return has_linkedmodel()
+      ? *Type_.linkedmodel_
+      : ::CoreML::Specification::LinkedModel::default_instance();
+}
+::CoreML::Specification::LinkedModel* Model::mutable_linkedmodel() {
+  if (!has_linkedmodel()) {
+    clear_Type();
+    set_has_linkedmodel();
+    Type_.linkedmodel_ = new ::CoreML::Specification::LinkedModel;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.linkedModel)
+  return Type_.linkedmodel_;
+}
+::CoreML::Specification::LinkedModel* Model::release_linkedmodel() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.linkedModel)
+  if (has_linkedmodel()) {
+    clear_has_Type();
+    ::CoreML::Specification::LinkedModel* temp = Type_.linkedmodel_;
+    Type_.linkedmodel_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_linkedmodel(::CoreML::Specification::LinkedModel* linkedmodel) {
+  clear_Type();
+  if (linkedmodel) {
+    set_has_linkedmodel();
+    Type_.linkedmodel_ = linkedmodel;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.linkedModel)
 }
 
 // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
@@ -5140,6 +5669,54 @@ void Model::set_allocated_visionfeatureprint(::CoreML::Specification::CoreMLMode
     Type_.visionfeatureprint_ = visionfeatureprint;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.visionFeaturePrint)
+}
+
+// .CoreML.Specification.CoreMLModels.SoundAnalysisPreprocessing soundAnalysisPreprocessing = 2003;
+bool Model::has_soundanalysispreprocessing() const {
+  return Type_case() == kSoundAnalysisPreprocessing;
+}
+void Model::set_has_soundanalysispreprocessing() {
+  _oneof_case_[0] = kSoundAnalysisPreprocessing;
+}
+void Model::clear_soundanalysispreprocessing() {
+  if (has_soundanalysispreprocessing()) {
+    delete Type_.soundanalysispreprocessing_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing& Model::soundanalysispreprocessing() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.soundAnalysisPreprocessing)
+  return has_soundanalysispreprocessing()
+      ? *Type_.soundanalysispreprocessing_
+      : ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing::default_instance();
+}
+::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* Model::mutable_soundanalysispreprocessing() {
+  if (!has_soundanalysispreprocessing()) {
+    clear_Type();
+    set_has_soundanalysispreprocessing();
+    Type_.soundanalysispreprocessing_ = new ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.soundAnalysisPreprocessing)
+  return Type_.soundanalysispreprocessing_;
+}
+::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* Model::release_soundanalysispreprocessing() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.soundAnalysisPreprocessing)
+  if (has_soundanalysispreprocessing()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* temp = Type_.soundanalysispreprocessing_;
+    Type_.soundanalysispreprocessing_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_soundanalysispreprocessing(::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* soundanalysispreprocessing) {
+  clear_Type();
+  if (soundanalysispreprocessing) {
+    set_has_soundanalysispreprocessing();
+    Type_.soundanalysispreprocessing_ = soundanalysispreprocessing;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.soundAnalysisPreprocessing)
 }
 
 bool Model::has_Type() const {

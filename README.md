@@ -70,7 +70,9 @@ Building from source
 To build the project, you need [CMake](https://cmake.org) to configure the project
 
 ```shell
-cmake .
+mkdir build
+cd build
+cmake ../
 ```
 
 When several python virtual environments are installed, 
@@ -78,7 +80,10 @@ it may be useful to use the following command instead,
 to point to the correct intended version of python:
 
 ```shell
-cmake . -DPYTHON=$(which python) -DPYTHON_CONFIG=$(which python-config)
+cmake \
+  -DPYTHON_EXECUTABLE:FILEPATH=/Library/Frameworks/Python.framework/Versions/3.7/bin/python \
+  -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m \
+  ../
 ``` 
 
 after which you can use make to build the project
@@ -135,7 +140,10 @@ To install xgboost
 
 ```shell
 git clone --recursive https://github.com/dmlc/xgboost
-cd xgboost; cp make/minimum.mk ./config.mk; make
+cd xgboost
+git checkout v0.90
+git submodule update
+make config=make/config.mk -j8
 cd python-package; python setup.py develop
 ```
 

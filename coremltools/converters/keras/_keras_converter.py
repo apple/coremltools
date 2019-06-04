@@ -1,4 +1,4 @@
-# Copyright (c) 2017, Apple Inc. All rights reserved.
+# Copyright (c) 2017-2019, Apple Inc. All rights reserved.
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -81,12 +81,12 @@ def _check_unsupported_layers(model):
     for i, layer in enumerate(model.layers):
         if isinstance(layer, _keras.models.Sequential) or isinstance(layer, _keras.models.Model):
             _check_unsupported_layers(layer)
-        else: 
+        else:
             if type(layer) not in _KERAS_LAYER_REGISTRY:
                  raise ValueError(
                      "Keras layer '%s' not supported. " % str(type(layer)))
             if isinstance(layer, _keras.engine.topology.Merge):
-                if layer.layers is None: 
+                if layer.layers is None:
                     continue
                 for merge_layer in layer.layers:
                     if isinstance(merge_layer, _keras.models.Sequential) or isinstance(merge_layer, _keras.models.Model):
@@ -122,7 +122,7 @@ def _load_keras_model(model_network_path, model_weight_path, custom_objects=None
         Path where the model network weights are (hd5 file)
 
     custom_objects:
-        A dictionary of layers or other custom classes 
+        A dictionary of layers or other custom classes
         or functions used by the model
 
     Returns
@@ -147,31 +147,32 @@ def _load_keras_model(model_network_path, model_weight_path, custom_objects=None
 
     return loaded_model
 
-def _convert(model, 
-            input_names = None, 
-            output_names = None, 
-            image_input_names = None, 
-            is_bgr = False, 
-            red_bias = 0.0, 
-            green_bias = 0.0, 
-            blue_bias = 0.0, 
-            gray_bias = 0.0, 
-            image_scale = 1.0, 
-            class_labels = None, 
+def _convert(model,
+            input_names = None,
+            output_names = None,
+            image_input_names = None,
+            is_bgr = False,
+            red_bias = 0.0,
+            green_bias = 0.0,
+            blue_bias = 0.0,
+            gray_bias = 0.0,
+            image_scale = 1.0,
+            class_labels = None,
             predicted_feature_name = None,
             predicted_probabilities_output = '',
-            custom_objects = None):
-    
+            custom_objects = None,
+            respect_trainable = False):
+
     if not(_HAS_KERAS_TF):
         raise RuntimeError('keras not found or unsupported version or backend found. keras conversion API is disabled.')
     if isinstance(model, _string_types):
         model = _keras.models.load_model(model, custom_objects = custom_objects)
     elif isinstance(model, tuple):
         model = _load_keras_model(model[0], model[1], custom_objects = custom_objects)
-    
+
     # Check valid versions
     _check_unsupported_layers(model)
-    
+
     # Build network graph to represent Keras model
     graph = _topology.NetGraph(model)
     graph.build()
@@ -185,28 +186,28 @@ def _convert(model,
     # The graph should be finalized before executing this
     graph.generate_blob_names()
     graph.add_recurrent_optionals()
-    
+
     inputs = graph.get_input_layers()
     outputs = graph.get_output_layers()
-    
+
     # check input / output names validity
-    if input_names is not None: 
+    if input_names is not None:
         if isinstance(input_names, _string_types):
             input_names = [input_names]
-    else: 
+    else:
         input_names = ['input' + str(i+1) for i in range(len(inputs))]
-    if output_names is not None: 
+    if output_names is not None:
         if isinstance(output_names, _string_types):
             output_names = [output_names]
-    else: 
+    else:
         output_names = ['output' + str(i+1) for i in range(len(outputs))]
-    
+
     if image_input_names is not None and isinstance(image_input_names, _string_types):
         image_input_names = [image_input_names]
-    
+
     graph.reset_model_input_names(input_names)
     graph.reset_model_output_names(output_names)
-    
+
     # Keras -> Core ML input dimension dictionary
     # (None, None) -> [1, 1, 1, 1, 1]
     # (None, D) -> [D] or [D, 1, 1, 1, 1]
@@ -223,7 +224,7 @@ def _convert(model,
     else:
         input_dims = [list(filter(None, model.input_shape))]
         unfiltered_shapes = [model.input_shape]
-            
+
     for idx, dim in enumerate(input_dims):
         unfiltered_shape = unfiltered_shapes[idx]
         if len(dim) == 0:
@@ -318,12 +319,12 @@ def _convert(model,
             builder.set_class_labels(classes)
 
     # Set pre-processing paramsters
-    builder.set_pre_processing_parameters(image_input_names = image_input_names, 
-                                          is_bgr = is_bgr, 
-                                          red_bias = red_bias, 
-                                          green_bias = green_bias, 
-                                          blue_bias = blue_bias, 
-                                          gray_bias = gray_bias, 
+    builder.set_pre_processing_parameters(image_input_names = image_input_names,
+                                          is_bgr = is_bgr,
+                                          red_bias = red_bias,
+                                          green_bias = green_bias,
+                                          blue_bias = blue_bias,
+                                          gray_bias = gray_bias,
                                           image_scale = image_scale)
 
     # Return the protobuf spec
@@ -347,7 +348,10 @@ def convertToSpec(model,
                   predicted_probabilities_output = '',
                   add_custom_layers = False,
                   custom_conversion_functions = None,
-                  custom_objects=None):
+                  custom_objects=None,
+                  input_shapes = None,
+                  output_shapes = None,
+                  respect_trainable = False):
 
     """
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
@@ -360,6 +364,7 @@ def convertToSpec(model,
         - a Keras model object
         - a string with the path to a Keras model file (h5)
         - a tuple of strings, where the first is the path to a Keras model
+
           architecture (.json file), the second is the path to its weights
           stored in h5 file.
 
@@ -383,7 +388,7 @@ def convertToSpec(model,
         Input names to the Keras model (a subset of the input_names
         parameter) that can be treated as images by Core ML. All other inputs
         are treated as MultiArrays (N-D Arrays).
-        
+
     input_name_shape_dict: {str: [int]}
         Optional Dictionary of input tensor names and their corresponding shapes expressed
         as a list of ints
@@ -401,34 +406,34 @@ def convertToSpec(model,
         representation.
 
     red_bias: float | dict()
-        Bias value to be added to the red channel of the input image. 
+        Bias value to be added to the red channel of the input image.
         Defaults to 0.0
         Applicable only if image_input_names is specified.
-        To specify different values for each image input provide a dictionary with input names as keys.    
+        To specify different values for each image input provide a dictionary with input names as keys.
 
     blue_bias: float | dict()
         Bias value to be added to the blue channel of the input image.
         Defaults to 0.0
         Applicable only if image_input_names is specified.
-        To specify different values for each image input provide a dictionary with input names as keys.    
+        To specify different values for each image input provide a dictionary with input names as keys.
 
     green_bias: float | dict()
         Bias value to be added to the green channel of the input image.
         Defaults to 0.0
         Applicable only if image_input_names is specified.
-        To specify different values for each image input provide a dictionary with input names as keys.    
+        To specify different values for each image input provide a dictionary with input names as keys.
 
     gray_bias: float | dict()
         Bias value to be added to the input image (in grayscale). Defaults
         to 0.0
         Applicable only if image_input_names is specified.
-        To specify different values for each image input provide a dictionary with input names as keys.    
+        To specify different values for each image input provide a dictionary with input names as keys.
 
     image_scale: float | dict()
-        Value by which input images will be scaled before bias is added and 
+        Value by which input images will be scaled before bias is added and
         Core ML model makes a prediction. Defaults to 1.0.
         Applicable only if image_input_names is specified.
-        To specify different values for each image input provide a dictionary with input names as keys.    
+        To specify different values for each image input provide a dictionary with input names as keys.
 
     class_labels: list[int or str] | str
         Class labels (applies to classifiers only) that map the index of the
@@ -450,7 +455,7 @@ def convertToSpec(model,
         Name of the neural network output to be interpreted as the predicted
         probabilities of the resulting classes. Typically the output of a
         softmax function. Defaults to the first output blob.
-        
+
     add_custom_layers: bool
         If True, then unknown Keras layer types will be added to the model as
         'custom' layers, which must then be filled in as postprocessing.
@@ -465,6 +470,10 @@ def convertToSpec(model,
         for custom objects such as custom loss in the Keras model.
         Provide a string of the name of the custom function as a key.
         Provide a function as a value.
+
+    respect_trainable: bool
+        If True, then Keras layers that are marked 'trainable' will
+        automatically be marked updatable in the Core ML model.
 
     Returns
     -------
@@ -534,26 +543,30 @@ def convertToSpec(model,
                          class_labels=class_labels,
                          predicted_feature_name=predicted_feature_name,
                          predicted_probabilities_output=predicted_probabilities_output,
-                         custom_objects=custom_objects)
+                         custom_objects=custom_objects,
+                         respect_trainable=respect_trainable)
     elif _HAS_KERAS2_TF:
         from . import _keras2_converter
         spec = _keras2_converter._convert(model=model,
-                                           input_names=input_names,
-                                           output_names=output_names,
-                                           image_input_names=image_input_names,
-                                           input_name_shape_dict=input_name_shape_dict,
-                                           is_bgr=is_bgr,
-                                           red_bias=red_bias,
-                                           green_bias=green_bias,
-                                           blue_bias=blue_bias,
-                                           gray_bias=gray_bias,
-                                           image_scale=image_scale,
-                                           class_labels=class_labels,
-                                           predicted_feature_name=predicted_feature_name,
-                                           predicted_probabilities_output=predicted_probabilities_output,
-                                           add_custom_layers=add_custom_layers,
-                                           custom_conversion_functions=custom_conversion_functions,
-                                           custom_objects=custom_objects)
+                                          input_names=input_names,
+                                          output_names=output_names,
+                                          image_input_names=image_input_names,
+                                          input_name_shape_dict=input_name_shape_dict,
+                                          is_bgr=is_bgr,
+                                          red_bias=red_bias,
+                                          green_bias=green_bias,
+                                          blue_bias=blue_bias,
+                                          gray_bias=gray_bias,
+                                          image_scale=image_scale,
+                                          class_labels=class_labels,
+                                          predicted_feature_name=predicted_feature_name,
+                                          predicted_probabilities_output=predicted_probabilities_output,
+                                          add_custom_layers=add_custom_layers,
+                                          custom_conversion_functions=custom_conversion_functions,
+                                          custom_objects=custom_objects,
+                                          input_shapes=input_shapes,
+                                          output_shapes=output_shapes,
+                                          respect_trainable=respect_trainable)
     else:
         raise RuntimeError(
             'Keras not found or unsupported version or backend found. keras conversion API is disabled.')
@@ -580,11 +593,14 @@ def convert(model,
                   model_precision = _MLMODEL_FULL_PRECISION,
                   predicted_probabilities_output = '',
                   add_custom_layers = False,
-                  custom_conversion_functions = None):
-    
+                  custom_conversion_functions = None,
+                  input_shapes = None,
+                  output_shapes = None,
+                  respect_trainable = False):
+
     """
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
-        
+
     Parameters
     ----------
     model: Keras model object | str | (str, str)
@@ -690,6 +706,10 @@ def convert(model,
         as functions taking a Keras custom layer and returning a parameter dictionary
         and list of weights.
 
+    respect_trainable: bool
+        If yes, then Keras layers marked 'trainable' will automatically be
+        marked updatable in the Core ML model.
+
     Returns
     -------
     model: MLModel
@@ -742,23 +762,24 @@ def convert(model,
 
     """
     spec = convertToSpec(model,
-                      input_names,
-                      output_names,
-                      image_input_names,
-                      input_name_shape_dict,
-                      is_bgr,
-                      red_bias,
-                      green_bias,
-                      blue_bias,
-                      gray_bias,
-                      image_scale,
-                      class_labels,
-                      predicted_feature_name,
-                      model_precision,
-                      predicted_probabilities_output,
-                      add_custom_layers,
-                      custom_conversion_functions=custom_conversion_functions)
+                         input_names=input_names,
+                         output_names=output_names,
+                         image_input_names=image_input_names,
+                         input_name_shape_dict=input_name_shape_dict,
+                         is_bgr=is_bgr,
+                         red_bias=red_bias,
+                         green_bias=green_bias,
+                         blue_bias=blue_bias,
+                         gray_bias=gray_bias,
+                         image_scale=image_scale,
+                         class_labels=class_labels,
+                         predicted_feature_name=predicted_feature_name,
+                         model_precision=model_precision,
+                         predicted_probabilities_output=predicted_probabilities_output,
+                         add_custom_layers=add_custom_layers,
+                         custom_conversion_functions=custom_conversion_functions,
+                         input_shapes=input_shapes,
+                         output_shapes=output_shapes,
+                         respect_trainable=respect_trainable)
 
     return _MLModel(spec)
-
-

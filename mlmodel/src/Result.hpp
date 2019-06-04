@@ -32,6 +32,10 @@ enum class ResultType {
 
     // Invalid protobuf model parameters
     INVALID_MODEL_PARAMETERS,
+    
+    // Invalid updatable parameters
+    INVALID_UPDATABLE_MODEL_PARAMETERS,
+    INVALID_UPDATABLE_MODEL_CONFIGURATION,
 
     // NN shaper failure, not necessarily an error
     POTENTIALLY_INVALID_NEURAL_NETWORK_SHAPES

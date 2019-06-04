@@ -3,7 +3,7 @@
 #import "CoreMLPython.h"
 #import "CoreMLPythonUtils.h"
 #import "Globals.hpp"
-#import "NeuralNetworkShapes.hpp"
+#import "NeuralNetwork/NeuralNetworkShapes.hpp"
 #import "Utils.hpp"
 
 #pragma clang diagnostic push
@@ -25,7 +25,7 @@ Model::~Model() {
     }
 }
 
-Model::Model(const std::string& urlStr) {
+Model::Model(const std::string& urlStr, bool useCPUOnly) {
     @autoreleasepool {
         
         // Compile the model
@@ -53,8 +53,16 @@ Model::Model(const std::string& urlStr) {
             errmsg << "\".";
             throw std::runtime_error(errmsg.str());
         }
-        
-        m_model = [MLModel modelWithContentsOfURL:compiledUrl error:&error];
+
+        if (@available(macOS 10.14, *)) {
+            MLModelConfiguration *configuration = [MLModelConfiguration new];
+            if (useCPUOnly){
+                configuration.computeUnits = MLComputeUnitsCPUOnly;
+            }
+            m_model = [MLModel modelWithContentsOfURL:compiledUrl configuration:configuration error:&error];
+        } else {
+            m_model = [MLModel modelWithContentsOfURL:compiledUrl error:&error];
+        }
         Utils::handleError(error);
     }
 }
@@ -109,7 +117,7 @@ PYBIND11_PLUGIN(libcoremlpython) {
     py::module m("libcoremlpython", "CoreML.Framework Python bindings");
 
     py::class_<Model>(m, "_MLModelProxy")
-        .def(py::init<const std::string&>())
+        .def(py::init<const std::string&, bool>())
         .def("predict", &Model::predict)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);
 

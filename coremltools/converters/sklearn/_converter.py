@@ -34,6 +34,7 @@ def convert(sk_obj, input_features = None,
         -   Standard Scaler
         -   DictVectorizer
         -   One Hot Encoder
+        -   KNeighborsClassifier
 
         The input model, or the last model in a pipeline or list of models,
         determines whether this is exposed as a Transformer, Regressor,
