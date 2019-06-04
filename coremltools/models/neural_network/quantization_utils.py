@@ -936,11 +936,13 @@ def quantize_weights(full_precision_model,
 
     Examples
     --------
+
     .. sourcecode:: python
+
         >>> import coremltools
         >>> from coremltools.models.neural_network import quantization_utils
         >>> model = coremltools.models.MLModel('my_model.mlmodel')
-        >>> quantized_model = quantization_utils.quantize_weights(model, 8, "linear")
+        >>> quantized_model = quantization_utils.quantize_weights(model, 8, 'linear')
     """
     qmode_mapping = {
         "linear": _QUANTIZATION_MODE_LINEAR_QUANTIZATION,

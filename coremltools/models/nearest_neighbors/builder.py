@@ -23,6 +23,7 @@ class KNearestNeighborsClassifierBuilder(object):
     Examples
     --------
     .. sourcecode:: python
+    
         from coremltools.models.nearest_neighbors import KNearestNeighborsClassifierBuilder
         from coremltools.models.utils import save_spec
 

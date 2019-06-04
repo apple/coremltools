@@ -164,6 +164,7 @@ class NeuralNetworkBuilder(object):
     Examples
     --------
     .. sourcecode:: python
+
         from coremltools.models.neural_network import datatypes, NeuralNetworkBuilder
         from coremltools.models.utils import save_spec
 
