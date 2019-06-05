@@ -5,6 +5,14 @@ Core ML community tools contains all supporting tools for CoreML model
 conversion and validation. This includes Scikit Learn, LIBSVM, Caffe,
 Keras and XGBoost.
 
+CoreML 3.0b beta 
+---
+[Release notes](https://github.com/apple/coremltools/releases/tag/v3.0-beta)
+```shell
+# Install using pip 
+pip install coremltools==3.0b1
+```
+
 API 
 ---
 [Example Code snippets](docs/APIExamples.md)  
