@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Word Tagger &mdash; mlmodel 3.0.0 documentation</title>
+  <title>Linked Model &mdash; mlmodel 3.0.0 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Vision Feature Print" href="VisionFeaturePrint.html"/>
-        <link rel="prev" title="Text Classifier" href="TextClassifier.html"/> 
+        <link rel="next" title="Data Structures &amp; Feature Types" href="DataStructuresAndFeatureTypes.html"/>
+        <link rel="prev" title="Nearest Neighbors" href="NearestNeighbors.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -94,10 +94,7 @@
 <li class="toctree-l1"><a class="reference internal" href="Model.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TextClassifier.html">Text Classifier</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Word Tagger</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#wordtagger">WordTagger</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="WordTagger.html">Word Tagger</a></li>
 <li class="toctree-l1"><a class="reference internal" href="VisionFeaturePrint.html">Vision Feature Print</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
@@ -105,7 +102,11 @@
 <li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="NearestNeighbors.html">Nearest Neighbors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Linked Model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#linkedmodel">LinkedModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linkedmodelfile">LinkedModelFile</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
 </ul>
 
@@ -151,13 +152,13 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Word Tagger</li>
+      <li>Linked Model</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/sections/WordTagger.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/sections/LinkedModel.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -170,35 +171,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="word-tagger">
-<h1>Word Tagger<a class="headerlink" href="#word-tagger" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="wordtagger">
-<h2>WordTagger<a class="headerlink" href="#wordtagger" title="Permalink to this headline">¶</a></h2>
-<p>A model which takes a single input string and outputs a
-sequence of tokens, tags for tokens, along with their
-locations and lengths, in the original string.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">WordTagger</span> <span class="p">{</span>
+  <div class="section" id="linked-model">
+<h1>Linked Model<a class="headerlink" href="#linked-model" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="linkedmodel">
+<h2>LinkedModel<a class="headerlink" href="#linkedmodel" title="Permalink to this headline">¶</a></h2>
+<p>A model which wraps another (compiled) model external to this one</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinkedModel</span> <span class="p">{</span>
 
-    <span class="kt">uint32</span> <span class="na">revision</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-
-    <span class="kt">string</span> <span class="na">language</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-
-    <span class="kt">string</span> <span class="na">tokensOutputFeatureName</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-
-    <span class="kt">string</span> <span class="na">tokenTagsOutputFeatureName</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
-
-    <span class="kt">string</span> <span class="na">tokenLocationsOutputFeatureName</span> <span class="o">=</span> <span class="mi">22</span><span class="p">;</span>
-
-    <span class="kt">string</span> <span class="na">tokenLengthsOutputFeatureName</span> <span class="o">=</span> <span class="mi">23</span><span class="p">;</span>
-
-    <span class="kt">bytes</span> <span class="na">modelParameterData</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-
-    <span class="k">oneof</span> <span class="n">Tags</span> <span class="p">{</span>
-        <span class="n">StringVector</span> <span class="na">stringTags</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+    <span class="k">oneof</span> <span class="n">LinkType</span> <span class="p">{</span>
+        <span class="c1">// A model located via a file system path</span>
+        <span class="n">LinkedModelFile</span> <span class="na">linkedModelFile</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="linkedmodelfile">
+<h2>LinkedModelFile<a class="headerlink" href="#linkedmodelfile" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinkedModelFile</span> <span class="p">{</span>
 
+    <span class="c1">// Model file name: e.g. &quot;MyFetureExtractor.mlmodelc&quot;</span>
+    <span class="n">StringParameter</span> <span class="na">linkedModelFileName</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
-
+    <span class="c1">// Search path to find the linked model file</span>
+    <span class="c1">// Multiple paths can be searched using the unix-style path separator &quot;:&quot;</span>
+    <span class="c1">// Each path can be relative (to this model) or absolute</span>
+    <span class="c1">//</span>
+    <span class="c1">// An empty string is the same as teh relative search path &quot;.&quot;</span>
+    <span class="c1">// which searches in the same location as this model file</span>
+    <span class="c1">//</span>
+    <span class="c1">// There are some special paths which start with $</span>
+    <span class="c1">// - $BUNDLE_MAIN - Indicates to look in the main bundle</span>
+    <span class="c1">// - $BUNDLE_IDENTIFIER(identifier) - Looks in Bunde with given identifer</span>
+    <span class="n">StringParameter</span> <span class="na">linkedModelSearchPath</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -215,10 +220,10 @@ locations and lengths, in the original string.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="VisionFeaturePrint.html" class="btn btn-neutral float-right" title="Vision Feature Print" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="DataStructuresAndFeatureTypes.html" class="btn btn-neutral float-right" title="Data Structures &amp; Feature Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="TextClassifier.html" class="btn btn-neutral" title="Text Classifier" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="NearestNeighbors.html" class="btn btn-neutral" title="Nearest Neighbors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

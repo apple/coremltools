@@ -111,6 +111,8 @@
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NearestNeighbors.html">Nearest Neighbors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
 </ul>
 
@@ -209,6 +211,7 @@ and can be any one of the following types:</p>
 <li><a class="reference internal" href="TextClassifier.html#textclassifier"><span class="std std-ref">TextClassifier</span></a></li>
 <li><a class="reference internal" href="WordTagger.html#wordtagger"><span class="std std-ref">WordTagger</span></a></li>
 <li><a class="reference internal" href="VisionFeaturePrint.html#visionfeatureprint"><span class="std std-ref">VisionFeaturePrint</span></a></li>
+<li><span class="xref std std-ref">SoundAnalysisPreprocessing</span></li>
 </ul>
 </dd>
 <dt>Feature Engineering</dt>
@@ -241,6 +244,11 @@ and can be any one of the following types:</p>
 <p>A pipeline consisting of one or more models.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Pipeline</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">Model</span> <span class="na">models</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="c1">// Optional names given for each model</span>
+    <span class="c1">// If not supplied it defaults to [&quot;model0&quot;,..., &quot;model&quot;(models.size()-1)]</span>
+    <span class="c1">// These names can be used to disambiguate the scope / domain of a parameter</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">names</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -313,6 +321,7 @@ key/value meta data.</p>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureVectorizer.proto&quot;</span><span class="p">;</span>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;GLMRegressor.proto&quot;</span><span class="p">;</span>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;GLMClassifier.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;NearestNeighbors.proto&quot;</span><span class="p">;</span>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Identity.proto&quot;</span><span class="p">;</span>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Imputer.proto&quot;</span><span class="p">;</span>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;NeuralNetwork.proto&quot;</span><span class="p">;</span>
@@ -322,11 +331,20 @@ key/value meta data.</p>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;NonMaximumSuppression.proto&quot;</span><span class="p">;</span>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;SVM.proto&quot;</span><span class="p">;</span>
 <span class="k">import</span> <span class="n">public</span> <span class="s">&quot;TreeEnsemble.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Parameters.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;ItemSimilarityRecommender.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;SoundAnalysisPreprocessing.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;LinkedModel.proto&quot;</span><span class="p">;</span>
 
 <span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
 
 <span class="kd">message</span> <span class="nc">Pipeline</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">Model</span> <span class="na">models</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="c1">// Optional names given for each model</span>
+    <span class="c1">// If not supplied it defaults to [&quot;model0&quot;,..., &quot;model&quot;(models.size()-1)]</span>
+    <span class="c1">// These names can be used to disambiguate the scope / domain of a parameter</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">names</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kd">message</span> <span class="nc">PipelineClassifier</span> <span class="p">{</span>
@@ -358,12 +376,16 @@ key/value meta data.</p>
     <span class="kt">string</span> <span class="na">predictedFeatureName</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
     <span class="kt">string</span> <span class="na">predictedProbabilitiesName</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
 
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">trainingInput</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
     <span class="n">Metadata</span> <span class="na">metadata</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kd">message</span> <span class="nc">Model</span> <span class="p">{</span>
     <span class="kt">int32</span> <span class="na">specificationVersion</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="n">ModelDescription</span> <span class="na">description</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">isUpdatable</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
 
     <span class="c1">// start at 200 here</span>
     <span class="c1">// model specific parameters:</span>
@@ -385,12 +407,15 @@ key/value meta data.</p>
         <span class="n">SupportVectorClassifier</span> <span class="na">supportVectorClassifier</span> <span class="o">=</span> <span class="mi">401</span><span class="p">;</span>
         <span class="n">TreeEnsembleClassifier</span> <span class="na">treeEnsembleClassifier</span> <span class="o">=</span> <span class="mi">402</span><span class="p">;</span>
         <span class="n">NeuralNetworkClassifier</span> <span class="na">neuralNetworkClassifier</span> <span class="o">=</span> <span class="mi">403</span><span class="p">;</span>
+        <span class="n">KNearestNeighborsClassifier</span> <span class="na">kNearestNeighborsClassifier</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span>
 
         <span class="c1">// generic models start at 500</span>
         <span class="n">NeuralNetwork</span> <span class="na">neuralNetwork</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span>
+        <span class="n">ItemSimilarityRecommender</span> <span class="na">itemSimilarityRecommender</span> <span class="o">=</span> <span class="mi">501</span><span class="p">;</span>
 
-        <span class="c1">// Custom model</span>
+        <span class="c1">// Custom and linked models</span>
         <span class="n">CustomModel</span> <span class="na">customModel</span> <span class="o">=</span> <span class="mi">555</span><span class="p">;</span>
+        <span class="n">LinkedModel</span> <span class="na">linkedModel</span> <span class="o">=</span> <span class="mi">556</span><span class="p">;</span>
 
         <span class="c1">// feature engineering starts at 600</span>
         <span class="n">OneHotEncoder</span> <span class="na">oneHotEncoder</span> <span class="o">=</span> <span class="mi">600</span><span class="p">;</span>
@@ -403,6 +428,7 @@ key/value meta data.</p>
         <span class="n">ArrayFeatureExtractor</span> <span class="na">arrayFeatureExtractor</span> <span class="o">=</span> <span class="mi">609</span><span class="p">;</span>
         <span class="n">NonMaximumSuppression</span> <span class="na">nonMaximumSuppression</span> <span class="o">=</span> <span class="mi">610</span><span class="p">;</span>
 
+
         <span class="c1">// simple mathematical functions used for testing start at 900</span>
         <span class="n">Identity</span> <span class="na">identity</span> <span class="o">=</span> <span class="mi">900</span><span class="p">;</span>
 
@@ -412,6 +438,7 @@ key/value meta data.</p>
         <span class="n">CoreMLModels.TextClassifier</span> <span class="na">textClassifier</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">;</span>
         <span class="n">CoreMLModels.WordTagger</span> <span class="na">wordTagger</span> <span class="o">=</span> <span class="mi">2001</span><span class="p">;</span>
         <span class="n">CoreMLModels.VisionFeaturePrint</span> <span class="na">visionFeaturePrint</span> <span class="o">=</span> <span class="mi">2002</span><span class="p">;</span>
+        <span class="n">CoreMLModels.SoundAnalysisPreprocessing</span> <span class="na">soundAnalysisPreprocessing</span> <span class="o">=</span> <span class="mi">2003</span><span class="p">;</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -434,6 +461,8 @@ probabilities for the predicted classes
     <span class="kt">string</span> <span class="na">predictedFeatureName</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
     <span class="kt">string</span> <span class="na">predictedProbabilitiesName</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
 
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">trainingInput</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
     <span class="n">Metadata</span> <span class="na">metadata</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -448,11 +477,48 @@ a model description, and a model type.</p>
 a monotonically increasing specification version number,
 which is incremented anytime a backward-incompatible change is made
 (this is functionally equivalent to the MAJOR version number
-described by <a class="reference external" href="http://semver.org/">Semantic Versioning 2.0.0</a>).
-The Core ML framework in macOS currently supports specification version <code class="docutils literal"><span class="pre">1</span></code>.</p>
+described by <a class="reference external" href="http://semver.org/">Semantic Versioning 2.0.0</a>).</p>
+<p>Specification Versions : OS Availability (Core ML Version)</p>
+<p>1 : iOS 11, macOS 10.13, tvOS 11, watchOS 4 (Core ML 1)
+- Feedforward &amp; Recurrent Neural Networks
+- General Linear Models
+- Tree Ensembles
+- Support Vector Machines
+- Pipelines
+- Feature Engineering</p>
+<p>2 : iOS 11.2, macOS 10.13.2, tvOS 11.2, watchOS 4.2 (Core ML 1.2)
+- Custom Layers for Neural Networks
+- Float 16 support for Neural Network layers</p>
+<p>3 : iOS 12, macOS 10.14, tvOS 12, watchOS 5 (Core ML 2)
+- Flexible shapes and image sizes
+- Categorical squences
+- Core ML Vision Feature Print, Text Classifier, Word Tagger
+- Non Max Suppression
+- Crop and Resize Bilinear NN layers
+- Custom Models</p>
+<p>4 : iOS 13, macOS 10.15, tvOS 13, watchOS 6 (Core ML 3)
+- Updatable models
+- Exact shape / general rank mapping for neural networks
+- Large expansion of supported neural network layers</p>
+<blockquote>
+<div><ul class="simple">
+<li>Generalized operations</li>
+<li>Control flow</li>
+<li>Dynmaic layers</li>
+<li>See NeuralNetwork.proto</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Nearest Neighbor Classifier</li>
+<li>Sound Analysis Prepreocessing</li>
+<li>Recommender</li>
+<li>Linked Model</li>
+</ul>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Model</span> <span class="p">{</span>
     <span class="kt">int32</span> <span class="na">specificationVersion</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="n">ModelDescription</span> <span class="na">description</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">isUpdatable</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
 
     <span class="c1">// start at 200 here</span>
     <span class="c1">// model specific parameters:</span>
@@ -474,12 +540,15 @@ The Core ML framework in macOS currently supports specification version <code cl
         <span class="n">SupportVectorClassifier</span> <span class="na">supportVectorClassifier</span> <span class="o">=</span> <span class="mi">401</span><span class="p">;</span>
         <span class="n">TreeEnsembleClassifier</span> <span class="na">treeEnsembleClassifier</span> <span class="o">=</span> <span class="mi">402</span><span class="p">;</span>
         <span class="n">NeuralNetworkClassifier</span> <span class="na">neuralNetworkClassifier</span> <span class="o">=</span> <span class="mi">403</span><span class="p">;</span>
+        <span class="n">KNearestNeighborsClassifier</span> <span class="na">kNearestNeighborsClassifier</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span>
 
         <span class="c1">// generic models start at 500</span>
         <span class="n">NeuralNetwork</span> <span class="na">neuralNetwork</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span>
+        <span class="n">ItemSimilarityRecommender</span> <span class="na">itemSimilarityRecommender</span> <span class="o">=</span> <span class="mi">501</span><span class="p">;</span>
 
-        <span class="c1">// Custom model</span>
+        <span class="c1">// Custom and linked models</span>
         <span class="n">CustomModel</span> <span class="na">customModel</span> <span class="o">=</span> <span class="mi">555</span><span class="p">;</span>
+        <span class="n">LinkedModel</span> <span class="na">linkedModel</span> <span class="o">=</span> <span class="mi">556</span><span class="p">;</span>
 
         <span class="c1">// feature engineering starts at 600</span>
         <span class="n">OneHotEncoder</span> <span class="na">oneHotEncoder</span> <span class="o">=</span> <span class="mi">600</span><span class="p">;</span>
@@ -492,6 +561,7 @@ The Core ML framework in macOS currently supports specification version <code cl
         <span class="n">ArrayFeatureExtractor</span> <span class="na">arrayFeatureExtractor</span> <span class="o">=</span> <span class="mi">609</span><span class="p">;</span>
         <span class="n">NonMaximumSuppression</span> <span class="na">nonMaximumSuppression</span> <span class="o">=</span> <span class="mi">610</span><span class="p">;</span>
 
+
         <span class="c1">// simple mathematical functions used for testing start at 900</span>
         <span class="n">Identity</span> <span class="na">identity</span> <span class="o">=</span> <span class="mi">900</span><span class="p">;</span>
 
@@ -501,6 +571,7 @@ The Core ML framework in macOS currently supports specification version <code cl
         <span class="n">CoreMLModels.TextClassifier</span> <span class="na">textClassifier</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">;</span>
         <span class="n">CoreMLModels.WordTagger</span> <span class="na">wordTagger</span> <span class="o">=</span> <span class="mi">2001</span><span class="p">;</span>
         <span class="n">CoreMLModels.VisionFeaturePrint</span> <span class="na">visionFeaturePrint</span> <span class="o">=</span> <span class="mi">2002</span><span class="p">;</span>
+        <span class="n">CoreMLModels.SoundAnalysisPreprocessing</span> <span class="na">soundAnalysisPreprocessing</span> <span class="o">=</span> <span class="mi">2003</span><span class="p">;</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>

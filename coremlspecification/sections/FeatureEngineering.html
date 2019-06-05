@@ -112,6 +112,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NearestNeighbors.html">Nearest Neighbors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
 </ul>
 
@@ -325,7 +327,7 @@ parameter.</p>
         <span class="c1">// Default output when converting from an integer to a string.</span>
         <span class="kt">string</span> <span class="na">strValue</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
 
-        <span class="c1">// Default output when converting from an string to an integer.</span>
+        <span class="c1">// Default output when converting from a string to an integer.</span>
         <span class="kt">int64</span> <span class="na">int64Value</span> <span class="o">=</span> <span class="mi">102</span><span class="p">;</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -364,7 +366,7 @@ parameter.</p>
 <p>The output array will be equal in length to the index mapping vector parameter.
 All keys in the input dictionary must be present in the index mapping vector.</p>
 <p>For each item in the input dictionary, insert its value in the output array.
-The position of the insertion is determined by the position of the item’s key
+The position of the insertion is determined by the position of the item&#8217;s key
 in the index mapping. Any keys not present in the input dictionary, will be
 zero in the output array.</p>
 <p>For example: if the <code class="docutils literal"><span class="pre">stringToIndex</span></code> parameter is set to <code class="docutils literal"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;c&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;z&quot;]</span></code>,
