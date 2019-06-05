@@ -1,0 +1,349 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Nearest Neighbors &mdash; mlmodel 3.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
+        <link rel="next" title="Linked Model" href="LinkedModel.html"/>
+        <link rel="prev" title="Custom Models" href="CustomModel.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mlmodel
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TextClassifier.html">Text Classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WordTagger.html">Word Tagger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VisionFeaturePrint.html">Vision Feature Print</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Nearest Neighbors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#knearestneighborsclassifier">KNearestNeighborsClassifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#nearestneighborsindex">NearestNeighborsIndex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#uniformweighting">UniformWeighting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#inversedistanceweighting">InverseDistanceWeighting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linearindex">LinearIndex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#singlekdtreeindex">SingleKdTreeIndex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#squaredeuclideandistance">SquaredEuclideanDistance</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mlmodel</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Nearest Neighbors</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/sections/NearestNeighbors.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="nearest-neighbors">
+<h1>Nearest Neighbors<a class="headerlink" href="#nearest-neighbors" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="knearestneighborsclassifier">
+<h2>KNearestNeighborsClassifier<a class="headerlink" href="#knearestneighborsclassifier" title="Permalink to this headline">¶</a></h2>
+<p>A k-Nearest-Neighbor classifier</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">KNearestNeighborsClassifier</span> <span class="p">{</span>
+
+    <span class="n">NearestNeighborsIndex</span> <span class="na">nearestNeighborsIndex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kt">int32</span> <span class="na">k</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="k">oneof</span> <span class="n">ClassLabels</span> <span class="p">{</span>
+        <span class="n">StringVector</span> <span class="na">stringClassLabels</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+        <span class="n">Int64Vector</span> <span class="na">int64ClassLabels</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">DefaultClassLabel</span> <span class="p">{</span>
+        <span class="kt">string</span> <span class="na">defaultStringLabel</span> <span class="o">=</span> <span class="mi">110</span><span class="p">;</span>
+        <span class="kt">int64</span> <span class="na">defaultInt64Label</span> <span class="o">=</span> <span class="mi">111</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">WeightingScheme</span> <span class="p">{</span>
+        <span class="n">UniformWeighting</span> <span class="na">uniformWeighting</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+        <span class="n">InverseDistanceWeighting</span> <span class="na">inverseDistanceWeighting</span> <span class="o">=</span> <span class="mi">210</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="nearestneighborsindex">
+<h2>NearestNeighborsIndex<a class="headerlink" href="#nearestneighborsindex" title="Permalink to this headline">¶</a></h2>
+<p>The &#8220;core&#8221; attributes of a Nearest Neighbors model.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NearestNeighborsIndex</span> <span class="p">{</span>
+
+    <span class="kt">int32</span> <span class="na">numberOfDimensions</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="n">FloatVector</span> <span class="na">floatSamples</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="k">oneof</span> <span class="n">IndexType</span> <span class="p">{</span>
+        <span class="n">LinearIndex</span> <span class="na">linearIndex</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+        <span class="n">SingleKdTreeIndex</span> <span class="na">singleKdTreeIndex</span> <span class="o">=</span> <span class="mi">110</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">DistanceFunction</span> <span class="p">{</span>
+        <span class="n">SquaredEuclideanDistance</span> <span class="na">squaredEuclideanDistance</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="uniformweighting">
+<h2>UniformWeighting<a class="headerlink" href="#uniformweighting" title="Permalink to this headline">¶</a></h2>
+<p>Specifies a uniform weighting scheme (i.e. each neighbor receives equal
+voting power).</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UniformWeighting</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="inversedistanceweighting">
+<h2>InverseDistanceWeighting<a class="headerlink" href="#inversedistanceweighting" title="Permalink to this headline">¶</a></h2>
+<p>Specifies a inverse-distance weighting scheme (i.e. closest neighbors receives higher
+voting power). A nearest neighbor with highest sum of (1 / distance) is picked.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">InverseDistanceWeighting</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="linearindex">
+<h2>LinearIndex<a class="headerlink" href="#linearindex" title="Permalink to this headline">¶</a></h2>
+<p>Specifies a flat index of data points to be searched by brute force.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearIndex</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="singlekdtreeindex">
+<h2>SingleKdTreeIndex<a class="headerlink" href="#singlekdtreeindex" title="Permalink to this headline">¶</a></h2>
+<p>Specifies a kd-tree backend for the nearest neighbors model.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SingleKdTreeIndex</span> <span class="p">{</span>
+
+    <span class="kt">int32</span> <span class="na">leafSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="squaredeuclideandistance">
+<h2>SquaredEuclideanDistance<a class="headerlink" href="#squaredeuclideandistance" title="Permalink to this headline">¶</a></h2>
+<p>Specifies the Squared Euclidean Distance function.</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SquaredEuclideanDistance</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="LinkedModel.html" class="btn btn-neutral float-right" title="Linked Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="CustomModel.html" class="btn btn-neutral" title="Custom Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'3.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

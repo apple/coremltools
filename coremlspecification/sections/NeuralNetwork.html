@@ -293,6 +293,8 @@
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NearestNeighbors.html">Nearest Neighbors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
 </ul>
 
@@ -379,16 +381,16 @@ refer to layers that are not yet defined.</p>
 all inputs are mapped to static rank 5 tensors, with axis notations
 [Sequence, Batch, Channel, Height, Width].</p>
 <p>From specification version 4 onwards (iOS &gt;= 13, macOS &gt;= 10.15), more options are available
-(see enums “NeuralNetworkMultiArrayShapeMapping”, “NeuralNetworkImageShapeMapping”)
+(see enums &#8220;NeuralNetworkMultiArrayShapeMapping&#8221;, &#8220;NeuralNetworkImageShapeMapping&#8221;)
 to map inputs to generic N-Dimensional (or N rank) tensors, where N &gt;= 1.</p>
 <p>Each layer type may have specific constraints on the ranks of its inputs and outputs.</p>
 <p>Some of the layers (such as softmax, reduce, etc) have parameters that have been described in
-terms of notational axis “Channel”, “Height”, “Width” or “Sequence”. They can be re-interpreted easily in
+terms of notational axis &#8220;Channel&#8221;, &#8220;Height&#8221;, &#8220;Width&#8221; or &#8220;Sequence&#8221;. They can be re-interpreted easily in
 the general ND setting by using the following rule:
-“width” is same as axis = -1 (i.e. the last axis from the end)
-“height” is same as axis = -2 (i.e. the second last axis from the end)
-“channel” is same as axis = -3 (i.e. the third last axis from the end)
-“sequence” is same as axis = -5 (i.e. the fifth last axis from the end)</p>
+&#8220;width&#8221; is same as axis = -1 (i.e. the last axis from the end)
+&#8220;height&#8221; is same as axis = -2 (i.e. the second last axis from the end)
+&#8220;channel&#8221; is same as axis = -3 (i.e. the third last axis from the end)
+&#8220;sequence&#8221; is same as axis = -5 (i.e. the fifth last axis from the end)</p>
 <div class="section" id="neuralnetwork">
 <h2>NeuralNetwork<a class="headerlink" href="#neuralnetwork" title="Permalink to this headline">¶</a></h2>
 <p>A neural network.</p>
@@ -562,8 +564,8 @@ The mean image is subtracted from the input named
 <div class="section" id="activationprelu">
 <h2>ActivationPReLU<a class="headerlink" href="#activationprelu" title="Permalink to this headline">¶</a></h2>
 <p>A parameterized rectified linear unit (PReLU) activation function.
-Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
-“alpha” parameter can be a vector of length C.</p>
+Input must be at least rank 3. Axis = -3 is denoted by &#8220;C&#8221;, or channels.
+&#8220;alpha&#8221; parameter can be a vector of length C.</p>
 <p>This function has the following formula:</p>
 <div class="math">
 <p><img src="../_images/math/2f9c271c95a3e79b5fe7976b208acf2c99da2c10.svg" alt="f(x_i) = \begin{cases}
@@ -633,8 +635,8 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 <div class="section" id="activationparametricsoftplus">
 <h2>ActivationParametricSoftplus<a class="headerlink" href="#activationparametricsoftplus" title="Permalink to this headline">¶</a></h2>
 <p>A parametric softplus activation function.
-Input must be at least rank 3. axis = -3 is denoted by “C”, or channels.
-“alpha”/”beta” parameter can be a vector of length C.</p>
+Input must be at least rank 3. axis = -3 is denoted by &#8220;C&#8221;, or channels.
+&#8220;alpha&#8221;/&#8221;beta&#8221; parameter can be a vector of length C.</p>
 <p>This function has the following formula:</p>
 <div class="math">
 <p><img src="../_images/math/9ee4a0352980adb621b1b2deed038c41f1e2cc4e.svg" alt="f(x_i) = \alpha_i \text{log}(1 + e^{\beta_i x_i}) \;,\;i=1,...,C"/></p>
@@ -938,22 +940,22 @@ if or the else branch based on the value of the input.</p>
 <div class="section" id="looplayerparams">
 <h2>LoopLayerParams<a class="headerlink" href="#looplayerparams" title="Permalink to this headline">¶</a></h2>
 <p>Loop Layer</p>
-<p>A layer that providies the functionality of a “for” loop or a “while” loop.</p>
+<p>A layer that providies the functionality of a &#8220;for&#8221; loop or a &#8220;while&#8221; loop.</p>
 <p>There are either no inputs or 1 input. When an input is present, it corresponds to the maximum loop count,
-in that case the value of the “maxLoopIterations” field is ignored. Input must be a scalar.
+in that case the value of the &#8220;maxLoopIterations&#8221; field is ignored. Input must be a scalar.
 (For description below, maxLoopIterations is assumed to be the value of the input, when its present)</p>
 <p>No outputs are produced. Blobs produced by the condition or the body network are visible in the scope of the overall network.</p>
-<p>“conditionNetwork” must produce a tensor with the name specified in the “conditionVar” field.</p>
+<p>&#8220;conditionNetwork&#8221; must produce a tensor with the name specified in the &#8220;conditionVar&#8221; field.</p>
 <p>There are 3 possible cases for determining the termination condition:</p>
 <p>Case 1:</p>
-<p>If there is no “conditionNetwork”, in this case the layer corresponds to a pure for loop, which is run “maxLoopIterations” number of times.
+<p>If there is no &#8220;conditionNetwork&#8221;, in this case the layer corresponds to a pure for loop, which is run &#8220;maxLoopIterations&#8221; number of times.
 Equivalent pseudo-code:</p>
 <dl class="docutils">
 <dt>for loopIterator = 0 <span class="classifier-delimiter">:</span> <span class="classifier">maxLoopIterations</span></dt>
 <dd>bodyNetwork()</dd>
 </dl>
 <p>Case 2:</p>
-<p>“conditionNetwork” is present, and “maxLoopIterations” is 0 and there is no input,
+<p>&#8220;conditionNetwork&#8221; is present, and &#8220;maxLoopIterations&#8221; is 0 and there is no input,
 in this case the layer corresponds to a while loop. Equivalent pseudo-code:</p>
 <p>conditionVar = conditionNetwork()
 while conditionVar:</p>
@@ -961,7 +963,7 @@ while conditionVar:</p>
 <div>bodyNetwork()
 conditionVar = conditionNetwork()</div></blockquote>
 <p>Case 3:</p>
-<p>“conditionNetwork” is provided, and “maxLoopIterations” is positive or there is an input,
+<p>&#8220;conditionNetwork&#8221; is provided, and &#8220;maxLoopIterations&#8221; is positive or there is an input,
 in this case the layer corresponds to a while loop with a joint condition. Equivalent pseudo-code:</p>
 <p>loopIterator = 0
 conditionVar = conditionNetwork()
@@ -983,7 +985,7 @@ conditionVar = conditionNetwork()</div></blockquote>
 <h2>LoopBreakLayerParams<a class="headerlink" href="#loopbreaklayerparams" title="Permalink to this headline">¶</a></h2>
 <p>Loop break Layer</p>
 <p>Terminate the loop that has this layer.
-If present, it should always reside in the “bodyNetwork” of the loop layer</p>
+If present, it should always reside in the &#8220;bodyNetwork&#8221; of the loop layer</p>
 <p>No inputs/outptus</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LoopBreakLayerParams</span> <span class="p">{</span>
 
@@ -995,7 +997,7 @@ If present, it should always reside in the “bodyNetwork” of the loop layer</
 <h2>LoopContinueLayerParams<a class="headerlink" href="#loopcontinuelayerparams" title="Permalink to this headline">¶</a></h2>
 <p>Loop Continue Layer</p>
 <p>Stop the current loop iteration and continue on the next iteration.
-If present, it should always reside in the “bodyNetwork” of the loop layer</p>
+If present, it should always reside in the &#8220;bodyNetwork&#8221; of the loop layer</p>
 <p>No inputs/outptus</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LoopContinueLayerParams</span> <span class="p">{</span>
 
@@ -1262,9 +1264,9 @@ output spatial shape <code class="docutils literal"><span class="pre">[H_out,</s
 </div>
 <p>The equivalent expressions hold true for <code class="docutils literal"><span class="pre">W_out</span></code> as well.</p>
 <p>By default, the values of <code class="docutils literal"><span class="pre">paddingAmounts</span></code> are set to <code class="docutils literal"><span class="pre">0</span></code>,
-which results in a “true” valid padding.
+which results in a &#8220;true&#8221; valid padding.
 If non-zero values are provided for <code class="docutils literal"><span class="pre">paddingAmounts</span></code>,
-“valid” convolution/pooling is performed within the spatially expanded input.</p>
+&#8220;valid&#8221; convolution/pooling is performed within the spatially expanded input.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ValidPadding</span> <span class="p">{</span>
     <span class="n">BorderAmounts</span> <span class="na">paddingAmounts</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
@@ -1321,8 +1323,8 @@ With Convolution or pooling:</p>
 <h2>SamplingMode<a class="headerlink" href="#samplingmode" title="Permalink to this headline">¶</a></h2>
 <p>Specifies how grid points are sampled from an interval.
 Without the loss of generality, assume the interval to be [0, X-1] from which N points are to be sampled.
-Here X may correspond to an input image’s height or width.
-All the methods can be expressed in terms of numpy’s linspace function, along with the constraint that grid points have to lie in the interval [0, X-1].
+Here X may correspond to an input image&#8217;s height or width.
+All the methods can be expressed in terms of numpy&#8217;s linspace function, along with the constraint that grid points have to lie in the interval [0, X-1].
 Note: numpy.linspace(start = start, end = end, num = N, endpoint = True) corresponds to sampling
 N points uniformly from the interval [start, end], endpoints included.
 The methods vary in how the <code class="docutils literal"><span class="pre">start</span></code> and <code class="docutils literal"><span class="pre">end</span></code> values are computed.</p>
@@ -1443,8 +1445,8 @@ modified as follows:</p>
 </pre></div>
 </div>
 <p>Type of padding can be <code class="docutils literal"><span class="pre">valid</span></code> or <code class="docutils literal"><span class="pre">same</span></code>. Output spatial dimensions depend on the
-the type of padding. For details, refer to the descriptions of the messages “ValidPadding”
-and “SamePadding”. Padded values are all zeros.</p>
+the type of padding. For details, refer to the descriptions of the messages &#8220;ValidPadding&#8221;
+and &#8220;SamePadding&#8221;. Padded values are all zeros.</p>
 <p>For Deconvolution, <code class="docutils literal"><span class="pre">ConvolutionPaddingType</span></code> (<code class="docutils literal"><span class="pre">valid</span></code> or <code class="docutils literal"><span class="pre">same</span></code>) is ignored when <code class="docutils literal"><span class="pre">outputShape</span></code> is set.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ConvolutionLayerParams</span> <span class="p">{</span>
     <span class="kt">uint64</span> <span class="na">outputChannels</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -1490,9 +1492,9 @@ The weight parameters correspond to a matrix of dimensions (inputChannels, outpu
 <dd>Input can have rank 1 to rank 5. This is how it is reshaped in to the matrix (for rank &gt; 1):
 rank 1 (x1) : in this case, the layer corresponds to a matrix-vector product. x1 must be equal to C_in
 rank 2 (x1, x2): x2 must be equal to C_in
-rank 3 (x1, x2, x3) –&gt; (x1 * x2, x3). x3 must be equal to C_in
-rank 4 (x1, x2, x3, x4) —&gt; (x1, x2 * x3 * x4). x2 * x3 * x4 must be equal to C_in
-rank 5 (x1, x2, x3, x4, x5) —&gt; (x1 * x2, x3 * x4 * x5). x3 * x4 * x5 must be equal to C_in</dd>
+rank 3 (x1, x2, x3) &#8211;&gt; (x1 * x2, x3). x3 must be equal to C_in
+rank 4 (x1, x2, x3, x4) &#8212;&gt; (x1, x2 * x3 * x4). x2 * x3 * x4 must be equal to C_in
+rank 5 (x1, x2, x3, x4, x5) &#8212;&gt; (x1 * x2, x3 * x4 * x5). x3 * x4 * x5 must be equal to C_in</dd>
 <dt>Output</dt>
 <dd>Output rank is same as the input rank
 rank 1: (C_out)
@@ -1811,8 +1813,8 @@ For general concatenation along any axis, see ConcatNDLayer.</p>
 <dl class="docutils">
 <dt>Input</dt>
 <dd>All input blobs must have same rank.
-If “sequenceConcat” = False, rank must be greater than equal to 3. In this case concatenation is along axis = -3
-If “sequenceConcat” = True, rank must be greater than equal to 5. In this case concatenation is along axis = -5</dd>
+If &#8220;sequenceConcat&#8221; = False, rank must be greater than equal to 3. In this case concatenation is along axis = -3
+If &#8220;sequenceConcat&#8221; = True, rank must be greater than equal to 5. In this case concatenation is along axis = -5</dd>
 <dt>Output</dt>
 <dd>Same rank as the input.</dd>
 </dl>
@@ -1840,8 +1842,8 @@ For ranks greater than 3, the leading dimensions, starting from 0 to -4 (inclusi
 <p>This layer is described by the following formula:</p>
 <div class="math">
 <p><img src="../_images/math/17d3211ab09b0a7a64161c366971011422505079.svg" alt="x_i \leftarrow  \dfrac{x_i}{\left ( k + \dfrac{\alpha}{C} \sum_j x_j^2 \right )^\beta}"/></p>
-</div><p>where the summation is done over a <code class="docutils literal"><span class="pre">(localSize,</span> <span class="pre">1,</span> <span class="pre">1)</span></code> neighborhood —
-that is, over a window “across” channels in 1x1 spatial neighborhoods.</p>
+</div><p>where the summation is done over a <code class="docutils literal"><span class="pre">(localSize,</span> <span class="pre">1,</span> <span class="pre">1)</span></code> neighborhood &#8212;
+that is, over a window &#8220;across&#8221; channels in 1x1 spatial neighborhoods.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LRNLayerParams</span> <span class="p">{</span>
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -2253,7 +2255,7 @@ and then reshaping it to the target shape;
 no data rearrangement is required.
 <code class="docutils literal"><span class="pre">CHANNEL_LAST</span></code> is equivalent to
 flattening the input to <code class="docutils literal"><span class="pre">[Seq,</span> <span class="pre">1,</span> <span class="pre">H</span> <span class="pre">*</span> <span class="pre">W</span> <span class="pre">*</span> <span class="pre">C,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> in channel last order,
-reshaping it to <code class="docutils literal"><span class="pre">[Seq_out,</span> <span class="pre">1,</span> <span class="pre">H_out,</span> <span class="pre">W_out,</span> <span class="pre">C_out]</span></code> (it is now in “H_out-major”” order),
+reshaping it to <code class="docutils literal"><span class="pre">[Seq_out,</span> <span class="pre">1,</span> <span class="pre">H_out,</span> <span class="pre">W_out,</span> <span class="pre">C_out]</span></code> (it is now in &#8220;H_out-major&#8221;&#8221; order),
 and then permuting it to <code class="docutils literal"><span class="pre">[C_out,</span> <span class="pre">H_out,</span> <span class="pre">W_out]</span></code>;
 both the flattening and permuting requires the data to be rearranged.</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ReshapeLayerParams</span> <span class="p">{</span>
@@ -2350,7 +2352,7 @@ For general slice along any axis, please see SliceStaticLayer/SliceDynamicLayer.
 <p>Requires 1 input and produces 1 output.</p>
 <dl class="docutils">
 <dt>Input</dt>
-<dd>A blob that can, in general, have any rank. However, depending on the value of “axis” ,
+<dd>A blob that can, in general, have any rank. However, depending on the value of &#8220;axis&#8221; ,
 there may be additional rank constraints.</dd>
 <dt>Output</dt>
 <dd>A blob with the same rank as the input.</dd>
@@ -2390,15 +2392,15 @@ Negative indexing is supported for startIndex and endIndex.
 <dl class="docutils">
 <dt>Input</dt>
 <dd><dl class="first last docutils">
-<dt>A blob that can, in general, have any rank. However, depending on the value of “axis” ,</dt>
+<dt>A blob that can, in general, have any rank. However, depending on the value of &#8220;axis&#8221; ,</dt>
 <dd>there may be additional rank constraints.</dd>
 </dl>
 </dd>
 <dt>Output</dt>
-<dd><p class="first">A blob with the same rank as the input, which has 1s on the dimensions specififed in the parameter “axis”</p>
+<dd><p class="first">A blob with the same rank as the input, which has 1s on the dimensions specififed in the parameter &#8220;axis&#8221;</p>
 <p class="last">Values supported for axis are [-1], [-2], [-3], [-2,-1], [-3,-2,-1]
 and the equivalent positive values (depending on the rank of the input)
-For mode == ‘ArgMax’, axis must be [-1] or [-2] or [-3].</p>
+For mode == &#8216;ArgMax&#8217;, axis must be [-1] or [-2] or [-3].</p>
 </dd>
 </dl>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ReduceLayerParams</span> <span class="p">{</span>
@@ -2584,7 +2586,7 @@ For ranks greater than 3, the leading dimensions, starting from 0 to -4 (inclusi
 <dd>A blob with the same shape as the input.</dd>
 </dl>
 <p>If <code class="docutils literal"><span class="pre">acrossChannels</span> <span class="pre">==</span> <span class="pre">true</span></code>
-normalization is performed on flattened input, i.e. the input is reshaped to (Batch,C), where “Batch” constains
+normalization is performed on flattened input, i.e. the input is reshaped to (Batch,C), where &#8220;Batch&#8221; constains
 all dimensions from 0 to -4 (inclusive), and C constains dimensions -1, -2, -3.</p>
 <p>If <code class="docutils literal"><span class="pre">acrossChannels</span> <span class="pre">==</span> <span class="pre">false</span></code>
 normalization is performed within a channel,
@@ -3017,7 +3019,7 @@ where the matrices reside in the last two indices of the tensor.</p>
 </pre></div>
 </div>
 <p>Requires 1 or 2 inputs and produces 1 output.
-The first tensor, “a”, must be provided as an input. The second tensor can either be an input or provided as a weight matrix parameter.</p>
+The first tensor, &#8220;a&#8221;, must be provided as an input. The second tensor can either be an input or provided as a weight matrix parameter.</p>
 <dl class="docutils">
 <dt>Input</dt>
 <dd><ul class="first last simple">
@@ -3045,11 +3047,11 @@ All the indices, except for the last two, are broadcasted using conventional rul
 <dd><ul class="first last simple">
 <li>The weight matrix corresponds to a matrix, of shape (X1, X2). Values of X1, X2 must be provided as layer parameters.</li>
 <li><dl class="first docutils">
-<dt>The input, “a”, is reshaped into a matrix by combining all the leading dimensions, except the last, into a batch dimension. eg:</dt>
+<dt>The input, &#8220;a&#8221;, is reshaped into a matrix by combining all the leading dimensions, except the last, into a batch dimension. eg:</dt>
 <dd><ul class="first last">
-<li>if “a” is rank 1 (X1,) –&gt;  (1, X1). Output shape will be (X2,)</li>
-<li>if “a” is rank 2 (B1, X1) –&gt; no need to reshape. Output shape will be (B1, X2)</li>
-<li>if “a” is rank 3 (B1, B2, X1) –&gt; (B1 * B2, X1). Output shape will be (B1, B2, X2)</li>
+<li>if &#8220;a&#8221; is rank 1 (X1,) &#8211;&gt;  (1, X1). Output shape will be (X2,)</li>
+<li>if &#8220;a&#8221; is rank 2 (B1, X1) &#8211;&gt; no need to reshape. Output shape will be (B1, X2)</li>
+<li>if &#8220;a&#8221; is rank 3 (B1, B2, X1) &#8211;&gt; (B1 * B2, X1). Output shape will be (B1, B2, X2)</li>
 <li>etc</li>
 </ul>
 </dd>
@@ -3485,7 +3487,7 @@ Supports conventional numpy like broadcasting.</p>
 <h2>MatrixBandPartLayerParams<a class="headerlink" href="#matrixbandpartlayerparams" title="Permalink to this headline">¶</a></h2>
 <p>Parameters for matrix_band_part layer
 band(m, n) = (num_lower &lt; 0 || (m-n) &lt;= num_lower) &amp;&amp; (num_upper &lt; 0 || (n-m) &lt;= num_upper).
-output[i, j, k, …, m, n] = band(m, n) * input[i, j, k, …, m, n]</p>
+output[i, j, k, ..., m, n] = band(m, n) * input[i, j, k, ..., m, n]</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">MatrixBandPartLayerParams</span><span class="p">{</span>
 
     <span class="kt">int64</span> <span class="na">numLower</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -3624,7 +3626,7 @@ output[i, j, k, …, m, n] = band(m, n) * input[i, j, k, …, m, n]</p>
 <div class="section" id="gatherlayerparams">
 <h2>GatherLayerParams<a class="headerlink" href="#gatherlayerparams" title="Permalink to this headline">¶</a></h2>
 <p>Requires 2 inputs and produces 1 output.</p>
-<p>Given two inputs, ‘data’ and ‘indices’, gather the slices of ‘data’
+<p>Given two inputs, &#8216;data&#8217; and &#8216;indices&#8217;, gather the slices of &#8216;data&#8217;
 and store into output.
 E.g. output[i] = data[indices[i]], for i in [0, length(indices) - 1] (1-D case, axis=0)
 Support negative indices and negative axis</p>
@@ -4111,7 +4113,7 @@ If there is only one input, value of K that is specified in the layer parameter 
 <p>Both outputs have the same rank as the first input.
 Second input must correspond to a scalar tensor.</p>
 <p>e.g.:</p>
-<p>first input’s shape = (45, 34, 10, 5)
+<p>first input&#8217;s shape = (45, 34, 10, 5)
 axis = 1
 output shape, for both outputs = (45, K, 10, 5)</p>
 <div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">TopKLayerParams</span> <span class="p">{</span>
@@ -4126,8 +4128,8 @@ output shape, for both outputs = (45, K, 10, 5)</p>
 <h2>ArgMaxLayerParams<a class="headerlink" href="#argmaxlayerparams" title="Permalink to this headline">¶</a></h2>
 <p>Return the indices of the maximum value along a specified axis in a tensor.</p>
 <p>Requires 1 input and produces 1 output.</p>
-<p>Output has the same rank as the input if “removeDim” is False (default).
-Output has rank one less than the input if “removeDim” is True and input rank is more than 1.</p>
+<p>Output has the same rank as the input if &#8220;removeDim&#8221; is False (default).
+Output has rank one less than the input if &#8220;removeDim&#8221; is True and input rank is more than 1.</p>
 <p>e.g.:</p>
 <p>input shape = (45, 34, 10, 5)
 axis = -2
@@ -4147,8 +4149,8 @@ output shape = (1,), if removeDim = False or True</p>
 <h2>ArgMinLayerParams<a class="headerlink" href="#argminlayerparams" title="Permalink to this headline">¶</a></h2>
 <p>Return the indices of the minimum value along a specified axis in a tensor.</p>
 <p>Requires 1 input and produces 1 output.</p>
-<p>Output has the same rank as the input if “removeDim” is False (default).
-Output has rank one less than the input if “removeDim” is True and input rank is more than 1.</p>
+<p>Output has the same rank as the input if &#8220;removeDim&#8221; is False (default).
+Output has rank one less than the input if &#8220;removeDim&#8221; is True and input rank is more than 1.</p>
 <p>e.g.:</p>
 <p>input shape = (45, 34, 10, 5)
 axis = -2
@@ -4334,8 +4336,8 @@ Each input is a scalar, or rank 1 and shape (1,).</p>
 </div>
 <div class="section" id="slidingwindowslayerparams">
 <h2>SlidingWindowsLayerParams<a class="headerlink" href="#slidingwindowslayerparams" title="Permalink to this headline">¶</a></h2>
-<p>A layer that returns a tensor containing all windows of size “window_size”
-separated by “step” along the dimension “axis”.</p>
+<p>A layer that returns a tensor containing all windows of size &#8220;window_size&#8221;
+separated by &#8220;step&#8221; along the dimension &#8220;axis&#8221;.</p>
 <div class="code highlight-default"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">SlidingWindows</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -4349,7 +4351,7 @@ separated by “step” along the dimension “axis”.</p>
 <dd><ul class="first last simple">
 <li>if axis = 0 &amp; input is rank 1 (L,). Output shape will be (M, W).</li>
 <li>if axis = 1 &amp; input is rank 3 (B1, L, C1). Output shape will be (B1, M, W, C1)</li>
-<li>if axis = 2 &amp; input is rank 5 (B1, B2, L, C1, C2) –&gt; (B1 * B2, L, C1 * C2) –&gt; (B1 * B2, M, W, C1 * C2). Output shape will be (B1, B2, M, W, C1, C2)</li>
+<li>if axis = 2 &amp; input is rank 5 (B1, B2, L, C1, C2) &#8211;&gt; (B1 * B2, L, C1 * C2) &#8211;&gt; (B1 * B2, M, W, C1 * C2). Output shape will be (B1, B2, M, W, C1, C2)</li>
 <li>etc</li>
 </ul>
 </dd>

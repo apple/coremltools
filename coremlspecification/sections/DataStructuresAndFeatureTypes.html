@@ -36,7 +36,7 @@
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="prev" title="Custom Models" href="CustomModel.html"/> 
+        <link rel="prev" title="Linked Model" href="LinkedModel.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -100,6 +100,8 @@
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
 <li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
 <li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NearestNeighbors.html">Nearest Neighbors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Data Structures &amp; Feature Types</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#stringtoint64map">StringToInt64Map</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#int64tostringmap">Int64ToStringMap</a></li>
@@ -197,6 +199,68 @@ to a 64-bit integer.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<div class="section" id="stringtoint64map-mapentry">
+<h3>StringToInt64Map.MapEntry<a class="headerlink" href="#stringtoint64map-mapentry" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<span class="c1">//</span>
+<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
+<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
+
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
+
+<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
+
+<span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">FloatVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Range</span> <span class="p">{</span>
+    <span class="kt">int64</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Set</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">values</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">DoubleRange</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="int64tostringmap">
 <h2>Int64ToStringMap<a class="headerlink" href="#int64tostringmap" title="Permalink to this headline">¶</a></h2>
@@ -206,6 +270,68 @@ to a string.</p>
     <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
+</div>
+<div class="section" id="int64tostringmap-mapentry">
+<h3>Int64ToStringMap.MapEntry<a class="headerlink" href="#int64tostringmap-mapentry" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<span class="c1">//</span>
+<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
+<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
+
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
+
+<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
+
+<span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">FloatVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Range</span> <span class="p">{</span>
+    <span class="kt">int64</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Set</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">values</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">DoubleRange</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="stringtodoublemap">
@@ -217,6 +343,68 @@ to a double-precision floating point number.</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+<div class="section" id="stringtodoublemap-mapentry">
+<h3>StringToDoubleMap.MapEntry<a class="headerlink" href="#stringtodoublemap-mapentry" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<span class="c1">//</span>
+<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
+<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
+
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
+
+<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
+
+<span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">FloatVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Range</span> <span class="p">{</span>
+    <span class="kt">int64</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Set</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">values</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">DoubleRange</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="int64todoublemap">
 <h2>Int64ToDoubleMap<a class="headerlink" href="#int64todoublemap" title="Permalink to this headline">¶</a></h2>
@@ -226,6 +414,68 @@ to a double-precision floating point number.</p>
     <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
+</div>
+<div class="section" id="int64todoublemap-mapentry">
+<h3>Int64ToDoubleMap.MapEntry<a class="headerlink" href="#int64todoublemap-mapentry" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<span class="c1">//</span>
+<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
+<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
+
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
+
+<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
+
+<span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">FloatVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Range</span> <span class="p">{</span>
+    <span class="kt">int64</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Int64Set</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">values</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">DoubleRange</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="stringvector">
@@ -597,7 +847,7 @@ to a double-precision floating point number.</p>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="CustomModel.html" class="btn btn-neutral" title="Custom Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="LinkedModel.html" class="btn btn-neutral" title="Linked Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
