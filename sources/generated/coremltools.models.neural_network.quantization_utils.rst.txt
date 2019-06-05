@@ -1,5 +1,5 @@
-coremltools\.models\.neural\_network\.quantization\_utils
-=========================================================
+coremltools.models.neural_network.quantization_utils
+====================================================
 
 .. automodule:: coremltools.models.neural_network.quantization_utils
 
@@ -10,8 +10,10 @@ coremltools\.models\.neural\_network\.quantization\_utils
    .. autosummary::
    
       compare_models
+      macos_version
       quantize_spec_weights
       quantize_weights
+      unpack_to_bytes
    
    
 

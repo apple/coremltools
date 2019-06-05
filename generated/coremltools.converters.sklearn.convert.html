@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.converters.sklearn.convert &mdash; coremltools 2.0b1 documentation</title>
+  <title>coremltools.converters.sklearn.convert &mdash; coremltools 2.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0b1 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
         <link rel="up" title="Converters" href="../coremltools.converters.html"/>
         <link rel="next" title="coremltools.converters.xgboost.convert" href="coremltools.converters.xgboost.convert.html"/>
         <link rel="prev" title="coremltools.converters.libsvm.convert" href="coremltools.converters.libsvm.convert.html"/>
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                2.0b1
+                2.0
               </div>
             
           
@@ -179,9 +179,9 @@
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sk_obj: model | [model] of scikit-learn format.</strong></p>
-<blockquote>
-<div><p>Scikit learn model(s) to convert to a Core ML format.</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>sk_obj: model | [model] of scikit-learn format.</strong></dt>
+<dd><p class="first">Scikit learn model(s) to convert to a Core ML format.</p>
 <p>The input model may be a single scikit learn model, a scikit learn
 pipeline model, or a list of scikit learn models.</p>
 <p>Currently supported scikit learn models are:</p>
@@ -202,17 +202,16 @@ pipeline model, or a list of scikit learn models.</p>
 <p>The input model, or the last model in a pipeline or list of models,
 determines whether this is exposed as a Transformer, Regressor,
 or Classifier.</p>
-<p>Note that there may not be a one-to-one correspondence between scikit
+<p class="last">Note that there may not be a one-to-one correspondence between scikit
 learn models and which Core ML models are used to represent them.  For
 example, many scikit learn models are embedded in a pipeline to handle
 processing of input features.</p>
-</div></blockquote>
-<p><strong>input_features: str | dict | list</strong></p>
-<blockquote>
-<div><p>Optional name(s) that can be given to the inputs of the scikit-learn
+</dd>
+<dt><strong>input_features: str | dict | list</strong></dt>
+<dd><p class="first">Optional name(s) that can be given to the inputs of the scikit-learn
 model. Defaults to ‘input’.</p>
 <p>Input features can be specified in a number of forms.</p>
-<ul>
+<ul class="last">
 <li><p class="first">Single string: In this case, the input is assumed to be a single
 array, with the number of dimensions set using num_dimensions.</p>
 </li>
@@ -256,15 +255,14 @@ name of the exposed feature, and <cite>datatype</cite> is an instance of
 <cite>String</cite>, <cite>Double</cite>, <cite>Int64</cite>, <cite>Array</cite>, or <cite>Dictionary</cite>.</p>
 </li>
 </ul>
-</div></blockquote>
-<p><strong>output_feature_names: string or list of strings</strong></p>
-<blockquote>
-<div><blockquote>
+</dd>
+<dt><strong>output_feature_names: string or list of strings</strong></dt>
+<dd><blockquote class="first">
 <div><p>Optional name(s) that can be given to the inputs of the scikit-learn
 model.</p>
 </div></blockquote>
 <p>The output_feature_names is interpreted according to the model type:</p>
-<ul class="simple">
+<ul class="last simple">
 <li>If the scikit-learn model is a transformer, it is the name of the
 array feature output by the final sequence of the transformer
 (defaults to “output”).</li>
@@ -274,13 +272,15 @@ class prediction and the array of scores for each class (defaults to
 <li>If it is a regressor, it should give the name of the prediction value
 (defaults to “prediction”).</li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">model:MLModel</p>
-<blockquote class="last">
-<div><p>Returns an MLModel instance representing a Core ML model.</p>
-</div></blockquote>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>model:MLModel</strong></dt>
+<dd><p class="first last">Returns an MLModel instance representing a Core ML model.</p>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -352,7 +352,7 @@ class prediction and the array of scores for each class (defaults to
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'2.0b1',
+            VERSION:'2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools 2.0b1 documentation</title>
+  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools 2.0 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0b1 documentation" href="../index.html"/>
+    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
         <link rel="up" title="Models" href="../coremltools.models.html"/>
         <link rel="next" title="Utilities" href="../coremltools.utils.html"/>
         <link rel="prev" title="coremltools.models.neural_network.flexible_shape_utils" href="coremltools.models.neural_network.flexible_shape_utils.html"/>
@@ -69,7 +69,7 @@
             
             
               <div class="version">
-                2.0b1
+                2.0
               </div>
             
           
@@ -182,13 +182,19 @@ Only available in coremltools 2.0b1 and onwards</p>
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.compare_models" title="coremltools.models.neural_network.quantization_utils.compare_models"><code class="xref py py-obj docutils literal"><span class="pre">compare_models</span></code></a>(full_precision_model,&nbsp;…)</td>
-<td>Utility function to compare the performance of a full precision vs</td>
+<td>Utility function to compare the performance of a full precision vs quantized model</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">quantize_spec_weights</span></code>(spec,&nbsp;nbits,&nbsp;…)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">macos_version</span></code>()</td>
+<td>Returns macOS version as a tuple of integers, making it easy to do proper version comparisons.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">quantize_spec_weights</span></code>(spec,&nbsp;nbits,&nbsp;…)</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="coremltools.models.neural_network.quantization_utils.quantize_weights"><code class="xref py py-obj docutils literal"><span class="pre">quantize_weights</span></code></a>(full_precision_model,&nbsp;nbits)</td>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="coremltools.models.neural_network.quantization_utils.quantize_weights"><code class="xref py py-obj docutils literal"><span class="pre">quantize_weights</span></code></a>(full_precision_model,&nbsp;nbits)</td>
 <td>Utility function to convert a full precision (float) MLModel to a nbit quantized MLModel (float16).</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">unpack_to_bytes</span></code>(byte_arr,&nbsp;num_weights,&nbsp;nbits)</td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -239,8 +245,7 @@ two model outputs</p>
 <dl class="function">
 <dt id="coremltools.models.neural_network.quantization_utils.compare_models">
 <code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">compare_models</code><span class="sig-paren">(</span><em>full_precision_model</em>, <em>quantized_model</em>, <em>sample_data</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.compare_models" title="Permalink to this definition">¶</a></dt>
-<dd><p>Utility function to compare the performance of a full precision vs
-quantized model</p>
+<dd><p>Utility function to compare the performance of a full precision vs quantized model</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -304,7 +309,7 @@ number of quantization bits and wp is the list of weights for a
 given layer. The function should return two parameters (lut, qw)
 where lut is an array of length (2^nbits)containing LUT values and
 qw is the list of quantized weight parameters. See
-_get_linear_lookup_table for a sample implementation.</dd>
+_get_linear_lookup_table_and_weight for a sample implementation.</dd>
 </dl>
 </div></blockquote>
 </li>
@@ -329,11 +334,12 @@ more details</li>
 </ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">model: MLModel</p>
-<blockquote class="last">
-<div><p>The quantized MLModel instance if running on macOS 10.14 or later,
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>model: MLModel</strong></dt>
+<dd><p class="first last">The quantized MLModel instance if running on macOS 10.14 or later,
 otherwise the quantized model specification is returned</p>
-</div></blockquote>
+</dd>
+</dl>
 </td>
 </tr>
 </tbody>
@@ -387,7 +393,7 @@ otherwise the quantized model specification is returned</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'2.0b1',
+            VERSION:'2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true,

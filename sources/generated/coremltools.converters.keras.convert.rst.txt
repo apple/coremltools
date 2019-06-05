@@ -1,5 +1,5 @@
-coremltools\.converters\.keras\.convert
-=======================================
+coremltools.converters.keras.convert
+====================================
 
 .. currentmodule:: coremltools.converters.keras
 

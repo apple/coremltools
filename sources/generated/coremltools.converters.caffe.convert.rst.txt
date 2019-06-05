@@ -1,5 +1,5 @@
-coremltools\.converters\.caffe\.convert
-=======================================
+coremltools.converters.caffe.convert
+====================================
 
 .. currentmodule:: coremltools.converters.caffe
 
