@@ -15,10 +15,10 @@ pip install coremltools==3.0b1
 
 API
 ---
-[Example Code snippets](docs/APIExamples.md)
-[CoreMLTools Documentation](https://apple.github.io/coremltools)
-[CoreML Specification Documentation](https://apple.github.io/coremltools/coremlspecification/)
-[IPython Notebooks](https://github.com/apple/coremltools/tree/master/examples)
+- [Example Code Snippets](docs/APIExamples.md)
+- [CoreMLTools Documentation](https://apple.github.io/coremltools)
+- [CoreML Specification Documentation](https://apple.github.io/coremltools/coremlspecification/)
+- [IPython Notebooks](https://github.com/apple/coremltools/tree/master/examples)
 
 Installation
 ------------
