@@ -1,10 +1,9 @@
-// Copyright (c) 2017, Apple Inc. All rights reserved.
+// Copyright (c) 2017-2019, Apple Inc. All rights reserved.
 //
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause
 
 /**
- *
  * A neural network is defined through a collection of layers
  * and represents a directed acyclic graph (DAG).
  * Each layer has a name, a layer type,
@@ -23,13 +22,12 @@
  * and a layer may not have input or output names that
  * refer to layers that are not yet defined.
  *
- *
  * For CoreML specification version <=3,
  * all inputs are mapped to static rank 5 tensors, with axis notations
  * [Sequence, Batch, Channel, Height, Width].
  *
  * From specification version 4 onwards (iOS >= 13, macOS >= 10.15), more options are available
- * (see enums "NeuralNetworkMultiArrayShapeMapping", "NeuralNetworkImageShapeMapping")
+ * (see enums ``NeuralNetworkMultiArrayShapeMapping``, ``NeuralNetworkImageShapeMapping``)
  * to map inputs to generic N-Dimensional (or N rank) tensors, where N >= 1.
  *
  * Each layer type may have specific constraints on the ranks of its inputs and outputs.
@@ -42,6 +40,19 @@
  * "channel" is same as axis = -3 (i.e. the third last axis from the end)
  * "sequence" is same as axis = -5 (i.e. the fifth last axis from the end)
  *
+ * Several layers are available in 3 different variations, with the names ending
+ * in identifiers: ``like``, ``static`` and ``dynamic``. For instance, ``FillLike``,
+ * ``FillStatic`` and ``FillDynamic``. The ``static`` variation generally will have
+ * a property corresponding to the shape of the output. For instance, if the
+ * output of the ``FillStatic`` layer is desired to be of shape (10, 4), the
+ * property ``targetShape`` will have to be set to [10, 4]. In the ``dynamic`` case,
+ * the shape is an input, hence it can be changed at runtime. For instance, for
+ * a ``FillDynamic`` layer, the input would have to be an array containing the
+ * values 10 and 4, if the desired output is of shape (10, 4). Whereas in the
+ * ``like`` case, the additional input's shape is used as the output shape, ignoring
+ * its values. For instance, for a ``FillLike`` layer, for an input with shape
+ * (10, 4), the output generated will also be of shape (10, 4), values of the
+ * input will be ignored.
  */
 
 syntax = "proto3";
@@ -54,15 +65,15 @@ package CoreML.Specification;
 
 
 enum NeuralNetworkMultiArrayShapeMapping {
+
     /*
      * Describes how the MultiArray shape for the inputs,
      * provided in Features Types proto via model description,
      * is mapped to construct tensors that are fed into the Neural Network layers.
      */
 
-
     /*
-     * Default legacy value. Only supported for CoreML Sepcification version <= 3.
+     * Default legacy value. Only supported for CoreML Specification version <= 3.
      *
      * The default legacy shape mapping resolves all input shapes to a rank 5 equivalent
      * with axis notation of [Seq, Batch, Channel, Height, Width].
@@ -88,6 +99,7 @@ enum NeuralNetworkMultiArrayShapeMapping {
      * Supported only for Specification version >= 4 (iOS >= 13, macOS >= 10.15).
      */
     EXACT_ARRAY_MAPPING = 1;
+
 }
 
 enum NeuralNetworkImageShapeMapping {
@@ -95,7 +107,6 @@ enum NeuralNetworkImageShapeMapping {
     /*
      * Describes how the shape of the input tensors is constructed from image inputs.
      */
-
 
     /*
      * In this case, image input is mapped to a rank 5 tensor.
@@ -110,13 +121,14 @@ enum NeuralNetworkImageShapeMapping {
      * Supported only for Specification version >= 4 (iOS >= 13, macOS >= 10.15).
      */
     RANK4_IMAGE_MAPPING = 1;
-}
 
+}
 
 /**
  A neural network.
  */
 message NeuralNetwork {
+
     repeated NeuralNetworkLayer layers = 1;
     repeated NeuralNetworkPreprocessing preprocessing = 2;
 
@@ -168,11 +180,13 @@ message NeuralNetwork {
  *     Y[0, :, :] = channelScale * X[0, :, :] + grayBias
  */
 message NeuralNetworkImageScaler {
+
     float channelScale = 10; ///Scalar to be multiplied.
     float blueBias = 20; ///Scalar blue bias to be added.
     float greenBias = 21; ///Scalar green bias to be added.
     float redBias = 22; ///Scalar red bias to be added.
     float grayBias = 30; ///Scalar bias to be added for grayscale images.
+
 }
 
 /**
@@ -182,20 +196,24 @@ message NeuralNetworkImageScaler {
  * ``NeuralNetworkPreprocessing.featureName``.
  */
 message NeuralNetworkMeanImage {
+
     /**
      * Mean image stored as a flattened array of floats,
      * representing shape [Channel,Height,Width].
      */
     repeated float meanImage = 1;
+
 }
 
 /// Preprocessing parameters for image inputs.
 message NeuralNetworkPreprocessing {
+
     string featureName = 1; /// must be equal to the input name to which the preprocessing is applied
     oneof preprocessor {
-      NeuralNetworkImageScaler scaler = 10;
-      NeuralNetworkMeanImage meanImage = 11;
+        NeuralNetworkImageScaler scaler = 10;
+        NeuralNetworkMeanImage meanImage = 11;
     }
+
 }
 
 /// Activation Functions
@@ -210,6 +228,7 @@ message NeuralNetworkPreprocessing {
  *     f(x) = \text{max}(0, x)
  */
 message ActivationReLU {
+
 }
 
 /**
@@ -224,7 +243,9 @@ message ActivationReLU {
  *            \end{cases}
  */
 message ActivationLeakyReLU {
+
     float alpha = 1; //negative slope value for leakyReLU
+
 }
 
 /**
@@ -236,6 +257,7 @@ message ActivationLeakyReLU {
  *     f(x) = \dfrac{1 - e^{-2x}}{1 + e^{-2x}}
  */
 message ActivationTanh {
+
 }
 
 /**
@@ -247,8 +269,10 @@ message ActivationTanh {
  *     f(x) = \alpha \tanh(\beta x)
  */
 message ActivationScaledTanh {
+
     float alpha = 1;
     float beta = 2;
+
 }
 
 /**
@@ -260,6 +284,7 @@ message ActivationScaledTanh {
  *     f(x) = \dfrac{1}{1 + e^{-x}}
  */
 message ActivationSigmoid {
+
 }
 
 /**
@@ -271,8 +296,10 @@ message ActivationSigmoid {
  *     f(x) = \alpha x + \beta
  */
 message ActivationLinear {
+
     float alpha = 1;
     float beta = 2;
+
 }
 
 /**
@@ -284,8 +311,10 @@ message ActivationLinear {
  *     f(x) = \text{min}(\text{max}(\alpha x + \beta, 0), 1)
  */
 message ActivationSigmoidHard {
+
     float alpha = 1;
     float beta = 2;
+
 }
 
 /**
@@ -302,9 +331,11 @@ message ActivationSigmoidHard {
  *             \end{cases} \;,\;i=1,...,C
  */
 message ActivationPReLU {
+
     // parameter of length C or 1.
     // If length is 1, same value is used for all channels
     WeightParams alpha = 1;
+
 }
 
 /**
@@ -319,7 +350,9 @@ message ActivationPReLU {
  *            \end{cases}
  */
 message ActivationELU {
+
     float alpha = 1;
+
 }
 
 /**
@@ -334,7 +367,9 @@ message ActivationELU {
  *            \end{cases}
  */
 message ActivationThresholdedReLU {
+
     float alpha = 1;
+
 }
 
 /**
@@ -346,6 +381,7 @@ message ActivationThresholdedReLU {
  *     f(x) = \dfrac{x}{1 + |x|}
  */
 message ActivationSoftsign {
+
 }
 
 /**
@@ -357,6 +393,7 @@ message ActivationSoftsign {
  *     f(x) = \text{log}(1 + e^x)
  */
 message ActivationSoftplus {
+
 }
 
 /**
@@ -370,12 +407,15 @@ message ActivationSoftplus {
  *     f(x_i) = \alpha_i \text{log}(1 + e^{\beta_i x_i}) \;,\;i=1,...,C
  */
 message ActivationParametricSoftplus {
+
     // If length is 1, same value is used for all channels
     WeightParams alpha = 1; //parameter of length C or 1
-    WeightParams beta = 2;  //parameter of length C or 1
+    WeightParams beta = 2; //parameter of length C or 1
+
 }
 
 message ActivationParams {
+
     oneof NonlinearityType {
         ActivationLinear linear = 5;
 
@@ -396,24 +436,28 @@ message ActivationParams {
         ActivationSoftplus softplus = 70;
         ActivationParametricSoftplus parametricSoftplus = 71;
     }
+
 }
 
 /**
  * Representation of the intermediate tensors
  */
 message Tensor {
+
     // Number of dimensions in the tensor shape
     uint32 rank = 1;
     // actual value of the tensor shape.
     // must be of length "rank". Can contain -1s for unknown dimensions.
     repeated int64 dimValue = 2;
+
 }
 
 /**
  * A single neural network layer.
  */
 message NeuralNetworkLayer {
-    string name = 1;  //descriptive name of the layer
+
+    string name = 1; //descriptive name of the layer
     repeated string input = 2;
     repeated string output = 3;
 
@@ -487,8 +531,9 @@ message NeuralNetworkLayer {
 
         // Custom (user-implemented) Layer
         CustomLayerParams custom = 500;
-        
-        // Following layers are available only after CoreML Specification version >= 4 (iOS >= 13, macOS >= 10.15)
+
+        // Following layers are available only after CoreML Specification
+        // version >= 4 (iOS >= 13, macOS >= 10.15)
 
         // Control Flow related Layers
         CopyLayerParams copy = 600;
@@ -509,7 +554,7 @@ message NeuralNetworkLayer {
         SignLayerParams sign = 680;
         RoundLayerParams round = 685;
 
-		Exp2LayerParams exp2 = 700;
+        Exp2LayerParams exp2 = 700;
 
         SinLayerParams sin = 710;
         CosLayerParams cos = 715;
@@ -586,13 +631,13 @@ message NeuralNetworkLayer {
         GetShapeLayerParams getShape = 1065;
         LoadConstantNDLayerParams loadConstantND = 1070;
 
-		FillLikeLayerParams fillLike = 1080;
-        FillStaticLayerParams fillStatic= 1085;
+        FillLikeLayerParams fillLike = 1080;
+        FillStaticLayerParams fillStatic = 1085;
         FillDynamicLayerParams fillDynamic = 1090;
 
-		BroadcastToLikeLayerParams broadcastToLike = 1100;
+        BroadcastToLikeLayerParams broadcastToLike = 1100;
         BroadcastToStaticLayerParams broadcastToStatic = 1105;
-		BroadcastToDynamicLayerParams broadcastToDynamic = 1110;
+        BroadcastToDynamicLayerParams broadcastToDynamic = 1110;
 
         SqueezeLayerParams squeeze = 1120;
         ExpandDimsLayerParams expandDims = 1125;
@@ -600,7 +645,7 @@ message NeuralNetworkLayer {
         ReshapeLikeLayerParams reshapeLike = 1135;
         ReshapeStaticLayerParams reshapeStatic = 1140;
         ReshapeDynamicLayerParams reshapeDynamic = 1145;
-        RankPreservingReshapeLayerParams rankPreservingReshape = 1150; 
+        RankPreservingReshapeLayerParams rankPreservingReshape = 1150;
 
         // Random Distributions
         RandomNormalLikeLayerParams randomNormalLike = 1170;
@@ -640,6 +685,7 @@ message NeuralNetworkLayer {
         LayerNormalizationLayerParams layerNormalization = 1350;
 
     }
+
 }
 
 /**
@@ -654,6 +700,7 @@ message NeuralNetworkLayer {
  *
  */
 message BranchLayerParams {
+
     /**
      * execute this graph if the absolute value of the input Tensor is greater than 1e-6
      * This must be present.
@@ -664,6 +711,7 @@ message BranchLayerParams {
      * This is optional.
      */
     NeuralNetwork elseBranch = 2;
+
 }
 
 /**
@@ -715,6 +763,7 @@ message BranchLayerParams {
  *
  */
 message LoopLayerParams {
+
     /**
      * maximum number of iterations. Ignored if input is present.
      */
@@ -737,6 +786,7 @@ message LoopLayerParams {
      * This field must be present.
      */
     NeuralNetwork bodyNetwork = 4;
+
 }
 
 /**
@@ -745,7 +795,7 @@ message LoopLayerParams {
  * Terminate the loop that has this layer.
  * If present, it should always reside in the "bodyNetwork" of the loop layer
  *
- * No inputs/outptus
+ * No inputs/outputs
  *
  */
 message LoopBreakLayerParams {
@@ -758,13 +808,12 @@ message LoopBreakLayerParams {
  * Stop the current loop iteration and continue on the next iteration.
  * If present, it should always reside in the "bodyNetwork" of the loop layer
  *
- * No inputs/outptus
+ * No inputs/outputs
  *
  */
 message LoopContinueLayerParams {
 
 }
-
 
 /**
  * Copy Layer
@@ -776,6 +825,7 @@ message LoopContinueLayerParams {
  *
  */
 message CopyLayerParams {
+
 }
 
 /**
@@ -797,10 +847,12 @@ message CopyLayerParams {
  *
  */
 message GreaterThanLayerParams {
+
     /**
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 2;
+
 }
 
 /**
@@ -822,12 +874,13 @@ message GreaterThanLayerParams {
  *
  */
 message GreaterEqualLayerParams {
+
     /**
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 2;
-}
 
+}
 
 /**
  * LessThan Layer
@@ -848,10 +901,12 @@ message GreaterEqualLayerParams {
  *
  */
 message LessThanLayerParams {
+
     /**
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 2;
+
 }
 
 /**
@@ -873,10 +928,12 @@ message LessThanLayerParams {
  *
  */
 message LessEqualLayerParams {
+
     /**
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 2;
+
 }
 
 /**
@@ -898,13 +955,13 @@ message LessEqualLayerParams {
  *
  */
 message EqualLayerParams {
+
     /**
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 1;
+
 }
-
-
 
 /**
  * NotEqual Layer
@@ -925,12 +982,13 @@ message EqualLayerParams {
  *
  */
 message NotEqualLayerParams {
+
     /**
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 1;
-}
 
+}
 
 /**
  * LogicalAnd Layer
@@ -949,6 +1007,7 @@ message NotEqualLayerParams {
  *
  */
 message LogicalAndLayerParams {
+
 }
 
 /**
@@ -968,6 +1027,7 @@ message LogicalAndLayerParams {
  *
  */
 message LogicalOrLayerParams {
+
 }
 
 /**
@@ -987,6 +1047,7 @@ message LogicalOrLayerParams {
  *
  */
 message LogicalXorLayerParams {
+
 }
 
 /**
@@ -1005,9 +1066,8 @@ message LogicalXorLayerParams {
  *
  */
 message LogicalNotLayerParams {
+
 }
-
-
 
 /// Border Amounts
 /// --------------
@@ -1040,6 +1100,7 @@ message LogicalNotLayerParams {
  *     rightCropAmount == Width endEdgeSize
  */
 message BorderAmounts {
+
     message EdgeSizes {
         /**
          * The amount to be padded or cropped from the beginning.
@@ -1057,6 +1118,7 @@ message BorderAmounts {
      * This must be length 2 in the order ``[H, W]``.
      */
     repeated EdgeSizes borderAmounts = 10;
+
 }
 
 /**
@@ -1100,7 +1162,9 @@ message BorderAmounts {
  *
  */
 message ValidPadding {
+
     BorderAmounts paddingAmounts = 1;
+
 }
 
 /**
@@ -1151,13 +1215,16 @@ message ValidPadding {
  *    W_out = W_in * stride[1]
  */
 message SamePadding {
+
     enum SamePaddingMode {
+
         BOTTOM_RIGHT_HEAVY = 0;
         TOP_LEFT_HEAVY = 1;
+
     }
     SamePaddingMode asymmetryMode = 1;
-}
 
+}
 
 /**
  * Specifies how grid points are sampled from an interval.
@@ -1170,39 +1237,39 @@ message SamePadding {
  */
 message SamplingMode {
 
-	enum Method {
+    enum Method {
 
-		/**
-		 * start = 0, end = X-1
+        /**
+         * start = 0, end = X-1
          * grid points = numpy.linspace(start, end)
-		 */
-		STRICT_ALIGN_ENDPOINTS_MODE = 0;
+         */
+        STRICT_ALIGN_ENDPOINTS_MODE = 0;
 
-		/**
-		 * if N == 1: start = end = (X-1)/2
-		 * otherwise, start = 0, end = X-1
+        /**
+         * if N == 1: start = end = (X-1)/2
+         * otherwise, start = 0, end = X-1
          * grid points = numpy.linspace(start, end)
-		 */
-		ALIGN_ENDPOINTS_MODE = 1;
+         */
+        ALIGN_ENDPOINTS_MODE = 1;
 
-		/**
-		 * start = 0, end = X - X/N
-		 * grid points = min(X-1, numpy.linspace(start, end))
-		 * This is same as the mode used in the upsample layer in this specification, when used with bilinear interpolation. In that case N/X = upsample ratio.
-		 */
-		UPSAMPLE_MODE = 2;
+        /**
+         * start = 0, end = X - X/N
+         * grid points = min(X-1, numpy.linspace(start, end))
+         * This is same as the mode used in the upsample layer in this specification, when used with bilinear interpolation. In that case N/X = upsample ratio.
+         */
+        UPSAMPLE_MODE = 2;
 
-		/**
-		 * spacing = max(1, X-1)/N
-		 * start = 0.5 * spacing
-		 * end = start + (N-1) * spacing
-		 * grid points = min(X-1, numpy.linspace(start, end))
-		 */
-		ROI_ALIGN_MODE = 3;
+        /**
+         * spacing = max(1, X-1)/N
+         * start = 0.5 * spacing
+         * end = start + (N-1) * spacing
+         * grid points = min(X-1, numpy.linspace(start, end))
+         */
+        ROI_ALIGN_MODE = 3;
 
-	}
+    }
 
-	Method samplingMethod = 1;
+    Method samplingMethod = 1;
 
 }
 
@@ -1212,16 +1279,16 @@ message SamplingMode {
  */
 message BoxCoordinatesMode {
 
-	enum Coordinates {
+    enum Coordinates {
 
-		/**
-		 * [h_start, w_start, h_end, w_end]
-		 */
-		CORNERS_HEIGHT_FIRST = 0;
+        /**
+         * [h_start, w_start, h_end, w_end]
+         */
+        CORNERS_HEIGHT_FIRST = 0;
 
-		/**
-		 * [w_start, h_start, w_end, h_end]
-		 */
+        /**
+         * [w_start, h_start, w_end, h_end]
+         */
         CORNERS_WIDTH_FIRST = 1;
 
         /**
@@ -1234,12 +1301,11 @@ message BoxCoordinatesMode {
          */
         CENTER_SIZE_WIDTH_FIRST = 3;
 
-	}
+    }
 
-	Coordinates boxMode = 1;
+    Coordinates boxMode = 1;
 
 }
-
 
 /**
  * Weights for layer parameters.
@@ -1248,6 +1314,7 @@ message BoxCoordinatesMode {
  * and can represent 1-, 2-, 3-, or 4-dimensional data.
  */
 message WeightParams {
+
     /**
      * Values specified in single / float / FP32 precision.
      */
@@ -1261,28 +1328,32 @@ message WeightParams {
     /**
      * Raw value specification for custom layers and quantized lower precisions.
      */
-    bytes rawValue  = 30;
+    bytes rawValue = 30;
 
-	/**
+    /**
      * Quantization related parameters.
      */
     QuantizationParams quantization = 40;
 
     bool isUpdatable = 50;
+
 }
 
 /**
  * Quantization parameters.
  */
 message QuantizationParams {
+
     uint64 numberOfBits = 1;
     oneof QuantizationType {
         LinearQuantizationParams linearQuantization = 101;
         LookUpTableQuantizationParams lookupTableQuantization = 102;
     }
+
 }
 
 message LinearQuantizationParams {
+
     /**
      * Stores scale and bias values corresponding to the quantized weights.
      * Must be an array of 1 element, or an array of C elements, where C
@@ -1291,13 +1362,16 @@ message LinearQuantizationParams {
      */
     repeated float scale = 1;
     repeated float bias = 2;
+
 }
 
 message LookUpTableQuantizationParams {
+
     /* Stores look-up table quantization values. Must be an array of
     (2^numberOfBits) Elements.
     */
     repeated float floatValue = 1;
+
 }
 
 /// Layers
@@ -1338,6 +1412,7 @@ message LookUpTableQuantizationParams {
  *
  */
 message ConvolutionLayerParams {
+
     /**
      * The number of kernels.
      * Same as ``C_out`` used in the layer description.
@@ -1413,6 +1488,7 @@ message ConvolutionLayerParams {
      * based on ``ConvolutionPaddingType``.
      */
     repeated uint64 outputShape = 100;
+
 }
 
 /**
@@ -1444,6 +1520,7 @@ message ConvolutionLayerParams {
  *
  */
 message InnerProductLayerParams {
+
     uint64 inputChannels = 1; /// Input size: C_in.
     uint64 outputChannels = 2; /// Output size: C_out.
 
@@ -1451,6 +1528,7 @@ message InnerProductLayerParams {
 
     WeightParams weights = 20; /// Weight matrix [C_out, C_in].
     WeightParams bias = 21; /// Bias vector [C_out].
+
 }
 
 /**
@@ -1477,6 +1555,7 @@ message InnerProductLayerParams {
  *
  */
 message EmbeddingLayerParams {
+
     uint64 inputDim = 1; /// Size of the input dictionary.
     uint64 outputChannels = 2; /// Size of the output vectors.
 
@@ -1484,6 +1563,7 @@ message EmbeddingLayerParams {
 
     WeightParams weights = 20; /// 2-D weights of dimensions [outputChannels, inputDim].
     WeightParams bias = 21; /// Bias of size [outputChannels].
+
 }
 
 /**
@@ -1513,11 +1593,13 @@ message EmbeddingLayerParams {
  *
  */
 message EmbeddingNDLayerParams {
+
     uint64 vocabSize = 1; /// Size of the input dictionary.
     uint64 embeddingSize = 2; /// Size of the output vectors.
     bool hasBias = 3; /// Whether a bias is added or not.
     WeightParams weights = 20; /// 2-D weights of dimensions [embeddingSize, vocabSize].
     WeightParams bias = 21; /// Bias of size [embeddingSize].
+
 }
 
 /**
@@ -1545,6 +1627,7 @@ message EmbeddingNDLayerParams {
  *     A blob with the same shape as the input.
  */
 message BatchnormLayerParams {
+
     uint64 channels = 1; /// Size of the channel dimension in the input.
 
     /**
@@ -1563,10 +1646,11 @@ message BatchnormLayerParams {
      */
     float epsilon = 10;
 
-    WeightParams gamma=15; /// Parameter of length [channels]
-    WeightParams beta=16; /// Parameter of length [channels]
-    WeightParams mean=17; /// Parameter of length [channels]
-    WeightParams variance=18; /// Parameter of length [channels]
+    WeightParams gamma = 15; /// Parameter of length [channels]
+    WeightParams beta = 16; /// Parameter of length [channels]
+    WeightParams mean = 17; /// Parameter of length [channels]
+    WeightParams variance = 18; /// Parameter of length [channels]
+
 }
 
 /**
@@ -1604,10 +1688,13 @@ message BatchnormLayerParams {
  * Only symmetric padding is supported with this option.
  */
 message PoolingLayerParams {
-    enum PoolingType{
+
+    enum PoolingType {
+
         MAX = 0;
         AVERAGE = 1;
         L2 = 2;
+
     }
     PoolingType type = 1; /// Type of pooling operation.
 
@@ -1624,11 +1711,13 @@ message PoolingLayerParams {
     repeated uint64 stride = 20;
 
     message ValidCompletePadding {
+
         /**
          * Must be length 2 in order ``[H, W]``.
          * If not set, value ``[0, 0]`` is used.
          */
         repeated uint64 paddingAmounts = 10;
+
     }
 
     oneof PoolingPaddingType {
@@ -1648,6 +1737,7 @@ message PoolingLayerParams {
      * Kernel size is inferred from the input data spatial dimensions.
      */
     bool globalPooling = 60;
+
 }
 
 /**
@@ -1726,6 +1816,7 @@ message PoolingLayerParams {
  *                     9   9   9  10  11  12
  */
 message PaddingLayerParams {
+
     /**
      * Fill a constant value in the padded region.
      */
@@ -1752,6 +1843,7 @@ message PaddingLayerParams {
     }
 
     BorderAmounts paddingAmounts = 10; /// Amounts to be padded to the input.
+
 }
 
 /**
@@ -1774,10 +1866,12 @@ message PaddingLayerParams {
  *
  */
 message ConcatLayerParams {
+
     /**
      * If true, concatenate along the axis = -5 instead of axis = -3.
      */
     bool sequenceConcat = 100;
+
 }
 
 /**
@@ -1805,10 +1899,12 @@ message ConcatLayerParams {
  * that is, over a window "across" channels in 1x1 spatial neighborhoods.
  */
 message LRNLayerParams {
+
     float alpha = 1;
     float beta = 2;
     uint64 localSize = 3; /// Number of channels in the normalization window.
     float k = 4; /// Defaults to 1 if not set or 0. Must be strictly positive.
+
 }
 
 /**
@@ -1836,6 +1932,7 @@ message LRNLayerParams {
  *     x_i \leftarrow \dfrac{e^{x_i}}{\sum_i{e^{x_i}}}
  */
 message SoftmaxLayerParams {
+
 }
 
 /**
@@ -1856,7 +1953,9 @@ message SoftmaxLayerParams {
  *     e.g.: For input that is of shape ``[C, H, W]``, output shapes will be ``[C/nOutputs, H, W]``
  */
 message SplitLayerParams {
-    uint64 nOutputs=1; /// The number of outputs.
+
+    uint64 nOutputs = 1; /// The number of outputs.
+
 }
 
 /**
@@ -1883,11 +1982,13 @@ message SplitLayerParams {
  *
  */
 message AddLayerParams {
+
     /**
      * Scalar to be added to the input.
      * Only used if there is a single input.
      */
     float alpha = 1;
+
 }
 
 /**
@@ -1914,11 +2015,13 @@ message AddLayerParams {
  *
  */
 message MultiplyLayerParams {
+
     /**
      * Scalar to be multiplied with the input.
      * Only used if there is a single input.
      */
     float alpha = 1;
+
 }
 
 /**
@@ -1941,6 +2044,7 @@ message MultiplyLayerParams {
  *     x \leftarrow \text{scale} \cdot x + \text{shift}
  */
 message UnaryFunctionLayerParams {
+
     /**
      * A unary operator.
      *
@@ -1970,7 +2074,7 @@ message UnaryFunctionLayerParams {
      * ``THRESHOLD``
      *     .. math:: f(x) = \text{max}(\alpha, x)
      */
-    enum Operation{
+    enum Operation {
         SQRT = 0;
         RSQRT = 1;
         INVERSE = 2;
@@ -2006,6 +2110,7 @@ message UnaryFunctionLayerParams {
      * Defaults to ``1.0`` if not set or set to ``0``.
      */
     float scale = 5;
+
 }
 
 /**
@@ -2028,6 +2133,7 @@ message UnaryFunctionLayerParams {
  *     e.g.: blob with shape ``[C, scalingFactor[0] * H, scalingFactor[1] * W]``
  */
 message UpsampleLayerParams {
+
     /**
      * Scaling Factor.
      * Must be length 2 in order ``[H, W]``.
@@ -2036,8 +2142,10 @@ message UpsampleLayerParams {
     repeated uint64 scalingFactor = 1;
 
     enum InterpolationMode {
+
         NN = 0; /// Nearest Neighbour
         BILINEAR = 1; /// Bilinear
+
     }
 
     InterpolationMode mode = 5;
@@ -2065,18 +2173,19 @@ message UpsampleLayerParams {
 */
 message ResizeBilinearLayerParams {
 
-	/**
-	 * Target Spatial Size.
-	 * Must be length 2 in order ``[Height, Width]``, i.e. ``[H_out, W_out]``.
-	 * If not set, default value ``[1, 1]`` is used.
-	 */
-	repeated uint64 targetSize = 1;
+    /**
+     * Target Spatial Size.
+     * Must be length 2 in order ``[Height, Width]``, i.e. ``[H_out, W_out]``.
+     * If not set, default value ``[1, 1]`` is used.
+     */
+    repeated uint64 targetSize = 1;
 
-	/**
-	 * Mode used to compute the grid on which the spatial output values are evaluated.
-	 * Same mode is applied to both the height and width axes.
-	 */
-	SamplingMode mode = 2;
+    /**
+     * Mode used to compute the grid on which the spatial output values are evaluated.
+     * Same mode is applied to both the height and width axes.
+     */
+    SamplingMode mode = 2;
+
 }
 
 /**
@@ -2117,43 +2226,41 @@ message ResizeBilinearLayerParams {
 */
 message CropResizeLayerParams {
 
-	/**
-	 * Target Spatial Size.
-	 * Must be length 2 in order ``[Height, Width]``, i.e. ``[H_out, W_out]``.
-	 * If not set, default value ``[1, 1]`` is used.
-	 */
-	repeated uint64 targetSize = 1;
+    /**
+     * Target Spatial Size.
+     * Must be length 2 in order ``[Height, Width]``, i.e. ``[H_out, W_out]``.
+     * If not set, default value ``[1, 1]`` is used.
+     */
+    repeated uint64 targetSize = 1;
 
-	/**
-	 * If true the bounding box coordinates must be in the interval [0, 1].
-	 * They are scaled by (H_in - 1), (W_in - 1), i.e. based on the input spatial dimensions.
-	 * If false the bounding box coordinates must be in the interval
-	 * [0, H_in -1] and [0, W_in - 1], respectively for height and width dimensions.
-	 */
-	bool normalizedCoordinates = 2;
+    /**
+     * If true the bounding box coordinates must be in the interval [0, 1].
+     * They are scaled by (H_in - 1), (W_in - 1), i.e. based on the input spatial dimensions.
+     * If false the bounding box coordinates must be in the interval
+     * [0, H_in -1] and [0, W_in - 1], respectively for height and width dimensions.
+     */
+    bool normalizedCoordinates = 2;
 
-	/**
-	 * Mode used to compute the grid on which the spatial output values are evaluated.
-	 * Same mode is applied to both the height and width axes.
-	 */
-	SamplingMode mode = 3;
+    /**
+     * Mode used to compute the grid on which the spatial output values are evaluated.
+     * Same mode is applied to both the height and width axes.
+     */
+    SamplingMode mode = 3;
 
-	/**
-	 * Representation used to express the bounding box coordinates.
-	 * It determines how the values of the second input are interpreted.
-	 */
-	BoxCoordinatesMode boxIndicesMode = 4;
+    /**
+     * Representation used to express the bounding box coordinates.
+     * It determines how the values of the second input are interpreted.
+     */
+    BoxCoordinatesMode boxIndicesMode = 4;
 
-	/**
-	 * Additional spatial scale that multiplies the bounding box coordinates.
+    /**
+     * Additional spatial scale that multiplies the bounding box coordinates.
      * Generally used while implementing the RoI Align layer,
      * which uses unnormalized RoI coordinates along with a spatial scale less than or equal to 1.
-	 */
-	float spatialScale = 5;
+     */
+    float spatialScale = 5;
 
 }
-
-
 
 /**
  * A layer that performs elementwise addition of a bias,
@@ -2173,6 +2280,7 @@ message CropResizeLayerParams {
  *     A blob with the same shape as the input.
  */
 message BiasLayerParams {
+
     /**
      * The shape of the bias.
      * Must be one of the following:
@@ -2185,6 +2293,7 @@ message BiasLayerParams {
      * The size must be equal to the product of the ``shape`` dimensions.
      */
     WeightParams bias = 2;
+
 }
 
 /**
@@ -2206,6 +2315,7 @@ message BiasLayerParams {
  *     A blob with the same shape as the input.
  */
 message ScaleLayerParams {
+
     /**
      * The shape of the scale.
      * Must be one of the following:
@@ -2233,6 +2343,7 @@ message ScaleLayerParams {
      * The size must be equal to the product of the ``shape`` dimensions.
      */
     WeightParams bias = 5;
+
 }
 
 /**
@@ -2243,14 +2354,13 @@ message ScaleLayerParams {
  *
  *      y = LoadConstantLayer()
  *
- * Takes no input. Produces 1 output.
+ * Requires no input and produces 1 output.
  *
- * Input
- *     None
  * Output:
  *     A blob with rank 5 and shape ``[1, 1, C, H, W]``
  */
 message LoadConstantLayerParams {
+
     /**
      * The shape of the constant to be loaded,
      * which must be``[C, H, W]``, that is length 3.
@@ -2262,6 +2372,7 @@ message LoadConstantLayerParams {
      * of size ``C * H * W``.
      */
     WeightParams data = 2;
+
 }
 
 /**
@@ -2286,11 +2397,13 @@ message LoadConstantLayerParams {
  *     x_i \leftarrow \dfrac{x_i}{\sqrt{\sum{x_i^2} + \epsilon}}
  */
 message L2NormalizeLayerParams {
+
     /**
      * A small constant to avoid division by 0 while normalizing variance.
      * Defaults to ``1e-6`` if not set or set to ``0``.
      */
     float epsilon = 1;
+
 }
 
 /// Data Reorganization Layers
@@ -2319,11 +2432,15 @@ message L2NormalizeLayerParams {
  * ``CHANNEL_LAST`` requires data to be rearranged.
  */
 message FlattenLayerParams {
+
     enum FlattenOrder {
+
         CHANNEL_FIRST = 0;
         CHANNEL_LAST = 1;
+
     }
     FlattenOrder mode = 1;
+
 }
 
 /**
@@ -2354,6 +2471,7 @@ message FlattenLayerParams {
  * both the flattening and permuting requires the data to be rearranged.
  */
 message ReshapeLayerParams {
+
     /**
      * The shape of the output.
      * Must be of length 3 or 4.
@@ -2366,10 +2484,13 @@ message ReshapeLayerParams {
     repeated int64 targetShape = 1;
 
     enum ReshapeOrder {
+
         CHANNEL_FIRST = 0;
         CHANNEL_LAST = 1;
+
     }
     ReshapeOrder mode = 2;
+
 }
 
 /**
@@ -2406,11 +2527,13 @@ message ReshapeLayerParams {
  *   the output is the same as the input.
  */
 message PermuteLayerParams {
+
     /**
      * The order in which to permute the dimensions.
      * Must have length 4 and a permutation of ``[0, 1, 2, 3]``.
      */
     repeated uint64 axis = 1;
+
 }
 
 /**
@@ -2446,11 +2569,14 @@ message PermuteLayerParams {
 message ReorganizeDataLayerParams {
 
     enum ReorganizationType {
+
         SPACE_TO_DEPTH = 0;
         DEPTH_TO_SPACE = 1;
+
     }
     ReorganizationType mode = 1;
     uint64 blockSize = 2; /// must be greater than 1
+
 }
 
 /**
@@ -2483,15 +2609,18 @@ message SliceLayerParams {
     uint64 stride = 3; /// The step size. Must be positive.
 
     enum SliceAxis {
+
         CHANNEL_AXIS = 0;
         HEIGHT_AXIS = 1;
         WIDTH_AXIS = 2;
+
     }
     // The following mapping is used for interpreting this parameter:
     // CHANNEL_AXIS => axis = -3, input must have rank at least 3.
     // HEIGHT_AXIS => axis = -2, input must have rank at least 2.
     // WIDTH_AXIS => axis = -1
     SliceAxis axis = 4;
+
 }
 
 /**
@@ -2514,6 +2643,7 @@ message SliceLayerParams {
  *     For mode == 'ArgMax', axis must be [-1] or [-2] or [-3].
  */
 message ReduceLayerParams {
+
     /*
      * The following reduction operations are supported
      * and are applied on the specified axis of the input array:
@@ -2570,6 +2700,7 @@ message ReduceLayerParams {
      *
      */
     enum ReduceOperation {
+
         SUM = 0;
         AVG = 1;
         PROD = 2;
@@ -2580,6 +2711,7 @@ message ReduceLayerParams {
         MAX = 7;
         MIN = 8;
         ARGMAX = 9; /// only supported with axis = C, H or W.
+
     }
     ReduceOperation mode = 1; /// Specifies function used to reduce.
 
@@ -2590,11 +2722,13 @@ message ReduceLayerParams {
     float epsilon = 2;
 
     enum ReduceAxis {
+
         CHW = 0;
         HW = 1;
         C = 2;
         H = 3;
         W = 4;
+
     }
 
     // The following mapping is used for interpreting this parameter:
@@ -2604,6 +2738,7 @@ message ReduceLayerParams {
     // H = axis [-2]
     // W = axis [-1]
     ReduceAxis axis = 3;
+
 }
 
 /**
@@ -2649,6 +2784,7 @@ message ReduceLayerParams {
  *      y = x1[:, offset[0]:offset[0] + H_out, offset[1]:offset[1] + W_out]
  */
 message CropLayerParams {
+
     /**
      * The amounts to be cropped from the input.
      * Used only if a single input is provided.
@@ -2661,6 +2797,7 @@ message CropLayerParams {
      * Must be of length 2, in order ``[H, W]``.
      */
     repeated uint64 offset = 5;
+
 }
 
 /**
@@ -2681,6 +2818,7 @@ message CropLayerParams {
  *     A blob with the same shape as each input.
  */
 message AverageLayerParams {
+
 }
 
 /**
@@ -2700,6 +2838,7 @@ message AverageLayerParams {
  *     A blob with the same shape as each input.
  */
 message MaxLayerParams {
+
 }
 
 /**
@@ -2719,6 +2858,7 @@ message MaxLayerParams {
  *     A blob with the same shape as each input.
  */
 message MinLayerParams {
+
 }
 
 /**
@@ -2740,11 +2880,13 @@ message MinLayerParams {
  *     e.g. for rank 4 inputs, output shape: [B, 1, 1, 1]
  */
 message DotProductLayerParams {
+
     /**
      * If true, inputs are normalized first,
      * thereby computing the cosine similarity.
      */
     bool cosineSimilarity = 1;
+
 }
 
 /**
@@ -2773,6 +2915,7 @@ message DotProductLayerParams {
  * across spatial dimensions (i.e. last two dimensions).
  */
 message MeanVarianceNormalizeLayerParams {
+
     /**
      * If true, mean and variance are computed across channels.
      */
@@ -2788,6 +2931,7 @@ message MeanVarianceNormalizeLayerParams {
      * Defaults to ``1e-6`` if not set or set to ``0``.
      */
     float epsilon = 3;
+
 }
 
 /**
@@ -2807,11 +2951,13 @@ message MeanVarianceNormalizeLayerParams {
  *     e.g.: for input shape ``[Seq, B, C, H, W]``, output shape is ``[nRepetitions * Seq, B, C, H, W]``.
  */
 message SequenceRepeatLayerParams {
+
     /**
      * Number of repetitions.
      * Defaults to ``1`` if not set or set to ``0``.
      */
     uint64 nRepetitions = 1;
+
 }
 
 /// Recurrent Layers
@@ -2859,6 +3005,7 @@ message SequenceRepeatLayerParams {
  * - ``clip()`` is a function that constrains values between ``[-50.0, 50.0]``
  */
 message SimpleRecurrentLayerParams {
+
     uint64 inputVectorSize = 1; /// The size of the input vectors.
     uint64 outputVectorSize = 2; /// The size of the output vectors.
 
@@ -2881,6 +3028,7 @@ message SimpleRecurrentLayerParams {
 
     bool reverseInput = 100;
     // If true, then the node processes the input sequence from right to left
+
 }
 
 /**
@@ -2942,6 +3090,7 @@ message SimpleRecurrentLayerParams {
  * - ``⊙`` denotes the elementwise product of matrices
  */
 message GRULayerParams {
+
     uint64 inputVectorSize = 1; /// Size of the input vectors.
     uint64 outputVectorSize = 2; /// Size of the output vectors.
 
@@ -2977,6 +3126,7 @@ message GRULayerParams {
 
     /// If true, then the node processes the input sequence from right to left
     bool reverseInput = 100;
+
 }
 
 /**
@@ -3035,6 +3185,7 @@ message GRULayerParams {
  * - ``⊙`` denotes the elementwise product of matrices
  */
 message LSTMParams {
+
     /**
      * If true, output is a sequence, containing outputs at all time steps.
      * If false, output is just the result after final state update.
@@ -3075,12 +3226,14 @@ message LSTMParams {
      * If 0, it is set to its default value = 50.0.
      */
     float cellClipThreshold = 60;
+
 }
 
 /**
  * Weights for long short-term memory (LSTM) layers
  */
 message LSTMWeightParams {
+
     WeightParams inputGateWeightMatrix = 1; /// Weight Matrix W_i.
     WeightParams forgetGateWeightMatrix = 2; /// Weight Matrix W_f.
     WeightParams blockInputWeightMatrix = 3; /// Weight Matrix W_z.
@@ -3101,6 +3254,7 @@ message LSTMWeightParams {
     WeightParams inputGatePeepholeVector = 60; /// Peephole vector p_i.
     WeightParams forgetGatePeepholeVector = 61; /// Peephole vector p_f.
     WeightParams outputGatePeepholeVector = 62; /// Peephole vector p_o.
+
 }
 
 /**
@@ -3122,8 +3276,9 @@ message LSTMWeightParams {
  *
  */
 message UniDirectionalLSTMLayerParams {
-    uint64 inputVectorSize = 1;  /// Size of the input vectors.
-    uint64 outputVectorSize = 2;  /// Size of the output vectors.
+
+    uint64 inputVectorSize = 1; /// Size of the input vectors.
+    uint64 outputVectorSize = 2; /// Size of the output vectors.
 
     /**
      * 3 element array representing activations [f(),g(),h()] in that order.
@@ -3138,6 +3293,7 @@ message UniDirectionalLSTMLayerParams {
 
     /// If true, then the node processes the input sequence from right to left
     bool reverseInput = 100;
+
 }
 
 /**
@@ -3186,6 +3342,7 @@ message UniDirectionalLSTMLayerParams {
  * - if ``sequenceOutput = False`` : { ``[yf_3, yb_3]`` }
  */
 message BiDirectionalLSTMLayerParams {
+
     /**
      * Size of the input vectors.
      */
@@ -3219,6 +3376,7 @@ message BiDirectionalLSTMLayerParams {
      * for the forward and backward LSTM respectively.
      */
     repeated LSTMWeightParams weightParams = 20;
+
 }
 
 message CustomLayerParams {
@@ -3250,9 +3408,9 @@ message CustomLayerParams {
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional blob.
+ *     A N-Dimensional tensor.
  * Output
- *     An N-dimensional blob of the same rank but with dimensions and data permuted according to axes.
+ *     A N-Dimensional tensor of the same rank but with dimensions and data permuted according to axes.
  *     Shape: ``[InputShape[axis[0]], InputShape[axis[1]], ... , InputShape[axis[N-1]]]``
  *
  * Examples:
@@ -3261,16 +3419,18 @@ message CustomLayerParams {
  *   then the output has shape ``[9,7,8,6]``
  */
 
-message TransposeLayerParams{
+message TransposeLayerParams {
+
     /**
      * Length of "axes" should match the rank of input & output tensor
      * "axes" should be a permutation of "[0,1,2,...,N-1]" where N is the rank.
      */
     repeated uint64 axes = 1; //
+
 }
 
 /**
- * A layer that computes the matrix multiplication of two tensors with numpy like broadcasting
+ * A layer that computes the matrix multiplication of two tensors with numpy-like broadcasting
  * where the matrices reside in the last two indices of the tensor.
  *
  * .. code::
@@ -3278,11 +3438,12 @@ message TransposeLayerParams{
  *      y = BatchedMatMul(a,b)
  *
  * Requires 1 or 2 inputs and produces 1 output.
+ *
  * The first tensor, "a", must be provided as an input. The second tensor can either be an input or provided as a weight matrix parameter.
  *
  * Input
- *     - a: First N-D tensor
- *     - b: Second N-D tensor (either an N rank input or a matrix, i.e. N=2, provided as a layer parameter)
+ *     - a: First N-Dimensional tensor
+ *     - b: Second N-Dimensional tensor (either a rank-N input or a matrix, i.e. N=2, provided as a layer parameter)
  *
  * Output
  *     A tensor containing the matrix product of two tensors.
@@ -3305,7 +3466,8 @@ message TransposeLayerParams{
  *             - if "a" is rank 3 (B1, B2, X1) --> (B1 * B2, X1). Output shape will be (B1, B2, X2)
  *             - etc
  */
-message BatchedMatMulLayerParams{
+message BatchedMatMulLayerParams {
+
     /**
      * If transposeA is true, it transposes the left matrix on the fly before matrix multiplication.
      * (is ignored when there is one input)
@@ -3336,7 +3498,6 @@ message BatchedMatMulLayerParams{
 
 }
 
-
 /**
  * A layer that concatenates a list of tensors along a specified axis.
  *
@@ -3344,26 +3505,25 @@ message BatchedMatMulLayerParams{
  *
  *      y = ConcatNDLayer(x1,x2,....)
  *
- * Requires more than 1 input and produces 1 output.
- *
+ * Requires at least 1 input and produces 1 output.
  *
  * Input
  *     A Sequence of N-dimensional tensors. The rank of the input tensors must match and all dimensions except 'axis' must be equal.
  * Output
- *     An N-dimensional tensor with the same rank .
+ *     A N-Dimensional tensor with the same rank .
  *
  *
  */
+message ConcatNDLayerParams {
 
-message ConcatNDLayerParams{
     /**
      * Dimension along which to concatenate. Supports negative values of the parameter 'axis'.
      */
     int64 axis = 1;
+
 }
 
 /**
- *
  * A layer that performs softmax normalization along a specified axis.
  *
  * .. code::
@@ -3373,99 +3533,108 @@ message ConcatNDLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor.
+ *     A N-Dimensional tensor.
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message SoftmaxNDLayerParams{
+message SoftmaxNDLayerParams {
+
     /**
      * Dimension on which the softmax would be performed. Supports negative values of the parameter 'axis'.
      */
     int64 axis = 1;
+
 }
 
-
-
+/**
+ * A layer that reverses specific dimensions of the input tensor.
+ *
+ * Requires 1 input and produces 1 output.
+ */
 message ReverseLayerParams {
+
     /**
      * Reverses each dimension of the input tensor for which corresponding reverseDim is set to True.
      * Requires len(reverseDim) == rank(inputTensor)
      */
     repeated bool reverseDim = 1;
+
 }
-
-
-
-message ReverseSeqLayerParams {
-
-    int64 batchAxis = 1;  // batch axis has to be strictly less than seq_axis
-    int64 sequenceAxis = 2;
-}
-
 
 /**
+ * A layer that reverses variable length slices.
  *
+ * Requires 2 inputs and produces 1 output.
+ *
+ */
+message ReverseSeqLayerParams {
+
+    int64 batchAxis = 1; // batch axis has to be strictly less than seq_axis
+    int64 sequenceAxis = 2;
+
+}
+
+/**
  * A layer that loads data as a parameter and provides it as an output.
  *
  * .. code::
  *
  *      y = LoadConstantNDLayer()
  *
- * Takes no input. Produces 1 output.
+ * Requires no input and produces 1 output.
  *
- * Input
- *     None
  * Output:
  *     A blob whose rank is between 1 to 4.
  */
 message LoadConstantNDLayerParams {
+
     /**
      * The shape of the constant to be loaded.
      */
     repeated uint64 shape = 1;
     WeightParams data = 2;
+
 }
 
 /**
- *
  * A layer that fills the tensor with a scalar value.
+ *
+ * Requires 1 input and produces 1 output.
  *
  * .. code::
  *
  *      y = FillLikeLayer(x)
  *
  * Input
+ *     A N-Dimensional tensor.
  *
  * Output
- *
- *
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  */
-message FillLikeLayerParams{
+message FillLikeLayerParams {
 
     float value = 1;
 
 }
 
 /**
- *
  * A layer that fills the tensor with a scalar value.
+ *
+ * Requires no input and produces 1 output.
  *
  * .. code::
  *
  *      y = FillStaticLayer(x)
  *
- * Input
- *
  * Output
- *
- *
+ *     A N-Dimensional tensor of shape targetShape.
  *
  */
-message FillStaticLayerParams{
+message FillStaticLayerParams {
 
     float value = 1;
     repeated uint64 targetShape = 2;
@@ -3473,28 +3642,30 @@ message FillStaticLayerParams{
 }
 
 /**
- *
  * A layer that fills the tensor with a scalar value.
+ *
+ * Requires 1 input and produces 1 output.
  *
  * .. code::
  *
  *      y = FillDynamicLayer(x)
  *
  * Input
+ *     A N-Dimensional tensor.
  *
  * Output
- *
- *
+ *     A N-Dimensional tensor with the same shape specified in the input tensor.
  *
  */
-message FillDynamicLayerParams{
+message FillDynamicLayerParams {
 
     float value = 1;
 
 }
 
 /**
- *
+ * A layer that returns the elements either from tensor x or tensor y,
+ * depending on the value in the condition tensor.
  *
  * .. code::
  *
@@ -3505,12 +3676,11 @@ message FillDynamicLayerParams{
  *
  *
  */
-message WhereBroadcastableLayerParams{
+message WhereBroadcastableLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric sine function.
  *
  *
@@ -3521,19 +3691,18 @@ message WhereBroadcastableLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message SinLayerParams{
+message SinLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -3544,19 +3713,18 @@ message SinLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message CosLayerParams{
+message CosLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -3567,19 +3735,18 @@ message CosLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message TanLayerParams{
+message TanLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric sine function.
  *
  *
@@ -3590,19 +3757,18 @@ message TanLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message AsinLayerParams{
+message AsinLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -3613,19 +3779,18 @@ message AsinLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message AcosLayerParams{
+message AcosLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -3636,19 +3801,18 @@ message AcosLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message AtanLayerParams{
+message AtanLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric sine function.
  *
  *
@@ -3659,19 +3823,18 @@ message AtanLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message SinhLayerParams{
+message SinhLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -3682,19 +3845,18 @@ message SinhLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message CoshLayerParams{
+message CoshLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -3705,19 +3867,18 @@ message CoshLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message TanhLayerParams{
+message TanhLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric sine function.
  *
  *
@@ -3728,19 +3889,18 @@ message TanhLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message AsinhLayerParams{
+message AsinhLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -3751,19 +3911,18 @@ message AsinhLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message AcoshLayerParams{
+message AcoshLayerParams {
 
 }
 
 /**
- *
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -3774,20 +3933,20 @@ message AcoshLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message AtanhLayerParams{
+message AtanhLayerParams {
 
 }
 /**
- *
- * A layer that raises each element in first tensor to the power of corresponding element in the second tensor.
- * Supports conventional numpy like broadcasting.
+ * A layer that raises each element in first tensor to the power of
+ * corresponding element in the second tensor.
+ * Supports conventional numpy-like broadcasting.
  *
  * .. code::
  *
@@ -3796,20 +3955,18 @@ message AtanhLayerParams{
  * Requires 2 inputs and produces 1 output.
  *
  * Input
- *     - First N-D tensor
- *     - Second N-D tensor
+ *     - First N-Dimensional tensor
+ *     - Second N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the broadcasted shape.
- *
+ *     A N-Dimensional tensor with the broadcast shape.
  *
  */
-message PowBroadcastableLayerParams{
+message PowBroadcastableLayerParams {
 
 }
 
 /**
- *
  * A layer that computes the exponential of all elements in the input tensor.
  *
  *
@@ -3820,40 +3977,65 @@ message PowBroadcastableLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor
  *
  * Output
- *     An N-dimesnional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  *
  */
-message Exp2LayerParams{
+message Exp2LayerParams {
 
-}
-
-message WhereNonZeroLayerParams{
-    
 }
 
 /**
+ * A layer that returns a tensor containing the indices of all non-zero
+ * elements of input tensor.
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ */
+message WhereNonZeroLayerParams {
+
+}
+
+/**
+ * A layer that copies a tensor setting everything outside a central band in
+ * each inner-most matrix to zero.
+ *
+ * Requires 1 input and produces 1 output.
+ *
  * Parameters for matrix_band_part layer
  * band(m, n) = (num_lower < 0 || (m-n) <= num_lower) && (num_upper < 0 || (n-m) <= num_upper).
  * output[i, j, k, ..., m, n] = band(m, n) * input[i, j, k, ..., m, n]
  */
-message MatrixBandPartLayerParams{
+message MatrixBandPartLayerParams {
 
     int64 numLower = 1;
     int64 numUpper = 2;
+
 }
 
-message UpperTriangularLayerParams{
+/**
+ * A layer that copies a tensor setting everything outside upper triangular to zero.
+ *
+ * Requires 1 input and produces 1 output.
+ */
+message UpperTriangularLayerParams {
 
     int64 k = 1; // Diagonal below which to zero elements. k = 0 (the default) is the main diagonal, k < 0 is below it and k > 0 is above
+
 }
 
-message LowerTriangularLayerParams{
+/**
+ * A layer that copies a tensor setting everything outside lower triangular to zero.
+ *
+ * Requires 1 input and produces 1 output.
+ */
+message LowerTriangularLayerParams {
 
     int64 k = 1; // Diagonal above which to zero elements. k = 0 (the default) is the main diagonal, k < 0 is below it and k > 0 is above
+
 }
 
 /**
@@ -3868,12 +4050,13 @@ message LowerTriangularLayerParams{
  * Requires 1 input and produces 1 output.
  *
  * Input
+ *     A N-Dimensional tensor.
  *
  * Output
- *
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  */
-message BroadcastToLikeLayerParams{
+message BroadcastToLikeLayerParams {
 
 }
 
@@ -3886,28 +4069,31 @@ message BroadcastToLikeLayerParams{
  *
  *      y = BroadcastToStaticLayer(x)
  *
- * Requires 1 input and produces 1 output.
+ * Requires 2 inputs and produces 1 output.
  *
  * Input
+ *     A N-Dimensional tensor.
+ *     A N-Dimensional tensor used for getting target shape.
  *
  * Output
- *
+ *     A N-Dimensional tensor of shape targetShape.
  *
  */
-message BroadcastToStaticLayerParams{
+message BroadcastToStaticLayerParams {
+
     repeated uint64 targetShape = 1;
+
 }
 
 /**
  *
  * A layer that broadcasts a tensor to a new shape.
  *
- *
  * .. code::
  *
  *      y = BroadcastToDynamicLayer(x)
  *
- * Requires 1 input and produces 1 output.
+ * Requires 2 inputs and produces 1 output.
  *
  * Input
  *
@@ -3915,66 +4101,86 @@ message BroadcastToStaticLayerParams{
  *
  *
  */
-message BroadcastToDynamicLayerParams{
+message BroadcastToDynamicLayerParams {
 
 }
 
 /**
+ * A layer that performs element-wise addition operation with broadcast support.
  *
- *
- *
+ * Requires 2 inputs and produces 1 output.
  */
-message AddBroadcastableLayerParams{
-
-}
-
-message MaxBroadcastableLayerParams{
-
-}
-
-message MinBroadcastableLayerParams{
+message AddBroadcastableLayerParams {
 
 }
 
 /**
+ * A layer that performs element-wise maximum operation with broadcast support.
  *
+ * Requires 2 inputs and produces 1 output.
  */
-message ModBroadcastableLayerParams{
-
-}
-
-message FloorDivBroadcastableLayerParams{
+message MaxBroadcastableLayerParams {
 
 }
 
 /**
+ * A layer that performs element-wise minimum operation with broadcast support.
  *
- *
- *
+ * Requires 2 inputs and produces 1 output.
  */
-message SubtractBroadcastableLayerParams{
+message MinBroadcastableLayerParams {
 
 }
 
 /**
+ * A layer that performs element-wise modular operation with broadcast support.
  *
- *
- *
+ * Requires 2 inputs and produces 1 output.
  */
-message MultiplyBroadcastableLayerParams{
+message ModBroadcastableLayerParams {
 
 }
 
 /**
+ * A layer that performs element-wise floor division operation with broadcast support.
  *
- *
- *
+ * Requires 2 inputs and produces 1 output.
  */
-message DivideBroadcastableLayerParams{
+message FloorDivBroadcastableLayerParams {
 
 }
 
 /**
+ * A layer that performs element-wise subtract operation with broadcast support.
+ *
+ * Requires 2 inputs and produces 1 output.
+ */
+message SubtractBroadcastableLayerParams {
+
+}
+
+/**
+ * A layer that performs element-wise multiply operation with broadcast support.
+ *
+ * Requires 2 inputs and produces 1 output.
+ */
+message MultiplyBroadcastableLayerParams {
+
+}
+
+/**
+ * A layer that performs element-wise division operation with broadcast support.
+ *
+ * Requires 2 inputs and produces 1 output.
+ */
+message DivideBroadcastableLayerParams {
+
+}
+
+/**
+ * Gather layer that gathers elements or slices from data and store to a tensor
+ * whose shape is defined by indices from the input. This is the reverse
+ * operation of the scatter operation.
  *
  * Requires 2 inputs and produces 1 output.
  *
@@ -3984,23 +4190,29 @@ message DivideBroadcastableLayerParams{
  * Support negative indices and negative axis
  *
  */
-message GatherLayerParams{
+message GatherLayerParams {
+
     int64 axis = 1;
-}
 
-
-enum ScatterMode {
-    SCATTER_UPDATE = 0;
-    SCATTER_ADD=1; /// add
-    SCATTER_SUB=2; /// subtract
-    SCATTER_MUL=3; /// multiply
-    SCATTER_DIV=4; /// divide
-    SCATTER_MAX=5; /// maximum
-    SCATTER_MIN=6; /// minimum
 }
 
 /*
- * Scatter operation.
+ * Scatter accumulation mode.
+ */
+enum ScatterMode {
+
+    SCATTER_UPDATE = 0;
+    SCATTER_ADD = 1; /// add
+    SCATTER_SUB = 2; /// subtract
+    SCATTER_MUL = 3; /// multiply
+    SCATTER_DIV = 4; /// divide
+    SCATTER_MAX = 5; /// maximum
+    SCATTER_MIN = 6; /// minimum
+
+}
+
+/*
+ * A layer that scatters data into a new tensor according to indices from the input.
  *
  * Requires 3 inputs and produces 1 output.
  *
@@ -4029,53 +4241,88 @@ enum ScatterMode {
  */
 
 message ScatterLayerParams {
+
     int64 axis = 1;
     ScatterMode mode = 2; /// mode of accumulation.
+
 }
 
-message GatherNDLayerParams{
+/**
+ * A layer that gathers elements or slices from data and store to a tensor
+ * whose shape is defined by indices from the input. This is the reverse
+ * operation of the scatter operation.
+ *
+ * Requires 2 inputs and produces 1 output.
+ */
+message GatherNDLayerParams {
 
 }
 
 /*
+ * A layer that scatters data into a new tensor according to indices from the input.
+ *
  * Given three inputs, container, indices, slices, where:
- * - container is an N-Dimensional array
+ * - container is A N-Dimensional array
  * - indices is a 2-Dimensional array [Ni, L], where Ni is the number of slices,
  *   L = 1, ..., 5, indicating the N-Dimensional index of slices.
  *   Each index is a vector of dimension L.
  *   For each i = 1, ..., L, if index[i] > 0, the slice at index[i] is retrieved.
  *   If index[i] < 0, the entire slice is retrieved.
- * - slices is a N-Dimensional array of size [Ni, ...,]
+ * - slices is A N-Dimensional array of size [Ni, ...,]
  * The effect of this operation is as follows:
  * output = array;
  * For each i in 1, ..., Ni
  * output[indices[i]] = value[i,:]
  *
+ * Requires 3 inputs and produces 1 output.
  */
-message ScatterNDLayerParams{
+message ScatterNDLayerParams {
 
     ScatterMode mode = 1; /// mode of accumulation.
+
 }
 
-message GatherAlongAxisLayerParams{
+/**
+ * A layer that gathers elements or slices from data and store to a tensor
+ * whose shape is defined by indices from the input along the given axis into
+ * the output tensor.
+ *
+ * Requires 2 inputs and produces 1 output.
+ */
+message GatherAlongAxisLayerParams {
+
     int64 axis = 1;
+
 }
 
-message ScatterAlongAxisLayerParams{
+/**
+ * A layer that scatters data into a new tensor according to indices from
+ * the input along the given axis into the output tensor.
+ *
+ * Requires 3 inputs and produces 1 output.
+ */
+message ScatterAlongAxisLayerParams {
+
     int64 axis = 1;
     ScatterMode mode = 2; /// mode of accumulation.
+
 }
 
 /**
+ * A layer that performs stack operation on a list of tensors into one
+ * rank + 1 tensor on the given axis.
  * Support negative indexing
  *
+ * Requires at least 2 inputs and produces 1 output.
  */
-message StackLayerParams{
+message StackLayerParams {
+
     int64 axis = 1;
+
 }
 
 /**
- * Reshape layer that does not alter the rank of the input.
+ * A layer that reshapes a tensor that does not alter the rank of the input.
  * Order of the data is left unchanged.
  *
  * Requires 1 input and produces 1 output.
@@ -4097,6 +4344,7 @@ message StackLayerParams{
  *
  */
 message RankPreservingReshapeLayerParams {
+
     /**
      * Length of this field must be same as the input/output rank.
      * It can have 0's, in which case the corresponding input dimension is kept intact.
@@ -4107,14 +4355,21 @@ message RankPreservingReshapeLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random normal values.
+ * A layer that returns a tensor of the specified shape filled with random normal distribution.
  *
- * Input:
+ * Requires 1 input and produces 1 output.
+ *
+ * Parameters
  *     seed: seed used for the normal distribution.
  *     mean: mean of the normal distribution.
  *     stdDev: standard deviation of the normal distribution.
  *
- * Output:
+ * Input
+ *     A N-Dimensional tensor.
+ *
+ * Output
+ *     A N-Dimensional tensor with the same shape as input tensor.
+ *
  */
 message RandomNormalLikeLayerParams {
 
@@ -4125,15 +4380,19 @@ message RandomNormalLikeLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random normal values.
+ * A layer that returns a tensor of the specified shape filled with random normal distribution.
  *
- * Input:
+ * Requires no input and produces 1 output.
+ *
+ * Parameters
  *     seed: seed used for the normal distribution.
  *     mean: mean of the normal distribution.
  *     stdDev: standard deviation of the normal distribution.
  *     outputShape: shape of the ouput tensor.
  *
- * Output:
+ * Output
+ *     A N-Dimensional tensor of shape outputShape.
+ *
  */
 message RandomNormalStaticLayerParams {
 
@@ -4145,7 +4404,9 @@ message RandomNormalStaticLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random normal values.
+ * A layer that returns a tensor of the specified shape filled with random normal distribution.
+ *
+ * Requires 1 input and produces 1 output.
  *
  * Input:
  *     seed: seed used for the normal distribution.
@@ -4163,14 +4424,20 @@ message RandomNormalDynamicLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random uniform values.
+ * A layer that returns a tensor of the specified shape filled with random uniform distribution.
  *
- * Input:
+ * Requires 1 input and produces 1 output.
+ *
+ * Parameters
  *     seed: seed used for the uniform distribution.
  *     minVal: lower bound on the range of random values for the uniform distribution.
  *     maxVal: upper bound on the range of random values for the uniform distribution.
  *
- * Output:
+ * Input
+ *     A N-Dimensional tensor.
+ *
+ * Output
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  */
 message RandomUniformLikeLayerParams {
@@ -4182,15 +4449,18 @@ message RandomUniformLikeLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random uniform values.
+ * A layer that returns a tensor of the specified shape filled with random uniform distribution.
  *
- * Input:
+ * Requires no input and produces 1 output.
+ *
+ * Parameters
  *     seed: seed used for the uniform distribution.
  *     minVal: lower bound on the range of random values for the uniform distribution.
  *     maxVal: upper bound on the range of random values for the uniform distribution.
- *     outputShape: shape of the ouput tensor.
+ *     outputShape: shape of the output tensor.
  *
- * Output:
+ * Output
+ *     A N-Dimensional tensor of shape outputShape.
  *
  */
 message RandomUniformStaticLayerParams {
@@ -4203,9 +4473,11 @@ message RandomUniformStaticLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random uniform values.
+ * A layer that returns a tensor of the specified shape filled with random uniform distribution.
  *
- * Input:
+ * Requires 1 input and produces 1 output.
+ *
+ * Parameters:
  *     seed: seed used for the uniform distribution.
  *     minVal: lower bound on the range of random values for the uniform distribution.
  *     maxVal: upper bound on the range of random values for the uniform distribution.
@@ -4222,13 +4494,20 @@ message RandomUniformDynamicLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random Bernoulli distribution.
+ * A layer that returns a tensor of the specified shape filled with Bernoulli distribution.
  *
- * Input:
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ * Parameters
  *     seed: seed used for the Bernoulli distribution.
  *     prob: probability of a 1 event.
  *
- * Output:
+ * Input
+ *     A N-Dimensional tensor.
+ *
+ * Output
+ *     A N-Dimensional tensor with the same shape as input tensor.
  *
  */
 message RandomBernoulliLikeLayerParams {
@@ -4239,15 +4518,17 @@ message RandomBernoulliLikeLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random Bernoulli distribution.
+ * A layer that returns a tensor of the specified shape filled with Bernoulli distribution.
  *
- * Input:
+ * Requires no input and produces 1 output.
+ *
+ * Parameters
  *     seed: seed used for the Bernoulli distribution.
  *     prob: probability of a 1 event.
- *     outputShape: shape of the ouput tensor.
+ *     outputShape: shape of the output tensor.
  *
- * Output:
- *
+ * Output
+ *     A N-Dimensional tensor of shape outputShape.
  */
 message RandomBernoulliStaticLayerParams {
 
@@ -4258,14 +4539,13 @@ message RandomBernoulliStaticLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with random Bernoulli distribution.
+ * A layer that returns a tensor of the specified shape filled with Bernoulli distribution.
  *
- * Input:
+ * Requires 1 input and produces 1 output.
+ *
+ * Parameters:
  *     seed: seed used for the Bernoulli distribution.
  *     prob: probability of a 1 event.
- *
- * Output:
- *
  */
 message RandomBernoulliDynamicLayerParams {
 
@@ -4275,7 +4555,9 @@ message RandomBernoulliDynamicLayerParams {
 }
 
 /**
- * A tensor of the specified shape filled with categorical distribution.
+ * A layer that returns a tensor of the specified shape filled with categorical distribution.
+ *
+ * Requires 1 input and produces 1 output.
  *
  * Input:
  *     seed: seed used for the categorical distribution.
@@ -4284,7 +4566,7 @@ message RandomBernoulliDynamicLayerParams {
  *     eps: default value is 1e-10.
  *     temperature: default value is 1.0.
  * Output:
- *
+ *     tensor.
  */
 message CategoricalDistributionLayerParams {
 
@@ -4295,13 +4577,15 @@ message CategoricalDistributionLayerParams {
     float temperature = 5;
 }
 
-
 /**
+ * A layer that performs reduction with L1 normalization operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceL1LayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4309,11 +4593,14 @@ message ReduceL1LayerParams {
 }
 
 /**
+ * A layer that performs reduction with L2 normalization operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceL2LayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4321,11 +4608,14 @@ message ReduceL2LayerParams {
 }
 
 /**
+ * A layer that performs reduction with max operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceMaxLayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4333,11 +4623,14 @@ message ReduceMaxLayerParams {
 }
 
 /**
+ * A layer that performs reduction with min operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceMinLayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4345,11 +4638,14 @@ message ReduceMinLayerParams {
 }
 
 /**
+ * A layer that performs reduction with sum operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceSumLayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4357,11 +4653,14 @@ message ReduceSumLayerParams {
 }
 
 /**
+ * A layer that performs reduction with prod operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceProdLayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4369,11 +4668,14 @@ message ReduceProdLayerParams {
 }
 
 /**
+ * A layer that performs reduction with mean operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceMeanLayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4381,11 +4683,14 @@ message ReduceMeanLayerParams {
 }
 
 /**
+ * A layer that performs reduction with logSum operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceLogSumLayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4393,11 +4698,14 @@ message ReduceLogSumLayerParams {
 }
 
 /**
+ * A layer that performs reduction with logSumExp operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceSumSquareLayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4405,11 +4713,14 @@ message ReduceSumSquareLayerParams {
 }
 
 /**
+ * A layer that performs reduction with logSumExp operation.
+ *
+ * Negative indexing is supported.
+ * Requires 1 input and produces 1 output.
+ *
  */
 message ReduceLogSumExpLayerParams {
-    /**
-     * Negative indexing is supported.
-     */
+
     repeated int64 axes = 1;
     bool keepDims = 2;
     bool reduceAll = 3;
@@ -4417,7 +4728,7 @@ message ReduceLogSumExpLayerParams {
 }
 
 /**
- * Increase the rank of the input tensor by adding unit dimensions.
+ * A layer that increases the rank of the input tensor by adding unit dimensions.
  *
  * Requires 1 input and produces 1 output.
  *
@@ -4437,30 +4748,56 @@ message ReduceLogSumExpLayerParams {
  *
  */
 message ExpandDimsLayerParams {
+
     /**
      * Axis values provided here get dimension 1 in the output tensor.
      * Negative indexing is supported.
      */
     repeated int64 axes = 1;
+
 }
 
 /**
+ * A layer that flattens the input tensor into a 2-dimensional matrix.
+ *
+ * Requires 1 input and produces 1 output.
  *
  */
 message FlattenTo2DLayerParams {
 
     int64 axis = 1;
+
 }
 
 /**
+ * A layer that reshapes a tensor.
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ * Input
+ *     A N-Dimensional tensor.
+ *
+ * Output
+ *     A N-Dimensional tensor of shape targetShape.
  *
  */
 message ReshapeStaticLayerParams {
 
     repeated int64 targetShape = 1;
+
 }
 
 /**
+ * A layer that reshapes a tensor.
+ *
+ * Requires 2 inputs and produces 1 output.
+ *
+ * Input
+ *     A N-Dimensional tensor.
+ *     A N-Dimensional tensor used for getting output shape.
+ *
+ * Output
+ *     A N-Dimensional tensor with the same shape as the second input tensor.
  *
  */
 message ReshapeLikeLayerParams {
@@ -4468,14 +4805,16 @@ message ReshapeLikeLayerParams {
 }
 
 /**
+ * A layer that reshapes a tensor.
  *
+ * Requires 2 inputs and produces 1 output.
  */
 message ReshapeDynamicLayerParams {
 
 }
 
 /**
- * Decrease the rank of the input tensor by removing unit dimensions.
+ * A layer that decreases the rank of the input tensor by removing unit dimensions.
  *
  * Requires 1 input and produces 1 output.
  *
@@ -4502,24 +4841,27 @@ message ReshapeDynamicLayerParams {
  *
  */
 message SqueezeLayerParams {
+
     /**
      * Axis values provided here get removed from the input tensor.
      * Negative indexing is supported.
      */
     repeated int64 axes = 1;
-    bool squeezeAll = 2; // if true squeeze all dimensions that are 1. 
+    bool squeezeAll = 2; // if true squeeze all dimensions that are 1.
+
 }
 
 /**
- * Return top K (or bottom K) values and the corresponding indices
+ * A layer that returns top K (or bottom K) values and the corresponding indices
  * of the input along a given axis.
  *
  * Requires 1 or 2 inputs and produces 2 outputs.
+ *
  * The second input is the value of the K, and is optional.
  * If there is only one input, value of K that is specified in the layer parameter is used.
  *
  * Both outputs have the same rank as the first input.
- * Second input must correspond to a scalar tensor. 
+ * Second input must correspond to a scalar tensor.
  *
  * e.g.:
  *
@@ -4529,15 +4871,17 @@ message SqueezeLayerParams {
  *
  */
 message TopKLayerParams {
+
     int64 axis = 1; ///  negative indexing is supported
     uint64 K = 2; /// is ignored if a second input is present.
     bool useBottomK = 3; /// if true, bottom K (values, indices) are returned instead
+
 }
 
 /**
- * Return the indices of the maximum value along a specified axis in a tensor.
+ * A layer that returns the indices of the maximum value along a specified axis in a tensor.
  *
- * Requires 1 input and produces 1 output.
+ * Requires 1 input and produces 1 output. Negative indexing is supported.
  *
  * Output has the same rank as the input if "removeDim" is False (default).
  * Output has rank one less than the input if "removeDim" is True and input rank is more than 1.
@@ -4555,14 +4899,16 @@ message TopKLayerParams {
  *
  */
 message ArgMaxLayerParams {
-    int64 axis = 1; ///  negative indexing is supported
+
+    int64 axis = 1;
     bool removeDim = 2;
+
 }
 
 /**
-* Return the indices of the minimum value along a specified axis in a tensor.
+* A layer that returns the indices of the minimum value along a specified axis in a tensor.
 *
-* Requires 1 input and produces 1 output.
+* Requires 1 input and produces 1 output. Negative indexing is supported.
 *
 * Output has the same rank as the input if "removeDim" is False (default).
 * Output has rank one less than the input if "removeDim" is True and input rank is more than 1.
@@ -4580,69 +4926,84 @@ message ArgMaxLayerParams {
 *
 */
 message ArgMinLayerParams {
-    int64 axis = 1; ///  negative indexing is supported
-    bool removeDim = 2;
-}
-
-/**
- * Support unequal splits and negative indexing
- *
- */
-message SplitNDLayerParams{
 
     int64 axis = 1;
+    bool removeDim = 2;
 
+}
+
+/**
+ * A layer layer that splits the input tensor into multiple output tensors.
+ * Either uniformly split the input tensor into ``num_splits`` tensors, or
+ * split into given size list ``split_sizes`` output tensors.
+ * Support unequal splits and negative indexing.
+ *
+ * Requires 1 input and produces at least 2 outputs.
+ */
+message SplitNDLayerParams {
+
+    int64 axis = 1;
     uint64 numSplits = 2;
-
     repeated uint64 splitSizes = 3;
-}
-
-/**
- *
- *
- *
- */
-message CeilLayerParams{
 
 }
 
 /**
- *
- *
- *
- */
-message RoundLayerParams{
-
-}
-
-/**
- *
- *
- *
- */
-message FloorLayerParams{
-
-}
-
-/**
- *
- *
- *
- */
-message SignLayerParams{
-
-}
-
-/**
- * Clip the input value within a minimum and maximum threshold values
+ * A layer that performs element-wise ceil operation on the input tensor that
+ * rounds the value to the smallest integer not less than x.
  *
  * Requires 1 input and produces 1 output.
+ *
+ */
+message CeilLayerParams {
+
+}
+
+/**
+ * A layer that performs element-wise round operation on the input tensor
+ * that rounds the value to the nearest integer.
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ */
+message RoundLayerParams {
+
+}
+
+/**
+ * A layer that performs element-wise floor operation on the input tensor
+ * that rounds the value to the largest integer not greater than x.
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ */
+message FloorLayerParams {
+
+}
+
+/**
+ * A layer that performs element-wise sign operation (+1 for positive values,
+ * -1 for negative values, 0 for zeroes).
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ */
+message SignLayerParams {
+
+}
+
+/**
+ * A layer that performs element-wise clip operation. Clip the values in the
+ * input tensor to the threshold values [min_value, max_value].
+ *
+ * Requires 1 input and produces 1 output.
+ *
  * Parameter minVal: the minimum threshold.
  * Parameter maxVal: the maximum threshold.
  *
  * output =  min(max(input, minVal), maxVal)
  */
-message ClipLayerParams{
+message ClipLayerParams {
 
     float minVal = 1;
     float maxVal = 2;
@@ -4650,45 +5011,60 @@ message ClipLayerParams{
 }
 
 /**
- * Support negative indexing and negative strides
+ * A layer that extracts a slice of size ``(end - begin) / stride``
+ * from the given input tensor.
+ * Support negative indexing and negative strides.
  *
+ * Requires 1 input and produces 1 output.
+ *
+ * Value of beginIds, beginMasks, endIds, endMasks, strides are required parameters.
  */
-message SliceStaticLayerParams{
+message SliceStaticLayerParams {
 
     repeated int64 beginIds = 1;
-    repeated bool  beginMasks = 2;
-
-    repeated int64 endIds   = 3;
-    repeated bool  endMasks = 4;
-
+    repeated bool beginMasks = 2;
+    repeated int64 endIds = 3;
+    repeated bool endMasks = 4;
     repeated int64 strides = 5;
 
 }
 
 /**
- * Support negative indexing and negative strides
+ * A layer that extracts a slice of size ``(end - begin) / stride``
+ * from the given input tensor.
+ * Support negative indexing and negative strides.
  *
+ * Requires 2 to 6 inputs and produces 1 output.
+ *
+ * Value of beginIds, beginMasks, endIds, endMasks, strides can be pass in either
+ * as dynamic inputs or as static parameters.
  */
-message SliceDynamicLayerParams{
+message SliceDynamicLayerParams {
 
-    repeated bool  beginMasks = 2;
-
-    repeated int64 endIds   = 3;
-    repeated bool  endMasks = 4;
-
+    repeated bool beginMasks = 2;
+    repeated int64 endIds = 3;
+    repeated bool endMasks = 4;
     repeated int64 strides = 5;
+
 }
 
 /**
+ * A layer that construct a tensor by repeating the input tensor multiple
+ * number of times.
  *
- *
+ * Requires 1 input and produces 1 output.
  */
-message TileLayerParams{
+message TileLayerParams {
 
     repeated uint64 reps = 1;
+
 }
 
 /**
+ * A layer that returns the shape of an input tensor.
+ *
+ * Requires 1 input and produces 1 output.
+ *
  * Input: a tensor.
  * Output: a vector of length R, where R is the rank of the input tensor
  */
@@ -4697,7 +5073,7 @@ message GetShapeLayerParams {
 }
 
 /**
- * Error function (also known as Gauss error function)
+ * A layer that adds Gauss error function.
  *
  * Requires 1 input and produces 1 output.
  */
@@ -4706,30 +5082,41 @@ message ErfLayerParams {
 }
 
 /**
- * Gaussian error linear unit activation, which is:
+ * A layer that adds Gaussian Error Linear Unit (GELU) activation, which is:
  *
- * y = 0.5 * x * (1 + erf(x/sqrt(2)))
+ * ``y = 0.5 * x * (1 + erf(x/sqrt(2)))``
  *
  * Requires 1 input and produces 1 output.
  */
 message GeluLayerParams {
 
     enum GeluMode {
+
         EXACT = 0;
         TANH_APPROXIMATION = 1;
         SIGMOID_APPROXIMATION = 2;
+
     }
 
     GeluMode mode = 1; /// mode of Gelu operation.
+
 }
 
 /**
- * RangeStatic function.
+ * RangeStatic layer that returns a tensor that contains evenly spaced values.
  *
- * Requires either three inputs in order: end, start, stepSize.
- * Each input is a scalar, or rank 1 and shape (1,).
+ * Requires no input, 3 parameters, and produces 1 output.
  *
- * Similar as np.arange() function.
+ * Parameters
+ *     endValue
+ *     startValue
+ *     stepSizeValue
+ *
+ * Input
+ *     A tensor.
+ *
+ * Output
+ *     A tensor.
  */
 message RangeStaticLayerParams {
 
@@ -4740,9 +5127,9 @@ message RangeStaticLayerParams {
 }
 
 /**
- * RangeDynamic function.
+ * A layer that returns a tensor that contains evenly spaced values.
  *
- * Requires either no input, 1 input, 2 inputs, or 3 inputs and produces 1 output.
+ * Requires 0-3 inputs, 0-3 parameters and produces 1 output.
  *
  * The three inputs are in order: end, start, stepSize.
  * Each input is a scalar, or rank 1 and shape (1,).
@@ -4753,9 +5140,7 @@ message RangeStaticLayerParams {
  * When there are 3 inputs, end, start and stepSize. Nothing in parameters will be used.
  * Produces a rank 1 output.
  *
- * Similar as np.arange() function.
  */
-
 message RangeDynamicLayerParams {
 
     float startValue = 2;
@@ -4764,8 +5149,8 @@ message RangeDynamicLayerParams {
 }
 
 /**
- * A layer that returns a tensor containing all windows of size "window_size"
- * separated by "step" along the dimension "axis".
+ * A layer that returns a tensor containing all windows of size ``windowSize``
+ * separated by ``step`` along the dimension ``axis``.
  *
  * .. code::
  *
@@ -4774,29 +5159,45 @@ message RangeDynamicLayerParams {
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     An N-dimensional tensor
+ *     A N-Dimensional tensor.
  *
  * Output
- *     A N+1 dimensioal tensor
+ *     A N+1 dimensional tensor.
  *
  * This operation behaves as following:
  *      - if axis = 0 & input is rank 1 (L,). Output shape will be (M, W).
  *      - if axis = 1 & input is rank 3 (B1, L, C1). Output shape will be (B1, M, W, C1)
  *      - if axis = 2 & input is rank 5 (B1, B2, L, C1, C2) --> (B1 * B2, L, C1 * C2) --> (B1 * B2, M, W, C1 * C2). Output shape will be (B1, B2, M, W, C1, C2)
- *      - etc
+ *      - etc.
  * where
  *      - L, C, B refer to input length, feature dimension length & batch size respectively
  *      - W is the window size.
  *      - M is the number of windows/slices calculated as M = (L - W) / step + 1
  */
 message SlidingWindowsLayerParams {
+
     int64 axis = 1;
     uint64 windowSize = 2;
     uint64 step = 3;
+
 }
 
 /**
+ * A layer that applies layer normalization over the input tensor.
  *
+ * Requires 1 input and produces 1 output.
+ *
+ * Parameters
+ *     normalizedShape:
+ *     gamma:
+ *     beta:
+ *     eps:
+ *
+ * Input
+ *     A N-Dimensional tensor.
+ *
+ * Output
+ *     A N-Dimensional tensor.
  */
 message LayerNormalizationLayerParams {
 
@@ -4814,6 +5215,7 @@ message LayerNormalizationLayerParams {
  * A neural network specialized as a classifier.
  */
 message NeuralNetworkClassifier {
+
     repeated NeuralNetworkLayer layers = 1;
     repeated NeuralNetworkPreprocessing preprocessing = 2;
 
@@ -4838,12 +5240,14 @@ message NeuralNetworkClassifier {
      * probabilities of each class label.
      */
     string labelProbabilityLayerName = 200;
+
 }
 
 /**
  * A neural network specialized as a regressor.
  */
 message NeuralNetworkRegressor {
+
     repeated NeuralNetworkLayer layers = 1;
     repeated NeuralNetworkPreprocessing preprocessing = 2;
 
@@ -4854,32 +5258,40 @@ message NeuralNetworkRegressor {
     NeuralNetworkImageShapeMapping imageInputShapeMapping = 6;
 
     NetworkUpdateParameters updateParams = 10;
+
 }
 
-
+/// ---------------------------------------------------------
 /// On-device Training related messages
 /// ---------------------------------------------------------
-/*
+
+/**
  * Details on how the network will be updated
  */
 message NetworkUpdateParameters {
+
     repeated LossLayer lossLayers = 1;
     Optimizer optimizer = 2;
     Int64Parameter epochs = 3;
+
 }
 
-/*
+/**
  * Loss layer - categorical cross entropy and mean squared error are the only supported loss functions currently
  */
 message LossLayer {
+
     string name = 1;
     oneof LossLayerType {
+
         CategoricalCrossEntropyLossLayer categoricalCrossEntropyLossLayer = 10;
         MeanSquaredErrorLossLayer meanSquaredErrorLossLayer = 11;
+
     }
+
 }
 
-/*
+/**
  * Categorical cross entropy loss layer
  * Categorical cross entropy is used for single label categorization (only one category is applicable for each data point).
  *
@@ -4891,47 +5303,59 @@ message LossLayer {
  * Loss_{CCE}(input, target) = -\sum_{i=1}^{N} (target == i) log( input[i] ) = - log (input[target])
  */
 message CategoricalCrossEntropyLossLayer {
+
     string input = 1;
     string target = 2;
+
 }
 
-/*
+/**
  * Mean squared error loss layer,
  * specifying input and target
  */
 message MeanSquaredErrorLossLayer {
+
     string input = 1;
     string target = 2;
+
 }
 
-/*
+/**
  * Optimizer - stochastic gradient descent and adam are the only supported optimizers currently
  */
 message Optimizer {
+
     oneof OptimizerType {
+
         SGDOptimizer sgdOptimizer = 10;
         AdamOptimizer adamOptimizer = 11;
+
     }
+
 }
 
-/*
+/**
  * Stochastic gradient descent optimizer,
  * specifying configurable learning rate, mini batch size, and momentum
  */
 message SGDOptimizer {
+
     DoubleParameter learningRate = 1;
     Int64Parameter miniBatchSize = 2;
     DoubleParameter momentum = 3;
+
 }
 
-/*
+/**
  * Adam optimizer,
  * specifying configurable learning rate, mini batch size, betas, and eps
  */
 message AdamOptimizer {
+
     DoubleParameter learningRate = 1;
     Int64Parameter miniBatchSize = 2;
     DoubleParameter beta1 = 3;
     DoubleParameter beta2 = 4;
     DoubleParameter eps = 5;
+
 }
