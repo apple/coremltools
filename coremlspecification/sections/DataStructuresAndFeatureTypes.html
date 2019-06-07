@@ -17,41 +17,35 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="prev" title="Linked Model" href="LinkedModel.html"/> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Linked Model" href="LinkedModel.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -136,7 +130,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">mlmodel</a>
@@ -144,9 +138,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -194,14 +189,14 @@
 <h2>StringToInt64Map<a class="headerlink" href="#stringtoint64map" title="Permalink to this headline">¶</a></h2>
 <p>A mapping from a string
 to a 64-bit integer.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
     <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <div class="section" id="stringtoint64map-mapentry">
 <h3>StringToInt64Map.MapEntry<a class="headerlink" href="#stringtoint64map-mapentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
 <span class="c1">//</span>
 <span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -266,14 +261,14 @@ to a 64-bit integer.</p>
 <h2>Int64ToStringMap<a class="headerlink" href="#int64tostringmap" title="Permalink to this headline">¶</a></h2>
 <p>A mapping from a 64-bit integer
 to a string.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
     <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <div class="section" id="int64tostringmap-mapentry">
 <h3>Int64ToStringMap.MapEntry<a class="headerlink" href="#int64tostringmap-mapentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
 <span class="c1">//</span>
 <span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -338,14 +333,14 @@ to a string.</p>
 <h2>StringToDoubleMap<a class="headerlink" href="#stringtodoublemap" title="Permalink to this headline">¶</a></h2>
 <p>A mapping from a string
 to a double-precision floating point number.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
     <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <div class="section" id="stringtodoublemap-mapentry">
 <h3>StringToDoubleMap.MapEntry<a class="headerlink" href="#stringtodoublemap-mapentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
 <span class="c1">//</span>
 <span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -410,14 +405,14 @@ to a double-precision floating point number.</p>
 <h2>Int64ToDoubleMap<a class="headerlink" href="#int64todoublemap" title="Permalink to this headline">¶</a></h2>
 <p>A mapping from a 64-bit integer
 to a double-precision floating point number.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
     <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <div class="section" id="int64todoublemap-mapentry">
 <h3>Int64ToDoubleMap.MapEntry<a class="headerlink" href="#int64todoublemap-mapentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
 <span class="c1">//</span>
 <span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -481,7 +476,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="stringvector">
 <h2>StringVector<a class="headerlink" href="#stringvector" title="Permalink to this headline">¶</a></h2>
 <p>A vector of strings.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -490,7 +485,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="int64vector">
 <h2>Int64Vector<a class="headerlink" href="#int64vector" title="Permalink to this headline">¶</a></h2>
 <p>A vector of 64-bit integers.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -499,7 +494,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="floatvector">
 <h2>FloatVector<a class="headerlink" href="#floatvector" title="Permalink to this headline">¶</a></h2>
 <p>A vector of floating point numbers.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FloatVector</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FloatVector</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">float</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -508,7 +503,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="doublevector">
 <h2>DoubleVector<a class="headerlink" href="#doublevector" title="Permalink to this headline">¶</a></h2>
 <p>A vector of double-precision floating point numbers.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -517,7 +512,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="int64range">
 <h2>Int64Range<a class="headerlink" href="#int64range" title="Permalink to this headline">¶</a></h2>
 <p>A range of int64 values</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Range</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Range</span> <span class="p">{</span>
     <span class="kt">int64</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">int64</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -527,7 +522,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="int64set">
 <h2>Int64Set<a class="headerlink" href="#int64set" title="Permalink to this headline">¶</a></h2>
 <p>A set of int64 values</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Set</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Set</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">values</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -536,7 +531,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="doublerange">
 <h2>DoubleRange<a class="headerlink" href="#doublerange" title="Permalink to this headline">¶</a></h2>
 <p>A range of double values</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleRange</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleRange</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -546,27 +541,27 @@ to a double-precision floating point number.</p>
 <div class="section" id="int64featuretype">
 <h2>Int64FeatureType<a class="headerlink" href="#int64featuretype" title="Permalink to this headline">¶</a></h2>
 <p>The 64-bit integer feature type.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64FeatureType</span> <span class="p">{}</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64FeatureType</span> <span class="p">{}</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="doublefeaturetype">
 <h2>DoubleFeatureType<a class="headerlink" href="#doublefeaturetype" title="Permalink to this headline">¶</a></h2>
 <p>The double-precision floating point number feature type.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleFeatureType</span> <span class="p">{}</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleFeatureType</span> <span class="p">{}</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="stringfeaturetype">
 <h2>StringFeatureType<a class="headerlink" href="#stringfeaturetype" title="Permalink to this headline">¶</a></h2>
 <p>The string feature type.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringFeatureType</span> <span class="p">{}</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringFeatureType</span> <span class="p">{}</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="sizerange">
 <h2>SizeRange<a class="headerlink" href="#sizerange" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SizeRange</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SizeRange</span> <span class="p">{</span>
     <span class="kt">uint64</span> <span class="na">lowerBound</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">int64</span> <span class="na">upperBound</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// negative value means unbound otherwise upperbound is included in range</span>
 <span class="p">}</span>
@@ -576,7 +571,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="imagefeaturetype">
 <h2>ImageFeatureType<a class="headerlink" href="#imagefeaturetype" title="Permalink to this headline">¶</a></h2>
 <p>The image feature type.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageFeatureType</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageFeatureType</span> <span class="p">{</span>
     <span class="c1">// Assumes raw (decompressed) format</span>
     <span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
         <span class="na">INVALID_COLOR_SPACE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -645,7 +640,7 @@ to a double-precision floating point number.</p>
 </div>
 <div class="section" id="imagefeaturetype-imagesize">
 <h3>ImageFeatureType.ImageSize<a class="headerlink" href="#imagefeaturetype-imagesize" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageSize</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageSize</span> <span class="p">{</span>
     <span class="kt">uint64</span> <span class="na">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">uint64</span> <span class="na">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -654,7 +649,7 @@ to a double-precision floating point number.</p>
 </div>
 <div class="section" id="imagefeaturetype-enumeratedimagesizes">
 <h3>ImageFeatureType.EnumeratedImageSizes<a class="headerlink" href="#imagefeaturetype-enumeratedimagesizes" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EnumeratedImageSizes</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EnumeratedImageSizes</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">ImageSize</span> <span class="na">sizes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -662,7 +657,7 @@ to a double-precision floating point number.</p>
 </div>
 <div class="section" id="imagefeaturetype-imagesizerange">
 <h3>ImageFeatureType.ImageSizeRange<a class="headerlink" href="#imagefeaturetype-imagesizerange" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageSizeRange</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageSizeRange</span> <span class="p">{</span>
     <span class="n">SizeRange</span> <span class="na">widthRange</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="n">SizeRange</span> <span class="na">heightRange</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -673,7 +668,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="arrayfeaturetype">
 <h2>ArrayFeatureType<a class="headerlink" href="#arrayfeaturetype" title="Permalink to this headline">¶</a></h2>
 <p>The array feature type.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ArrayFeatureType</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ArrayFeatureType</span> <span class="p">{</span>
 
 <span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
         <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -740,7 +735,7 @@ to a double-precision floating point number.</p>
 </div>
 <div class="section" id="arrayfeaturetype-shape">
 <h3>ArrayFeatureType.Shape<a class="headerlink" href="#arrayfeaturetype-shape" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Shape</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Shape</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -748,7 +743,7 @@ to a double-precision floating point number.</p>
 </div>
 <div class="section" id="arrayfeaturetype-enumeratedshapes">
 <h3>ArrayFeatureType.EnumeratedShapes<a class="headerlink" href="#arrayfeaturetype-enumeratedshapes" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EnumeratedShapes</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EnumeratedShapes</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">Shape</span> <span class="na">shapes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -756,7 +751,7 @@ to a double-precision floating point number.</p>
 </div>
 <div class="section" id="arrayfeaturetype-shaperange">
 <h3>ArrayFeatureType.ShapeRange<a class="headerlink" href="#arrayfeaturetype-shaperange" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ShapeRange</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ShapeRange</span> <span class="p">{</span>
     <span class="c1">// sizeRanges.size() must be length 1 or 3</span>
     <span class="c1">// sizeRanges[d] specifies the allowed range for dimension d</span>
     <span class="k">repeated</span> <span class="n">SizeRange</span> <span class="na">sizeRanges</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -768,7 +763,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="dictionaryfeaturetype">
 <h2>DictionaryFeatureType<a class="headerlink" href="#dictionaryfeaturetype" title="Permalink to this headline">¶</a></h2>
 <p>The dictionary feature type.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DictionaryFeatureType</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DictionaryFeatureType</span> <span class="p">{</span>
     <span class="k">oneof</span> <span class="n">KeyType</span> <span class="p">{</span>
         <span class="n">Int64FeatureType</span> <span class="na">int64KeyType</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
         <span class="n">StringFeatureType</span> <span class="na">stringKeyType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -780,7 +775,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="sequencefeaturetype">
 <h2>SequenceFeatureType<a class="headerlink" href="#sequencefeaturetype" title="Permalink to this headline">¶</a></h2>
 <p>The Sequence feature type.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SequenceFeatureType</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SequenceFeatureType</span> <span class="p">{</span>
 
     <span class="k">oneof</span> <span class="n">Type</span> <span class="p">{</span>
         <span class="n">Int64FeatureType</span> <span class="na">int64Type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -796,7 +791,7 @@ to a double-precision floating point number.</p>
 <div class="section" id="featuretype">
 <h2>FeatureType<a class="headerlink" href="#featuretype" title="Permalink to this headline">¶</a></h2>
 <p>A feature, which may be optional.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureType</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureType</span> <span class="p">{</span>
     <span class="k">oneof</span> <span class="n">Type</span> <span class="p">{</span>
         <span class="n">Int64FeatureType</span> <span class="na">int64Type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
         <span class="n">DoubleFeatureType</span> <span class="na">doubleType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -813,7 +808,7 @@ to a double-precision floating point number.</p>
 </div>
 <div class="section" id="arrayfeaturetype-arraydatatype">
 <h3>ArrayFeatureType.ArrayDataType<a class="headerlink" href="#arrayfeaturetype-arraydatatype" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
         <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
         <span class="na">FLOAT32</span> <span class="o">=</span> <span class="mi">65568</span><span class="p">;</span> <span class="c1">// 0x10000 | 32</span>
         <span class="na">DOUBLE</span> <span class="o">=</span> <span class="mi">65600</span><span class="p">;</span>  <span class="c1">// 0x10000 | 64</span>
@@ -824,7 +819,7 @@ to a double-precision floating point number.</p>
 </div>
 <div class="section" id="imagefeaturetype-colorspace">
 <h3>ImageFeatureType.ColorSpace<a class="headerlink" href="#imagefeaturetype-colorspace" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
     <span class="na">INVALID_COLOR_SPACE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bits per pixel</span>
     <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: RGBA with A channel ignored</span>
@@ -838,16 +833,14 @@ to a double-precision floating point number.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="LinkedModel.html" class="btn btn-neutral" title="Linked Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="LinkedModel.html" class="btn btn-neutral float-left" title="Linked Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -856,11 +849,11 @@ to a double-precision floating point number.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc.
+        &copy; Copyright 2017, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -873,36 +866,15 @@ to a double-precision floating point number.</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'3.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

@@ -17,42 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Neural Networks" href="NeuralNetwork.html"/>
-        <link rel="prev" title="Core ML Model Format Specification" href="../index.html"/> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Neural Networks" href="NeuralNetwork.html" />
+    <link rel="prev" title="Core ML Model Format Specification" href="../index.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -125,7 +119,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">mlmodel</a>
@@ -133,9 +127,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -190,11 +185,11 @@ and can be any one of the following types:</p>
 </dd>
 <dt>Regressors</dt>
 <dd><ul class="first last simple">
-<li><code class="docutils literal"><span class="pre">GLMRegressor</span></code></li>
-<li><code class="docutils literal"><span class="pre">SupportVectorRegressor</span></code></li>
-<li><code class="docutils literal"><span class="pre">TreeEnsembleRegressor</span></code></li>
-<li><code class="docutils literal"><span class="pre">NeuralNetworkRegressor</span></code></li>
-<li><code class="docutils literal"><span class="pre">BayesianProbitRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">GLMRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">SupportVectorRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">TreeEnsembleRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">NeuralNetworkRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">BayesianProbitRegressor</span></code></li>
 </ul>
 </dd>
 <dt>Classifiers</dt>
@@ -242,7 +237,7 @@ and can be any one of the following types:</p>
 <div class="section" id="pipeline">
 <h2>Pipeline<a class="headerlink" href="#pipeline" title="Permalink to this headline">¶</a></h2>
 <p>A pipeline consisting of one or more models.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Pipeline</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Pipeline</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">Model</span> <span class="na">models</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
     <span class="c1">// Optional names given for each model</span>
@@ -256,7 +251,7 @@ and can be any one of the following types:</p>
 <div class="section" id="pipelineclassifier">
 <h2>PipelineClassifier<a class="headerlink" href="#pipelineclassifier" title="Permalink to this headline">¶</a></h2>
 <p>A classifier pipeline.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PipelineClassifier</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PipelineClassifier</span> <span class="p">{</span>
     <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -265,7 +260,7 @@ and can be any one of the following types:</p>
 <div class="section" id="pipelineregressor">
 <h2>PipelineRegressor<a class="headerlink" href="#pipelineregressor" title="Permalink to this headline">¶</a></h2>
 <p>A regressor pipeline.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PipelineRegressor</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PipelineRegressor</span> <span class="p">{</span>
     <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -275,7 +270,7 @@ and can be any one of the following types:</p>
 <h2>FeatureDescription<a class="headerlink" href="#featuredescription" title="Permalink to this headline">¶</a></h2>
 <p>A feature description,
 consisting of a name, short description, and type.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureDescription</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureDescription</span> <span class="p">{</span>
     <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
     <span class="n">FeatureType</span> <span class="na">type</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
@@ -289,7 +284,7 @@ consisting of a name, short description, and type.</p>
 consisting of a short description, a version string,
 an author, a license, and any other user defined
 key/value meta data.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Metadata</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Metadata</span> <span class="p">{</span>
     <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">string</span> <span class="na">versionString</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
     <span class="kt">string</span> <span class="na">author</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
@@ -300,7 +295,7 @@ key/value meta data.</p>
 </div>
 <div class="section" id="metadata-userdefinedentry">
 <h3>Metadata.UserDefinedEntry<a class="headerlink" href="#metadata-userdefinedentry" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
 <span class="c1">//</span>
 <span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -450,11 +445,11 @@ key/value meta data.</p>
 <p>A description of a model,
 consisting of descriptions of its input and output features.
 Both regressor and classifier models require the name of the
-primary predicted output feature (<code class="docutils literal"><span class="pre">predictedFeatureName</span></code>).
+primary predicted output feature (<code class="docutils literal notranslate"><span class="pre">predictedFeatureName</span></code>).
 Classifier models can specify the output feature containing
 probabilities for the predicted classes
-(<code class="docutils literal"><span class="pre">predictedProbabilitiesName</span></code>).</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ModelDescription</span> <span class="p">{</span>
+(<code class="docutils literal notranslate"><span class="pre">predictedProbabilitiesName</span></code>).</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ModelDescription</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">input</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">output</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
 
@@ -514,7 +509,7 @@ described by <a class="reference external" href="http://semver.org/">Semantic Ve
 <li>Recommender</li>
 <li>Linked Model</li>
 </ul>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Model</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Model</span> <span class="p">{</span>
     <span class="kt">int32</span> <span class="na">specificationVersion</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="n">ModelDescription</span> <span class="na">description</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 
@@ -582,7 +577,7 @@ described by <a class="reference external" href="http://semver.org/">Semantic Ve
 <p>An identity model.</p>
 <p>This model returns given inputs as outputs, unchanged.
 Intended to be used for testing purposes.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Identity</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Identity</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -591,9 +586,7 @@ Intended to be used for testing purposes.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -602,7 +595,7 @@ Intended to be used for testing purposes.</p>
         <a href="NeuralNetwork.html" class="btn btn-neutral float-right" title="Neural Networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../index.html" class="btn btn-neutral" title="Core ML Model Format Specification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../index.html" class="btn btn-neutral float-left" title="Core ML Model Format Specification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -611,11 +604,11 @@ Intended to be used for testing purposes.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc.
+        &copy; Copyright 2017, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -628,36 +621,15 @@ Intended to be used for testing purposes.</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'3.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

@@ -17,42 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Linked Model" href="LinkedModel.html"/>
-        <link rel="prev" title="Custom Models" href="CustomModel.html"/> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Linked Model" href="LinkedModel.html" />
+    <link rel="prev" title="Custom Models" href="CustomModel.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -124,7 +118,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">mlmodel</a>
@@ -132,9 +126,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -181,7 +176,7 @@
 <div class="section" id="knearestneighborsclassifier">
 <h2>KNearestNeighborsClassifier<a class="headerlink" href="#knearestneighborsclassifier" title="Permalink to this headline">¶</a></h2>
 <p>A k-Nearest-Neighbor classifier</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">KNearestNeighborsClassifier</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">KNearestNeighborsClassifier</span> <span class="p">{</span>
 
     <span class="n">NearestNeighborsIndex</span> <span class="na">nearestNeighborsIndex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -207,8 +202,8 @@
 </div>
 <div class="section" id="nearestneighborsindex">
 <h2>NearestNeighborsIndex<a class="headerlink" href="#nearestneighborsindex" title="Permalink to this headline">¶</a></h2>
-<p>The &#8220;core&#8221; attributes of a Nearest Neighbors model.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NearestNeighborsIndex</span> <span class="p">{</span>
+<p>The “core” attributes of a Nearest Neighbors model.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NearestNeighborsIndex</span> <span class="p">{</span>
 
     <span class="kt">int32</span> <span class="na">numberOfDimensions</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -231,7 +226,7 @@
 <h2>UniformWeighting<a class="headerlink" href="#uniformweighting" title="Permalink to this headline">¶</a></h2>
 <p>Specifies a uniform weighting scheme (i.e. each neighbor receives equal
 voting power).</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UniformWeighting</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UniformWeighting</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -240,7 +235,7 @@ voting power).</p>
 <h2>InverseDistanceWeighting<a class="headerlink" href="#inversedistanceweighting" title="Permalink to this headline">¶</a></h2>
 <p>Specifies a inverse-distance weighting scheme (i.e. closest neighbors receives higher
 voting power). A nearest neighbor with highest sum of (1 / distance) is picked.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">InverseDistanceWeighting</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">InverseDistanceWeighting</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -248,7 +243,7 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
 <div class="section" id="linearindex">
 <h2>LinearIndex<a class="headerlink" href="#linearindex" title="Permalink to this headline">¶</a></h2>
 <p>Specifies a flat index of data points to be searched by brute force.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearIndex</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearIndex</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -256,7 +251,7 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
 <div class="section" id="singlekdtreeindex">
 <h2>SingleKdTreeIndex<a class="headerlink" href="#singlekdtreeindex" title="Permalink to this headline">¶</a></h2>
 <p>Specifies a kd-tree backend for the nearest neighbors model.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SingleKdTreeIndex</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SingleKdTreeIndex</span> <span class="p">{</span>
 
     <span class="kt">int32</span> <span class="na">leafSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -267,7 +262,7 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
 <div class="section" id="squaredeuclideandistance">
 <h2>SquaredEuclideanDistance<a class="headerlink" href="#squaredeuclideandistance" title="Permalink to this headline">¶</a></h2>
 <p>Specifies the Squared Euclidean Distance function.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SquaredEuclideanDistance</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SquaredEuclideanDistance</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -276,9 +271,7 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -287,7 +280,7 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
         <a href="LinkedModel.html" class="btn btn-neutral float-right" title="Linked Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="CustomModel.html" class="btn btn-neutral" title="Custom Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="CustomModel.html" class="btn btn-neutral float-left" title="Custom Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -296,11 +289,11 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc.
+        &copy; Copyright 2017, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -313,36 +306,15 @@ voting power). A nearest neighbor with highest sum of (1 / distance) is picked.<
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'3.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

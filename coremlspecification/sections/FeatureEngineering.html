@@ -17,42 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Custom Models" href="CustomModel.html"/>
-        <link rel="prev" title="Support Vector Machines" href="SVM.html"/> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Custom Models" href="CustomModel.html" />
+    <link rel="prev" title="Support Vector Machines" href="SVM.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -126,7 +120,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">mlmodel</a>
@@ -134,9 +128,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -184,15 +179,15 @@
 <h2>Imputer<a class="headerlink" href="#imputer" title="Permalink to this headline">¶</a></h2>
 <p>A transformer that replaces missing values with a default value,
 such as a statistically-derived value.</p>
-<p>If <code class="docutils literal"><span class="pre">ReplaceValue</span></code> is set, then missing values of that type are
+<p>If <code class="docutils literal notranslate"><span class="pre">ReplaceValue</span></code> is set, then missing values of that type are
 replaced with the corresponding value.</p>
-<p>For example: if <code class="docutils literal"><span class="pre">replaceDoubleValue</span></code> is set to <code class="docutils literal"><span class="pre">NaN</span></code>
-and a single <code class="docutils literal"><span class="pre">NaN</span></code> double value is provided as input,
-then it is replaced by <code class="docutils literal"><span class="pre">imputedDoubleValue</span></code>. However
+<p>For example: if <code class="docutils literal notranslate"><span class="pre">replaceDoubleValue</span></code> is set to <code class="docutils literal notranslate"><span class="pre">NaN</span></code>
+and a single <code class="docutils literal notranslate"><span class="pre">NaN</span></code> double value is provided as input,
+then it is replaced by <code class="docutils literal notranslate"><span class="pre">imputedDoubleValue</span></code>. However
 if the input is an array of doubles, then any instances
-of <code class="docutils literal"><span class="pre">NaN</span></code> in the array is replaced with the corresponding
-value in <code class="docutils literal"><span class="pre">imputedDoubleArray</span></code>.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Imputer</span> <span class="p">{</span>
+of <code class="docutils literal notranslate"><span class="pre">NaN</span></code> in the array is replaced with the corresponding
+value in <code class="docutils literal notranslate"><span class="pre">imputedDoubleArray</span></code>.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Imputer</span> <span class="p">{</span>
     <span class="k">oneof</span> <span class="n">ImputedValue</span> <span class="p">{</span>
         <span class="kt">double</span> <span class="na">imputedDoubleValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
         <span class="kt">int64</span> <span class="na">imputedInt64Value</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -218,16 +213,16 @@ value in <code class="docutils literal"><span class="pre">imputedDoubleArray</sp
 <p>This function has the following formula:</p>
 <div class="math">
 <p><img src="../_images/math/3f3f7780b96ea3108c3333a6564560f9d14f328e.svg" alt="f(x) = scaleValue \cdot (x + shiftValue)"/></p>
-</div><p>If the <code class="docutils literal"><span class="pre">scaleValue</span></code> is not given, the default value 1 is used.
-If the <code class="docutils literal"><span class="pre">shiftValue</span></code> is not given, the default value 0 is used.</p>
-<p>If <code class="docutils literal"><span class="pre">scaleValue</span></code> and <code class="docutils literal"><span class="pre">shiftValue</span></code> are each a single value
+</div><p>If the <code class="docutils literal notranslate"><span class="pre">scaleValue</span></code> is not given, the default value 1 is used.
+If the <code class="docutils literal notranslate"><span class="pre">shiftValue</span></code> is not given, the default value 0 is used.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">scaleValue</span></code> and <code class="docutils literal notranslate"><span class="pre">shiftValue</span></code> are each a single value
 and the input is an array, then the scale and shift are applied
 to each element of the array.</p>
 <p>If the input is an integer, then it is converted to a double to
 perform the scaling operation. If the output type is an integer,
 then it is cast to an integer. If that cast is lossy, then an
 error is generated.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Scaler</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Scaler</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">double</span> <span class="na">shiftValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="k">repeated</span> <span class="kt">double</span> <span class="na">scaleValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -237,7 +232,7 @@ error is generated.</p>
 <div class="section" id="normalizer">
 <h2>Normalizer<a class="headerlink" href="#normalizer" title="Permalink to this headline">¶</a></h2>
 <p>A normalization preprocessor.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Normalizer</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Normalizer</span> <span class="p">{</span>
     <span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
         <span class="na">LMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
         <span class="na">L1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -266,7 +261,7 @@ which have the corresponding formulas:</p>
 <p><img src="../_images/math/de8cd4ee9453cad71e85647b893a78375e55f516.svg" alt="z = ||x||_2 = \sqrt{\sum_{i=1}^{n} x_i^2}"/></p>
 </div></dd>
 </dl>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
     <span class="na">LMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="na">L1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="na">L2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -280,9 +275,9 @@ which have the corresponding formulas:</p>
 <p>Transforms a categorical feature into an array. The array will be all
 zeros expect a single entry of one.</p>
 <p>Each categorical value will map to an index, this mapping is given by
-either the <code class="docutils literal"><span class="pre">stringCategories</span></code> parameter or the <code class="docutils literal"><span class="pre">int64Categories</span></code>
+either the <code class="docutils literal notranslate"><span class="pre">stringCategories</span></code> parameter or the <code class="docutils literal notranslate"><span class="pre">int64Categories</span></code>
 parameter.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">OneHotEncoder</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">OneHotEncoder</span> <span class="p">{</span>
     <span class="kd">enum</span> <span class="n">HandleUnknown</span> <span class="p">{</span>
         <span class="na">ErrorOnUnknown</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
         <span class="na">IgnoreUnknown</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>   <span class="c1">// Output will be all zeros for unknown values.</span>
@@ -302,7 +297,7 @@ parameter.</p>
 </div>
 <div class="section" id="onehotencoder-handleunknown">
 <h3>OneHotEncoder.HandleUnknown<a class="headerlink" href="#onehotencoder-handleunknown" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">HandleUnknown</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">HandleUnknown</span> <span class="p">{</span>
     <span class="na">ErrorOnUnknown</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="na">IgnoreUnknown</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>   <span class="c1">// Output will be all zeros for unknown values.</span>
 <span class="p">}</span>
@@ -314,7 +309,7 @@ parameter.</p>
 <h2>CategoricalMapping<a class="headerlink" href="#categoricalmapping" title="Permalink to this headline">¶</a></h2>
 <p>A categorical mapping.</p>
 <p>This allows conversion from integers to strings, or from strings to integers.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">CategoricalMapping</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">CategoricalMapping</span> <span class="p">{</span>
     <span class="k">oneof</span> <span class="n">MappingType</span> <span class="p">{</span>
         <span class="c1">// Conversion from strings to integers</span>
         <span class="n">StringToInt64Map</span> <span class="na">stringToInt64Map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -338,9 +333,9 @@ parameter.</p>
 <h2>FeatureVectorizer<a class="headerlink" href="#featurevectorizer" title="Permalink to this headline">¶</a></h2>
 <p>A FeatureVectorizer puts one or more features into a single array.</p>
 <p>The ordering of features in the output array is determined by
-<code class="docutils literal"><span class="pre">inputList</span></code>.</p>
-<p><code class="docutils literal"><span class="pre">inputDimensions</span></code> is a zero based index.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureVectorizer</span> <span class="p">{</span>
+<code class="docutils literal notranslate"><span class="pre">inputList</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">inputDimensions</span></code> is a zero based index.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureVectorizer</span> <span class="p">{</span>
     <span class="kd">message</span> <span class="nc">InputColumn</span> <span class="p">{</span>
         <span class="kt">string</span> <span class="na">inputColumn</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
         <span class="kt">uint64</span> <span class="na">inputDimensions</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -352,7 +347,7 @@ parameter.</p>
 </div>
 <div class="section" id="featurevectorizer-inputcolumn">
 <h3>FeatureVectorizer.InputColumn<a class="headerlink" href="#featurevectorizer-inputcolumn" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">InputColumn</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">InputColumn</span> <span class="p">{</span>
     <span class="kt">string</span> <span class="na">inputColumn</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">uint64</span> <span class="na">inputDimensions</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -366,12 +361,12 @@ parameter.</p>
 <p>The output array will be equal in length to the index mapping vector parameter.
 All keys in the input dictionary must be present in the index mapping vector.</p>
 <p>For each item in the input dictionary, insert its value in the output array.
-The position of the insertion is determined by the position of the item&#8217;s key
+The position of the insertion is determined by the position of the item’s key
 in the index mapping. Any keys not present in the input dictionary, will be
 zero in the output array.</p>
-<p>For example: if the <code class="docutils literal"><span class="pre">stringToIndex</span></code> parameter is set to <code class="docutils literal"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;c&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;z&quot;]</span></code>,
-then an input of <code class="docutils literal"><span class="pre">{&quot;a&quot;:</span> <span class="pre">4,</span> <span class="pre">&quot;c&quot;:</span> <span class="pre">8}</span></code> will produce an output of <code class="docutils literal"><span class="pre">[4,</span> <span class="pre">8,</span> <span class="pre">0,</span> <span class="pre">0]</span></code>.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DictVectorizer</span> <span class="p">{</span>
+<p>For example: if the <code class="docutils literal notranslate"><span class="pre">stringToIndex</span></code> parameter is set to <code class="docutils literal notranslate"><span class="pre">[&quot;a&quot;,</span> <span class="pre">&quot;c&quot;,</span> <span class="pre">&quot;b&quot;,</span> <span class="pre">&quot;z&quot;]</span></code>,
+then an input of <code class="docutils literal notranslate"><span class="pre">{&quot;a&quot;:</span> <span class="pre">4,</span> <span class="pre">&quot;c&quot;:</span> <span class="pre">8}</span></code> will produce an output of <code class="docutils literal notranslate"><span class="pre">[4,</span> <span class="pre">8,</span> <span class="pre">0,</span> <span class="pre">0]</span></code>.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DictVectorizer</span> <span class="p">{</span>
     <span class="k">oneof</span> <span class="n">Map</span> <span class="p">{</span>
         <span class="n">StringVector</span> <span class="na">stringToIndex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -386,7 +381,7 @@ then an input of <code class="docutils literal"><span class="pre">{&quot;a&quot;
 <p>An array feature extractor.</p>
 <p>Given an index, extracts the value at that index from its array input.
 Indexes are zero-based.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ArrayFeatureExtractor</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ArrayFeatureExtractor</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">uint64</span> <span class="na">extractIndex</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -394,7 +389,7 @@ Indexes are zero-based.</p>
 </div>
 <div class="section" id="nonmaximumsuppression">
 <h2>NonMaximumSuppression<a class="headerlink" href="#nonmaximumsuppression" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-proto"><div class="highlight"><pre><span></span>message NonMaximumSuppression {
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span>message NonMaximumSuppression {
     // Suppression methods:
     message PickTop {
         bool perClass = 1;
@@ -431,7 +426,7 @@ Indexes are zero-based.</p>
 </div>
 <div class="section" id="nonmaximumsuppression-picktop">
 <h3>NonMaximumSuppression.PickTop<a class="headerlink" href="#nonmaximumsuppression-picktop" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PickTop</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PickTop</span> <span class="p">{</span>
     <span class="kt">bool</span> <span class="na">perClass</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -442,9 +437,7 @@ Indexes are zero-based.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -453,7 +446,7 @@ Indexes are zero-based.</p>
         <a href="CustomModel.html" class="btn btn-neutral float-right" title="Custom Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="SVM.html" class="btn btn-neutral" title="Support Vector Machines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="SVM.html" class="btn btn-neutral float-left" title="Support Vector Machines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -462,11 +455,11 @@ Indexes are zero-based.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc.
+        &copy; Copyright 2017, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -479,36 +472,15 @@ Indexes are zero-based.</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'3.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>
