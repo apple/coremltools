@@ -100,6 +100,20 @@ after which you can use make to build the project
 make
 ```
 
+Installing
+----------
+
+Once the project is built, it can be installed via the normal setup.py
+mechanisms, such as:
+
+```shell
+python /path/to/setup.py install
+```
+
+Make sure to activate any desired virtual environment first.
+
+Alternatively, a wheel can be created and installed via pip.
+
 Building Installable Wheel
 ---------------------------
 To make a wheel/egg that you can distribute, you can do the following
