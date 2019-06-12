@@ -665,16 +665,16 @@ class TypeInferenceVisitor(object):
         return self._get_type_from_attr(node)
 
     def visit_GreaterEqual(self, node):
-        return self.visit_elementwiseBinary(node)
+        return self.visit_broadcast_op(node)
 
     def visit_Greater(self, node):
-        return self.visit_elementwiseBinary(node)
+        return self.visit_broadcast_op(node)
 
     def visit_Less(self, node):
-        return self.visit_elementwiseBinary(node)
+        return self.visit_broadcast_op(node)
 
     def visit_LessEqual(self, node):
-        return self.visit_elementwiseBinary(node)
+        return self.visit_broadcast_op(node)
 
     def visit_make_tuple(self, node):
         types = [self.visit(i) for i in node.inputs]
