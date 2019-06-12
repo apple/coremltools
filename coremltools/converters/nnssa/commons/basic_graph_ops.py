@@ -108,7 +108,7 @@ def replace_node(g, original_node, new_node):
 
 def fill_outputs(gd):
     """
-    Fills the output lists of of a graph pf ParsedNode
+    Fills the output lists of of a graph of ParsedNode
 
     Takes a graph in "dict{str, ParsedNode}" form, and returns a new graph.
     """

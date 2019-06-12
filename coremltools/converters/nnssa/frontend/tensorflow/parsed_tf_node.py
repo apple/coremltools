@@ -15,10 +15,10 @@ class ParsedTFNode(ParsedNode):
     datatype: The type of the node. (type)
     value: The value of the node if available 
     inputs: The list of nodes which are inputs to this node (list[str])
-    control_inputs: The list of nodes whch have to be executed before this node (list[str])
+    control_inputs: The list of nodes which have to be executed before this node (list[str])
     attr: The attributes of the node
     outputs: The list of nodes which consume the result of this node (list[str])
-    control_outputs: The list of nodes whch have to be executed after this node (list[str])
+    control_outputs: The list of nodes which have to be executed after this node (list[str])
     """
 
     def __init__(self, tfnode=None):
