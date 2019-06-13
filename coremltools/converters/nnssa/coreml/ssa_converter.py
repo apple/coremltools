@@ -159,6 +159,7 @@ class SSAConverter(object):
             'return': self._convert_return,
             'Add': self._convert_add,
             'Sub': self._convert_sub,
+            'RealDiv': self._convert_realdiv,
             'SquaredDifference': self._convert_squared_difference,
             'TensorArrayReadV3': self._convert_tensorarray_read,
             'TensorArrayWriteV3': self._convert_tensorarray_write,
@@ -651,6 +652,11 @@ class SSAConverter(object):
         layer = self._get_builder().add_multiply_broadcastable(
             name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
 
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_realdiv(self, node):
+        layer = self._get_builder().add_divide_broadcastable(
+            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_squared_difference(self, node):

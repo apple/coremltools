@@ -356,6 +356,7 @@ _LAYER_REGISTRY = {
     'stackND': _stack_nd,
     'addBroadcastable': _add_broadcastable,
     'subtractBroadcastable': _add_broadcastable,
+    'divideBroadcastable': _add_broadcastable,
     'conv2d': _conv2d,
     'multiplyBroadcastable': _add_broadcastable,
     'reshapeStatic': _reshape_static,
