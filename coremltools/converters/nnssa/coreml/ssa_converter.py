@@ -19,8 +19,9 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
     """
     Convert NNSSA into CoreML spec.
     ssa - nnssa to be converted to CoreML spec.
-    inputs - Input features of CoreML specs. Must be a list of tuples
-             [(name, shape)], where name is the input's name, shape is the
+    inputs - Input features of CoreML specs. Must be a dictionary with
+             name as key and shape as value {name: shape},
+             where name is the input's name, shape is the
              shape of the feature tensor. The shape must be static - all
              dimensions of shape should be a positive integer.
              When not provided, SSA converter will treat all input nodes
@@ -154,11 +155,13 @@ class SSAConverter(object):
             'get_tuple': self._convert_get_tuple,
             'Less': self._convert_less,
             'NotEqual': self._convert_not_equal,
+            'Square': self._convert_square,
             'LogicalAnd': self._convert_logical_and,
             'Log': self._convert_log,
             'return': self._convert_return,
             'Add': self._convert_add,
             'Sub': self._convert_sub,
+            'RealDiv': self._convert_real_div,
             'SquaredDifference': self._convert_squared_difference,
             'TensorArrayReadV3': self._convert_tensorarray_read,
             'TensorArrayWriteV3': self._convert_tensorarray_write,
@@ -181,6 +184,7 @@ class SSAConverter(object):
             'Unpack': self._convert_unpack,
             'Gather': self._convert_gather,
             'Sqrt': self._convert_sqrt,
+            'Exp': self._convert_exp,
             'Rsqrt': self._convert_rsqrt,
             'Pow': self._convert_pow,
             'Conv2D': self._convert_conv2d,
@@ -188,6 +192,7 @@ class SSAConverter(object):
             'Softmax': self._convert_softmax,
             'Sum': self._convert_sum,
             'Mean': self._convert_mean,
+            'Max': self._convert_max,
             'ArgMax': self._convert_argmax,
             'ReverseV2': self._convert_reverse,
             'ReverseSequence': self._convert_reverse_sequence,
@@ -605,8 +610,6 @@ class SSAConverter(object):
             name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-    # def add_not_equal(self, name, input_names, output_name, alpha=0):
-
     def _convert_logical_and(self, node):
         assert (len(node.inputs) == 2)
         layer = self._get_builder().add_logical(
@@ -649,6 +652,13 @@ class SSAConverter(object):
     def _convert_mul(self, node):
         assert (len(node.inputs) == 2)
         layer = self._get_builder().add_multiply_broadcastable(
+            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
+
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_real_div(self, node):
+        assert (len(node.inputs) == 2)
+        layer = self._get_builder().add_divide_broadcastable(
             name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
 
         shapes.propagate_single_layer(layer, self.tensor_shapes)
@@ -698,6 +708,21 @@ class SSAConverter(object):
         keepdims = node.attr['keep_dims']
 
         layer = self._get_builder().add_reduce_mean(
+            name=node.name,
+            input_name=input_names[0],
+            output_name=node.name,
+            axes=reduction_indices,
+            keepdims=keepdims,
+            reduce_all=False)
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_max(self, node):
+        input_names = self._get_input_tensors(node)
+        input_shape = self._get_current_graph()[node.inputs[0]].attr['_output_shapes'][0]
+        reduction_indices = node.attr['reduction_indices']
+        keepdims = node.attr['keep_dims']
+
+        layer = self._get_builder().add_reduce_max(
             name=node.name,
             input_name=input_names[0],
             output_name=node.name,
@@ -943,6 +968,18 @@ class SSAConverter(object):
         input_names = self._get_input_tensors(node)
         layer = self._get_builder().add_unary(
             name=node.name, input_name=input_names[0], output_name=node.name, mode='sqrt')
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_exp(self, node):
+        input_names = self._get_input_tensors(node)
+        layer = self._get_builder().add_unary(
+            name=node.name, input_name=input_names[0], output_name=node.name, mode='exp')
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_square(self, node):
+        input_names = self._get_input_tensors(node)
+        layer = self._get_builder().add_elementwise(
+            name=node.name, input_names = input_names*2, output_name = node.name, mode='MULTIPLY')
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_pow(self, node):
