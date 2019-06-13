@@ -314,6 +314,10 @@ def _reduce_mean(layer_spec, input_shapes):
     return _reduce_general(layer_spec.reduceMean, input_shapes)
 
 
+def _reduce_max(layer_spec, input_shapes):
+    return _reduce_general(layer_spec.reduceMax, input_shapes)
+
+
 def _argmax(layer_spec, input_shapes):
     params = layer_spec.argMax
     axis = params.axis
@@ -356,6 +360,7 @@ _LAYER_REGISTRY = {
     'stackND': _stack_nd,
     'addBroadcastable': _add_broadcastable,
     'subtractBroadcastable': _add_broadcastable,
+    'divideBroadcastable': _add_broadcastable,
     'conv2d': _conv2d,
     'multiplyBroadcastable': _add_broadcastable,
     'reshapeStatic': _reshape_static,
@@ -371,6 +376,7 @@ _LAYER_REGISTRY = {
     'argMax': _argmax,
     'reduceMean': _reduce_mean,
     'reduceSum': _reduce_sum,
+    'reduceMax': _reduce_max,
     'splitND': _split_nd,
     'batchedMatmul': _batched_mat_mul
 }

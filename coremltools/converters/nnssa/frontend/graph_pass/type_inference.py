@@ -351,7 +351,7 @@ class TypeInferenceVisitor(object):
         pass
 
     def visit_BiasAdd(self, node):
-        return self.visit_elementwiseBinary(node)
+        return self.visit_broadcast_op(node)
 
     def visit_Cast(self, node):
         assert (len(node.inputs) == 1)
@@ -571,11 +571,10 @@ class TypeInferenceVisitor(object):
             return rettype
 
     def visit_FloorMod(self, node):
-        # same as a regular binary op.
-        return self.visit_elementwiseBinary(node)
+        return self.visit_broadcast_op(node)
 
     def visit_Pow(self, node):
-        return self.visit_elementwiseBinary(node)
+        return self.visit_broadcast_op(node)
 
     def visit_function(self, node):
         pass
@@ -1492,11 +1491,9 @@ class TypeInferenceVisitor(object):
         return rettype
 
     def visit_FloorDiv(self, node):
-        # same as a regular binary op.
         return self.visit_broadcast_op(node)
 
     def visit_RealDiv(self, node):
-        # same as a regular binary op.
         return self.visit_broadcast_op(node)
 
     def visit_OneHot(self, node):
@@ -1529,7 +1526,7 @@ class TypeInferenceVisitor(object):
 
     def visit_SquaredDifference(self, node):
         # some kind of binary op
-        return self.visit_elementwiseBinary(node)
+        return self.visit_broadcast_op(node)
 
     def visit_Sub(self, node):
         # sub is a broadcast op
