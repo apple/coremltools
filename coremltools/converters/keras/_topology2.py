@@ -338,6 +338,7 @@ class NetGraph(object):
         for idx, layer in enumerate(self.layer_list):
             keras_layer = self.keras_layer_map[layer]
             inbound_nodes = keras_layer.inbound_nodes if hasattr(keras_layer, 'inbound_nodes') else keras_layer._inbound_nodes
+            inbound_nodes = [node for node in inbound_nodes if len(node.inbound_layers) > 0]
             if not _is_merge_layer(self.keras_layer_map[layer]) and \
                 len(self.get_predecessors(layer)) > 1 and \
                 len(inbound_nodes) > 1:
