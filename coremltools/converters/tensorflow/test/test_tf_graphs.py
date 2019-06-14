@@ -46,7 +46,7 @@ class TFSimpleNetworkTest(TFNetworkTest):
             product = tf.matmul(matrix1, matrix2, name='product')
         self._test_tf_model(graph, {'input': [1, 2]}, ['product'], delta=1e-2)
 
-    def test_matmul_tranposed_weight(self):
+    def test_matmul_transposed_weight(self):
         graph = tf.Graph()
         with graph.as_default() as g:
             matrix1 = tf.placeholder(tf.float32, shape=[1, 2], name='input')
@@ -69,7 +69,7 @@ class TFSimpleNetworkTest(TFNetworkTest):
             z = tf.subtract(z0, c, name='output')
         self._test_tf_model(graph, {'input': [1, 2]}, ['output'], delta=1e-2)
 
-    def test_matmul_tranpose(self):
+    def test_matmul_transpose(self):
         graph = tf.Graph()
         with graph.as_default() as g:
             matrix1 = tf.placeholder(tf.float32, shape=[1, 5], name='input')
@@ -152,7 +152,6 @@ class TFSimpleNetworkTest(TFNetworkTest):
             output = arr.gather([0, 1], name='output')
         self._test_tf_model(graph, {'input': [batch_size, 3]}, ['output'], delta=1e-2)
 
-    @unittest.skip
     def test_range(self):
         graph = tf.Graph()
         with graph.as_default() as g:
@@ -208,7 +207,7 @@ class TFSimpleNetworkTest(TFNetworkTest):
 
 
 if __name__ == '__main__':
-    # unittest.main()
-    suite = unittest.TestSuite()
-    suite.addTest(TFSimpleNetworkTest("test_simple_loop"))
-    unittest.TextTestRunner().run(suite)
+    unittest.main()
+    # suite = unittest.TestSuite()
+    # suite.addTest(TFSimpleNetworkTest("test_simple_loop"))
+    # unittest.TextTestRunner().run(suite)

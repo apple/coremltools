@@ -132,7 +132,6 @@ def _gather(layer_spec, input_shapes):
         return [indices_shape + input_shapes[0][1:]]
     else:
         raise ValueError("[Shaper] Gather layer accepts only 2 inputs")
-        return None
 
 
 def _less_than(layer_spec, input_shapes):
@@ -142,7 +141,7 @@ def _less_than(layer_spec, input_shapes):
     ]]
 
 
-def _logical_and(layer_spec, input_shapes):
+def _logical(layer_spec, input_shapes):
     # Always returns a boolean
     return [[
         1,
@@ -306,19 +305,42 @@ def _reduce_general(params, input_shapes):
     return [output_shape]
 
 
-def _reduce_sum(layer_spec, input_shapes):
-    return _reduce_general(layer_spec.reduceSum, input_shapes)
+def _reduce_prod(layer_spec, input_shapes):
+    return _reduce_general(layer_spec.reduceProd, input_shapes)
 
 
 def _reduce_mean(layer_spec, input_shapes):
     return _reduce_general(layer_spec.reduceMean, input_shapes)
 
 
+def _reduce_sum(layer_spec, input_shapes):
+    return _reduce_general(layer_spec.reduceSum, input_shapes)
+
+
 def _reduce_max(layer_spec, input_shapes):
     return _reduce_general(layer_spec.reduceMax, input_shapes)
 
 
+def _reduce_min(layer_spec, input_shapes):
+    return _reduce_general(layer_spec.reduceMin, input_shapes)
+
+
 def _argmax(layer_spec, input_shapes):
+    params = layer_spec.argMax
+    axis = params.axis
+    keepdims = not params.removeDim
+
+    output_shape = input_shapes[0][:]
+    if keepdims:
+        output_shape[axis] = 1
+    else:
+        output_shape[axis] = None
+        output_shape = [dim for dim in output_shape if dim is not None]
+
+    return [output_shape]
+
+
+def _argmin(layer_spec, input_shapes):
     params = layer_spec.argMax
     axis = params.axis
     keepdims = not params.removeDim
@@ -347,8 +369,11 @@ _LAYER_REGISTRY = {
     'gather': _gather,
     'scatter': _scatter,
     'lessThan': _less_than,
+    'greatherThan': _less_than,
     'notEqual': _less_than,
-    'logicalAnd': _logical_and,
+    'logicalAnd': _logical,
+    'logicalOr': _logical,
+    'logicalNot': _logical,
     'add': _add,
     'multiply': _add,
     'concatND': _concat_nd,
@@ -361,6 +386,8 @@ _LAYER_REGISTRY = {
     'addBroadcastable': _add_broadcastable,
     'subtractBroadcastable': _add_broadcastable,
     'divideBroadcastable': _add_broadcastable,
+    'floorDivBroadcastable': _add_broadcastable,
+    'modBroadcastable': _add_broadcastable,
     'conv2d': _conv2d,
     'multiplyBroadcastable': _add_broadcastable,
     'reshapeStatic': _reshape_static,
@@ -374,11 +401,16 @@ _LAYER_REGISTRY = {
     'min': _add,
     'reduce': _reduce,
     'argMax': _argmax,
+    'argMin': _argmin,
+    'reduceProd': _reduce_prod,
     'reduceMean': _reduce_mean,
     'reduceSum': _reduce_sum,
     'reduceMax': _reduce_max,
+    'reduceMin': _reduce_min,
     'splitND': _split_nd,
-    'batchedMatmul': _batched_mat_mul
+    'batchedMatmul': _batched_mat_mul,
+    'sin': _identity,
+    'cos': _identity,
 }
 
 

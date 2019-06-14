@@ -33,7 +33,6 @@ def constant_propagation(nnssa):
         # topological sort const nodes
         topsort = []
         topsort_set = set()
-        # (this is kinda a poor algorithm but it works)
         while len(const_nodes_in_this_graph) > 0:
             for n in const_nodes_in_this_graph:
                 if len(set(f.graph[n].inputs).difference(topsort_set)) == 0:

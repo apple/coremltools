@@ -27,7 +27,6 @@ class ConstantTracing(object):
         # now trace all functions which use a constant C
         # function F uses C is if there exists some node in F which
         # takes C as an input, and the node is not one of get_tuple, make_tuple and while
-        #
         const_usages = {}
         for (fname, nodename), v in self.node_value_trace.items():
             if type(v) is tuple and self.whole_graph.functions[v[0]].graph[v[1]].value is not None:
@@ -188,8 +187,6 @@ class ConstantTracing(object):
         source_const_node = source_fn.graph[source_node_name]
 
         # move the nodes.
-        #
-        # THIS CODE IS SHITE
 
         # make sure the new const node is in the trace
         self.node_value_trace[(
@@ -200,7 +197,7 @@ class ConstantTracing(object):
             source_const_node.name,
         )
 
-        ## We first remove references to the source node from all functions
+        # We first remove references to the source node from all functions
         fnames = list(self.whole_graph.functions.keys())
         fnames.pop(fnames.index(source_fname))
         fnames.pop(fnames.index(target_fname))
@@ -212,7 +209,7 @@ class ConstantTracing(object):
             # This might seem awkward. but not really.
             #
             # Essentially, we are entirely removing the source constant node
-            # entirely and reassociating everything which uses it in the target
+            # entirely and re-associating everything which uses it in the target
             # function with the moved constant. This means that even the
             # entry point and exit points of the target function have to be
             # rewritten. Thus it is just simpler to just think about it
