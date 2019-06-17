@@ -6,6 +6,7 @@ import traceback
 import numpy as np
 import sympy as sm
 import sys
+
 PY3 = False
 if sys.version_info >= (3, 0):
     PY3 = True
@@ -56,8 +57,8 @@ class TypeInferenceVisitor(object):
             # if we seen it this round, we return it
             # otherwise we recurse
             if not builtins.is_tensor(node.datatype) or \
-                   builtins.tensor_has_complete_shape(node.datatype) or \
-                   node.name in self.visited:
+                    builtins.tensor_has_complete_shape(node.datatype) or \
+                    node.name in self.visited:
                 return node.datatype
         # look for the op's visit method
         method = 'visit_' + node.op
@@ -144,35 +145,35 @@ class TypeInferenceVisitor(object):
         else:
             rettype = rettype1
         if self.gdict[node.inputs[0]].attr['symbolic_value'] is not None and self.gdict[
-                node.inputs[1]].attr['symbolic_value'] is not None:
+            node.inputs[1]].attr['symbolic_value'] is not None:
             if node.op == 'Add':
                 node.attr['symbolic_value'] = rettype()
                 try:
                     node.attr['symbolic_value'].val = self.gdict[
-                        node.inputs[0]].attr['symbolic_value'].val + self.gdict[
-                            node.inputs[1]].attr['symbolic_value'].val
+                                                          node.inputs[0]].attr['symbolic_value'].val + self.gdict[
+                                                          node.inputs[1]].attr['symbolic_value'].val
                 except:
                     pass
             elif node.op == 'Sub':
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = self.gdict[node.inputs[0]].attr[
-                    'symbolic_value'].val - self.gdict[node.inputs[1]].attr['symbolic_value'].val
+                                                      'symbolic_value'].val - self.gdict[node.inputs[1]].attr['symbolic_value'].val
             elif node.op == 'Mul':
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = self.gdict[node.inputs[0]].attr[
-                    'symbolic_value'].val * self.gdict[node.inputs[1]].attr['symbolic_value'].val
+                                                      'symbolic_value'].val * self.gdict[node.inputs[1]].attr['symbolic_value'].val
             elif node.op == 'FloorMod':
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = self.gdict[node.inputs[0]].attr[
-                    'symbolic_value'].val % self.gdict[node.inputs[1]].attr['symbolic_value'].val
+                                                      'symbolic_value'].val % self.gdict[node.inputs[1]].attr['symbolic_value'].val
             elif node.op == 'FloorDiv':
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = self.gdict[node.inputs[0]].attr[
-                    'symbolic_value'].val / self.gdict[node.inputs[1]].attr['symbolic_value'].val
+                                                      'symbolic_value'].val / self.gdict[node.inputs[1]].attr['symbolic_value'].val
             elif node.op == 'RealDiv':
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = self.gdict[node.inputs[0]].attr[
-                    'symbolic_value'].val / self.gdict[node.inputs[1]].attr['symbolic_value'].val
+                                                      'symbolic_value'].val / self.gdict[node.inputs[1]].attr['symbolic_value'].val
         return rettype
 
     def visit_reduction_op(self, node):
@@ -208,9 +209,9 @@ class TypeInferenceVisitor(object):
         node.attr['keep_dims'] = keepdims
 
         if 'symbolic_value' in self.gdict[node.inputs[0]].attr and \
-           self.gdict[node.inputs[0]].attr['symbolic_value'] is not None and \
-           'symbolic_value' in self.gdict[node.inputs[1]].attr and \
-           self.gdict[node.inputs[1]].attr['symbolic_value'] is not None :
+                self.gdict[node.inputs[0]].attr['symbolic_value'] is not None and \
+                'symbolic_value' in self.gdict[node.inputs[1]].attr and \
+                self.gdict[node.inputs[1]].attr['symbolic_value'] is not None:
             if node.op == 'Prod':
                 method = 'prod'
             elif node.op == 'Mean':
@@ -420,6 +421,9 @@ class TypeInferenceVisitor(object):
             return node.datatype
         return self._get_type_from_attr(node)
 
+    def visit_Sin(self, node):
+        return self.visit_unary(node)
+
     def visit_Cos(self, node):
         return self.visit_unary(node)
 
@@ -434,7 +438,7 @@ class TypeInferenceVisitor(object):
                 inshape = input_type.get_shape()
                 filtshape = filter_type.get_shape()
                 if node.attr['padding'] == 'VALID':
-                    #filtshape is [H, W, in_channels, out_channels]
+                    # filtshape is [H, W, in_channels, out_channels]
                     assert (len(inshape) == 4)
                     assert (len(filtshape) == 4)
                     retshape = [
@@ -514,7 +518,7 @@ class TypeInferenceVisitor(object):
         assert (len(node.inputs) == 2)
         typea = self.visit(node.inputs[0])
         if not builtins.is_tensor(typea):
-            typea = builtins.tensor(typea, (1, ))
+            typea = builtins.tensor(typea, (1,))
             shape = []
         else:
             shape = list(typea.get_shape())  # input[0] should be a tensor.
@@ -712,8 +716,8 @@ class TypeInferenceVisitor(object):
                 matb_shape = tuple(matb_shape)
             assert (len(mata_shape) == len(matb_shape))
             assert (
-                mata_shape[-1] == matb_shape[-2] or is_symbolic_or_unknown(mata_shape[-1])
-                or is_symbolic_or_unknown(matb_shape[-2]))
+                    mata_shape[-1] == matb_shape[-2] or is_symbolic_or_unknown(mata_shape[-1])
+                    or is_symbolic_or_unknown(matb_shape[-2]))
             shape = list(mata_shape)
             shape[-1] = matb_shape[-1]
             if len(shape) > 2:
@@ -756,7 +760,7 @@ class TypeInferenceVisitor(object):
             if len(output_shapes[0]) > 0:
                 return builtins.tensor(node.attr['T'], tuple(output_shapes[0]))
             elif 'N' in node.attr:
-                return builtins.tensor(node.attr['T'], (node.attr['N'], ))
+                return builtins.tensor(node.attr['T'], (node.attr['N'],))
 
     def visit_Pad(self, node):
         lefttype = self.visit(node.inputs[0])
@@ -789,7 +793,7 @@ class TypeInferenceVisitor(object):
             # Non-const propagation.
             return
         if self.gdict[node.inputs[0]].attr['symbolic_value'] is None or self.gdict[
-                node.inputs[1]].attr['symbolic_value'] is None:
+            node.inputs[1]].attr['symbolic_value'] is None:
             # Non-fixed value propagation (e.g. TensorArray)
             return builtins.tensor(datatype, [make_symbol(node.name + '_range')])
         if typea != builtins.int32:
@@ -901,7 +905,7 @@ class TypeInferenceVisitor(object):
             shape = check_volumetric_constraint(left_volume, shape)
             r = builtins.tensor(left_primitive, shape)
             if self.gdict[node.inputs[0]].attr['symbolic_value'] is not None \
-                and all(isscalar(a) for a in shape):
+                    and all(isscalar(a) for a in shape):
                 node.attr['symbolic_value'] = r()
                 node.attr['symbolic_value'].val = \
                     self.gdict[node.inputs[0]].attr['symbolic_value'].val.reshape(shape)
@@ -929,7 +933,6 @@ class TypeInferenceVisitor(object):
     def visit_ReverseSequence(self, node):
         assert (len(node.inputs) == 2)
         return self.visit(node.inputs[0])
-        pass
 
     def visit_ReverseV2(self, node):
         assert (len(node.inputs) == 2)
@@ -1634,10 +1637,10 @@ class TypeInferenceVisitor(object):
         tensor_put_type = builtins.tensor(
             tensor_put_type.get_primitive(),
             tensor_put_type.get_shape()[1:])
-        # can we overide the shape in the node attributes?
+        # can we override the shape in the node attributes?
         if len(tensor_put_type.get_shape()) > 0 and tanode is not None and \
                 ('element_shape' not in tanode.attr or tanode.attr['element_shape'].get_shape() is None \
-                or len(tanode.attr['element_shape'].get_shape()) == 0):
+                 or len(tanode.attr['element_shape'].get_shape()) == 0):
             tanode.attr['element_shape'] = tensor_put_type
         # output is flow
         assert (len(node.inputs) == 3)
@@ -1669,7 +1672,7 @@ class TypeInferenceVisitor(object):
         # can we overide the shape in the node attributes?
         if hasattr(tensor_put_type, 'get_shape') and len(tensor_put_type.get_shape()) > 0 and tanode is not None and \
                 ('element_shape' not in tanode.attr or tanode.attr['element_shape'].get_shape() is None \
-                or len(tanode.attr['element_shape'].get_shape()) == 0):
+                 or len(tanode.attr['element_shape'].get_shape()) == 0):
             tanode.attr['element_shape'] = tensor_put_type
 
         assert (len(node.inputs) == 3)
@@ -1758,9 +1761,9 @@ def type_is_unknown(t):
         return any(type_is_unknown(a) for a in t.T)
     elif builtins.is_tensor(t):
         return type_is_unknown(t.get_primitive()) or \
-                t.get_shape() is None or \
-                len(t.get_shape()) == 0  or \
-                any_symbolic_or_unknown(t.get_shape())
+               t.get_shape() is None or \
+               len(t.get_shape()) == 0 or \
+               any_symbolic_or_unknown(t.get_shape())
     elif builtins.is_list(t):
         return type_is_unknown(t.T[0])
     elif t is builtins.unknown:

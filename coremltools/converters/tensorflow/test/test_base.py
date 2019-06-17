@@ -22,11 +22,13 @@ DEBUG = False
 class TFNetworkTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        """ Set up the unit test by loading common utilities.
+        """
+        Set up the unit test by loading common utilities.
         """
 
     def _get_tf_tensor_name(self, graph, name):
-        """ Convenience function to get the name of first output tensor of an op with name
+        """
+        Convenience function to get the name of first output tensor of an op with name
         """
         return graph.get_operation_by_name(name).outputs[0].name
 
@@ -79,7 +81,8 @@ class TFNetworkTest(unittest.TestCase):
             use_cpu_only=False,
             use_freeze=True,
             quantize_tf_model=False):
-        """ Common entry to testing routine.
+        """
+        Common entry to testing routine.
         graph - defined TensorFlow graph.
         input_shapes -  dict str:shape for each input op (placeholder)
         output_node_names - output_node_names, a list of strings
@@ -164,7 +167,7 @@ class TFNetworkTest(unittest.TestCase):
             from coremltools.models.neural_network.printer import print_network_spec
             print_network_spec(mlmodel.get_spec(), style='coding')
             mlmodel.save(coreml_model_file)
-            print('\n mlmodel saved at %s' %(coreml_model_file))
+            print('\n mlmodel saved at %s' % coreml_model_file)
 
         # Transpose input data as CoreML requires
         coreml_inputs = {
@@ -202,7 +205,8 @@ class TFNetworkTest(unittest.TestCase):
             delta=1e-2,
             use_cpu_only=False,
             one_dim_seq_flags=None):
-        """ Common entry to testing routine for graphs that have no variables.
+        """
+        Common entry to testing routine for graphs that have no variables.
         graph - defined TensorFlow graph.
         input_tensor_shapes -  dict str:shape for each input (placeholder)
         output_node_names - output_node_names, a list of strings
@@ -230,9 +234,9 @@ class TFNetworkTest(unittest.TestCase):
                 sess,  # The session is used to retrieve the weights
                 tf.get_default_graph().as_graph_def(
                 ),  # The graph_def is used to retrieve the nodes
-                output_node_names  # The output node names are used to select the usefull nodes
+                output_node_names  # The output node names are used to select the useful nodes
             )
-            with tf.gfile.GFile(frozen_model_file, "wb") as f:
+            with tf.gfile.GFile(frozen_model_file, 'wb') as f:
                 f.write(output_graph_def.SerializeToString())
 
         # convert to CoreML
@@ -247,7 +251,7 @@ class TFNetworkTest(unittest.TestCase):
             from coremltools.models.neural_network.printer import print_network_spec
             print_network_spec(mlmodel.get_spec(), style='coding')
             mlmodel.save(coreml_model_file)
-            print('\n mlmodel saved at %s' %(coreml_model_file))
+            print('\n mlmodel saved at %s' % coreml_model_file)
 
         # Transpose input data as CoreML requires
         coreml_inputs = {
