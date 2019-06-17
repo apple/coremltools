@@ -23,13 +23,16 @@
  *   - `TreeEnsembleClassifier`
  *   - `GLMClassifier`
  *   - `SupportVectorClassifier`
+ *   - `KNearestNeighborsClassifier`
  *
  * Other models
  *   - `CustomModel`
  *   - `TextClassifier`
  *   - `WordTagger`
  *   - `VisionFeaturePrint`
+ *   - `LinkedModel`
  *   - `SoundAnalysisPreprocessing`
+ *   - `ItemSimilarityRecommender`
  *
  * Feature Engineering
  *   - `Imputer`
@@ -40,6 +43,7 @@
  *   - `FeatureVectorizer`
  *   - `DictVectorizer`
  *   - `ArrayFeatureExtractor`
+ *   - `NonMaximumSuppression`
  *
  * Pipelines
  *   - `PipelineClassifier`
