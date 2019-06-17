@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Vision Feature Print &mdash; mlmodel 3.0.0 documentation</title>
+  <title>Non Maximum Suppression &mdash; mlmodel 3.0.0 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Tree Ensembles" href="TreeEnsembles.html"/>
-        <link rel="prev" title="Word Tagger" href="WordTagger.html"/> 
+        <link rel="next" title="Data Structures &amp; Feature Types" href="DataStructuresAndFeatureTypes.html"/>
+        <link rel="prev" title="Sound Analysis Preprocessing" href="SoundAnalysisPreprocessing.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -95,10 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TextClassifier.html">Text Classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="WordTagger.html">Word Tagger</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Vision Feature Print</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#visionfeatureprint">VisionFeaturePrint</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="VisionFeaturePrint.html">Vision Feature Print</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
@@ -107,7 +104,10 @@
 <li class="toctree-l1"><a class="reference internal" href="NearestNeighbors.html">Nearest Neighbors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SoundAnalysisPreprocessing.html">Sound Analysis Preprocessing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ItemSimilarityRecommender.html">Item Similarity Recommender</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Non Maximum Suppression</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#nonmaximumsuppression">NonMaximumSuppression</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
 </ul>
 
@@ -153,13 +153,13 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Vision Feature Print</li>
+      <li>Non Maximum Suppression</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/sections/VisionFeaturePrint.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/sections/NonMaximumSuppression.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -172,59 +172,49 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="vision-feature-print">
-<h1>Vision Feature Print<a class="headerlink" href="#vision-feature-print" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="visionfeatureprint">
-<h2>VisionFeaturePrint<a class="headerlink" href="#visionfeatureprint" title="Permalink to this headline">¶</a></h2>
-<p>A model which takes an input image and outputs an array of features
-according to the specified feature types</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">VisionFeaturePrint</span> <span class="p">{</span>
+  <div class="section" id="non-maximum-suppression">
+<h1>Non Maximum Suppression<a class="headerlink" href="#non-maximum-suppression" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="nonmaximumsuppression">
+<h2>NonMaximumSuppression<a class="headerlink" href="#nonmaximumsuppression" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto"><div class="highlight"><pre><span></span>message NonMaximumSuppression {
+    // Suppression methods:
+    message PickTop {
+        bool perClass = 1;
+    }
 
-    <span class="c1">// Specific vision feature print types</span>
+    oneof SuppressionMethod {
+        PickTop pickTop = 1;
+    }
 
-    <span class="c1">// Scene extracts features useful for identifying contents of natural images</span>
-    <span class="c1">// in both indoor and outdoor environments</span>
-    <span class="kd">message</span> <span class="nc">Scene</span> <span class="p">{</span>
-        <span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
-            <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
-            <span class="c1">// It uses a 299x299 input image and yields a 2048 float feature vector</span>
-            <span class="na">SCENE_VERSION_1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="p">}</span>
+    oneof ClassLabels {
+        StringVector stringClassLabels = 100;
+        Int64Vector int64ClassLabels = 101;
+    }
 
-        <span class="n">SceneVersion</span> <span class="na">version</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
+    double iouThreshold = 110;
 
-    <span class="c1">// Vision feature print type</span>
-    <span class="k">oneof</span> <span class="n">VisionFeaturePrintType</span> <span class="p">{</span>
-        <span class="n">Scene</span> <span class="na">scene</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-    <span class="p">}</span>
+           it means there is a 60% (0.2 + 0.4) confidence that an object is
+           present)
+    double confidenceThreshold = 111;
 
-<span class="p">}</span>
+    string confidenceInputFeatureName = 200;
+
+    string coordinatesInputFeatureName = 201;
+
+    string iouThresholdInputFeatureName = 202;
+
+    string confidenceThresholdInputFeatureName = 203;
+
+    string confidenceOutputFeatureName = 210;
+
+    string coordinatesOutputFeatureName = 211;
+}
 </pre></div>
 </div>
-<div class="section" id="visionfeatureprint-scene">
-<h3>VisionFeaturePrint.Scene<a class="headerlink" href="#visionfeatureprint-scene" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Scene</span> <span class="p">{</span>
-    <span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
-        <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
-        <span class="c1">// It uses a 299x299 input image and yields a 2048 float feature vector</span>
-        <span class="na">SCENE_VERSION_1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="n">SceneVersion</span> <span class="na">version</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="visionfeatureprint-scene-sceneversion">
-<h3>VisionFeaturePrint.Scene.SceneVersion<a class="headerlink" href="#visionfeatureprint-scene-sceneversion" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
-    <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
-    <span class="c1">// It uses a 299x299 input image and yields a 2048 float feature vector</span>
-    <span class="na">SCENE_VERSION_1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<div class="section" id="nonmaximumsuppression-picktop">
+<h3>NonMaximumSuppression.PickTop<a class="headerlink" href="#nonmaximumsuppression-picktop" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PickTop</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="na">perClass</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -242,10 +232,10 @@ according to the specified feature types</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="TreeEnsembles.html" class="btn btn-neutral float-right" title="Tree Ensembles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="DataStructuresAndFeatureTypes.html" class="btn btn-neutral float-right" title="Data Structures &amp; Feature Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="WordTagger.html" class="btn btn-neutral" title="Word Tagger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="SoundAnalysisPreprocessing.html" class="btn btn-neutral" title="Sound Analysis Preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
