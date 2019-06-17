@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Vision Feature Print &mdash; mlmodel 3.0.0 documentation</title>
+  <title>Sound Analysis Preprocessing &mdash; mlmodel 3.0.0 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
     <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Tree Ensembles" href="TreeEnsembles.html"/>
-        <link rel="prev" title="Word Tagger" href="WordTagger.html"/> 
+        <link rel="next" title="Item Similarity Recommender" href="ItemSimilarityRecommender.html"/>
+        <link rel="prev" title="Linked Model" href="LinkedModel.html"/> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -95,10 +95,7 @@
 <li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TextClassifier.html">Text Classifier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="WordTagger.html">Word Tagger</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Vision Feature Print</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#visionfeatureprint">VisionFeaturePrint</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="VisionFeaturePrint.html">Vision Feature Print</a></li>
 <li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
 <li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
@@ -106,7 +103,10 @@
 <li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="NearestNeighbors.html">Nearest Neighbors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="SoundAnalysisPreprocessing.html">Sound Analysis Preprocessing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Sound Analysis Preprocessing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#soundanalysispreprocessing">SoundAnalysisPreprocessing</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ItemSimilarityRecommender.html">Item Similarity Recommender</a></li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
 </ul>
@@ -153,13 +153,13 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>Vision Feature Print</li>
+      <li>Sound Analysis Preprocessing</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/sections/VisionFeaturePrint.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/sections/SoundAnalysisPreprocessing.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -172,59 +172,62 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="vision-feature-print">
-<h1>Vision Feature Print<a class="headerlink" href="#vision-feature-print" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="visionfeatureprint">
-<h2>VisionFeaturePrint<a class="headerlink" href="#visionfeatureprint" title="Permalink to this headline">¶</a></h2>
-<p>A model which takes an input image and outputs an array of features
-according to the specified feature types</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">VisionFeaturePrint</span> <span class="p">{</span>
+  <div class="section" id="sound-analysis-preprocessing">
+<h1>Sound Analysis Preprocessing<a class="headerlink" href="#sound-analysis-preprocessing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="soundanalysispreprocessing">
+<h2>SoundAnalysisPreprocessing<a class="headerlink" href="#soundanalysispreprocessing" title="Permalink to this headline">¶</a></h2>
+<p>A model which takes audio signal samples as input and outputs an array of
+preprocessed samples according to the specified preprocessing types</p>
+<div class="highlight-proto"><div class="highlight"><pre><span></span>message SoundAnalysisPreprocessing {
 
-    <span class="c1">// Specific vision feature print types</span>
+    // Specific preprocessing types for sound analysis
 
-    <span class="c1">// Scene extracts features useful for identifying contents of natural images</span>
-    <span class="c1">// in both indoor and outdoor environments</span>
-    <span class="kd">message</span> <span class="nc">Scene</span> <span class="p">{</span>
-        <span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
-            <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-            <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
-            <span class="c1">// It uses a 299x299 input image and yields a 2048 float feature vector</span>
-            <span class="na">SCENE_VERSION_1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-        <span class="p">}</span>
+       be fed to Vggish feature extractor.
+       c.f. https://arxiv.org/pdf/1609.09430.pdf
 
-        <span class="n">SceneVersion</span> <span class="na">version</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
+       The preprocessing takes input a single channel (monophonic) audio samples
+       975 miliseconds long, sampled at 16KHz, i.e., 15600 samples 1D multiarray
+       and produces preprocessed samples in multiarray of shape [1, 96, 64]
 
-    <span class="c1">// Vision feature print type</span>
-    <span class="k">oneof</span> <span class="n">VisionFeaturePrintType</span> <span class="p">{</span>
-        <span class="n">Scene</span> <span class="na">scene</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
-    <span class="p">}</span>
+     (1) Splits the input audio samples into overlapping frames, where each
+         frame is 25 milliseconds long and hops forward by 10 milliseconds.
+         Any partial frames at the end are dropped.
 
-<span class="p">}</span>
+     (2) Hann window: apply a periodic Hann with a window_length of
+         25 milliseconds, which translates to 400 samples in 16KHz sampling rate
+
+         w(n) = 0.5 - 0.5 * cos(2*pi*n/window_length_sample),
+         where 0 &lt;= n &lt;= window_lenth_samples - 1 and window_lenth_samples = 400
+
+         Then, the Hann window is applied to each frame as below
+
+         windowed_frame(n) = frame(n) * w(n)
+         where 0 &lt;= n &lt;= window_lenth_samples - 1 and window_lenth_samples = 400
+
+     (3) Power spectrum: calculate short-time Fourier transfor magnitude, with
+         an FFT length of 512
+
+     (4) Log Mel filter bank: calculates a log magnitude mel-frequency
+         spectrogram minimum frequency of 125Hz and maximum frequency of 7500Hz,
+         number of mel bins is 64, log_offset is 0.01, number of spectrum bins
+         is 64.
+
+    message Vggish {
+        // no specific parameter
+    }
+
+    // Vision feature print type
+    oneof SoundAnalysisPreprocessingType {
+        Vggish vggish = 20;
+    }
+
+}
 </pre></div>
 </div>
-<div class="section" id="visionfeatureprint-scene">
-<h3>VisionFeaturePrint.Scene<a class="headerlink" href="#visionfeatureprint-scene" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Scene</span> <span class="p">{</span>
-    <span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
-        <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-        <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
-        <span class="c1">// It uses a 299x299 input image and yields a 2048 float feature vector</span>
-        <span class="na">SCENE_VERSION_1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="n">SceneVersion</span> <span class="na">version</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="visionfeatureprint-scene-sceneversion">
-<h3>VisionFeaturePrint.Scene.SceneVersion<a class="headerlink" href="#visionfeatureprint-scene-sceneversion" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
-    <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
-    <span class="c1">// It uses a 299x299 input image and yields a 2048 float feature vector</span>
-    <span class="na">SCENE_VERSION_1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<div class="section" id="soundanalysispreprocessing-vggish">
+<h3>SoundAnalysisPreprocessing.Vggish<a class="headerlink" href="#soundanalysispreprocessing-vggish" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Vggish</span> <span class="p">{</span>
+    <span class="c1">// no specific parameter</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -242,10 +245,10 @@ according to the specified feature types</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="TreeEnsembles.html" class="btn btn-neutral float-right" title="Tree Ensembles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="ItemSimilarityRecommender.html" class="btn btn-neutral float-right" title="Item Similarity Recommender" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="WordTagger.html" class="btn btn-neutral" title="Word Tagger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="LinkedModel.html" class="btn btn-neutral" title="Linked Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
