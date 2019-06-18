@@ -173,7 +173,6 @@ class SSAConverter(object):
             'FloorMod': self._convert_floor_mod,
             'FloorDiv': self._convert_floor_div,
             'RealDiv': self._convert_real_div,
-            'FloorMod': self._convert_floor_mod,
             'SquaredDifference': self._convert_squared_difference,
             'TensorArrayReadV3': self._convert_tensorarray_read,
             'TensorArrayWriteV3': self._convert_tensorarray_write,
@@ -1325,14 +1324,6 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-    def _convert_floor_mod(self, node):
-        assert len(node.inputs) == 2
-        layer = self._get_builder().add_mod_broadcastable(
-            name=node.name,
-            input_names=self._get_input_tensors(node),
-            output_name=node.name,
-        )
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_sin(self, node):
         assert len(node.inputs) == 1
