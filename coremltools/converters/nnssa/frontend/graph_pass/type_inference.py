@@ -982,6 +982,14 @@ class TypeInferenceVisitor(object):
         typea = self.visit(node.inputs[1])
         typeb = self.visit(node.inputs[2])
 
+        rankcond = len(self.gdict[node.inputs[0]].datatype.get_shape())
+        ranka = len(self.gdict[node.inputs[1]].datatype.get_shape())
+        rankb = len(self.gdict[node.inputs[2]].datatype.get_shape())
+
+        assert (ranka == rankb)
+        if rankcond == 1 and ranka > 1:
+            node.attr['expand_dims'] = [-i-1 for i in range(ranka-rankcond)]
+
         if typea is not None and typeb is not None:
             compatible, restype = builtins.is_tensor_and_is_compatible_general_shape(typea, typeb)
             if compatible:
@@ -1056,7 +1064,6 @@ class TypeInferenceVisitor(object):
             ]
             slices = [[int(begin[i]), int(end[i]), 1] for i in range(len(begin))]
             node.attr['slice'] = slices
-            node.attr['squeeze'] = []
             output_value = None
             if input_value is not None:
                 slices = [slice(*i) for i in slices]
