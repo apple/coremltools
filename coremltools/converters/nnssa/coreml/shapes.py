@@ -99,7 +99,7 @@ def _add(layer_spec, input_shapes):
     return output_shapes
 
 
-def _add_broadcastable(layer_spec, input_shapes):
+def _broadcastable(layer_spec, input_shapes):
     def broadcast_dim(x, y):
         if x < 0 or y < 0:
             return -1
@@ -133,19 +133,6 @@ def _gather(layer_spec, input_shapes):
     else:
         raise ValueError("[Shaper] Gather layer accepts only 2 inputs")
 
-
-def _less_than(layer_spec, input_shapes):
-    # Always returns a boolean
-    return [[
-        1,
-    ]]
-
-
-def _logical(layer_spec, input_shapes):
-    # Always returns a boolean
-    return [[
-        1,
-    ]]
 
 
 def _concat_nd(layer_spec, input_shapes):
@@ -200,6 +187,8 @@ def _split_nd(layer_spec, input_shapes):
 def _identity(layer_spec, input_shapes):
     return input_shapes[:]
 
+def _reverse_seq(layer_spec, input_shapes):
+    return [input_shapes[0]]
 
 def _copy(layer_spec, input_shapes):
     return input_shapes[:]
@@ -302,7 +291,7 @@ def _reduce_general(params, input_shapes):
             output_shape[axis] = None
         output_shape = [dim for dim in output_shape if dim is not None]
 
-    return [output_shape]
+    return [output_shape] if output_shape else [[1]]
 
 
 def _reduce_prod(layer_spec, input_shapes):
@@ -368,28 +357,33 @@ _LAYER_REGISTRY = {
     'loadConstantND': _load_constant_nd,
     'gather': _gather,
     'scatter': _scatter,
-    'lessThan': _less_than,
-    'greatherThan': _less_than,
-    'notEqual': _less_than,
-    'logicalAnd': _logical,
-    'logicalOr': _logical,
-    'logicalNot': _logical,
+    'greatherThan': _broadcastable,
+    'logicalOr': _broadcastable,
+    'logicalNot': _identity,
+    'lessThan': _broadcastable,
+    'greaterEqual': _broadcastable,
+    'notEqual': _broadcastable,
+    'logicalAnd': _broadcastable,
     'add': _add,
     'multiply': _add,
     'concatND': _concat_nd,
     'innerProduct': _inner_product,
     'activation': _identity,
     'reverse': _identity,
+    'reverseSeq': _reverse_seq,
     'copy': _copy,
     'expandDims': _expand_dims,
     'stackND': _stack_nd,
-    'addBroadcastable': _add_broadcastable,
-    'subtractBroadcastable': _add_broadcastable,
-    'divideBroadcastable': _add_broadcastable,
-    'floorDivBroadcastable': _add_broadcastable,
-    'modBroadcastable': _add_broadcastable,
+    'addBroadcastable': _broadcastable,
+    'subtractBroadcastable': _broadcastable,
+    'divideBroadcastable': _broadcastable,
+    'whereBroadcastable': _broadcastable,
+    'maxBroadcastable': _broadcastable,
+    'minBroadcastable': _broadcastable,
+    'modBroadcastable': _broadcastable,
+    'floorDivBroadcastable': _broadcastable,
     'conv2d': _conv2d,
-    'multiplyBroadcastable': _add_broadcastable,
+    'multiplyBroadcastable': _broadcastable,
     'reshapeStatic': _reshape_static,
     # 'convolution': _convolution, # We propagate convolutional shapes by directly assigning from SSA output shape
     'embeddingND': _embedding_nd,
@@ -411,6 +405,7 @@ _LAYER_REGISTRY = {
     'batchedMatmul': _batched_mat_mul,
     'sin': _identity,
     'cos': _identity,
+    'round': _identity
 }
 
 
