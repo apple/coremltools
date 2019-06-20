@@ -229,7 +229,7 @@ def _permute(layer, shape_dict):
     params = layer.permute
     Seq, Batch, Cin, Hin, Win = shape_dict[layer.input[0]]
     
-    axis = map(int, params.axis)
+    axis = list(map(int, params.axis))
     dims = (Seq, Cin, Hin, Win)
     Seq_out = dims[axis[0]]
     Cout = dims[axis[1]]
