@@ -334,7 +334,11 @@ class MLModel(object):
 
             try:
                 from ..libcoremlpython import _MLModelProxy
+            except Exception as e:
+                print("exception loading model proxy: %s\n" % e)
+                _MLModelProxy = None
             except:
+                print("exception while loading model proxy.\n")
                 _MLModelProxy = None
 
             if not _MLModelProxy:

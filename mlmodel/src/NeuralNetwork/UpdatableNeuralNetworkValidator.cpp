@@ -26,12 +26,17 @@ static Result validateLossLayer(const Specification::LossLayer *lossLayer, const
 
             // validate loss input.
             std::string lossLayerName = lossLayer->name();
-            node lossNode = graph->getNodeFromName(lossLayerName);
+            const auto *lossNode = graph->getNodeFromName(lossLayerName);
+            if (lossNode == NULL) {
+                err = "Failed to look up node for '" + lossLayerName + "'.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+            
             bool lossInputValidated = false;
-            std::vector<node> parents = lossNode.parents;
-            for (node node : parents) {
-                if (node.layerType == Specification::NeuralNetworkLayer::kSoftmax) {
-                    if (node.outputNames[0] != lossInputName) {
+            const auto &parents = lossNode->parents;
+            for (const auto *node : parents) {
+                if (node->layerType == Specification::NeuralNetworkLayer::kSoftmax) {
+                    if (node->outputNames[0] != lossInputName) {
                         err = "For the categorical cross entropy loss layer named '" + lossLayer->name() + "', input is not generated from a softmax output.";
                         return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
                     }
@@ -170,7 +175,12 @@ static Result validateOtherTopLevelUpdateParameters(const Specification::Network
     
     r = validateInt64Parameter("epochs", updateParameters.epochs());
     if (!r.good()) {return r;}
-    
+
+    if (updateParameters.has_seed()) {
+        r = validateInt64Parameter("seed", updateParameters.seed());
+        if (!r.good()) {return r;}
+    }
+
     return r;
 }
 
@@ -184,18 +194,25 @@ template<typename T> static Result isTrainingConfigurationSupported(const T& nn)
     }
     
     NeuralNetworkValidatorGraph graph;
+    std::vector<LayerNode> layerNodes;  // Holds on to all the nodes until the validation is over.
+    
+    // Make sure the layerNodes is large enough to hold all the elements
+    size_t numberOfLayers = (size_t)nn.layers_size() + (size_t)nn.updateparams().losslayers_size();
+    layerNodes.resize(numberOfLayers);
     
     /* first traverse "nn" and build the graph object
      */
     for (int i = 0; i < nn.layers_size(); i++) {
         const Specification::NeuralNetworkLayer* layer = &nn.layers(i);
-        node node(layer);
-        graph.insertNode(node);
+        layerNodes.push_back(LayerNode(layer));
+        LayerNode *nodePtr = &(layerNodes[layerNodes.size() - 1]);
+        graph.insertNode(nodePtr);
     }
     for (int i = 0; i < nn.updateparams().losslayers_size(); i++) {
         const Specification::LossLayer* lossLayer = &nn.updateparams().losslayers(i);
-        node node(lossLayer);
-        graph.insertNode(node);
+        layerNodes.push_back(LayerNode(lossLayer));
+        LayerNode *nodePtr = &(layerNodes[layerNodes.size() - 1]);
+        graph.insertNode(nodePtr);
         r = validateLossLayer(lossLayer, &graph);
         if (!r.good()) {return r;}
     }
@@ -215,7 +232,6 @@ template<typename T> static Result isTrainingConfigurationSupported(const T& nn)
     for (int i = 0; i < nn.updateparams().losslayers_size(); i++) {
         const Specification::LossLayer& lossLayer = nn.updateparams().losslayers(i);
         std::string lossLayerName = lossLayer.name();
-        node lossNode = graph.getNodeFromName(lossLayerName);
         
         // queue for BFS
         std::queue<std::string> BFSQueue;
@@ -228,10 +244,15 @@ template<typename T> static Result isTrainingConfigurationSupported(const T& nn)
         while(!BFSQueue.empty()) {
             std::string currentNodeName = BFSQueue.front();
             BFSQueue.pop();
-            node currentNode = graph.getNodeFromName(currentNodeName);
+            const auto *currentNode = graph.getNodeFromName(currentNodeName);
+            if (currentNode == NULL) {
+                std::string err = "Failed to look up node for '" + currentNodeName + "'.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+            
             // we are traversing the graph in reverse
-            for (const auto& parentNode: currentNode.parents) {
-                std::string parentName = parentNode.name;
+            for (const auto *parentNode: currentNode->parents) {
+                std::string parentName = parentNode->name;
                 if (visitedLayersSet.find(parentName) != visitedLayersSet.end()) {
                     continue;
                 }
@@ -239,7 +260,7 @@ template<typename T> static Result isTrainingConfigurationSupported(const T& nn)
                 BFSQueue.push(parentName);
                 
                 // check if this "parentNode" is marked as updatable
-                if (parentNode.isUpdatable) {
+                if (parentNode->isUpdatable) {
                     if (nonBackPropagableLayerSeen) {
                         // if this is true, it means an updatable node exists beyond a non-backpropagable layer
                         std::string err;
@@ -249,9 +270,9 @@ template<typename T> static Result isTrainingConfigurationSupported(const T& nn)
                 }
                 
                 // check if this "parentNode" is a non-backpropagable layer
-                if (!parentNode.isBackPropagable) {
+                if (!parentNode->isBackPropagable) {
                     nonBackPropagableLayerSeen = true;
-                    firstNonBackpropogabaleLayerSeen = parentNode.name;
+                    firstNonBackpropogabaleLayerSeen = parentNode->name;
                 }
             }
         }

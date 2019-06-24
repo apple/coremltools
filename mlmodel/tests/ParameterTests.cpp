@@ -201,6 +201,32 @@ void addEpochs(NeuralNetworkClass *nn, int64_t defaultValue, int64_t minValue,  
     }
 }
 
+template void addShuffleAndSeed(Specification::NeuralNetwork *nn, int64_t defaultValue, int64_t minValue,  int64_t maxValue, std::set<int64_t> allowedValues);
+template void addShuffleAndSeed(Specification::NeuralNetworkClassifier *nn, int64_t defaultValue, int64_t minValue,  int64_t maxValue, std::set<int64_t> allowedValues);
+
+template <class NeuralNetworkClass>
+void addShuffleAndSeed(NeuralNetworkClass *nn, int64_t defaultValue, int64_t minValue,  int64_t maxValue, std::set<int64_t> allowedValues) {
+    auto updateParameters = nn->mutable_updateparams();
+    auto shuffle = updateParameters->mutable_shuffle();
+    shuffle->set_defaultvalue(true);
+
+    auto shuffleSeed = updateParameters->mutable_seed();
+    shuffleSeed->set_defaultvalue(defaultValue);
+
+    if (allowedValues.size() == 0) {
+        auto int64Range = shuffleSeed->mutable_range();
+        int64Range->set_minvalue(minValue);
+        int64Range->set_maxvalue(maxValue);
+    }
+    else {
+        auto int64Set = shuffleSeed->mutable_set();
+        for (auto& x : allowedValues) {
+            int64Set->add_values(x);
+        }
+    }
+}
+
+
 int testMiniBatchSizeOutOfAllowedRange() {
     
     Specification::Model m;

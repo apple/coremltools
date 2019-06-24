@@ -20,6 +20,8 @@ template <class NeuralNetworkClass> void addMiniBatchSize(NeuralNetworkClass *nn
 
 template <class NeuralNetworkClass> void addEpochs(NeuralNetworkClass *nn, int64_t defaultValue, int64_t minValue, int64_t maxValue, std::set<int64_t> allowedValues = std::set<int64_t>());
 
+template <class NeuralNetworkClass> void addShuffleAndSeed(NeuralNetworkClass *nn, int64_t defaultValue, int64_t minValue, int64_t maxValue, std::set<int64_t> allowedValues);
+
 void addMomentum(Specification::NeuralNetwork *nn, Specification::Optimizer::OptimizerTypeCase optimizerType, double defaultValue, double minValue, double maxValue);
 
 void addBeta1(Specification::NeuralNetwork *nn, Specification::Optimizer::OptimizerTypeCase optimizerType, double defaultValue, double minValue, double maxValue);

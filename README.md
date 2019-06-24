@@ -10,7 +10,7 @@ coremltools 3.0b beta
 [Release notes](https://github.com/apple/coremltools/releases/tag/v3.0-beta)
 ```shell
 # Install using pip
-pip install coremltools==3.0b1
+pip install coremltools==3.0b2
 ```
 
 API
@@ -93,7 +93,6 @@ cmake \
   -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m \
   ../
 ```
-
 after which you can use make to build the project
 
 ```shell

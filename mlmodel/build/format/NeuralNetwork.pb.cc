@@ -1350,6 +1350,10 @@ void TableStruct::InitDefaultsImpl() {
       ::CoreML::Specification::Optimizer::internal_default_instance());
   _NetworkUpdateParameters_default_instance_.get_mutable()->epochs_ = const_cast< ::CoreML::Specification::Int64Parameter*>(
       ::CoreML::Specification::Int64Parameter::internal_default_instance());
+  _NetworkUpdateParameters_default_instance_.get_mutable()->shuffle_ = const_cast< ::CoreML::Specification::BoolParameter*>(
+      ::CoreML::Specification::BoolParameter::internal_default_instance());
+  _NetworkUpdateParameters_default_instance_.get_mutable()->seed_ = const_cast< ::CoreML::Specification::Int64Parameter*>(
+      ::CoreML::Specification::Int64Parameter::internal_default_instance());
   _SGDOptimizer_default_instance_.get_mutable()->learningrate_ = const_cast< ::CoreML::Specification::DoubleParameter*>(
       ::CoreML::Specification::DoubleParameter::internal_default_instance());
   _SGDOptimizer_default_instance_.get_mutable()->minibatchsize_ = const_cast< ::CoreML::Specification::Int64Parameter*>(
@@ -66649,6 +66653,8 @@ void NeuralNetworkRegressor::set_allocated_updateparams(::CoreML::Specification:
 const int NetworkUpdateParameters::kLossLayersFieldNumber;
 const int NetworkUpdateParameters::kOptimizerFieldNumber;
 const int NetworkUpdateParameters::kEpochsFieldNumber;
+const int NetworkUpdateParameters::kShuffleFieldNumber;
+const int NetworkUpdateParameters::kSeedFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NetworkUpdateParameters::NetworkUpdateParameters()
@@ -66675,12 +66681,22 @@ NetworkUpdateParameters::NetworkUpdateParameters(const NetworkUpdateParameters& 
   } else {
     epochs_ = NULL;
   }
+  if (from.has_shuffle()) {
+    shuffle_ = new ::CoreML::Specification::BoolParameter(*from.shuffle_);
+  } else {
+    shuffle_ = NULL;
+  }
+  if (from.has_seed()) {
+    seed_ = new ::CoreML::Specification::Int64Parameter(*from.seed_);
+  } else {
+    seed_ = NULL;
+  }
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.NetworkUpdateParameters)
 }
 
 void NetworkUpdateParameters::SharedCtor() {
-  ::memset(&optimizer_, 0, reinterpret_cast<char*>(&epochs_) -
-    reinterpret_cast<char*>(&optimizer_) + sizeof(epochs_));
+  ::memset(&optimizer_, 0, reinterpret_cast<char*>(&seed_) -
+    reinterpret_cast<char*>(&optimizer_) + sizeof(seed_));
   _cached_size_ = 0;
 }
 
@@ -66695,6 +66711,12 @@ void NetworkUpdateParameters::SharedDtor() {
   }
   if (this != internal_default_instance()) {
     delete epochs_;
+  }
+  if (this != internal_default_instance()) {
+    delete shuffle_;
+  }
+  if (this != internal_default_instance()) {
+    delete seed_;
   }
 }
 
@@ -66727,6 +66749,14 @@ void NetworkUpdateParameters::Clear() {
     delete epochs_;
   }
   epochs_ = NULL;
+  if (GetArenaNoVirtual() == NULL && shuffle_ != NULL) {
+    delete shuffle_;
+  }
+  shuffle_ = NULL;
+  if (GetArenaNoVirtual() == NULL && seed_ != NULL) {
+    delete seed_;
+  }
+  seed_ = NULL;
 }
 
 bool NetworkUpdateParameters::MergePartialFromCodedStream(
@@ -66735,7 +66765,7 @@ bool NetworkUpdateParameters::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:CoreML.Specification.NetworkUpdateParameters)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(16383u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -66769,6 +66799,30 @@ bool NetworkUpdateParameters::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(26u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_epochs()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.BoolParameter shuffle = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(82u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_shuffle()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.Int64Parameter seed = 20;
+      case 20: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(162u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_seed()));
         } else {
           goto handle_unusual;
         }
@@ -66820,6 +66874,18 @@ void NetworkUpdateParameters::SerializeWithCachedSizes(
       3, *this->epochs_, output);
   }
 
+  // .CoreML.Specification.BoolParameter shuffle = 10;
+  if (this->has_shuffle()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      10, *this->shuffle_, output);
+  }
+
+  // .CoreML.Specification.Int64Parameter seed = 20;
+  if (this->has_seed()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      20, *this->seed_, output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NetworkUpdateParameters)
 }
 
@@ -66852,6 +66918,20 @@ size_t NetworkUpdateParameters::ByteSizeLong() const {
         *this->epochs_);
   }
 
+  // .CoreML.Specification.BoolParameter shuffle = 10;
+  if (this->has_shuffle()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->shuffle_);
+  }
+
+  // .CoreML.Specification.Int64Parameter seed = 20;
+  if (this->has_seed()) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->seed_);
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -66878,6 +66958,12 @@ void NetworkUpdateParameters::MergeFrom(const NetworkUpdateParameters& from) {
   if (from.has_epochs()) {
     mutable_epochs()->::CoreML::Specification::Int64Parameter::MergeFrom(from.epochs());
   }
+  if (from.has_shuffle()) {
+    mutable_shuffle()->::CoreML::Specification::BoolParameter::MergeFrom(from.shuffle());
+  }
+  if (from.has_seed()) {
+    mutable_seed()->::CoreML::Specification::Int64Parameter::MergeFrom(from.seed());
+  }
 }
 
 void NetworkUpdateParameters::CopyFrom(const NetworkUpdateParameters& from) {
@@ -66899,6 +66985,8 @@ void NetworkUpdateParameters::InternalSwap(NetworkUpdateParameters* other) {
   losslayers_.InternalSwap(&other->losslayers_);
   std::swap(optimizer_, other->optimizer_);
   std::swap(epochs_, other->epochs_);
+  std::swap(shuffle_, other->shuffle_);
+  std::swap(seed_, other->seed_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -67015,6 +67103,84 @@ void NetworkUpdateParameters::set_allocated_epochs(::CoreML::Specification::Int6
     
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.epochs)
+}
+
+// .CoreML.Specification.BoolParameter shuffle = 10;
+bool NetworkUpdateParameters::has_shuffle() const {
+  return this != internal_default_instance() && shuffle_ != NULL;
+}
+void NetworkUpdateParameters::clear_shuffle() {
+  if (GetArenaNoVirtual() == NULL && shuffle_ != NULL) delete shuffle_;
+  shuffle_ = NULL;
+}
+const ::CoreML::Specification::BoolParameter& NetworkUpdateParameters::shuffle() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  return shuffle_ != NULL ? *shuffle_
+                         : *::CoreML::Specification::BoolParameter::internal_default_instance();
+}
+::CoreML::Specification::BoolParameter* NetworkUpdateParameters::mutable_shuffle() {
+  
+  if (shuffle_ == NULL) {
+    shuffle_ = new ::CoreML::Specification::BoolParameter;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  return shuffle_;
+}
+::CoreML::Specification::BoolParameter* NetworkUpdateParameters::release_shuffle() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  
+  ::CoreML::Specification::BoolParameter* temp = shuffle_;
+  shuffle_ = NULL;
+  return temp;
+}
+void NetworkUpdateParameters::set_allocated_shuffle(::CoreML::Specification::BoolParameter* shuffle) {
+  delete shuffle_;
+  shuffle_ = shuffle;
+  if (shuffle) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.shuffle)
+}
+
+// .CoreML.Specification.Int64Parameter seed = 20;
+bool NetworkUpdateParameters::has_seed() const {
+  return this != internal_default_instance() && seed_ != NULL;
+}
+void NetworkUpdateParameters::clear_seed() {
+  if (GetArenaNoVirtual() == NULL && seed_ != NULL) delete seed_;
+  seed_ = NULL;
+}
+const ::CoreML::Specification::Int64Parameter& NetworkUpdateParameters::seed() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NetworkUpdateParameters.seed)
+  return seed_ != NULL ? *seed_
+                         : *::CoreML::Specification::Int64Parameter::internal_default_instance();
+}
+::CoreML::Specification::Int64Parameter* NetworkUpdateParameters::mutable_seed() {
+  
+  if (seed_ == NULL) {
+    seed_ = new ::CoreML::Specification::Int64Parameter;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NetworkUpdateParameters.seed)
+  return seed_;
+}
+::CoreML::Specification::Int64Parameter* NetworkUpdateParameters::release_seed() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NetworkUpdateParameters.seed)
+  
+  ::CoreML::Specification::Int64Parameter* temp = seed_;
+  seed_ = NULL;
+  return temp;
+}
+void NetworkUpdateParameters::set_allocated_seed(::CoreML::Specification::Int64Parameter* seed) {
+  delete seed_;
+  seed_ = seed;
+  if (seed) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.seed)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

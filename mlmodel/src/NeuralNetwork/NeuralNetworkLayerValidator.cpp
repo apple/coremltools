@@ -1007,7 +1007,7 @@ Result NeuralNetworkSpecValidator::validateGRULayer(const Specification::NeuralN
     Result r;
     
     // Must specify hidden states
-    r = validateInputCount(layer, 2, 2);
+    r = validateInputCount(layer, 1, 2);
     if (r.good()) {
         r = validateOutputCount(layer, 2, 2);
     }
@@ -1104,7 +1104,7 @@ Result NeuralNetworkSpecValidator::validateGRULayer(const Specification::NeuralN
 Result NeuralNetworkSpecValidator::validateUniDirectionalLSTMLayer(const Specification::NeuralNetworkLayer& layer) {
     Result r;
     // Must specify hidden states
-    r = validateInputCount(layer, 3, 3);
+    r = validateInputCount(layer, 1, 3);
     if (r.good()) {
         r = validateOutputCount(layer, 3, 3);
     }
@@ -1203,7 +1203,7 @@ Result NeuralNetworkSpecValidator::validateUniDirectionalLSTMLayer(const Specifi
 Result NeuralNetworkSpecValidator::validateBiDirectionalLSTMLayer(const Specification::NeuralNetworkLayer& layer) {
     Result r;
     // Must specify hidden states
-    r = validateInputCount(layer, 5, 5);
+    r = validateInputCount(layer, 1, 5);
     if (r.good()) {
         r = validateOutputCount(layer, 5, 5);
     }

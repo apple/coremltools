@@ -26,6 +26,7 @@ def _get_recurrent_activation_name_from_keras(activation):
     return activation_str
 
 def _get_activation_name_from_keras_layer(keras_layer):
+
     if isinstance(keras_layer, keras.layers.advanced_activations.LeakyReLU):
         non_linearity = 'LEAKYRELU'
     elif isinstance(keras_layer, keras.layers.advanced_activations.PReLU):
@@ -60,7 +61,8 @@ def _get_activation_name_from_keras_layer(keras_layer):
         elif act_name == 'linear':
             non_linearity = 'LINEAR'
         else:
-            _utils.raise_error_unsupported_categorical_option('activation', act_name, 'Dense', ## 
+            _utils.raise_error_unsupported_categorical_option('activation',
+                                                            act_name, 'Dense', ##
                     keras_layer.name)
 
     return non_linearity
@@ -75,14 +77,18 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
     elif mode == 'mul':
         return 'MULTIPLY'
     elif mode == 'concat':
-        if len(keras_layer.input_shape[0]) == 3 and (keras_layer.concat_axis == 1 or keras_layer.concat_axis == -2):
+        if len(keras_layer.input_shape[0]) == 3 and (keras_layer.concat_axis == 1
+                                                     or keras_layer.concat_axis == -2):
             return 'SEQUENCE_CONCAT'
-        elif len(keras_layer.input_shape[0]) == 4 and (keras_layer.concat_axis == 3 or keras_layer.concat_axis == -1):
+        elif len(keras_layer.input_shape[0]) == 4 and (keras_layer.concat_axis == 3
+                                                       or keras_layer.concat_axis == -1):
             return 'CONCAT'
-        elif len(keras_layer.input_shape[0]) == 2 and (keras_layer.concat_axis == 1 or keras_layer.concat_axis == -1):
+        elif len(keras_layer.input_shape[0]) == 2 and (keras_layer.concat_axis == 1
+                                                       or keras_layer.concat_axis == -1):
             return 'CONCAT'
         else:
-            option = "input_shape = %s concat_axis = %s" % (str(keras_layer.input_shape[0]), str(keras_layer.concat_axis))
+            option = "input_shape = %s concat_axis = %s" \
+                     % (str(keras_layer.input_shape[0]), str(keras_layer.concat_axis))
             _utils.raise_error_unsupported_option(option, mode, keras_layer.name)
     elif mode == 'cos':
         if len(keras_layer.input_shape[0]) == 2: 
@@ -158,13 +164,13 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
     non_linearity = _get_activation_name_from_keras_layer(keras_layer)
-    
+
     # Add a non-linearity layer
     if non_linearity == 'SOFTMAX':
         builder.add_softmax(name = layer, input_name = input_name,
                 output_name = output_name)
         return
-    
+
     params = None
     if non_linearity == 'LEAKYRELU':
         params = [keras_layer.alpha]
@@ -174,7 +180,8 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
         # backend tensor, not a numpy array as it claims in documentation. 
         shared_axes = list(keras_layer.shared_axes)
         if not (shared_axes == [1,2,3] or shared_axes == [1,2]):
-            _utils.raise_error_unsupported_scenario("Shared axis not being [1,2,3] or [1,2]", 'parametric_relu', layer)
+            _utils.raise_error_unsupported_scenario("Shared axis not being [1,2,3] "
+                                                    "or [1,2]", 'parametric_relu', layer)
         params = keras.backend.eval(keras_layer.weights[0])
     elif non_linearity == 'ELU':
         params = keras_layer.alpha
@@ -186,8 +193,10 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer):
         betas = keras.backend.eval(keras_layer.weights[1])
 
         if len(alphas.shape) == 3:  # (H,W,C)
-            if not (_same_elements_per_channel(alphas) and _same_elements_per_channel(betas)):
-                _utils.raise_error_unsupported_scenario("Different parameter values", 'parametric_softplus', layer)
+            if not (_same_elements_per_channel(alphas) and
+                    _same_elements_per_channel(betas)):
+                _utils.raise_error_unsupported_scenario("Different parameter values",
+                                                        'parametric_softplus', layer)
             alphas = alphas[0,0,:]
             betas = betas[0,0,:]
         params = [alphas, betas]
@@ -388,10 +397,13 @@ def convert_reshape(builder, layer, input_names, output_names, keras_layer):
     new_shape = get_coreml_target_shape(target_shape)
     if new_shape is not None: 
         mode = get_mode(input_shape, target_shape)
-        builder.add_reshape(name = layer, input_name = input_name, output_name=output_name, 
+        builder.add_reshape(name = layer, input_name = input_name,
+                            output_name=output_name,
                 target_shape = new_shape, mode = mode)
     else: 
-        _utils.raise_error_unsupported_categorical_option('input_shape', str(input_shape), 'reshape', layer)
+        _utils.raise_error_unsupported_categorical_option('input_shape',
+                                                          str(input_shape),
+                                                          'reshape', layer)
 
 def convert_upsample(builder, layer, input_names, output_names, keras_layer):
     """Convert convolution layer from keras to coreml.
@@ -538,7 +550,8 @@ def convert_lstm(builder, layer, input_names, output_names, keras_layer):
     hidden_size = keras_layer.output_dim
     input_size = keras_layer.input_shape[-1]
     if keras_layer.consume_less not in ['cpu', 'gpu']:
-        raise ValueError('Cannot convert Keras layer with consume_less = %s' % keras_layer.consume_less)
+        raise ValueError('Cannot convert Keras layer with consume_less = %s'
+                         % keras_layer.consume_less)
 
     output_all = keras_layer.return_sequences
     reverse_input = keras_layer.go_backwards
@@ -618,7 +631,8 @@ def convert_simple_rnn(builder, layer, input_names, output_names, keras_layer):
     reverse_input = keras_layer.go_backwards
 
     if keras_layer.consume_less not in ['cpu', 'gpu']:
-        raise ValueError('Cannot convert Keras layer with consume_less = %s' % keras_layer.consume_less)
+        raise ValueError('Cannot convert Keras layer with consume_less = %s'
+                         % keras_layer.consume_less)
     
     W_h = np.zeros((hidden_size, hidden_size))
     W_x = np.zeros((hidden_size, input_size))
@@ -667,7 +681,8 @@ def convert_gru(builder, layer, input_names, output_names, keras_layer):
     reverse_input = keras_layer.go_backwards
 
     if keras_layer.consume_less not in ['cpu', 'gpu']:
-        raise ValueError('Cannot convert Keras layer with consume_less = %s' % keras_layer.consume_less)
+        raise ValueError('Cannot convert Keras layer with consume_less = %s'
+                         % keras_layer.consume_less)
 
     # Keras: Z R O
     # CoreML: Z R O    
@@ -733,7 +748,8 @@ def convert_bidirectional(builder, layer, input_names, output_names, keras_layer
     #output_size = lstm_layer.output_dim * 2
 
     if lstm_layer.consume_less not in ['cpu', 'gpu']:
-        raise ValueError('Cannot convert Keras layer with consume_less = %s' % keras_layer.consume_less)
+        raise ValueError('Cannot convert Keras layer with consume_less = %s'
+                         % keras_layer.consume_less)
 
     # Keras: I C F O; W_x, W_h, b
     # CoreML: I F O G; W_h and W_x are separated
@@ -897,7 +913,8 @@ def convert_flatten(builder, layer, input_names, output_names, keras_layer):
     if len(keras_layer.input.shape) == 4:
         blob_order = 1
     
-    builder.add_flatten(name=layer, mode=blob_order, input_name=input_name, output_name=output_name)
+    builder.add_flatten(name=layer, mode=blob_order, input_name=input_name,
+                        output_name=output_name)
 
 def convert_softmax(builder, layer, input_names, output_names, keras_layer):
     """Convert a softmax layer from keras to coreml.

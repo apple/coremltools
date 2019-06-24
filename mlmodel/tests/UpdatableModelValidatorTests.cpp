@@ -12,6 +12,7 @@
 #include "../src/NeuralNetwork/NeuralNetworkShapes.hpp"
 #include "ParameterTests.hpp"
 #include "ModelCreationUtils.hpp"
+#include "../src/Utils.hpp"
 
 #include "framework/TestUtils.hpp"
 
@@ -733,6 +734,23 @@ int testMissingEpochsParameter() {
     return 0;
 }
 
+int testExistingShuffleWithMissingSeedParameter() {
+
+    Specification::Model m;
+
+    // basic neural network model without any updatable model parameters.
+    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+
+    addShuffleAndSeed(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    Result res = Model::validate(m);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
 int testNonUpdatablePipelineWithNonUpdatableModels() {
     
     Specification::Model spec;
@@ -1027,6 +1045,22 @@ int testUpdatablePipelineWithOneUpdatableModelInsidePipelineHierarchy() {
     ML_ASSERT_GOOD(res);
     
     // expect validation to pass!
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    
+    return 0;
+}
+
+int testValidUpdatableModelWith1024Layers() {
+    
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+    
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(spec, "OutTensor");
+    
     res = Model::validate(spec);
     ML_ASSERT_GOOD(res);
     

@@ -36,6 +36,7 @@ def _get_recurrent_activation_name_from_keras(activation):
     return activation_str
 
 def _get_activation_name_from_keras_layer(keras_layer):
+
     if isinstance(keras_layer, _keras.layers.advanced_activations.LeakyReLU):
         non_linearity = 'LEAKYRELU'
     elif isinstance(keras_layer, _keras.layers.advanced_activations.PReLU):
@@ -44,6 +45,8 @@ def _get_activation_name_from_keras_layer(keras_layer):
         non_linearity = 'ELU'
     elif isinstance(keras_layer, _keras.layers.advanced_activations.ThresholdedReLU):
         non_linearity = 'THRESHOLDEDRELU'
+    elif isinstance(keras_layer, _keras.layers.advanced_activations.Softmax):
+        non_linearity = 'SOFTMAX'
     else:
         import six
         if six.PY2:
@@ -415,6 +418,7 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer,
         builder.make_updatable([layer])
 
 
+
 def convert_convolution1d(builder, layer, input_names, output_names,
                           keras_layer, respect_train):
     """
@@ -754,10 +758,12 @@ def convert_pooling(builder, layer, input_names, output_names, keras_layer,
             isinstance(keras_layer, _keras.layers.pooling.GlobalMaxPooling1D) or \
             isinstance(keras_layer, _keras.layers.convolutional.AveragePooling1D) or \
             isinstance(keras_layer, _keras.layers.pooling.GlobalAveragePooling1D):
-            pool_size = keras_layer.pool_size if type(keras_layer.pool_size) is int else keras_layer.pool_size[0]
+            pool_size = keras_layer.pool_size if type(keras_layer.pool_size) is \
+                                                 int else keras_layer.pool_size[0]
             height, width = 1, pool_size
             if keras_layer.strides is not None:
-                strides = keras_layer.strides if type(keras_layer.strides) is int else keras_layer.strides[0]
+                strides = keras_layer.strides if type(keras_layer.strides) is \
+                                                 int else keras_layer.strides[0]
                 stride_height, stride_width = 1, strides
             else:
                 stride_height, stride_width = 1, pool_size
@@ -937,7 +943,8 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer,
             fh = fw = keras_layer.size
         elif len(keras_layer.size) == 2:
             if keras_layer.size[0] != keras_layer.size[1]:
-                raise ValueError("Upsample with different rows and columns not supported.")
+                raise ValueError("Upsample with different rows and columns not "
+                                 "supported.")
             else:
                 fh = keras_layer.size[0]
                 fw = keras_layer.size[1]
@@ -1301,7 +1308,8 @@ def convert_bidirectional(builder, layer, input_names, output_names,
         b_back = None
         
     if (b == None and b_back != None) or (b != None and b_back == None):
-        raise ValueError('Unsupported Bi-directional LSTM configuration. Bias must be enabled/disabled for both directions.')
+        raise ValueError('Unsupported Bi-directional LSTM configuration. Bias '
+                         'must be enabled/disabled for both directions.')
 
     # Set activation type
     inner_activation_str = _get_recurrent_activation_name_from_keras(lstm_layer.recurrent_activation)
@@ -1311,7 +1319,8 @@ def convert_bidirectional(builder, layer, input_names, output_names,
     if hasattr(keras_layer, 'merge_mode'):
         merge_mode = keras_layer.merge_mode
         if merge_mode not in ['concat','sum','mul','ave']:
-            raise NotImplementedError('merge_mode \'%s\' in Bidirectional LSTM not supported currently' % merge_mode)
+            raise NotImplementedError('merge_mode \'%s\' in Bidirectional LSTM '
+                                      'not supported currently' % merge_mode)
         if merge_mode != 'concat':
             output_name_1 += '_concatenated_bilstm_output'
 
@@ -1340,9 +1349,11 @@ def convert_bidirectional(builder, layer, input_names, output_names,
             mode = 'MULTIPLY'
         builder.add_split(name = layer + '_split',
                           input_name= output_name_1,
-                          output_names= [output_names[0] + '_forward', output_names[0] + '_backward'])
+                          output_names= [output_names[0] + '_forward',
+                                         output_names[0] + '_backward'])
         builder.add_elementwise(name = layer + '_elementwise',
-                                input_names = [output_names[0] + '_forward', output_names[0] + '_backward'],
+                                input_names = [output_names[0] + '_forward',
+                                               output_names[0] + '_backward'],
                                 output_name = output_names[0],
                                 mode = mode)
 

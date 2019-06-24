@@ -972,7 +972,6 @@ class LSTMLayer(RecurrentLayerTest):
 
     @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
-    @unittest.skip
     def test_keras2_bilstm_layer_batched(self):
         self._test_bilstm_layer(batched=True)
 

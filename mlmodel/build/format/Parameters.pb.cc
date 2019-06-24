@@ -27,6 +27,8 @@ class DoubleParameterDefaultTypeInternal : public ::google::protobuf::internal::
 } _DoubleParameter_default_instance_;
 class StringParameterDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<StringParameter> {
 } _StringParameter_default_instance_;
+class BoolParameterDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BoolParameter> {
+} _BoolParameter_default_instance_;
 
 namespace protobuf_Parameters_2eproto {
 
@@ -44,6 +46,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
 };
 
 
@@ -51,6 +54,7 @@ void TableStruct::Shutdown() {
   _Int64Parameter_default_instance_.Shutdown();
   _DoubleParameter_default_instance_.Shutdown();
   _StringParameter_default_instance_.Shutdown();
+  _BoolParameter_default_instance_.Shutdown();
 }
 
 void TableStruct::InitDefaultsImpl() {
@@ -61,6 +65,7 @@ void TableStruct::InitDefaultsImpl() {
   _Int64Parameter_default_instance_.DefaultConstruct();
   _DoubleParameter_default_instance_.DefaultConstruct();
   _StringParameter_default_instance_.DefaultConstruct();
+  _BoolParameter_default_instance_.DefaultConstruct();
 }
 
 void InitDefaults() {
@@ -1066,6 +1071,200 @@ void StringParameter::set_allocated_defaultvalue(::std::string* defaultvalue) {
   }
   defaultvalue_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), defaultvalue);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.StringParameter.defaultValue)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int BoolParameter::kDefaultValueFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+BoolParameter::BoolParameter()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_Parameters_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.BoolParameter)
+}
+BoolParameter::BoolParameter(const BoolParameter& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  defaultvalue_ = from.defaultvalue_;
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.BoolParameter)
+}
+
+void BoolParameter::SharedCtor() {
+  defaultvalue_ = false;
+  _cached_size_ = 0;
+}
+
+BoolParameter::~BoolParameter() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.BoolParameter)
+  SharedDtor();
+}
+
+void BoolParameter::SharedDtor() {
+}
+
+void BoolParameter::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const BoolParameter& BoolParameter::default_instance() {
+  protobuf_Parameters_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+BoolParameter* BoolParameter::New(::google::protobuf::Arena* arena) const {
+  BoolParameter* n = new BoolParameter;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void BoolParameter::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.BoolParameter)
+  defaultvalue_ = false;
+}
+
+bool BoolParameter::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.BoolParameter)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // bool defaultValue = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &defaultvalue_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.BoolParameter)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.BoolParameter)
+  return false;
+#undef DO_
+}
+
+void BoolParameter::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.BoolParameter)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // bool defaultValue = 1;
+  if (this->defaultvalue() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(1, this->defaultvalue(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.BoolParameter)
+}
+
+size_t BoolParameter::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.BoolParameter)
+  size_t total_size = 0;
+
+  // bool defaultValue = 1;
+  if (this->defaultvalue() != 0) {
+    total_size += 1 + 1;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void BoolParameter::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const BoolParameter*>(&from));
+}
+
+void BoolParameter::MergeFrom(const BoolParameter& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.BoolParameter)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.defaultvalue() != 0) {
+    set_defaultvalue(from.defaultvalue());
+  }
+}
+
+void BoolParameter::CopyFrom(const BoolParameter& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.BoolParameter)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool BoolParameter::IsInitialized() const {
+  return true;
+}
+
+void BoolParameter::Swap(BoolParameter* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void BoolParameter::InternalSwap(BoolParameter* other) {
+  std::swap(defaultvalue_, other->defaultvalue_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string BoolParameter::GetTypeName() const {
+  return "CoreML.Specification.BoolParameter";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// BoolParameter
+
+// bool defaultValue = 1;
+void BoolParameter::clear_defaultvalue() {
+  defaultvalue_ = false;
+}
+bool BoolParameter::defaultvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.BoolParameter.defaultValue)
+  return defaultvalue_;
+}
+void BoolParameter::set_defaultvalue(bool value) {
+  
+  defaultvalue_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.BoolParameter.defaultValue)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
