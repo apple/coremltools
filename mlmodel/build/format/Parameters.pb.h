@@ -44,6 +44,9 @@ extern ArrayFeatureType_ShapeDefaultTypeInternal _ArrayFeatureType_Shape_default
 class ArrayFeatureType_ShapeRange;
 class ArrayFeatureType_ShapeRangeDefaultTypeInternal;
 extern ArrayFeatureType_ShapeRangeDefaultTypeInternal _ArrayFeatureType_ShapeRange_default_instance_;
+class BoolParameter;
+class BoolParameterDefaultTypeInternal;
+extern BoolParameterDefaultTypeInternal _BoolParameter_default_instance_;
 class DictionaryFeatureType;
 class DictionaryFeatureTypeDefaultTypeInternal;
 extern DictionaryFeatureTypeDefaultTypeInternal _DictionaryFeatureType_default_instance_;
@@ -457,6 +460,84 @@ class StringParameter : public ::google::protobuf::MessageLite /* @@protoc_inser
   mutable int _cached_size_;
   friend struct protobuf_Parameters_2eproto::TableStruct;
 };
+// -------------------------------------------------------------------
+
+class BoolParameter : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.BoolParameter) */ {
+ public:
+  BoolParameter();
+  virtual ~BoolParameter();
+
+  BoolParameter(const BoolParameter& from);
+
+  inline BoolParameter& operator=(const BoolParameter& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const BoolParameter& default_instance();
+
+  static inline const BoolParameter* internal_default_instance() {
+    return reinterpret_cast<const BoolParameter*>(
+               &_BoolParameter_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    3;
+
+  void Swap(BoolParameter* other);
+
+  // implements Message ----------------------------------------------
+
+  inline BoolParameter* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  BoolParameter* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const BoolParameter& from);
+  void MergeFrom(const BoolParameter& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(BoolParameter* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // bool defaultValue = 1;
+  void clear_defaultvalue();
+  static const int kDefaultValueFieldNumber = 1;
+  bool defaultvalue() const;
+  void set_defaultvalue(bool value);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.BoolParameter)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  bool defaultvalue_;
+  mutable int _cached_size_;
+  friend struct protobuf_Parameters_2eproto::TableStruct;
+};
 // ===================================================================
 
 
@@ -716,7 +797,27 @@ inline void StringParameter::set_allocated_defaultvalue(::std::string* defaultva
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.StringParameter.defaultValue)
 }
 
+// -------------------------------------------------------------------
+
+// BoolParameter
+
+// bool defaultValue = 1;
+inline void BoolParameter::clear_defaultvalue() {
+  defaultvalue_ = false;
+}
+inline bool BoolParameter::defaultvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.BoolParameter.defaultValue)
+  return defaultvalue_;
+}
+inline void BoolParameter::set_defaultvalue(bool value) {
+  
+  defaultvalue_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.BoolParameter.defaultValue)
+}
+
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

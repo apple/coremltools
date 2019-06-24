@@ -1316,10 +1316,6 @@ void NeuralNetworkShaper::shapeGRULayer(const Specification::NeuralNetworkLayer&
     ShapeConstraint& outputShape = blobShapes[specLayer.output(0)];
     outputShape.setName(specLayer.output(0));
 
-    ShapeConstraint& stateInShape = blobShapes[specLayer.input(1)];
-    ShapeConstraint& stateOutShape = blobShapes[specLayer.output(1)];
-    stateOutShape.setName(specLayer.output(1));
-
 #if COREML_VALIDATOR_VERBOSE
     std::cout << "GRU layer " << specLayer.name() << " input shapes (before): " << std::endl;
     for (int i = 0; i < specLayer.input_size(); i++) {
@@ -1349,6 +1345,14 @@ void NeuralNetworkShaper::shapeGRULayer(const Specification::NeuralNetworkLayer&
     else {
         outputShape.setSequence(1);
     }
+
+    if (specLayer.input_size() < 2) {
+        return;
+    }
+
+    ShapeConstraint& stateInShape = blobShapes[specLayer.input(1)];
+    ShapeConstraint& stateOutShape = blobShapes[specLayer.output(1)];
+    stateOutShape.setName(specLayer.output(1));
 
     stateInShape.setSequence(1);
     stateInShape.setChannel(outSize);
@@ -1380,14 +1384,6 @@ void NeuralNetworkShaper::shapeUnidirectionalLSTMLayer(const Specification::Neur
     ShapeConstraint& outputShape = blobShapes[specLayer.output(0)];
     outputShape.setName(specLayer.output(0));
 
-    ShapeConstraint& stateInShape = blobShapes[specLayer.input(1)];
-    ShapeConstraint& stateOutShape = blobShapes[specLayer.output(1)];
-    stateOutShape.setName(specLayer.output(1));
-
-    ShapeConstraint& hiddenInShape = blobShapes[specLayer.input(2)];
-    ShapeConstraint& hiddenOutShape = blobShapes[specLayer.output(2)];
-    hiddenOutShape.setName(specLayer.output(2));
-
 #if COREML_VALIDATOR_VERBOSE
     std::cout << "Unidirectional LSTM layer " << specLayer.name() << " input shapes (before): " << std::endl;
     for (int i = 0; i < specLayer.input_size(); i++) {
@@ -1417,6 +1413,18 @@ void NeuralNetworkShaper::shapeUnidirectionalLSTMLayer(const Specification::Neur
     else {
         outputShape.setSequence(1);
     }
+
+    if (specLayer.input_size() < 3) {
+        return;
+    }
+
+    ShapeConstraint& stateInShape = blobShapes[specLayer.input(1)];
+    ShapeConstraint& stateOutShape = blobShapes[specLayer.output(1)];
+    stateOutShape.setName(specLayer.output(1));
+
+    ShapeConstraint& hiddenInShape = blobShapes[specLayer.input(2)];
+    ShapeConstraint& hiddenOutShape = blobShapes[specLayer.output(2)];
+    hiddenOutShape.setName(specLayer.output(2));
 
     stateInShape.setSequence(1);
     stateInShape.setChannel(outSize);
@@ -1458,22 +1466,6 @@ void NeuralNetworkShaper::shapeBidirectionalLSTMLayer(const Specification::Neura
     ShapeConstraint& outputShape = blobShapes[specLayer.output(0)];
     outputShape.setName(specLayer.output(0));
 
-    ShapeConstraint& stateInShape = blobShapes[specLayer.input(1)];
-    ShapeConstraint& stateOutShape = blobShapes[specLayer.output(1)];
-    stateOutShape.setName(specLayer.output(1));
-
-    ShapeConstraint& hiddenInShape = blobShapes[specLayer.input(2)];
-    ShapeConstraint& hiddenOutShape = blobShapes[specLayer.output(2)];
-    hiddenOutShape.setName(specLayer.output(2));
-
-    ShapeConstraint& stateInShapeRev = blobShapes[specLayer.input(3)];
-    ShapeConstraint& stateOutShapeRev = blobShapes[specLayer.output(3)];
-    stateOutShapeRev.setName(specLayer.output(3));
-
-    ShapeConstraint& hiddenInShapeRev = blobShapes[specLayer.input(4)];
-    ShapeConstraint& hiddenOutShapeRev = blobShapes[specLayer.output(4)];
-    hiddenOutShapeRev.setName(specLayer.output(4));
-
 #if COREML_VALIDATOR_VERBOSE
     std::cout << "Bidirectional LSTM layer " << specLayer.name() << " input shapes (before): " << std::endl;
     for (int i = 0; i < specLayer.input_size(); i++) {
@@ -1491,7 +1483,7 @@ void NeuralNetworkShaper::shapeBidirectionalLSTMLayer(const Specification::Neura
     size_t outSize = (size_t)recurrent.outputvectorsize();
 
     // This is the current maximum sequence length for bidirectional models.
-    inputShape.upperBoundSequence(400);
+    inputShape.upperBoundSequence(10000);
     
     inputShape.setChannel(inSize);
     inputShape.setHeight(1);
@@ -1506,6 +1498,27 @@ void NeuralNetworkShaper::shapeBidirectionalLSTMLayer(const Specification::Neura
     else {
         outputShape.setSequence(1);
     }
+
+    if (specLayer.input_size() < 5) {
+        return;
+    }
+
+    ShapeConstraint& stateInShape = blobShapes[specLayer.input(1)];
+    ShapeConstraint& stateOutShape = blobShapes[specLayer.output(1)];
+    stateOutShape.setName(specLayer.output(1));
+
+    ShapeConstraint& hiddenInShape = blobShapes[specLayer.input(2)];
+    ShapeConstraint& hiddenOutShape = blobShapes[specLayer.output(2)];
+    hiddenOutShape.setName(specLayer.output(2));
+
+    ShapeConstraint& stateInShapeRev = blobShapes[specLayer.input(3)];
+    ShapeConstraint& stateOutShapeRev = blobShapes[specLayer.output(3)];
+    stateOutShapeRev.setName(specLayer.output(3));
+
+    ShapeConstraint& hiddenInShapeRev = blobShapes[specLayer.input(4)];
+    ShapeConstraint& hiddenOutShapeRev = blobShapes[specLayer.output(4)];
+    hiddenOutShapeRev.setName(specLayer.output(4));
+
 
     stateInShape.setSequence(1);
     stateInShape.setChannel(outSize);
@@ -1903,6 +1916,9 @@ NeuralNetworkShaper::NeuralNetworkShaper(const Specification::ModelDescription& 
             }
             
             // using at because it needs to exist, this will throw if it doesn't
+            if (blobShapes.find(desc.name()) == blobShapes.end()) {
+                continue;
+            }
             ShapeConstraint& constraint = blobShapes.at(desc.name());
 
             // TODO: add a catch with an error message that mentions the name

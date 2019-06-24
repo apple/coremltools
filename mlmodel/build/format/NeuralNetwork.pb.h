@@ -138,6 +138,9 @@ extern BiDirectionalLSTMLayerParamsDefaultTypeInternal _BiDirectionalLSTMLayerPa
 class BiasLayerParams;
 class BiasLayerParamsDefaultTypeInternal;
 extern BiasLayerParamsDefaultTypeInternal _BiasLayerParams_default_instance_;
+class BoolParameter;
+class BoolParameterDefaultTypeInternal;
+extern BoolParameterDefaultTypeInternal _BoolParameter_default_instance_;
 class BorderAmounts;
 class BorderAmountsDefaultTypeInternal;
 extern BorderAmountsDefaultTypeInternal _BorderAmounts_default_instance_;
@@ -20127,6 +20130,24 @@ class NetworkUpdateParameters : public ::google::protobuf::MessageLite /* @@prot
   ::CoreML::Specification::Int64Parameter* release_epochs();
   void set_allocated_epochs(::CoreML::Specification::Int64Parameter* epochs);
 
+  // .CoreML.Specification.BoolParameter shuffle = 10;
+  bool has_shuffle() const;
+  void clear_shuffle();
+  static const int kShuffleFieldNumber = 10;
+  const ::CoreML::Specification::BoolParameter& shuffle() const;
+  ::CoreML::Specification::BoolParameter* mutable_shuffle();
+  ::CoreML::Specification::BoolParameter* release_shuffle();
+  void set_allocated_shuffle(::CoreML::Specification::BoolParameter* shuffle);
+
+  // .CoreML.Specification.Int64Parameter seed = 20;
+  bool has_seed() const;
+  void clear_seed();
+  static const int kSeedFieldNumber = 20;
+  const ::CoreML::Specification::Int64Parameter& seed() const;
+  ::CoreML::Specification::Int64Parameter* mutable_seed();
+  ::CoreML::Specification::Int64Parameter* release_seed();
+  void set_allocated_seed(::CoreML::Specification::Int64Parameter* seed);
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.NetworkUpdateParameters)
  private:
 
@@ -20134,6 +20155,8 @@ class NetworkUpdateParameters : public ::google::protobuf::MessageLite /* @@prot
   ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::LossLayer > losslayers_;
   ::CoreML::Specification::Optimizer* optimizer_;
   ::CoreML::Specification::Int64Parameter* epochs_;
+  ::CoreML::Specification::BoolParameter* shuffle_;
+  ::CoreML::Specification::Int64Parameter* seed_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -38703,6 +38726,84 @@ inline void NetworkUpdateParameters::set_allocated_epochs(::CoreML::Specificatio
     
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.epochs)
+}
+
+// .CoreML.Specification.BoolParameter shuffle = 10;
+inline bool NetworkUpdateParameters::has_shuffle() const {
+  return this != internal_default_instance() && shuffle_ != NULL;
+}
+inline void NetworkUpdateParameters::clear_shuffle() {
+  if (GetArenaNoVirtual() == NULL && shuffle_ != NULL) delete shuffle_;
+  shuffle_ = NULL;
+}
+inline const ::CoreML::Specification::BoolParameter& NetworkUpdateParameters::shuffle() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  return shuffle_ != NULL ? *shuffle_
+                         : *::CoreML::Specification::BoolParameter::internal_default_instance();
+}
+inline ::CoreML::Specification::BoolParameter* NetworkUpdateParameters::mutable_shuffle() {
+  
+  if (shuffle_ == NULL) {
+    shuffle_ = new ::CoreML::Specification::BoolParameter;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  return shuffle_;
+}
+inline ::CoreML::Specification::BoolParameter* NetworkUpdateParameters::release_shuffle() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  
+  ::CoreML::Specification::BoolParameter* temp = shuffle_;
+  shuffle_ = NULL;
+  return temp;
+}
+inline void NetworkUpdateParameters::set_allocated_shuffle(::CoreML::Specification::BoolParameter* shuffle) {
+  delete shuffle_;
+  shuffle_ = shuffle;
+  if (shuffle) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.shuffle)
+}
+
+// .CoreML.Specification.Int64Parameter seed = 20;
+inline bool NetworkUpdateParameters::has_seed() const {
+  return this != internal_default_instance() && seed_ != NULL;
+}
+inline void NetworkUpdateParameters::clear_seed() {
+  if (GetArenaNoVirtual() == NULL && seed_ != NULL) delete seed_;
+  seed_ = NULL;
+}
+inline const ::CoreML::Specification::Int64Parameter& NetworkUpdateParameters::seed() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NetworkUpdateParameters.seed)
+  return seed_ != NULL ? *seed_
+                         : *::CoreML::Specification::Int64Parameter::internal_default_instance();
+}
+inline ::CoreML::Specification::Int64Parameter* NetworkUpdateParameters::mutable_seed() {
+  
+  if (seed_ == NULL) {
+    seed_ = new ::CoreML::Specification::Int64Parameter;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NetworkUpdateParameters.seed)
+  return seed_;
+}
+inline ::CoreML::Specification::Int64Parameter* NetworkUpdateParameters::release_seed() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NetworkUpdateParameters.seed)
+  
+  ::CoreML::Specification::Int64Parameter* temp = seed_;
+  seed_ = NULL;
+  return temp;
+}
+inline void NetworkUpdateParameters::set_allocated_seed(::CoreML::Specification::Int64Parameter* seed) {
+  delete seed_;
+  seed_ = seed;
+  if (seed) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.seed)
 }
 
 // -------------------------------------------------------------------

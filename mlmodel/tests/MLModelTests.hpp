@@ -169,6 +169,8 @@ MLMODEL_TEST(testMissingBeta1Parameter)
 MLMODEL_TEST(testMissingBeta2Parameter)
 MLMODEL_TEST(testMissingEpsParameter)
 MLMODEL_TEST(testMissingEpochsParameter)
+MLMODEL_TEST(testValidUpdatableModelWith1024Layers)
+MLMODEL_TEST(testExistingShuffleWithMissingSeedParameter)
 
 // Pipeline tests
 MLMODEL_TEST(testNonUpdatablePipelineWithNonUpdatableModels)
