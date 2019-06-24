@@ -5274,6 +5274,15 @@ message NetworkUpdateParameters {
     Optimizer optimizer = 2;
     Int64Parameter epochs = 3;
 
+    /**
+     * Describes whether to shuffle the batch of data between epochs.
+     */
+    BoolParameter shuffle = 10;
+
+    /**
+     * The seed to be used in an associated random number generator.
+     */
+    Int64Parameter seed = 20;
 }
 
 /**

@@ -18,7 +18,7 @@ Specification::NeuralNetwork* buildBasicUpdatableNeuralNetworkModel(Specificatio
     return buildBasicNeuralNetworkModel(m, true, &inTensorAttr, &outTensorAttr);
 }
 
-Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr) {
+Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr, int numberOfLayers) {
     auto inTensor = m.mutable_description()->add_input();
     inTensor->set_name(inTensorAttr->name);
     auto inTensorShape = inTensor->mutable_type()->mutable_multiarraytype();
@@ -38,24 +38,35 @@ Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model&
     m.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
     
     auto neuralNet = m.mutable_neuralnetwork();
-    auto layer = neuralNet->add_layers();
-    layer->set_name("inner_layer");
-    layer->add_input(inTensorAttr->name);
-    layer->add_output(outTensorAttr->name);
     
-    Specification::InnerProductLayerParams *innerProductParams = layer->mutable_innerproduct();
-    innerProductParams->set_inputchannels(1);
-    innerProductParams->set_outputchannels(1);
-    innerProductParams->mutable_weights()->add_floatvalue(1.0);
-    innerProductParams->set_hasbias(true);
-    innerProductParams->mutable_bias()->add_floatvalue(1.0);
+    for (int i = 0; i < numberOfLayers; i++) {
+        auto layer = neuralNet->add_layers();
+        
+        std::string layerName = "inner_layer" + std::to_string(i);
+        std::string input = "output" + std::to_string(i-1);
+        std::string output = "output" + std::to_string(i);
+        
+        layer->set_name((numberOfLayers == 1) ? "inner_layer" : layerName.c_str());
+        layer->add_input((i == 0) ? inTensorAttr->name : input.c_str());
+        layer->add_output((i == numberOfLayers-1) ? outTensorAttr->name : output.c_str());
+        
+        Specification::InnerProductLayerParams *innerProductParams = layer->mutable_innerproduct();
+        innerProductParams->set_inputchannels(1);
+        innerProductParams->set_outputchannels(1);
+        innerProductParams->mutable_weights()->add_floatvalue(1.0);
+        innerProductParams->set_hasbias(true);
+        innerProductParams->mutable_bias()->add_floatvalue(1.0);
+        
+        if (isUpdatable) {
+            layer->set_isupdatable(true);
+            innerProductParams->mutable_weights()->set_isupdatable(true);
+            innerProductParams->mutable_bias()->set_isupdatable(true);
+        }
+    }
     
     if (isUpdatable) {
         m.set_isupdatable(true);
-        layer->set_isupdatable(true);
-        innerProductParams->mutable_weights()->set_isupdatable(true);
-        innerProductParams->mutable_bias()->set_isupdatable(true);
-
+        
         for (auto feature : m.description().input()) {
             auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
             trainingInput->CopyFrom(feature);
@@ -79,7 +90,7 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
     auto inputType = new Specification::FeatureType;
     auto multiArray = inputType->mutable_multiarraytype();
     multiArray->mutable_shape()->Add(inTensorAttr->dimension);
-    multiArray->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    multiArray->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
     input->set_name(inTensorAttr->name);
     input->set_allocated_type(inputType);
     

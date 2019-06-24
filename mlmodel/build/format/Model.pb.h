@@ -176,6 +176,9 @@ extern BiDirectionalLSTMLayerParamsDefaultTypeInternal _BiDirectionalLSTMLayerPa
 class BiasLayerParams;
 class BiasLayerParamsDefaultTypeInternal;
 extern BiasLayerParamsDefaultTypeInternal _BiasLayerParams_default_instance_;
+class BoolParameter;
+class BoolParameterDefaultTypeInternal;
+extern BoolParameterDefaultTypeInternal _BoolParameter_default_instance_;
 class BorderAmounts;
 class BorderAmountsDefaultTypeInternal;
 extern BorderAmountsDefaultTypeInternal _BorderAmounts_default_instance_;

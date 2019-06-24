@@ -156,18 +156,18 @@ class KNearestNeighborsClassifierBuilder(object):
     @property
     def license(self):
         """
-            Get the license for the KNearestNeighborsClassifier model
-            :return: the license
-            """
+        Get the license for the KNearestNeighborsClassifier model
+        :return: the license
+        """
         return self.spec.description.metadata.license
 
     @author.setter
     def license(self, license):
         """
-            Add a license for the KNearestNeighborsClassifier model
-            :param license: the license
-            :return: None
-            """
+        Add a license for the KNearestNeighborsClassifier model
+        :param license: the license
+        :return: None
+        """
         self.spec.description.metadata.license = license
 
     @property

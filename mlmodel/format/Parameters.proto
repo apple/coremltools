@@ -43,3 +43,10 @@ message StringParameter {
     string defaultValue = 1;
 }
 
+/**
+ * String parameter,
+ * A default bool value must be provided
+ */
+message BoolParameter {
+    bool defaultValue = 1;
+}
