@@ -679,6 +679,9 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
     if (isUpdatable) {
         r = validateUpdatableNeuralNetwork(nn);
         if (!r.good()) { return r; }
+
+        r = validateTrainingInputs(interface, nn);
+        if (!r.good()) { return r; }
     }
     
     return r;

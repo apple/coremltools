@@ -71,10 +71,6 @@ Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model&
             auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
             trainingInput->CopyFrom(feature);
         }
-        for (auto feature : m.description().output()) {
-            auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
-            trainingInput->CopyFrom(feature);
-        }
     }
     
     return neuralNet;
@@ -226,26 +222,24 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
             innerProductParams->mutable_bias()->set_isupdatable(true);
         }
         
-        auto updateParams = classifier->mutable_updateparams();
-        auto lossLayer = updateParams->add_losslayers();
-        lossLayer->set_name("cross_entropy_loss");
-        
-        auto ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
-        ceLossLayer->set_input("scoreVector");
-        ceLossLayer->set_target("target");
+        addCategoricalCrossEntropyLoss(m, classifier, "cross_entropy_loss", "scoreVector", "target");
         
         addLearningRate(classifier, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
         addMiniBatchSize(classifier, Specification::Optimizer::kSgdOptimizer, 32, 1, 100, {16, 32, 64, 128});
         addEpochs(classifier, 100, 1, 100, std::set<int64_t>());
         addShuffleAndSeed(classifier, 2019, 0, 2019, std::set<int64_t>());
+
+        m.mutable_description()->clear_traininginput();
         
         for (auto feature : m.description().input()) {
             auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
             trainingInput->CopyFrom(feature);
         }
         for (auto feature : m.description().output()) {
-            auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
-            trainingInput->CopyFrom(feature);
+            if (feature.name() == m.description().predictedfeaturename()) {
+                auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
+                trainingInput->CopyFrom(feature);
+            }
         }
     }
     
@@ -360,12 +354,7 @@ void addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(Specification::Mod
     softmaxLayer->add_output("softmax_out");
     softmaxLayer->mutable_softmax();
 
-    Specification::NetworkUpdateParameters *updateParams = neuralNets->mutable_updateparams();
-    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
-    lossLayer->set_name("cross_entropy_loss_layer");
-    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
-    ceLossLayer->set_input("softmax_out");
-    ceLossLayer->set_target("target");
+    addCategoricalCrossEntropyLoss(m, neuralNets, "cross_entropy_loss_layer", "softmax_out", "target");
     
     addLearningRate(neuralNets, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(neuralNets, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());

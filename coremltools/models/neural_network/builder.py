@@ -594,14 +594,14 @@ class NeuralNetworkBuilder(object):
                 else:
                     pass
 
-    def set_categorical_cross_entropy_loss(self, name, input, target=None):
+    def set_categorical_cross_entropy_loss(self, name, input):
         """
         Categorical Cross Entropy is used for single label categorization (only one category is applicable for each data point).
 
         Parameters
         ----------
         name: The name of the loss layer
-        input: The input is a vector of length N representing the distribution over N categories. It must be the output of a softmax.
+        input: The name of the input, which will be a vector of length N representing the distribution over N categories. It must be the output of a softmax.
         target: The target is a single value representing the true category or class label.
         If the target is the predictedFeatureName of a neural network classifier it will be inverse mapped to the corresponding categorical index for you.
 
@@ -618,9 +618,7 @@ class NeuralNetworkBuilder(object):
         if input is None:
             raise ValueError('Loss Layer input must be specified')
 
-        # target is optional for CCE loss layer
-        if target is None:
-            target = input + 'True'
+        target = input + '_true'
 
         if len(self.nn_spec.layers) < 1:
             raise ValueError('Loss layer (%s) cannot be attached to an empty model.' % name)
@@ -644,6 +642,12 @@ class NeuralNetworkBuilder(object):
         if target in output_names:
             raise ValueError('Loss layer target (%s) must not be a model output.' % target)
 
+        updating_classifier = False
+        predicted_probabilities_name = self.spec.description.predictedProbabilitiesName
+        predicted_feature_name = self.spec.description.predictedFeatureName
+        if self.spec.HasField('neuralNetworkClassifier') and input == predicted_probabilities_name:
+            updating_classifier = True
+
         loss_layer = self.nn_spec.updateParams.lossLayers.add()
         self.layers.append(name)
         self.layer_specs[name] = loss_layer
@@ -651,7 +655,29 @@ class NeuralNetworkBuilder(object):
         loss_layer.categoricalCrossEntropyLossLayer.input = input
         loss_layer.categoricalCrossEntropyLossLayer.target = target
 
-    def set_mean_squared_error_loss(self, name, input, target=None):
+        training_inputs = self.spec.description.input
+        classifier_output = self.spec.description.predictedFeatureName
+        training_input = self.spec.description.trainingInput
+        training_input.extend(training_inputs)
+        training_input_ = training_input.add()
+
+        if updating_classifier:
+            training_input_.name = predicted_feature_name
+            classifier_output_type = [x.type for x in self.spec.description.output if x.name == predicted_feature_name]
+
+            model_type = classifier_output_type[0].WhichOneof('Type')
+            if model_type == 'stringType':
+                datatypes._set_datatype(training_input_.type, datatypes.String())
+            elif model_type == 'int64Type':
+                datatypes._set_datatype(training_input_.type, datatypes.Int64())
+        else:
+            training_input_.name = target
+            datatypes._set_datatype(training_input_.type, datatypes.Array(1))
+            training_input_.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.INT32
+
+        print('Now adding input {} as target for categorical cross-entropy loss layer.'.format(target))
+
+    def set_mean_squared_error_loss(self, name, input):
         if self.spec is None:
             return
 
@@ -661,8 +687,7 @@ class NeuralNetworkBuilder(object):
         if input is None:
             raise ValueError('Loss Layer input must be specified')
 
-        if target is None:
-            target = input + 'True'
+        target = input + '_true'
 
         loss_layer = self.nn_spec.updateParams.lossLayers.add()
         self.layers.append(name)
@@ -679,6 +704,19 @@ class NeuralNetworkBuilder(object):
 
         loss_layer.meanSquaredErrorLossLayer.input = input
         loss_layer.meanSquaredErrorLossLayer.target = target
+
+        training_inputs = self.spec.description.input
+        training_input = self.spec.description.trainingInput
+        training_input.extend(training_inputs)
+        training_input_ = training_input.add()
+        training_input_.name = target
+
+        output_descriptor_training_input = [x for x in self.spec.description.output if x.name == input]
+        training_input_shape = [int(x) for x in output_descriptor_training_input[0].type.multiArrayType.shape]
+        datatypes._set_datatype(training_input_.type, datatypes.Array(*training_input_shape))
+        training_input_.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+        print('Now adding input {} as target for mean squared error loss layer.'.format(target))
+
 
     def set_sgd_optimizer(self, sgd_params):
         if self.spec is None:

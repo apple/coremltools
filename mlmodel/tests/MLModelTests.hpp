@@ -204,4 +204,29 @@ MLMODEL_TEST(testBeta2OutOfAllowedRange)
 MLMODEL_TEST(testEpsOutOfAllowedRange)
 MLMODEL_TEST(testEpochsOutOfAllowedRange)
 MLMODEL_TEST(testEpochsOutOfAllowedSet)
+
+// Ttraining input validation test
+// All are non-classifier unless otherwise described. All include model inputs unless specified "Only"
+MLMODEL_TEST(testInvalid_NoTrainingInputs)
+MLMODEL_TEST(testInvalid_OnlyModelInputs)
+MLMODEL_TEST(testInvalid_OnlyTarget)
+MLMODEL_TEST(testInvalid_OnlyPredictedFeatureName)
+MLMODEL_TEST(testInvalid_OnlyTargetAndPredictedFeatureName)
+MLMODEL_TEST(testInvalid_TargetAndFakeModelInputs) // make a model with 1 input. Supply target and fake input not actually listed
+MLMODEL_TEST(testInvalid_PredictedFeatureNameAndFakeModelInputs) // make a model with 1 input. Supply PFN and fake input not actually listed
+MLMODEL_TEST(testInvalid_TargetPredictedFeatureNameAndFakeModelInputs) // make a model with 1 input. Supply target, PFN and fake input not actually listed
+MLMODEL_TEST(testInvalid_PredictedFeatureName) // make a model with 1 input. Supply PFN and model input, should fail as not a classifier
+MLMODEL_TEST(testValid_TargetAndPredictedFeatureName) // make a model w/ 1 input. Supply target, PFN, and this input, should pass
+MLMODEL_TEST(testValid_TargetAndRealAndFakeTrainingInputs) // make a model w/ 1 input. Supply target, this input, and other fake input
+MLMODEL_TEST(testValid_TargetOneOfTwoModelInputs) // make a model w/ 2 inputs. Supply target and 1 input
+MLMODEL_TEST(testValid_TargetUnusedOneOfTwoModelInput) // make a model w/ 2 inputs only 1 is actually used. Supply the wrong one as TI
+MLMODEL_TEST(testValid_1InferenceAnd3TrainingInputs) // // make a model w/ 1 input. Supply it and 3 training inputs (so they outnumber model inputs)
+MLMODEL_TEST(testInvalid_Classifier_OnlyPredictedFeatureName)
+MLMODEL_TEST(testInvalid_Classifier_OnlyTarget)
+MLMODEL_TEST(testValid_Classifier_PredictedFeatureName)
+MLMODEL_TEST(testValid_Classifier_Target)
+MLMODEL_TEST(testValid_Classifier_PredictedFeatureNameAndTarget)
+MLMODEL_TEST(testInvalid_Classifier_PredictedFeatureNameWrongType)
+MLMODEL_TEST(testValid_WithMSE)
+MLMODEL_TEST(testValid_Pipeline)
 #undef MLMODEL_TEST

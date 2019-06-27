@@ -227,6 +227,49 @@ void addShuffleAndSeed(NeuralNetworkClass *nn, int64_t defaultValue, int64_t min
 }
 
 
+template void addCategoricalCrossEntropyLoss(Specification::Model& m, Specification::NeuralNetwork *nn, const char *lossName, const char *softmaxInputName, const char *targetName);
+template void addCategoricalCrossEntropyLoss(Specification::Model& m, Specification::NeuralNetworkClassifier *nn, const char *lossName, const char *softmaxInputName, const char *targetName);
+
+template <class NeuralNetworkClass>
+void addCategoricalCrossEntropyLoss(Specification::Model& m, NeuralNetworkClass *nn, const char *lossName, const char *softmaxInputName, const char *targetName) {
+
+    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name(lossName);
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input(softmaxInputName);
+    ceLossLayer->set_target(targetName);
+
+    auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(ceLossLayer->target());
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+}
+
+template void addMeanSquareError(Specification::Model& m, Specification::NeuralNetwork *nn, const char *lossName, const char *mseInputName, const char *targetName);
+template void addMeanSquareError(Specification::Model& m, Specification::NeuralNetworkClassifier *nn, const char *lossName, const char *mseInputName, const char *targetName);
+
+template <class NeuralNetworkClass>
+void addMeanSquareError(Specification::Model& m, NeuralNetworkClass *nn, const char *lossName, const char *mseInputName, const char *targetName) {
+
+    // set a MSE loss layer
+    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name(lossName);
+    Specification::MeanSquaredErrorLossLayer *mseLossLayer = lossLayer->mutable_meansquarederrorlosslayer();
+    mseLossLayer->set_input(mseInputName);
+    mseLossLayer->set_target(targetName);
+
+    auto output = m.description().output(0);
+    auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->CopyFrom(output);
+    trainingInput->set_name(mseLossLayer->target());
+
+}
+
+
 int testMiniBatchSizeOutOfAllowedRange() {
     
     Specification::Model m;

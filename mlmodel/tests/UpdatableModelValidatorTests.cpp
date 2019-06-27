@@ -614,13 +614,8 @@ int testValidModelValidMultipleSoftmax_2() {
     nn = addSoftmaxLayer(m, "softmax", "B", "softmax_out");
     
     // attach a CCE loss layer to softmax
-    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
-    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
-    lossLayer->set_name("cross_entropy_loss_layer");
-    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
-    ceLossLayer->set_input("softmax_out");
-    ceLossLayer->set_target("label_target");
-    
+    addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer", "softmax_out", "label_target");
+
     // attch an updatable inner product layer to the softmax
     TensorAttributes inTensorAttr = { "softmax_out", 1 };
     TensorAttributes outTensorAttr = { "inner_layer_after_softmax_out", 1 };
@@ -662,12 +657,8 @@ int testValidModelMultipleSoftmaxOutputs() {
     nn = addInnerProductLayer(m, false, "inner_layer_after_softmax", &inTensorAttr, &outTensorAttr);
     
     // attach a CCE to softmax
-    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
-    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
-    lossLayer->set_name("cross_entropy_loss_layer");
-    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
-    ceLossLayer->set_input("softmax_out");
-    ceLossLayer->set_target("label_target");
+    addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer", "softmax_out", "label_target");
+
 
     // now add an updatable model parameter.
     addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
@@ -701,24 +692,15 @@ int testInvalidModelMultipleLoss() {
     TensorAttributes inTensorAttr = { "softmax_out", 3 };
     TensorAttributes outTensorAttr = { "inner_layer_after_softmax_out", 1 };
     nn = addInnerProductLayer(m, true, "inner_layer_after_softmax", &inTensorAttr, &outTensorAttr);
-    
-    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
-    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
-    lossLayer->set_name("cross_entropy_loss_layer_1");
-    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
-    ceLossLayer->set_input("softmax_1_out");
-    ceLossLayer->set_target("label_target");
-    
+
+    addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer_1", "softmax_1_out", "label_target");
+
     // set second softmax layer
     nn = addSoftmaxLayer(m, "softmax_2", "inner_layer_after_softmax_out", "softmax_2_out");
 
     // attach second loss to the second softmax
-    Specification::LossLayer *lossLayer_2 = updateParams->add_losslayers();
-    lossLayer_2->set_name("cross_entropy_loss_layer_2");
-    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer_2 = lossLayer->mutable_categoricalcrossentropylosslayer();
-    ceLossLayer_2->set_input("softmax_2_out");
-    ceLossLayer_2->set_target("label_target");
-    
+    addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer_2", "softmax_2_out", "label_target");
+
     // now add an updatable model parameter.
     addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
@@ -730,7 +712,8 @@ int testInvalidModelMultipleLoss() {
     return 0;
 }
 
-static Specification::NetworkUpdateParameters* buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(Specification::Model& m) {
+void buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(Specification::Model& m);
+void buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(Specification::Model& m) {
     
     auto *nn = buildBasicUpdatableNeuralNetworkModel(m);
 
@@ -740,31 +723,16 @@ static Specification::NetworkUpdateParameters* buildBasicUpdatableModelWithCateg
     softmaxLayer->add_input("B");
     softmaxLayer->add_output("softmax_out");
     softmaxLayer->mutable_softmax();
-    
-    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
-    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
-    lossLayer->set_name("cross_entropy_loss_layer");
 
-    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
-    ceLossLayer->set_input("softmax_out");
-    ceLossLayer->set_target("label_target");
-    
-    return updateParams;
+    addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer", "softmax_out", "label_target");
 }
 
-static Specification::NetworkUpdateParameters* buildBasicUpdatableModelWithMeanSquaredError(Specification::Model& m) {
+void buildBasicUpdatableModelWithMeanSquaredError(Specification::Model& m);
+void buildBasicUpdatableModelWithMeanSquaredError(Specification::Model& m) {
     
     auto *nn = buildBasicUpdatableNeuralNetworkModel(m);
-    
-    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
-    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
-    lossLayer->set_name("mean_squared_error_loss_layer");
-    
-    Specification::MeanSquaredErrorLossLayer *mseLossLayer = lossLayer->mutable_meansquarederrorlosslayer();
-    mseLossLayer->set_input("B");
-    mseLossLayer->set_target("label_target");
-    
-    return updateParams;
+
+    addMeanSquareError(m, nn, "mean_squared_error_loss_layer", "B", "label_target");
 }
 
 int testMissingUpdatableModelParameters() {
@@ -772,7 +740,7 @@ int testMissingUpdatableModelParameters() {
     Specification::Model m;
     
     // basic neural network model with CCE and softmax without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     
     // expect validation to fail due to missing updatable model parameters.
     Result res = Model::validate(m);
@@ -782,7 +750,7 @@ int testMissingUpdatableModelParameters() {
     m.Clear();
     
     // basic neural network model with MSE without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithMeanSquaredError(m);
+    buildBasicUpdatableModelWithMeanSquaredError(m);
     
     // expect validation to fail due to missing updatable model parameters.
     res = Model::validate(m);
@@ -798,7 +766,7 @@ int testUpdatableModelSpecVersion() {
      */
     
     Specification::Model m;
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     // now add an updatable model parameter.
     addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
@@ -822,7 +790,7 @@ int testMissingMiniBatchSizeParameter() {
     Specification::Model m;
     
     // basic neural network model with CCE and softmax without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     
     // expect validation to fail due to missing updatable model parameters.
     Result res = Model::validate(m);
@@ -849,7 +817,7 @@ int testMissingLearningRateParameter() {
     Specification::Model m;
     
     // basic neural network model without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     
     // expect validation to fail due to missing updatable model parameters.
     Result res = Model::validate(m);
@@ -876,7 +844,7 @@ int testMissingBeta1Parameter() {
     Specification::Model m;
 
     // basic neural network model without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
 
     // expect validation to fail due to missing updatable model parameters.
     Result res = Model::validate(m);
@@ -905,7 +873,7 @@ int testMissingBeta2Parameter() {
     Specification::Model m;
     
     // basic neural network model without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     
     // expect validation to fail due to missing updatable model parameters.
     Result res = Model::validate(m);
@@ -934,7 +902,7 @@ int testMissingEpsParameter() {
     Specification::Model m;
     
     // basic neural network model without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     
     // expect validation to fail due to missing updatable model parameters.
     Result res = Model::validate(m);
@@ -963,7 +931,7 @@ int testMissingEpochsParameter() {
     Specification::Model m;
     
     // basic neural network model without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     
     // expect validation to fail due to missing updatable model parameters.
     Result res = Model::validate(m);
@@ -984,7 +952,7 @@ int testExistingShuffleWithMissingSeedParameter() {
     Specification::Model m;
 
     // basic neural network model without any updatable model parameters.
-    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
     addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
@@ -1311,4 +1279,1118 @@ int testValidUpdatableModelWith1024Layers() {
     
     return 0;
 }
+
+
+
+int testInvalid_NoTrainingInputs() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    addCategoricalCrossEntropyLoss(spec, neuralNet, "cross_entropy_loss_layer", "softmax_out", "target");
+
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    spec.mutable_description()->clear_traininginput(); // Clearing all training inputs, buildBasicNeuralNetworkModel() adds model inputs to training inputs
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+    // Add target and model's inputs to training inputs
+    auto trainingInputTarget = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInputTarget->set_name("target");
+    auto trainingInputTensorShape = trainingInputTarget->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testInvalid_OnlyModelInputs() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    Specification::NetworkUpdateParameters *updateParams = neuralNet->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_out");
+    ceLossLayer->set_target("target");
+
+    // Not clearing training inputs or explicitly adding model inputs as buildBasicNeuralNetworkModel() adds model inputs to training inputs
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+    // Add target to training inputs
+    auto trainingInputTarget = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInputTarget->set_name("target");
+    auto trainingInputTensorShape = trainingInputTarget->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testInvalid_OnlyTarget() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    std::string targetName = "cce_target";
+    addCategoricalCrossEntropyLoss(spec, neuralNet, "cross_entropy_loss_layer", "softmax_out", targetName.c_str());
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Clearing and then specifically adding only the target as a training input
+    spec.mutable_description()->clear_traininginput();
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(targetName);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+    // Remove predictedFeatureName from model's outputs and add model's inputs to training inputs
+    spec.mutable_description()->clear_output();
+    auto outTensor = spec.mutable_description()->add_output();
+    outTensor->set_name(tensorAttributesOut.name);
+    auto outTensorShape = outTensor->mutable_type()->mutable_multiarraytype();
+    outTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < tensorAttributesOut.dimension; i++) {
+        outTensorShape->add_shape(1);
+    }
+
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);    return 0;
+}
+
+int testInvalid_OnlyPredictedFeatureName() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    // Model is not a classifier, but we'll describe these things in the spec anyway to check this edge-case
+    std::string predictedFeatureName = "predictedFeatures";
+    std::string probsName = "probs";
+    auto *output = spec.mutable_description()->add_output();
+    output->set_name(predictedFeatureName);
+    output->mutable_type()->mutable_stringtype();
+
+    auto *outputProbs = spec.mutable_description()->add_output();
+    outputProbs->set_name(probsName);
+    outputProbs->mutable_type()->mutable_dictionarytype();
+    outputProbs->mutable_type()->mutable_dictionarytype()->mutable_stringkeytype();
+
+    spec.mutable_description()->set_predictedfeaturename(predictedFeatureName);
+    spec.mutable_description()->set_predictedprobabilitiesname(probsName);
+
+
+    addCategoricalCrossEntropyLoss(spec, neuralNet, "cross_entropy_loss_layer", "softmax_out", "target");
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Clearing and then specifically adding only the target as a training input
+    spec.mutable_description()->clear_traininginput();
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(predictedFeatureName);
+    trainingInput->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+    // Remove predictedFeatureName from model's outputs and add target and model's inputs to training inputs
+    spec.mutable_description()->clear_output();
+    auto outTensor = spec.mutable_description()->add_output();
+    outTensor->set_name(tensorAttributesOut.name);
+    auto outTensorShape = outTensor->mutable_type()->mutable_multiarraytype();
+    outTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < tensorAttributesOut.dimension; i++) {
+        outTensorShape->add_shape(1);
+    }
+
+    auto trainingInputTarget = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInputTarget->set_name("target");
+    auto trainingInputTensorShape = trainingInputTarget->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testInvalid_OnlyTargetAndPredictedFeatureName() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    // Model is not a classifier, but we'll describe these things in the spec anyway to check this edge-case
+    std::string predictedFeatureName = "predictedFeatures";
+    std::string probsName = "probs";
+    auto *output = spec.mutable_description()->add_output();
+    output->set_name(predictedFeatureName);
+    output->mutable_type()->mutable_stringtype();
+
+    auto *outputProbs = spec.mutable_description()->add_output();
+    outputProbs->set_name(probsName);
+    outputProbs->mutable_type()->mutable_dictionarytype();
+    outputProbs->mutable_type()->mutable_dictionarytype()->mutable_stringkeytype();
+
+    spec.mutable_description()->set_predictedfeaturename(predictedFeatureName);
+    spec.mutable_description()->set_predictedprobabilitiesname(probsName);
+
+    std::string targetName = "cce_target";
+    addCategoricalCrossEntropyLoss(spec, neuralNet, "cross_entropy_loss_layer", "softmax_out", targetName.c_str());
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Clearing and then specifically adding only the target as a training input
+    spec.mutable_description()->clear_traininginput();
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(targetName);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    auto trainingInput2 = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput2->set_name(predictedFeatureName);
+    trainingInput2->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+    // Remove predictedFeatureName from model's outputs and add model's inputs to training inputs
+    spec.mutable_description()->clear_output();
+    auto outTensor = spec.mutable_description()->add_output();
+    outTensor->set_name(tensorAttributesOut.name);
+    auto outTensorShape = outTensor->mutable_type()->mutable_multiarraytype();
+    outTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < tensorAttributesOut.dimension; i++) {
+        outTensorShape->add_shape(1);
+    }
+
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testInvalid_TargetAndFakeModelInputs() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    std::string targetName = "cce_target";
+    addCategoricalCrossEntropyLoss(spec, neuralNet, "cross_entropy_loss_layer", "softmax_out", targetName.c_str());
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Clearing and then specifically adding only the target as a training input
+    spec.mutable_description()->clear_traininginput();
+
+    auto fakeModelInput = spec.mutable_description()->mutable_traininginput()->Add();
+    fakeModelInput->set_name("madeUpInput");
+    auto fakeModelInputShape = fakeModelInput->mutable_type()->mutable_multiarraytype();
+    fakeModelInputShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < 3; i++) {
+        fakeModelInputShape->add_shape(1);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(targetName);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+    // Add model's inputs to training inputs
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testInvalid_PredictedFeatureNameAndFakeModelInputs() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    // Model is not a classifier, but we'll describe these things in the spec anyway to check this edge-case
+    std::string predictedFeatureName = "predictedFeatures";
+    std::string probsName = "probs";
+    auto *output = spec.mutable_description()->add_output();
+    output->set_name(predictedFeatureName);
+    output->mutable_type()->mutable_stringtype();
+
+    auto *outputProbs = spec.mutable_description()->add_output();
+    outputProbs->set_name(probsName);
+    outputProbs->mutable_type()->mutable_dictionarytype();
+    outputProbs->mutable_type()->mutable_dictionarytype()->mutable_stringkeytype();
+
+    spec.mutable_description()->set_predictedfeaturename(predictedFeatureName);
+    spec.mutable_description()->set_predictedprobabilitiesname(probsName);
+
+
+    addCategoricalCrossEntropyLoss(spec, neuralNet, "cross_entropy_loss_layer", "softmax_out", "target");
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Clearing and then specifically adding only the target as a training input
+    spec.mutable_description()->clear_traininginput();
+
+    auto fakeModelInput = spec.mutable_description()->mutable_traininginput()->Add();
+    fakeModelInput->set_name("madeUpInput");
+    auto fakeModelInputShape = fakeModelInput->mutable_type()->mutable_multiarraytype();
+    fakeModelInputShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < 3; i++) {
+        fakeModelInputShape->add_shape(1);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(predictedFeatureName);
+    trainingInput->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+    // Remove predictedFeatureName from model's outputs and add target and model's inputs to training inputs
+    spec.mutable_description()->clear_output();
+    auto outTensor = spec.mutable_description()->add_output();
+    outTensor->set_name(tensorAttributesOut.name);
+    auto outTensorShape = outTensor->mutable_type()->mutable_multiarraytype();
+    outTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < tensorAttributesOut.dimension; i++) {
+        outTensorShape->add_shape(1);
+    }
+
+    auto trainingInputTarget = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInputTarget->set_name("target");
+    auto trainingInputTensorShape = trainingInputTarget->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testInvalid_TargetPredictedFeatureNameAndFakeModelInputs() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    // Model is not a classifier, but we'll describe these things in the spec anyway to check this edge-case
+    std::string predictedFeatureName = "predictedFeatures";
+    std::string probsName = "probs";
+    auto *output = spec.mutable_description()->add_output();
+    output->set_name(predictedFeatureName);
+    output->mutable_type()->mutable_stringtype();
+
+    auto *outputProbs = spec.mutable_description()->add_output();
+    outputProbs->set_name(probsName);
+    outputProbs->mutable_type()->mutable_dictionarytype();
+    outputProbs->mutable_type()->mutable_dictionarytype()->mutable_stringkeytype();
+
+    spec.mutable_description()->set_predictedfeaturename(predictedFeatureName);
+    spec.mutable_description()->set_predictedprobabilitiesname(probsName);
+
+    std::string targetName = "cce_target";
+    addCategoricalCrossEntropyLoss(spec, neuralNet, "cross_entropy_loss_layer", "softmax_out", targetName.c_str());
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Clearing and then specifically adding only the target as a training input
+    spec.mutable_description()->clear_traininginput();
+
+    auto fakeModelInput = spec.mutable_description()->mutable_traininginput()->Add();
+    fakeModelInput->set_name("madeUpInput");
+    auto fakeModelInputShape = fakeModelInput->mutable_type()->mutable_multiarraytype();
+    fakeModelInputShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < 3; i++) {
+        fakeModelInputShape->add_shape(1);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(targetName);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    auto trainingInput2 = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput2->set_name(predictedFeatureName);
+    trainingInput2->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+
+    // Remove predictedFeatureName from model's outputs and add model's inputs to training inputs
+    spec.mutable_description()->clear_output();
+    auto outTensor = spec.mutable_description()->add_output();
+    outTensor->set_name(tensorAttributesOut.name);
+    auto outTensorShape = outTensor->mutable_type()->mutable_multiarraytype();
+    outTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < tensorAttributesOut.dimension; i++) {
+        outTensorShape->add_shape(1);
+    }
+
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testInvalid_PredictedFeatureName() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    // Model is not a classifier
+    std::string predictedFeatureName = "predictedFeatures";
+    std::string probsName = "probs";
+    auto *output = spec.mutable_description()->add_output();
+    output->set_name(predictedFeatureName);
+    output->mutable_type()->mutable_stringtype();
+
+    auto *outputProbs = spec.mutable_description()->add_output();
+    outputProbs->set_name(probsName);
+    outputProbs->mutable_type()->mutable_dictionarytype();
+    outputProbs->mutable_type()->mutable_dictionarytype()->mutable_stringkeytype();
+
+    spec.mutable_description()->set_predictedfeaturename(predictedFeatureName);
+    spec.mutable_description()->set_predictedprobabilitiesname(probsName);
+
+
+    Specification::NetworkUpdateParameters *updateParams = neuralNet->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_out");
+    ceLossLayer->set_target("target");
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Model inputs should be added, now we'll add the predicted feature name (which really exists in the model) as a training input, should fail as it's not a classifier
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(predictedFeatureName);
+    trainingInput->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+
+    // Remove predictedFeatureName from model's outputs and add target to training inputs
+    spec.mutable_description()->clear_output();
+    auto outTensor = spec.mutable_description()->add_output();
+    outTensor->set_name(tensorAttributesOut.name);
+    auto outTensorShape = outTensor->mutable_type()->mutable_multiarraytype();
+    outTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < tensorAttributesOut.dimension; i++) {
+        outTensorShape->add_shape(1);
+    }
+
+    auto trainingInputTarget = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInputTarget->set_name("target");
+    auto trainingInputTensorShape = trainingInputTarget->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testValid_TargetAndPredictedFeatureName() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    // Model is not a classifier, but we'll describe these things in the spec anyway to check this edge-case
+    std::string predictedFeatureName = "predictedFeatures";
+    std::string probsName = "probs";
+
+    spec.mutable_description()->set_predictedfeaturename(predictedFeatureName);
+    spec.mutable_description()->set_predictedprobabilitiesname(probsName);
+
+
+    Specification::NetworkUpdateParameters *updateParams = neuralNet->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_out");
+    ceLossLayer->set_target("target");
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(ceLossLayer->target());
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    auto trainingInput2 = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput2->set_name(predictedFeatureName);
+    trainingInput2->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testValid_TargetAndRealAndFakeTrainingInputs() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    Specification::NetworkUpdateParameters *updateParams = neuralNet->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_out");
+    ceLossLayer->set_target("target");
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Difference between this and testInvalid_TargetAndFakeModelInputs is that we aren't clearing the model's actual inputs from the training inputs before adding the target, so this should instead be valid.
+    auto fakeModelInput = spec.mutable_description()->mutable_traininginput()->Add();
+    fakeModelInput->set_name("madeUpInput");
+    auto fakeModelInputShape = fakeModelInput->mutable_type()->mutable_multiarraytype();
+    fakeModelInputShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < 3; i++) {
+        fakeModelInputShape->add_shape(1);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(ceLossLayer->target());
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testValid_TargetOneOfTwoModelInputs() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    Specification::NetworkUpdateParameters *updateParams = neuralNet->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_out");
+    ceLossLayer->set_target("target");
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    auto inTensor = spec.mutable_description()->add_input();
+    inTensor->set_name("fakeInput");
+    auto inTensorShape = inTensor->mutable_type()->mutable_multiarraytype();
+    inTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < 3; i++) {
+        inTensorShape->add_shape(1);
+    }
+    // Added input but didn't add this to the training inputs
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(ceLossLayer->target());
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testValid_TargetUnusedOneOfTwoModelInput() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", "softmax_out");
+
+    Specification::NetworkUpdateParameters *updateParams = neuralNet->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_out");
+    ceLossLayer->set_target("target");
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    // Clearing the real model's input from the training inputs so we can add the input not used by the model along with the target only as training inputs. Will succeed as we don't have input->loss relationships.
+    spec.mutable_description()->clear_traininginput();
+
+    auto inTensor = spec.mutable_description()->add_input();
+    inTensor->set_name("fakeInput");
+    auto inTensorShape = inTensor->mutable_type()->mutable_multiarraytype();
+    inTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < 3; i++) {
+        inTensorShape->add_shape(1);
+    }
+    auto trainingInput0 = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput0->CopyFrom(*inTensor);
+
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(ceLossLayer->target());
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testValid_1InferenceAnd3TrainingInputs() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    // set a softmax layer
+    std::string softmaxOutputName = "softmax_out";
+    std::string targetName = "cce_target";
+    (void)addSoftmaxLayer(spec, "softmax", "OutTensor", softmaxOutputName.c_str());
+
+    Specification::NetworkUpdateParameters *updateParams = neuralNet->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input(softmaxOutputName);
+    ceLossLayer->set_target(targetName);
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    auto fakeModelInput = spec.mutable_description()->mutable_traininginput()->Add();
+    fakeModelInput->set_name("madeUpInput");
+    auto fakeModelInputShape = fakeModelInput->mutable_type()->mutable_multiarraytype();
+    fakeModelInputShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < 3; i++) {
+        fakeModelInputShape->add_shape(1);
+    }
+    auto fakeModelInput2 = spec.mutable_description()->mutable_traininginput()->Add();
+    fakeModelInput2->set_name("madeUpInput2");
+    auto fakeModelInputShape2 = fakeModelInput->mutable_type()->mutable_multiarraytype();
+    fakeModelInputShape2->set_datatype(Specification::ArrayFeatureType_ArrayDataType_FLOAT32);
+    for (int i = 0; i < 3; i++) {
+        fakeModelInputShape2->add_shape(1);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(ceLossLayer->target());
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testInvalid_Classifier_OnlyPredictedFeatureName() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+
+    std::string labels[] = { "1", "2", "3", "4" };
+    std::vector<std::string> classLabels(labels, labels + sizeof(labels) / sizeof(std::string));
+
+    (void)buildBasicNeuralNetworkClassifierModel(spec, true, &tensorAttributesIn, classLabels, std::vector<int64_t>(), true);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+
+    // Clearing and then specifically adding only the predicted feature name as a training input (for the classifier)
+    spec.mutable_description()->clear_traininginput();
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(spec.description().predictedfeaturename());
+    trainingInput->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+
+    // Add model's inputs to training inputs
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testInvalid_Classifier_OnlyTarget() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+
+    std::string labels[] = { "1", "2", "3", "4" };
+    std::vector<std::string> classLabels(labels, labels + sizeof(labels) / sizeof(std::string));
+
+    (void)buildBasicNeuralNetworkClassifierModel(spec, true, &tensorAttributesIn, classLabels, std::vector<int64_t>(), true);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+
+    // Clearing and then specifically adding only the predicted feature name as a training input (for the classifier)
+    spec.mutable_description()->clear_traininginput();
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    std::string target = spec.neuralnetworkclassifier().updateparams().losslayers(0).categoricalcrossentropylosslayer().target();
+    trainingInput->set_name(target);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+    // Add model's inputs to training inputs
+    for (auto feature : spec.description().input()) {
+        auto trainingInputModel = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInputModel->CopyFrom(feature);
+    }
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testValid_Classifier_PredictedFeatureName() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+
+    std::string labels[] = { "1", "2", "3", "4" };
+    std::vector<std::string> classLabels(labels, labels + sizeof(labels) / sizeof(std::string));
+
+    (void)buildBasicNeuralNetworkClassifierModel(spec, true, &tensorAttributesIn, classLabels, std::vector<int64_t>(), true);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+
+    // Clearing and then specifically adding only the predicted feature name as a training input (for the classifier)
+    spec.mutable_description()->clear_traininginput();
+
+    // Re-adding model inputs and the predicted feature name to classifier's training inputs
+    for (auto feature : spec.description().input()) {
+        auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInput->CopyFrom(feature);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(spec.description().predictedfeaturename());
+    trainingInput->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testValid_Classifier_Target() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+
+    std::string labels[] = { "1", "2", "3", "4" };
+    std::vector<std::string> classLabels(labels, labels + sizeof(labels) / sizeof(std::string));
+
+    (void)buildBasicNeuralNetworkClassifierModel(spec, true, &tensorAttributesIn, classLabels, std::vector<int64_t>(), true);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+
+    // Clearing and then specifically adding only the predicted feature name as a training input (for the classifier)
+    spec.mutable_description()->clear_traininginput();
+
+    // Re-adding model inputs and the target to classifier's training inputs
+    for (auto feature : spec.description().input()) {
+        auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInput->CopyFrom(feature);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    std::string target = spec.neuralnetworkclassifier().updateparams().losslayers(0).categoricalcrossentropylosslayer().target();
+    trainingInput->set_name(target);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testValid_Classifier_PredictedFeatureNameAndTarget() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+
+    std::string labels[] = { "1", "2", "3", "4" };
+    std::vector<std::string> classLabels(labels, labels + sizeof(labels) / sizeof(std::string));
+
+    (void)buildBasicNeuralNetworkClassifierModel(spec, true, &tensorAttributesIn, classLabels, std::vector<int64_t>(), true);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+
+    // Clearing and then specifically adding only the predicted feature name as a training input (for the classifier)
+    spec.mutable_description()->clear_traininginput();
+
+    // Re-adding model inputs and the target + predicted feature nmae to classifier's training inputs
+    for (auto feature : spec.description().input()) {
+        auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInput->CopyFrom(feature);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    std::string target = spec.neuralnetworkclassifier().updateparams().losslayers(0).categoricalcrossentropylosslayer().target();
+    trainingInput->set_name(target);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    auto trainingInput2 = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput2->set_name(spec.description().predictedfeaturename());
+    trainingInput2->mutable_type()->mutable_stringtype();
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testInvalid_Classifier_PredictedFeatureNameWrongType() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+
+    std::string labels[] = { "1", "2", "3", "4" };
+    std::vector<std::string> classLabels(labels, labels + sizeof(labels) / sizeof(std::string));
+
+    (void)buildBasicNeuralNetworkClassifierModel(spec, true, &tensorAttributesIn, classLabels, std::vector<int64_t>(), true);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+
+    // Clearing and then specifically adding only the predicted feature name as a training input (for the classifier)
+    spec.mutable_description()->clear_traininginput();
+
+    // Re-adding model inputs and the target + predicted feature nmae to classifier's training inputs
+    for (auto feature : spec.description().input()) {
+        auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInput->CopyFrom(feature);
+    }
+
+    auto trainingInput2 = spec.mutable_description()->mutable_traininginput()->Add();
+    trainingInput2->set_name(spec.description().predictedfeaturename());
+    trainingInput2->mutable_type()->mutable_int64type(); // buildBasicNeuralNetworkClassifierModel adds the predictedFeatureName's output as a String type, this should fail validation
+
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+
+    // Correct type of target in training inputs
+    trainingInput2->mutable_type()->clear_int64type();
+    trainingInput2->mutable_type()->mutable_stringtype();
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testValid_WithMSE() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    auto neuralNet = spec.mutable_neuralnetwork();
+
+    std::string targetName = "mse_target";
+    addMeanSquareError(spec, neuralNet, "mean_square_error", "OutTensor", targetName.c_str());
+
+    spec.mutable_description()->clear_traininginput();
+
+    for (auto feature : spec.description().input()) {
+        auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+        trainingInput->CopyFrom(feature);
+    }
+
+    auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
+    std::string target = spec.neuralnetwork().updateparams().losslayers(0).meansquarederrorlosslayer().target();
+    trainingInput->set_name(targetName);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_DOUBLE);
+    trainingInputTensorShape->add_shape(1);
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testValid_Pipeline() {
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesA = { "A", 3 };
+    TensorAttributes tensorAttributesB = { "B", 1 };
+    TensorAttributes tensorAttributesC = { "C", 1 };
+    TensorAttributes tensorAttributesD = { "D", 3 };
+
+    auto pipeline = buildEmptyPipelineModelWithStringOutput(spec, true, &tensorAttributesA, "E");
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+
+    auto m1 = pipeline->add_models();
+    auto m2 = pipeline->add_models();
+    auto m3 = pipeline->add_models();
+    auto m4 = pipeline->add_models();
+
+    (void)buildBasicNeuralNetworkModel(*m1, false, &tensorAttributesA, &tensorAttributesB);
+    (void)buildBasicNeuralNetworkModel(*m2, false, &tensorAttributesB, &tensorAttributesC);
+    auto neuralNet = buildBasicNeuralNetworkModel(*m3, true, &tensorAttributesC, &tensorAttributesD);
+    (void)buildBasicNearestNeighborClassifier(*m4, false, &tensorAttributesD, "E");
+
+    res = Model::validate(*m1);
+    ML_ASSERT_GOOD(res);
+
+    res = Model::validate(*m2);
+    ML_ASSERT_GOOD(res);
+
+    res = Model::validate(*m3);
+    ML_ASSERT_BAD(res);
+
+    res = Model::validate(*m4);
+    ML_ASSERT_GOOD(res);
+
+    // expect validation to pass!
+    res = Model::validate(spec);
+    ML_ASSERT_BAD(res);
+
+
+    // Add target to updatable neural network model (3rd) within pipeline
+    std::string softmaxOutputName = "softmax_out";
+    std::string targetName = "cce_target";
+    (void)addSoftmaxLayer(*m3, "softmax", tensorAttributesD.name, softmaxOutputName.c_str());
+
+    Specification::NetworkUpdateParameters *updateParams = neuralNet->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cce_loss");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input(softmaxOutputName);
+    ceLossLayer->set_target(targetName);
+
+    auto trainingInput = (*m3).mutable_description()->mutable_traininginput()->Add();
+    trainingInput->set_name(targetName);
+    auto trainingInputTensorShape = trainingInput->mutable_type()->mutable_multiarraytype();
+    trainingInputTensorShape->set_datatype(Specification::ArrayFeatureType_ArrayDataType_INT32);
+    trainingInputTensorShape->add_shape(1);
+
+    addLearningRate(neuralNet, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(neuralNet, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(neuralNet, 100, 1, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNet, 2019, 0, 2019, std::set<int64_t>());
+
+    res = Model::validate(*m3);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
 
