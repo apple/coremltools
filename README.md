@@ -90,7 +90,8 @@ to point to the correct intended version of python:
 ```shell
 cmake \
   -DPYTHON_EXECUTABLE:FILEPATH=/Library/Frameworks/Python.framework/Versions/3.7/bin/python \
-  -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m \
+  -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m/ \
+  -DPYTHON_LIBRARY=/Library/Frameworks/Python.framework/Versions/3.7/lib/ \
   ../
 ```
 after which you can use make to build the project
