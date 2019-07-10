@@ -1,8 +1,20 @@
 cmake_minimum_required(VERSION 3.12.0)
 
 set(CMAKE_OSX_ARCHITECTURES x86_64)
+set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 project(coremltools)
+
+if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
+  message(FATAL_ERROR "
+    Source directory '${PROJECT_SOURCE_DIR}' is the same
+    as binary directory '${PROJECT_BINARY_DIR}'; coremltools requires
+    an out-of-source build.  Note that your directory tree will require
+    you to remove CMakeCache.txt before this will work, and CMake may have
+    clobbered some source files (use git reset --hard).
+    See: https://gitlab.kitware.com/cmake/community/wikis/FAQ#i-run-an-out-of-source-build-but-cmake-generates-in-source-anyway-why
+  ")
+endif()
 
 find_program(HAS_CCACHE ccache)
 if(HAS_CCACHE)

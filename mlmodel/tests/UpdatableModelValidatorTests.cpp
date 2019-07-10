@@ -12,6 +12,7 @@
 #include "../src/NeuralNetwork/NeuralNetworkShapes.hpp"
 #include "ParameterTests.hpp"
 #include "ModelCreationUtils.hpp"
+#include "../src/Utils.hpp"
 
 #include "framework/TestUtils.hpp"
 
@@ -510,6 +511,226 @@ int testInvalidMeanSquaredErrorLossLayerInputs() {
     return 0;
 }
 
+int testInvalidModelInvalidSoftmax() {
+
+    // This test creates the following model. This is an invalid case as the first Softmax is not
+    // attached to CCE.
+    //     -----        --      -----      --       ---
+    //    |Dense| --> |SM| --> |Dense| --> |SM| --> |CCE|
+    //     -----        --      -----      --       ---
+    //     updatable            updatable
+    
+    Specification::Model m;
+    auto *nn = buildBasicUpdatableNeuralNetworkModel(m);
+    
+    // add a softmax layer
+    nn = addSoftmaxLayer(m, "softmax", "B", "softmax_out");
+    
+    // add an updatable inner product layer after softmax
+    TensorAttributes inTensorAttr = { "softmax_out", 3 };
+    TensorAttributes outTensorAttr = { "inner_layer_after_softmax_out", 1 };
+    nn = addInnerProductLayer(m, true, "inner_layer_after_softmax", &inTensorAttr, &outTensorAttr);
+    
+    // add second softmax layer
+    nn = addSoftmaxLayer(m, "softmax_2", "inner_layer_after_softmax_out", "softmax_2_out");
+    
+    // set a CCE loss layer
+    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_2_out");
+    ceLossLayer->set_target("label_target");
+    
+    // now add an updatable model parameter.
+    addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    
+    Result res = Model::validate(m);
+    // "validator error: There is a layer (softmax), which does not support backpropagation, between an updatable marked layer and the loss function."
+    ML_ASSERT_BAD(res);
+    return 0;
+}
+
+int testValidModelValidMultipleSoftmax_1() {
+    
+    // This test creates the following model. This is a valid model. The first softmax does not need to back prop
+    // cause the first dense is NOT updatable. Second softmax is also valid cause it is attached to CCE.
+    //     -----        --       -----       --       ---
+    //    |Dense| -- > |SM| --> |Dense| --> |SM| --> |CCE|
+    //     -----        --       -----       --       ---
+    //     non-updatable        updatable
+    
+    Specification::Model m;
+    TensorAttributes inTensorAttr = { "A", 3 };
+    TensorAttributes outTensorAttr = { "B", 1 };
+    auto *nn = buildBasicNeuralNetworkModel(m, false, &inTensorAttr, &outTensorAttr);
+    
+    // add a softmax layer
+    nn = addSoftmaxLayer(m, "softmax", "B", "softmax_out");
+    
+    // add an updatable inner product layer
+    inTensorAttr = { "softmax_out", 1 };
+    outTensorAttr = { "inner_layer_after_softmax_out", 1 };
+    nn = addInnerProductLayer(m, true, "inner_layer_after_softmax", &inTensorAttr, &outTensorAttr);
+    
+    // add second softmax layer
+    nn = addSoftmaxLayer(m, "softmax_2", "inner_layer_after_softmax_out", "softmax_2_out");
+
+    // set a CCE loss layer
+    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_2_out");
+    ceLossLayer->set_target("label_target");
+    
+    // now add an updatable model parameter.
+    addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    
+    Result res = Model::validate(m);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testValidModelValidMultipleSoftmax_2() {
+    
+    // This test creates the following model. This is a valid model. The first softmax is attached to CCE.
+    // Second softmax is also valid. Although it is not attached to CCE, it is out of backpropagation scope.
+    //     -----        --       -----       --
+    //    |Dense| -- > |SM| --> |Dense| --> |SM|
+    //     -----        --       -----       --
+    //     updatable    |        updatable
+    //                  |     ---
+    //                   --> |CCE|
+    //                        ---
+    
+    Specification::Model m;
+    auto *nn = buildBasicUpdatableNeuralNetworkModel(m);
+    
+    // add a softmax layer
+    nn = addSoftmaxLayer(m, "softmax", "B", "softmax_out");
+    
+    // attach a CCE loss layer to softmax
+    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_out");
+    ceLossLayer->set_target("label_target");
+    
+    // attch an updatable inner product layer to the softmax
+    TensorAttributes inTensorAttr = { "softmax_out", 1 };
+    TensorAttributes outTensorAttr = { "inner_layer_after_softmax_out", 1 };
+    nn = addInnerProductLayer(m, true, "inner_layer_after_softmax", &inTensorAttr, &outTensorAttr);
+    
+    // add a second softmax layer
+    nn = addSoftmaxLayer(m, "softmax_2", "inner_layer_after_softmax_out", "softmax_2_out");
+    
+    // now add an updatable model parameter.
+    addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    
+    Result res = Model::validate(m);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testValidModelMultipleSoftmaxOutputs() {
+    
+    // This test creates the following model. This is a valid case.
+    //     -----        --       -----
+    //    |Dense| -- > |SM| --> |Dense|
+    //     -----        --       -----
+    //    updatable     |
+    //                  |     ---
+    //                   --> |CCE|
+    //                        ---
+    
+    Specification::Model m;
+    auto *nn = buildBasicUpdatableNeuralNetworkModel(m);
+    
+    // add a softmax layer
+    nn = addSoftmaxLayer(m, "softmax", "B", "softmax_out");
+    
+    // add a non-updatable inner product layer
+    TensorAttributes inTensorAttr = { "softmax_out", 3 };
+    TensorAttributes outTensorAttr = { "inner_layer_after_softmax_out", 1 };
+    nn = addInnerProductLayer(m, false, "inner_layer_after_softmax", &inTensorAttr, &outTensorAttr);
+    
+    // attach a CCE to softmax
+    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_out");
+    ceLossLayer->set_target("label_target");
+
+    // now add an updatable model parameter.
+    addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    
+    Result res = Model::validate(m);
+    ML_ASSERT_GOOD(res);
+    return 0;
+    
+}
+
+int testInvalidModelMultipleLoss() {
+    
+    // This test creates the following model. This is an invalid case as a model with multiple losses is not supported
+    //     -----        --       -----       --       ---
+    //    |Dense| -- > |SM| --> |Dense| --> |SM| --> |CCE|
+    //     -----        --       -----       --       ---
+    //     updatable    |        updatable
+    //                  |     ---
+    //                   --> |CCE|
+    //                        ---
+    
+    Specification::Model m;
+    auto *nn = buildBasicUpdatableNeuralNetworkModel(m);
+    
+    // add a softmax layer
+    nn = addSoftmaxLayer(m, "softmax", "B", "softmax_out");
+    
+    // add an updatable inner product layer
+    TensorAttributes inTensorAttr = { "softmax_out", 3 };
+    TensorAttributes outTensorAttr = { "inner_layer_after_softmax_out", 1 };
+    nn = addInnerProductLayer(m, true, "inner_layer_after_softmax", &inTensorAttr, &outTensorAttr);
+    
+    Specification::NetworkUpdateParameters *updateParams = nn->mutable_updateparams();
+    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
+    lossLayer->set_name("cross_entropy_loss_layer_1");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer->set_input("softmax_1_out");
+    ceLossLayer->set_target("label_target");
+    
+    // set second softmax layer
+    nn = addSoftmaxLayer(m, "softmax_2", "inner_layer_after_softmax_out", "softmax_2_out");
+
+    // attach second loss to the second softmax
+    Specification::LossLayer *lossLayer_2 = updateParams->add_losslayers();
+    lossLayer_2->set_name("cross_entropy_loss_layer_2");
+    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer_2 = lossLayer->mutable_categoricalcrossentropylosslayer();
+    ceLossLayer_2->set_input("softmax_2_out");
+    ceLossLayer_2->set_target("label_target");
+    
+    // now add an updatable model parameter.
+    addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    
+    Result res = Model::validate(m);
+    // "validator error: This model has more than one loss layers specified, which is not supported at the moment."
+    ML_ASSERT_BAD(res);
+    return 0;
+}
+
 static Specification::NetworkUpdateParameters* buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(Specification::Model& m) {
     
     auto *nn = buildBasicUpdatableNeuralNetworkModel(m);
@@ -730,6 +951,23 @@ int testMissingEpochsParameter() {
     // expect validation to pass.
     res = Model::validate(m);
     ML_ASSERT_BAD(res);
+    return 0;
+}
+
+int testExistingShuffleWithMissingSeedParameter() {
+
+    Specification::Model m;
+
+    // basic neural network model without any updatable model parameters.
+    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+
+    addShuffleAndSeed(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    Result res = Model::validate(m);
+    ML_ASSERT_GOOD(res);
+
     return 0;
 }
 
@@ -1027,6 +1265,22 @@ int testUpdatablePipelineWithOneUpdatableModelInsidePipelineHierarchy() {
     ML_ASSERT_GOOD(res);
     
     // expect validation to pass!
+    res = Model::validate(spec);
+    ML_ASSERT_GOOD(res);
+    
+    return 0;
+}
+
+int testValidUpdatableModelWith1024Layers() {
+    
+    Specification::Model spec;
+    Result res;
+    TensorAttributes tensorAttributesIn = { "InTensor", 3 };
+    TensorAttributes tensorAttributesOut = { "OutTensor", 1 };
+    
+    (void)buildBasicNeuralNetworkModel(spec, true, &tensorAttributesIn, &tensorAttributesOut, 1024);
+    addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(spec, "OutTensor");
+    
     res = Model::validate(spec);
     ML_ASSERT_GOOD(res);
     

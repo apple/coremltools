@@ -22,14 +22,15 @@ if _HAS_KERAS_TF:
     from . import _layers
     from . import _topology
     _KERAS_LAYER_REGISTRY  = {
-        _keras.layers.core.Dense: _layers.convert_dense,
 
+        _keras.layers.core.Dense: _layers.convert_dense,
         _keras.layers.core.Activation: _layers.convert_activation,
         _keras.layers.advanced_activations.LeakyReLU: _layers.convert_activation,
         _keras.layers.advanced_activations.PReLU: _layers.convert_activation,
         _keras.layers.advanced_activations.ELU: _layers.convert_activation,
         _keras.layers.advanced_activations.ParametricSoftplus: _layers.convert_activation,
         _keras.layers.advanced_activations.ThresholdedReLU: _layers.convert_activation,
+        _keras.activations.softmax: _layers.convert_activation,
 
         _keras.layers.convolutional.Convolution2D: _layers.convert_convolution,
         _keras.layers.convolutional.Deconvolution2D: _layers.convert_convolution,
@@ -79,7 +80,8 @@ if _HAS_KERAS_TF:
 
 def _check_unsupported_layers(model):
     for i, layer in enumerate(model.layers):
-        if isinstance(layer, _keras.models.Sequential) or isinstance(layer, _keras.models.Model):
+        if isinstance(layer, _keras.models.Sequential) or isinstance(layer,
+                                                                     _keras.models.Model):
             _check_unsupported_layers(layer)
         else:
             if type(layer) not in _KERAS_LAYER_REGISTRY:
@@ -89,7 +91,8 @@ def _check_unsupported_layers(model):
                 if layer.layers is None:
                     continue
                 for merge_layer in layer.layers:
-                    if isinstance(merge_layer, _keras.models.Sequential) or isinstance(merge_layer, _keras.models.Model):
+                    if isinstance(merge_layer, _keras.models.Sequential) or \
+                            isinstance(merge_layer, _keras.models.Model):
                         _check_unsupported_layers(merge_layer)
             if isinstance(layer, _keras.layers.wrappers.TimeDistributed):
                 if type(layer.layer) not in _KERAS_LAYER_REGISTRY:
@@ -98,7 +101,8 @@ def _check_unsupported_layers(model):
             if isinstance(layer, _keras.layers.wrappers.Bidirectional):
                 if not isinstance(layer.layer,  _keras.layers.recurrent.LSTM):
                     raise ValueError(
-                        "Keras bi-directional wrapper conversion supports only LSTM layer at this time. ")
+                        "Keras bi-directional wrapper conversion supports only "
+                        "LSTM layer at this time. ")
 
 def _get_layer_converter_fn(layer):
     """Get the right converter function for Keras
@@ -164,7 +168,8 @@ def _convert(model,
             respect_trainable = False):
 
     if not(_HAS_KERAS_TF):
-        raise RuntimeError('keras not found or unsupported version or backend found. keras conversion API is disabled.')
+        raise RuntimeError('keras not found or unsupported version or backend '
+                           'found. keras conversion API is disabled.')
     if isinstance(model, _string_types):
         model = _keras.models.load_model(model, custom_objects = custom_objects)
     elif isinstance(model, tuple):
@@ -228,12 +233,14 @@ def _convert(model,
     for idx, dim in enumerate(input_dims):
         unfiltered_shape = unfiltered_shapes[idx]
         if len(dim) == 0:
-            # Used to be [None, None] before filtering; indicating unknown sequence length
+            # Used to be [None, None] before filtering; indicating unknown
+            # sequence length
             input_dims[idx] = tuple([1])
         elif len(dim) == 1:
             s = graph.get_successors(inputs[idx])[0]
             if isinstance(graph.get_keras_layer(s), _keras.layers.embeddings.Embedding):
-                # Embedding layer's special input (None, D) where D is actually sequence length
+                # Embedding layer's special input (None, D) where D is actually
+                # sequence length
                 input_dims[idx] = (1,)
             else:
                 input_dims[idx] = dim # dim is just a number
@@ -243,10 +250,12 @@ def _convert(model,
             if (len(unfiltered_shape) > 3):
                 # keras uses the reverse notation from us
                 input_dims[idx] = (dim[2], dim[0], dim[1])
-            else: # keras provided fixed batch and sequence length, so the input was (batch, sequence, channel)
+            else: # keras provided fixed batch and sequence length, so the input
+                # was (batch, sequence, channel)
                 input_dims[idx] = (dim[2],)
         else:
-            raise ValueError('Input' + input_names[idx] + 'has input shape of length' + str(len(dim)))
+            raise ValueError('Input' + input_names[idx] +
+                             'has input shape of length' + str(len(dim)))
 
     # Retrieve output shapes from model
     if type(model.output_shape) is list:
@@ -303,7 +312,8 @@ def _convert(model,
         if isinstance(classes_in, _string_types):
             import os
             if not os.path.isfile(classes_in):
-                raise ValueError("Path to class labels (%s) does not exist." % classes_in)
+                raise ValueError("Path to class labels (%s) does not exist."
+                                 % classes_in)
             with open(classes_in, 'r') as f:
                 classes = f.read()
             classes = classes.splitlines()

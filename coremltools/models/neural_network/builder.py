@@ -514,9 +514,16 @@ class NeuralNetworkBuilder(object):
         if (not optionals_in) and (not optionals_out):
             return
 
-        # assuming single sizes here
-        input_types = [datatypes.Array(dim) for (name, dim) in optionals_in]
-        output_types = [datatypes.Array(dim) for (name, dim) in optionals_out]
+
+        input_types = [datatypes.Array(dim) if isinstance(dim, int) else datatypes.Array(*dim) for (name, dim) in optionals_in]
+        output_types = []
+        for name, dim in optionals_out:
+            if not dim:
+                output_types.append(None)
+            elif isinstance(dim,int):
+                output_types.append(datatypes.Array(dim))
+            else:
+                output_types.append(datatypes.Array(*dim))
 
         input_names = [str(name) for (name, dim) in optionals_in]
         output_names = [str(name) for (name, dim) in optionals_out]
@@ -568,6 +575,20 @@ class NeuralNetworkBuilder(object):
                     pass
 
     def set_categorical_cross_entropy_loss(self, name, input, target=None):
+        """
+        Categorical Cross Entropy is used for single label categorization (only one category is applicable for each data point).
+
+        Parameters
+        ----------
+        name: The name of the loss layer
+        input: The input is a vector of length N representing the distribution over N categories. It must be the output of a softmax.
+        target: The target is a single value representing the true category or class label.
+        If the target is the predictedFeatureName of a neural network classifier it will be inverse mapped to the corresponding categorical index for you.
+
+        Math
+        ----------
+        Loss_ {CCE}(input, target) = -\sum_{i = 1} ^ {N}(target == i) log(input[i]) = - log(input[target])
+        """
         if self.spec is None:
             return
 
@@ -577,22 +598,36 @@ class NeuralNetworkBuilder(object):
         if input is None:
             raise ValueError('Loss Layer input must be specified')
 
+        # target is optional for CCE loss layer
         if target is None:
             target = input + 'True'
+
+        if len(self.nn_spec.layers) < 1:
+            raise ValueError('Loss layer (%s) cannot be attached to an empty model.' % name)
+
+        # validate input
+        # input must be a softmax layer output
+        input_validated = False
+        for _, layer in enumerate(self.nn_spec.layers[::-1]):
+            layer_outputs = list(layer.output)
+            layer_type = layer.WhichOneof('layer')
+
+            if input in layer_outputs and layer_type == 'softmax':
+                input_validated = True
+                break
+
+        if not input_validated:
+            raise ValueError('Categorical Cross Entropy loss layer input (%s) must be a softmax layer output.' % input)
+
+        # validate target
+        output_names = [x.name for x in self.spec.description.output]
+        if target in output_names:
+            raise ValueError('Loss layer target (%s) must not be a model output.' % target)
 
         loss_layer = self.nn_spec.updateParams.lossLayers.add()
         self.layers.append(name)
         self.layer_specs[name] = loss_layer
         loss_layer.name = name
-
-        names = [x.name for x in self.spec.description.output]
-
-        if input not in names:
-            raise ValueError('Loss Layer input (%s) must be a model output' % input)
-
-        if target in names:
-            raise ValueError('Loss Layer target (%s) must not be a model output' % target)
-
         loss_layer.categoricalCrossEntropyLossLayer.input = input
         loss_layer.categoricalCrossEntropyLossLayer.target = target
 
@@ -614,12 +649,12 @@ class NeuralNetworkBuilder(object):
         self.layer_specs[name] = loss_layer
         loss_layer.name = name
 
-        names = [x.name for x in self.spec.description.output]
+        output_names = [x.name for x in self.spec.description.output]
 
-        if input not in names:
+        if input not in output_names:
             raise ValueError('Loss Layer input (%s) must be a model output' % input)
 
-        if target in names:
+        if target in output_names:
             raise ValueError('Loss Layer target (%s) must not be a model output' % target)
 
         loss_layer.meanSquaredErrorLossLayer.input = input
@@ -691,6 +726,19 @@ class NeuralNetworkBuilder(object):
             self.nn_spec.updateParams.epochs.set.values.extend([epochs])
         else:
             self.nn_spec.updateParams.epochs.set.values.extend(allowed_set)
+
+    def set_shuffle(self, seed=None):
+        if self.spec is None:
+            return
+
+        # Validate that seed passed in is integer
+        if seed is not None:
+            if not isinstance(seed, int):
+                raise TypeError('Shuffle seed value must be integer')
+
+        self.nn_spec.updateParams.shuffle.defaultValue = True
+        if seed is not None:
+            self.nn_spec.updateParams.seed.defaultValue = seed
 
     def _add_generic_layer(self, name, input_names, output_names,
                            input_ranks=None, input_shapes=None,
@@ -1740,7 +1788,7 @@ class NeuralNetworkBuilder(object):
 
         See Also
         --------
-        add_crop, add_convolution, add_pooling
+        add_crop, add_convolution, add_pooling, add_constant_pad
         """
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.padding
@@ -4860,6 +4908,80 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.argMin
         spec_layer_params.axis = axis
         spec_layer_params.removeDim = not keepdims
+        return spec_layer
+
+    def add_constant_pad(self, name, input_names, output_name,
+                         value=0.0, pad_to_given_output_size_mode = False, pad_amounts = []):
+        """
+        Add a constant pad layer.
+        Refer to the **ConstantPaddingLayerParams** message in specification (NeuralNetwork.proto) for more details.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_name: [str]
+            The input blob name(s) of this layer.
+        output_name: str
+            The output blob name of this layer.
+        value: float
+            value to be used for padding.
+        pad_to_given_output_size_mode: bool
+            if true, pad_amounts are interpreted as output shapes (see example in NeuralNetwork.proto)
+        pad_amounts: [int], optional
+            must be non negative. Amount to pad in each dimension. Length of the list must be twice the input/output rank.
+            Not required if second input is present.
+
+
+        See Also
+        --------
+        add_padding
+        """
+
+        spec_layer = self._add_generic_layer(name, input_names, [output_name])
+        spec_layer_params = spec_layer.constantPad
+        spec_layer_params.value = value
+        spec_layer_params.padToGivenOutputSizeMode = pad_to_given_output_size_mode
+        if len(pad_amounts) > 0:
+            spec_layer_params.padAmounts.extend(map(int, pad_amounts))
+        if len(input_names) == 1 and len(pad_amounts) == 0:
+            raise ValueError("Constant_pad layer: pad_amounts must be provided when there is a single input")
+        return spec_layer
+
+    def add_nms(self, name, input_names, output_names,
+                iou_threshold=0.5, score_threshold=0.0, max_boxes=1, per_class_suppression=False):
+        """
+        Add a non maximum suppression layer.
+        Refer to the **NonMaximumSuppressionLayerParams** message in specification (NeuralNetwork.proto) for more details.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_names: [str]
+            The input blob names of this layer. Must be at least 2, and maximum 5.
+        output_names: [str]
+            The output blob names of this layer. Must be of length 4 exactly.
+        iou_threshold: float
+            intersection over union threshold for suppression. Ignored if 3rd input is present.
+        score_threshold: float
+            threshold for selecting boxes to be used for NMS algorithm. Ignored if 4th input is present.
+        max_boxes: int
+            maximum number of boxes to output. Ignored if 5th input is present.
+        per_class_suppression: bool
+            If true, boxes are organized into classes and suppression is applied to each class group separately
+
+        See Also
+        --------
+        add_constant_pad
+        """
+
+        spec_layer = self._add_generic_layer(name, input_names, output_names)
+        spec_layer_params = spec_layer.NonMaximumSuppression
+        spec_layer_params.iouThreshold = iou_threshold
+        spec_layer_params.scoreThreshold = score_threshold
+        spec_layer_params.maxBoxes = max_boxes
+        spec_layer_params.perClassSuppression = per_class_suppression
         return spec_layer
 
     def add_embedding_nd(self, name, input_name, output_name,

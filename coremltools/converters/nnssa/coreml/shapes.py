@@ -35,12 +35,16 @@ def _slice_static(layer_spec, input_shapes):
     input_shape = input_shapes[0]
     rank = len(input_shape)
     output_shape = [-1] * rank
+    begin_indices = params.beginIds
+    end_indices = params.endIds
+    for i in range(rank):
+        begin_indices[i] = begin_indices[i] if begin_indices[i] >= 0 else input_shape[i] + begin_indices[i]
+        end_indices[i] = end_indices[i] if end_indices[i] >= 0 else input_shape[i] + end_indices[i]
     for idx, dim in enumerate(input_shape):
         if dim > 0:  # known
-            begin_index = 0 if params.beginMasks[idx] else params.beginIds[idx]
-            end_index = dim if params.endMasks[idx] else params.endIds[idx]
-            step = params.strides[idx]
-            output_shape[idx] = int((end_index - begin_index) / step)
+            begin = 0 if params.beginMasks[idx] else begin_indices[idx]
+            end = dim if params.endMasks[idx] else end_indices[idx]
+            output_shape[idx] = (end - begin) // params.strides[idx]
     return [output_shape]
 
 
@@ -134,7 +138,6 @@ def _gather(layer_spec, input_shapes):
         raise ValueError("[Shaper] Gather layer accepts only 2 inputs")
 
 
-
 def _concat_nd(layer_spec, input_shapes):
     axis = layer_spec.concatND.axis
     rank = len(input_shapes[0])
@@ -187,8 +190,10 @@ def _split_nd(layer_spec, input_shapes):
 def _identity(layer_spec, input_shapes):
     return input_shapes[:]
 
+
 def _reverse_seq(layer_spec, input_shapes):
     return [input_shapes[0]]
+
 
 def _copy(layer_spec, input_shapes):
     return input_shapes[:]
@@ -197,8 +202,8 @@ def _copy(layer_spec, input_shapes):
 def _expand_dims(layer_spec, input_shapes):
     input_shape = input_shapes[0]
     axes = list(layer_spec.expandDims.axes)
-    rank = len(input_shape)
-    axes = [axis if axis > 0 else axis + rank + 1 for axis in axes]
+    target_rank = len(input_shape) + len(axes)
+    axes = [axis if axis >= 0 else axis + target_rank + 1 for axis in axes]
 
     output_shape = input_shape[:]
     for axis in axes:
@@ -206,8 +211,8 @@ def _expand_dims(layer_spec, input_shapes):
     return [output_shape]
 
 
-def _stack_nd(layer_spec, input_shapes):
-    axis = layer_spec.stackND.axis
+def _stack(layer_spec, input_shapes):
+    axis = layer_spec.stack.axis
     num_inputs = len(layer_spec.input)
     shape = input_shapes[0]
     for s in input_shapes:
@@ -344,6 +349,13 @@ def _argmin(layer_spec, input_shapes):
     return [output_shape]
 
 
+def _tile(layer_spec, input_shapes):
+    params = layer_spec.tile
+    reps = params.reps
+    assert len(reps) == len(input_shapes[0])
+    return [[reps[i] * input_shapes[0][i] for i in range(len(reps))]]
+
+
 # We'll enable them one by one
 _LAYER_REGISTRY = {
     'transpose': _transpose,
@@ -371,9 +383,9 @@ _LAYER_REGISTRY = {
     'activation': _identity,
     'reverse': _identity,
     'reverseSeq': _reverse_seq,
-    'copy': _copy,
+    'copy': _identity,
     'expandDims': _expand_dims,
-    'stackND': _stack_nd,
+    'stack': _stack,
     'addBroadcastable': _broadcastable,
     'subtractBroadcastable': _broadcastable,
     'divideBroadcastable': _broadcastable,
@@ -405,7 +417,10 @@ _LAYER_REGISTRY = {
     'batchedMatmul': _batched_mat_mul,
     'sin': _identity,
     'cos': _identity,
-    'round': _identity
+    'round': _identity,
+    'tile': _tile,
+    'fillLike': _identity,
+    'uniDirectionalLSTM': _identity
 }
 
 

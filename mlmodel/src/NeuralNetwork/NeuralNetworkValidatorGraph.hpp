@@ -9,9 +9,10 @@ using namespace CoreML;
 
 static bool isLayerSupportedForBackprop(const Specification::NeuralNetworkLayer* layer) {
     switch (layer->layer_case()) {
+
         case Specification::NeuralNetworkLayer::kConvolution:
         case Specification::NeuralNetworkLayer::kInnerProduct:
-        case Specification::NeuralNetworkLayer::kSoftmax:
+        case Specification::NeuralNetworkLayer::kFlatten:
         case Specification::NeuralNetworkLayer::kPooling:
         case Specification::NeuralNetworkLayer::kBatchnorm:
             return true;
@@ -30,22 +31,23 @@ static bool isLayerSupportedForBackprop(const Specification::NeuralNetworkLayer*
     }
 }
 
-struct node {
+struct LayerNode {
     
     public:
     
-    std::vector<node> parents; // list of nodes that are parent to this node
-    std::vector<node> children;
+    std::vector<LayerNode *> parents; // list of nodes that are parent to this node
+    std::vector<LayerNode *> children;
     Specification::NeuralNetworkLayer::LayerCase layerType;
+    Specification::LossLayer::LossLayerTypeCase lossLayerType;
     std::string name; // name of this node
     std::vector<std::string> inputNames;
     std::vector<std::string> outputNames;
     bool isUpdatable;
     bool isBackPropagable;
     
-    node () {}
+    LayerNode () {}
     
-    node(const Specification::LossLayer *lossLayer)
+    LayerNode(const Specification::LossLayer *lossLayer)
     {
         name = lossLayer->name();
         
@@ -60,11 +62,13 @@ struct node {
                 break;
         }
 
+        lossLayerType = lossLayer->LossLayerType_case();
+        layerType = Specification::NeuralNetworkLayer::LAYER_NOT_SET;
         isUpdatable = false;
         isBackPropagable = false;
     }
     
-    node(const Specification::NeuralNetworkLayer* layer)
+    LayerNode(const Specification::NeuralNetworkLayer *layer)
     {
         std::vector<std::string> inNames;
         std::vector<std::string> outNames;
@@ -75,6 +79,7 @@ struct node {
             outNames.push_back(elem);
         }
         layerType =  layer->layer_case();
+        lossLayerType = Specification::LossLayer::LOSSLAYERTYPE_NOT_SET;
         inputNames = inNames;
         outputNames = outNames;
         name = layer->name();
@@ -87,29 +92,30 @@ struct NeuralNetworkValidatorGraph {
     
     public:
     
-    std::map<std::string, node> nodeNameToNode;
-    std::map<std::string, node> blobNameToProducingNode;
+    std::map<std::string, LayerNode *> nodeNameToNode;
+    std::map<std::string, LayerNode *> blobNameToProducingNode;
     
     NeuralNetworkValidatorGraph() {}
     
-    void insertNode(node thisNode)
+    void insertNode(LayerNode *node)
     {
-        for (const auto& name: thisNode.inputNames) {
+        for (const auto& name: node->inputNames) {
             if (blobNameToProducingNode.find(name) != blobNameToProducingNode.end()) {
-                thisNode.parents.push_back(blobNameToProducingNode[name]);
-                blobNameToProducingNode[name].children.push_back(thisNode);
+                LayerNode *producingNode = blobNameToProducingNode.at(name);
+                node->parents.push_back(producingNode);
+                producingNode->children.push_back(node);
             }
         }
-        for (const auto& name: thisNode.outputNames) {
-            blobNameToProducingNode[name] = thisNode;
+        for (const auto& name: node->outputNames) {
+            blobNameToProducingNode[name] = node;
         }
-        nodeNameToNode[thisNode.name] = thisNode;
+        nodeNameToNode[node->name] = node;
     }
     
-    node getNodeFromName(std::string name) const
+    LayerNode *getNodeFromName(std::string name) const
     {
         if (nodeNameToNode.find(name) == nodeNameToNode.end()) {
-            return node();
+            return NULL;
         }
         return nodeNameToNode.at(name);
     }

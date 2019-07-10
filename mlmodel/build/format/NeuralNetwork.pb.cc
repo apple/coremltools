@@ -195,6 +195,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::ReshapeStaticLayerParams* reshapestatic_;
   const ::CoreML::Specification::ReshapeDynamicLayerParams* reshapedynamic_;
   const ::CoreML::Specification::RankPreservingReshapeLayerParams* rankpreservingreshape_;
+  const ::CoreML::Specification::ConstantPaddingLayerParams* constantpad_;
   const ::CoreML::Specification::RandomNormalLikeLayerParams* randomnormallike_;
   const ::CoreML::Specification::RandomNormalStaticLayerParams* randomnormalstatic_;
   const ::CoreML::Specification::RandomNormalDynamicLayerParams* randomnormaldynamic_;
@@ -221,6 +222,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::UpperTriangularLayerParams* uppertriangular_;
   const ::CoreML::Specification::WhereBroadcastableLayerParams* wherebroadcastable_;
   const ::CoreML::Specification::LayerNormalizationLayerParams* layernormalization_;
+  const ::CoreML::Specification::NonMaximumSuppressionLayerParams* nonmaximumsuppression_;
 } _NeuralNetworkLayer_default_instance_;
 class BranchLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BranchLayerParams> {
 } _BranchLayerParams_default_instance_;
@@ -482,6 +484,8 @@ class StackLayerParamsDefaultTypeInternal : public ::google::protobuf::internal:
 } _StackLayerParams_default_instance_;
 class RankPreservingReshapeLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<RankPreservingReshapeLayerParams> {
 } _RankPreservingReshapeLayerParams_default_instance_;
+class ConstantPaddingLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ConstantPaddingLayerParams> {
+} _ConstantPaddingLayerParams_default_instance_;
 class RandomNormalLikeLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<RandomNormalLikeLayerParams> {
 } _RandomNormalLikeLayerParams_default_instance_;
 class RandomNormalStaticLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<RandomNormalStaticLayerParams> {
@@ -572,6 +576,8 @@ class SlidingWindowsLayerParamsDefaultTypeInternal : public ::google::protobuf::
 } _SlidingWindowsLayerParams_default_instance_;
 class LayerNormalizationLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<LayerNormalizationLayerParams> {
 } _LayerNormalizationLayerParams_default_instance_;
+class NonMaximumSuppressionLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NonMaximumSuppressionLayerParams> {
+} _NonMaximumSuppressionLayerParams_default_instance_;
 class NeuralNetworkClassifierDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NeuralNetworkClassifier> {
   public:
   const ::CoreML::Specification::StringVector* stringclasslabels_;
@@ -613,6 +619,8 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
     TableStruct::schema[] = {
+  { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
@@ -950,6 +958,7 @@ void TableStruct::Shutdown() {
   _ScatterAlongAxisLayerParams_default_instance_.Shutdown();
   _StackLayerParams_default_instance_.Shutdown();
   _RankPreservingReshapeLayerParams_default_instance_.Shutdown();
+  _ConstantPaddingLayerParams_default_instance_.Shutdown();
   _RandomNormalLikeLayerParams_default_instance_.Shutdown();
   _RandomNormalStaticLayerParams_default_instance_.Shutdown();
   _RandomNormalDynamicLayerParams_default_instance_.Shutdown();
@@ -995,6 +1004,7 @@ void TableStruct::Shutdown() {
   _RangeDynamicLayerParams_default_instance_.Shutdown();
   _SlidingWindowsLayerParams_default_instance_.Shutdown();
   _LayerNormalizationLayerParams_default_instance_.Shutdown();
+  _NonMaximumSuppressionLayerParams_default_instance_.Shutdown();
   _NeuralNetworkClassifier_default_instance_.Shutdown();
   _NeuralNetworkRegressor_default_instance_.Shutdown();
   _NetworkUpdateParameters_default_instance_.Shutdown();
@@ -1152,6 +1162,7 @@ void TableStruct::InitDefaultsImpl() {
   _ScatterAlongAxisLayerParams_default_instance_.DefaultConstruct();
   _StackLayerParams_default_instance_.DefaultConstruct();
   _RankPreservingReshapeLayerParams_default_instance_.DefaultConstruct();
+  _ConstantPaddingLayerParams_default_instance_.DefaultConstruct();
   _RandomNormalLikeLayerParams_default_instance_.DefaultConstruct();
   _RandomNormalStaticLayerParams_default_instance_.DefaultConstruct();
   _RandomNormalDynamicLayerParams_default_instance_.DefaultConstruct();
@@ -1197,6 +1208,7 @@ void TableStruct::InitDefaultsImpl() {
   _RangeDynamicLayerParams_default_instance_.DefaultConstruct();
   _SlidingWindowsLayerParams_default_instance_.DefaultConstruct();
   _LayerNormalizationLayerParams_default_instance_.DefaultConstruct();
+  _NonMaximumSuppressionLayerParams_default_instance_.DefaultConstruct();
   _NeuralNetworkClassifier_default_instance_.DefaultConstruct();
   _NeuralNetworkRegressor_default_instance_.DefaultConstruct();
   _NetworkUpdateParameters_default_instance_.DefaultConstruct();
@@ -1349,6 +1361,10 @@ void TableStruct::InitDefaultsImpl() {
   _NetworkUpdateParameters_default_instance_.get_mutable()->optimizer_ = const_cast< ::CoreML::Specification::Optimizer*>(
       ::CoreML::Specification::Optimizer::internal_default_instance());
   _NetworkUpdateParameters_default_instance_.get_mutable()->epochs_ = const_cast< ::CoreML::Specification::Int64Parameter*>(
+      ::CoreML::Specification::Int64Parameter::internal_default_instance());
+  _NetworkUpdateParameters_default_instance_.get_mutable()->shuffle_ = const_cast< ::CoreML::Specification::BoolParameter*>(
+      ::CoreML::Specification::BoolParameter::internal_default_instance());
+  _NetworkUpdateParameters_default_instance_.get_mutable()->seed_ = const_cast< ::CoreML::Specification::Int64Parameter*>(
       ::CoreML::Specification::Int64Parameter::internal_default_instance());
   _SGDOptimizer_default_instance_.get_mutable()->learningrate_ = const_cast< ::CoreML::Specification::DoubleParameter*>(
       ::CoreML::Specification::DoubleParameter::internal_default_instance());
@@ -7487,6 +7503,7 @@ const int NeuralNetworkLayer::kReshapeLikeFieldNumber;
 const int NeuralNetworkLayer::kReshapeStaticFieldNumber;
 const int NeuralNetworkLayer::kReshapeDynamicFieldNumber;
 const int NeuralNetworkLayer::kRankPreservingReshapeFieldNumber;
+const int NeuralNetworkLayer::kConstantPadFieldNumber;
 const int NeuralNetworkLayer::kRandomNormalLikeFieldNumber;
 const int NeuralNetworkLayer::kRandomNormalStaticFieldNumber;
 const int NeuralNetworkLayer::kRandomNormalDynamicFieldNumber;
@@ -7513,6 +7530,7 @@ const int NeuralNetworkLayer::kLowerTriangularFieldNumber;
 const int NeuralNetworkLayer::kUpperTriangularFieldNumber;
 const int NeuralNetworkLayer::kWhereBroadcastableFieldNumber;
 const int NeuralNetworkLayer::kLayerNormalizationFieldNumber;
+const int NeuralNetworkLayer::kNonMaximumSuppressionFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NeuralNetworkLayer::NeuralNetworkLayer()
@@ -8027,6 +8045,10 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
       mutable_rankpreservingreshape()->::CoreML::Specification::RankPreservingReshapeLayerParams::MergeFrom(from.rankpreservingreshape());
       break;
     }
+    case kConstantPad: {
+      mutable_constantpad()->::CoreML::Specification::ConstantPaddingLayerParams::MergeFrom(from.constantpad());
+      break;
+    }
     case kRandomNormalLike: {
       mutable_randomnormallike()->::CoreML::Specification::RandomNormalLikeLayerParams::MergeFrom(from.randomnormallike());
       break;
@@ -8129,6 +8151,10 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
     }
     case kLayerNormalization: {
       mutable_layernormalization()->::CoreML::Specification::LayerNormalizationLayerParams::MergeFrom(from.layernormalization());
+      break;
+    }
+    case kNonMaximumSuppression: {
+      mutable_nonmaximumsuppression()->::CoreML::Specification::NonMaximumSuppressionLayerParams::MergeFrom(from.nonmaximumsuppression());
       break;
     }
     case LAYER_NOT_SET: {
@@ -8666,6 +8692,10 @@ void NeuralNetworkLayer::clear_layer() {
       delete layer_.rankpreservingreshape_;
       break;
     }
+    case kConstantPad: {
+      delete layer_.constantpad_;
+      break;
+    }
     case kRandomNormalLike: {
       delete layer_.randomnormallike_;
       break;
@@ -8768,6 +8798,10 @@ void NeuralNetworkLayer::clear_layer() {
     }
     case kLayerNormalization: {
       delete layer_.layernormalization_;
+      break;
+    }
+    case kNonMaximumSuppression: {
+      delete layer_.nonmaximumsuppression_;
       break;
     }
     case LAYER_NOT_SET: {
@@ -10351,6 +10385,18 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.ConstantPaddingLayerParams constantPad = 1155;
+      case 1155: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(9242u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_constantpad()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       // .CoreML.Specification.RandomNormalLikeLayerParams randomNormalLike = 1170;
       case 1170: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
@@ -10657,6 +10703,18 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(10802u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_layernormalization()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.NonMaximumSuppressionLayerParams NonMaximumSuppression = 1400;
+      case 1400: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(11202u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_nonmaximumsuppression()));
         } else {
           goto handle_unusual;
         }
@@ -11469,6 +11527,12 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
       1150, *layer_.rankpreservingreshape_, output);
   }
 
+  // .CoreML.Specification.ConstantPaddingLayerParams constantPad = 1155;
+  if (has_constantpad()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1155, *layer_.constantpad_, output);
+  }
+
   // .CoreML.Specification.RandomNormalLikeLayerParams randomNormalLike = 1170;
   if (has_randomnormallike()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
@@ -11623,6 +11687,12 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
   if (has_layernormalization()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1350, *layer_.layernormalization_, output);
+  }
+
+  // .CoreML.Specification.NonMaximumSuppressionLayerParams NonMaximumSuppression = 1400;
+  if (has_nonmaximumsuppression()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1400, *layer_.nonmaximumsuppression_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NeuralNetworkLayer)
@@ -12537,6 +12607,13 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.rankpreservingreshape_);
       break;
     }
+    // .CoreML.Specification.ConstantPaddingLayerParams constantPad = 1155;
+    case kConstantPad: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.constantpad_);
+      break;
+    }
     // .CoreML.Specification.RandomNormalLikeLayerParams randomNormalLike = 1170;
     case kRandomNormalLike: {
       total_size += 2 +
@@ -12717,6 +12794,13 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           *layer_.layernormalization_);
+      break;
+    }
+    // .CoreML.Specification.NonMaximumSuppressionLayerParams NonMaximumSuppression = 1400;
+    case kNonMaximumSuppression: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.nonmaximumsuppression_);
       break;
     }
     case LAYER_NOT_SET: {
@@ -13242,6 +13326,10 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
       mutable_rankpreservingreshape()->::CoreML::Specification::RankPreservingReshapeLayerParams::MergeFrom(from.rankpreservingreshape());
       break;
     }
+    case kConstantPad: {
+      mutable_constantpad()->::CoreML::Specification::ConstantPaddingLayerParams::MergeFrom(from.constantpad());
+      break;
+    }
     case kRandomNormalLike: {
       mutable_randomnormallike()->::CoreML::Specification::RandomNormalLikeLayerParams::MergeFrom(from.randomnormallike());
       break;
@@ -13344,6 +13432,10 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
     }
     case kLayerNormalization: {
       mutable_layernormalization()->::CoreML::Specification::LayerNormalizationLayerParams::MergeFrom(from.layernormalization());
+      break;
+    }
+    case kNonMaximumSuppression: {
+      mutable_nonmaximumsuppression()->::CoreML::Specification::NonMaximumSuppressionLayerParams::MergeFrom(from.nonmaximumsuppression());
       break;
     }
     case LAYER_NOT_SET: {
@@ -19507,6 +19599,54 @@ void NeuralNetworkLayer::set_allocated_rankpreservingreshape(::CoreML::Specifica
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.rankPreservingReshape)
 }
 
+// .CoreML.Specification.ConstantPaddingLayerParams constantPad = 1155;
+bool NeuralNetworkLayer::has_constantpad() const {
+  return layer_case() == kConstantPad;
+}
+void NeuralNetworkLayer::set_has_constantpad() {
+  _oneof_case_[0] = kConstantPad;
+}
+void NeuralNetworkLayer::clear_constantpad() {
+  if (has_constantpad()) {
+    delete layer_.constantpad_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::ConstantPaddingLayerParams& NeuralNetworkLayer::constantpad() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.constantPad)
+  return has_constantpad()
+      ? *layer_.constantpad_
+      : ::CoreML::Specification::ConstantPaddingLayerParams::default_instance();
+}
+::CoreML::Specification::ConstantPaddingLayerParams* NeuralNetworkLayer::mutable_constantpad() {
+  if (!has_constantpad()) {
+    clear_layer();
+    set_has_constantpad();
+    layer_.constantpad_ = new ::CoreML::Specification::ConstantPaddingLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.constantPad)
+  return layer_.constantpad_;
+}
+::CoreML::Specification::ConstantPaddingLayerParams* NeuralNetworkLayer::release_constantpad() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.constantPad)
+  if (has_constantpad()) {
+    clear_has_layer();
+    ::CoreML::Specification::ConstantPaddingLayerParams* temp = layer_.constantpad_;
+    layer_.constantpad_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_constantpad(::CoreML::Specification::ConstantPaddingLayerParams* constantpad) {
+  clear_layer();
+  if (constantpad) {
+    set_has_constantpad();
+    layer_.constantpad_ = constantpad;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.constantPad)
+}
+
 // .CoreML.Specification.RandomNormalLikeLayerParams randomNormalLike = 1170;
 bool NeuralNetworkLayer::has_randomnormallike() const {
   return layer_case() == kRandomNormalLike;
@@ -20753,6 +20893,54 @@ void NeuralNetworkLayer::set_allocated_layernormalization(::CoreML::Specificatio
     layer_.layernormalization_ = layernormalization;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.layerNormalization)
+}
+
+// .CoreML.Specification.NonMaximumSuppressionLayerParams NonMaximumSuppression = 1400;
+bool NeuralNetworkLayer::has_nonmaximumsuppression() const {
+  return layer_case() == kNonMaximumSuppression;
+}
+void NeuralNetworkLayer::set_has_nonmaximumsuppression() {
+  _oneof_case_[0] = kNonMaximumSuppression;
+}
+void NeuralNetworkLayer::clear_nonmaximumsuppression() {
+  if (has_nonmaximumsuppression()) {
+    delete layer_.nonmaximumsuppression_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::NonMaximumSuppressionLayerParams& NeuralNetworkLayer::nonmaximumsuppression() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.NonMaximumSuppression)
+  return has_nonmaximumsuppression()
+      ? *layer_.nonmaximumsuppression_
+      : ::CoreML::Specification::NonMaximumSuppressionLayerParams::default_instance();
+}
+::CoreML::Specification::NonMaximumSuppressionLayerParams* NeuralNetworkLayer::mutable_nonmaximumsuppression() {
+  if (!has_nonmaximumsuppression()) {
+    clear_layer();
+    set_has_nonmaximumsuppression();
+    layer_.nonmaximumsuppression_ = new ::CoreML::Specification::NonMaximumSuppressionLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.NonMaximumSuppression)
+  return layer_.nonmaximumsuppression_;
+}
+::CoreML::Specification::NonMaximumSuppressionLayerParams* NeuralNetworkLayer::release_nonmaximumsuppression() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.NonMaximumSuppression)
+  if (has_nonmaximumsuppression()) {
+    clear_has_layer();
+    ::CoreML::Specification::NonMaximumSuppressionLayerParams* temp = layer_.nonmaximumsuppression_;
+    layer_.nonmaximumsuppression_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_nonmaximumsuppression(::CoreML::Specification::NonMaximumSuppressionLayerParams* nonmaximumsuppression) {
+  clear_layer();
+  if (nonmaximumsuppression) {
+    set_has_nonmaximumsuppression();
+    layer_.nonmaximumsuppression_ = nonmaximumsuppression;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.NonMaximumSuppression)
 }
 
 bool NeuralNetworkLayer::has_layer() const {
@@ -53112,6 +53300,325 @@ RankPreservingReshapeLayerParams::mutable_targetshape() {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ConstantPaddingLayerParams::kValueFieldNumber;
+const int ConstantPaddingLayerParams::kPadAmountsFieldNumber;
+const int ConstantPaddingLayerParams::kPadToGivenOutputSizeModeFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ConstantPaddingLayerParams::ConstantPaddingLayerParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.ConstantPaddingLayerParams)
+}
+ConstantPaddingLayerParams::ConstantPaddingLayerParams(const ConstantPaddingLayerParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      padamounts_(from.padamounts_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::memcpy(&value_, &from.value_,
+    reinterpret_cast<char*>(&padtogivenoutputsizemode_) -
+    reinterpret_cast<char*>(&value_) + sizeof(padtogivenoutputsizemode_));
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.ConstantPaddingLayerParams)
+}
+
+void ConstantPaddingLayerParams::SharedCtor() {
+  ::memset(&value_, 0, reinterpret_cast<char*>(&padtogivenoutputsizemode_) -
+    reinterpret_cast<char*>(&value_) + sizeof(padtogivenoutputsizemode_));
+  _cached_size_ = 0;
+}
+
+ConstantPaddingLayerParams::~ConstantPaddingLayerParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.ConstantPaddingLayerParams)
+  SharedDtor();
+}
+
+void ConstantPaddingLayerParams::SharedDtor() {
+}
+
+void ConstantPaddingLayerParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ConstantPaddingLayerParams& ConstantPaddingLayerParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+ConstantPaddingLayerParams* ConstantPaddingLayerParams::New(::google::protobuf::Arena* arena) const {
+  ConstantPaddingLayerParams* n = new ConstantPaddingLayerParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void ConstantPaddingLayerParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.ConstantPaddingLayerParams)
+  padamounts_.Clear();
+  ::memset(&value_, 0, reinterpret_cast<char*>(&padtogivenoutputsizemode_) -
+    reinterpret_cast<char*>(&value_) + sizeof(padtogivenoutputsizemode_));
+}
+
+bool ConstantPaddingLayerParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.ConstantPaddingLayerParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // float value = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(13u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &value_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated uint64 padAmounts = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, this->mutable_padamounts())));
+        } else if (static_cast< ::google::protobuf::uint8>(tag) ==
+                   static_cast< ::google::protobuf::uint8>(16u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 1, 18u, input, this->mutable_padamounts())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool padToGivenOutputSizeMode = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &padtogivenoutputsizemode_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.ConstantPaddingLayerParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.ConstantPaddingLayerParams)
+  return false;
+#undef DO_
+}
+
+void ConstantPaddingLayerParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.ConstantPaddingLayerParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // float value = 1;
+  if (this->value() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(1, this->value(), output);
+  }
+
+  // repeated uint64 padAmounts = 2;
+  if (this->padamounts_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(2, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_padamounts_cached_byte_size_);
+  }
+  for (int i = 0, n = this->padamounts_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64NoTag(
+      this->padamounts(i), output);
+  }
+
+  // bool padToGivenOutputSizeMode = 3;
+  if (this->padtogivenoutputsizemode() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->padtogivenoutputsizemode(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.ConstantPaddingLayerParams)
+}
+
+size_t ConstantPaddingLayerParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.ConstantPaddingLayerParams)
+  size_t total_size = 0;
+
+  // repeated uint64 padAmounts = 2;
+  {
+    size_t data_size = ::google::protobuf::internal::WireFormatLite::
+      UInt64Size(this->padamounts_);
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _padamounts_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
+  // float value = 1;
+  if (this->value() != 0) {
+    total_size += 1 + 4;
+  }
+
+  // bool padToGivenOutputSizeMode = 3;
+  if (this->padtogivenoutputsizemode() != 0) {
+    total_size += 1 + 1;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ConstantPaddingLayerParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ConstantPaddingLayerParams*>(&from));
+}
+
+void ConstantPaddingLayerParams::MergeFrom(const ConstantPaddingLayerParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.ConstantPaddingLayerParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  padamounts_.MergeFrom(from.padamounts_);
+  if (from.value() != 0) {
+    set_value(from.value());
+  }
+  if (from.padtogivenoutputsizemode() != 0) {
+    set_padtogivenoutputsizemode(from.padtogivenoutputsizemode());
+  }
+}
+
+void ConstantPaddingLayerParams::CopyFrom(const ConstantPaddingLayerParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.ConstantPaddingLayerParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ConstantPaddingLayerParams::IsInitialized() const {
+  return true;
+}
+
+void ConstantPaddingLayerParams::Swap(ConstantPaddingLayerParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ConstantPaddingLayerParams::InternalSwap(ConstantPaddingLayerParams* other) {
+  padamounts_.InternalSwap(&other->padamounts_);
+  std::swap(value_, other->value_);
+  std::swap(padtogivenoutputsizemode_, other->padtogivenoutputsizemode_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string ConstantPaddingLayerParams::GetTypeName() const {
+  return "CoreML.Specification.ConstantPaddingLayerParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// ConstantPaddingLayerParams
+
+// float value = 1;
+void ConstantPaddingLayerParams::clear_value() {
+  value_ = 0;
+}
+float ConstantPaddingLayerParams::value() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ConstantPaddingLayerParams.value)
+  return value_;
+}
+void ConstantPaddingLayerParams::set_value(float value) {
+  
+  value_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ConstantPaddingLayerParams.value)
+}
+
+// repeated uint64 padAmounts = 2;
+int ConstantPaddingLayerParams::padamounts_size() const {
+  return padamounts_.size();
+}
+void ConstantPaddingLayerParams::clear_padamounts() {
+  padamounts_.Clear();
+}
+::google::protobuf::uint64 ConstantPaddingLayerParams::padamounts(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ConstantPaddingLayerParams.padAmounts)
+  return padamounts_.Get(index);
+}
+void ConstantPaddingLayerParams::set_padamounts(int index, ::google::protobuf::uint64 value) {
+  padamounts_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ConstantPaddingLayerParams.padAmounts)
+}
+void ConstantPaddingLayerParams::add_padamounts(::google::protobuf::uint64 value) {
+  padamounts_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.ConstantPaddingLayerParams.padAmounts)
+}
+const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
+ConstantPaddingLayerParams::padamounts() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.ConstantPaddingLayerParams.padAmounts)
+  return padamounts_;
+}
+::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
+ConstantPaddingLayerParams::mutable_padamounts() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.ConstantPaddingLayerParams.padAmounts)
+  return &padamounts_;
+}
+
+// bool padToGivenOutputSizeMode = 3;
+void ConstantPaddingLayerParams::clear_padtogivenoutputsizemode() {
+  padtogivenoutputsizemode_ = false;
+}
+bool ConstantPaddingLayerParams::padtogivenoutputsizemode() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ConstantPaddingLayerParams.padToGivenOutputSizeMode)
+  return padtogivenoutputsizemode_;
+}
+void ConstantPaddingLayerParams::set_padtogivenoutputsizemode(bool value) {
+  
+  padtogivenoutputsizemode_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ConstantPaddingLayerParams.padToGivenOutputSizeMode)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int RandomNormalLikeLayerParams::kSeedFieldNumber;
 const int RandomNormalLikeLayerParams::kMeanFieldNumber;
 const int RandomNormalLikeLayerParams::kStdDevFieldNumber;
@@ -65420,6 +65927,335 @@ void LayerNormalizationLayerParams::set_allocated_beta(::CoreML::Specification::
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int NonMaximumSuppressionLayerParams::kIouThresholdFieldNumber;
+const int NonMaximumSuppressionLayerParams::kScoreThresholdFieldNumber;
+const int NonMaximumSuppressionLayerParams::kMaxBoxesFieldNumber;
+const int NonMaximumSuppressionLayerParams::kPerClassSuppressionFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+NonMaximumSuppressionLayerParams::NonMaximumSuppressionLayerParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.NonMaximumSuppressionLayerParams)
+}
+NonMaximumSuppressionLayerParams::NonMaximumSuppressionLayerParams(const NonMaximumSuppressionLayerParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::memcpy(&iouthreshold_, &from.iouthreshold_,
+    reinterpret_cast<char*>(&perclasssuppression_) -
+    reinterpret_cast<char*>(&iouthreshold_) + sizeof(perclasssuppression_));
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.NonMaximumSuppressionLayerParams)
+}
+
+void NonMaximumSuppressionLayerParams::SharedCtor() {
+  ::memset(&iouthreshold_, 0, reinterpret_cast<char*>(&perclasssuppression_) -
+    reinterpret_cast<char*>(&iouthreshold_) + sizeof(perclasssuppression_));
+  _cached_size_ = 0;
+}
+
+NonMaximumSuppressionLayerParams::~NonMaximumSuppressionLayerParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  SharedDtor();
+}
+
+void NonMaximumSuppressionLayerParams::SharedDtor() {
+}
+
+void NonMaximumSuppressionLayerParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const NonMaximumSuppressionLayerParams& NonMaximumSuppressionLayerParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+NonMaximumSuppressionLayerParams* NonMaximumSuppressionLayerParams::New(::google::protobuf::Arena* arena) const {
+  NonMaximumSuppressionLayerParams* n = new NonMaximumSuppressionLayerParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void NonMaximumSuppressionLayerParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  ::memset(&iouthreshold_, 0, reinterpret_cast<char*>(&perclasssuppression_) -
+    reinterpret_cast<char*>(&iouthreshold_) + sizeof(perclasssuppression_));
+}
+
+bool NonMaximumSuppressionLayerParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // float iouThreshold = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(13u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &iouthreshold_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // float scoreThreshold = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(21u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &scorethreshold_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // uint64 maxBoxes = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &maxboxes_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool perClassSuppression = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(32u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &perclasssuppression_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  return false;
+#undef DO_
+}
+
+void NonMaximumSuppressionLayerParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // float iouThreshold = 1;
+  if (this->iouthreshold() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(1, this->iouthreshold(), output);
+  }
+
+  // float scoreThreshold = 2;
+  if (this->scorethreshold() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->scorethreshold(), output);
+  }
+
+  // uint64 maxBoxes = 3;
+  if (this->maxboxes() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(3, this->maxboxes(), output);
+  }
+
+  // bool perClassSuppression = 4;
+  if (this->perclasssuppression() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(4, this->perclasssuppression(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.NonMaximumSuppressionLayerParams)
+}
+
+size_t NonMaximumSuppressionLayerParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  size_t total_size = 0;
+
+  // float iouThreshold = 1;
+  if (this->iouthreshold() != 0) {
+    total_size += 1 + 4;
+  }
+
+  // float scoreThreshold = 2;
+  if (this->scorethreshold() != 0) {
+    total_size += 1 + 4;
+  }
+
+  // uint64 maxBoxes = 3;
+  if (this->maxboxes() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt64Size(
+        this->maxboxes());
+  }
+
+  // bool perClassSuppression = 4;
+  if (this->perclasssuppression() != 0) {
+    total_size += 1 + 1;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void NonMaximumSuppressionLayerParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const NonMaximumSuppressionLayerParams*>(&from));
+}
+
+void NonMaximumSuppressionLayerParams::MergeFrom(const NonMaximumSuppressionLayerParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.iouthreshold() != 0) {
+    set_iouthreshold(from.iouthreshold());
+  }
+  if (from.scorethreshold() != 0) {
+    set_scorethreshold(from.scorethreshold());
+  }
+  if (from.maxboxes() != 0) {
+    set_maxboxes(from.maxboxes());
+  }
+  if (from.perclasssuppression() != 0) {
+    set_perclasssuppression(from.perclasssuppression());
+  }
+}
+
+void NonMaximumSuppressionLayerParams::CopyFrom(const NonMaximumSuppressionLayerParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.NonMaximumSuppressionLayerParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool NonMaximumSuppressionLayerParams::IsInitialized() const {
+  return true;
+}
+
+void NonMaximumSuppressionLayerParams::Swap(NonMaximumSuppressionLayerParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void NonMaximumSuppressionLayerParams::InternalSwap(NonMaximumSuppressionLayerParams* other) {
+  std::swap(iouthreshold_, other->iouthreshold_);
+  std::swap(scorethreshold_, other->scorethreshold_);
+  std::swap(maxboxes_, other->maxboxes_);
+  std::swap(perclasssuppression_, other->perclasssuppression_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string NonMaximumSuppressionLayerParams::GetTypeName() const {
+  return "CoreML.Specification.NonMaximumSuppressionLayerParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// NonMaximumSuppressionLayerParams
+
+// float iouThreshold = 1;
+void NonMaximumSuppressionLayerParams::clear_iouthreshold() {
+  iouthreshold_ = 0;
+}
+float NonMaximumSuppressionLayerParams::iouthreshold() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NonMaximumSuppressionLayerParams.iouThreshold)
+  return iouthreshold_;
+}
+void NonMaximumSuppressionLayerParams::set_iouthreshold(float value) {
+  
+  iouthreshold_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.NonMaximumSuppressionLayerParams.iouThreshold)
+}
+
+// float scoreThreshold = 2;
+void NonMaximumSuppressionLayerParams::clear_scorethreshold() {
+  scorethreshold_ = 0;
+}
+float NonMaximumSuppressionLayerParams::scorethreshold() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NonMaximumSuppressionLayerParams.scoreThreshold)
+  return scorethreshold_;
+}
+void NonMaximumSuppressionLayerParams::set_scorethreshold(float value) {
+  
+  scorethreshold_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.NonMaximumSuppressionLayerParams.scoreThreshold)
+}
+
+// uint64 maxBoxes = 3;
+void NonMaximumSuppressionLayerParams::clear_maxboxes() {
+  maxboxes_ = GOOGLE_ULONGLONG(0);
+}
+::google::protobuf::uint64 NonMaximumSuppressionLayerParams::maxboxes() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NonMaximumSuppressionLayerParams.maxBoxes)
+  return maxboxes_;
+}
+void NonMaximumSuppressionLayerParams::set_maxboxes(::google::protobuf::uint64 value) {
+  
+  maxboxes_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.NonMaximumSuppressionLayerParams.maxBoxes)
+}
+
+// bool perClassSuppression = 4;
+void NonMaximumSuppressionLayerParams::clear_perclasssuppression() {
+  perclasssuppression_ = false;
+}
+bool NonMaximumSuppressionLayerParams::perclasssuppression() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NonMaximumSuppressionLayerParams.perClassSuppression)
+  return perclasssuppression_;
+}
+void NonMaximumSuppressionLayerParams::set_perclasssuppression(bool value) {
+  
+  perclasssuppression_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.NonMaximumSuppressionLayerParams.perClassSuppression)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int NeuralNetworkClassifier::kLayersFieldNumber;
 const int NeuralNetworkClassifier::kPreprocessingFieldNumber;
 const int NeuralNetworkClassifier::kArrayInputShapeMappingFieldNumber;
@@ -66649,6 +67485,8 @@ void NeuralNetworkRegressor::set_allocated_updateparams(::CoreML::Specification:
 const int NetworkUpdateParameters::kLossLayersFieldNumber;
 const int NetworkUpdateParameters::kOptimizerFieldNumber;
 const int NetworkUpdateParameters::kEpochsFieldNumber;
+const int NetworkUpdateParameters::kShuffleFieldNumber;
+const int NetworkUpdateParameters::kSeedFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NetworkUpdateParameters::NetworkUpdateParameters()
@@ -66675,12 +67513,22 @@ NetworkUpdateParameters::NetworkUpdateParameters(const NetworkUpdateParameters& 
   } else {
     epochs_ = NULL;
   }
+  if (from.has_shuffle()) {
+    shuffle_ = new ::CoreML::Specification::BoolParameter(*from.shuffle_);
+  } else {
+    shuffle_ = NULL;
+  }
+  if (from.has_seed()) {
+    seed_ = new ::CoreML::Specification::Int64Parameter(*from.seed_);
+  } else {
+    seed_ = NULL;
+  }
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.NetworkUpdateParameters)
 }
 
 void NetworkUpdateParameters::SharedCtor() {
-  ::memset(&optimizer_, 0, reinterpret_cast<char*>(&epochs_) -
-    reinterpret_cast<char*>(&optimizer_) + sizeof(epochs_));
+  ::memset(&optimizer_, 0, reinterpret_cast<char*>(&seed_) -
+    reinterpret_cast<char*>(&optimizer_) + sizeof(seed_));
   _cached_size_ = 0;
 }
 
@@ -66695,6 +67543,12 @@ void NetworkUpdateParameters::SharedDtor() {
   }
   if (this != internal_default_instance()) {
     delete epochs_;
+  }
+  if (this != internal_default_instance()) {
+    delete shuffle_;
+  }
+  if (this != internal_default_instance()) {
+    delete seed_;
   }
 }
 
@@ -66727,6 +67581,14 @@ void NetworkUpdateParameters::Clear() {
     delete epochs_;
   }
   epochs_ = NULL;
+  if (GetArenaNoVirtual() == NULL && shuffle_ != NULL) {
+    delete shuffle_;
+  }
+  shuffle_ = NULL;
+  if (GetArenaNoVirtual() == NULL && seed_ != NULL) {
+    delete seed_;
+  }
+  seed_ = NULL;
 }
 
 bool NetworkUpdateParameters::MergePartialFromCodedStream(
@@ -66735,7 +67597,7 @@ bool NetworkUpdateParameters::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   // @@protoc_insertion_point(parse_start:CoreML.Specification.NetworkUpdateParameters)
   for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(16383u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
@@ -66769,6 +67631,30 @@ bool NetworkUpdateParameters::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(26u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_epochs()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.BoolParameter shuffle = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(82u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_shuffle()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.Int64Parameter seed = 20;
+      case 20: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(162u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_seed()));
         } else {
           goto handle_unusual;
         }
@@ -66820,6 +67706,18 @@ void NetworkUpdateParameters::SerializeWithCachedSizes(
       3, *this->epochs_, output);
   }
 
+  // .CoreML.Specification.BoolParameter shuffle = 10;
+  if (this->has_shuffle()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      10, *this->shuffle_, output);
+  }
+
+  // .CoreML.Specification.Int64Parameter seed = 20;
+  if (this->has_seed()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      20, *this->seed_, output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NetworkUpdateParameters)
 }
 
@@ -66852,6 +67750,20 @@ size_t NetworkUpdateParameters::ByteSizeLong() const {
         *this->epochs_);
   }
 
+  // .CoreML.Specification.BoolParameter shuffle = 10;
+  if (this->has_shuffle()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->shuffle_);
+  }
+
+  // .CoreML.Specification.Int64Parameter seed = 20;
+  if (this->has_seed()) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->seed_);
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -66878,6 +67790,12 @@ void NetworkUpdateParameters::MergeFrom(const NetworkUpdateParameters& from) {
   if (from.has_epochs()) {
     mutable_epochs()->::CoreML::Specification::Int64Parameter::MergeFrom(from.epochs());
   }
+  if (from.has_shuffle()) {
+    mutable_shuffle()->::CoreML::Specification::BoolParameter::MergeFrom(from.shuffle());
+  }
+  if (from.has_seed()) {
+    mutable_seed()->::CoreML::Specification::Int64Parameter::MergeFrom(from.seed());
+  }
 }
 
 void NetworkUpdateParameters::CopyFrom(const NetworkUpdateParameters& from) {
@@ -66899,6 +67817,8 @@ void NetworkUpdateParameters::InternalSwap(NetworkUpdateParameters* other) {
   losslayers_.InternalSwap(&other->losslayers_);
   std::swap(optimizer_, other->optimizer_);
   std::swap(epochs_, other->epochs_);
+  std::swap(shuffle_, other->shuffle_);
+  std::swap(seed_, other->seed_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -67015,6 +67935,84 @@ void NetworkUpdateParameters::set_allocated_epochs(::CoreML::Specification::Int6
     
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.epochs)
+}
+
+// .CoreML.Specification.BoolParameter shuffle = 10;
+bool NetworkUpdateParameters::has_shuffle() const {
+  return this != internal_default_instance() && shuffle_ != NULL;
+}
+void NetworkUpdateParameters::clear_shuffle() {
+  if (GetArenaNoVirtual() == NULL && shuffle_ != NULL) delete shuffle_;
+  shuffle_ = NULL;
+}
+const ::CoreML::Specification::BoolParameter& NetworkUpdateParameters::shuffle() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  return shuffle_ != NULL ? *shuffle_
+                         : *::CoreML::Specification::BoolParameter::internal_default_instance();
+}
+::CoreML::Specification::BoolParameter* NetworkUpdateParameters::mutable_shuffle() {
+  
+  if (shuffle_ == NULL) {
+    shuffle_ = new ::CoreML::Specification::BoolParameter;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  return shuffle_;
+}
+::CoreML::Specification::BoolParameter* NetworkUpdateParameters::release_shuffle() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NetworkUpdateParameters.shuffle)
+  
+  ::CoreML::Specification::BoolParameter* temp = shuffle_;
+  shuffle_ = NULL;
+  return temp;
+}
+void NetworkUpdateParameters::set_allocated_shuffle(::CoreML::Specification::BoolParameter* shuffle) {
+  delete shuffle_;
+  shuffle_ = shuffle;
+  if (shuffle) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.shuffle)
+}
+
+// .CoreML.Specification.Int64Parameter seed = 20;
+bool NetworkUpdateParameters::has_seed() const {
+  return this != internal_default_instance() && seed_ != NULL;
+}
+void NetworkUpdateParameters::clear_seed() {
+  if (GetArenaNoVirtual() == NULL && seed_ != NULL) delete seed_;
+  seed_ = NULL;
+}
+const ::CoreML::Specification::Int64Parameter& NetworkUpdateParameters::seed() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NetworkUpdateParameters.seed)
+  return seed_ != NULL ? *seed_
+                         : *::CoreML::Specification::Int64Parameter::internal_default_instance();
+}
+::CoreML::Specification::Int64Parameter* NetworkUpdateParameters::mutable_seed() {
+  
+  if (seed_ == NULL) {
+    seed_ = new ::CoreML::Specification::Int64Parameter;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NetworkUpdateParameters.seed)
+  return seed_;
+}
+::CoreML::Specification::Int64Parameter* NetworkUpdateParameters::release_seed() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NetworkUpdateParameters.seed)
+  
+  ::CoreML::Specification::Int64Parameter* temp = seed_;
+  seed_ = NULL;
+  return temp;
+}
+void NetworkUpdateParameters::set_allocated_seed(::CoreML::Specification::Int64Parameter* seed) {
+  delete seed_;
+  seed_ = seed;
+  if (seed) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NetworkUpdateParameters.seed)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

@@ -3115,6 +3115,47 @@ int testInvalidIOS13LayerOldRank() {
     return 0;
 }
 
+int testInvalidConstantPad() {
+
+    // if padToGivenOutputSizeMode is True,
+    // only one of 2*i-th and 2*i+1-th index can be non zero.
+
+    Specification::Model m;
+
+    auto *in = m.mutable_description()->add_input();
+    in->set_name("input");
+    auto *inShape = in->mutable_type()->mutable_multiarraytype();
+    inShape->add_shape(3);
+    inShape->add_shape(5);
+
+    auto *out = m.mutable_description()->add_output();
+    out->set_name("output");
+    auto *outShape = out->mutable_type()->mutable_multiarraytype();
+    outShape->add_shape(6);
+    outShape->add_shape(5);
+
+    const auto nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    auto *layers = nn->add_layers();
+    layers->set_name("constant_pad");
+    layers->add_input("input");
+    layers->add_output("output");
+
+    auto *params = layers->mutable_constantpad();
+    params->set_padtogivenoutputsizemode(true);
+    params->add_padamounts(7);
+    params->add_padamounts(6);
+    params->add_padamounts(0);
+    params->add_padamounts(0);
+
+    Result res = validate<MLModelType_neuralNetwork>(m);
+    ML_ASSERT_BAD(res);
+    ML_ASSERT(res.message().find("padToGivenOutputSizeMode") != std::string::npos);
+
+    return 0;
+}
+
 int testInvalidConcatNdWrongAxis() {
 
     Specification::Model m;

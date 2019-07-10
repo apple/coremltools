@@ -8,7 +8,7 @@ from ...models import MLModel
 def convert(filename, inputs=None, outputs=None, **kwargs):
     try:
         from ..nnssa.frontend.tensorflow import load as frontend_load
-        ssa = frontend_load(filename, **kwargs)
+        ssa = frontend_load(filename, resume_on_errors = False, **kwargs)
     except ImportError as err:
         raise ImportError("Frontend converter not found! Error message:\n%s" % err)
 

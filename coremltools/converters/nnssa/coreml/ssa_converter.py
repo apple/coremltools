@@ -19,7 +19,7 @@ DEBUG = False
 def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
     """
     Convert NNSSA into CoreML spec.
-    ssa - nnssa to be converted to CoreML spec.
+    ssa - NNSSA to be converted to CoreML spec.
     inputs - Input features of CoreML specs. Must be a dictionary with
              name as key and shape as value {name: shape},
              where name is the input's name, shape is the
@@ -37,16 +37,17 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(name_and_op_style=True)
+        dot_string = ssa.get_dot_string(annotation=True)
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
     passes = [
         constant_weight_link_removal, fuse_bias_add,
         onehot_matmul_to_embedding,
-        remove_single_isolated_node,
         transform_nhwc_to_nchw,
-        remove_identity,  # This should be the last pass
+        remove_identity,
+        remove_no_ops_and_shift_control_dependencies,
+        remove_single_isolated_node,
     ]
 
     for p in passes:
@@ -57,7 +58,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(name_and_op_style=True)
+        dot_string = ssa.get_dot_string(annotation=True)
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     converter = SSAConverter(ssa, top_func=top_func, inputs=inputs, outputs=outputs)
@@ -84,6 +85,7 @@ class SSAConverter(object):
         self.net_ensemble.functions[top_func].find_inputs_and_outputs()
         top_input_names = list(map(str, self.net_ensemble.functions[top_func].inputs))
         top_output_names = list(map(str, self.net_ensemble.functions[top_func].outputs))
+
         top_ssa = self.net_ensemble.functions[top_func]
 
         # find_inputs_and_outputs() generates a list of required inputs, which
@@ -95,7 +97,7 @@ class SSAConverter(object):
             shape = list(node.datatype.get_shape()) if hasattr(node.datatype, 'get_shape') else None
             if shape is None and inputs is None:
                 raise ValueError(
-                    'nnssa input "%s" has non-static shape %s, please provide in argument "inputs"'
+                    'NNSSA input "%s" has non-static shape %s, please provide in argument "inputs"'
                     % (name, str(shape)))
             if inputs is not None:
                 if name not in inputs:
@@ -117,7 +119,7 @@ class SSAConverter(object):
                 # If input is None, use whatever there is
                 if not shapes.is_static_shape(shape):
                     raise ValueError(
-                        'nnssa input "%s" has non-static shape %s, please provide in argument "inputs"'
+                        'NNSSA input "%s" has non-static shape %s, please provide in argument "inputs"'
                         % (name, str(shape)))
             top_input_shapes.append(shape)
 
@@ -127,8 +129,8 @@ class SSAConverter(object):
         # TODO - verify outputs
         if outputs is not None:
             for name in outputs:
-                if name not in top_output_names:
-                    raise ValueError('Output "%s" is not a nnssa output.' % name)
+                if name not in top_output_names and name not in self.net_ensemble.variables.keys():
+                    raise ValueError('Output "%s" is not a NNSSA output.' % name)
 
         top_output_features = list(zip(top_output_names, [None] * len(top_output_names)))
 
@@ -155,6 +157,8 @@ class SSAConverter(object):
             'while': self._convert_while,
             'function_entry': self._convert_function,
             'get_tuple': self._convert_get_tuple,
+            'get_global': self._convert_get_global,
+            'set_global': self._convert_set_global,
             'Less': self._convert_less,
             'Greater': self._convert_greater,
             'GreaterEqual': self._convert_greater_equal,
@@ -200,6 +204,8 @@ class SSAConverter(object):
             'Pow': self._convert_pow,
             'SelectMask': self._convert_select,
             'Conv2D': self._convert_conv2d,
+            'MaxPool': self._convert_maxpool,
+            'AvgPool': self._convert_avgpool,
             'Reshape': self._convert_reshape,
             'Softmax': self._convert_softmax,
             'Prod': self._convert_prod,
@@ -213,6 +219,8 @@ class SSAConverter(object):
             'ExpandDims': self._convert_expand_dims,
             'Squeeze': self._convert_squeeze,
             'Elu': self._convert_elu,
+            'Tile': self._convert_tile,
+            'LSTMBlock': self._convert_lstm_block_cell,
         }
 
         # converter state variables
@@ -230,12 +238,21 @@ class SSAConverter(object):
         # and value is the list of node names that represent tensors
         self.op_tensor_map = {}
 
+        # all variables/states are treated as both inputs & outputs.
+        for name, aVariable in self.net_ensemble.variables.items():
+            if builtins.is_tensor(aVariable):
+                shape = list([int(i) if i and i > 0 else 1 for i in aVariable.get_shape()])
+            else:
+                shape = [1,]
+            self.top_builder.add_optionals([(name, shape)], [(name, shape)])
+            self.tensor_shapes[name] = shape
+
     def get_spec(self):
         return self.spec
 
     def print_function_nodes(self, func_name):
         if func_name not in self.net_ensemble.functions:
-            raise ValueError('%s is not a function name in NetworkEnsemble' % (func_name))
+            raise ValueError('%s is not a function name in NetworkEnsemble' % func_name)
         graph = self.net_ensemble.functions[func_name].graph
         for name, node in graph.items():
             if node.op == 'get_global':
@@ -260,7 +277,7 @@ class SSAConverter(object):
         """
         func_name = self.func_stack[-1]
         func = self.net_ensemble.functions[func_name]
-        print('[SSAConverter] Converting function %s ...' % (func_name))
+        print('[SSAConverter] Converting function %s ...' % func_name)
         # Do a topological sort
         # ?? Why leaving out nodes with all outputs with some value??
         # I'm assuming restricted_graph is enough to generate all layers
@@ -278,8 +295,7 @@ class SSAConverter(object):
             op_type = node.op
             if op_type not in self.CONVERT_FUNCTION_MAP:
                 raise NotImplementedError(
-                    '[SSAConverter] Conversion for op %s not implemented, terminating...' %
-                    (op_type))
+                    '[SSAConverter] Conversion for op %s not implemented, terminating...' % op_type)
             print(
                 '[SSAConverter] [{}/{}] Converting op {}: {}'.format(
                     idx + 1, len(instruction_order), node_name, op_type))
@@ -373,8 +389,8 @@ class SSAConverter(object):
 
         input_names = self._get_input_tensors(node)
 
-        has_squeeze = 'squeeze' in node.attr
         axes = node.attr.get('squeeze')
+        has_squeeze = 'squeeze' in node.attr and axes and len(axes) > 0
         output_shapes = node.attr.get('_output_shapes')
         output_shape = output_shapes[0] if output_shapes is not None and len(output_shapes) > 0 else None
         if has_squeeze:
@@ -394,7 +410,8 @@ class SSAConverter(object):
             end_ids=end_indices,
             strides=strides,
             begin_masks=[False] * len(slices),
-            end_masks= [True if id == 2147483647 else False for id in end_indices] ) # NNSSA uses 2147483647 to include all the remaining elements from that dimension
+            end_masks=[True if id == 2147483647 else False for id in end_indices]
+        )  # NNSSA uses 2147483647 to include all the remaining elements from that dimension
 
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
@@ -509,7 +526,7 @@ class SSAConverter(object):
         # make tuple aggregates a list of SSA nodes (which also stands for their outputs)
         # For now, I think recording the make_tuple node itself for reference would suffice.
         if node.name in self.op_tensor_map:
-            raise ValueError('make_tuple node %s should not be visited twice.' % (node.name))
+            raise ValueError('make_tuple node %s should not be visited twice.' % node.name)
         self.op_tensor_map[node.name] = self._get_input_tensors(node)
 
     def _convert_while(self, node):
@@ -601,6 +618,22 @@ class SSAConverter(object):
     def _convert_get_tuple(self, node):
         input_names = self._get_input_tensors(node)
         self.op_tensor_map[node.name] = [input_names[node.attr['index']]]
+
+    def _convert_get_global(self, node):
+        input_name = node.attr["variable"]
+        self.op_tensor_map[node.name] = [input_name]
+
+    def _convert_set_global(self, node):
+        input_name = self._get_input_tensors(node)[0]
+        output_name = node.attr["variable"]
+
+        builder = self._get_builder()
+        layer = builder.add_copy(name=node.name,
+                                 input_name=input_name,
+                                 output_name=output_name)
+
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
 
     def _convert_return(self, node):
         # When converting a body function of a loop, return node should overwrite body functions' input tensors
@@ -711,7 +744,7 @@ class SSAConverter(object):
     def _convert_floor_mod(self, node):
         assert (len(node.inputs) == 2)
 
-        a,b = self._get_input_tensors(node)
+        a, b = self._get_input_tensors(node)
         a_div_b = node.name + "_floor_div"
         floor_a = node.name + "_floor_a"
 
@@ -732,7 +765,7 @@ class SSAConverter(object):
             a, b = round_a, round_b
 
         layer = self._get_builder().add_floor_div_broadcastable(
-            name=a_div_b, input_names=[a,b], output_name=a_div_b)
+            name=a_div_b, input_names=[a, b], output_name=a_div_b)
 
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
@@ -745,7 +778,6 @@ class SSAConverter(object):
             name=node.name, input_names=[a, floor_a], output_name=node.name)
 
         shapes.propagate_single_layer(layer, self.tensor_shapes)
-
 
     def _convert_squared_difference(self, node):
         assert (len(node.inputs) == 2)
@@ -1010,7 +1042,7 @@ class SSAConverter(object):
             non_linearity='ELU',
             input_name=self._get_input_tensors(node)[0],
             output_name=node.name,
-            params = 1.0)
+            params=1.0)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_leaky_relu(self, node):
@@ -1164,7 +1196,7 @@ class SSAConverter(object):
             raise NotImplementedError(
                 '[SSAConverter] Dynamic weights in convolution not implemented')
 
-        assert (len(weight.shape) == 4, 'Conv2d: weight parameter not rank 4')
+        assert len(weight.shape) == 4, 'Conv2d: weight parameter not rank 4'
 
         data_format = node.attr.get('data_format', 'NHWC')
 
@@ -1199,8 +1231,46 @@ class SSAConverter(object):
             input_name=conv_input_name,
             output_name=conv_output_name,
             dilation_factors=[1, 1])
+        
+        shapes.propagate_single_layer(layer, self.tensor_shapes, output_shapes=node.attr.get('_output_shapes'))
+
+    def _convert_pool(self, node, layer_type):
+        input_names = self._get_input_tensors(node)
+        data_format = node.attr.get('data_format', 'NHWC')
+        kernel_sizes = node.attr.get('ksize', [1, 1, 1, 1])
+        stride_sizes = node.attr.get('strides', [1, 1, 1, 1])
+        padding_type = node.attr.get('padding')
+
+        if data_format == 'NHWC':
+            kernel_height = kernel_sizes[1]
+            kernel_width = kernel_sizes[2]
+            stride_height = stride_sizes[1]
+            stride_width = stride_sizes[2]
+        else:
+            kernel_height = kernel_sizes[-2]
+            kernel_width = kernel_sizes[-1]
+            stride_height = stride_sizes[-2]
+            stride_width = stride_sizes[-1]
+
+        layer = self._get_builder().add_pooling(
+            name=node.name,
+            height=kernel_height,
+            width=kernel_width,
+            stride_height=stride_height,
+            stride_width=stride_width,
+            layer_type=layer_type,
+            padding_type=padding_type,
+            input_name=input_names[0],
+            output_name=node.name,
+            exclude_pad_area=True)
 
         shapes.propagate_single_layer(layer, self.tensor_shapes, output_shapes=node.attr.get('_output_shapes'))
+
+    def _convert_maxpool(self, node):
+        self._convert_pool(node, 'MAX')
+
+    def _convert_avgpool(self, node):
+        self._convert_pool(node, 'AVERAGE')
 
     def _convert_reshape(self, node):
         input_names = self._get_input_tensors(node)
@@ -1253,7 +1323,6 @@ class SSAConverter(object):
             name=node.name, input_name=input_names[0], output_name=node.name, axes=axes)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-
     def _convert_squeeze(self, node):
         input_names = self._get_input_tensors(node)
 
@@ -1273,7 +1342,7 @@ class SSAConverter(object):
 
     def _convert_reverse_sequence(self, node):
         input_names = self._get_input_tensors(node)
-        batch_axis= node.attr['batch_dim']
+        batch_axis = node.attr['batch_dim']
         seq_axis = node.attr['seq_dim']
 
         layer = self._get_builder().add_reverse_sequence(
@@ -1324,7 +1393,6 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-
     def _convert_sin(self, node):
         assert len(node.inputs) == 1
         layer = self._get_builder().add_sin(
@@ -1342,3 +1410,128 @@ class SSAConverter(object):
             output_name=node.name,
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_tile(self, node):
+        assert len(node.inputs) == 2
+        reps_name = self._get_input_tensors(node)[1]
+        reps = self._get_current_graph()[reps_name].value.val
+        layer = self._get_builder().add_tile(
+            name=node.name,
+            input_name=self._get_input_tensors(node)[0],
+            output_name=node.name,
+            reps=reps
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_lstm_block_cell(self, node):
+        assert len(node.inputs) == 5
+
+        x, w_name, b_name, h_prev, c_prev = self._get_input_tensors(node)
+
+        graph = self._get_current_graph()
+        weight = graph[w_name].value.val
+        bias = graph[b_name].value.val
+
+        builder = self._get_builder()
+
+        def igfo_to_ifog(data):
+            i, g, f, o = np.split(data, 4, axis=-1)
+            return np.concatenate([i, f, o, g], axis=-1)
+
+        hidden_size = weight.shape[-1] // 4
+        input_size = weight.shape[0] - hidden_size
+
+        W_h_fw = weight[input_size:, :4 * hidden_size]
+        W_h_fw = igfo_to_ifog(W_h_fw)
+        W_h_fw = np.transpose(W_h_fw, [1, 0])
+        W_h_fw = np.ascontiguousarray(W_h_fw)
+        W_h_fw = np.split(W_h_fw, 4, axis=0)
+
+        W_x_fw = weight[:input_size, :4 * hidden_size]
+        W_x_fw = igfo_to_ifog(W_x_fw)
+        W_x_fw = np.transpose(W_x_fw, [1, 0])
+        W_x_fw = np.ascontiguousarray(W_x_fw)
+        W_x_fw = np.split(W_x_fw, 4, axis=0)
+
+        b_fw = bias[:4 * hidden_size]
+        b_fw = igfo_to_ifog(b_fw)
+        b_fw = np.split(b_fw, 4, axis=-1)
+
+        forget_bias = node.attr.get('forget_bias')
+        has_forget_bias = forget_bias and forget_bias != 0.0
+        if has_forget_bias:
+            b_fw[1] += forget_bias
+
+        layer = builder.add_expand_dims(
+            name=node.name + '_in_expand',
+            input_name=x,
+            output_name=node.name + '_in_expand',
+            axes=[-1, -2]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_expand_dims(
+            name=node.name + '_h_prev_expand',
+            input_name=h_prev,
+            output_name=node.name + '_h_prev_expand',
+            axes=[0, -1, -2]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_expand_dims(
+            name=node.name + '_c_prev_expand',
+            input_name=c_prev,
+            output_name=node.name + '_c_prev_expand',
+            axes=[0, -1, -2]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_unilstm(
+            name=node.name + '_lstm',
+            W_h=W_h_fw,
+            W_x=W_x_fw,
+            b=b_fw,
+            hidden_size=hidden_size,
+            input_size=input_size,
+            input_names=[
+                node.name + '_in_expand',
+                node.name + '_h_prev_expand',
+                node.name + '_c_prev_expand'
+            ],
+            output_names=[
+                node.name + '_lstm_h',
+                node.name + '_lstm_out',
+                node.name + '_lstm_c',
+            ],
+            forget_bias=has_forget_bias,
+            output_all=True,
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_squeeze(
+            name=node.name + '_out',
+            input_name=node.name + '_lstm_out',
+            output_name=node.name + '_out',
+            axes=[-1, -2]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_squeeze(
+            name=node.name + '_h',
+            input_name=node.name + '_lstm_h',
+            output_name=node.name + '_h',
+            axes=[-1, -2]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_squeeze(
+            name=node.name + '_c',
+            input_name=node.name + '_lstm_c',
+            output_name=node.name + '_c',
+            axes=[-1, -2]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        self.op_tensor_map[node.name] = [
+            node.name + '_out', node.name + '_h', node.name + '_c'
+        ]

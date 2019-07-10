@@ -3,8 +3,13 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import os
+import shutil
+from subprocess import Popen, PIPE
+
 import unittest
 
+from coremltools.models import MLModel
 from coremltools.models.nearest_neighbors import KNearestNeighborsClassifierBuilder
 from coremltools._deps import HAS_SKLEARN
 if HAS_SKLEARN:
@@ -92,14 +97,14 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         builder.weighting_scheme = 'uniform'
         self.assertEqual(builder.weighting_scheme, 'uniform')
 
-        # builder.weighting_scheme = 'inverse_distance'
-        # self.assertEqual(builder.weighting_scheme, 'inverse_distance')
+        builder.weighting_scheme = 'inverse_distance'
+        self.assertEqual(builder.weighting_scheme, 'inverse_distance')
 
         builder.weighting_scheme = 'unIfOrM'
         self.assertEqual(builder.weighting_scheme, 'uniform')
 
-        # builder.weighting_scheme = 'InVerSE_DISTance'
-        # self.assertEqual(builder.weighting_scheme, 'inverse_distance')
+        builder.weighting_scheme = 'InVerSE_DISTance'
+        self.assertEqual(builder.weighting_scheme, 'inverse_distance')
 
         with self.assertRaises(TypeError):
             builder.weighting_scheme = 'test'
@@ -226,6 +231,49 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             builder_string_labels.add_samples(some_X, invalid_string_y)
 
+    def test_builder_with_validation(self):
+        builder = KNearestNeighborsClassifierBuilder(input_name='input',
+                                                     output_name='output',
+                                                     number_of_dimensions=10,
+                                                     default_class_label='defaultLabel',
+                                                     k=3,
+                                                     weighting_scheme='inverse_distance',
+                                                     index_type='kd_tree',
+                                                     leaf_size=50)
+        builder.author = 'CoreML Team'
+        builder.license = 'MIT'
+        builder.description = 'test_builder_with_validation'
+
+        # Save the updated spec
+        coreml_model = MLModel(builder.spec)
+        coreml_model_path = '/tmp/__test_builder_with_validation.mlmodel'
+        coreml_model.save(coreml_model_path)
+        self.assertTrue(os.path.isfile(coreml_model_path))
+
+        try:
+            stdout, stderr, return_code = self._compile_mlmodel(coreml_model_path)
+            self.assertEqual(return_code, 0)
+        finally:
+            self._delete_mlmodel_and_mlmodelc(coreml_model_path)
+
+    def test_builder_with_compilation_default_parameters(self):
+        builder = KNearestNeighborsClassifierBuilder(input_name='input',
+                                                     output_name='output',
+                                                     number_of_dimensions=4,
+                                                     default_class_label='defaultLabel')
+
+        # Save the updated spec
+        coreml_model = MLModel(builder.spec)
+        coreml_model_path = '/tmp/__test_builder_with_validation.mlmodel'
+        coreml_model.save(coreml_model_path)
+        self.assertTrue(os.path.isfile(coreml_model_path))
+
+        try:
+            stdout, stderr, return_code = self._compile_mlmodel(coreml_model_path)
+            self.assertEqual(return_code, 0)
+        finally:
+            self._delete_mlmodel_and_mlmodelc(coreml_model_path)
+
     def _validate_samples(self, spec, expected_X, expected_y):
         """Validate the float samples returned from the converted scikit KNeighborsClassifier"""
         num_dimensions = spec.kNearestNeighborsClassifier.nearestNeighborsIndex.numberOfDimensions
@@ -240,3 +288,34 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         elif spec.kNearestNeighborsClassifier.HasField("stringClassLabels"):
             for index, label in enumerate(spec.kNearestNeighborsClassifier.stringClassLabels.vector):
                 self.assertEqual(label, expected_y[index])
+
+    @staticmethod
+    def _compile_mlmodel(path_to_mlmodel):
+        """Compile the .mlmodel at the specified path."""
+        cmd = ['/usr/local/bin/coremlcompiler',
+               'compile',
+               path_to_mlmodel,
+               os.path.dirname(path_to_mlmodel)]
+
+        print(' '.join(cmd))
+        proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = proc.communicate()
+        return_code = proc.returncode
+
+        if stdout:
+            print('{}'.format(stdout.decode('ascii')))
+
+        if return_code or stderr:
+            print('Compilation failed with return code: {}'.format(return_code))
+            print('{}'.format(stderr.decode('ascii')))
+
+        return stdout, stderr, return_code
+
+    @staticmethod
+    def _delete_mlmodel_and_mlmodelc(path_to_mlmodel):
+        """Delete the .mlmodel and .mlmodelc for the given .mlmodel."""
+        if os.path.exists(path_to_mlmodel):
+            os.remove(path_to_mlmodel)
+        path_to_mlmodelc = '{}c'.format(path_to_mlmodel)
+        if os.path.exists(path_to_mlmodelc):
+            shutil.rmtree(path_to_mlmodelc)

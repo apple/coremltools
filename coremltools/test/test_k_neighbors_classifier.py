@@ -4,7 +4,9 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
+
 import numpy as np
+from scipy import sparse
 
 from coremltools._deps import HAS_SKLEARN
 
@@ -12,6 +14,7 @@ if HAS_SKLEARN:
     from coremltools.converters import sklearn
     from sklearn.datasets import load_iris
     from sklearn.neighbors import KNeighborsClassifier
+
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class KNeighborsClassifierScikitTest(unittest.TestCase):
@@ -149,6 +152,34 @@ class KNeighborsClassifierScikitTest(unittest.TestCase):
         scikit_model = KNeighborsClassifier(algorithm='brute', metric=callable_distance_function)
         scikit_model.fit(self.iris_X, self.iris_y)
         self.assertRaises(TypeError, sklearn.convert, scikit_model)
+
+    def test_conversion_with_sparse_X(self):
+        """Tests conversion of a model that's fitted with sparse data."""
+        num_samples = 100
+        num_dims = 64
+        sparse_X = sparse.rand(num_samples, num_dims, format='csr') # KNeighborsClassifier only supports CSR format
+        y = self.iris_y[0:num_samples] # the labels themselves don't matter - just use 100 of the Iris ones
+
+        sklearn_model = KNeighborsClassifier(algorithm='brute')
+        sklearn_model.fit(sparse_X, y)
+
+        coreml_model = sklearn.convert(sklearn_model)
+        coreml_spec = coreml_model.get_spec()
+        self.assertIsNotNone(coreml_spec)
+
+    def test_conversion_with_sparse_y(self):
+        """Tests conversion of a model that's fitted with y values in a sparse format."""
+        from sklearn.model_selection import train_test_split
+        X_train, X_test, y_train, y_test = train_test_split(self.iris_X, self.iris_y, test_size=0.2, train_size=0.8)
+
+        from sklearn import preprocessing
+        lb = preprocessing.LabelBinarizer(sparse_output=True)
+        binarized_y = lb.fit_transform(y_train)
+
+        sklearn_model = KNeighborsClassifier(algorithm='brute')
+        sklearn_model.fit(X_train, binarized_y)
+
+        self.assertRaises(ValueError, sklearn.convert, sklearn_model)
 
     def validate_labels(self, spec, expected):
         """Validate the labels returned from the converted scikit KNeighborsClassifier"""

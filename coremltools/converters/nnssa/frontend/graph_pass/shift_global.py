@@ -4,7 +4,7 @@ from ...nnssa import ParsedNode
 
 def shift_get_global_to_set_global(nnssa):
     # For very set_global with only 1 get_global, shift all computations
-    # whihc only depend on the result of get_global to be at the set_global
+    # which only depend on the result of get_global to be at the set_global
     # instead, even if they are across different functions
     delete_count = 0
     global_get_count = {}

@@ -701,7 +701,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
 
-    def test_batched_mat_mul_cpu(self):
+    def test_batched_mat_mul_cpu(self, cpu_only=True):
         a_shapes = [(10,), (4, 10), (10,), (10,), (2, 3), (1, 3, 4),
                     (1, 3, 1, 2, 3), (2, 3, 1, 3, 4)]
         b_shapes = [(10,), (10,), (10, 3), (2, 10, 3), (3, 4), (3, 2, 4, 5),
@@ -732,10 +732,13 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'A': a, 'B': b}
             expected = {'output': np.array(np.matmul(a, b))}
             shape_dict = {'output': outShape}
-            self._test_model(builder.spec, input, expected, useCPUOnly=True,
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only,
                              output_name_shape_dict=shape_dict)
 
-    def test_batched_mat_mul_with_transposes_cpu(self):
+    def test_batched_mat_mul_gpu(self):
+        self.test_batched_mat_mul_cpu(cpu_only=False)
+
+    def test_batched_mat_mul_with_transposes_cpu(self, cpu_only=True):
         for transpose_a, transpose_b in itertools.product([True, False],
                                                           [True, False]):
             a_shape = (3, 4)
@@ -766,10 +769,14 @@ class NewLayersSimpleTest(CorrectnessTest):
             b = b.T if transpose_b else b
             expected = {'output': np.matmul(a, b)}
 
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_batched_mat_mul_single_input_cpu(
-            self, model_precision=_MLMODEL_FULL_PRECISION):
+    def test_batched_mat_mul_with_transposes_gpu(self):
+        self.test_batched_mat_mul_with_transposes_cpu(cpu_only=False)
+
+    def test_batched_mat_mul_single_input_cpu(self,
+                                              model_precision=_MLMODEL_FULL_PRECISION,
+                                              cpu_only=True):
         X1 = 11
         X2 = 23
         W = np.random.rand(X1, X2)
@@ -797,11 +804,15 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             self._test_model(
                 builder.spec, inputs, expected,
-                model_precision=model_precision, useCPUOnly=True)
+                model_precision=model_precision, useCPUOnly=cpu_only)
 
     def test_batched_mat_mul_single_input_half_precision_cpu(self):
         self.test_batched_mat_mul_single_input_cpu(
-            model_precision=_MLMODEL_HALF_PRECISION)
+            model_precision=_MLMODEL_HALF_PRECISION,
+            cpu_only=True)
+
+    def test_batched_mat_mul_single_input_gpu(self):
+        self.test_batched_mat_mul_single_input_cpu(model_precision=_MLMODEL_FULL_PRECISION, cpu_only=False)
 
     def test_embedding_nd_cpu(
             self, model_precision=_MLMODEL_FULL_PRECISION, use_cpu_only=True):
@@ -847,7 +858,7 @@ class NewLayersSimpleTest(CorrectnessTest):
         self.test_embedding_nd_cpu(
             model_precision=_MLMODEL_HALF_PRECISION, use_cpu_only=False)
 
-    def test_softmax_nd_cpu(self):
+    def test_softmax_nd_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for axis in range(-rank, rank):
                 input_shape = np.random.randint(low=2, high=5, size=rank)
@@ -867,9 +878,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 y = y / np.sum(y, axis=axis, keepdims=True)
                 expected = {'output': y}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_concat_nd_cpu(self):
+    def test_softmax_nd_gpu(self):
+        self.test_softmax_nd_cpu(cpu_only=False)
+
+    def test_concat_nd_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for axis in range(-rank, rank):
                 n_inputs = np.random.choice(range(2, 5))
@@ -901,9 +915,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 input = dict(zip(input_names, input_tensors))
                 expected = {'output': np.concatenate(input_tensors, axis)}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_fill_like_cpu(self):
+    def test_concat_nd_gpu(self):
+        self.test_concat_nd_cpu(cpu_only=False)
+
+    def test_fill_like_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             target_shape = np.random.randint(low=2, high=6, size=rank)
@@ -922,9 +939,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'tensor': tensor}
             expected = {'output': np.zeros(target_shape) + value}
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_fill_static_cpu(self):
+    def test_fill_like_gpu(self):
+        self.test_fill_like_cpu(cpu_only=False)
+
+    def test_fill_static_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             shape = np.random.randint(low=2, high=8, size=rank)
@@ -944,9 +964,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'data': data}
             expected = {'output': data + value}
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_fill_dynamic_cpu(self):
+    def test_fill_static_gpu(self):
+        self.test_fill_static_cpu(cpu_only=False)
+
+    def test_fill_dynamic_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=8, size=rank)
@@ -964,9 +987,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'shape': np.array(input_shape, dtype='float')}
             expected = {'output': np.zeros(input_shape) + value}
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_broadcast_to_like_cpu(self):
+    def test_fill_dynamic_gpu(self):
+        self.test_fill_dynamic_cpu(cpu_only=False)
+
+    def test_broadcast_to_like_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=8, size=rank)
@@ -993,9 +1019,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {'data': data, 'tensor': tensor}
             expected = {'output': np.broadcast_to(data, target_shape)}
 
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_broadcast_to_static_cpu(self):
+    def test_broadcast_to_like_gpu(self):
+        self.test_broadcast_to_like_cpu(cpu_only=False)
+
+    def test_broadcast_to_static_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=8, size=rank)
@@ -1021,9 +1050,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'data': data}
             expected = {'output': np.broadcast_to(data, target_shape)}
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_broadcast_to_dynamic_cpu(self):
+    def test_broadcast_to_static_gpu(self):
+        self.test_broadcast_to_static_cpu(cpu_only=False)
+
+    def test_broadcast_to_dynamic_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=8, size=rank)
@@ -1049,9 +1081,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {'data': data, 'shape': np.array(target_shape, dtype='float')}
             expected = {'output': np.broadcast_to(data, target_shape)}
 
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_trigonometry_cpu(self):
+    def test_broadcast_to_dynamic_gpu(self):
+        self.test_broadcast_to_dynamic_cpu(cpu_only=False)
+
+    def test_trigonometry_cpu(self, cpu_only=True):
 
         ops = ['sin', 'cos', 'tan',
                'asin', 'acos', 'atan',
@@ -1106,9 +1141,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     builder.add_atanh(name=op, input_name='data', output_name='output')
                     expected = {'output': np.arctanh(x)}
 
-                self._test_model(builder.spec, {'data': x}, expected, useCPUOnly=True)
+                self._test_model(builder.spec, {'data': x}, expected, useCPUOnly=cpu_only)
 
-    def test_exp2_cpu(self):
+    def test_trigonometry_gpu(self):
+        self.test_trigonometry_cpu(cpu_only=False)
+
+    def test_exp2_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             shape = np.random.randint(low=2, high=8, size=rank)
             input_features = [('data', datatypes.Array(*shape))]
@@ -1122,9 +1160,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'data': x}
             expected = {'output': np.exp2(x)}
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_elementwise_binary_cpu(self):
+    def test_exp2_gpu(self):
+        self.test_exp2_cpu(cpu_only=False)
+
+    def test_elementwise_binary_cpu(self, cpu_only=True):
         input_names = ['A', 'B']
         test_cases = ['greater', 'less', 'equal', 'not_equal', 'greater_equal',
                       'less_equal', 'logical_and', 'logical_or', 'logical_xor',
@@ -1225,9 +1266,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 b = np.random.rand(*input_shapes[1])
                 input = {'A': a, 'B': b}
                 expected = {'output': func(a, b, dtype=np.float32)}
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_elementwise_boolean_unary_cpu(self):
+    def test_elementwise_binary_gpu(self):
+        self.test_elementwise_binary_cpu(cpu_only=False)
+
+    def test_elementwise_boolean_unary_cpu(self, cpu_only=True):
         input_names = ['input']
         shapes = [(1, 2, 3, 1), (3, 1, 2, 1, 2), (1, 2, 1, 3), (2, 3),
                   (2, 1, 1), (2, 3, 4), (2, 4), (1,), (1,)]
@@ -1268,9 +1312,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 input = {'input': a}
                 expected = {'output': func(a, b, dtype=np.float32)}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_logical_not_cpu(self):
+    def test_elementwise_boolean_unary_gpu(self):
+        self.test_elementwise_boolean_unary_cpu(cpu_only=False)
+
+    def test_logical_not_cpu(self, cpu_only=True):
         input_names = ['input']
         shapes = [(1, 2, 3, 1), (3, 1, 2, 1, 2), (1, 2, 1, 3), (2, 3),
                   (2, 1, 1), (2, 3, 4), (2, 4), (1,), (1,)]
@@ -1286,9 +1333,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'input': a}
             expected = {'output': np.logical_not(a)}
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_stack_cpu(self):
+    def test_logical_not_gpu(self):
+        self.test_logical_not_cpu(cpu_only=False)
+
+    def test_stack_cpu(self, cpu_only=True):
         for input_rank in range(1, 5):
             for axis in range(-input_rank - 1, input_rank + 1):
                 n_inputs = np.random.choice(range(2, 5))
@@ -1315,9 +1365,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 input = dict(zip(input_names, input_tensors))
                 expected = {'output': np.stack(input_tensors, axis)}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_ceil_cpu(self):
+    def test_stack_gpu(self):
+        self.test_stack_cpu(cpu_only=False)
+
+    def test_ceil_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             shape = np.random.randint(low=2, high=8, size=rank)
             input_features = [('data', datatypes.Array(*shape))]
@@ -1333,9 +1386,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {'data': x}
             expected = {'output': np.ceil(x)}
 
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_floor_cpu(self):
+    def test_ceil_gpu(self):
+        self.test_ceil_cpu(cpu_only=False)
+
+    def test_floor_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             shape = np.random.randint(low=2, high=8, size=rank)
             input_features = [('data', datatypes.Array(*shape))]
@@ -1351,9 +1407,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {'data': x}
             expected = {'output': np.floor(x)}
 
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_round_cpu(self):
+    def test_floor_gpu(self):
+        self.test_floor_cpu(cpu_only=False)
+
+    def test_round_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             shape = np.random.randint(low=2, high=8, size=rank)
             input_features = [('data', datatypes.Array(*shape))]
@@ -1369,9 +1428,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {'data': x}
             expected = {'output': np.around(x)}
 
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_sign_cpu(self):
+    def test_round_gpu(self):
+        self.test_round_cpu(cpu_only=False)
+
+    def test_sign_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             shape = np.random.randint(low=2, high=8, size=rank)
             input_features = [('data', datatypes.Array(*shape))]
@@ -1388,9 +1450,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {'data': x}
             expected = {'output': np.sign(x)}
 
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_clip_cpu(self):
+    def test_sign_gpu(self):
+        self.test_sign_cpu(cpu_only=False)
+
+    def test_clip_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             shape = np.random.randint(low=2, high=6, size=rank)
             input_features = [('data', datatypes.Array(*shape))]
@@ -1408,9 +1473,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                              min_value=min_value, max_value=max_value)
 
             expected = {'output': np.clip(x, min_value, max_value)}
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_split_nd_cpu(self):
+    def test_clip_gpu(self):
+        self.test_clip_cpu(cpu_only=False)
+
+    def test_split_nd_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for axis in range(-rank, rank):
                 n_outputs = np.random.choice(range(2, 4))
@@ -1454,9 +1522,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     )
                 )  # Explicitly trying to compare against both versions of numpy split
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_split_nd_with_split_sizes_cpu(self):
+    def test_split_nd_gpu(self):
+        self.test_split_nd_cpu(cpu_only=False)
+
+    def test_split_nd_with_split_sizes_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for axis in range(-rank, rank):
                 n_outputs = np.random.choice(range(2, 4))
@@ -1493,10 +1564,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = dict(
                     zip(output_names, np.split(x, sections, axis=axis)))
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_slice_static_cpu(self):
+    def test_split_nd_with_split_sizes_gpu(self):
+        self.test_split_nd_with_split_sizes_cpu(cpu_only=False)
 
+    def test_slice_static_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for _ in range(200):
                 input_shape = np.array([5 for _ in range(rank)])
@@ -1535,9 +1608,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 inputs = {'data': x}
                 expected = {'output': x[tuple(objs)]}
 
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_slice_dynamic_cpu(self):
+    def test_slice_static_gpu(self):
+        self.test_slice_static_cpu(cpu_only=False)
+
+    def test_slice_dynamic_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             input_shape = np.array([5 for _ in range(rank)])
             objs, strides, begin_masks, end_ids, end_masks, begin_ids = [], [], [], [], [], []
@@ -1641,11 +1717,13 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 expected = {'output': x[tuple(objs)]}
 
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
+
+    def test_slice_dynamic_gpu(self):
+        self.test_slice_dynamic_cpu(cpu_only=False)
 
     @unittest.skip('fix')
-    def test_tile_cpu(self):
-
+    def test_tile_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=5, size=rank)
             reps = list(np.random.randint(low=1, high=4, size=rank))
@@ -1664,10 +1742,13 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'data': x}
             expected = {'output': np.tile(x, reps)}
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_sliding_windows_cpu(self):
+    @unittest.skip('fix')
+    def test_tile_gpu(self):
+        self.test_tile_cpu(cpu_only=False)
 
+    def test_sliding_windows_cpu(self, cpu_only=True):
         def numpy_sliding_windows(a, np_axis, np_size, np_step):
             n = (a.shape[np_axis] - np_size) // np_step + 1
             shape = list(a.shape)
@@ -1714,9 +1795,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 input = {'data': x}
                 expected = {'output': numpy_sliding_windows(x, axis, window_size, step)}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_range_static_cpu(self):
+    def test_sliding_windows_gpu(self):
+        self.test_sliding_windows_cpu(cpu_only=False)
+
+    def test_range_static_cpu(self, cpu_only=True):
 
         params = [(-10.4, 23, 12.2), (0, 1000, 1), (50.5, 90.5, 1.5), (5, 8, 2),
                   (5, 8, 98), (5, 8, 1.5), (10, 5, -0.6), (24, -65, -2)]
@@ -1745,9 +1829,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs['multiplicative_input'] = np.ones((1,), dtype=np.float64)
             expected = {'output': np.arange(start, end, step)}
 
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_range_dynamic_cpu(self):
+    def test_range_static_gpu(self):
+        self.test_range_static_cpu(cpu_only=False)
+
+    def test_range_dynamic_cpu(self, cpu_only=True):
         params = [(-10.4, 23, 12.2), (0, 1000, 1), (50.5, 90.5, 1.5), (5, 8, 2),
                   (5, 8, 98), (5, 8, 1.5), (10, 5, -0.6), (24, -65, -2)]
 
@@ -1796,9 +1883,12 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 expected = {'output': np.arange(start, end, step)}
 
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_linear_activation_different_ranks_cpu(self):
+    def test_range_dynamic_gpu(self):
+        self.test_range_dynamic_cpu(cpu_only=False)
+
+    def test_linear_activation_different_ranks_cpu(self, cpu_only=True):
         for input_dim in [(10, 15), (10, 15, 2, 3),
                           (10, 2, 4, 15, 1, 4), (6,)]:
             input_features = [('data', datatypes.Array(*input_dim))]
@@ -1817,9 +1907,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'data': x}
             expected = {'output': 34.0 * x + 67.0}
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_topk(self):
+    def test_linear_activation_different_ranks_gpu(self):
+        self.test_linear_activation_different_ranks_cpu(cpu_only=False)
+
+    def test_topk_cpu(self, cpu_only=True):
         test_input_shapes = [(9,), (8, 6), (9, 8, 10), (5, 9, 7, 9), (12, 8, 6, 6, 7)]
         K = [3, 5]
         axes = [[0], [0, 1], [1, 2], [0, 3, 1], [1, 3, 4]]
@@ -1870,7 +1963,349 @@ class NewLayersSimpleTest(CorrectnessTest):
                                 ref_values = np.take_along_axis(data, ref_indices, axis=axis)
                                 expected = {'values': ref_values, 'indices': ref_indices}
 
-                                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+    def test_topk_gpu(self):
+        self.test_topk_cpu(cpu_only=False)
+
+
+    def test_const_pad_cpu(self, cpu_only=True):
+
+        def get_reference(data, pads, value):
+            with tf.Graph().as_default(), tf.Session() as sess:
+                x = tf.placeholder(tf.float32, shape=data.shape)
+                p = tf.placeholder(tf.int32, shape=pads.shape)
+                y = tf.pad(x, p, mode='CONSTANT', constant_values=value)
+                return sess.run(y, feed_dict={x: data, p: pads})
+
+        value = 34.0
+        shapes = [(3,), (4, 5), (2, 4, 5), (12, 6, 3, 5, 7), (1, 24, 2, 4, 8)]
+
+        ctr = 0
+        for shape in shapes:
+            rank = len(shape)
+            for force_zeros_in_end in [0, 2, 6]:
+                for max_pad_value in range(1, 6):
+                    for n_inputs in [1, 2]:
+                        pads = np.random.randint(low=0, high=max_pad_value, size=(rank, 2))
+
+                        if force_zeros_in_end > 2 * rank:
+                            continue
+
+                        # pads = np.reshape(np.array([1,1,1,0,0,1]), (rank, 2))
+                        if force_zeros_in_end != 0:
+                            pads[-force_zeros_in_end:] = 0
+
+                        data = np.random.rand(*shape)
+                        reference = get_reference(data, pads, value)
+
+                        ctr += 1
+                        # print('-' * 80)
+                        # print('{} test: constant pad nd: input shape: {}, output shape: {}, pads = {}, n_inputs = {}'.
+                        #       format(ctr, shape, reference.shape, pads.flatten(), n_inputs))
+                        # print('-' * 80)
+
+                        input_features = [('data', datatypes.Array(*shape))]
+                        output_features = [('output', None)]
+
+                        input_names = ['data']
+                        if n_inputs == 2:
+                            input_names.append('pads')
+                            input_features.append(('pads', datatypes.Array(2*rank,)))
+
+                        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+                        if n_inputs == 2:
+                            builder.add_constant_pad('pad', input_names, 'output', value=value)
+                        else:
+                            builder.add_constant_pad('pad', input_names, 'output', value=value, pad_amounts=pads.flatten())
+
+                        input = {'data': data}
+                        if n_inputs == 2:
+                            input['pads'] = pads.flatten().astype(np.float)
+
+                        expected = {'output': reference}
+                        self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+
+    def test_const_pad_gpu(self):
+        self.test_const_pad_cpu(cpu_only=False)
+
+
+    def test_const_pad_mode2_cpu(self, cpu_only=True):
+
+        def get_reference(data, output_shape, value, left_pad=False):
+            with tf.Graph().as_default(), tf.Session() as sess:
+                x = tf.placeholder(tf.float32, shape=data.shape)
+                p = tf.placeholder(tf.int32, shape=(len(output_shape), 2))
+                y = tf.pad(x, p, mode='CONSTANT', constant_values=value)
+                pads = np.zeros((len(output_shape), 2))
+                if left_pad:
+                    pads[:, 0] = np.array(output_shape) - np.array(data.shape)
+                else:
+                    pads[:, 1] = np.array(output_shape) - np.array(data.shape)
+
+                return sess.run(y, feed_dict={x: data, p: pads})
+
+        value = 34.0
+        shapes = [(3,), (4, 5), (2, 4, 5), (12, 6, 3, 5, 7), (1, 24, 2, 4, 8)]
+        out_shapes = [(5,), (4, 8), (2, 4, 10), (20, 6, 7, 10, 7), (5, 24, 10, 4, 10)]
+
+        ctr = 0
+        for ii, shape in enumerate(shapes):
+            rank = len(shape)
+            for left_pad in [True, False]:
+                for n_inputs in [1, 2]:
+
+                    data = np.random.rand(*shape)
+                    reference = get_reference(data, out_shapes[ii], value, left_pad)
+
+                    pads = np.zeros((rank, 2))
+                    tmp = np.zeros((rank))
+
+                    for i in range(rank):
+                        if out_shapes[ii][i] == shape[i]:
+                            tmp[i] = 0
+                        else:
+                            tmp[i] = out_shapes[ii][i]
+
+                    if left_pad:
+                        pads[:, 0] = tmp
+                    else:
+                        pads[:, 1] = tmp
+
+                    ctr += 1
+                    # print('-' * 80)
+                    # print('{} test: constant pad nd: input shape: {}, output shape: {}, pads = {}, n_inputs = {}'.
+                    #       format(ctr, shape, reference.shape, pads.flatten(), n_inputs))
+                    # print('-' * 80)
+
+                    input_features = [('data', datatypes.Array(*shape))]
+                    output_features = [('output', None)]
+
+                    input_names = ['data']
+                    if n_inputs == 2:
+                        input_names.append('pads')
+                        input_features.append(('pads', datatypes.Array(2*rank,)))
+
+                    builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+                    if n_inputs == 2:
+                        builder.add_constant_pad('pad', input_names, 'output', value=value, pad_to_given_output_size_mode=True)
+                    else:
+                        builder.add_constant_pad('pad', input_names, 'output', value=value, pad_amounts=pads.flatten(), pad_to_given_output_size_mode=True)
+
+                    input = {'data': data}
+                    if n_inputs == 2:
+                        input['pads'] = pads.flatten().astype(np.float)
+
+                    expected = {'output': reference}
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+
+    def test_const_pad_mode2_gpu(self):
+        self.test_const_pad_mode2_cpu(cpu_only=False)
+
+
+    def test_nms_cpu(self, cpu_only=True):
+        def _compute_iou_matrix(boxes):
+            # input is (N,4), in order [center_w, center_h, width, height]
+            assert len(boxes.shape) == 2
+            assert boxes.shape[1] == 4
+            boxes = boxes.astype(np.float)
+            center_w, center_h, width, height = np.split(boxes, 4, axis=1)  # outs are all (N,1)
+            top = center_h + 0.5 * height
+            bottom = center_h - 0.5 * height
+            left = center_w - 0.5 * width
+            right = center_w + 0.5 * width
+            area = width * height
+
+            hB = np.minimum(top, np.transpose(top))
+            wB = np.minimum(right, np.transpose(right))
+            hA = np.maximum(bottom, np.transpose(bottom))
+            wA = np.maximum(left, np.transpose(left))
+
+            intersection_area = np.maximum(0, hB - hA) * np.maximum(0, wB - wA)
+            union_area = area + np.transpose(area) - intersection_area
+            iou = intersection_area / union_area
+            return iou
+
+        def _nms_TF(boxes, scores, iou_threshold, score_threshold, per_class_suppression, M):
+            # boxes is (B,N,4), in order [center_w, center_h, width, height]
+            # scores is (B,N,C)
+            # output shapes: (B,M,4), (B,M,C), (B,M), (B,)
+            '''
+            this is implementation of CoreML's NMS layer
+            '''
+            B, N, C = scores.shape
+
+            iou_threshold = iou_threshold.astype(np.float32)
+            score_threshold = score_threshold.astype(np.float32)
+
+            # convert box ids to TF style
+            center_w, center_h, width, height = np.split(boxes, 4, axis=-1)  # outs are all (B,N,1)
+            y1 = center_h - 0.5 * height
+            y2 = center_h + 0.5 * height
+            x1 = center_w - 0.5 * width
+            x2 = center_w + 0.5 * width
+            boxes_tf = np.concatenate((y1, x1, y2, x2), axis=-1)  # (B,N,4)
+
+            out1 = np.zeros((B, M, 4))
+            out2 = np.zeros((B, M, C))
+            out3 = -1 * np.ones((B, M))
+            out4 = np.zeros((B,))
+
+            for b in range(B):
+                box_coord_matrix = boxes_tf[b, :, :]  # (N,4)
+                score_vector = np.max(scores[b, :, :], axis=-1)  # (N,)
+                if not per_class_suppression:
+                    # this is the simple case as TF directly supports it
+                    with tf.Graph().as_default(), tf.Session() as sess:
+                        box_coord_matrix_pl = tf.placeholder(tf.float32, shape=box_coord_matrix.shape)
+                        score_vector_pl = tf.placeholder(tf.float32, shape=score_vector.shape)
+                        ids_g = tf.image.non_max_suppression(box_coord_matrix_pl,
+                                                             score_vector_pl,
+                                                             max_output_size=M, iou_threshold=iou_threshold,
+                                                             score_threshold=score_threshold)
+
+                        ids = sess.run(ids_g, feed_dict={box_coord_matrix_pl: box_coord_matrix, score_vector_pl: score_vector})
+                else:
+                    # this is slightly complicated as TF does not directly support it
+                    class_ids = np.argmax(scores[b, :, :], axis=-1)  # (N,)
+                    sorted_score_ids = np.argsort(-score_vector)
+                    box_coord_matrix2 = np.take(box_coord_matrix, sorted_score_ids, axis=0)
+                    score_vector2 = np.take(score_vector, sorted_score_ids)
+                    class_ids = np.take(class_ids, sorted_score_ids)
+                    classes_seen = dict()
+                    ids_intermediate = np.array([], dtype=np.int)
+                    for n in range(N):
+                        if class_ids[n] in classes_seen:
+                            continue
+                        c = class_ids[n]
+                        classes_seen[c] = True
+                        current_class_ids = np.where(class_ids == c)[0]
+                        if len(current_class_ids) > 0:
+                            feed_in1 = np.take(box_coord_matrix2, current_class_ids, axis=0)
+                            feed_in2 = np.take(score_vector2, current_class_ids)
+
+                            with tf.Graph().as_default(), tf.Session() as sess:
+                                box_coord_matrix_pl = tf.placeholder(tf.float32, shape=feed_in1.shape)
+                                score_vector_pl = tf.placeholder(tf.float32, shape=feed_in2.shape)
+                                cur_ids_g = tf.image.non_max_suppression(box_coord_matrix_pl,
+                                                                       score_vector_pl,
+                                                                       max_output_size=M, iou_threshold=iou_threshold,
+                                                                       score_threshold=score_threshold)
+                                cur_ids = sess.run(cur_ids_g, feed_dict={box_coord_matrix_pl: feed_in1,
+                                                                         score_vector_pl: feed_in2})
+
+
+                            from_sort_ids = np.take(current_class_ids, cur_ids)
+                            ids_intermediate = np.append(ids_intermediate, from_sort_ids)
+                    ids_intermediate.sort()
+                    ids = np.take(sorted_score_ids, ids_intermediate)
+
+                xx = len(ids)
+                if xx == 0:
+                    ids = np.array([np.argmax(score_vector)])
+                    xx = 1
+                if xx > M:
+                    ids = ids[:M]
+                    xx = len(ids)
+                out1[b, :xx, :] = np.take(boxes[b, :, :], ids, axis=0)
+                out2[b, :xx, :] = np.take(scores[b, :, :], ids, axis=0)
+                out3[b, :xx] = ids
+                out4[b] = xx
+
+            return out1, out2, out3, out4
+
+        iou_threshold_percentile = [0, 30, 80, 100]
+        score_threshold_percentile_arr = [0, 40, 100]
+        N_M_pairs_to_test = [[100, 48], [100, 112]]  # N : boxes in, M: max boxes out
+
+        number_of_test = 0
+        for N_M in N_M_pairs_to_test:
+            for B in [1, 5]:
+                for C in [1, 7]:
+                    N, M = N_M
+
+                    boxes = np.random.rand(B, N, 4)
+                    scores = np.random.rand(B, N, C)
+
+                    iou_matrix = _compute_iou_matrix(boxes[0, :, :])  # (N,N)
+                    iou_matrix = iou_matrix[~np.eye(iou_matrix.shape[0], dtype=bool)].reshape(iou_matrix.shape[0], -1)
+
+                    for per_class_suppression in [False, True]:
+                        for iou_thresh in iou_threshold_percentile:
+                            for score_thresh in score_threshold_percentile_arr:
+                                for is_dynamic in [False, True]:
+
+                                    if score_thresh == 0:
+                                        score_threshold = np.min(scores) - 1
+                                    elif score_thresh == 100:
+                                        score_threshold = np.max(scores) + 1
+                                    else:
+                                        score_threshold = np.percentile(scores, score_thresh) + .01
+
+                                    if iou_thresh == 0:
+                                        iou_threshold = np.maximum(np.min(iou_matrix) - .01, 0.0)
+                                    else:
+                                        iou_threshold = np.percentile(iou_matrix, iou_thresh) + .01
+
+                                    number_of_test += 1
+                                    # print('-' * 90)
+                                    # print(
+                                    #     '{} Testing NMS: iou percentile thresh and value : {}, {:.3f}, '
+                                    #     'score thresh percentile and value: {}, {:.3f}, B={}, C={}, N={}, M={}, per_class_suppression={} '.
+                                    #     format(number_of_test, iou_thresh, iou_threshold, score_thresh, score_threshold, B,C,N,M,per_class_suppression))
+                                    # print('-' * 90)
+
+                                    tf_boxes, tf_scores, tf_ids, tf_num_boxes = _nms_TF(boxes, scores, iou_threshold,
+                                                                                        score_threshold,
+                                                                                        per_class_suppression,
+                                                                                        M)
+                                    expected = dict()
+                                    expected['selected_boxes'] = tf_boxes
+                                    expected['selected_scores'] = tf_scores
+                                    expected['selected_box_ids'] = tf_ids
+                                    expected['number_of_boxes'] = tf_num_boxes
+
+                                    # define CoreML model
+
+                                    input_features = [('boxes', datatypes.Array(B,N,4)), ('scores', datatypes.Array(B,N,C))]
+                                    output_features = [('selected_boxes', None), ('selected_scores', None),
+                                                       ('selected_box_ids', None), ('number_of_boxes', None)]
+
+                                    input_names = ['boxes', 'scores']
+                                    if is_dynamic:
+                                        input_names.extend(['iou_threshold', 'score_threshold', 'max_boxes'])
+                                        input_features.append(('iou_threshold', datatypes.Array(1, )))
+                                        input_features.append(('score_threshold', datatypes.Array(1, )))
+                                        input_features.append(('max_boxes', datatypes.Array(1, )))
+
+                                    builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                                                  disable_rank5_shape_mapping=True)
+
+                                    input_dict = dict()
+                                    input_dict['boxes'] = boxes
+                                    input_dict['scores'] = scores
+
+                                    if is_dynamic:
+                                        builder.add_nms('nms', input_names,
+                                                        ['selected_boxes', 'selected_scores', 'selected_box_ids','number_of_boxes'],
+                                                        per_class_suppression=per_class_suppression)
+
+                                        input_dict['iou_threshold'] = iou_threshold * np.ones([1], dtype=np.float)
+                                        input_dict['score_threshold'] = score_threshold * np.ones([1], dtype=np.float)
+                                        input_dict['max_boxes'] = M * np.ones([1], dtype=np.float)
+                                    else:
+                                        builder.add_nms('nms', input_names,
+                                                        ['selected_boxes', 'selected_scores', 'selected_box_ids','number_of_boxes'],
+                                                        iou_threshold=iou_threshold, score_threshold=score_threshold,
+                                                        max_boxes=M, per_class_suppression=per_class_suppression)
+
+                                    self._test_model(builder.spec, input_dict, expected, useCPUOnly=cpu_only)
+
+
+    def test_nms_gpu(self):
+        self.test_nms_cpu(cpu_only=False)
 
     def test_rank_preserving_reshape(self):
         input_shapes = [(20, 10), (20, 10, 5), (10, 3, 5)]
@@ -2074,7 +2509,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
         self._test_model(builder.spec, feed, expected, useCPUOnly=True)
 
-    def test_erf_activation(self):
+    def test_erf_activation_cpu(self, cpu_only=True):
         input_features = [('data', datatypes.Array(10, 45))]
         output_features = [('output', datatypes.Array(10, 45))]
 
@@ -2089,7 +2524,10 @@ class NewLayersSimpleTest(CorrectnessTest):
                                   x.flatten().tolist()]).reshape(10, 45)
         }
 
-        self._test_model(builder.spec, input, expected, useCPUOnly=True)
+        self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+    def test_erf_activation_gpu(self):
+        self.test_erf_activation_cpu(cpu_only=False)
 
     def test_gelu_activation(self):
 
@@ -2112,8 +2550,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': exact}
                 self._test_model(builder.spec, input, expected, useCPUOnly=True)
 
-    def test_lower_triangular_cpu(self):
-
+    def test_lower_triangular_cpu(self, cpu_only=True):
         for rank in range(2, 6):
             for k in range(-7, 8):
                 shape = np.random.randint(low=2, high=6, size=rank)
@@ -2128,10 +2565,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 x = np.random.rand(*shape)
                 input = {'data': x}
                 expected = {'output': np.tril(x, k=k)}
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_upper_triangular_cpu(self):
+    def test_lower_triangular_gpu(self):
+        self.test_lower_triangular_cpu(cpu_only=False)
 
+    def test_upper_triangular_cpu(self, cpu_only=True):
         for rank in range(2, 6):
             for k in range(-7, 8):
                 shape = np.random.randint(low=2, high=6, size=rank)
@@ -2146,10 +2585,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 x = np.random.rand(*shape)
                 input = {'data': x}
                 expected = {'output': np.triu(x, k=k)}
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_where_broadcastable_cpu(self):
+    def test_upper_triangular_gpu(self):
+        self.test_upper_triangular_cpu(cpu_only=False)
 
+    def test_where_broadcastable_cpu(self, cpu_only=True):
         for _ in range(150):
             rank_cond = np.random.randint(low=1, high=6)
             rank_true = np.random.randint(low=1, high=6)
@@ -2191,10 +2632,12 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             input = {'cond': cond, 'true': true, 'false': false}
             expected = {'output': np.where(cond, true, false)}
-            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_random_normal_like_cpu(self):
+    def test_where_broadcastable_gpu(self):
+        self.test_where_broadcastable_cpu(cpu_only=False)
 
+    def test_random_normal_like_cpu(self, cpu_only=True):
         mean, stddev, seed = 0., 1., 42
 
         for rank in range(5, -1, -1):
@@ -2221,11 +2664,14 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             if rank > 0:
                 CorrectnessTest._compare_moments(builder.spec, inputs, expected, num_moments=2)
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
             else:  # one extra test to test more moments
                 CorrectnessTest._compare_moments(builder.spec, inputs, expected, num_moments=6)
 
-    def test_random_normal_static_cpu(self):
+    def test_random_normal_like_gpu(self):
+        self.test_random_normal_like_cpu(cpu_only=False)
+
+    def test_random_normal_static_cpu(self, cpu_only=True):
 
         mean, stddev, seed = 0., 1., 42
 
@@ -2253,10 +2699,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': data + np.random.normal(mean, stddev, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected, num_moments=2)
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_random_normal_dynamic_cpu(self):
+    def test_random_normal_static_gpu(self):
+        self.test_random_normal_static_cpu(cpu_only=False)
 
+    def test_random_normal_dynamic_cpu(self, cpu_only=True):
         mean, stddev, seed = 0., 1., 42
 
         for rank in range(1, 6):
@@ -2280,10 +2728,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.random.normal(mean, stddev, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected, num_moments=2)
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_random_uniform_like_cpu(self):
+    def test_random_normal_dynamic_gpu(self):
+        self.test_random_normal_dynamic_cpu(cpu_only=False)
 
+    def test_random_uniform_like_cpu(self, cpu_only=True):
         minval, maxval, seed = 0., 1., 42
 
         for rank in range(1, 6):
@@ -2308,10 +2758,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.random.uniform(minval, maxval, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_random_uniform_static_cpu(self):
+    def test_random_uniform_like_gpu(self):
+        self.test_random_uniform_like_cpu(cpu_only=False)
 
+    def test_random_uniform_static_cpu(self, cpu_only=True):
         minval, maxval, seed = 0., 1., 42
 
         for rank in range(1, 6):
@@ -2338,10 +2790,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': data + np.random.uniform(minval, maxval, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_random_uniform_dynamic_cpu(self):
+    def test_random_uniform_static_gpu(self):
+        self.test_random_uniform_static_cpu(cpu_only=False)
 
+    def test_random_uniform_dynamic_cpu(self, cpu_only=True):
         minval, maxval, seed = 0., 1., 42
 
         for rank in range(1, 6):
@@ -2365,9 +2819,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.random.uniform(minval, maxval, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_random_bernoulli_like_cpu(self):
+    def test_random_uniform_dynamic_gpu(self):
+        self.test_random_uniform_dynamic_cpu(cpu_only=False)
+
+    def test_random_bernoulli_like_cpu(self, cpu_only=True):
 
         prob, seed = 0.5, 42
 
@@ -2393,10 +2850,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.random.binomial(1, prob, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_random_bernoulli_static_cpu(self):
+    def test_random_bernoulli_like_gpu(self):
+        self.test_random_bernoulli_like_cpu(cpu_only=False)
 
+    def test_random_bernoulli_static_cpu(self, cpu_only=True):
         prob, seed = 0.5, 42
 
         for rank in range(1, 6):
@@ -2421,10 +2880,12 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': data + np.random.binomial(1, prob, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_random_bernoulli_dynamic_cpu(self):
+    def test_random_bernoulli_static_gpu(self):
+        self.test_random_bernoulli_static_cpu(cpu_only=False)
 
+    def test_random_bernoulli_dynamic_cpu(self, cpu_only=True):
         prob, seed = 0.5, 42
 
         for rank in range(1, 6):
@@ -2448,7 +2909,10 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.random.binomial(1, prob, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
+
+    def test_random_bernoulli_dynamic_gpu(self):
+        self.test_random_bernoulli_dynamic_cpu(cpu_only=False)
 
     def test_categorical_distribution_cpu_shapes(self):
 
@@ -2602,7 +3066,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(model, inputs, expected, useCPUOnly=True,
                              output_name_shape_dict={'output': prediction['output'].shape})
 
-    def test_reverse_cpu(self):
+    def test_reverse_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             for _ in range(20):
@@ -2623,9 +3087,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 input = {'data': x}
                 expected = {'output': np.flip(x, axis=axes)}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_matrix_band_part_cpu(self):
+    def test_reverse_gpu(self):
+        self.test_reverse_cpu(cpu_only=False)
+
+    def test_matrix_band_part_cpu(self, cpu_only=True):
 
         for rank in range(2, 6):
             for _ in range(20):
@@ -2651,9 +3118,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                         band[m, n] = (num_lower < 0 or (m - n) <= num_lower) and (num_upper < 0 or (n - m) <= num_upper)
 
                 expected = {'output': np.multiply(band, x)}
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_flatten_to_2d_cpu(self):
+    def test_matrix_band_part_gpu(self):
+        self.test_matrix_band_part_cpu(cpu_only=False)
+
+    def test_flatten_to_2d_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             for axis in range(-rank, rank + 1):
@@ -2679,9 +3149,12 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 input = {'data': x}
                 expected = {'output': ref}
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reshape_like_cpu(self):
+    def test_flatten_to_2d_gpu(self):
+        self.test_flatten_to_2d_cpu(cpu_only=False)
+
+    def test_reshape_like_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             for _ in range(20):
@@ -2714,10 +3187,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 inputs = {'data': data, 'tensor': tensor}
                 expected = {'output': np.reshape(data, target_shape)}
 
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_reshape_static_cpu(self):
+    def test_reshape_like_gpu(self):
+        self.test_reshape_like_cpu(cpu_only=False)
 
+    def test_reshape_static_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for _ in range(20):
                 input_shape = np.random.randint(low=2, high=8, size=rank)
@@ -2750,10 +3225,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 inputs = {'data': data}
                 expected = {'output': np.reshape(data, target_shape)}
 
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_reshape_dynamic_cpu(self):
+    def test_reshape_static_gpu(self):
+        self.test_reshape_static_cpu(cpu_only=False)
 
+    def test_reshape_dynamic_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for _ in range(20):
                 input_shape = np.random.randint(low=2, high=8, size=rank)
@@ -2786,9 +3263,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 inputs = {'data': data, 'shape': np.array(target_shape, dtype='float')}
                 expected = {'output': np.reshape(data, target_shape)}
 
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_sum_cpu(self):
+    def test_reshape_dynamic_gpu(self):
+        self.test_reshape_dynamic_cpu(cpu_only=False)
+
+    def test_reduce_sum_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
@@ -2818,9 +3298,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.add.reduce(x, axes, keepdims=keep_dims)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_prod_cpu(self):
+    def test_reduce_sum_gpu(self):
+        self.test_reduce_sum_cpu(cpu_only=False)
+
+    def test_reduce_prod_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
@@ -2851,10 +3334,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.multiply.reduce(x, axes, keepdims=keep_dims)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_mean_cpu(self):
+    def test_reduce_prod_gpu(self):
+        self.test_reduce_prod_cpu(cpu_only=False)
 
+    def test_reduce_mean_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
             axes_list.append(None)
@@ -2884,10 +3369,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.mean(x, axes, keepdims=keep_dims)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_max_cpu(self):
+    def test_reduce_mean_gpu(self):
+        self.test_reduce_mean_cpu(cpu_only=False)
 
+    def test_reduce_max_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
             axes_list.append(None)
@@ -2916,10 +3403,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.maximum.reduce(x, axes, keepdims=keep_dims)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_min_cpu(self):
+    def test_reduce_max_gpu(self):
+        self.test_reduce_max_cpu(cpu_only=False)
 
+    def test_reduce_min_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
             axes_list.append(None)
@@ -2948,10 +3437,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.minimum.reduce(x, axes, keepdims=keep_dims)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_l2_cpu(self):
+    def test_reduce_min_gpu(self):
+        self.test_reduce_min_cpu(cpu_only=False)
 
+    def test_reduce_l2_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
             axes_list.append(None)
@@ -2980,10 +3471,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.sqrt(np.sum(np.square(x), axis=axes, keepdims=keep_dims))}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_l1_cpu(self):
+    def test_reduce_l2_gpu(self):
+        self.test_reduce_l2_cpu(cpu_only=False)
 
+    def test_reduce_l1_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
             axes_list.append(None)
@@ -3012,10 +3505,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.sum(np.abs(x), axis=axes, keepdims=keep_dims)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_sumsquare_cpu(self):
+    def test_reduce_l1_gpu(self):
+        self.test_reduce_l1_cpu(cpu_only=False)
 
+    def test_reduce_sumsquare_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
             axes_list.append(None)
@@ -3045,10 +3540,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.sum(np.square(x), axis=axes, keepdims=keep_dims)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_logsum_cpu(self):
+    def test_reduce_sumsquare_gpu(self):
+        self.test_reduce_sumsquare_cpu(cpu_only=False)
 
+    def test_reduce_logsum_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
             axes_list.append(None)
@@ -3078,10 +3575,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.log(np.sum(x, axis=axes, keepdims=keep_dims))}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reduce_logsumexp_cpu(self):
+    def test_reduce_logsum_gpu(self):
+        self.test_reduce_logsum_cpu(cpu_only=False)
 
+    def test_reduce_logsumexp_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
             axes_list.append(None)
@@ -3111,10 +3610,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'data': x}
                     expected = {'output': np.log(np.sum(np.exp(x), axis=axes, keepdims=keep_dims))}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_reverse_sequence_cpu(self):
+    def test_reduce_logsumexp_gpu(self):
+        self.test_reduce_logsumexp_cpu(cpu_only=False)
 
+    def test_reverse_sequence_cpu(self, cpu_only=True):
         for rank in range(2, 6):
             for i in range(20):
                 input_shape = np.random.randint(low=2, high=6, size=rank)
@@ -3153,9 +3654,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                                                 seq_axis=pos_seq_axis, batch_axis=pos_batch_axis)
                     expected = {'output': sess.run(tf_op)}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_where_nonzero_cpu(self):
+    def test_reverse_sequence_gpu(self):
+        self.test_reverse_sequence_cpu(cpu_only=False)
+
+    def test_where_nonzero_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
             for i in range(10):
@@ -3174,10 +3678,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 x = np.random.rand(*shape)
                 input = {'data': x}
                 expected = {'output': np.transpose(np.nonzero(x)).astype(np.float)}
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_gather_cpu(self):
+    def test_where_nonzero_gpu(self):
+        self.test_where_nonzero_cpu(cpu_only=False)
 
+    def test_gather_cpu(self, cpu_only=True):
         for rankParams, rankIndices in [(i, j) for i in range(1, 6) for j in range(1, 6)]:
             for axis in range(-rankParams, rankParams):
                 shapeParams = np.random.randint(low=2, high=5, size=rankParams)
@@ -3211,10 +3717,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 input = {'params': a, 'indices': b.astype(np.float)}
                 expected = {'output': np.take(a, b, axis=axis)}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_gather_along_axis_cpu(self):
+    def test_gather_gpu(self):
+        self.test_gather_cpu(cpu_only=False)
 
+    def test_gather_along_axis_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for axis in range(-rank, rank):
                 for _ in range(5):
@@ -3237,10 +3745,12 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     input = {'params': a, 'indices': b.astype(np.float)}
                     expected = {'output': np.take_along_axis(a, b, axis=axis)}
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_gather_nd_cpu(self):
+    def test_gather_along_axis_gpu(self):
+        self.test_gather_along_axis_cpu(cpu_only=False)
 
+    def test_gather_nd_cpu(self, cpu_only=True):
         for params_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(1, 6)]:
             params_shape = np.random.randint(low=2, high=8, size=params_rank)
             indices_shape = np.random.randint(low=2, high=8, size=indices_rank)
@@ -3274,10 +3784,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     tf_op = tf.gather_nd(a, indices)
                     expected = {'output': sess.run(tf_op)}
 
-                self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_scatter_cpu(self):
+    def test_gather_nd_gpu(self):
+        self.test_gather_nd_cpu(cpu_only=False)
 
+    def test_scatter_cpu(self, cpu_only=True):
         for ref_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(1, 6)]:
             for accumulate_mode in ["UPDATE", "ADD", "SUB", "MUL", "DIV", "MAX", "MIN"]:
                 for _ in range(5):
@@ -3325,9 +3837,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                             sess.run(tf.scatter_min(tf_output, indices, updates))
                         expected = {'output': sess.run(tf_output)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_gather_scatter_multiple_axis_cpu(self):
+    def test_scatter_gpu(self):
+        self.test_scatter_cpu(cpu_only=False)
+
+    def test_gather_scatter_multiple_axis_cpu(self, cpu_only=True):
 
         for params_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(1, 6)]:
             for axis in range(-params_rank, params_rank):
@@ -3359,10 +3874,12 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     input = {'params': a, 'indices': b.astype(np.float)}
                     expected = {'output': a}
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_scatter_along_axis_cpu(self):
+    def test_gather_scatter_multiple_axis_gpu(self):
+        self.test_gather_scatter_multiple_axis_cpu(cpu_only=False)
 
+    def test_scatter_along_axis_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for axis in range(-rank, rank):
                 for id in range(5):
@@ -3392,10 +3909,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     np_output = np.copy(ref)
                     np.put_along_axis(np_output, indices, updates, axis=axis)
                     expected = {'output': np_output}
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_scatter_nd_cpu(self):
+    def test_scatter_along_axis_gpu(self):
+        self.test_scatter_along_axis_cpu(cpu_only=False)
 
+    def test_scatter_nd_cpu(self, cpu_only=True):
         for ref_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(2, 6)]:
             ref_shape = np.random.randint(low=2, high=8, size=ref_rank)
             indices_shape = np.random.randint(low=2, high=8, size=indices_rank)
@@ -3438,10 +3957,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                             sess.run(tf.scatter_nd_sub(tf_output, indices, updates))
                         expected = {'output': sess.run(tf_output)}
 
-                    self._test_model(builder.spec, input, expected, useCPUOnly=True)
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def test_layer_normalization_cpu(self):
+    def test_scatter_nd_gpu(self):
+        self.test_scatter_nd_cpu(cpu_only=False)
 
+    def test_layer_normalization_cpu(self, cpu_only=True):
         def layer_norm_numpy(x, shapes, gamma_, beta_, eps=1e-5):
             axes = [-i - 1 for i, _ in enumerate(shapes)]
             num = x - np.mean(x, axis=tuple(axes), keepdims=True)
@@ -3477,7 +3998,10 @@ class NewLayersSimpleTest(CorrectnessTest):
                 ref = layer_norm_numpy(data, norm_shapes, gamma, beta)
                 expected = {'output': ref}
 
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=True)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
+
+    def test_layer_normalization_gpu(self):
+        self.test_layer_normalization_cpu(cpu_only=False)
 
 
 def get_size_after_stride(X, params):
@@ -3788,7 +4312,7 @@ class SimpleNetworkTest(CorrectnessTest):
 
 if __name__ == '__main__':
     unittest.main()
-    #suite = unittest.TestSuite()
-    #suite.addTest(NewLayersSimpleTest("test_shape_flexibility_enumeration"))
-    #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
-    #unittest.TextTestRunner().run(suite)
+    # suite = unittest.TestSuite()
+    # suite.addTest(NewLayersSimpleTest("test_nms_cpu"))
+    # #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
+    # unittest.TextTestRunner().run(suite)

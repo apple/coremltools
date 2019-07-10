@@ -121,15 +121,15 @@ inline Result validateOutputCount(const Specification::NeuralNetworkLayer& layer
     std::string err;
     
     if (max > 0 && max == min && layer.output_size() != max) {
-        err = "Layer '" + layer.name() + "' of type " + std::to_string(layer.layer_case()) + + " has " + std::to_string(layer.input_size()) + " outputs but expects exactly " + std::to_string(min) + ".";
+        err = "Layer '" + layer.name() + "' of type " + std::to_string(layer.layer_case()) + + " has " + std::to_string(layer.output_size()) + " outputs but expects exactly " + std::to_string(min) + ".";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     else if (min > 0 && layer.output_size() < min) {
-        err = "Layer '" + layer.name() + "' of type " + std::to_string(layer.layer_case()) + + " has " + std::to_string(layer.input_size()) + " outputs but expects at least " + std::to_string(min) + ".";
+        err = "Layer '" + layer.name() + "' of type " + std::to_string(layer.layer_case()) + + " has " + std::to_string(layer.output_size()) + " outputs but expects at least " + std::to_string(min) + ".";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     else if (max > 0 && layer.output_size() > max) {
-        err = "Layer '" + layer.name() + "' of type " + std::to_string(layer.layer_case()) + " has " + std::to_string(layer.input_size()) + " outputs but expects at most " + std::to_string(max) + ".";
+        err = "Layer '" + layer.name() + "' of type " + std::to_string(layer.layer_case()) + " has " + std::to_string(layer.output_size()) + " outputs but expects at most " + std::to_string(max) + ".";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     else {

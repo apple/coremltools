@@ -14,7 +14,7 @@ from ..common_pass import common_pass
 
 def load(tfgraph, resume_on_errors=False, **kwargs):
     """
-    Loads a NetworkEnsemble from a Tensorflow frozen graph.
+    Loads a NetworkEnsemble from a TensorFlow frozen graph.
     tfgraph should either be a TensorFlow Graph object, or a path to a 
     frozen graph.
 
@@ -46,7 +46,7 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
         remove_variable_nodes, fusedbatchnorm_rewrite, lstmblockcell_rewrite
     ]
 
-    if resume_on_errors == False:
+    if resume_on_errors is False:
         for p in passes:
             p(ssa)
     else:
@@ -59,12 +59,12 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
                 print(tb)
                 print("Ignoring and continuing to next pass")
 
-    common_pass(ssa)
+    common_pass(ssa, resume_on_errors)
 
     for f in ssa.functions.values():
         f.find_inputs_and_outputs()
     # check that type inference is complete
-    if resume_on_errors == False:
+    if resume_on_errors is False:
         for f in ssa.functions.values():
             for n in f.graph.values():
                 assert (n.datatype is not None)

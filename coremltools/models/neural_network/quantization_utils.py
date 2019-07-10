@@ -945,6 +945,7 @@ def quantize_weights(full_precision_model,
     qmode_mapping = {
         "linear": _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
         "kmeans": _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
+        "kmeans_lut": _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
         "linear_lut": _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
         "custom_lut": _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
         "dequantization": _QUANTIZATION_MODE_DEQUANTIZE
@@ -952,6 +953,8 @@ def quantize_weights(full_precision_model,
     try:
         qmode = qmode_mapping[quantization_mode]
     except KeyError:
+        # kmeans is deprecated. Instead kmeans_lut is used. No need to show it.
+        del qmode_mapping['kmeans']
         raise Exception("Invalid quantization mode. Quantization mode must be "
                         "one of {}".format(qmode_mapping))
 
