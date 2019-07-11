@@ -3385,12 +3385,19 @@ int testInvalidStackWrongAxis() {
 
     Specification::Model m;
 
-    auto *in = m.mutable_description()->add_input();
-    in->set_name("input");
-    auto *inShape = in->mutable_type()->mutable_multiarraytype();
-    inShape->add_shape(3);
-    inShape->add_shape(5);
-    inShape->add_shape(2);
+    auto *in1 = m.mutable_description()->add_input();
+    in1->set_name("input1");
+    auto *inShape1 = in1->mutable_type()->mutable_multiarraytype();
+    inShape1->add_shape(3);
+    inShape1->add_shape(5);
+    inShape1->add_shape(2);
+
+    auto *in2 = m.mutable_description()->add_input();
+    in2->set_name("input2");
+    auto *inShape2 = in2->mutable_type()->mutable_multiarraytype();
+    inShape2->add_shape(3);
+    inShape2->add_shape(5);
+    inShape2->add_shape(2);
 
     auto *out = m.mutable_description()->add_output();
     out->set_name("output");
@@ -3403,14 +3410,16 @@ int testInvalidStackWrongAxis() {
     nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
 
     auto *layers = nn->add_layers();
-    layers->add_input("input");
+    layers->add_input("input1");
+    layers->add_input("input2");
     layers->add_output("output");
+    layers->add_inputtensor()->set_rank(3);
     layers->add_inputtensor()->set_rank(3);
 
     auto *params = layers->mutable_stack();
-    params->set_axis(3);
+    params->set_axis(4);
 
-    // axis should be in range [-rank, rank)
+    // axis should be in range [-(rank + 1), rank + 1)
     Result res = validate<MLModelType_neuralNetwork>(m);
     ML_ASSERT_BAD(res);
     ML_ASSERT(res.message().find("axis") != std::string::npos);

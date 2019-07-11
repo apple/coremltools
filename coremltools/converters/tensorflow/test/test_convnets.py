@@ -870,13 +870,31 @@ class TFSingleLayerTest(TFNetworkTest):
 
     def test_leaky_relu(self):
         graph = tf.Graph()
-        with graph.as_default() as g:
-            x_input = tf.placeholder(tf.float32, shape=[None, 5, 5, 6], name="input")
+        with graph.as_default():
+            x_input = tf.placeholder(tf.float32, shape=[None, 5, 5, 6], name='input')
             z = tf.nn.leaky_relu(x_input, 0.2, name='output')
 
         output_name = [z.op.name]
         self._test_tf_model_constant(
-            graph, {"input": [1, 5, 5, 6]}, output_name, delta=1e-2, data_mode="random_zero_mean")
+            graph, {"input": [1, 5, 5, 6]}, output_name, delta=1e-2, data_mode='random_zero_mean')
+
+    def test_stack(self):
+        shape = [1]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape, name='a')
+            b = tf.placeholder(tf.float32, shape=shape, name='b')
+            out = tf.stack([a, b], axis=1)
+        self._test_tf_model_constant(graph, {'a': shape, 'b': shape}, [out.op.name])
+
+    def test_gather_nd(self):
+        shape = [2, 3, 2]
+        indices = [[[0, 0], [0, 1]], [[1, 0], [1, 1]]]
+        graph = tf.Graph()
+        with graph.as_default():
+            params = tf.placeholder(tf.float32, shape=shape, name='input')
+            out = tf.gather_nd(params=params, indices=indices)
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     # @unittest.skip
     # def test_resize_bilinear_non_fractional(self):
@@ -930,5 +948,5 @@ class TFSingleLayerTest(TFNetworkTest):
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest("test_strided_slice"))
+    # suite.addTest(TFSingleLayerTest('test_stack'))
     # unittest.TextTestRunner().run(suite)

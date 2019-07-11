@@ -2,14 +2,12 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-import os
 import traceback
 
 from .graph_pass import *
 
 
 def common_pass(ssa, resume_on_errors=False, **kwargs):
-
     passes = [
         trace_constants, shift_get_global_to_set_global, type_inference_pass,
         common_symbolic_value_elimination, delete_unnecessary_constant_nodes, remove_identities,

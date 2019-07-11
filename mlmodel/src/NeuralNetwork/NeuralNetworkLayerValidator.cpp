@@ -2318,9 +2318,14 @@ Result NeuralNetworkSpecValidator::validateStackLayer(const Specification::Neura
     }
     const auto& params = layer.stack();
     if (layer.inputtensor_size() > 0) {
-        const int rank = static_cast<int>(layer.inputtensor(0).rank());
-        if (params.axis() < -rank || params.axis() >= rank) {
-            const std::string err = "Value of axis must be in the range [-rank(tensor), rank(tensor)) for '" + layer.name() + "' layer.";
+        const int rank0 = static_cast<int>(layer.inputtensor(0).rank());
+        const int rank1 = static_cast<int>(layer.inputtensor(1).rank());
+        if (rank0 != rank1) {
+            const std::string err = "Shapes of all inputs must match for '" + layer.name() + "' layer.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+        if (!(params.axis() >= -(rank0 + 1) && params.axis() < rank0 + 1)) {
+            const std::string err = "Value of axis must be in the range [-rank(tensor), rank(tensor)] for '" + layer.name() + "' layer.";
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }

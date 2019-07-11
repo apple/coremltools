@@ -1,6 +1,5 @@
 import numpy as np
-import coremltools
-from coremltools.models import datatypes, MLModel
+from coremltools.models import datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
 
 from ..commons import builtins
@@ -31,7 +30,6 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
               When not provided, SSA converter will treat all output nodes
               in top level NNSSA as outputs.
     """
-
     if outputs is not None:
         ssa.extract_subgraph(outputs, name=top_func)
 
@@ -1103,9 +1101,11 @@ class SSAConverter(object):
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_pack(self, node):
+        axis = node.attr.get('axis')
+        axis = axis if axis else 0
         input_names = self._get_input_tensors(node)
         layer = self._get_builder().add_stack(
-            name=node.name, input_names=input_names, output_name=node.name, axis=0)
+            name=node.name, input_names=input_names, output_name=node.name, axis=axis)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_unpack(self, node):
@@ -1139,7 +1139,7 @@ class SSAConverter(object):
         input_names = self._get_input_tensors(node)
         layer = self._get_builder().add_gather_nd(
             name=node.name,
-            input_names=input_names[0:2],
+            input_names=input_names,
             output_name=node.name
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
@@ -1499,8 +1499,8 @@ class SSAConverter(object):
                 node.name + '_c_prev_expand'
             ],
             output_names=[
-                node.name + '_lstm_h',
                 node.name + '_lstm_out',
+                node.name + '_lstm_h',
                 node.name + '_lstm_c',
             ],
             forget_bias=has_forget_bias,
@@ -1516,9 +1516,24 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
+        layer = builder.add_copy(
+            name=node.name + '_temp_h',
+            input_name=node.name + '_lstm_out',
+            output_name=node.name + '_temp_h'
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        # workaround: Core ML LSTM layer outputs the states on last sequence
+        layer = builder.add_broadcast_to_like(
+            name=node.name + '_temp_c',
+            input_names=[node.name + '_lstm_c', node.name + '_lstm_out'],
+            output_name=node.name + '_temp_c',
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
         layer = builder.add_squeeze(
             name=node.name + '_h',
-            input_name=node.name + '_lstm_h',
+            input_name=node.name + '_temp_h',
             output_name=node.name + '_h',
             axes=[-1, -2]
         )
@@ -1526,7 +1541,7 @@ class SSAConverter(object):
 
         layer = builder.add_squeeze(
             name=node.name + '_c',
-            input_name=node.name + '_lstm_c',
+            input_name=node.name + '_temp_c',
             output_name=node.name + '_c',
             axes=[-1, -2]
         )

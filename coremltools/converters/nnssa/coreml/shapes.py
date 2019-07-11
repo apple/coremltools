@@ -138,6 +138,15 @@ def _gather(layer_spec, input_shapes):
         raise ValueError("[Shaper] Gather layer accepts only 2 inputs")
 
 
+def _gather_nd(layer_spec, input_shapes):
+    param_shape = input_shapes[0]
+    index_shape = input_shapes[1]
+    index_rank = len(index_shape)
+    output_shape = index_shape[:-1]
+    output_shape[index_rank - 1:] = param_shape[index_shape[index_rank - 1]:]
+    return [output_shape]
+
+
 def _concat_nd(layer_spec, input_shapes):
     axis = layer_spec.concatND.axis
     rank = len(input_shapes[0])
@@ -356,6 +365,16 @@ def _tile(layer_spec, input_shapes):
     return [[reps[i] * input_shapes[0][i] for i in range(len(reps))]]
 
 
+def _broadcast_to_like(layer_spec, input_shapes):
+    return [input_shapes[1]]
+
+
+def _broadcast_to_static(layer_spec, input_shapes):
+    params = layer_spec.broadcastToStatic
+    output_shape = params.targetShape
+    return [output_shape]
+
+
 # We'll enable them one by one
 _LAYER_REGISTRY = {
     'transpose': _transpose,
@@ -368,6 +387,7 @@ _LAYER_REGISTRY = {
     'loadConstant': _load_constant,
     'loadConstantND': _load_constant_nd,
     'gather': _gather,
+    'gatherND': _gather_nd,
     'scatter': _scatter,
     'greatherThan': _broadcastable,
     'logicalOr': _broadcastable,
@@ -420,7 +440,9 @@ _LAYER_REGISTRY = {
     'round': _identity,
     'tile': _tile,
     'fillLike': _identity,
-    'uniDirectionalLSTM': _identity
+    'uniDirectionalLSTM': _identity,
+    'broadcastToLike': _broadcast_to_like,
+    'broadcastToStatic': _broadcast_to_static,
 }
 
 
