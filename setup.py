@@ -52,7 +52,7 @@ setup(name='coremltools',
                                   'graph_visualization/icons/*']
                   },
     install_requires=[
-        'numpy >= 1.10.0',
+        'numpy >= 1.14.5',
         'protobuf >= 3.1.0',
         'six>=1.10.0'
     ],
