@@ -29,6 +29,8 @@
  *   - `CustomModel`
  *   - `TextClassifier`
  *   - `WordTagger`
+ *   - `Gazetteer`
+ *   - `WordEmbedding`
  *   - `VisionFeaturePrint`
  *   - `LinkedModel`
  *   - `SoundAnalysisPreprocessing`
@@ -60,6 +62,8 @@ option optimize_for = LITE_RUNTIME;
 import public "VisionFeaturePrint.proto";
 import public "TextClassifier.proto";
 import public "WordTagger.proto";
+import public "Gazetteer.proto";
+import public "WordEmbedding.proto";
 import public "ArrayFeatureExtractor.proto";
 import public "BayesianProbitRegressor.proto";
 import public "CategoricalMapping.proto";
@@ -202,6 +206,8 @@ message ModelDescription {
  * - Sound Analysis Prepreocessing
  * - Recommender
  * - Linked Model
+ * - NLP Gazeteer
+ * - NLP WordEmbedding
  *
  */
 message Model {
@@ -270,5 +276,7 @@ message Model {
         CoreMLModels.WordTagger wordTagger = 2001;
         CoreMLModels.VisionFeaturePrint visionFeaturePrint = 2002;
         CoreMLModels.SoundAnalysisPreprocessing soundAnalysisPreprocessing = 2003;
+        CoreMLModels.Gazetteer gazetteer = 2004;
+        CoreMLModels.WordEmbedding wordEmbedding = 2005;
     }
 }

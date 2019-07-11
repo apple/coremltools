@@ -376,6 +376,9 @@ bool CoreML::hasIOS13Features(const Specification::Model& model) {
     // - model is of type kKNearestNeighborsClassifier
     // - model is of sound analysis preprocessing
     // - model is of type LinkedModel
+    // - model is of type TextClassifier with revision == 2
+    // - model is of type Gazetteer
+    // - model is of type WordEmbedding
     // - (... add others here ...)
     
     if (model.isupdatable()) {
@@ -415,6 +418,12 @@ bool CoreML::hasIOS13Features(const Specification::Model& model) {
             return hasItemSimilarityRecommender(model);
         case Specification::Model::kSoundAnalysisPreprocessing:
             return hasSoundAnalysisPreprocessing(model);
+        case Specification::Model::kTextClassifier:
+            return model.textclassifier().revision() == 2;
+        case Specification::Model::kGazetteer:
+            return model.gazetteer().revision() == 2;
+        case Specification::Model::kWordEmbedding:
+            return model.wordembedding().revision() == 2;
         default:
             return hasIOS13NeuralNetworkFeatures(model);
     }
@@ -431,6 +440,14 @@ bool CoreML::hasAppleWordTagger(const Specification::Model& model) {
 
 bool CoreML::hasAppleTextClassifier(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kTextClassifier);
+}
+
+bool CoreML::hasAppleGazetteer(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kGazetteer);
+}
+
+bool CoreML::hasAppleWordEmbedding(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kWordEmbedding);
 }
 
 bool CoreML::hasAppleImageFeatureExtractor(const Specification::Model& model) {

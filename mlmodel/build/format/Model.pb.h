@@ -33,6 +33,8 @@
 #include "VisionFeaturePrint.pb.h"  // IWYU pragma: export
 #include "TextClassifier.pb.h"  // IWYU pragma: export
 #include "WordTagger.pb.h"  // IWYU pragma: export
+#include "Gazetteer.pb.h"  // IWYU pragma: export
+#include "WordEmbedding.pb.h"  // IWYU pragma: export
 #include "ArrayFeatureExtractor.pb.h"  // IWYU pragma: export
 #include "BayesianProbitRegressor.pb.h"  // IWYU pragma: export
 #include "CategoricalMapping.pb.h"  // IWYU pragma: export
@@ -933,6 +935,9 @@ class WhereNonZeroLayerParams;
 class WhereNonZeroLayerParamsDefaultTypeInternal;
 extern WhereNonZeroLayerParamsDefaultTypeInternal _WhereNonZeroLayerParams_default_instance_;
 namespace CoreMLModels {
+class Gazetteer;
+class GazetteerDefaultTypeInternal;
+extern GazetteerDefaultTypeInternal _Gazetteer_default_instance_;
 class SoundAnalysisPreprocessing;
 class SoundAnalysisPreprocessingDefaultTypeInternal;
 extern SoundAnalysisPreprocessingDefaultTypeInternal _SoundAnalysisPreprocessing_default_instance_;
@@ -948,6 +953,9 @@ extern VisionFeaturePrintDefaultTypeInternal _VisionFeaturePrint_default_instanc
 class VisionFeaturePrint_Scene;
 class VisionFeaturePrint_SceneDefaultTypeInternal;
 extern VisionFeaturePrint_SceneDefaultTypeInternal _VisionFeaturePrint_Scene_default_instance_;
+class WordEmbedding;
+class WordEmbeddingDefaultTypeInternal;
+extern WordEmbeddingDefaultTypeInternal _WordEmbedding_default_instance_;
 class WordTagger;
 class WordTaggerDefaultTypeInternal;
 extern WordTaggerDefaultTypeInternal _WordTagger_default_instance_;
@@ -1708,6 +1716,8 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     kWordTagger = 2001,
     kVisionFeaturePrint = 2002,
     kSoundAnalysisPreprocessing = 2003,
+    kGazetteer = 2004,
+    kWordEmbedding = 2005,
     TYPE_NOT_SET = 0,
   };
 
@@ -2059,6 +2069,24 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* release_soundanalysispreprocessing();
   void set_allocated_soundanalysispreprocessing(::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* soundanalysispreprocessing);
 
+  // .CoreML.Specification.CoreMLModels.Gazetteer gazetteer = 2004;
+  bool has_gazetteer() const;
+  void clear_gazetteer();
+  static const int kGazetteerFieldNumber = 2004;
+  const ::CoreML::Specification::CoreMLModels::Gazetteer& gazetteer() const;
+  ::CoreML::Specification::CoreMLModels::Gazetteer* mutable_gazetteer();
+  ::CoreML::Specification::CoreMLModels::Gazetteer* release_gazetteer();
+  void set_allocated_gazetteer(::CoreML::Specification::CoreMLModels::Gazetteer* gazetteer);
+
+  // .CoreML.Specification.CoreMLModels.WordEmbedding wordEmbedding = 2005;
+  bool has_wordembedding() const;
+  void clear_wordembedding();
+  static const int kWordEmbeddingFieldNumber = 2005;
+  const ::CoreML::Specification::CoreMLModels::WordEmbedding& wordembedding() const;
+  ::CoreML::Specification::CoreMLModels::WordEmbedding* mutable_wordembedding();
+  ::CoreML::Specification::CoreMLModels::WordEmbedding* release_wordembedding();
+  void set_allocated_wordembedding(::CoreML::Specification::CoreMLModels::WordEmbedding* wordembedding);
+
   TypeCase Type_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.Model)
  private:
@@ -2093,6 +2121,8 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   void set_has_wordtagger();
   void set_has_visionfeatureprint();
   void set_has_soundanalysispreprocessing();
+  void set_has_gazetteer();
+  void set_has_wordembedding();
 
   inline bool has_Type() const;
   void clear_Type();
@@ -2135,6 +2165,8 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     ::CoreML::Specification::CoreMLModels::WordTagger* wordtagger_;
     ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* visionfeatureprint_;
     ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* soundanalysispreprocessing_;
+    ::CoreML::Specification::CoreMLModels::Gazetteer* gazetteer_;
+    ::CoreML::Specification::CoreMLModels::WordEmbedding* wordembedding_;
   } Type_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -4515,6 +4547,102 @@ inline void Model::set_allocated_soundanalysispreprocessing(::CoreML::Specificat
     Type_.soundanalysispreprocessing_ = soundanalysispreprocessing;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.soundAnalysisPreprocessing)
+}
+
+// .CoreML.Specification.CoreMLModels.Gazetteer gazetteer = 2004;
+inline bool Model::has_gazetteer() const {
+  return Type_case() == kGazetteer;
+}
+inline void Model::set_has_gazetteer() {
+  _oneof_case_[0] = kGazetteer;
+}
+inline void Model::clear_gazetteer() {
+  if (has_gazetteer()) {
+    delete Type_.gazetteer_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::CoreMLModels::Gazetteer& Model::gazetteer() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.gazetteer)
+  return has_gazetteer()
+      ? *Type_.gazetteer_
+      : ::CoreML::Specification::CoreMLModels::Gazetteer::default_instance();
+}
+inline ::CoreML::Specification::CoreMLModels::Gazetteer* Model::mutable_gazetteer() {
+  if (!has_gazetteer()) {
+    clear_Type();
+    set_has_gazetteer();
+    Type_.gazetteer_ = new ::CoreML::Specification::CoreMLModels::Gazetteer;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.gazetteer)
+  return Type_.gazetteer_;
+}
+inline ::CoreML::Specification::CoreMLModels::Gazetteer* Model::release_gazetteer() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.gazetteer)
+  if (has_gazetteer()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::Gazetteer* temp = Type_.gazetteer_;
+    Type_.gazetteer_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_gazetteer(::CoreML::Specification::CoreMLModels::Gazetteer* gazetteer) {
+  clear_Type();
+  if (gazetteer) {
+    set_has_gazetteer();
+    Type_.gazetteer_ = gazetteer;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.gazetteer)
+}
+
+// .CoreML.Specification.CoreMLModels.WordEmbedding wordEmbedding = 2005;
+inline bool Model::has_wordembedding() const {
+  return Type_case() == kWordEmbedding;
+}
+inline void Model::set_has_wordembedding() {
+  _oneof_case_[0] = kWordEmbedding;
+}
+inline void Model::clear_wordembedding() {
+  if (has_wordembedding()) {
+    delete Type_.wordembedding_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::CoreMLModels::WordEmbedding& Model::wordembedding() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.wordEmbedding)
+  return has_wordembedding()
+      ? *Type_.wordembedding_
+      : ::CoreML::Specification::CoreMLModels::WordEmbedding::default_instance();
+}
+inline ::CoreML::Specification::CoreMLModels::WordEmbedding* Model::mutable_wordembedding() {
+  if (!has_wordembedding()) {
+    clear_Type();
+    set_has_wordembedding();
+    Type_.wordembedding_ = new ::CoreML::Specification::CoreMLModels::WordEmbedding;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.wordEmbedding)
+  return Type_.wordembedding_;
+}
+inline ::CoreML::Specification::CoreMLModels::WordEmbedding* Model::release_wordembedding() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.wordEmbedding)
+  if (has_wordembedding()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::WordEmbedding* temp = Type_.wordembedding_;
+    Type_.wordembedding_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_wordembedding(::CoreML::Specification::CoreMLModels::WordEmbedding* wordembedding) {
+  clear_Type();
+  if (wordembedding) {
+    set_has_wordembedding();
+    Type_.wordembedding_ = wordembedding;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.wordEmbedding)
 }
 
 inline bool Model::has_Type() const {

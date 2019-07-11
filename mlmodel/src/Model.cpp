@@ -102,6 +102,8 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(bayesianProbitRegressor);
                 VALIDATE_MODEL_TYPE(wordTagger);
                 VALIDATE_MODEL_TYPE(textClassifier);
+                VALIDATE_MODEL_TYPE(gazetteer);
+                VALIDATE_MODEL_TYPE(wordEmbedding);
                 VALIDATE_MODEL_TYPE(visionFeaturePrint);
                 VALIDATE_MODEL_TYPE(kNearestNeighborsClassifier);
                 VALIDATE_MODEL_TYPE(itemSimilarityRecommender);
