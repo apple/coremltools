@@ -57,8 +57,6 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder = self.create_base_builder()
 
-        builder.make_updatable(['ip1', 'ip2']) # or a dict for weightParams
-
         builder.add_softmax(name='softmax', input_name='output', output_name='softmax_output')
 
         builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='softmax_output', target='target')
@@ -99,8 +97,6 @@ class MLModelUpdatableTest(unittest.TestCase):
     def test_updatable_model_creation_ce_adam(self):
 
         builder = self.create_base_builder()
-
-        builder.make_updatable(['ip1', 'ip2']) # or a dict for weightParams
 
         builder.add_softmax(name='softmax', input_name='output', output_name='softmax_output')
 
@@ -155,8 +151,6 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder = self.create_base_builder()
 
-        builder.make_updatable(['ip1', 'ip2'])  # or a dict for weightParams
-
         builder.set_mean_squared_error_loss(name='mse', input='output', target='target')
 
         builder.set_sgd_optimizer(SgdParams(lr=1e-2, batch=10, momentum=0.0))
@@ -200,8 +194,6 @@ class MLModelUpdatableTest(unittest.TestCase):
     def test_updatable_model_creation_mse_adam(self):
 
         builder = self.create_base_builder()
-
-        builder.make_updatable(['ip1', 'ip2']) # or a dict for weightParams
 
         builder.set_mean_squared_error_loss(name='cross_entropy', input='output', target='target')
 
@@ -251,7 +243,6 @@ class MLModelUpdatableTest(unittest.TestCase):
     def test_nn_set_cce_without_softmax_fail(self):
 
         nn_builder = self.create_base_builder()
-        nn_builder.make_updatable(['ip1', 'ip2'])
 
         # fails since adding CCE without softmax must raise error
         with self.assertRaises(ValueError):
@@ -259,20 +250,26 @@ class MLModelUpdatableTest(unittest.TestCase):
 
     def test_nn_set_cce_invalid(self):
         nn_builder = self.create_base_builder()
-        nn_builder.make_updatable(['ip1', 'ip2'])
         nn_builder.add_softmax(name='softmax', input_name='output', output_name='softmax_output')
 
         # fails since CCE input must be softmax output
         with self.assertRaises(ValueError):
             nn_builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='output',
                                                           target='target')
+
+    def test_nn_set_softmax_updatable_invalid(self):
+        nn_builder = self.create_base_builder()
+        nn_builder.add_softmax(name='softmax', input_name='output', output_name='softmax_output')
+
+        # fails since marking softmax as updatable layer is not allowed
+        with self.assertRaises(ValueError):
+            nn_builder.make_updatable(['softmax'])
+
     def test_nn_set_training_input(self):
 
         builder = self.create_base_builder()
 
-        builder.make_updatable(['ip1', 'ip2']) # or a dict for weightParams
-
-        builder.set_mean_squared_error_loss(name='cross_entropy', input='output', target='target')
+        builder.set_mean_squared_error_loss(name='mse', input='output', target='target')
 
         builder.set_adam_optimizer(AdamParams(lr=1e-2, batch=10,
                                    beta1=0.9, beta2=0.999, eps=1e-8))
@@ -322,7 +319,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder.make_updatable(['ip1', 'ip2'])  # or a dict for weightParams
 
-        builder.set_mean_squared_error_loss(name='cross_entropy', input='output', target='target')
+        builder.set_mean_squared_error_loss(name='mse', input='output', target='target')
 
         builder.set_adam_optimizer(AdamParams(lr=1e-2, batch=10,
                                    beta1=0.9, beta2=0.999, eps=1e-8))

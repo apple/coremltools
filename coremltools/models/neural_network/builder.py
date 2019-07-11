@@ -20,6 +20,9 @@ from .spec_inspection_utils import *
 from .update_optimizer_utils import AdamParams, SgdParams
 
 
+_SUPPORTED_UPDATABLE_LAYERS = ['innerProduct', 'convolution']
+
+
 def _set_recurrent_activation(param, activation):
     if activation == 'SIGMOID':
         param.sigmoid.MergeFromString(b'')
@@ -561,6 +564,10 @@ class NeuralNetworkBuilder(object):
             if trainable not in self.layer_specs:
                 raise ValueError('Layer %s does not exist.' % trainable)
             spec_layer = self.layer_specs[trainable]
+            spec_layer_type = spec_layer.WhichOneof('layer')
+            if spec_layer_type not in _SUPPORTED_UPDATABLE_LAYERS:
+                raise ValueError('Layer %s is not supported to be marked as updatable. Only %s layers '
+                                 'are supported to be marked updatable.' % (trainable, _SUPPORTED_UPDATABLE_LAYERS))
             spec_layer.isUpdatable = True
             typed_layer = getattr(spec_layer, spec_layer.WhichOneof('layer'))
             for fd in typed_layer.DESCRIPTOR.fields:
