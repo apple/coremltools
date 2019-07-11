@@ -199,6 +199,7 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
         addLearningRate(classifier, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
         addMiniBatchSize(classifier, Specification::Optimizer::kSgdOptimizer, 1, 1, 100, std::set<int64_t>());
         addEpochs(classifier, 100, 0, 100, std::set<int64_t>());
+        addShuffleAndSeed(classifier, 2019, 0, 2019, std::set<int64_t>());
     }
     
     return classifier;
@@ -320,6 +321,7 @@ void addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(Specification::Mod
     addLearningRate(neuralNets, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(neuralNets, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
     addEpochs(neuralNets, 100, 0, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNets, 2019, 0, 2019, std::set<int64_t>());
 }
 
 
