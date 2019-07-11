@@ -358,6 +358,10 @@ class NeuralNetworkBuilder(object):
         --------
         set_output, set_class_labels
         """
+
+        if len(input_names) != len(input_dims):
+            raise ValueError('input_names and input_dims must be of the same sizes.')
+
         spec = self.spec
         for idx, dim in enumerate(input_dims):
             if hasattr(self, '_disable_rank5_shape_mapping') and self._disable_rank5_shape_mapping:
@@ -379,6 +383,8 @@ class NeuralNetworkBuilder(object):
 
             # TODO: if it's an embedding, this should be integer
             spec.description.input[idx].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+
+            spec.description.input[idx].name = input_names[idx]
 
     def set_output(self, output_names, output_dims):
         """
@@ -405,12 +411,18 @@ class NeuralNetworkBuilder(object):
         --------
         set_input, set_class_labels
         """
+
+        if len(output_names) != len(output_dims):
+            raise ValueError('output_names and output_dims must be of the same sizes.')
+
         spec = self.spec
         for idx, dim in enumerate(output_dims):
             spec.description.output[idx].type.multiArrayType.ClearField("shape")
             spec.description.output[idx].type.multiArrayType.shape.extend(dim)
             spec.description.output[idx].type.multiArrayType.dataType = \
                 _Model_pb2.ArrayFeatureType.DOUBLE
+
+            spec.description.output[idx].name = output_names[idx]
 
     def set_training_input(self, training_input):
         """
