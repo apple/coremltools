@@ -147,6 +147,8 @@ namespace CoreML {
                           "unable to open file for write");
         }
 
+        // Before saving the model, always downgrade the specification version to
+        // the minimal version supporting everything this model needs
         downgradeSpecificationVersion();
 
         // validate on save

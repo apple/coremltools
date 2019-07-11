@@ -115,7 +115,13 @@ std::vector<std::pair<std::string, std::string> > CoreML::getCustomModelNamesAnd
 void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
 
     if (!pModel) { return; }
-    
+
+
+    if (pModel->specificationversion() == 0) {
+         // If mistakenly never set and left as default, lets start at the newest version and downgrade from there
+        pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
+    }
+
     if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS13 && !hasIOS13Features(*pModel)) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS12);
     }
