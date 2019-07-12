@@ -33,3 +33,6 @@ Specification::Pipeline* buildEmptyPipelineModelWithStringOutput(Specification::
 
 void addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(Specification::Model& m, const char *softmaxInputName);
 
+Specification::NeuralNetwork* addInnerProductLayer(Specification::Model& m, bool isUpdatable, const char *name, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr);
+
+Specification::NeuralNetwork* addSoftmaxLayer(Specification::Model& m, const char *name,  const char *input, const char *output);

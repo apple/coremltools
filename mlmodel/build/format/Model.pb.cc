@@ -63,6 +63,8 @@ class ModelDefaultTypeInternal : public ::google::protobuf::internal::Explicitly
   const ::CoreML::Specification::CoreMLModels::WordTagger* wordtagger_;
   const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint* visionfeatureprint_;
   const ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* soundanalysispreprocessing_;
+  const ::CoreML::Specification::CoreMLModels::Gazetteer* gazetteer_;
+  const ::CoreML::Specification::CoreMLModels::WordEmbedding* wordembedding_;
 } _Model_default_instance_;
 
 namespace protobuf_Model_2eproto {
@@ -106,6 +108,8 @@ void TableStruct::InitDefaultsImpl() {
   ::CoreML::Specification::CoreMLModels::protobuf_VisionFeaturePrint_2eproto::InitDefaults();
   ::CoreML::Specification::CoreMLModels::protobuf_TextClassifier_2eproto::InitDefaults();
   ::CoreML::Specification::CoreMLModels::protobuf_WordTagger_2eproto::InitDefaults();
+  ::CoreML::Specification::CoreMLModels::protobuf_Gazetteer_2eproto::InitDefaults();
+  ::CoreML::Specification::CoreMLModels::protobuf_WordEmbedding_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_ArrayFeatureExtractor_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_BayesianProbitRegressor_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_CategoricalMapping_2eproto::InitDefaults();
@@ -160,6 +164,8 @@ void AddDescriptorsImpl() {
   ::CoreML::Specification::CoreMLModels::protobuf_VisionFeaturePrint_2eproto::AddDescriptors();
   ::CoreML::Specification::CoreMLModels::protobuf_TextClassifier_2eproto::AddDescriptors();
   ::CoreML::Specification::CoreMLModels::protobuf_WordTagger_2eproto::AddDescriptors();
+  ::CoreML::Specification::CoreMLModels::protobuf_Gazetteer_2eproto::AddDescriptors();
+  ::CoreML::Specification::CoreMLModels::protobuf_WordEmbedding_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_ArrayFeatureExtractor_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_BayesianProbitRegressor_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_CategoricalMapping_2eproto::AddDescriptors();
@@ -2734,6 +2740,8 @@ const int Model::kTextClassifierFieldNumber;
 const int Model::kWordTaggerFieldNumber;
 const int Model::kVisionFeaturePrintFieldNumber;
 const int Model::kSoundAnalysisPreprocessingFieldNumber;
+const int Model::kGazetteerFieldNumber;
+const int Model::kWordEmbeddingFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Model::Model()
@@ -2881,6 +2889,14 @@ Model::Model(const Model& from)
     }
     case kSoundAnalysisPreprocessing: {
       mutable_soundanalysispreprocessing()->::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing::MergeFrom(from.soundanalysispreprocessing());
+      break;
+    }
+    case kGazetteer: {
+      mutable_gazetteer()->::CoreML::Specification::CoreMLModels::Gazetteer::MergeFrom(from.gazetteer());
+      break;
+    }
+    case kWordEmbedding: {
+      mutable_wordembedding()->::CoreML::Specification::CoreMLModels::WordEmbedding::MergeFrom(from.wordembedding());
       break;
     }
     case TYPE_NOT_SET: {
@@ -3054,6 +3070,14 @@ void Model::clear_Type() {
     }
     case kSoundAnalysisPreprocessing: {
       delete Type_.soundanalysispreprocessing_;
+      break;
+    }
+    case kGazetteer: {
+      delete Type_.gazetteer_;
+      break;
+    }
+    case kWordEmbedding: {
+      delete Type_.wordembedding_;
       break;
     }
     case TYPE_NOT_SET: {
@@ -3497,6 +3521,30 @@ bool Model::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.CoreMLModels.Gazetteer gazetteer = 2004;
+      case 2004: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16034u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_gazetteer()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.CoreMLModels.WordEmbedding wordEmbedding = 2005;
+      case 2005: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16042u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_wordembedding()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -3724,6 +3772,18 @@ void Model::SerializeWithCachedSizes(
   if (has_soundanalysispreprocessing()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       2003, *Type_.soundanalysispreprocessing_, output);
+  }
+
+  // .CoreML.Specification.CoreMLModels.Gazetteer gazetteer = 2004;
+  if (has_gazetteer()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2004, *Type_.gazetteer_, output);
+  }
+
+  // .CoreML.Specification.CoreMLModels.WordEmbedding wordEmbedding = 2005;
+  if (has_wordembedding()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2005, *Type_.wordembedding_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.Model)
@@ -3970,6 +4030,20 @@ size_t Model::ByteSizeLong() const {
           *Type_.soundanalysispreprocessing_);
       break;
     }
+    // .CoreML.Specification.CoreMLModels.Gazetteer gazetteer = 2004;
+    case kGazetteer: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.gazetteer_);
+      break;
+    }
+    // .CoreML.Specification.CoreMLModels.WordEmbedding wordEmbedding = 2005;
+    case kWordEmbedding: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.wordembedding_);
+      break;
+    }
     case TYPE_NOT_SET: {
       break;
     }
@@ -4125,6 +4199,14 @@ void Model::MergeFrom(const Model& from) {
     }
     case kSoundAnalysisPreprocessing: {
       mutable_soundanalysispreprocessing()->::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing::MergeFrom(from.soundanalysispreprocessing());
+      break;
+    }
+    case kGazetteer: {
+      mutable_gazetteer()->::CoreML::Specification::CoreMLModels::Gazetteer::MergeFrom(from.gazetteer());
+      break;
+    }
+    case kWordEmbedding: {
+      mutable_wordembedding()->::CoreML::Specification::CoreMLModels::WordEmbedding::MergeFrom(from.wordembedding());
       break;
     }
     case TYPE_NOT_SET: {
@@ -5717,6 +5799,102 @@ void Model::set_allocated_soundanalysispreprocessing(::CoreML::Specification::Co
     Type_.soundanalysispreprocessing_ = soundanalysispreprocessing;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.soundAnalysisPreprocessing)
+}
+
+// .CoreML.Specification.CoreMLModels.Gazetteer gazetteer = 2004;
+bool Model::has_gazetteer() const {
+  return Type_case() == kGazetteer;
+}
+void Model::set_has_gazetteer() {
+  _oneof_case_[0] = kGazetteer;
+}
+void Model::clear_gazetteer() {
+  if (has_gazetteer()) {
+    delete Type_.gazetteer_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::CoreMLModels::Gazetteer& Model::gazetteer() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.gazetteer)
+  return has_gazetteer()
+      ? *Type_.gazetteer_
+      : ::CoreML::Specification::CoreMLModels::Gazetteer::default_instance();
+}
+::CoreML::Specification::CoreMLModels::Gazetteer* Model::mutable_gazetteer() {
+  if (!has_gazetteer()) {
+    clear_Type();
+    set_has_gazetteer();
+    Type_.gazetteer_ = new ::CoreML::Specification::CoreMLModels::Gazetteer;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.gazetteer)
+  return Type_.gazetteer_;
+}
+::CoreML::Specification::CoreMLModels::Gazetteer* Model::release_gazetteer() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.gazetteer)
+  if (has_gazetteer()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::Gazetteer* temp = Type_.gazetteer_;
+    Type_.gazetteer_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_gazetteer(::CoreML::Specification::CoreMLModels::Gazetteer* gazetteer) {
+  clear_Type();
+  if (gazetteer) {
+    set_has_gazetteer();
+    Type_.gazetteer_ = gazetteer;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.gazetteer)
+}
+
+// .CoreML.Specification.CoreMLModels.WordEmbedding wordEmbedding = 2005;
+bool Model::has_wordembedding() const {
+  return Type_case() == kWordEmbedding;
+}
+void Model::set_has_wordembedding() {
+  _oneof_case_[0] = kWordEmbedding;
+}
+void Model::clear_wordembedding() {
+  if (has_wordembedding()) {
+    delete Type_.wordembedding_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::CoreMLModels::WordEmbedding& Model::wordembedding() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.wordEmbedding)
+  return has_wordembedding()
+      ? *Type_.wordembedding_
+      : ::CoreML::Specification::CoreMLModels::WordEmbedding::default_instance();
+}
+::CoreML::Specification::CoreMLModels::WordEmbedding* Model::mutable_wordembedding() {
+  if (!has_wordembedding()) {
+    clear_Type();
+    set_has_wordembedding();
+    Type_.wordembedding_ = new ::CoreML::Specification::CoreMLModels::WordEmbedding;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.wordEmbedding)
+  return Type_.wordembedding_;
+}
+::CoreML::Specification::CoreMLModels::WordEmbedding* Model::release_wordembedding() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.wordEmbedding)
+  if (has_wordembedding()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::WordEmbedding* temp = Type_.wordembedding_;
+    Type_.wordembedding_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_wordembedding(::CoreML::Specification::CoreMLModels::WordEmbedding* wordembedding) {
+  clear_Type();
+  if (wordembedding) {
+    set_has_wordembedding();
+    Type_.wordembedding_ = wordembedding;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.wordEmbedding)
 }
 
 bool Model::has_Type() const {

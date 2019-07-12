@@ -647,6 +647,8 @@ message NeuralNetworkLayer {
         ReshapeDynamicLayerParams reshapeDynamic = 1145;
         RankPreservingReshapeLayerParams rankPreservingReshape = 1150;
 
+        ConstantPaddingLayerParams constantPad = 1155;
+
         // Random Distributions
         RandomNormalLikeLayerParams randomNormalLike = 1170;
         RandomNormalStaticLayerParams randomNormalStatic = 1175;
@@ -683,6 +685,8 @@ message NeuralNetworkLayer {
 
         // Normalization Layers
         LayerNormalizationLayerParams layerNormalization = 1350;
+
+        NonMaximumSuppressionLayerParams NonMaximumSuppression = 1400;
 
     }
 
@@ -1677,7 +1681,7 @@ message BatchnormLayerParams {
  *
  * .. code::
  *
- *     H_out = int_division_round_up((H_in + 2 * paddingAmounts[0] - kernelSize[0]),Stride[0]) + 1)
+ *     H_out = ceil(float(H_in + 2 * paddingAmounts[0] - kernelSize[0])/float(Stride[0])) + 1
  *     if (paddingAmounts[0] > 0 or paddingAmounts[1] > 0)
  *          if ((H_out - 1) * Stride >= H_in + paddingAmounts[0]) {
  *              H_out = H_out - 1
@@ -4355,6 +4359,62 @@ message RankPreservingReshapeLayerParams {
 }
 
 /**
+ * Constant padding layer.
+ * Pad the input array with a constant value, either along a single given axis or along a set of axes.
+ *
+ * Requires 1 or 2 inputs and produces 1 output.
+ * The amount of padding can be either set as a parameter ("padAmounts") or provided as a second input.
+ *
+ * when "padToGivenOutputSizeMode" is False:
+ *
+ * output_shape[i] = input_shape[i] + padAmounts[2*i] + padAmounts[2*i+1], i=0,...,rank-1
+ *
+ * Examples:
+ *
+ * input shape = (20,10)
+ * padAmounts = [0,1,4,0]
+ * output shape = (21,14)
+ *
+ * input shape = (20,10,5)
+ * padAmounts = [0,0,3,4,0,9]
+ * output shape = (20,17,14)
+ *
+ *
+ * when "padToGivenOutputSizeMode" is True
+ *
+ * output_shape[i] = max(input_shape[i], max(padAmounts[2*i] + padAmounts[2*i+1])), i=0,...,rank-1
+ *
+ * input shape = (20,10)
+ * padAmounts = [0,21,14,0]
+ * output shape = (21,14)
+ *
+ * input shape = (20,10,5)
+ * padAmounts = [0,0,17,0,0,14]
+ * output shape = (20,17,14)
+ *
+ *
+ */
+message ConstantPaddingLayerParams {
+    /**
+     * The value to be used for padding.
+     */
+    float value = 1;
+
+    /**
+     * Length of this repeated field must be twice the rank of the first input.
+     * 2*i-th and (2*i+1)-th values represent the amount of padding to be applied to the the i-th input
+     * dimension, "before" and "after" the input values, respectively.
+     */
+    repeated uint64 padAmounts = 2;
+
+    /**
+     * When this is True, positive values in "padAmounts" are equivalent to the output shape.
+     * In that case only one of padAmounts[2*i] and padAmounts[2*i+1] can be non zero, for i=0,..,rank-1.
+     */
+    bool padToGivenOutputSizeMode = 3;
+}
+
+/**
  * A layer that returns a tensor of the specified shape filled with random normal distribution.
  *
  * Requires 1 input and produces 1 output.
@@ -5206,6 +5266,78 @@ message LayerNormalizationLayerParams {
     WeightParams gamma = 3;
     WeightParams beta = 4;
 
+}
+
+/**
+ * Non maximum suppression (NMS) layer.
+ * Applies the non maximum suppression algorithm to input bounding box coordinates.
+ * The effect of this layer is similar to the functionality of the "NonMaximumSuppression"
+ * model type (for details please see NonMaximumSuppression.proto) with a couple of differences.
+ * One, this is a layer in a neural network model, whereas that is a different model type. Second,
+ * this layer supports a batch of bounding boxes.
+ *
+ * The NMS layer requires at least 2 inputs, and up to a maximum of 5 inputs. It produces 4 outputs.
+ * Following is the description of inputs and outputs:
+ *
+ * input 1, shape (B,N,4): coordinates of N boxes, for a batch size B.
+ * input 2, shape (B,N,C): class scores for each box. C can be 1 when there is only 1 score per box, i.e., no class specific score.
+ *
+ * input 3, optional, shape (1,): IoU threshold. When present, it overwrites the value provided in layer parameter "iouThreshold".
+ * input 4, optional, shape (1,): Score threshold. When present, it overwrites the value provided in layer parameter "scoreThreshold".
+ * input 5, optional, shape (1,): Maximum number of boxes. When present, it overwrites the value provided in layer parameter "maxBoxes".
+ *
+ * output 1, shape (B,maxBoxes,4): box coordinates, corresponding to the surviving boxes.
+ * output 2, shape (B,maxBoxes,C): box scores, corresponding to the surviving boxes.
+ * output 3, shape (B,maxBoxes): indices of the surviving boxes. Hence it will have values in the range [0,N-1], except for padding.
+ * output 4, shape (B,): number of boxes selected after the NMS algorithm, for each batch.
+ *
+ * When survivng boxes are less than "maxBoxes", the first 3 outputs are padded.
+ * For the first two outputs, the padding is done using values 0, whereas for the third output the
+ * padding value used is -1, since the output values represent indices.
+ *
+ * If no box survives, that is, all the scores are below the "scoreThreshold",
+ * then for that batch, number of boxes (value of the fourth output) will be 1. The first 3 outputs will
+ * correspond to the box with the highest score. This is to avoid generating an "empty" output.
+ *
+ * The four values that describe the box dimensions are (in order):
+ *
+ *  - x (center location of the box along the horizontal axis)
+ *  - y (center location of the box along the vertical axis)
+ *  - width (size of box along the horizontal axis)
+ *  - height (size of box on along the vertical axis)
+ *
+ * In each batch,
+ * the N scores for N boxes, used for suppression, are generated by taking the max of the matrix (N,C)
+ * along the columns.
+ * If "perClassSuppression" flag is false, suppression happens across all classes.
+ * If "perClassSuppression" flag is true, each box is assigned to the class with the highest
+ * score and then the suppression happens separately for boxes within the same class.
+ *
+ * Note that the 4th output can be used to dynamically slice the first 3 outputs, in case
+ * the padded outputs are not required.
+ *
+ */
+message NonMaximumSuppressionLayerParams {
+    /**
+     * The intersection over union (IoU) threshold over which boxes are suppressed.
+     */
+    float iouThreshold = 1;
+
+    /**
+     * Before IoU suppression is performed, boxes with class scores below this threshold are rejected.
+     */
+    float scoreThreshold = 2;
+
+    /**
+     * The maximum number of boxes to be given out as output.
+     * If the number of surviving boxes are less, output is padded up to this number.
+     */
+    uint64 maxBoxes = 3;
+
+    /**
+     * If true, suppression is performed independently within boxes of each class.
+     */
+    bool perClassSuppression = 4;
 }
 
 /// Neural Network Specializations

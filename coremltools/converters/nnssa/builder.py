@@ -6,7 +6,7 @@ Helper class for
 
 """
 
-import copy
+import sys
 import numpy as np
 
 from .nnssa import *
@@ -530,7 +530,7 @@ class GraphBuilder(object):
 
         """
         input_names = [self._maybe_add_const(input, "elementwise_input") \
-                for input in inputs]
+                       for input in inputs]
         return self._build_op(op, input_names, name=name)
 
     def add_reshape(self, input_name, shape, name=None, attr={}):
@@ -768,7 +768,7 @@ class GraphBuilder(object):
             >>> split_size_2 = builder.add_const(np.array([5, 10, 16]))
             
             # Valid split.
-            >>> custom_split_1 = builder.add_split(axis, split_size=split_size_1, value) 
+            >>> custom_split_1 = builder.add_split(axis, value, split_size=split_size_1)
             # custom_output_1_0 has shape = [5, 1, 512]
             >>> custom_output_1_0 = builder.add_get_tuple(custom_split_1, 0)
             # custom_output_1_1 has shape = [10, 1, 512]
@@ -777,7 +777,7 @@ class GraphBuilder(object):
             >>> custom_output_1_2 = builder.add_get_tuple(custom_split_1, 2)
 
             # Invalid split. sum(split_size_2) != value.shape[axis]
-            >>> custom_split_2 = builder.add_split(axis, split_size=split_size_2, value) 
+            >>> custom_split_2 = builder.add_split(axis, value, split_size=split_size_2)
 
             # Valid split.
             >>> even_split_1 = builder.add_split(axis, value, num_split=3)
@@ -895,7 +895,7 @@ class GraphBuilder(object):
         else:
             squeeze_mask = 0
             for i in squeeze:
-                squeeze_mask += 2**i
+                squeeze_mask += 2 ** i
             return self._build_op(
                 'StridedSlice', [input_name, begin, end, strides],
                 attr={'shrink_axis_mask': squeeze_mask},
@@ -947,7 +947,7 @@ class GraphBuilder(object):
         input_name: str
             The name of the input_node
 
-        squeeze_dim: [int]
+        squeeze_dims: [int]
             The axes that are going to be squeezed. If an empty list, all axis
             with shape=1 will be squeezed out.
 
@@ -1472,7 +1472,9 @@ class GraphBuilder(object):
         var_name (str): The SSA name of the new const node, if created, will
         be `var_name` + incrementing counter.
         """
-        if isinstance(var, str) or isinstance(var, unicode) or var is None:
+        if isinstance(var, str) or var is None:
+            return var
+        if sys.version_info < (3, 0) and isinstance(var, unicode):
             return var
         if not var_name:
             var_name = "generated_const"
@@ -1489,3 +1491,172 @@ class GraphBuilder(object):
         if isinstance(var, np.ndarray):
             return self.add_const(var, name=node_name)
         raise RuntimeError("Unable to create const node for " + str(var))
+
+    def add_LSTMBlock(
+            self,
+            input_vec,
+            W,
+            b,
+            prev_h=None,
+            prev_cs=None,
+            mode='cell',
+            forget_bias=0.0,
+            time_major=True,
+            bidirectional=False,
+            output_all_states=True,
+            name=None):
+        """
+        Build a LSTM Block.
+
+        LSTM Cell performs the following operation:
+            xh = [x, prev_h]
+            [i, ci, f, o] = xh * W + b
+            f = f + forget_bias
+            i = sigmoid(i)
+            f = sigmoid(f)
+            ci = tanh(ci)
+            cs = ci .* i + prev_cs .* f
+            o = sigmoid(o)
+            co = tanh(cs)
+            h = co .* o
+
+        SSANode form:
+            op: 'LSTMBlock'
+            inputs: [input_vec, W, b, prev_h, prev_cs]
+            attr: 'mode', 'forget_bias', 'time_major', 'bidirectional', 'output_all_states'
+
+        Examples
+        --------
+        .. sourcecode:: python
+
+            # A sample for the LSTMBlock that can be used for the encoder (static length if input given)
+            # Setup for the hidden size and input size
+            >>> hidden_size = 8
+            >>> input_size = 15
+            >>> ph_encoder = builder.add_placeholder(datatype=builtins.tensor(builtins.fp32, [5, 1, 15]), name="ph_encoder")
+            >>> W_val = np.random.random(size=(input_size+hidden_size,4*hidden_size)).astype(np.float32)
+            # The weight matrix
+            >>> W = builder.add_const(W_val)
+            # The bias vector
+            >>> b = builder.add_const(np.zeros(shape=[4*hidden_size]).astype(np.float32))
+            # The previous cell state and hidden state can be None if it is in encoder mode.
+            >>> prev_cs_encoder = None
+            >>> prev_h_encoder = None
+
+            >>> lstm_encoder = builder.add_LSTMBlock(ph_encoder,
+            >>>                                      W,
+            >>>                                      b,
+            >>>                                      prev_h=prev_h_encoder,
+            >>>                                      prev_cs=prev_cs_encoder,
+            >>>                                      mode="encoder")
+
+            # Fetch the output through get_tuple.
+            >>> o = builder.add_get_tuple(lstm_encoder, index=0, name="o")
+            >>> h = builder.add_get_tuple(lstm_encoder, index=1, name="h")
+            >>> c = builder.add_get_tuple(lstm_encoder, index=2, name="c")
+
+            # Similarly, we can just use cell for each timestamp if we want.
+            # The input is [batch_size, input_size] without the sequence length.
+            >>> ph_cell = builder.add_placeholder(datatype=builtins.tensor(builtins.fp32, [1, 15]), name="ph_cell")
+            # The previous cell state and hidden state must be set if it is in cell mode.
+            >>> prev_cs_cell = gb.add_const(np.zeros(shape=[hidden_size]).astype(np.float32))
+            >>> prev_h_cell = gb.add_const(np.zeros(shape=[hidden_size]).astype(np.float32))
+
+            # We just reuse weight/bias/sizes with the encoder over here.
+            >>> lstm_cell = builder.add_LSTMBlock(ph_cell,
+            >>>                                   W,
+            >>>                                   b,
+            >>>                                   prev_h=prev_h_cell,
+            >>>                                   prev_cs=prev_cs_cell,
+            >>>                                   mode="cell")
+
+            # Fetch the output through get_tuple. 'o' is dummy in cell mode.
+            >>> _ = builder.add_get_tuple(lstm_cell, index=0)
+            >>> h = builder.add_get_tuple(lstm_cell, index=1, name="h")
+            >>> c = builder.add_get_tuple(lstm_cell, index=2, name="c")
+
+        Parameters
+        ----------
+        input_vec: str
+            The input to the LSTM Block.
+            Shape of input_vec should be:
+                - mode == 'cell':
+                    (batch size, input size)
+                - mode == 'encoder':
+                    time_major == True:  (seq_len, batch size, input size)
+                    time_major == False: (batch size, seq_len, input size)
+
+        W: str [input_size + hidden_size, {4, 8} * hidden_size]
+            The weight matrix.
+            Concatenation of [W_i, W_g, W_f, W_o], see notes on how the order should be.
+            If bidirectional encoder is being used, we will have W as:
+                W = np.concatenate([W_fw, W_bw], axis=-1)
+            Shape should be:
+                - mode == 'cell':
+                    (input_size + hidden_size, 4 * hidden_size)
+                - mode == 'encoder':
+                    bidirectional == True:  (input_size + hidden_size, 8 * hidden_size)
+                    bidirectional == False: (input_size + hidden_size, 4 * hidden_size)
+
+        b: str [4 * hidden_size]
+            The bias vector.
+
+        prev_h: str [batch_size, {1, 2} * hidden_size], optional
+            Output of the previous cell at previous time step.
+            If mode == 'encoder', this is optional and will be set to zero-state if not provided.
+            If bidirectional is True, concatenation should be done on last axis.
+
+        prev_cs: str [batch_size, {1, 2} * hidden_size], optional
+            Value of the cell state at previous timestamp.
+            If mode == 'encoder', this is optional and will be set to zero-state if not provided.
+            If bidirectional is True, concatenation should be done on last axis.
+
+        name: str
+            The name of this node
+
+        mode: str
+            'cell' or 'encoder'
+
+        forget_bias: int
+            See notes. Whether there's a bias for the forget gate.
+
+        time_major: bool
+            See notes. Only valid when mode == 'encoder'. Default True.
+
+        bidirectional: bool
+            See notes. Only valid when mode == 'encoder'. Default False.
+
+        output_all_states: bool
+            See output notes. Only valid when mode == 'encoder'. Default True.
+
+        Outputs
+        -------
+        Need to use get_tuple to obtain outputs.
+
+        - mode == 'cell':
+            [Output_state, Hidden_state, Cell_state]
+        - mode == 'encoder':
+            - bidirectional == False
+                [Output_state, Hidden_state, Cell_state]
+            - bidirectional == True
+                [Output_state, Hidden_state_fwd, Cell_state_fwd,
+                Hidden_state_bck, Cell_state_bck]
+
+            Output_state has shape (assuming time_major = True)
+                - output_all_states = True: [seq_len, batch_size, {1, 2} * hidden_size]
+                - output_all_states = False: [1, batch_size, {1, 2} * hidden_size]
+            Hidden_state*, Cell_state* both have shape [1, batch_size, hidden_size]
+        """
+
+        attr = dict()
+        attr['mode'] = mode
+        attr['forget_bias'] = forget_bias
+        if mode == 'encoder':
+            attr['time_major'] = time_major
+            attr['bidirectional'] = bidirectional
+            attr['output_all_states'] = output_all_states
+
+        inputs = [input_vec, W, b]
+        if mode == 'cell':
+            inputs += [prev_h, prev_cs]
+        return self._build_op('LSTMBlock', inputs, attr=attr, name=name)

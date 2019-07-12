@@ -79,7 +79,7 @@ class TFNetworkTest(unittest.TestCase):
             input_refs=None,
             delta=1e-2,
             use_cpu_only=False,
-            use_freeze=True,
+            graph_optimizations="freeze",  # one of ["freeze", "convert_variables_to_constants", None]
             quantize_tf_model=False):
         """
         Common entry to testing routine.
@@ -91,19 +91,19 @@ class TFNetworkTest(unittest.TestCase):
             When using auto-generated input vectors, set input_refs to None.
         delta - maximum difference of normalized TensorFlow and CoreML outputs
         use_cpu_only - If True, instantiate and run CoreML model with CPU only
-        use_freeze - If True, force TensorFlow graph to be frozen before converting.
+        graph_optimizations == "freeze" - Force TensorFlow graph to be frozen before converting.
         quantize_tf_model - If True, try to quantize TensorFlow model before converting
         """
         # Some file processing
         model_dir = tempfile.mkdtemp()
-        graph_def_file = os.path.join(model_dir, 'tf_graph.pbtxt')
+        graph_def_file = os.path.join(model_dir, 'tf_graph.pb')
         checkpoint_file = os.path.join(model_dir, 'tf_model.ckpt')
         static_model_file = os.path.join(model_dir, 'tf_static.pb')
         coreml_model_file = os.path.join(model_dir, 'coreml_model.mlmodel')
 
         # add a saver
         tf.reset_default_graph()
-        if use_freeze:
+        if graph_optimizations == "freeze":
             with graph.as_default() as g:
                 saver = tf.train.Saver()
 
@@ -120,35 +120,29 @@ class TFNetworkTest(unittest.TestCase):
 
         with tf.Session(graph=graph) as sess:
             # initialize
-            sess.run(tf.global_variables_initializer())
+            initializer_op = tf.global_variables_initializer()
+            sess.run(initializer_op)
             # run the result
             fetches = [graph.get_operation_by_name(name).outputs[0] for name in output_node_names]
             result = sess.run(fetches, feed_dict=feed_dict)
             # save graph definition somewhere
             tf.train.write_graph(sess.graph, model_dir, graph_def_file, as_text=False)
             # save the weights if freezing is needed
-            if use_freeze:
+            if not graph_optimizations:
+                static_model_file = graph_def_file
+            elif graph_optimizations=="freeze":
                 saver.save(sess, checkpoint_file)
+                self._simple_freeze(
+                    input_graph=graph_def_file,
+                    input_checkpoint=checkpoint_file,
+                    output_graph=static_model_file,
+                    output_node_names=",".join(output_node_names))
             else:
                 output_graph_def = tf.graph_util.convert_variables_to_constants(
                     sess, graph.as_graph_def(), output_node_names)
                 with tf.gfile.GFile(static_model_file, "wb") as f:
                     f.write(output_graph_def.SerializeToString())
 
-        # freeze the graph
-        if use_freeze:
-            self._simple_freeze(
-                input_graph=graph_def_file,
-                input_checkpoint=checkpoint_file,
-                output_graph=static_model_file,
-                output_node_names=",".join(output_node_names))
-
-            if DEBUG:
-                self._simple_freeze(
-                    input_graph=graph_def_file,
-                    input_checkpoint=checkpoint_file,
-                    output_graph='/tmp/model.pb',
-                    output_node_names=",".join(output_node_names))
 
         # if TF needs to be quantized, quantize the graph
         if quantize_tf_model:

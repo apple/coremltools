@@ -271,6 +271,10 @@ template<typename T> static Result isTrainingConfigurationSupported(const T& nn)
                 
                 // check if this "parentNode" is a non-backpropagable layer
                 if (!parentNode->isBackPropagable) {
+                    // softmax is a nonBackPropagableLayer. However, It is valid config if it is attached to a kCategoricalCrossEntropyLossLayer layer.
+                    if ((parentNode->layerType == Specification::NeuralNetworkLayer::kSoftmax) && (currentNode->lossLayerType == Specification::LossLayer::kCategoricalCrossEntropyLossLayer)) {
+                        continue;
+                    }
                     nonBackPropagableLayerSeen = true;
                     firstNonBackpropogabaleLayerSeen = parentNode->name;
                 }

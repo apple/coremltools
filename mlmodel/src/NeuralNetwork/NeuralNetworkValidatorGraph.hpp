@@ -12,7 +12,6 @@ static bool isLayerSupportedForBackprop(const Specification::NeuralNetworkLayer*
 
         case Specification::NeuralNetworkLayer::kConvolution:
         case Specification::NeuralNetworkLayer::kInnerProduct:
-        case Specification::NeuralNetworkLayer::kSoftmax:
         case Specification::NeuralNetworkLayer::kFlatten:
         case Specification::NeuralNetworkLayer::kPooling:
         case Specification::NeuralNetworkLayer::kBatchnorm:
@@ -39,6 +38,7 @@ struct LayerNode {
     std::vector<LayerNode *> parents; // list of nodes that are parent to this node
     std::vector<LayerNode *> children;
     Specification::NeuralNetworkLayer::LayerCase layerType;
+    Specification::LossLayer::LossLayerTypeCase lossLayerType;
     std::string name; // name of this node
     std::vector<std::string> inputNames;
     std::vector<std::string> outputNames;
@@ -62,6 +62,8 @@ struct LayerNode {
                 break;
         }
 
+        lossLayerType = lossLayer->LossLayerType_case();
+        layerType = Specification::NeuralNetworkLayer::LAYER_NOT_SET;
         isUpdatable = false;
         isBackPropagable = false;
     }
@@ -77,6 +79,7 @@ struct LayerNode {
             outNames.push_back(elem);
         }
         layerType =  layer->layer_case();
+        lossLayerType = Specification::LossLayer::LOSSLAYERTYPE_NOT_SET;
         inputNames = inNames;
         outputNames = outNames;
         name = layer->name();
