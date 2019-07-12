@@ -3168,7 +3168,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     while n % (np.prod(target_shape) * dim_size) != 0:
                         dim_size = np.random.choice(divisors)
                     target_shape.append(dim_size)
-                target_shape[0] = n / np.prod(target_shape)
+                target_shape[0] = n // np.prod(target_shape)
 
                 np.random.shuffle(target_shape)
                 input_features = [('data', datatypes.Array(*input_shape)),
