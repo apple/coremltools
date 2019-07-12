@@ -82,6 +82,10 @@ namespace CoreML {
                     return a.wordtagger() == b.wordtagger();
                 case Model::kTextClassifier:
                     return a.textclassifier() == b.textclassifier();
+                case Model::kGazetteer:
+                    return a.gazetteer() == b.gazetteer();
+                case Model::kWordEmbedding:
+                    return a.wordembedding() == b.wordembedding();
                 case Model::kVisionFeaturePrint:
                     return a.visionfeatureprint() == b.visionfeatureprint();
                 case Model::kKNearestNeighborsClassifier:
@@ -859,6 +863,70 @@ namespace CoreML {
                     break;
                 case CoreMLModels::TextClassifier::CLASSLABELS_NOT_SET:
                     break;
+            }
+            
+            if (a.modelparameterdata().size() != b.modelparameterdata().size()) {
+                return false;
+            }
+            
+            size_t s = a.modelparameterdata().size();
+            if (s > 0) {
+                if (memcmp(&a.modelparameterdata()[0], &b.modelparameterdata()[0], s)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        
+        bool operator==(const CoreMLModels::Gazetteer& a,
+                        const CoreMLModels::Gazetteer& b) {
+            
+            if (a.revision()!= b.revision()) {
+                return false;
+            }
+            
+            if (a.language()!= b.language()) {
+                return false;
+            }
+            
+            if (a.ClassLabels_case()!= b.ClassLabels_case()) {
+                return false;
+            }
+            
+            switch (a.ClassLabels_case()) {
+                case CoreMLModels::Gazetteer::kStringClassLabels:
+                    if (a.stringclasslabels()!= b.stringclasslabels()) {
+                        return false;
+                    }
+                    break;
+                case CoreMLModels::Gazetteer::CLASSLABELS_NOT_SET:
+                    break;
+            }
+            
+            if (a.modelparameterdata().size() != b.modelparameterdata().size()) {
+                return false;
+            }
+            
+            size_t s = a.modelparameterdata().size();
+            if (s > 0) {
+                if (memcmp(&a.modelparameterdata()[0], &b.modelparameterdata()[0], s)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        bool operator==(const CoreMLModels::WordEmbedding& a,
+                        const CoreMLModels::WordEmbedding& b) {
+            
+            if (a.revision()!= b.revision()) {
+                return false;
+            }
+            
+            if (a.language()!= b.language()) {
+                return false;
             }
             
             if (a.modelparameterdata().size() != b.modelparameterdata().size()) {

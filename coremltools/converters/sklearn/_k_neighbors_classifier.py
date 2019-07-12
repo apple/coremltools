@@ -14,6 +14,7 @@ if HAS_SKLEARN:
     from . import _sklearn_util
 
 import numpy as np
+import scipy as sp
 import six as _six
 
 model_type = 'classifier'
@@ -105,12 +106,17 @@ def _extract_training_data(model, spec):
     """Extract the training data from the scikit model and add it to the CoreML spec"""
 
     if _is_algorithm_brute(model):
-        for sample in model._fit_X:
+        X = model._fit_X
+        if _is_valid_sparse_format(X):
+            X = _unpack_sparse(X)
+
+        for sample in X:
             coreml_sample = spec.kNearestNeighborsClassifier.nearestNeighborsIndex.floatSamples.add()
             for feature in sample:
                 coreml_sample.vector.append(feature)
 
     elif _is_algorithm_kd_tree(model):
+        # sklearn guarantees that tree data is not stored in a sparse format
         npdata = np.asarray(model._tree.data)
         for sample in npdata:
             coreml_sample = spec.kNearestNeighborsClassifier.nearestNeighborsIndex.floatSamples.add()
@@ -199,3 +205,12 @@ def _is_printable(obj):
     """Check if the object is a valid text type."""
     return isinstance(obj, _six.string_types)
 
+def _is_valid_sparse_format(obj):
+    """Check if the object is in CSR sparse format (the only valid type for KNeighborsClassifier)"""
+    return isinstance(obj, sp.sparse.csr_matrix)
+
+def _unpack_sparse(obj):
+    """Unpack the sparse matrix into a format that we can easily iterate over for insertion into a CoreML model."""
+    if not sp.sparse.issparse(obj):
+        raise TypeError('Object {} is not a scipy sparse matrix type'.format(type(obj)))
+    return obj.toarray()

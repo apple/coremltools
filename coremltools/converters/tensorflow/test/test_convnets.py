@@ -40,7 +40,7 @@ class TFConvNetTest(TFNetworkTest):
             data_mode='random',
             delta=1e-2,
             use_cpu_only=True,
-            use_freeze=True,
+            graph_optimizations="freeze",  # one of ["freeze", "convert_variables_to_constants", None]
             quantize_tf_model=False):
         super(TFConvNetTest, self)._test_tf_model(
             graph,
@@ -50,7 +50,7 @@ class TFConvNetTest(TFNetworkTest):
             input_refs=None,
             delta=delta,
             use_cpu_only=use_cpu_only,
-            use_freeze=use_freeze,
+            graph_optimizations=graph_optimizations,
             quantize_tf_model=quantize_tf_model)
 
     def test_toy(self):
@@ -97,7 +97,6 @@ class TFConvNetTest(TFNetworkTest):
         # TODO: batched
         # self._test_tf_model(graph, {"input:0": [10, 8, 8, 3]}, output_name)
 
-    @unittest.skip
     def test_simple_convnet(self):
         def weight_variable(shape):
             initial = tf.truncated_normal(shape, stddev=0.1)
@@ -113,6 +112,9 @@ class TFConvNetTest(TFNetworkTest):
         def max_pool_2x2(x):
             return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
+        def avg_pool_2x2(x):
+            return tf.nn.avg_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
+
         graph = tf.Graph()
         with graph.as_default() as g:
             W_conv1 = weight_variable([5, 5, 1, 32])
@@ -127,11 +129,11 @@ class TFConvNetTest(TFNetworkTest):
             b_conv2 = bias_variable([64])
 
             h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-            h_pool2 = max_pool_2x2(h_conv2)
+            h_pool2 = avg_pool_2x2(h_conv2)
 
         output_name = [h_pool2.op.name]
         self._test_tf_model(
-            graph, {"test_simple_conv/input:0": [1, 28, 28, 1]}, output_name)
+            graph, {"test_simple_conv/input": [1, 28, 28, 1]}, output_name)
 
     @unittest.skip
     def test_convnet_classifier(self):
@@ -819,35 +821,80 @@ class TFSingleLayerTest(TFNetworkTest):
 
     @unittest.skip
     def test_cast(self):
+        shape = [3, 4, 5]
         graph = tf.Graph()
         with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
             out = tf.cast(a, tf.int32)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     def test_sin(self):
+        shape = [3, 4, 5]
         graph = tf.Graph()
         with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
             out = tf.sin(a)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     def test_cos(self):
+        shape = [3, 4, 5]
         graph = tf.Graph()
         with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
             out = tf.cos(a)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
+
+    def test_strided_slice(self):
+        shape = [3, 2, 3]
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
+            out = tf.strided_slice(a, [1, 0, 0], [2, -1, 3])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
+
+    def test_expand_dims(self):
+        shape = [3, 2, 3]
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
+            out = tf.expand_dims(a, axis=-1)
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
+
+    def test_tile(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
+            out = tf.tile(a, [1, 2, 3])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     def test_leaky_relu(self):
         graph = tf.Graph()
-        with graph.as_default() as g:
-            x_input = tf.placeholder(tf.float32, shape=[None, 5, 5, 6], name="input")
+        with graph.as_default():
+            x_input = tf.placeholder(tf.float32, shape=[None, 5, 5, 6], name='input')
             z = tf.nn.leaky_relu(x_input, 0.2, name='output')
 
         output_name = [z.op.name]
         self._test_tf_model_constant(
-            graph, {"input": [1, 5, 5, 6]}, output_name, delta=1e-2, data_mode="random_zero_mean")
+            graph, {"input": [1, 5, 5, 6]}, output_name, delta=1e-2, data_mode='random_zero_mean')
+
+    def test_stack(self):
+        shape = [1]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape, name='a')
+            b = tf.placeholder(tf.float32, shape=shape, name='b')
+            out = tf.stack([a, b], axis=1)
+        self._test_tf_model_constant(graph, {'a': shape, 'b': shape}, [out.op.name])
+
+    def test_gather_nd(self):
+        shape = [2, 3, 2]
+        indices = [[[0, 0], [0, 1]], [[1, 0], [1, 1]]]
+        graph = tf.Graph()
+        with graph.as_default():
+            params = tf.placeholder(tf.float32, shape=shape, name='input')
+            out = tf.gather_nd(params=params, indices=indices)
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     # @unittest.skip
     # def test_resize_bilinear_non_fractional(self):
@@ -897,115 +944,9 @@ class TFSingleLayerTest(TFNetworkTest):
         # batched
         self._test_tf_model(graph, {"test_linear/input:0": [8, 20]}, output_name)
 
-    @unittest.skip
-    def test_simple_convnet(self):
-        def weight_variable(shape):
-            initial = tf.truncated_normal(shape, stddev=0.1)
-            return tf.Variable(initial)
-
-        def bias_variable(shape):
-            initial = tf.constant(0.1, shape=shape)
-            return tf.Variable(initial)
-
-        def conv2d(x, W):
-            return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-
-        def max_pool_2x2(x):
-            return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
-
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            W_conv1 = weight_variable([5, 5, 1, 32])
-            b_conv1 = bias_variable([32])
-
-            x_image = tf.placeholder(
-                tf.float32, shape=[None, 28, 28, 1], name="test_simple_conv/input")
-            h_conv1 = tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)
-            h_pool1 = max_pool_2x2(h_conv1)
-
-            W_conv2 = weight_variable([5, 5, 32, 64])
-            b_conv2 = bias_variable([64])
-
-            h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-            h_pool2 = max_pool_2x2(h_conv2)
-
-        output_name = [h_pool2.op.name]
-        self._test_tf_model(
-            graph, {"test_simple_conv/input:0": [1, 28, 28, 1]}, output_name)
-
-    @unittest.skip
-    def test_convnet(self):
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            x_image = tf.placeholder(tf.float32, shape=[None, 8, 8, 3], name="test_convnet/input")
-            W_conv1 = tf.Variable(tf.truncated_normal([3, 3, 3, 2], stddev=0.3))
-            h_conv1 = tf.nn.conv2d(x_image, W_conv1, strides=[1, 1, 1, 1], padding='SAME')
-            h_conv1_flat = tf.reshape(h_conv1, [-1, 8 * 8 * 2])
-            W_fc1 = tf.Variable(tf.truncated_normal([8 * 8 * 2, 4], stddev=0.3))
-            h_fc1 = tf.matmul(h_conv1_flat, W_fc1)
-
-        output_name = [h_fc1.op.name]
-        # not batched
-        self._test_tf_model(graph, {"test_convnet/input:0": [1, 8, 8, 3]}, output_name)
-        # batched
-        self._test_tf_model(graph, {"test_convnet/input:0": [10, 8, 8, 3]}, output_name)
-
-    @unittest.skip
-    def test_convnet_quantized(self):
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            x_image = tf.placeholder(tf.float32, shape=[None, 8, 8, 3], name="test_convnet/input")
-            W_conv1 = tf.Variable(tf.truncated_normal([3, 3, 3, 2], stddev=0.3))
-            h_conv1 = tf.nn.conv2d(x_image, W_conv1, strides=[1, 1, 1, 1], padding='SAME')
-            h_conv1_flat = tf.reshape(h_conv1, [-1, 8 * 8 * 2])
-            W_fc1 = tf.Variable(tf.truncated_normal([8 * 8 * 2, 4], stddev=0.3))
-            h_fc1 = tf.matmul(h_conv1_flat, W_fc1)
-
-        output_name = [h_fc1.op.name]
-        # quantized
-        self._test_tf_model(
-            graph, {"test_convnet/input:0": [1, 8, 8, 3]},
-            output_name,
-            delta=0.20,
-            quantize_tf_model=True)
-
-    @unittest.skip
-    def test_pad_conv_fuse(self):
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            x = tf.placeholder(tf.float32, shape=[None, 32, 18, 3], name="test_pad_conv/input")
-            W = tf.Variable(tf.truncated_normal([9, 9, 3, 5], stddev=1))
-            paddings = tf.constant([[0, 0], [5, 5], [1, 1], [0, 0]])
-            x_pad = tf.pad(x, paddings, "CONSTANT")
-            output = tf.nn.conv2d(x_pad, W, strides=[1, 1, 1, 1], padding='VALID')
-
-        output_name = [output.op.name]
-        self._test_tf_model(
-            graph, {"test_pad_conv/input:0": [1, 32, 18, 3]}, output_name, delta=.05)
-
-    @unittest.skip
-    def test_dilated_conv(self):
-        # params: (Hin,Win,K,pad,dilation)
-        Cin = 3
-        Cout = 5
-        params = [(32, 18, 3, 3), (14, 13, 3, 4), (14, 19, 1, 3), (17, 18, 5, 3), (14, 20, 3, 3)]
-        for param in params:
-            Hin, Win, K, d = param
-            graph = tf.Graph()
-            with graph.as_default() as g:
-                x = tf.placeholder(
-                    tf.float32, shape=[None, Hin, Win, Cin], name="test_pad_conv/input")
-                W = tf.Variable(tf.truncated_normal([K, K, Cin, Cout], stddev=1))
-                output = tf.nn.convolution(
-                    x, W, strides=[1, 1], padding='VALID', dilation_rate=[d, d])
-
-            output_name = [output.op.name]
-            self._test_tf_model(
-                graph, {"test_pad_conv/input:0": [1, Hin, Win, Cin]}, output_name, delta=.05)
-
 
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFConvNetTest("test_convnet"))
+    # suite.addTest(TFSingleLayerTest('test_stack'))
     # unittest.TextTestRunner().run(suite)

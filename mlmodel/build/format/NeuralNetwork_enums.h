@@ -214,6 +214,7 @@ enum MLNeuralNetworkLayerlayer: int {
     MLNeuralNetworkLayerlayer_reshapeStatic = 1140,
     MLNeuralNetworkLayerlayer_reshapeDynamic = 1145,
     MLNeuralNetworkLayerlayer_rankPreservingReshape = 1150,
+    MLNeuralNetworkLayerlayer_constantPad = 1155,
     MLNeuralNetworkLayerlayer_randomNormalLike = 1170,
     MLNeuralNetworkLayerlayer_randomNormalStatic = 1175,
     MLNeuralNetworkLayerlayer_randomNormalDynamic = 1180,
@@ -240,6 +241,7 @@ enum MLNeuralNetworkLayerlayer: int {
     MLNeuralNetworkLayerlayer_upperTriangular = 1325,
     MLNeuralNetworkLayerlayer_whereBroadcastable = 1330,
     MLNeuralNetworkLayerlayer_layerNormalization = 1350,
+    MLNeuralNetworkLayerlayer_NonMaximumSuppression = 1400,
     MLNeuralNetworkLayerlayer_NOT_SET = 0,
 };
 
@@ -490,6 +492,8 @@ static const char * MLNeuralNetworkLayerlayer_Name(MLNeuralNetworkLayerlayer x) 
             return "MLNeuralNetworkLayerlayer_reshapeDynamic";
         case MLNeuralNetworkLayerlayer_rankPreservingReshape:
             return "MLNeuralNetworkLayerlayer_rankPreservingReshape";
+        case MLNeuralNetworkLayerlayer_constantPad:
+            return "MLNeuralNetworkLayerlayer_constantPad";
         case MLNeuralNetworkLayerlayer_randomNormalLike:
             return "MLNeuralNetworkLayerlayer_randomNormalLike";
         case MLNeuralNetworkLayerlayer_randomNormalStatic:
@@ -542,6 +546,8 @@ static const char * MLNeuralNetworkLayerlayer_Name(MLNeuralNetworkLayerlayer x) 
             return "MLNeuralNetworkLayerlayer_whereBroadcastable";
         case MLNeuralNetworkLayerlayer_layerNormalization:
             return "MLNeuralNetworkLayerlayer_layerNormalization";
+        case MLNeuralNetworkLayerlayer_NonMaximumSuppression:
+            return "MLNeuralNetworkLayerlayer_NonMaximumSuppression";
         case MLNeuralNetworkLayerlayer_NOT_SET:
             return "INVALID";
     }

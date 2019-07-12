@@ -24,7 +24,7 @@ class TFSimpleNetworkTest(TFNetworkTest):
             input_refs=None,
             delta=1e-2,
             use_cpu_only=True,
-            use_freeze=True,
+            graph_optimizations = "freeze", # one of ["freeze", "convert_variables_to_constants", None]
             quantize_tf_model=False):
 
         super(TFSimpleNetworkTest, self)._test_tf_model(
@@ -35,7 +35,7 @@ class TFSimpleNetworkTest(TFNetworkTest):
             input_refs=input_refs,
             delta=delta,
             use_cpu_only=use_cpu_only,
-            use_freeze=use_freeze,
+            graph_optimizations=graph_optimizations,
             quantize_tf_model=quantize_tf_model)
 
     def test_simple_matmul(self):
@@ -56,6 +56,44 @@ class TFSimpleNetworkTest(TFNetworkTest):
             y = tf.nn.bias_add(product, bias, name='y')
 
         self._test_tf_model(graph, {'input': [1, 2]}, ['y'], delta=1e-2)
+
+    def test_variable_assign(self):
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            x = tf.placeholder(tf.float32, shape=[1,], name='input')
+            y = tf.Variable(0.0, dtype=tf.float32, name='y')
+
+            # We set our assign op
+            assign_op = tf.assign(y, y + 10)
+
+            with tf.control_dependencies([assign_op]):
+                out = tf.multiply(x, y, name = 'output')
+
+        self._test_tf_model(graph, {'input': [1,]}, ['output', 'y'],
+                            graph_optimizations = None)
+
+    def test_control_dependency_with_no_op(self):
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            x = tf.placeholder(tf.float32, shape=[1,], name='input')
+            y = tf.Variable(0.0, dtype=tf.float32, name='y')
+
+            assign_op = tf.assign(y, y + 10)
+
+            with tf.control_dependencies([assign_op]):
+                c = tf.no_op()
+
+            with tf.control_dependencies([c]):
+                d = tf.no_op()
+
+            with tf.control_dependencies([c,d]):
+                e = tf.no_op()
+
+            with tf.control_dependencies([e]):
+                out = tf.multiply(x, y, name = 'output')
+
+        self._test_tf_model(graph, {'input': [1,]}, ['output', 'y'],
+                            graph_optimizations=None)
 
     def test_matmul_biasadd_sub(self):
         graph = tf.Graph()
@@ -203,11 +241,11 @@ class TFSimpleNetworkTest(TFNetworkTest):
                 input_weight = tf.placeholder(tf.float32, shape=weight_shape, name='input_weight')
                 y = tf.matmul(input_data, input_weight, name='output', transpose_a=tp_x, transpose_b=tp_y)
             self._test_tf_model(graph, {"input_data": data_shape, "input_weight": weight_shape}, ["output"], delta=1e-2,
-                                use_freeze=False)
+                                graph_optimizations=None)
 
 
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFSimpleNetworkTest("test_simple_loop"))
+    # suite.addTest(TFSimpleNetworkTest("test_variable_assign"))
     # unittest.TextTestRunner().run(suite)
