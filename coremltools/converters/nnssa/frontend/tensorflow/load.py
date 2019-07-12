@@ -2,10 +2,8 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-import os
-import traceback
 
-import numpy as np
+import traceback
 
 from .graphdef_to_ssa import graphdef_to_ssa
 from .graph_pass import *
@@ -14,20 +12,23 @@ from ..common_pass import common_pass
 
 def load(tfgraph, resume_on_errors=False, **kwargs):
     """
-    Loads a NetworkEnsemble from a Tensorflow frozen graph.
+    Loads a NetworkEnsemble from a TensorFlow frozen graph.
     tfgraph should either be a TensorFlow Graph object, or a path to a 
     frozen graph.
 
     Parameters
     ----------
-    tfgraph : tf.Graph or str
+    tfgraph: tf.Graph or str
         Either a path to a frozen graph, or a TensorFlow Graph object
-
-    resume_on_errors : bool, optional. Default False
+    resume_on_errors : bool, optional. Default False.
         This flag should generally be False except for debugging purposes
         for diagnosing 'unconvertible' graphs. Setting this flag to True
         will cause graph pass errors to be ignored, forcefully returning
         a NetworkEnsemble object.
+    inputs: list of str
+        Input features of Core ML specification.
+    outputs: list of str
+        Output features of Core ML specification.
     """
     if hasattr(tfgraph, 'as_graph_def'):
         gd = tfgraph.as_graph_def(add_shapes=True)
@@ -46,7 +47,7 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
         remove_variable_nodes, fusedbatchnorm_rewrite, lstmblockcell_rewrite
     ]
 
-    if resume_on_errors == False:
+    if resume_on_errors is False:
         for p in passes:
             p(ssa)
     else:
@@ -59,12 +60,13 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
                 print(tb)
                 print("Ignoring and continuing to next pass")
 
-    common_pass(ssa)
+    common_pass(ssa, resume_on_errors)
 
     for f in ssa.functions.values():
         f.find_inputs_and_outputs()
-    # check that type inference is complete
-    if resume_on_errors == False:
+
+    # make sure type inference is complete
+    if resume_on_errors is False:
         for f in ssa.functions.values():
             for n in f.graph.values():
                 assert (n.datatype is not None)

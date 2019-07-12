@@ -56,7 +56,7 @@ import pkg_resources
 try:
     version = pkg_resources.require("coremltools")[0].version
 except:
-    version = "3.0b2"
+    version = "3.0b3"
 
 # The short X.Y version.
 version = version

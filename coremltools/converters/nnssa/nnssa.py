@@ -18,10 +18,10 @@ class ParsedNode(object):
     datatype: The type of the node. (type)
     value: The value of the node if available 
     inputs: The list of nodes which are inputs to this node (list[str])
-    control_inputs: The list of nodes whch have to be executed before this node (list[str])
+    control_inputs: The list of nodes which have to be executed before this node (list[str])
     attr: The attributes of the node
     outputs: The list of nodes which consume the result of this node (list[str])
-    control_outputs: The list of nodes whch have to be executed after this node (list[str])
+    control_outputs: The list of nodes which have to be executed after this node (list[str])
     """
     __slots__ = [
         'name', 'op', 'datatype', 'value', 'inputs', 'control_inputs', 'outputs', 'control_outputs',
@@ -216,10 +216,11 @@ class NetworkEnsemble(object):
             vis.add(node)
             if node in target_inputs:
                 return [node]
-            if len(graph[node].inputs) == 0 and graph[node].op != "Const":
+            if (len(graph[node].inputs) == 0 and
+                len(graph[node].control_inputs) == 0 and graph[node].op != "Const"):
                 return [node]
             inputs = []
-            for i in graph[node].inputs:
+            for i in graph[node].inputs + graph[node].control_inputs:
                 if i in vis:
                     continue
                 inputs += DFS_inputs(graph, i, vis)
@@ -230,7 +231,7 @@ class NetworkEnsemble(object):
             set_globals = []
             if graph[node].op == "set_global":
                 set_globals.append(node)
-            for i in graph[node].outputs:
+            for i in graph[node].outputs + graph[node].control_outputs:
                 if i in vis:
                     continue
                 set_globals += DFS_set_globals(graph, i, vis)
@@ -349,10 +350,10 @@ class NetworkEnsemble(object):
 
         Parameters
         ----------
-        name_and_op_style : bool
+        name_and_op_style: bool
             If set, graph contains only the name and the op.
 
-
+        annotation: bool
         Examples
         --------
         >>> import graphviz

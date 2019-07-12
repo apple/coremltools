@@ -26,7 +26,8 @@ ELEMENTWISE_OPS = [
 
 
 def _is_NHWC(graph, node):
-    if (node.op == 'Conv2D' or node.op == 'Pooling') and node.attr.get('data_format') == 'NHWC':
+    if (node.op == 'Conv2D' or node.op == 'Pooling' or node.op =='MaxPool' or \
+        node.op == 'AvgPool') and node.attr.get('data_format') == 'NHWC':
         return True
     if node.op == 'ConcatV2':
         # ConcatV2's last input is axis

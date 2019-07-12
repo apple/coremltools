@@ -24,7 +24,7 @@ class TFDynRNNTest(TFNetworkTest):
             input_refs=None,
             delta=1e-2,
             use_cpu_only=True,
-            use_freeze=True,
+            graph_optimizations="freeze",  # one of ["freeze", "convert_variables_to_constants", None]
             quantize_tf_model=False):
         super(TFDynRNNTest, self)._test_tf_model(
             graph,
@@ -34,7 +34,7 @@ class TFDynRNNTest(TFNetworkTest):
             input_refs=input_refs,
             delta=delta,
             use_cpu_only=use_cpu_only,
-            use_freeze=use_freeze,
+            graph_optimizations=graph_optimizations,
             quantize_tf_model=quantize_tf_model)
 
     def test_simple_lstm(self):
@@ -52,8 +52,19 @@ class TFDynRNNTest(TFNetworkTest):
             val, state = tf.nn.dynamic_rnn(cell, data, initial_state=init_state, dtype=tf.float32)
 
         self._test_tf_model(
-            graph, {'input': input_shape}, [val.op.name, state[0].op.name, state[1].op.name],
-            delta=1e-2)
+            graph, {'input': input_shape}, [val.op.name, state[0].op.name, state[1].op.name])
+
+    def test_lstm_block_fused_cell(self):
+        sequence_length, batch_size, input_dim, hidden_size = 5, 1, 24, 32
+        input_shape = [sequence_length, batch_size, input_dim]
+        forget_bias = np.random.rand()
+        graph = tf.Graph()
+        with graph.as_default():
+            data = tf.placeholder(tf.float32, input_shape, name='input')
+            lstm_block_cell = tf.contrib.rnn.LSTMBlockFusedCell(
+                num_units=hidden_size, forget_bias=forget_bias)
+            _, state = lstm_block_cell(data, dtype=tf.float32)
+        self._test_tf_model(graph, {'input': input_shape}, [state[0].op.name, state[1].op.name])
 
     def test_simple_rnn(self):
         batch_size, sequence_length, hidden_size = 1, 5, 10
@@ -68,7 +79,7 @@ class TFDynRNNTest(TFNetworkTest):
             init_state = cell.zero_state(batch_size, dtype=tf.float32)
             val, state = tf.nn.dynamic_rnn(cell, data, initial_state=init_state, dtype=tf.float32)
 
-        self._test_tf_model(graph, {'input': input_shape}, [val.op.name, state.op.name], delta=1e-2)
+        self._test_tf_model(graph, {'input': input_shape}, [val.op.name, state.op.name])
 
     def test_simple_bilstm(self):
         batch_size, sequence_length, hidden_size = 1, 5, 10
@@ -86,9 +97,8 @@ class TFDynRNNTest(TFNetworkTest):
             x.op.name
             for x in [val[0], val[1], states[0][0], states[0][1], states[1][0], states[1][1]]
         ]
-        self._test_tf_model(graph, {'input': input_shape}, output_node_names, delta=1e-2)
+        self._test_tf_model(graph, {'input': input_shape}, output_node_names)
 
-    # ReverseSequence has not been implemented.
     @unittest.skip
     def test_batched_bilstm(self):
         batch_size, max_sequence_length, hidden_size = 4, 5, 10
@@ -109,11 +119,11 @@ class TFDynRNNTest(TFNetworkTest):
             x.op.name
             for x in [val[0], val[1], states[0][0], states[0][1], states[1][0], states[1][1]]
         ]
-        self._test_tf_model(graph, {'input': input_shape}, output_node_names, delta=1e-2)
+        self._test_tf_model(graph, {'input': input_shape}, output_node_names)
 
 
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFDynRNNTest("test_batched_bilstm"))
+    # suite.addTest(TFDynRNNTest('test_lstm_block_fused_cell'))
     # unittest.TextTestRunner().run(suite)

@@ -110,6 +110,8 @@ namespace CoreML {
     bool hasCustomModel(const Specification::Model& model);
     bool hasAppleWordTagger(const Specification::Model& model);
     bool hasAppleTextClassifier(const Specification::Model& model);
+    bool hasAppleGazetteer(const Specification::Model& model);
+    bool hasAppleWordEmbedding(const Specification::Model& model);
     bool hasAppleImageFeatureExtractor(const Specification::Model& model);
     bool hasCategoricalSequences(const Specification::Model& model);
     bool hasNonmaxSuppression(const Specification::Model& model);

@@ -83,7 +83,7 @@ py::dict Model::predict(const py::dict& input, bool useCPUOnly) {
 }
 
 int32_t Model::maximumSupportedSpecificationVersion() {
-    return CoreML::MLMODEL_SPECIFICATION_VERSION;
+    return CoreML::MLMODEL_SPECIFICATION_VERSION_NEWEST;
 }
 
 NeuralNetworkShapeInformation::NeuralNetworkShapeInformation(const std::string& filename) {

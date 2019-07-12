@@ -311,6 +311,10 @@ Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetw
             return validateReverseSeqLayer(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kLayerNormalization:
             return validateLayerNormalizationLayer(layer);
+        case Specification::NeuralNetworkLayer::LayerCase::kConstantPad:
+            return validateConstantPadLayer(layer);
+        case Specification::NeuralNetworkLayer::LayerCase::kNonMaximumSuppression:
+            return validateNMSLayer(layer);
         default:
             return validateFailUnknownType(layer);
     }

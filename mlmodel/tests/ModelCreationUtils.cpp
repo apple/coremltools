@@ -80,6 +80,43 @@ Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model&
     return neuralNet;
 }
 
+Specification::NeuralNetwork* addInnerProductLayer(Specification::Model& m, bool isUpdatable, const char *name, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr) {
+    
+    auto neuralNet = m.mutable_neuralnetwork();
+    auto layer = neuralNet->add_layers();
+    
+    layer->set_name(name);
+    layer->add_input(inTensorAttr->name);
+    layer->add_output(outTensorAttr->name);
+    Specification::InnerProductLayerParams *innerProductParams = layer->mutable_innerproduct();
+    innerProductParams->set_inputchannels(1);
+    innerProductParams->set_outputchannels(1);
+    innerProductParams->mutable_weights()->add_floatvalue(1.0);
+    innerProductParams->set_hasbias(true);
+    innerProductParams->mutable_bias()->add_floatvalue(1.0);
+    
+    if (isUpdatable) {
+        layer->set_isupdatable(true);
+        innerProductParams->mutable_weights()->set_isupdatable(true);
+        innerProductParams->mutable_bias()->set_isupdatable(true);
+    }
+
+    return neuralNet;
+}
+
+Specification::NeuralNetwork* addSoftmaxLayer(Specification::Model& m, const char *name,  const char *input, const char *output) {
+    
+    auto neuralNet = m.mutable_neuralnetwork();
+    auto softmaxLayer = neuralNet->add_layers();
+    
+    softmaxLayer->set_name(name);
+    softmaxLayer->add_input(input);
+    softmaxLayer->add_output(output);
+    softmaxLayer->mutable_softmax();
+    
+    return neuralNet;
+}
+
 template <class NeuralNetworkType> void tempMethod0(NeuralNetworkType *nn) {
 #pragma unused (nn)
 }
@@ -162,6 +199,7 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
         addLearningRate(classifier, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
         addMiniBatchSize(classifier, Specification::Optimizer::kSgdOptimizer, 1, 1, 100, std::set<int64_t>());
         addEpochs(classifier, 100, 0, 100, std::set<int64_t>());
+        addShuffleAndSeed(classifier, 2019, 0, 2019, std::set<int64_t>());
     }
     
     return classifier;
@@ -283,6 +321,7 @@ void addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(Specification::Mod
     addLearningRate(neuralNets, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(neuralNets, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
     addEpochs(neuralNets, 100, 0, 100, std::set<int64_t>());
+    addShuffleAndSeed(neuralNets, 2019, 0, 2019, std::set<int64_t>());
 }
 
 

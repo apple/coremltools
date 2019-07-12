@@ -2318,9 +2318,14 @@ Result NeuralNetworkSpecValidator::validateStackLayer(const Specification::Neura
     }
     const auto& params = layer.stack();
     if (layer.inputtensor_size() > 0) {
-        const int rank = static_cast<int>(layer.inputtensor(0).rank());
-        if (params.axis() < -rank || params.axis() >= rank) {
-            const std::string err = "Value of axis must be in the range [-rank(tensor), rank(tensor)) for '" + layer.name() + "' layer.";
+        const int rank0 = static_cast<int>(layer.inputtensor(0).rank());
+        const int rank1 = static_cast<int>(layer.inputtensor(1).rank());
+        if (rank0 != rank1) {
+            const std::string err = "Shapes of all inputs must match for '" + layer.name() + "' layer.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+        if (!(params.axis() >= -(rank0 + 1) && params.axis() < rank0 + 1)) {
+            const std::string err = "Value of axis must be in the range [-rank(tensor), rank(tensor)] for '" + layer.name() + "' layer.";
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
@@ -3195,6 +3200,51 @@ Result NeuralNetworkSpecValidator::validateLayerNormalizationLayer(const Specifi
         err = "Shape of beta should match normalized_shape for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
+    return r;
+}
+
+Result NeuralNetworkSpecValidator::validateConstantPadLayer(const Specification::NeuralNetworkLayer& layer) {
+    Result r;
+    r = validateInputCount(layer, 1, 2);
+    if (!r.good()) {return r;}
+    r = validateOutputCount(layer, 1, 1);
+    if (!r.good()) {return r;}
+    r = validateInputOutputRankEquality(layer, "ConstantPad", blobNameToRank);
+    if (!r.good()) {return r;}
+
+    const auto& params = layer.constantpad();
+
+    if (layer.input_size() == 1) {
+        int len = params.padamounts_size();
+        if (len % 2 != 0) {
+            const std::string err = "In 'ConstantPad' layer '" + layer.name() + "', length of 'padAmounts' parameter is " + std::to_string(len) + ", an odd value, which is not allowed.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+        if (len == 0) {
+            const std::string err = "In 'ConstantPad' layer '" + layer.name() + "', length of 'padAmounts' cannot be zero when only 1 input is provided.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+        if (params.padtogivenoutputsizemode()) {
+            for (int i=0; i < len/2; i++) {
+                int pad_a = (int)params.padamounts(2*i);
+                int pad_b = (int)params.padamounts(2*i+1);
+                if (pad_a > 0 && pad_b > 0) {
+                    const std::string err = "In 'ConstantPad' layer '" + layer.name() + "', 'padToGivenOutputSizeMode' is true, and both padding values corresponding to dimension " + std::to_string(i) + " are non zero, which is invalid. Only one value can be non-zero.";
+                    return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+                }
+            }
+        }
+    }
+
+    return r;
+}
+
+Result NeuralNetworkSpecValidator::validateNMSLayer(const Specification::NeuralNetworkLayer& layer) {
+    Result r;
+    r = validateInputCount(layer, 2, 5);
+    if (!r.good()) {return r;}
+    r = validateOutputCount(layer, 4, 4);
+
     return r;
 }
 
