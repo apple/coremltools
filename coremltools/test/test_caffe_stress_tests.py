@@ -6,7 +6,6 @@ import tarfile
 import shutil
 import json
 import numpy as np
-import math
 from coremltools.converters import caffe as caffe_converter
 from coremltools.models.utils import macos_version
 nets_path = os.getenv('CAFFE_MODELS_PATH', '')
@@ -71,11 +70,11 @@ def load_mlmodel(net_name, layer_type):
                     shell=True)
     stdout, err = process.communicate()
 
-    if not err:
+    if process.returncode == 0:
         return True
-    else:
-        print(" The error is {}".format(err.decode()))
-        return False
+
+    print(" The error is {}".format(err.decode()))
+    return False
 
 
 def evaluation_data(net_name, layer_type, data_files):

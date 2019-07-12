@@ -1968,6 +1968,345 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_topk_gpu(self):
         self.test_topk_cpu(cpu_only=False)
 
+
+    def test_const_pad_cpu(self, cpu_only=True):
+
+        def get_reference(data, pads, value):
+            with tf.Graph().as_default(), tf.Session() as sess:
+                x = tf.placeholder(tf.float32, shape=data.shape)
+                p = tf.placeholder(tf.int32, shape=pads.shape)
+                y = tf.pad(x, p, mode='CONSTANT', constant_values=value)
+                return sess.run(y, feed_dict={x: data, p: pads})
+
+        value = 34.0
+        shapes = [(3,), (4, 5), (2, 4, 5), (12, 6, 3, 5, 7), (1, 24, 2, 4, 8)]
+
+        ctr = 0
+        for shape in shapes:
+            rank = len(shape)
+            for force_zeros_in_end in [0, 2, 6]:
+                for max_pad_value in range(1, 6):
+                    for n_inputs in [1, 2]:
+                        pads = np.random.randint(low=0, high=max_pad_value, size=(rank, 2))
+
+                        if force_zeros_in_end > 2 * rank:
+                            continue
+
+                        # pads = np.reshape(np.array([1,1,1,0,0,1]), (rank, 2))
+                        if force_zeros_in_end != 0:
+                            pads[-force_zeros_in_end:] = 0
+
+                        data = np.random.rand(*shape)
+                        reference = get_reference(data, pads, value)
+
+                        ctr += 1
+                        # print('-' * 80)
+                        # print('{} test: constant pad nd: input shape: {}, output shape: {}, pads = {}, n_inputs = {}'.
+                        #       format(ctr, shape, reference.shape, pads.flatten(), n_inputs))
+                        # print('-' * 80)
+
+                        input_features = [('data', datatypes.Array(*shape))]
+                        output_features = [('output', None)]
+
+                        input_names = ['data']
+                        if n_inputs == 2:
+                            input_names.append('pads')
+                            input_features.append(('pads', datatypes.Array(2*rank,)))
+
+                        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+                        if n_inputs == 2:
+                            builder.add_constant_pad('pad', input_names, 'output', value=value)
+                        else:
+                            builder.add_constant_pad('pad', input_names, 'output', value=value, pad_amounts=pads.flatten())
+
+                        input = {'data': data}
+                        if n_inputs == 2:
+                            input['pads'] = pads.flatten().astype(np.float)
+
+                        expected = {'output': reference}
+                        self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+
+    def test_const_pad_gpu(self):
+        self.test_const_pad_cpu(cpu_only=False)
+
+
+    def test_const_pad_mode2_cpu(self, cpu_only=True):
+
+        def get_reference(data, output_shape, value, left_pad=False):
+            with tf.Graph().as_default(), tf.Session() as sess:
+                x = tf.placeholder(tf.float32, shape=data.shape)
+                p = tf.placeholder(tf.int32, shape=(len(output_shape), 2))
+                y = tf.pad(x, p, mode='CONSTANT', constant_values=value)
+                pads = np.zeros((len(output_shape), 2))
+                if left_pad:
+                    pads[:, 0] = np.array(output_shape) - np.array(data.shape)
+                else:
+                    pads[:, 1] = np.array(output_shape) - np.array(data.shape)
+
+                return sess.run(y, feed_dict={x: data, p: pads})
+
+        value = 34.0
+        shapes = [(3,), (4, 5), (2, 4, 5), (12, 6, 3, 5, 7), (1, 24, 2, 4, 8)]
+        out_shapes = [(5,), (4, 8), (2, 4, 10), (20, 6, 7, 10, 7), (5, 24, 10, 4, 10)]
+
+        ctr = 0
+        for ii, shape in enumerate(shapes):
+            rank = len(shape)
+            for left_pad in [True, False]:
+                for n_inputs in [1, 2]:
+
+                    data = np.random.rand(*shape)
+                    reference = get_reference(data, out_shapes[ii], value, left_pad)
+
+                    pads = np.zeros((rank, 2))
+                    tmp = np.zeros((rank))
+
+                    for i in range(rank):
+                        if out_shapes[ii][i] == shape[i]:
+                            tmp[i] = 0
+                        else:
+                            tmp[i] = out_shapes[ii][i]
+
+                    if left_pad:
+                        pads[:, 0] = tmp
+                    else:
+                        pads[:, 1] = tmp
+
+                    ctr += 1
+                    # print('-' * 80)
+                    # print('{} test: constant pad nd: input shape: {}, output shape: {}, pads = {}, n_inputs = {}'.
+                    #       format(ctr, shape, reference.shape, pads.flatten(), n_inputs))
+                    # print('-' * 80)
+
+                    input_features = [('data', datatypes.Array(*shape))]
+                    output_features = [('output', None)]
+
+                    input_names = ['data']
+                    if n_inputs == 2:
+                        input_names.append('pads')
+                        input_features.append(('pads', datatypes.Array(2*rank,)))
+
+                    builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+                    if n_inputs == 2:
+                        builder.add_constant_pad('pad', input_names, 'output', value=value, pad_to_given_output_size_mode=True)
+                    else:
+                        builder.add_constant_pad('pad', input_names, 'output', value=value, pad_amounts=pads.flatten(), pad_to_given_output_size_mode=True)
+
+                    input = {'data': data}
+                    if n_inputs == 2:
+                        input['pads'] = pads.flatten().astype(np.float)
+
+                    expected = {'output': reference}
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+
+    def test_const_pad_mode2_gpu(self):
+        self.test_const_pad_mode2_cpu(cpu_only=False)
+
+
+    def test_nms_cpu(self, cpu_only=True):
+        def _compute_iou_matrix(boxes):
+            # input is (N,4), in order [center_w, center_h, width, height]
+            assert len(boxes.shape) == 2
+            assert boxes.shape[1] == 4
+            boxes = boxes.astype(np.float)
+            center_w, center_h, width, height = np.split(boxes, 4, axis=1)  # outs are all (N,1)
+            top = center_h + 0.5 * height
+            bottom = center_h - 0.5 * height
+            left = center_w - 0.5 * width
+            right = center_w + 0.5 * width
+            area = width * height
+
+            hB = np.minimum(top, np.transpose(top))
+            wB = np.minimum(right, np.transpose(right))
+            hA = np.maximum(bottom, np.transpose(bottom))
+            wA = np.maximum(left, np.transpose(left))
+
+            intersection_area = np.maximum(0, hB - hA) * np.maximum(0, wB - wA)
+            union_area = area + np.transpose(area) - intersection_area
+            iou = intersection_area / union_area
+            return iou
+
+        def _nms_TF(boxes, scores, iou_threshold, score_threshold, per_class_suppression, M):
+            # boxes is (B,N,4), in order [center_w, center_h, width, height]
+            # scores is (B,N,C)
+            # output shapes: (B,M,4), (B,M,C), (B,M), (B,)
+            '''
+            this is implementation of CoreML's NMS layer
+            '''
+            B, N, C = scores.shape
+
+            iou_threshold = iou_threshold.astype(np.float32)
+            score_threshold = score_threshold.astype(np.float32)
+
+            # convert box ids to TF style
+            center_w, center_h, width, height = np.split(boxes, 4, axis=-1)  # outs are all (B,N,1)
+            y1 = center_h - 0.5 * height
+            y2 = center_h + 0.5 * height
+            x1 = center_w - 0.5 * width
+            x2 = center_w + 0.5 * width
+            boxes_tf = np.concatenate((y1, x1, y2, x2), axis=-1)  # (B,N,4)
+
+            out1 = np.zeros((B, M, 4))
+            out2 = np.zeros((B, M, C))
+            out3 = -1 * np.ones((B, M))
+            out4 = np.zeros((B,))
+
+            for b in range(B):
+                box_coord_matrix = boxes_tf[b, :, :]  # (N,4)
+                score_vector = np.max(scores[b, :, :], axis=-1)  # (N,)
+                if not per_class_suppression:
+                    # this is the simple case as TF directly supports it
+                    with tf.Graph().as_default(), tf.Session() as sess:
+                        box_coord_matrix_pl = tf.placeholder(tf.float32, shape=box_coord_matrix.shape)
+                        score_vector_pl = tf.placeholder(tf.float32, shape=score_vector.shape)
+                        ids_g = tf.image.non_max_suppression(box_coord_matrix_pl,
+                                                             score_vector_pl,
+                                                             max_output_size=M, iou_threshold=iou_threshold,
+                                                             score_threshold=score_threshold)
+
+                        ids = sess.run(ids_g, feed_dict={box_coord_matrix_pl: box_coord_matrix, score_vector_pl: score_vector})
+                else:
+                    # this is slightly complicated as TF does not directly support it
+                    class_ids = np.argmax(scores[b, :, :], axis=-1)  # (N,)
+                    sorted_score_ids = np.argsort(-score_vector)
+                    box_coord_matrix2 = np.take(box_coord_matrix, sorted_score_ids, axis=0)
+                    score_vector2 = np.take(score_vector, sorted_score_ids)
+                    class_ids = np.take(class_ids, sorted_score_ids)
+                    classes_seen = dict()
+                    ids_intermediate = np.array([], dtype=np.int)
+                    for n in range(N):
+                        if class_ids[n] in classes_seen:
+                            continue
+                        c = class_ids[n]
+                        classes_seen[c] = True
+                        current_class_ids = np.where(class_ids == c)[0]
+                        if len(current_class_ids) > 0:
+                            feed_in1 = np.take(box_coord_matrix2, current_class_ids, axis=0)
+                            feed_in2 = np.take(score_vector2, current_class_ids)
+
+                            with tf.Graph().as_default(), tf.Session() as sess:
+                                box_coord_matrix_pl = tf.placeholder(tf.float32, shape=feed_in1.shape)
+                                score_vector_pl = tf.placeholder(tf.float32, shape=feed_in2.shape)
+                                cur_ids_g = tf.image.non_max_suppression(box_coord_matrix_pl,
+                                                                       score_vector_pl,
+                                                                       max_output_size=M, iou_threshold=iou_threshold,
+                                                                       score_threshold=score_threshold)
+                                cur_ids = sess.run(cur_ids_g, feed_dict={box_coord_matrix_pl: feed_in1,
+                                                                         score_vector_pl: feed_in2})
+
+
+                            from_sort_ids = np.take(current_class_ids, cur_ids)
+                            ids_intermediate = np.append(ids_intermediate, from_sort_ids)
+                    ids_intermediate.sort()
+                    ids = np.take(sorted_score_ids, ids_intermediate)
+
+                xx = len(ids)
+                if xx == 0:
+                    ids = np.array([np.argmax(score_vector)])
+                    xx = 1
+                if xx > M:
+                    ids = ids[:M]
+                    xx = len(ids)
+                out1[b, :xx, :] = np.take(boxes[b, :, :], ids, axis=0)
+                out2[b, :xx, :] = np.take(scores[b, :, :], ids, axis=0)
+                out3[b, :xx] = ids
+                out4[b] = xx
+
+            return out1, out2, out3, out4
+
+        iou_threshold_percentile = [0, 30, 80, 100]
+        score_threshold_percentile_arr = [0, 40, 100]
+        N_M_pairs_to_test = [[100, 48], [100, 112]]  # N : boxes in, M: max boxes out
+
+        number_of_test = 0
+        for N_M in N_M_pairs_to_test:
+            for B in [1, 5]:
+                for C in [1, 7]:
+                    N, M = N_M
+
+                    boxes = np.random.rand(B, N, 4)
+                    scores = np.random.rand(B, N, C)
+
+                    iou_matrix = _compute_iou_matrix(boxes[0, :, :])  # (N,N)
+                    iou_matrix = iou_matrix[~np.eye(iou_matrix.shape[0], dtype=bool)].reshape(iou_matrix.shape[0], -1)
+
+                    for per_class_suppression in [False, True]:
+                        for iou_thresh in iou_threshold_percentile:
+                            for score_thresh in score_threshold_percentile_arr:
+                                for is_dynamic in [False, True]:
+
+                                    if score_thresh == 0:
+                                        score_threshold = np.min(scores) - 1
+                                    elif score_thresh == 100:
+                                        score_threshold = np.max(scores) + 1
+                                    else:
+                                        score_threshold = np.percentile(scores, score_thresh) + .01
+
+                                    if iou_thresh == 0:
+                                        iou_threshold = np.maximum(np.min(iou_matrix) - .01, 0.0)
+                                    else:
+                                        iou_threshold = np.percentile(iou_matrix, iou_thresh) + .01
+
+                                    number_of_test += 1
+                                    # print('-' * 90)
+                                    # print(
+                                    #     '{} Testing NMS: iou percentile thresh and value : {}, {:.3f}, '
+                                    #     'score thresh percentile and value: {}, {:.3f}, B={}, C={}, N={}, M={}, per_class_suppression={} '.
+                                    #     format(number_of_test, iou_thresh, iou_threshold, score_thresh, score_threshold, B,C,N,M,per_class_suppression))
+                                    # print('-' * 90)
+
+                                    tf_boxes, tf_scores, tf_ids, tf_num_boxes = _nms_TF(boxes, scores, iou_threshold,
+                                                                                        score_threshold,
+                                                                                        per_class_suppression,
+                                                                                        M)
+                                    expected = dict()
+                                    expected['selected_boxes'] = tf_boxes
+                                    expected['selected_scores'] = tf_scores
+                                    expected['selected_box_ids'] = tf_ids
+                                    expected['number_of_boxes'] = tf_num_boxes
+
+                                    # define CoreML model
+
+                                    input_features = [('boxes', datatypes.Array(B,N,4)), ('scores', datatypes.Array(B,N,C))]
+                                    output_features = [('selected_boxes', None), ('selected_scores', None),
+                                                       ('selected_box_ids', None), ('number_of_boxes', None)]
+
+                                    input_names = ['boxes', 'scores']
+                                    if is_dynamic:
+                                        input_names.extend(['iou_threshold', 'score_threshold', 'max_boxes'])
+                                        input_features.append(('iou_threshold', datatypes.Array(1, )))
+                                        input_features.append(('score_threshold', datatypes.Array(1, )))
+                                        input_features.append(('max_boxes', datatypes.Array(1, )))
+
+                                    builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                                                  disable_rank5_shape_mapping=True)
+
+                                    input_dict = dict()
+                                    input_dict['boxes'] = boxes
+                                    input_dict['scores'] = scores
+
+                                    if is_dynamic:
+                                        builder.add_nms('nms', input_names,
+                                                        ['selected_boxes', 'selected_scores', 'selected_box_ids','number_of_boxes'],
+                                                        per_class_suppression=per_class_suppression)
+
+                                        input_dict['iou_threshold'] = iou_threshold * np.ones([1], dtype=np.float)
+                                        input_dict['score_threshold'] = score_threshold * np.ones([1], dtype=np.float)
+                                        input_dict['max_boxes'] = M * np.ones([1], dtype=np.float)
+                                    else:
+                                        builder.add_nms('nms', input_names,
+                                                        ['selected_boxes', 'selected_scores', 'selected_box_ids','number_of_boxes'],
+                                                        iou_threshold=iou_threshold, score_threshold=score_threshold,
+                                                        max_boxes=M, per_class_suppression=per_class_suppression)
+
+                                    self._test_model(builder.spec, input_dict, expected, useCPUOnly=cpu_only)
+
+
+    def test_nms_gpu(self):
+        self.test_nms_cpu(cpu_only=False)
+
     def test_rank_preserving_reshape(self):
         input_shapes = [(20, 10), (20, 10, 5), (10, 3, 5)]
         target_shapes = [(5, -1), (0, 2, 25), (25, 0, -1)]
@@ -3973,7 +4312,7 @@ class SimpleNetworkTest(CorrectnessTest):
 
 if __name__ == '__main__':
     unittest.main()
-    #suite = unittest.TestSuite()
-    #suite.addTest(NewLayersSimpleTest("test_shape_flexibility_enumeration"))
-    #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
-    #unittest.TextTestRunner().run(suite)
+    # suite = unittest.TestSuite()
+    # suite.addTest(NewLayersSimpleTest("test_nms_cpu"))
+    # #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
+    # unittest.TextTestRunner().run(suite)

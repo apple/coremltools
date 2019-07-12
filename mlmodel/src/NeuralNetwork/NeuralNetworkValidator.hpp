@@ -174,6 +174,8 @@ namespace CoreML {
         Result validateReductionTypeLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateReverseSeqLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateLayerNormalizationLayer(const Specification::NeuralNetworkLayer& layer);
+        Result validateConstantPadLayer(const Specification::NeuralNetworkLayer& layer);
+        Result validateNMSLayer(const Specification::NeuralNetworkLayer& layer);
 
         Result validateFailUnknownType(const Specification::NeuralNetworkLayer& layer);
     };

@@ -371,7 +371,7 @@ class TypeInferenceVisitor(object):
             # visit each the inputs
             input_types = [self.visit(inp) for inp in node.inputs[:-1]]
             rettype = input_types[0]
-            # find the most specific tensor shpae
+            # find the most specific tensor shape
             for t in input_types[1:]:
                 good, newtype = builtins.is_tensor_and_is_compatible(rettype, t)
                 if good:
@@ -687,7 +687,6 @@ class TypeInferenceVisitor(object):
             print("make_tuple at %s has an unknown type %s", (node.name, str(types)))
         types = [t if t is not None else builtins.unknown for t in types]
         return builtins.tuple(types)
-        pass
 
     def visit_BatchMatMul(self, node):
         # node.op = "MatMul"
@@ -944,9 +943,6 @@ class TypeInferenceVisitor(object):
     def visit_Rsqrt(self, node):
         return self.visit_unary(node)
 
-    def visit_Sin(self, node):
-        return self.visit_unary(node)
-
     def visit_Square(self, node):
         return self.visit_unary(node)
 
@@ -988,7 +984,7 @@ class TypeInferenceVisitor(object):
 
         assert (ranka == rankb)
         if rankcond == 1 and ranka > 1:
-            node.attr['expand_dims'] = [-i-1 for i in range(ranka-rankcond)]
+            node.attr['expand_dims'] = [-i - 1 for i in range(ranka - rankcond)]
 
         if typea is not None and typeb is not None:
             compatible, restype = builtins.is_tensor_and_is_compatible_general_shape(typea, typeb)
@@ -1761,6 +1757,43 @@ class TypeInferenceVisitor(object):
                     "Possible incompatible type in set_global: %s. expected %s" %
                     (builtins.get_type_info(input_type), builtins.get_type_info(variable_type)))
         return input_type
+
+    def visit_LSTMBlock(self, node):
+        input_type = self.visit(node.inputs[0])
+        weight_type = self.visit(node.inputs[1])
+
+        mode = node.attr['mode']
+        input_shape = list(input_type.get_shape())
+        weight_shape = list(weight_type.get_shape())
+        hidden_size = weight_shape[-1] // 4
+        if mode == 'encoder' and node.attr.get('bidirectional'):
+            hidden_size /= 2
+        input_shape[-1] = hidden_size
+        if mode == 'cell':
+            # returns (output, hidden state, cell state)
+            types = [builtins.tensor(input_type.get_primitive(), tuple(input_shape)) for _ in range(3)]
+        elif mode == 'encoder':
+            hidden_size = input_shape[:]
+            output_shape = input_shape[:]
+            if not node.attr['output_all_states']:
+                if node.attr['time_major']:
+                    output_shape[0] = 1
+                else:
+                    output_shape[1] = 1
+
+            if node.attr.get('bidirectional'):
+                output_shape[-1] *= 2
+                output_type = builtins.tensor(input_type.get_primitive(), tuple(output_shape))
+                hidden_type = builtins.tensor(input_type.get_primitive(), tuple(hidden_size))
+                types = [output_type] + [hidden_type] * 4
+            else:
+                output_type = builtins.tensor(input_type.get_primitive(), tuple(output_shape))
+                hidden_type = builtins.tensor(input_type.get_primitive(), tuple(hidden_size))
+                types = [output_type] + [hidden_type] * 2
+        else:
+            raise ValueError('Unknown mode type for LSTMBlock')
+
+        return builtins.tuple(types)
 
 
 def type_is_unknown(t):

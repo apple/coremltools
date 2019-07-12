@@ -102,6 +102,8 @@ def delete_node(g, name):
 
 
 def replace_node(g, original_node, new_node):
+    for o in list(g[original_node].control_outputs):
+        replace_control_source(g, original_node, o, new_node)
     for o in list(g[original_node].outputs):
         replace_source(g, original_node, o, new_node)
 
@@ -118,7 +120,7 @@ def fill_outputs(gd):
             gd[i].outputs.append(v.name)
         for i in v.control_inputs:
             gd[i].control_outputs.append(v.name)
-    get_tuple_ops = ['Split', 'SplitV']
+    get_tuple_ops = ['Split', 'SplitV', 'LSTMBlock']
     for k, v in gd.items():
         if v.op in get_tuple_ops:
             outputs = [[out, int(gd[out].attr['index'])] for out in v.outputs]

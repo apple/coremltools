@@ -25,7 +25,8 @@ def add_identity_outputs(ssa, main_function='main'):
     vnames = list(main.graph.keys())[:]
     for v in vnames:
         node = main.graph[v]
-        if len(node.outputs) == 0 and node.op != 'Identity':
+        if (len(node.outputs) == 0 and node.op != 'Identity'
+            and node.op != "NoOp" and node.op != 'set_global'):
             # current node is appended with _orig, new node takes current name
             name = ssa._find_free_name(node.name + '_orig')
             original_name = node.name

@@ -74,6 +74,7 @@ add_library(mlmodel
     ${CMAKE_CURRENT_BINARY_DIR}/format/DictVectorizer.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/FeatureTypes.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/FeatureVectorizer.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/format/Gazetteer.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/GLMClassifier.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/GLMRegressor.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/Identity.pb.cc
@@ -93,6 +94,7 @@ add_library(mlmodel
     ${CMAKE_CURRENT_BINARY_DIR}/format/TreeEnsemble.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/TextClassifier.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/VisionFeaturePrint.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/format/WordEmbedding.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/WordTagger.pb.cc
 
     src/Comparison.cpp
@@ -107,6 +109,7 @@ add_library(mlmodel
     src/CustomModelValidator.cpp
     src/DictVectorizerValidator.cpp
     src/FeatureVectorizerValidator.cpp
+    src/GazetteerValidator.cpp
     src/IdentityValidator.cpp
     src/ImputerValidator.cpp
     src/InterfaceValidators.cpp
@@ -122,6 +125,7 @@ add_library(mlmodel
     src/TreeEnsembleValidator.cpp
     src/TextClassifierValidator.cpp
     src/VisionFeaturePrintValidator.cpp
+    src/WordEmbeddingValidator.cpp
     src/WordTaggerValidator.cpp
     src/QuantizationValidationUtils.cpp
     src/KNearestNeighborsClassifierValidator.cpp
@@ -170,6 +174,7 @@ set(proto_files
     DictVectorizer
     FeatureTypes
     FeatureVectorizer
+    Gazetteer
     GLMClassifier
     GLMRegressor
     Identity
@@ -189,6 +194,7 @@ set(proto_files
     TreeEnsemble
     TextClassifier
     VisionFeaturePrint
+    WordEmbedding
     WordTagger
 )
 

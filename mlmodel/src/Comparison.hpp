@@ -113,6 +113,10 @@ namespace CoreML {
                         const CoreMLModels::WordTagger& b);
         bool operator==(const CoreMLModels::TextClassifier& a,
                         const CoreMLModels::TextClassifier& b);
+        bool operator==(const CoreMLModels::Gazetteer& a,
+                        const CoreMLModels::Gazetteer& b);
+        bool operator==(const CoreMLModels::WordEmbedding& a,
+                        const CoreMLModels::WordEmbedding& b);
         bool operator==(const CoreMLModels::VisionFeaturePrint& a,
                         const CoreMLModels::VisionFeaturePrint& b);
         bool operator==(const CoreMLModels::SoundAnalysisPreprocessing& a,

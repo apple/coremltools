@@ -32,6 +32,8 @@ enum MLModelType: int {
     MLModelType_wordTagger = 2001,
     MLModelType_visionFeaturePrint = 2002,
     MLModelType_soundAnalysisPreprocessing = 2003,
+    MLModelType_gazetteer = 2004,
+    MLModelType_wordEmbedding = 2005,
     MLModelType_NOT_SET = 0,
 };
 
@@ -100,6 +102,10 @@ static const char * MLModelType_Name(MLModelType x) {
             return "MLModelType_visionFeaturePrint";
         case MLModelType_soundAnalysisPreprocessing:
             return "MLModelType_soundAnalysisPreprocessing";
+        case MLModelType_gazetteer:
+            return "MLModelType_gazetteer";
+        case MLModelType_wordEmbedding:
+            return "MLModelType_wordEmbedding";
         case MLModelType_NOT_SET:
             return "INVALID";
     }
