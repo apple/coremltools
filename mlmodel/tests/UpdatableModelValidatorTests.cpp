@@ -21,7 +21,6 @@
 
 using namespace CoreML;
 
-
 int testInvalidUpdatableModelWrongType() {
     
     /*
@@ -789,6 +788,32 @@ int testMissingUpdatableModelParameters() {
     res = Model::validate(m);
     ML_ASSERT_BAD(res);
 
+    return 0;
+}
+
+int testUpdatableModelSpecVersion() {
+    /*
+     checks that an updatable model has correct spec version
+     - MLMODEL_SPECIFICATION_VERSION_IOS13
+     */
+    
+    Specification::Model m;
+    (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
+    // now add an updatable model parameter.
+    addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    
+    // now set incorrect spec version
+    m.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS12);
+    
+    Result res = Model::validate(m);
+    ML_ASSERT_BAD(res);  // "Model specification version for an updatable model must be '4' or above."
+    
+    // fix spec version
+    m.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    res = Model::validate(m);
+    ML_ASSERT_GOOD(res);
     return 0;
 }
 

@@ -153,6 +153,7 @@ MLMODEL_TEST(testInvalidLayerNormalizationWrongGammaOrBeta)
 MLMODEL_TEST(testInvalidConstantPad)
 
 // Updatable model tests
+MLMODEL_TEST(testUpdatableModelSpecVersion)
 MLMODEL_TEST(testInvalidUpdatableModelWrongType)
 MLMODEL_TEST(testInvalidUpdatableModelWrongLayer)
 MLMODEL_TEST(testInvalidUpdatableModelWrongWeights)
