@@ -1941,8 +1941,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                                     input_features, output_features,
                                     disable_rank5_shape_mapping=True)
 
-                                builder.add_topk('topk', input_names, output_names,
-                                                 k=k, axis=axis, use_bottom_k=bottom_k_flag)
+                                if n_inputs == 2:
+                                    builder.add_topk('topk', input_names, output_names,
+                                                     axis=axis, use_bottom_k=bottom_k_flag)
+                                else:
+                                    builder.add_topk('topk', input_names, output_names,
+                                                     k=k, axis=axis, use_bottom_k=bottom_k_flag)
 
                                 data = np.random.randint(low=0, high=int(np.prod(input_shape)), size=input_shape)
                                 data = data.astype(np.float32)
