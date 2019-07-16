@@ -659,24 +659,30 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.sin(x)}
             self._test_model(spec, {'data': x}, expected, useCPUOnly=True)
 
-
-    @unittest.skip('TO FIX')
-    def test_shape_flexibility_enumeration(self):
-
-        input_features = [('data', datatypes.Array(*(3,4,6)))]
+    def test_shape_flexibility_enumeration(self, rank=4):
+        default_shape = tuple(np.random.randint(1,15,size=rank))
+        input_features = [('data', datatypes.Array(*default_shape))]
         builder = neural_network.NeuralNetworkBuilder(input_features,
                                                       [('output', None)], disable_rank5_shape_mapping=True)
         builder.add_sin(name='sin', input_name='data', output_name='output')
         spec = builder.spec
 
-        shapes = [(1, 5, 7), (60, 5, 2), (22, 4, 9), (5, 3, 56)]
+        shapes = [tuple(np.random.randint(1,15,size=rank)), tuple(np.random.randint(1,15,size=rank))]
         flexible_shape_utils.add_multiarray_ndshape_enumeration(spec, feature_name='data', enumerated_shapes=shapes)
 
-        shapes.append((3,4,6))
+        shapes.append(default_shape)
         for s in shapes:
             x = np.random.rand(*s)
             expected = {'output': np.sin(x)}
             self._test_model(spec, {'data': x}, expected, useCPUOnly=True)
+
+    @unittest.skip('To fix, output rank comes out to be 4, prepended by 1')
+    def test_shape_flexibility_enumeration_rank3(self):
+        self.test_shape_flexibility_enumeration(rank=3)
+
+    @unittest.skip('To fix, output rank comes out to be 4, prepended by two 1s')
+    def test_shape_flexibility_enumeration_rank2(self):
+        self.test_shape_flexibility_enumeration(rank=2)
 
     def test_transpose_cpu(self):
         for rank in range(1, 6):
