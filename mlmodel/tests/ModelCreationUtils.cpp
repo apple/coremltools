@@ -197,9 +197,18 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
         ceLossLayer->set_target("target");
         
         addLearningRate(classifier, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
-        addMiniBatchSize(classifier, Specification::Optimizer::kSgdOptimizer, 1, 1, 100, std::set<int64_t>());
+        addMiniBatchSize(classifier, Specification::Optimizer::kSgdOptimizer, 32, 1, 100, {16, 32, 64, 128});
         addEpochs(classifier, 100, 0, 100, std::set<int64_t>());
         addShuffleAndSeed(classifier, 2019, 0, 2019, std::set<int64_t>());
+        
+        for (auto feature : m.description().input()) {
+            auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
+            trainingInput->CopyFrom(feature);
+        }
+        for (auto feature : m.description().output()) {
+            auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
+            trainingInput->CopyFrom(feature);
+        }
     }
     
     return classifier;
