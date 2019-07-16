@@ -29,6 +29,12 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
         if (!r.good()) {return r;}
         r = validateRankCount(layer, "Convolution", 4, -1, blobNameToRank);
         if (!r.good()) {return r;}
+    } else {
+        if (layer.input_size() != 1) {
+            std::string err = "Convolution Layer '" + layer.name() +
+            "' does not support weight as input tensor when RANK5_ARRAY_MAPPING == true.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
     }
     
     // We need to check if the ConvolutionPaddingType is set
@@ -40,7 +46,19 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
     
     const auto& params = layer.convolution();
     bool is_deconv = params.isdeconvolution();
-    
+    if (is_deconv && layer.input_size() != 1) {
+        std::string err = "Deconvolution Layer '" + layer.name() + "' does not support weight as input tensor.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    if (layer.input_size() != 1 && (
+        ((params.dilationfactor_size() > 0 && params.dilationfactor(0) > 1) ||
+        (params.dilationfactor_size() > 1 && params.dilationfactor(1) > 1))
+        )) {
+        std::string err = "Convolution layer: '" + layer.name() + "' , dilated convolution does not support weight as input tensor.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
     uint64_t kernelChannels = params.kernelchannels();
     uint64_t outputChannels = params.outputchannels();
     uint64_t nGroups = params.ngroups();
@@ -69,6 +87,11 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
     }
 
     bool has_bias = params.hasbias();
+    if (has_bias && layer.input_size() != 1) {
+        std::string err = "Convolution layer: '" + layer.name() + "' with dynamic weight does not support static bias.";
+        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
     WeightParamType weightsValueType, biasValueType;
     weightsValueType = valueType(params.weights());
     biasValueType = valueType(params.bias());

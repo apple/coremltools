@@ -11,6 +11,7 @@ import uuid
 
 import numpy as np
 import tensorflow as tf
+import pytest
 
 import coremltools
 import coremltools.models.datatypes as datatypes
@@ -707,6 +708,100 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
 
+
+    def test_dynamic_weight_conv(self):
+
+        input_dim = (1, 3, 16, 16)
+        # weight layout: (output_channels, kernel_channels, height, width)
+        weight_dim = (4, 3, 3, 3)
+        output_dim = (1, 4, 14, 14)
+
+        kernel_channels = input_dim[0]
+        output_channels, kernel_channels, height, width = weight_dim
+        
+        input_features = [
+            ('input', datatypes.Array(*input_dim)),
+            ('weight', datatypes.Array(*weight_dim))]
+        output_features = [('output', None)]
+
+        builder = neural_network.NeuralNetworkBuilder(
+            input_features,
+            output_features,
+            disable_rank5_shape_mapping=True)
+
+        builder.add_convolution(
+            name='two_input_conv_layer',
+            kernel_channels=kernel_channels,
+            output_channels=output_channels,
+            height=height,
+            width=width,
+            stride_height=1,
+            stride_width=1,
+            border_mode='valid',
+            groups=1,
+            W=None,
+            b=None,
+            has_bias=False,
+            input_name=['input', 'weight'],
+            output_name='output')
+
+        # Assigning everything to ones should cover the execution path
+        # and engine failures, but is not a complete check on numerics.
+        input_val = np.ones(input_dim)
+        weight_val = np.ones(weight_dim)
+        expected = np.ones(output_dim) * 27
+
+        feed_dict = {'input': input_val, 'weight': weight_val}
+        expected = {'output': expected}
+
+        self._test_model(builder.spec, feed_dict, expected, useCPUOnly=True)
+        self._test_model(builder.spec, feed_dict, expected, useCPUOnly=False)
+
+    @pytest.mark.xfail
+    def test_dynamic_weight_deconv(self):
+        # Expect to fail in Core ML 3
+        input_dim = (1, 1, 16, 16)
+        # weight layout: (output_channels, kernel_channels, height, width)
+        weight_dim = (1, 1, 3, 3)
+        output_dim = (1, 1, 18, 18)
+        output_channels, kernel_channels, height, width = weight_dim
+
+        input_features = [
+            ('data', datatypes.Array(*input_dim)),
+            ('weight', datatypes.Array(*weight_dim))]
+        output_features = [('output', None)]
+
+        builder = neural_network.NeuralNetworkBuilder(
+            input_features,
+            output_features,
+            disable_rank5_shape_mapping=True)
+
+        builder.add_convolution(
+            name='deconv',
+            kernel_channels=kernel_channels,
+            output_channels=output_channels,
+            height=height,
+            width=width,
+            stride_height=1,
+            stride_width=1,
+            border_mode='valid',
+            groups=1,
+            W=None,
+            b=None,
+            has_bias=False,
+            is_deconv=True,
+            input_name=['data', 'weight'],
+            output_name='output')
+
+        input_val = np.ones(input_dim)
+        weight_val = np.ones(weight_dim)
+        expected = np.ones(output_dim) * 27
+
+        feed_dict = {'data': input_val, 'weight': weight_val}
+        expected = {'output': expected}
+
+        self._test_model(builder.spec, feed_dict, expected)
+
     def test_batched_mat_mul_cpu(self, cpu_only=True):
         a_shapes = [(10,), (4, 10), (10,), (10,), (2, 3), (1, 3, 4),
                     (1, 3, 1, 2, 3), (2, 3, 1, 3, 4)]
@@ -735,10 +830,10 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             a = np.random.rand(*input_shapes[0])
             b = np.random.rand(*input_shapes[1])
-            input = {'A': a, 'B': b}
+            input_ = {'A': a, 'B': b}
             expected = {'output': np.array(np.matmul(a, b))}
             shape_dict = {'output': outShape}
-            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only,
+            self._test_model(builder.spec, input_, expected, useCPUOnly=cpu_only,
                              output_name_shape_dict=shape_dict)
 
     def test_batched_mat_mul_gpu(self):
@@ -4223,9 +4318,88 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_shape, [])
         self.assertEqual(failed_tests_numerical, [])
 
+
 @unittest.skipIf(macos_version() < LAYERS_10_15_MACOS_VERSION,
                  'macOS 10.15+ required. Skipping tests.')
-class SimpleNetworkTest(CorrectnessTest):
+class CoreML3NetworkStressTest(CorrectnessTest):
+    def test_dyn_weight_conv2d_stress(self):
+        options = dict(
+            padding = ['valid'],
+            filters = [1,2,4],
+            kernel_size = [1,3,5], # square kernels
+            strides = [1,2],
+            dilation_rate = [1],
+        )
+
+        input_size = 16
+        input_channels = 3
+        input_dim = (1, input_channels, input_size, input_size)
+
+        def conv_spatial_size(image_size, kernel_size, stride, dilation,
+                padding):
+            if padding == 'valid':
+                kernel_size_dilated = (kernel_size - 1) * dilation + 1
+                return (image_size - kernel_size_dilated) // stride + 1
+            elif padding == 'same':
+                return int(math.ceil(image_size * 1.0 / stride))
+            else:
+                return 0
+
+        for x in itertools.product(*options.values()):
+            kwargs = dict(zip(options.keys(), x))
+            if kwargs['strides'] > 1 and kwargs['dilation_rate'] > 1:
+                continue
+            # weight layout: (output_channels, kernel_channels, height, width)
+            weight_dim = (kwargs['filters'], input_channels,
+                kwargs['kernel_size'], kwargs['kernel_size'])
+
+            input_features = [
+                ('input', datatypes.Array(*input_dim)),
+                ('weight', datatypes.Array(*weight_dim))]
+            output_features = [('output', None)]
+
+            builder = neural_network.NeuralNetworkBuilder(
+                input_features,
+                output_features,
+                disable_rank5_shape_mapping=True)
+
+            builder.add_convolution(
+                name='two_input_conv_layer',
+                kernel_channels=input_channels,
+                output_channels=kwargs['filters'],
+                height=kwargs['kernel_size'],
+                width=kwargs['kernel_size'],
+                stride_height=kwargs['strides'],
+                stride_width=kwargs['strides'],
+                border_mode=kwargs['padding'],
+                groups=1,
+                W=None,
+                b=None,
+                has_bias=False,
+                dilation_rate=kwargs['dilation_rate'],
+                input_name=['input', 'weight'],
+                output_name='output')
+
+            # Assigning everything to ones should cover the execution path
+            # and engine failures, but is not a complete check on numerics.
+            out_spatial_size = conv_spatial_size(
+                input_size,
+                kwargs['kernel_size'],
+                kwargs['strides'],
+                kwargs['dilation_rate'],
+                kwargs['padding'])
+
+            input_val = np.ones(input_dim)
+            weight_val = np.ones(weight_dim)
+            output_dim = (1, kwargs['filters'], out_spatial_size, out_spatial_size)
+            expected = np.ones(output_dim) * (kwargs['kernel_size'] * kwargs['kernel_size'] * input_channels)
+
+            feed_dict = {'input': input_val, 'weight': weight_val}
+            expected = {'output': expected}
+
+            self._test_model(builder.spec, feed_dict, expected)
+
+
     def test_power_iteration_cpu(self):
 
         convergence_tolerance = 1e-8
@@ -4281,12 +4455,6 @@ class SimpleNetworkTest(CorrectnessTest):
 
         # make input sizes flexible
         spec = builder.spec
-
-        # flexible_shape_utils.set_multiarray_ndshape_range(spec, feature_name='matrix',
-        #                                                      lower_bounds=[1, 1], upper_bounds=[10, -1])
-        #
-        # flexible_shape_utils.set_multiarray_ndshape_range(spec, feature_name='starting_vector',
-        #                                                      lower_bounds=[1], upper_bounds=[-1])
 
         flexible_shape_utils.add_multiarray_ndshape_enumeration(spec, feature_name='matrix',
                                                                 enumerated_shapes=[(3,3), (4,4)])

@@ -1521,13 +1521,16 @@ class NeuralNetworkBuilder(object):
             Option for the padding type and output blob shape. Can be either 'valid' or 'same'.
         groups: int
             Number of kernel groups. Input is divided into groups along the channel axis. Each kernel group share the same weights.
-        W: numpy.array or bytes()
+        W: numpy.array or bytes() or None
             Weight of the convolution kernels.
 
             - If is_deconv is False, W should have shape (height, width, kernel_channels, output_channels), where kernel_channel = input_channels / groups
             - If is_deconv is True, W should have shape (height, width, kernel_channels, output_channels / groups), where kernel_channel = input_channels
 
             If W is of type bytes(), i.e. quantized, other quantization related arguments must be provided as well (see below).
+            For Core ML specification version >=4, W can be None. In this case,
+            the convolution layer takes 2 inputs, where the 1st input represents the input feature map,
+            the 2nd input represents the weight blob.
 
         b: numpy.array
             Biases of the convolution kernels. b should have shape (outputChannels, ).
@@ -1548,8 +1551,8 @@ class NeuralNetworkBuilder(object):
             When is_deconv == False, this parameter is ignored.
             If it is None, the output shape is calculated automatically using the border_mode.
 
-        input_name: str
-            The input blob name of this layer.
+        input_name: str or [str]
+            The input blob name(s) of this layer.
         output_name: str
             The output blob name of this layer.
 
