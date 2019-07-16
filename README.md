@@ -10,7 +10,7 @@ coremltools 3.0b beta
 [Release notes](https://github.com/apple/coremltools/releases/tag/v3.0-beta)
 ```shell
 # Install using pip
-pip install coremltools==3.0b2
+pip install coremltools==3.0b3
 ```
 
 API
