@@ -1,8 +1,3 @@
-import math
-import numpy as np
-from coremltools.proto import FeatureTypes_pb2 as _FeatureTypes_pb2
-from coremltools.proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
-
 """
 Shape inference functions.
 """
@@ -22,12 +17,6 @@ def _transpose(layer_spec, input_shapes):
 def _get_shape(layer_spec, input_shapes):
     rank = len(input_shapes[0])
     return [[rank]]
-
-
-def _fill_dynamic(layer_spec, input_shapes):
-    assert (len(input_shapes) == 1 and len(input_shapes[0]) == 1)
-    rank = int(input_shapes[0][0])
-    return [[-1] * rank]
 
 
 def _slice_static(layer_spec, input_shapes):
@@ -126,8 +115,8 @@ def _broadcastable(layer_spec, input_shapes):
 
 
 def _scatter(layer_spec, input_shapes):
-    # inputs: [target, source, indices]
-    return [input_shapes[0]]
+    # get the values of the shape input
+    return [[-1] * input_shapes[0][0]]
 
 
 def _gather(layer_spec, input_shapes):
@@ -365,6 +354,18 @@ def _tile(layer_spec, input_shapes):
     return [[reps[i] * input_shapes[0][i] for i in range(len(reps))]]
 
 
+def _fill_static(layer_spec, input_shapes):
+    params = layer_spec.fillStatic
+    output_shape = params.targetShape
+    return [output_shape]
+
+
+def _fill_dynamic(layer_spec, input_shapes):
+    assert (len(input_shapes) == 1 and len(input_shapes[0]) == 1)
+    rank = int(input_shapes[0][0])
+    return [[-1] * rank]
+
+
 def _broadcast_to_like(layer_spec, input_shapes):
     return [input_shapes[1]]
 
@@ -375,11 +376,21 @@ def _broadcast_to_static(layer_spec, input_shapes):
     return [output_shape]
 
 
+def _pad(layer_spec, input_shapes):
+    return [[-1] * len(input_shapes[0])]
+
+
+def _topk(layer_spec, input_shapes):
+    params = layer_spec.topK
+    value_shape = index_shape = input_shapes[0][:-1] + [params.K]
+    output_shapes = [value_shape, index_shape]
+    return output_shapes
+
+
 # We'll enable them one by one
 _LAYER_REGISTRY = {
     'transpose': _transpose,
     'getShape': _get_shape,
-    'fillDynamic': _fill_dynamic,
     'sliceStatic': _slice_static,
     'squeeze': _squeeze,
     'rangeStatic': _range_static,
@@ -389,11 +400,14 @@ _LAYER_REGISTRY = {
     'gather': _gather,
     'gatherND': _gather_nd,
     'scatter': _scatter,
-    'greatherThan': _broadcastable,
+    'scatterND': _scatter,
     'logicalOr': _broadcastable,
     'logicalNot': _identity,
     'lessThan': _broadcastable,
+    'lessEqual': _broadcastable,
+    'greaterThan': _broadcastable,
     'greaterEqual': _broadcastable,
+    'equal': _broadcastable,
     'notEqual': _broadcastable,
     'logicalAnd': _broadcastable,
     'add': _add,
@@ -437,12 +451,19 @@ _LAYER_REGISTRY = {
     'batchedMatmul': _batched_mat_mul,
     'sin': _identity,
     'cos': _identity,
-    'round': _identity,
     'tile': _tile,
     'fillLike': _identity,
+    'fillStatic': _fill_static,
+    'fillDynamic': _fill_dynamic,
     'uniDirectionalLSTM': _identity,
     'broadcastToLike': _broadcast_to_like,
     'broadcastToStatic': _broadcast_to_static,
+    'constantPad': _pad,
+    'sign': _identity,
+    'ceil': _identity,
+    'floor': _identity,
+    'round': _identity,
+    'topK': _topk,
 }
 
 

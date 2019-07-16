@@ -1,14 +1,7 @@
 import unittest
-import os, shutil, tempfile
 import tensorflow as tf
 import numpy as np
 
-from tensorflow.python.tools.freeze_graph import freeze_graph
-from tensorflow.tools.graph_transforms import TransformGraph
-
-import coremltools
-
-from testutils import generate_data, tf_transpose
 from test_base import TFNetworkTest
 
 
@@ -628,54 +621,6 @@ class TFSingleLayerTest(TFNetworkTest):
         output_name = [z.op.name]
         self._test_tf_model_constant(graph, {"input": [1, 10, 10, 6]}, output_name)
 
-    def test_sqrt(self):
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            x_input = tf.placeholder(tf.float32, shape=[None, 10, 10, 6], name='input')
-            z = tf.sqrt(x_input, name='output')
-
-        output_name = [z.op.name]
-        self._test_tf_model_constant(graph, {'input': [1, 10, 10, 6]}, output_name)
-
-    def test_pow(self):
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            x_input = tf.placeholder(tf.float32, shape=[None, 5, 5, 6], name="input")
-            z = tf.pow(x_input, 4, name='output')
-
-        output_name = [z.op.name]
-        self._test_tf_model_constant(graph, {"input": [1, 5, 5, 6]}, output_name)
-
-    def test_log(self):
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
-            out = tf.log(a)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
-
-    def test_exp(self):
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
-            out = tf.exp(a)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
-
-    def test_square(self):
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
-            out = tf.square(a)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
-
-    def test_squared_difference(self):
-        shape = [3, 4, 5]
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=shape, name='a')
-            b = tf.placeholder(tf.float32, shape=shape, name='b')
-            out = tf.squared_difference(a, b)
-        self._test_tf_model_constant(graph, {'a': shape, 'b': shape}, [out.op.name])
-
     def test_add(self):
         shape = [3, 4, 5]
         graph = tf.Graph()
@@ -758,39 +703,44 @@ class TFSingleLayerTest(TFNetworkTest):
         self._test_tf_model_constant(graph, {'a': shape, 'b': shape}, [out.op.name])
 
     def test_reduce_prod(self):
+        shape = [3, 400, 500]
         graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
-            out = tf.reduce_prod(a, axis=-1)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
+            out = tf.reduce_prod(a, axis=0)
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name], data_mode='random_zero_mean_with_zeros')
 
     def test_reduce_mean(self):
+        shape = [3, 4, 5]
         graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
             out = tf.reduce_mean(a, axis=-1)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     def test_reduce_sum(self):
+        shape = [3, 4, 5]
         graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
             out = tf.reduce_sum(a, axis=-1)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     def test_reduce_max(self):
+        shape = [3, 4, 5]
         graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
             out = tf.reduce_max(a, axis=-1)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     def test_reduce_min(self):
+        shape = [3, 4, 5]
         graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=[None, 20], name='input')
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape, name='input')
             out = tf.reduce_min(a, axis=-1)
-        self._test_tf_model_constant(graph, {'input': [1, 20]}, [out.op.name])
+        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
     def test_logical_and(self):
         shape = [3, 4, 5]
@@ -831,18 +781,190 @@ class TFSingleLayerTest(TFNetworkTest):
     def test_sin(self):
         shape = [3, 4, 5]
         graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=shape, name='input')
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
             out = tf.sin(a)
-        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     def test_cos(self):
         shape = [3, 4, 5]
         graph = tf.Graph()
-        with graph.as_default() as g:
-            a = tf.placeholder(tf.float32, shape=shape, name='input')
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
             out = tf.cos(a)
-        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_sqrt(self):
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=[None, 10, 10, 6])
+            out = tf.sqrt(a)
+        self._test_tf_model_constant(graph, {a.op.name: [1, 10, 10, 6]}, [out.op.name], data_mode='random_large')
+
+    def test_rsqrt(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.rsqrt(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name], data_mode='random_large')
+
+    def test_pow(self):
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            a = tf.placeholder(tf.float32, shape=[None, 5, 5, 6])
+            out = tf.pow(a, 4)
+        self._test_tf_model_constant(graph, {a.op.name: [1, 5, 5, 6]}, [out.op.name])
+
+    def test_log(self):
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            a = tf.placeholder(tf.float32, shape=[None, 20])
+            out = tf.log(a)
+        self._test_tf_model_constant(graph, {a.op.name: [1, 20]}, [out.op.name], data_mode='random')
+
+    def test_exp(self):
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            a = tf.placeholder(tf.float32, shape=[None, 20])
+            out = tf.exp(a)
+        self._test_tf_model_constant(graph, {a.op.name: [1, 20]}, [out.op.name])
+
+    def test_abs(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.abs(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_square(self):
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            a = tf.placeholder(tf.float32, shape=[None, 20])
+            out = tf.square(a)
+        self._test_tf_model_constant(graph, {a.op.name: [1, 20]}, [out.op.name])
+
+    def test_squared_difference(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default() as g:
+            a = tf.placeholder(tf.float32, shape=shape)
+            b = tf.placeholder(tf.float32, shape=shape)
+            out = tf.squared_difference(a, b)
+        self._test_tf_model_constant(graph, {a.op.name: shape, b.op.name: shape}, [out.op.name])
+
+    def test_sign(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.sign(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name], data_mode='random_int')
+
+    def test_ceil(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.ceil(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name], data_mode='random_int')
+
+    def test_floor(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.floor(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name], data_mode='random_int')
+
+    def test_round(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.round(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_negative(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.negative(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_equal(self):
+        shape_a = [1, 4, 5]
+        shape_b = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape_a)
+            b = tf.placeholder(tf.float32, shape=shape_b)
+            out = tf.equal(a, b)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape_a, b.op.name: shape_b}, [out.op.name],
+            data_mode='random_zero_mean_with_zeros')
+
+    def test_not_equal(self):
+        shape_a = [1, 4, 5]
+        shape_b = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape_a)
+            b = tf.placeholder(tf.float32, shape=shape_b)
+            out = tf.not_equal(a, b)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape_a, b.op.name: shape_b}, [out.op.name],
+            data_mode='random_zero_mean_with_zeros')
+
+    def test_less(self):
+        shape_a = [1, 4, 5]
+        shape_b = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape_a)
+            b = tf.placeholder(tf.float32, shape=shape_b)
+            out = tf.less(a, b)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape_a, b.op.name: shape_b}, [out.op.name],
+            data_mode='random_zero_mean_with_zeros')
+
+    def test_less_equal(self):
+        shape_a = [1, 4, 5]
+        shape_b = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape_a)
+            b = tf.placeholder(tf.float32, shape=shape_b)
+            out = tf.less_equal(a, b)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape_a, b.op.name: shape_b}, [out.op.name],
+            data_mode='random_zero_mean_with_zeros')
+
+    def test_greater(self):
+        shape_a = [1, 4, 5]
+        shape_b = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape_a)
+            b = tf.placeholder(tf.float32, shape=shape_b)
+            out = tf.greater(a, b)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape_a, b.op.name: shape_b}, [out.op.name],
+            data_mode='random_zero_mean_with_zeros')
+
+    def test_greater_equal(self):
+        shape_a = [1, 4, 5]
+        shape_b = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape_a)
+            b = tf.placeholder(tf.float32, shape=shape_b)
+            out = tf.greater_equal(a, b)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape_a, b.op.name: shape_b}, [out.op.name],
+            data_mode='random_zero_mean_with_zeros')
 
     def test_strided_slice(self):
         shape = [3, 2, 3]
@@ -892,9 +1014,148 @@ class TFSingleLayerTest(TFNetworkTest):
         indices = [[[0, 0], [0, 1]], [[1, 0], [1, 1]]]
         graph = tf.Graph()
         with graph.as_default():
-            params = tf.placeholder(tf.float32, shape=shape, name='input')
+            params = tf.placeholder(tf.float32, shape=shape)
             out = tf.gather_nd(params=params, indices=indices)
-        self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
+        self._test_tf_model_constant(graph, {params.op.name: shape}, [out.op.name])
+
+    def test_scatter_nd(self):
+        graph = tf.Graph()
+        with graph.as_default():
+            indices = tf.constant([[0], [2]])
+            updates = tf.placeholder(tf.float32, shape=[2, 4, 4])
+            shape = tf.constant([4, 4, 4])
+            out = tf.scatter_nd(indices, updates, shape)
+        self._test_tf_model_constant(graph, {updates.op.name: [2, 4, 4]}, [out.op.name])
+
+    def test_constant_pad(self):
+        shape = [2, 3]
+        graph = tf.Graph()
+        with graph.as_default():
+            paddings = tf.constant([[1, 1], [2, 2]])
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.pad(a, paddings=paddings, mode='constant')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_constant_pad_v2(self):
+        shape = [2, 3]
+        graph = tf.Graph()
+        with graph.as_default():
+            paddings = tf.constant([[1, 1], [2, 2]])
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.pad(a, paddings=paddings, mode='constant', constant_values=1)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_one_hot(self):
+        shape = [2, 2, 3]
+        graph = tf.Graph()
+        # indices as constants
+        with graph.as_default():
+            indices = [[0, 2], [1, -1]]
+            one_hot = tf.one_hot(indices=indices, depth=3)
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.add(one_hot, a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        # indices as inputs
+        # todo: add implementation
+        # with graph.as_default():
+        #     indices = tf.placeholder(tf.int32, shape=[1])
+        #     out = tf.one_hot(indices=indices, depth=3)
+        # self._test_tf_model_constant(graph, {indices.op.name: [1]}, [out.op.name], data_mode='random_zeros_ones')
+
+    def test_size(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            b = tf.placeholder(tf.int32, shape=[1])
+            size = tf.size(a)
+            out = tf.add(size, b)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape, b.op.name: [1]},
+            [out.op.name], data_mode='random_int')
+
+    def test_all(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.keras.backend.all(a, axis=0)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape}, [out.op.name],
+            data_mode='random_zeros_ones', validate_bool_only=True)
+
+    def test_any(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.keras.backend.any(a, axis=0)
+        self._test_tf_model_constant(
+            graph, {a.op.name: shape}, [out.op.name],
+            data_mode='random_zeros_ones', validate_bool_only=True)
+
+    def test_topk(self):
+        shape = [12, 5, 9, 7]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            values, indices = tf.math.top_k(a, k=3)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [values.op.name])
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [indices.op.name])
+
+    def test_argmax(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.argmax(a, axis=-1)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_argmin(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.argmin(a, axis=-1)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_fill(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.add(tf.fill(dims=shape, value=1.0), a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_clip(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.clip_by_value(a, clip_value_min=-0.2, clip_value_max=0.2)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_log_softmax(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.nn.log_softmax(a, axis=-1)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_slice(self):
+        shape = [3, 4, 10]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.slice(a, begin=[0, 1, 0], size=[-1, 2, 3])
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.strided_slice(a, begin=[0, 1, 0], end=[-1, 2, 5], strides=[1, 2, 1])
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     # @unittest.skip
     # def test_resize_bilinear_non_fractional(self):
@@ -923,30 +1184,27 @@ class TFSingleLayerTest(TFNetworkTest):
     #   output_name = [z.op.name]
     #   self._test_tf_model_constant(graph, {"input:0":[1,10,10,3]}, output_name)
 
-    @unittest.skip
     def test_crop_resize(self):
-        graph = tf.Graph()
-        roi = np.zeros((2, 4), dtype=np.float32)
         graph = tf.Graph()
         with graph.as_default() as g:
             # placeholder constructor returns a tensor not an op
-            x = tf.placeholder(tf.float32, shape=[None, 20], name="test_linear/input")
+            x = tf.placeholder(tf.float32, shape=[None, 20], name='test_linear/input')
             # Make a redundant tensor. It should get trimmed
-            gt = tf.placeholder(tf.float32, shape=[None, 10])
+            dummy = tf.placeholder(tf.float32, shape=[None, 10])
 
             W = tf.Variable(tf.ones([20, 10]))
             b = tf.Variable(tf.ones([10]))
 
             y = tf.matmul(x, W) + b
-            output_name = [y.op.name]
+
         # not batched
-        self._test_tf_model(graph, {"test_linear/input:0": [1, 20]}, output_name)
+        self._test_tf_model(graph, {'test_linear/input': [1, 20]}, [y.op.name])
         # batched
-        self._test_tf_model(graph, {"test_linear/input:0": [8, 20]}, output_name)
+        self._test_tf_model(graph, {'test_linear/input': [8, 20]}, [y.op.name])
 
 
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest('test_stack'))
+    # suite.addTest(TFSingleLayerTest('test_scatter_nd'))
     # unittest.TextTestRunner().run(suite)

@@ -14,12 +14,13 @@ from tensorflow.python.tools.freeze_graph import freeze_graph
 import coremltools
 
 # local to pytest
-from testutils import generate_data, tf_transpose
+from test_utils import generate_data, tf_transpose
 
 DEBUG = False
 
 
 class TFNetworkTest(unittest.TestCase):
+
     @classmethod
     def setUpClass(self):
         """
@@ -130,7 +131,7 @@ class TFNetworkTest(unittest.TestCase):
             # save the weights if freezing is needed
             if not graph_optimizations:
                 static_model_file = graph_def_file
-            elif graph_optimizations=="freeze":
+            elif graph_optimizations == "freeze":
                 saver.save(sess, checkpoint_file)
                 self._simple_freeze(
                     input_graph=graph_def_file,
@@ -142,7 +143,6 @@ class TFNetworkTest(unittest.TestCase):
                     sess, graph.as_graph_def(), output_node_names)
                 with tf.gfile.GFile(static_model_file, "wb") as f:
                     f.write(output_graph_def.SerializeToString())
-
 
         # if TF needs to be quantized, quantize the graph
         if quantize_tf_model:
@@ -195,17 +195,30 @@ class TFNetworkTest(unittest.TestCase):
             graph,
             input_shapes,
             output_node_names,
-            data_mode='random',
+            data_mode='random_zero_mean',
             delta=1e-2,
             use_cpu_only=False,
-            one_dim_seq_flags=None):
+            validate_bool_only=False):
         """
         Common entry to testing routine for graphs that have no variables.
-        graph - defined TensorFlow graph.
-        input_tensor_shapes -  dict str:shape for each input (placeholder)
-        output_node_names - output_node_names, a list of strings
-        output_tensor_names - output tensor names, a list of strings, usually
-            just output_node_names each appended with ':0'
+
+        Parameters
+        ----------
+        graph: tf.Graph()
+            TensorFlow graph.
+        input_shapes: dict [str : shape]
+            Shapes for each input (placeholder).
+        output_node_names: list of str
+            Output tensor names.
+        data_mode: str
+            Data mode for the placeholder data generation.
+        delta: float
+            Delta for error checking, default 1e-2.
+        use_cpu_only: bool
+            If true, force use CPU only, default False.
+        validate_bool_only: bool
+            If true, only validate it's zero or non-zero, otherwise, validate
+            float values, default False.
         """
 
         model_dir = tempfile.mkdtemp()
@@ -263,7 +276,11 @@ class TFNetworkTest(unittest.TestCase):
             tp = tf_out.flatten()
             coreml_out = coreml_output[out_name]
             cp = coreml_out.flatten()
-            self.assertTrue(tf_out.shape == coreml_out.shape)
+
+            self.assertTrue(tf_out.shape == coreml_out.shape, msg=(tf_out.shape, 'vs.', coreml_out.shape))
+
+            if validate_bool_only:
+                cp = np.logical_and(cp, cp)
             for i in range(len(tp)):
                 max_den = max(1.0, tp[i], cp[i])
                 self.assertAlmostEqual(tp[i] / max_den, cp[i] / max_den, delta=delta)
