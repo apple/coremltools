@@ -344,7 +344,7 @@ int testEpochsOutOfAllowedRange() {
     
     addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 20, 10, 100);
-    addEpochs(nn, 100, 0, 50, std::set<int64_t>());
+    addEpochs(nn, 100, 1, 50, std::set<int64_t>());
     
     // expect validation to fail due to conflict in updatable model parameter names.
     Result res = Model::validate(m);

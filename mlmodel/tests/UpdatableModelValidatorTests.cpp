@@ -544,7 +544,7 @@ int testInvalidModelInvalidSoftmax() {
     // now add an updatable model parameter.
     addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 1, 100, std::set<int64_t>());
     
     Result res = Model::validate(m);
     // "validator error: There is a layer (softmax), which does not support backpropagation, between an updatable marked layer and the loss function."
@@ -588,7 +588,7 @@ int testValidModelValidMultipleSoftmax_1() {
     // now add an updatable model parameter.
     addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 1, 100, std::set<int64_t>());
     
     Result res = Model::validate(m);
     ML_ASSERT_GOOD(res);
@@ -632,7 +632,7 @@ int testValidModelValidMultipleSoftmax_2() {
     // now add an updatable model parameter.
     addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 1, 100, std::set<int64_t>());
     
     Result res = Model::validate(m);
     ML_ASSERT_GOOD(res);
@@ -672,7 +672,7 @@ int testValidModelMultipleSoftmaxOutputs() {
     // now add an updatable model parameter.
     addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 1, 100, std::set<int64_t>());
     
     Result res = Model::validate(m);
     ML_ASSERT_GOOD(res);
@@ -722,7 +722,7 @@ int testInvalidModelMultipleLoss() {
     // now add an updatable model parameter.
     addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(nn, 100, 0, 100, std::set<int64_t>());
+    addEpochs(nn, 100, 1, 100, std::set<int64_t>());
     
     Result res = Model::validate(m);
     // "validator error: This model has more than one loss layers specified, which is not supported at the moment."
@@ -802,7 +802,7 @@ int testUpdatableModelSpecVersion() {
     // now add an updatable model parameter.
     addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
     
     // now set incorrect spec version
     m.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS12);
@@ -836,7 +836,7 @@ int testMissingMiniBatchSizeParameter() {
     ML_ASSERT_BAD(res);
     
     addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
     
     // expect validation to pass.
     res = Model::validate(m);
@@ -863,7 +863,7 @@ int testMissingLearningRateParameter() {
     ML_ASSERT_BAD(res);
     
     addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
-    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
     
     // expect validation to pass.
     res = Model::validate(m);
@@ -885,7 +885,7 @@ int testMissingBeta1Parameter() {
     // now add an updatable model parameter.
     addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
     addBeta2(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
     addEps(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
 
@@ -914,7 +914,7 @@ int testMissingBeta2Parameter() {
     // now add an updatable model parameter.
     addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
     addBeta1(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
     addEps(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
     
@@ -943,7 +943,7 @@ int testMissingEpsParameter() {
     // now add an updatable model parameter.
     addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
     addBeta1(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
     addBeta2(m.mutable_neuralnetwork(), Specification::Optimizer::kAdamOptimizer, 0.7f, 0.0f, 1.0f);
     
@@ -987,7 +987,7 @@ int testExistingShuffleWithMissingSeedParameter() {
     (void)buildBasicUpdatableModelWithCategoricalCrossEntropyAndSoftmax(m);
     addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
     addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
-    addEpochs(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
 
     addShuffleAndSeed(m.mutable_neuralnetwork(), 100, 0, 100, std::set<int64_t>());
     Result res = Model::validate(m);

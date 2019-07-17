@@ -105,7 +105,7 @@ static Result validateOptimizer(const Specification::Optimizer& optimizer) {
                 return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
             }
             
-            r = validateInt64Parameter("miniBatchSize", sgdOptimizer.minibatchsize());
+            r = validateInt64Parameter("miniBatchSize", sgdOptimizer.minibatchsize(), true);
             if (!r.good()) {return r;}
             
             break;
@@ -127,7 +127,7 @@ static Result validateOptimizer(const Specification::Optimizer& optimizer) {
                 return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
             }
             
-            r = validateInt64Parameter("miniBatchSize", adamOptimizer.minibatchsize());
+            r = validateInt64Parameter("miniBatchSize", adamOptimizer.minibatchsize(), true);
             if (!r.good()) {return r;}
             
             if (false == adamOptimizer.has_beta1()) {
@@ -173,11 +173,11 @@ static Result validateOtherTopLevelUpdateParameters(const Specification::Network
         return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
     }
     
-    r = validateInt64Parameter("epochs", updateParameters.epochs());
+    r = validateInt64Parameter("epochs", updateParameters.epochs(), true);
     if (!r.good()) {return r;}
 
     if (updateParameters.has_seed()) {
-        r = validateInt64Parameter("seed", updateParameters.seed());
+        r = validateInt64Parameter("seed", updateParameters.seed(), false);
         if (!r.good()) {return r;}
     }
 

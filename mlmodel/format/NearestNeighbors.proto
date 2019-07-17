@@ -9,6 +9,7 @@ option optimize_for = LITE_RUNTIME;
 package CoreML.Specification;
 
 import public "DataStructures.proto";
+import public "Parameters.proto";
 
 /**
  * A k-Nearest-Neighbor classifier
@@ -23,7 +24,7 @@ message KNearestNeighborsClassifier {
     /**
      * Number of neighbors to use for classification.
      */
-    int32 k = 2;
+    Int64Parameter numberOfNeighbors = 3;
 
     /**
      * Type of labels supported by the model. Currently supports String or Int64

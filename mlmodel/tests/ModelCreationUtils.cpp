@@ -198,7 +198,7 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
         
         addLearningRate(classifier, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
         addMiniBatchSize(classifier, Specification::Optimizer::kSgdOptimizer, 32, 1, 100, {16, 32, 64, 128});
-        addEpochs(classifier, 100, 0, 100, std::set<int64_t>());
+        addEpochs(classifier, 100, 1, 100, std::set<int64_t>());
         addShuffleAndSeed(classifier, 2019, 0, 2019, std::set<int64_t>());
         
         for (auto feature : m.description().input()) {
@@ -232,8 +232,10 @@ Specification::KNearestNeighborsClassifier* buildBasicNearestNeighborClassifier(
     m.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
     
     auto nearestNeighborClassifier = m.mutable_knearestneighborsclassifier();
-    nearestNeighborClassifier->set_k(3);
-    
+    int numberOfNeighbors = 3;
+    nearestNeighborClassifier->mutable_numberofneighbors()->mutable_set()->add_values(numberOfNeighbors);
+    nearestNeighborClassifier->mutable_numberofneighbors()->set_defaultvalue(numberOfNeighbors);
+
     auto nearestNeighborIndex = nearestNeighborClassifier->mutable_nearestneighborsindex();
     
     nearestNeighborIndex->mutable_singlekdtreeindex()->set_leafsize(30);
@@ -329,7 +331,7 @@ void addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(Specification::Mod
     
     addLearningRate(neuralNets, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(neuralNets, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(neuralNets, 100, 0, 100, std::set<int64_t>());
+    addEpochs(neuralNets, 100, 1, 100, std::set<int64_t>());
     addShuffleAndSeed(neuralNets, 2019, 0, 2019, std::set<int64_t>());
 }
 

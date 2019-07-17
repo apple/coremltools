@@ -66,7 +66,9 @@ def _convert_k_neighbors_classifier(model, input_name, output_name):
     spec = coremltools.proto.Model_pb2.Model()
     spec.specificationVersion = coremltools.SPECIFICATION_VERSION
 
-    spec.kNearestNeighborsClassifier.k = model.n_neighbors
+    spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue = model.n_neighbors
+    spec.kNearestNeighborsClassifier.numberOfNeighbors.range.minValue = 1
+    spec.kNearestNeighborsClassifier.numberOfNeighbors.range.maxValue = _number_of_samples(model, spec) # is there a better heuristic to use here?
 
     number_of_dimensions = 0
     if _is_algorithm_brute(model):
@@ -101,6 +103,15 @@ def _convert_k_neighbors_classifier(model, input_name, output_name):
     _extract_training_data(model, spec)
 
     return spec
+
+def _number_of_samples(model, spec):
+    """Get the number of samples the model is fitted to."""
+
+    if _is_algorithm_brute(model):
+        return len(model._fit_X)
+    elif _is_algorithm_kd_tree(model):
+        return len(np.asarray(model._tree.data))
+    return 0
 
 def _extract_training_data(model, spec):
     """Extract the training data from the scikit model and add it to the CoreML spec"""
