@@ -188,7 +188,7 @@ message ModelDescription {
  *
  * 3 : iOS 12, macOS 10.14, tvOS 12, watchOS 5 (Core ML 2)
  * - Flexible shapes and image sizes
- * - Categorical squences
+ * - Categorical sequences
  * - Core ML Vision Feature Print, Text Classifier, Word Tagger
  * - Non Max Suppression
  * - Crop and Resize Bilinear NN layers
@@ -200,7 +200,7 @@ message ModelDescription {
  * - Large expansion of supported neural network layers
  *   - Generalized operations
  *   - Control flow
- *   - Dynmaic layers
+ *   - Dynamic layers
  *   - See NeuralNetwork.proto
  * - Nearest Neighbor Classifier
  * - Sound Analysis Prepreocessing
