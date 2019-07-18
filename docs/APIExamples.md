@@ -43,7 +43,10 @@ nn_mlmodel.visualize_spec()
 # To print a succinct description of the neural network
 spec = nn_mlmodel.get_spec()
 from  coremltools.models.neural_network.printer import print_network_spec
-print_network_spec(spec)
+print_network_spec(spec, style='coding') 
+# or
+print_network_spec(spec)  
+
 ```
 
 Another useful tool for visualizing CoreML models and models from other frameworks: [Netron](https://github.com/lutzroeder/netron)
