@@ -437,6 +437,9 @@ class TypeInferenceVisitor(object):
     def visit_Cos(self, node):
         return self.visit_unary(node)
 
+    def visit_Tan(self, node):
+        return self.visit_unary(node)
+
     def visit_Conv2D(self, node):
         input_type = self.visit(node.inputs[0])
         filter_type = self.visit(node.inputs[1])

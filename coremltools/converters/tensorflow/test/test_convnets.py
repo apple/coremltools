@@ -794,6 +794,14 @@ class TFSingleLayerTest(TFNetworkTest):
             out = tf.cos(a)
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
+    def test_tan(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.tan(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
     def test_sqrt(self):
         graph = tf.Graph()
         with graph.as_default():
@@ -990,15 +998,45 @@ class TFSingleLayerTest(TFNetworkTest):
             out = tf.tile(a, [1, 2, 3])
         self._test_tf_model_constant(graph, {'input': shape}, [out.op.name])
 
-    def test_leaky_relu(self):
+    def test_unary_activation_sigmoid(self):
+        shape = [1, 5, 5, 6]
         graph = tf.Graph()
         with graph.as_default():
-            x_input = tf.placeholder(tf.float32, shape=[None, 5, 5, 6], name='input')
-            z = tf.nn.leaky_relu(x_input, 0.2, name='output')
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.sigmoid(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
-        output_name = [z.op.name]
-        self._test_tf_model_constant(
-            graph, {"input": [1, 5, 5, 6]}, output_name, delta=1e-2, data_mode='random_zero_mean')
+    def test_unary_activation_relu(self):
+        shape = [1, 5, 5, 6]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.nn.relu(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_unary_activation_leaky_relu(self):
+        shape = [1, 5, 5, 6]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.nn.leaky_relu(a, 0.15)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_unary_activation_tanh(self):
+        shape = [1, 5, 5, 6]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.tanh(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_unary_activation_elu(self):
+        shape = [1, 5, 5, 6]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.nn.elu(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     def test_stack(self):
         shape = [1]
@@ -1206,5 +1244,5 @@ class TFSingleLayerTest(TFNetworkTest):
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest('test_scatter_nd'))
+    # suite.addTest(TFSingleLayerTest('test_greater'))
     # unittest.TextTestRunner().run(suite)

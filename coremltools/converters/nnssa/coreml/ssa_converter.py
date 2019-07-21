@@ -149,92 +149,93 @@ class SSAConverter(object):
             'StridedSlice': self._convert_slice,
             'Range': self._convert_range,
             'TensorArrayV3': self._convert_tensorarray_alloc,
-            'Maximum': self._convert_maximum,
-            'Minimum': self._convert_minimum,
             'TensorArrayScatterV3': self._convert_array_scatter,
-            'make_tuple': self._convert_make_tuple,
+            'TensorArraySizeV3': self._convert_tensorarray_size,
+            'TensorArrayGatherV3': self._convert_tensorarray_gather,
+            'TensorArrayReadV3': self._convert_tensorarray_read,
+            'TensorArrayWriteV3': self._convert_tensorarray_write,
             'while': self._convert_while,
             'function_entry': self._convert_function,
             'get_tuple': self._convert_get_tuple,
+            'make_tuple': self._convert_make_tuple,
             'get_global': self._convert_get_global,
             'set_global': self._convert_set_global,
-            'Greater': self._convert_greater,
-            'GreaterEqual': self._convert_greater_equal,
-            'NotEqual': self._convert_not_equal,
-            'Equal': self._convert_equal,
-            'Less': self._convert_less,
-            'LessEqual': self._convert_less_equal,
-            'LogSoftmax': self._convert_log_softmax,
-            'LogicalAnd': self._convert_logical_and,
-            'LogicalOr': self._convert_logical_or,
-            'LogicalNot': self._convert_logical_not,
+            'Greater': self._convert_binary_broadcastable,
+            'GreaterEqual': self._convert_binary_broadcastable,
+            'NotEqual': self._convert_binary_broadcastable,
+            'Equal': self._convert_binary_broadcastable,
+            'Less': self._convert_binary_broadcastable,
+            'LessEqual': self._convert_binary_broadcastable,
+            'LogicalAnd': self._convert_binary_broadcastable,
+            'LogicalOr': self._convert_binary_broadcastable,
+            'LogicalNot': self._convert_unary_logical_not,
+            'LogSoftmax': self._convert_unary_log_softmax,
             'return': self._convert_return,
-            'Add': self._convert_add,
-            'Sub': self._convert_sub,
-            'Mul': self._convert_mul,
+            'Maximum': self._convert_binary_broadcastable,
+            'Minimum': self._convert_binary_broadcastable,
+            'Add': self._convert_binary_broadcastable,
+            'Sub': self._convert_binary_broadcastable,
+            'Mul': self._convert_binary_broadcastable,
+            'RealDiv': self._convert_binary_broadcastable,
+            'FloorDiv': self._convert_binary_broadcastable,
+            'BiasAdd': self._convert_binary_broadcastable,
             'FloorMod': self._convert_floor_mod,
-            'FloorDiv': self._convert_floor_div,
-            'RealDiv': self._convert_real_div,
             'SquaredDifference': self._convert_squared_difference,
-            'TensorArrayReadV3': self._convert_tensorarray_read,
-            'TensorArrayWriteV3': self._convert_tensorarray_write,
             'ConcatV2': self._convert_concat_nd,
             'MatMul': self._convert_batched_mat_mul,
             'BatchMatMul': self._convert_batched_mat_mul,
             'Embedding': self._convert_embedding,
-            'BiasAdd': self._convert_bias_add,
             'Split': self._convert_split,
-            'Sigmoid': self._convert_sigmoid,
-            'Relu': self._convert_relu,
-            'LeakyRelu': self._convert_leaky_relu,
-            'Tanh': self._convert_tanh,
+            'Sigmoid': self._convert_unary_activation,
+            'Relu': self._convert_unary_activation,
+            'LeakyRelu': self._convert_unary_activation,
+            'Tanh': self._convert_unary_activation,
+            'Elu': self._convert_unary_activation,
             'Identity': self._convert_identity,
             'Cast': self._convert_cast,
-            'TensorArraySizeV3': self._convert_tensorarray_size,
-            'TensorArrayGatherV3': self._convert_tensorarray_gather,
             'Pack': self._convert_pack,
             'Unpack': self._convert_unpack,
             'Gather': self._convert_gather,
             'GatherNd': self._convert_gather_nd,
             'ScatterNd': self._convert_scatter_nd,
-            'Pow': self._convert_pow,
-            'Square': self._convert_square,
-            'Neg': self._convert_neg,
-            'Sqrt': self._convert_unary,
-            'Rsqrt': self._convert_unary,
-            'Exp': self._convert_unary,
-            'Log': self._convert_unary,
-            'Abs': self._convert_unary,
-            'Sign': self._convert_unary,
-            'Ceil': self._convert_unary,
-            'Floor': self._convert_unary,
-            'Round': self._convert_unary,
-            'Sin': self._convert_unary,
-            'Cos': self._convert_unary,
+            'Pow': self._convert_unary_pow,
+            'Square': self._convert_unary_square,
+            'Neg': self._convert_unary_neg,
+            'Sqrt': self._convert_unary_common,
+            'Rsqrt': self._convert_unary_common,
+            'Exp': self._convert_unary_common,
+            'Log': self._convert_unary_common,
+            'Abs': self._convert_unary_common,
+            'Sign': self._convert_unary_common,
+            'Ceil': self._convert_unary_common,
+            'Floor': self._convert_unary_common,
+            'Round': self._convert_unary_common,
+            'Sin': self._convert_unary_trigonometric,
+            'Cos': self._convert_unary_trigonometric,
+            'Tan': self._convert_unary_trigonometric,
             'SelectMask': self._convert_select,
             'Conv2D': self._convert_conv2d,
             'MaxPool': self._convert_maxpool,
             'AvgPool': self._convert_avgpool,
             'Reshape': self._convert_reshape,
             'Softmax': self._convert_softmax,
-            'Prod': self._convert_prod,
-            'Mean': self._convert_mean,
-            'Sum': self._convert_sum,
-            'Max': self._convert_max,
-            'Min': self._convert_min,
+            'Prod': self._convert_reduction,
+            'Mean': self._convert_reduction,
+            'Sum': self._convert_reduction,
+            'Max': self._convert_reduction,
+            'Min': self._convert_reduction,
+            'All': self._convert_reduction,
+            'Any': self._convert_reduction,
             'ArgMax': self._convert_argmax,
             'ArgMin': self._convert_argmin,
             'ReverseV2': self._convert_reverse,
             'ReverseSequence': self._convert_reverse_sequence,
             'ExpandDims': self._convert_expand_dims,
             'Squeeze': self._convert_squeeze,
-            'Elu': self._convert_elu,
             'Tile': self._convert_tile,
             'LSTMBlock': self._convert_lstm_block_cell,
             'Pad': self._convert_pad,
             'PadV2': self._convert_pad,
-            'All': self._convert_all,
-            'Any': self._convert_any,
             'TopKV2': self._convert_topk,
         }
 
@@ -512,20 +513,6 @@ class SSAConverter(object):
         self.tensor_shapes[node.name][1:] = es
         layer.outputTensor[0].dimValue[1:] = es
 
-    def _convert_maximum(self, node):
-        assert (len(node.inputs) == 2)
-        layer = self._get_builder().add_max_broadcastable(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_minimum(self, node):
-        assert (len(node.inputs) == 2)
-        layer = self._get_builder().add_min_broadcastable(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
     def _convert_array_scatter(self, node):
         # NNSSA input order: indices, value, array
         # CoreML input order: container (array), indices, slices (value)
@@ -653,75 +640,8 @@ class SSAConverter(object):
         # When converting a body function of a loop, return node should overwrite body functions' input tensors
         pass
 
-    def _convert_less(self, node):
-        assert (len(node.inputs) == 2)
-        builder = self._get_builder()
-        layer = builder.add_less_than(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_less_equal(self, node):
-        assert len(node.inputs) == 2
-        builder = self._get_builder()
-        layer = builder.add_less_than(
-            name=node.name,
-            input_names=self._get_input_tensors(node),
-            output_name=node.name,
-            use_less_than_equal=True
-        )
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_greater(self, node):
-        assert (len(node.inputs) == 2)
-        builder = self._get_builder()
-        layer = builder.add_greater_than(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_greater_equal(self, node):
-        assert (len(node.inputs) == 2)
-        builder = self._get_builder()
-        layer = builder.add_greater_than(
-            name=node.name,
-            input_names=self._get_input_tensors(node),
-            output_name=node.name,
-            use_greater_than_equal=True)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_equal(self, node):
-        assert len(node.inputs) == 2
-        builder = self._get_builder()
-        layer = builder.add_equal(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_not_equal(self, node):
-        assert len(node.inputs) == 2
-        builder = self._get_builder()
-        layer = builder.add_not_equal(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_logical_and(self, node):
-        assert (len(node.inputs) == 2)
-        layer = self._get_builder().add_logical(
-            name=node.name,
-            input_names=self._get_input_tensors(node),
-            output_name=node.name,
-            mode='AND')
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_logical_or(self, node):
-        assert (len(node.inputs) == 2)
-        layer = self._get_builder().add_logical(
-            name=node.name,
-            input_names=self._get_input_tensors(node),
-            output_name=node.name,
-            mode='OR')
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_logical_not(self, node):
-        assert (len(node.inputs) == 1)
+    def _convert_unary_logical_not(self, node):
+        assert len(node.inputs) == 1
         layer = self._get_builder().add_logical(
             name=node.name,
             input_names=self._get_input_tensors(node),
@@ -729,34 +649,8 @@ class SSAConverter(object):
             mode='NOT')
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-    def _convert_add(self, node):
-        assert (len(node.inputs) == 2)
-        layer = self._get_builder().add_add_broadcastable(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_sub(self, node):
-        assert (len(node.inputs) == 2)
-        layer = self._get_builder().add_subtract_broadcastable(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_mul(self, node):
-        assert (len(node.inputs) == 2)
-        layer = self._get_builder().add_multiply_broadcastable(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_real_div(self, node):
-        assert (len(node.inputs) == 2)
-        layer = self._get_builder().add_divide_broadcastable(
-            name=node.name, input_names=self._get_input_tensors(node), output_name=node.name)
-
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
     def _convert_floor_mod(self, node):
-        assert (len(node.inputs) == 2)
+        assert len(node.inputs) == 2
 
         a, b = self._get_input_tensors(node)
         a_div_b = node.name + "_floor_div"
@@ -829,79 +723,6 @@ class SSAConverter(object):
         axis = -1 if 'axis' not in node.attr else node.attr['axis']
         layer = self._get_builder().add_softmax_nd(
             name=node.name, input_name=input_names[0], output_name=node.name, axis=axis)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_sum(self, node):
-        input_names = self._get_input_tensors(node)
-        reduction_indices = node.attr['reduction_indices']
-
-        keepdims = node.attr.get('keep_dims')
-        if keepdims is None:
-            keepdims = False
-
-        layer = self._get_builder().add_reduce_sum(
-            name=node.name,
-            input_name=input_names[0],
-            output_name=node.name,
-            axes=reduction_indices,
-            keepdims=keepdims,
-            reduce_all=False)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_prod(self, node):
-        input_names = self._get_input_tensors(node)
-        reduction_indices = node.attr['reduction_indices']
-        keepdims = node.attr['keep_dims']
-
-        layer = self._get_builder().add_reduce_prod(
-            name=node.name,
-            input_name=input_names[0],
-            output_name=node.name,
-            axes=reduction_indices,
-            keepdims=keepdims,
-            reduce_all=False)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_mean(self, node):
-        input_names = self._get_input_tensors(node)
-        reduction_indices = node.attr['reduction_indices']
-        keepdims = node.attr['keep_dims']
-
-        layer = self._get_builder().add_reduce_mean(
-            name=node.name,
-            input_name=input_names[0],
-            output_name=node.name,
-            axes=reduction_indices,
-            keepdims=keepdims,
-            reduce_all=False)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_max(self, node):
-        input_names = self._get_input_tensors(node)
-        reduction_indices = node.attr['reduction_indices']
-        keepdims = node.attr['keep_dims']
-
-        layer = self._get_builder().add_reduce_max(
-            name=node.name,
-            input_name=input_names[0],
-            output_name=node.name,
-            axes=reduction_indices,
-            keepdims=keepdims,
-            reduce_all=False)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_min(self, node):
-        input_names = self._get_input_tensors(node)
-        reduction_indices = node.attr['reduction_indices']
-        keepdims = node.attr['keep_dims']
-
-        layer = self._get_builder().add_reduce_min(
-            name=node.name,
-            input_name=input_names[0],
-            output_name=node.name,
-            axes=reduction_indices,
-            keepdims=keepdims,
-            reduce_all=False)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_tensorarray_read(self, node):
@@ -997,15 +818,6 @@ class SSAConverter(object):
         #     pdb.set_trace()
         #     print('2 in bias.shape')
 
-    def _convert_bias_add(self, node):
-        assert (len(node.inputs) == 2)
-        input_names = self._get_input_tensors(node)
-
-        layer = self._get_builder().add_add_broadcastable(
-            name=node.name, input_names=input_names, output_name=node.name)
-
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
     def _convert_split(self, node):
         # Only handles static, even splits
         axis = node.attr['split_dim']
@@ -1027,53 +839,6 @@ class SSAConverter(object):
             output_names=output_names,
             axis=axis,
             num_splits=num_splits)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_sigmoid(self, node):
-        builder = self._get_builder()
-        layer = builder.add_activation(
-            name=node.name,
-            non_linearity='SIGMOID',
-            input_name=self._get_input_tensors(node)[0],
-            output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_relu(self, node):
-        builder = self._get_builder()
-        layer = builder.add_activation(
-            name=node.name,
-            non_linearity='RELU',
-            input_name=self._get_input_tensors(node)[0],
-            output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_elu(self, node):
-        builder = self._get_builder()
-        layer = builder.add_activation(
-            name=node.name,
-            non_linearity='ELU',
-            input_name=self._get_input_tensors(node)[0],
-            output_name=node.name,
-            params=1.0)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_leaky_relu(self, node):
-        builder = self._get_builder()
-        layer = builder.add_activation(
-            name=node.name,
-            non_linearity='LEAKYRELU',
-            input_name=self._get_input_tensors(node)[0],
-            output_name=node.name,
-            params=([node.attr['alpha']]))
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_tanh(self, node):
-        builder = self._get_builder()
-        layer = builder.add_activation(
-            name=node.name,
-            non_linearity='TANH',
-            input_name=self._get_input_tensors(node)[0],
-            output_name=node.name)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_identity(self, node):
@@ -1179,14 +944,14 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-    def _convert_square(self, node):
+    def _convert_unary_square(self, node):
         assert len(node.inputs) == 1
         input_names = self._get_input_tensors(node)
         layer = self._get_builder().add_elementwise(
             name=node.name, input_names=input_names * 2, output_name=node.name, mode='MULTIPLY')
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-    def _convert_pow(self, node):
+    def _convert_unary_pow(self, node):
         input_names = self._get_input_tensors(node)
         alpha = self._get_current_graph()[input_names[1]].attr['value'].val[0]
         layer = self._get_builder().add_unary(
@@ -1197,7 +962,7 @@ class SSAConverter(object):
             alpha=alpha)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-    def _convert_neg(self, node):
+    def _convert_unary_neg(self, node):
         assert len(node.inputs) == 1
         input_names = self._get_input_tensors(node)
         layer = self._get_builder().add_elementwise(
@@ -1372,9 +1137,10 @@ class SSAConverter(object):
 
     def _convert_cast(self, node):
         assert len(node.inputs) == 1
-        layer = self._get_builder().add_round(name=node.name,
-                                              input_name=self._get_input_tensors(node)[0],
-                                              output_name=node.name)
+        layer = self._get_builder().add_round(
+            name=node.name,
+            input_name=self._get_input_tensors(node)[0],
+            output_name=node.name)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_reverse_sequence(self, node):
@@ -1419,15 +1185,6 @@ class SSAConverter(object):
             vocab_size=depth,
             embedding_size=out_channels,
             W=weight)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_floor_div(self, node):
-        assert len(node.inputs) == 2
-        layer = self._get_builder().add_floor_div_broadcastable(
-            name=node.name,
-            input_names=self._get_input_tensors(node),
-            output_name=node.name,
-        )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_tile(self, node):
@@ -1587,45 +1344,10 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-    def _convert_all(self, node):
-        assert len(node.inputs) == 2
-        input_names = self._get_input_tensors(node)
-        graph = self._get_current_graph()
-        axis = [graph[node.inputs[1]].value.val]
-        keepdims = node.attr.get('keep_dims')
-
-        layer = self._get_builder().add_reduce_prod(
-            name=node.name,
-            input_name=input_names[0],
-            output_name=node.name,
-            axes=axis,
-            keepdims=keepdims,
-            reduce_all=False
-        )
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_any(self, node):
-        assert len(node.inputs) == 2
-        input_names = self._get_input_tensors(node)
-        graph = self._get_current_graph()
-        axis = [graph[node.inputs[1]].value.val]
-        keepdims = node.attr.get('keep_dims')
-
-        layer = self._get_builder().add_reduce_sum(
-            name=node.name,
-            input_name=input_names[0],
-            output_name=node.name,
-            axes=axis,
-            keepdims=keepdims,
-            reduce_all=False
-        )
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
     def _convert_topk(self, node):
         assert len(node.inputs) == 2
         if node.attr.get('sorted') is False:
             raise NotImplementedError('sorted should be set to True.')
-
         graph = self._get_current_graph()
         k = graph[node.inputs[1]].attr.get('value').val[0]
         input_names = self._get_input_tensors(node)
@@ -1637,27 +1359,10 @@ class SSAConverter(object):
             k=k,
             axis=-1
         )
-
         shapes.propagate_single_layer(layer, self.tensor_shapes)
         self.op_tensor_map[node.name] = output_names
 
-    def _convert_unary(self, node):
-        """
-        Convert element-wise unary operator.
-        """
-        assert len(node.inputs) == 1
-        input_name = self._get_input_tensors(node)[0]
-        op = node.op.lower()  # type of the unary operator
-        if op in ['sqrt', 'rsqrt', 'exp', 'log', 'abs']:
-            layer = self._get_builder().add_unary(
-                name=node.name, input_name=input_name, output_name=node.name, mode=op)
-        else:
-            # assumes TensorFlow and Core ML has same op name
-            func = getattr(self._get_builder(), 'add_' + op)
-            layer = func(name=node.name, input_name=input_name, output_name=node.name)
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-    def _convert_log_softmax(self, node):
+    def _convert_unary_log_softmax(self, node):
         assert len(node.inputs) == 1
         input_name = self._get_input_tensors(node)[0]
         axis = -1 if 'axis' not in node.attr else node.attr['axis']
@@ -1665,7 +1370,8 @@ class SSAConverter(object):
             name=node.name + '_softmax',
             input_name=input_name,
             output_name=node.name + '_softmax',
-            axis=axis)
+            axis=axis
+        )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
         layer = self._get_builder().add_unary(
             name=node.name,
@@ -1673,4 +1379,122 @@ class SSAConverter(object):
             output_name=node.name,
             mode='log'
         )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_unary_common(self, node):
+        assert len(node.inputs) == 1
+        input_name = self._get_input_tensors(node)[0]
+        op = node.op.lower()  # type of the unary operator
+        if op in ['sqrt', 'rsqrt', 'exp', 'log', 'abs']:
+            layer = self._get_builder().add_unary(
+                name=node.name, input_name=input_name, output_name=node.name, mode=op)
+        else:
+            # same function name for TensorFlow and Core ML
+            func = getattr(self._get_builder(), 'add_' + op)
+            layer = func(name=node.name, input_name=input_name, output_name=node.name)
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_unary_trigonometric(self, node):
+        assert len(node.inputs) == 1
+        input_name = self._get_input_tensors(node)[0]
+        op = node.op.lower()  # type of the unary operator
+        # assumes TensorFlow and Core ML has same op name
+        func = getattr(self._get_builder(), 'add_' + op)
+        layer = func(name=node.name, input_name=input_name, output_name=node.name)
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_unary_activation(self, node):
+        assert len(node.inputs) == 1
+        input_name = self._get_input_tensors(node)[0]
+        op = node.op.upper()  # type of the unary operator
+        params = None
+        if op in ['LEAKYRELU']:
+            params = ([node.attr['alpha']])
+        elif op in ['ELU']:
+            params = 1.0
+        layer = self._get_builder().add_activation(
+            name=node.name,
+            input_name=input_name,
+            output_name=node.name,
+            non_linearity=op,
+            params=params
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_reduction(self, node):
+        assert len(node.inputs) == 2
+        input_name = self._get_input_tensors(node)[0]
+        reduction_indices = node.attr.get('reduction_indices')
+        keepdims = node.attr.get('keep_dims')
+        op = node.op.lower()  # type of the unary operator
+        if op in ['all', 'any']:
+            op = 'prod' if op == 'all' else 'sum'
+            graph = self._get_current_graph()
+            reduction_indices = [graph[node.inputs[1]].value.val]
+        func = getattr(self._get_builder(), 'add_reduce_' + op)
+        layer = func(
+            name=node.name,
+            input_name=input_name,
+            output_name=node.name,
+            axes=reduction_indices,
+            keepdims=keepdims,
+            reduce_all=not reduction_indices
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_binary_broadcastable(self, node):
+        assert len(node.inputs) == 2
+        input_names = self._get_input_tensors(node)
+        builder = self._get_builder()
+        op = node.op.lower()  # type of the unary operator
+        compare_greater_ops = {'greater', 'greaterequal'}
+        compare_equal_ops = {'equal', 'notequal'}
+        compare_less_ops = {'less', 'lessequal'}
+        logical_ops = {'logicaland': 'AND', 'logicalor': 'OR'}
+        math_ops = {'sub': 'subtract', 'mul': 'multiply', 'realdiv': 'divide',
+                    'floordiv': 'floor_div', 'maximum': 'max', 'minimum': 'min',
+                    'biasadd': 'add'}
+        if op in compare_greater_ops:
+            layer = builder.add_greater_than(
+                name=node.name,
+                input_names=input_names,
+                output_name=node.name,
+                use_greater_than_equal='equal' in op
+            )
+        elif op in compare_equal_ops:
+            op = 'not_equal' if op == 'notequal' else op
+            func = getattr(builder, 'add_' + op)
+            layer = func(
+                name=node.name,
+                input_names=input_names,
+                output_name=node.name
+            )
+        elif op in compare_less_ops:
+            layer = builder.add_less_than(
+                name=node.name,
+                input_names=input_names,
+                output_name=node.name,
+                use_less_than_equal='equal' in op
+            )
+        elif op in logical_ops.keys():
+            layer = self._get_builder().add_logical(
+                name=node.name,
+                input_names=input_names,
+                output_name=node.name,
+                mode=logical_ops[op]
+            )
+        elif op in math_ops.keys():
+            func = getattr(builder, 'add_' + math_ops[op] + '_broadcastable')
+            layer = func(
+                name=node.name,
+                input_names=input_names,
+                output_name=node.name
+            )
+        else:  # same function name for TensorFlow and Core ML
+            func = getattr(builder, 'add_' + op + '_broadcastable')
+            layer = func(
+                name=node.name,
+                input_names=input_names,
+                output_name=node.name
+            )
         shapes.propagate_single_layer(layer, self.tensor_shapes)

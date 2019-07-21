@@ -115,6 +115,11 @@ def _broadcastable(layer_spec, input_shapes):
 
 
 def _scatter(layer_spec, input_shapes):
+    # inputs: [target, source, indices]
+    return [input_shapes[0]]
+
+
+def _scatter_nd(layer_spec, input_shapes):
     # get the values of the shape input
     return [[-1] * input_shapes[0][0]]
 
@@ -191,10 +196,6 @@ def _identity(layer_spec, input_shapes):
 
 def _reverse_seq(layer_spec, input_shapes):
     return [input_shapes[0]]
-
-
-def _copy(layer_spec, input_shapes):
-    return input_shapes[:]
 
 
 def _expand_dims(layer_spec, input_shapes):
@@ -400,7 +401,7 @@ _LAYER_REGISTRY = {
     'gather': _gather,
     'gatherND': _gather_nd,
     'scatter': _scatter,
-    'scatterND': _scatter,
+    'scatterND': _scatter_nd,
     'logicalOr': _broadcastable,
     'logicalNot': _identity,
     'lessThan': _broadcastable,
@@ -451,6 +452,7 @@ _LAYER_REGISTRY = {
     'batchedMatmul': _batched_mat_mul,
     'sin': _identity,
     'cos': _identity,
+    'tan': _identity,
     'tile': _tile,
     'fillLike': _identity,
     'fillStatic': _fill_static,
