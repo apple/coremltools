@@ -440,3 +440,9 @@ class MLModelUpdatableTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             p_classifier.add_model(builder.spec)
         self.assertEqual(p_classifier.spec.isUpdatable, True)
+
+    def test_shuffle_on_by_default(self):
+        builder = self.create_base_builder()
+
+        # base builder already marks two layers as updatable
+        self.assertTrue(builder.nn_spec.updateParams.shuffle.defaultValue, "Shuffle not turned on by default for updatable models")

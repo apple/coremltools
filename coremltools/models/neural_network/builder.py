@@ -571,6 +571,7 @@ class NeuralNetworkBuilder(object):
             return
         self.spec.isUpdatable = True
         self.nn_spec.updateParams.MergeFromString(b'')
+        self.set_shuffle()
 
         for trainable in trainables:
             if trainable not in self.layer_specs:
