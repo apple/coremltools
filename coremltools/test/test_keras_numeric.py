@@ -93,6 +93,7 @@ def conv2d_bn(x, nb_filter, nb_row, nb_col, border_mode='same', subsample=(1, 1)
     return x
 
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras1
 class KerasNumericCorrectnessTest(unittest.TestCase):
     """
     Unit test class for testing the Keras converter.
@@ -179,6 +180,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         
 
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras1
 class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
     def test_tiny_inner_product_zero_input(self):
@@ -1597,6 +1599,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
 
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras1
 class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
     def test_tiny_sequential_merge(self):
@@ -1682,6 +1685,7 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         self._test_keras_model(model, mode = 'random', delta=1e-2)
 
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras1
 class KerasInceptionCorrectnessTest(KerasNumericCorrectnessTest):
 
     def test_inception_conv_stage(self):
@@ -2025,8 +2029,9 @@ class KerasInceptionCorrectnessTest(KerasNumericCorrectnessTest):
         # Get the coreml model
         self._test_keras_model(model)
 
-@pytest.mark.slow
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras1
+@pytest.mark.slow
 class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
     """
     Unit test class for testing all combinations of a particular
@@ -2051,17 +2056,17 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
                 feature_name = "data_%s" % i
                 input_names.append(feature_name)
                 input_data.append(X)
-                if one_dim_seq_flags is None: 
+                if one_dim_seq_flags is None:
                     coreml_input[feature_name] = _keras_transpose(X).astype('f')
-                else: 
+                else:
                     coreml_input[feature_name] = _keras_transpose(X, one_dim_seq_flags[i]).astype('f')
         else:
             input_shape = [1 if a is None else a for a in model.input_shape]
             input_names = ['data']
             input_data = _generate_data(input_shape)
-            if one_dim_seq_flags is None: 
+            if one_dim_seq_flags is None:
                 coreml_input = {'data': _keras_transpose(input_data).astype('f')}
-            else: 
+            else:
                 coreml_input = {'data': _keras_transpose(input_data, one_dim_seq_flags[0]).astype('f')}
 
         # Make predictions
@@ -2069,12 +2074,12 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
             keras_preds = _keras_transpose(model.predict(input_data)).flatten()
         else:
             keras_preds = model.predict(input_data).flatten()
-        
+
         # Get the model
         coreml_model = _get_coreml_model(model, model_path, input_names, ['output'])
         if macos_version() >= (10, 13):
             # get prediction
-            coreml_preds = coreml_model.predict(coreml_input)['output'].flatten() 
+            coreml_preds = coreml_model.predict(coreml_input)['output'].flatten()
 
             if use_tmp_folder:
                 shutil.rmtree(model_dir)
@@ -2191,7 +2196,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         print("Testing a total of %s cases. This could take a while" % len(args))
         for param, model in args:
             self._run_test(model, param)
-            
+
     @pytest.mark.slow
     def test_dense_elementwise_params(self):
         options = dict(
@@ -2360,42 +2365,42 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
 
         # Get the coreml model
         self._test_keras_model(model)
-    
+
     def test_imdb_fasttext_first_2(self):
 
         max_features = 10
         max_len = 6
         embedding_dims = 4
         pool_length = 2
-        
-        model = Sequential()        
+
+        model = Sequential()
         model.add(Embedding(max_features, embedding_dims, input_length=max_len))
         # we add a AveragePooling1D, which will average the embeddings
         # of all words in the document
         model.add(AveragePooling1D(pool_length=pool_length))
-        
+
         self._test_keras_model(model, one_dim_seq_flags=[True])
-        
+
     def test_tiny_mcrnn_td(self):
-        
+
         model = Sequential()
         model.add(Convolution2D(3,1,1, input_shape=(2,4,4), border_mode='same'))
         model.add(AveragePooling2D(pool_size=(2,2)))
         model.add(Reshape((2,3)))
         model.add(TimeDistributed(Dense(5)))
-        
+
         self._test_keras_model(model)
-        
+
     def test_tiny_mcrnn_recurrent(self):
-        
+
         model = Sequential()
         model.add(Convolution2D(3,1,1, input_shape=(2,4,4), border_mode='same'))
         model.add(AveragePooling2D(pool_size=(2,2)))
         model.add(Reshape((2,3)))
         model.add(LSTM(5, inner_activation = 'sigmoid'))
-        
+
         self._test_keras_model(model)
-    
+
     def test_tiny_mcrnn_music_tagger(self):
 
         x_in = Input(shape=(4,6,1))
@@ -2416,70 +2421,70 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         x = Reshape((2, 4))(x)
         x = GRU(32, return_sequences=True, name='gru1')(x)
         x = GRU(32, return_sequences=False, name='gru2')(x)
-        
+
         # Create model.
         model = Model(x_in, x)
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_keras_model(model, mode='random_zero_mean', delta=1e-2)
-    
+
     def test_tiny_apple_manual(self):
         model = Sequential()
         model.add(LSTM(3, input_shape=(4, 5), inner_activation='sigmoid'))
         model.add(Dense(5))
         model.add(Activation('softmax'))
-        
+
         self._test_keras_model(model)
-    
+
     def test_tiny_image_captioning_image_branch(self):
         img_input_1 = Input(shape=(16,16,3))
         x = Convolution2D(2,3,3)(img_input_1)
         x = Flatten()(x)
         img_model = Model([img_input_1], [x])
-        
+
         img_input = Input(shape=(16,16,3))
         x = img_model(img_input)
         x = Dense(8, name = 'cap_dense')(x)
         x = Reshape((1,8), name = 'cap_reshape')(x)
         image_branch = Model([img_input],[x])
         self._test_keras_model(image_branch)
-    
+
     def test_tiny_image_captioning_feature_merge(self):
-        
+
         img_input_1 = Input(shape=(16,16,3))
         x = Convolution2D(2,3,3)(img_input_1)
         x = Flatten()(x)
         img_model = Model([img_input_1], [x])
-        
+
         img_input = Input(shape=(16,16,3))
         x = img_model(img_input)
         x = Dense(8, name = 'cap_dense')(x)
         x = Reshape((1,8), name = 'cap_reshape')(x)
-        
+
         sentence_input = Input(shape=(5,)) # max_length = 5
         y = Embedding(8, 8, name = 'cap_embedding')(sentence_input)
         z = merge([x,y], mode = 'concat', concat_axis = 1, name = 'cap_merge')
-        
+
         combined_model = Model([img_input, sentence_input], [z])
         self._test_keras_model(combined_model, one_dim_seq_flags=[False, True])
-    
+
     def test_tiny_image_captioning(self):
         # use a conv layer as a image feature branch
         img_input_1 = Input(shape=(16,16,3))
         x = Convolution2D(2,3,3)(img_input_1)
         x = Flatten()(x)
         img_model = Model([img_input_1], [x])
-        
+
         img_input = Input(shape=(16,16,3))
         x = img_model(img_input)
         x = Dense(8, name = 'cap_dense')(x)
         x = Reshape((1,8), name = 'cap_reshape')(x)
-        
+
         sentence_input = Input(shape=(5,)) # max_length = 5
         y = Embedding(8, 8, name = 'cap_embedding')(sentence_input)
         z = merge([x,y], mode = 'concat', concat_axis = 1, name = 'cap_merge')
         z = LSTM(4, return_sequences = True, name = 'cap_lstm')(z)
         z = TimeDistributed(Dense(8), name = 'cap_timedistributed')(z)
-        
+
         combined_model = Model([img_input, sentence_input], [z])
         self._test_keras_model(combined_model, one_dim_seq_flags=[False, True])
 
@@ -2488,7 +2493,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         embed_hidden_size = 8
         story_maxlen = 5
         query_maxlen = 5
-        
+
         sentrnn = Sequential()
         sentrnn.add(Embedding(vocab_size, embed_hidden_size,
                               input_length=story_maxlen))
@@ -2506,15 +2511,15 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         model.add(LSTM(embed_hidden_size, return_sequences=False))
         model.add(Dropout(0.3))
         model.add(Dense(vocab_size, activation='softmax'))
-        
+
         self._test_keras_model(model, one_dim_seq_flags=[True, True])
-    
+
     def test_clickbait_cnn(self):
         # from: https://github.com/saurabhmathur96/clickbait-detector
         vocabulary_size = 500
         embedding_dimension = 30
         input_length = 20
-        
+
         model = Sequential()
         model.add(Embedding(vocabulary_size, embedding_dimension, input_length=input_length, trainable=True))
 
@@ -2538,6 +2543,3 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         model.add(Activation("sigmoid"))
 
         self._test_keras_model(model, one_dim_seq_flags=[True])
-
-
-        
