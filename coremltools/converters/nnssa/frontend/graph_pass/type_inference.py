@@ -702,8 +702,9 @@ class TypeInferenceVisitor(object):
         return builtins.tuple(types)
 
     def visit_BatchMatMul(self, node):
-        # node.op = "MatMul"
-        # Batch matmul was deprecated, we implement this in MatMul
+        return self.visit_MatMul(node)
+
+    def visit_BatchMatMulV2(self, node):
         return self.visit_MatMul(node)
 
     def visit_MatMul(self, node):
