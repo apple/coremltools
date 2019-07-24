@@ -18,7 +18,6 @@ from .utils import has_custom_layer as _has_custom_layer
 from .utils import macos_version as _macos_version
 from ..proto import Model_pb2 as _Model_pb2
 
-
 _MLMODEL_FULL_PRECISION = 'float32'
 _MLMODEL_HALF_PRECISION = 'float16'
 _MLMODEL_QUANTIZED = 'quantized_model'
@@ -82,34 +81,39 @@ class _FeatureDescription(object):
         for f in self._fd_spec:
             yield f.name
 
-def _get_proxy_from_spec(filename, useCPUOnly):
+
+def _get_proxy_and_spec(filename, use_cpu_only=False):
     try:
         from ..libcoremlpython import _MLModelProxy
-    except:
+    except Exception:
         _MLModelProxy = None
 
+    specification = _load_spec(filename)
+
     if _MLModelProxy:
+
         # check if the version is supported
-        engineVersion = _MLModelProxy.maximum_supported_specification_version()
-        spec = _load_spec(filename)
-        if spec.specificationVersion > engineVersion:
-            # in this case the specification is a newer kind of .mlmodel than this version of the engine can support
-            # so we'll not try to have a proxy object
-            return None
+        engine_version = _MLModelProxy.maximum_supported_specification_version()
+        if specification.specificationVersion > engine_version:
+            # in this case the specification is a newer kind of .mlmodel than this
+            # version of the engine can support so we'll not try to have a proxy object
+            return None, specification
+
         # check if there are custom layers
-        if _has_custom_layer(spec):
+        if _has_custom_layer(specification):
             # custom layers can't be supported directly by compiling and loading the model here
-            return None
+            return None, specification
+
         try:
-            return _MLModelProxy(filename, useCPUOnly)
+            return _MLModelProxy(filename, use_cpu_only), specification
         except RuntimeError as e:
             warnings.warn(
                 "You will not be able to run predict() on this Core ML model." +
                 " Underlying exception message was: " + str(e),
                 RuntimeWarning)
-            return None
-    else:
-        return None
+            return None, specification
+
+    return None, specification
 
 
 class NeuralNetworkShaper(object):
@@ -127,7 +131,7 @@ class NeuralNetworkShaper(object):
             path = model
         elif isinstance(model, _Model_pb2.Model):
             self._spec = model
-            filename = _tempfile.mktemp(suffix = '.mlmodel')
+            filename = _tempfile.mktemp(suffix='.mlmodel')
             _save_spec(model, filename)
             path = filename
         else:
@@ -191,6 +195,7 @@ class MLModel(object):
     --------
     predict
     """
+
     def __init__(self, model, useCPUOnly=False):
         """
         Construct an MLModel from a .mlmodel
@@ -207,16 +212,13 @@ class MLModel(object):
         --------
         >>> loaded_model = MLModel('my_model_file.mlmodel')
         """
-        from .utils import load_spec as _load_spec
 
         if isinstance(model, str):
-            self._spec = _load_spec(model)
-            self.__proxy__ = _get_proxy_from_spec(model, useCPUOnly)
+            self.__proxy__, self._spec = _get_proxy_and_spec(model, useCPUOnly)
         elif isinstance(model, _Model_pb2.Model):
-            self._spec = model
-            filename = _tempfile.mktemp(suffix = '.mlmodel')
+            filename = _tempfile.mktemp(suffix='.mlmodel')
             _save_spec(model, filename)
-            self.__proxy__ = _get_proxy_from_spec(filename, useCPUOnly)
+            self.__proxy__, self._spec = _get_proxy_and_spec(filename, useCPUOnly)
         else:
             raise TypeError("Expected model to be a .mlmodel file or a Model_pb2 object")
 
@@ -327,7 +329,7 @@ class MLModel(object):
         """
 
         if self.__proxy__:
-            return self.__proxy__.predict(data,useCPUOnly)
+            return self.__proxy__.predict(data, useCPUOnly)
         else:
             if _macos_version() < (10, 13):
                 raise Exception('Model prediction is only supported on macOS version 10.13 or later.')
@@ -355,28 +357,28 @@ class MLModel(object):
 
     def visualize_spec(self, port=None, input_shape_dict=None):
         """
-            Visualize the model.
+        Visualize the model.
 
-            Parameters
-            ----------
-            port : int
-                if server is to be hosted on specific localhost port
+        Parameters
+        ----------
+        port : int
+            if server is to be hosted on specific localhost port
 
-            input_shape_dict : dict
-                The shapes are calculated assuming the batch and sequence
-                are 1 i.e. (1, 1, C, H, W). If either is not 1, then provide
-                full input shape
+        input_shape_dict : dict
+            The shapes are calculated assuming the batch and sequence
+            are 1 i.e. (1, 1, C, H, W). If either is not 1, then provide
+            full input shape
 
-            Returns
-            -------
+        Returns
+        -------
 
-            None
+        None
 
-            Examples
-            --------
-            >>> model = coreml.models.MLModel('HousePricer.mlmodel')
-            >>> model.visualize_spec()
-            """
+        Examples
+        --------
+        >>> model = coreml.models.MLModel('HousePricer.mlmodel')
+        >>> model.visualize_spec()
+        """
 
         spec = self._spec
         model_type = spec.WhichOneof('Type')
@@ -474,7 +476,6 @@ class MLModel(object):
             print("Model is not of type Pipeline or Neural Network "
                   "and cannot be visualized")
             return
-
 
         import coremltools
         web_dir = _os.path.join(_os.path.dirname(coremltools.__file__),

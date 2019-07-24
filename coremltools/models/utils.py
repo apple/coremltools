@@ -10,9 +10,9 @@ import math as _math
 import numpy as _np
 import os as _os
 import six as _six
+import warnings
 
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
-
 
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
@@ -25,7 +25,7 @@ def _to_unicode(x):
         return x
 
 
-def save_spec(spec, filename):
+def save_spec(spec, filename, auto_set_specification_version=True):
     """
     Save a protobuf model specification to file.
 
@@ -36,6 +36,10 @@ def save_spec(spec, filename):
 
     filename: str
         File path  where the spec gets saved.
+
+    auto_set_specification_version: bool
+        If true, will always try to set specification version automatically
+        otherwise, use the original specification version
 
     Examples
     --------
@@ -54,9 +58,21 @@ def save_spec(spec, filename):
         if ext != '.mlmodel':
             raise Exception("Extension must be .mlmodel (not %s)" % ext)
 
+    spec = spec.SerializeToString()
+
+    if auto_set_specification_version:
+        try:
+            # always try to downgrade the specification version to the
+            # minimal version that supports everything in this mlmodel
+            from ..libcoremlpython import _MLModelProxy
+            spec = _MLModelProxy.auto_set_specification_version(spec)
+        except Exception:
+            warnings.warn(
+                "Failed to automatic set specification version for this model.",
+                RuntimeWarning)
+
     with open(filename, 'wb') as f:
-        s = spec.SerializeToString()
-        f.write(s)
+        f.write(spec)
 
 
 def load_spec(filename):
