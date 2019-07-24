@@ -241,15 +241,16 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         self.assertEqual(builder.number_of_neighbors, 12)
 
         with self.assertRaises(ValueError):
-            builder.number_of_neighbors = 1
-        builder.number_of_neighbors = 4
+            builder.set_number_of_neighbors_with_bounds(1, allowed_range=(2, 24))
+        builder.set_number_of_neighbors_with_bounds(4, allowed_range=(2, 24))
         self.assertEqual(builder.number_of_neighbors, 4)
 
         test_set = {3, 5, 7, 9}
         builder.set_number_of_neighbors_with_bounds(7, allowed_set=test_set)
+        
         with self.assertRaises(ValueError):
-            builder.number_of_neighbors = 4
-        builder.number_of_neighbors = 5
+            builder.set_number_of_neighbors_with_bounds(4, allowed_set=test_set)
+        builder.set_number_of_neighbors_with_bounds(5, allowed_set=test_set)
         self.assertEqual(builder.number_of_neighbors, 5)
 
     def test_add_samples_invalid_data(self):
