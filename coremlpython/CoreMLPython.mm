@@ -27,24 +27,24 @@ Model::~Model() {
 
 Model::Model(const std::string& urlStr, bool useCPUOnly) {
     @autoreleasepool {
-        
+
         // Compile the model
         NSError *error = nil;
         NSURL *specUrl = Utils::stringToNSURL(urlStr);
-        
+
         // Swallow output for the very verbose coremlcompiler
         int stdoutBack = dup(STDOUT_FILENO);
         int devnull = open("/dev/null", O_WRONLY);
         dup2(devnull, STDOUT_FILENO);
-        
+
         // Compile the model
         compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
-        
+
         // Close all the file descriptors and revert back to normal
         dup2(stdoutBack, STDOUT_FILENO);
         close(devnull);
         close(stdoutBack);
-        
+
         // Translate into a type that pybind11 can bridge to Python
         if (error != nil) {
             std::stringstream errmsg;
@@ -80,6 +80,21 @@ py::dict Model::predict(const py::dict& input, bool useCPUOnly) {
         Utils::handleError(error);
         return Utils::featuresToDict(outFeatures);
     }
+}
+
+py::bytes Model::autoSetSpecificationVersion(const py::bytes& modelBytes) {
+
+    CoreML::Specification::Model model;
+    std::istringstream modelIn(static_cast<std::string>(modelBytes), std::ios::binary);
+    CoreML::loadSpecification<Specification::Model>(model, modelIn);
+    model.set_specificationversion(CoreML::MLMODEL_SPECIFICATION_VERSION_NEWEST);
+    // always try to downgrade the specification version to the
+    // minimal version that supports everything in this mlmodel
+    CoreML::downgradeSpecificationVersion(&model);
+    std::ostringstream modelOut;
+    saveSpecification(model, modelOut);
+    return static_cast<py::bytes>(modelOut.str());
+
 }
 
 int32_t Model::maximumSupportedSpecificationVersion() {
@@ -119,6 +134,7 @@ PYBIND11_PLUGIN(libcoremlpython) {
     py::class_<Model>(m, "_MLModelProxy")
         .def(py::init<const std::string&, bool>())
         .def("predict", &Model::predict)
+        .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);
 
     py::class_<NeuralNetworkShapeInformation>(m, "_NeuralNetworkShaperProxy")

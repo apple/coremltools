@@ -46,7 +46,7 @@ class MLModelTest(unittest.TestCase):
         model = MLModel(self.spec)
         self.assertIsNotNone(model)
 
-        filename = tempfile.mktemp(suffix = '.mlmodel')
+        filename = tempfile.mktemp(suffix='.mlmodel')
         save_spec(self.spec, filename)
         model = MLModel(filename)
         self.assertIsNotNone(model)
@@ -56,39 +56,39 @@ class MLModelTest(unittest.TestCase):
         self.assertIsNotNone(model)
 
         model.author = 'Test author'
-        self.assertEquals(model.author, 'Test author')
-        self.assertEquals(model.get_spec().description.metadata.author, 'Test author')
+        self.assertEqual(model.author, 'Test author')
+        self.assertEqual(model.get_spec().description.metadata.author, 'Test author')
 
         model.license = 'Test license'
-        self.assertEquals(model.license, 'Test license')
-        self.assertEquals(model.get_spec().description.metadata.license, 'Test license')
+        self.assertEqual(model.license, 'Test license')
+        self.assertEqual(model.get_spec().description.metadata.license, 'Test license')
 
         model.short_description = 'Test model'
-        self.assertEquals(model.short_description, 'Test model')
-        self.assertEquals(model.get_spec().description.metadata.shortDescription, 'Test model')
+        self.assertEqual(model.short_description, 'Test model')
+        self.assertEqual(model.get_spec().description.metadata.shortDescription, 'Test model')
 
         model.input_description['feature_1'] = 'This is feature 1'
-        self.assertEquals(model.input_description['feature_1'], 'This is feature 1')
+        self.assertEqual(model.input_description['feature_1'], 'This is feature 1')
 
         model.output_description['output'] = 'This is output'
-        self.assertEquals(model.output_description['output'], 'This is output')
+        self.assertEqual(model.output_description['output'], 'This is output')
 
-        filename = tempfile.mktemp(suffix = '.mlmodel')
+        filename = tempfile.mktemp(suffix='.mlmodel')
         model.save(filename)
         loaded_model = MLModel(filename)
 
-        self.assertEquals(model.author, 'Test author')
-        self.assertEquals(model.license, 'Test license')
-        # self.assertEquals(model.short_description, 'Test model')
-        self.assertEquals(model.input_description['feature_1'], 'This is feature 1')
-        self.assertEquals(model.output_description['output'], 'This is output')
+        self.assertEqual(model.author, 'Test author')
+        self.assertEqual(model.license, 'Test license')
+        # self.assertEqual(model.short_description, 'Test model')
+        self.assertEqual(model.input_description['feature_1'], 'This is feature 1')
+        self.assertEqual(model.output_description['output'], 'This is output')
 
     @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_predict_api(self):
         model = MLModel(self.spec)
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
-        self.assertEquals(preds['output'], 3.1)
+        self.assertEqual(preds['output'], 3.1)
 
     @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_rename_input(self):
@@ -96,7 +96,7 @@ class MLModelTest(unittest.TestCase):
         model = MLModel(self.spec)
         preds = model.predict({'renamed_feature': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
-        self.assertEquals(preds['output'], 3.1)
+        self.assertEqual(preds['output'], 3.1)
         # reset the spec for next run
         rename_feature(self.spec, 'renamed_feature', 'feature_1', rename_inputs=True)
 
@@ -106,7 +106,7 @@ class MLModelTest(unittest.TestCase):
         model = MLModel(self.spec)
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
-        self.assertEquals(preds['output'], 3.1)
+        self.assertEqual(preds['output'], 3.1)
 
     @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_rename_output(self):
@@ -114,7 +114,7 @@ class MLModelTest(unittest.TestCase):
         model = MLModel(self.spec)
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
-        self.assertEquals(preds['renamed_output'], 3.1)
+        self.assertEqual(preds['renamed_output'], 3.1)
         rename_feature(self.spec, 'renamed_output', 'output', rename_inputs=False, rename_outputs=True)
 
     @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
@@ -123,17 +123,23 @@ class MLModelTest(unittest.TestCase):
         model = MLModel(self.spec)
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
-        self.assertEquals(preds['output'], 3.1)
+        self.assertEqual(preds['output'], 3.1)
 
     @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
     def test_future_version(self):
         self.spec.specificationVersion = 10000
-        model = MLModel(self.spec)
-        # this model should exist, but throw an exception when we try to use predict because the engine doesn't support
-        # this model version
+        filename = tempfile.mktemp(suffix='.mlmodel')
+        save_spec(self.spec, filename, auto_set_specification_version=False)
+        model = MLModel(filename)
+        # this model should exist, but throw an exception when we try to use
+        # predict because the engine doesn't support this model version
         self.assertIsNotNone(model)
         with self.assertRaises(Exception):
-            model.predict(1)
+            try:
+                model.predict({})
+            except Exception as e:
+                assert 'Core ML model specification version' in str(e)
+                raise
         self.spec.specificationVersion = 1
 
     @unittest.skipIf(macos_version() >= (10, 13), 'Only supported on macOS 10.13-')
@@ -186,3 +192,45 @@ class MLModelTest(unittest.TestCase):
         model = MLModel(builder.spec)
         spec = convert_neural_network_spec_weights_to_fp16(model.get_spec())
         self.assertIsNotNone(spec)
+
+    def test_downgrade_specification_version(self):
+        # manually set a invalid specification version
+        self.spec.specificationVersion = -1
+        model = MLModel(self.spec)
+        assert model.get_spec().specificationVersion == 1
+
+        # manually set a high specification version
+        self.spec.specificationVersion = 4
+        filename = tempfile.mktemp(suffix='.mlmodel')
+        save_spec(self.spec, filename)
+        model = MLModel(filename)
+        assert model.get_spec().specificationVersion == 1
+
+        # simple neural network with only spec 1 layer
+        input_features = [('data', datatypes.Array(3))]
+        output_features = [('out', datatypes.Array(3))]
+        builder = NeuralNetworkBuilder(input_features, output_features)
+        builder.add_activation('relu', 'RELU', 'data', 'out')
+        # set a high specification version
+        builder.spec.specificationVersion = 3
+        model = MLModel(builder.spec)
+        filename = tempfile.mktemp(suffix='.mlmodel')
+        model.save(filename)
+        # load the model back
+        model = MLModel(filename)
+        assert model.get_spec().specificationVersion == 1
+
+        # test save without automatic set specification version
+        self.spec.specificationVersion = 3
+        filename = tempfile.mktemp(suffix='.mlmodel')
+        save_spec(self.spec, filename, auto_set_specification_version=False)
+        model = MLModel(filename)
+        # the specification version should be original
+        assert model.get_spec().specificationVersion == 3
+
+
+if __name__ == '__main__':
+    unittest.main()
+    # suite = unittest.TestSuite()
+    # suite.addTest(MLModelTest('test_downgrade_specification_version'))
+    # unittest.TextTestRunner().run(suite)
