@@ -108,7 +108,7 @@ def _number_of_samples(model, spec):
     """Get the number of samples the model is fitted to."""
 
     if _is_algorithm_brute(model):
-        return len(model._fit_X)
+        return model._fit_X.shape[0]
     elif _is_algorithm_kd_tree(model):
         return len(np.asarray(model._tree.data))
     return 0
