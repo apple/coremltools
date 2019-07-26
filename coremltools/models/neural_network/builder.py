@@ -602,8 +602,6 @@ class NeuralNetworkBuilder(object):
         ----------
         name: The name of the loss layer
         input: The name of the input, which will be a vector of length N representing the distribution over N categories. It must be the output of a softmax.
-        target: The target is a single value representing the true category or class label.
-        If the target is the predictedFeatureName of a neural network classifier it will be inverse mapped to the corresponding categorical index for you.
 
         Math
         ----------

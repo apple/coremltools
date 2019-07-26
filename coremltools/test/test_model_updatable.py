@@ -26,10 +26,10 @@ class MLModelUpdatableTest(unittest.TestCase):
 
     def create_base_builder(self):
         self.input_features = [('input', datatypes.Array(3))]
-        self.output_features = [('output', None)]
+        self.output_features = [('output', datatypes.Array(3))]
         self.output_names = ["output"]
 
-        builder = NeuralNetworkBuilder(self.input_features, self.output_features, disable_rank5_shape_mapping=True)
+        builder = NeuralNetworkBuilder(self.input_features, self.output_features)
 
         W1 = _np.random.uniform(-0.5, 0.5, (3, 3))
         W2 = _np.random.uniform(-0.5, 0.5, (3, 3))
@@ -59,7 +59,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder.add_softmax(name='softmax', input_name='output', output_name='softmax_output')
 
-        builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='softmax_output', target='target')
+        builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='softmax_output')
 
         builder.set_sgd_optimizer(SgdParams(lr=1e-2, batch=10, momentum=0.0))
         builder.set_epochs(20, allowed_set=[10, 20, 30, 40])
@@ -100,7 +100,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder.add_softmax(name='softmax', input_name='output', output_name='softmax_output')
 
-        builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='softmax_output', target='target')
+        builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='softmax_output')
 
         adam_params = AdamParams()
         adam_params.set_batch(value=10, allowed_set=[10, 20])
@@ -151,7 +151,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder = self.create_base_builder()
 
-        builder.set_mean_squared_error_loss(name='mse', input='output', target='target')
+        builder.set_mean_squared_error_loss(name='mse', input='output')
 
         builder.set_sgd_optimizer(SgdParams(lr=1e-2, batch=10, momentum=0.0))
 
@@ -195,7 +195,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder = self.create_base_builder()
 
-        builder.set_mean_squared_error_loss(name='cross_entropy', input='output', target='target')
+        builder.set_mean_squared_error_loss(name='cross_entropy', input='output')
 
         builder.set_adam_optimizer(AdamParams(lr=1e-2, batch=10,
                                    beta1=0.9, beta2=0.999, eps=1e-8))
@@ -246,7 +246,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         # fails since adding CCE without softmax must raise error
         with self.assertRaises(ValueError):
-            nn_builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='output', target='target')
+            nn_builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='output')
 
     def test_nn_set_cce_invalid(self):
         nn_builder = self.create_base_builder()
@@ -254,8 +254,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         # fails since CCE input must be softmax output
         with self.assertRaises(ValueError):
-            nn_builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='output',
-                                                          target='target')
+            nn_builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='output')
 
     def test_nn_set_softmax_updatable_invalid(self):
         nn_builder = self.create_base_builder()
@@ -269,13 +268,11 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder = self.create_base_builder()
 
-        builder.set_mean_squared_error_loss(name='mse', input='output', target='target')
+        builder.set_mean_squared_error_loss(name='mse', input='output')
 
         builder.set_adam_optimizer(AdamParams(lr=1e-2, batch=10,
                                    beta1=0.9, beta2=0.999, eps=1e-8))
         builder.set_epochs(20, allowed_set=[10, 20, 30])
-
-        builder.set_training_input([('input', datatypes.Array(3)), ('target', 'Double')])
 
         model_path = os.path.join(self.model_dir, 'updatable_creation.mlmodel')
         print(model_path)
@@ -286,17 +283,14 @@ class MLModelUpdatableTest(unittest.TestCase):
         spec = mlmodel.get_spec()
         self.assertEqual(spec.description.trainingInput[0].name, 'input')
         self.assertEqual(spec.description.trainingInput[0].type.WhichOneof('Type'), 'multiArrayType')
-        self.assertEqual(spec.description.trainingInput[1].name, 'target')
-        self.assertEqual(spec.description.trainingInput[1].type.WhichOneof('Type'), 'doubleType')
+        self.assertEqual(spec.description.trainingInput[1].name, 'output_true')
+        self.assertEqual(spec.description.trainingInput[1].type.WhichOneof('Type'), 'multiArrayType')
 
     def test_nn_builder_with_training_features(self):
 
         input_features = [('input', datatypes.Array(3))]
-        output_features = [('output', None)]
-        training_features = [('input', datatypes.Array(3)), ('target', datatypes.Double)]
-
-        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True,
-                                       training_features=training_features)
+        output_features = [('output', datatypes.Array(3))]
+        builder = NeuralNetworkBuilder(input_features, output_features)
 
         W1 = _np.random.uniform(-0.5, 0.5, (3, 3))
         W2 = _np.random.uniform(-0.5, 0.5, (3, 3))
@@ -319,13 +313,11 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder.make_updatable(['ip1', 'ip2'])  # or a dict for weightParams
 
-        builder.set_mean_squared_error_loss(name='mse', input='output', target='target')
+        builder.set_mean_squared_error_loss(name='mse', input='output')
 
         builder.set_adam_optimizer(AdamParams(lr=1e-2, batch=10,
                                    beta1=0.9, beta2=0.999, eps=1e-8))
         builder.set_epochs(20, allowed_set=[10, 20, 30])
-
-        builder.set_training_input([('input', datatypes.Array(3)), ('target', 'Double')])
 
         model_path = os.path.join(self.model_dir, 'updatable_creation.mlmodel')
         print(model_path)
@@ -336,8 +328,8 @@ class MLModelUpdatableTest(unittest.TestCase):
         spec = mlmodel.get_spec()
         self.assertEqual(spec.description.trainingInput[0].name, 'input')
         self.assertEqual(spec.description.trainingInput[0].type.WhichOneof('Type'), 'multiArrayType')
-        self.assertEqual(spec.description.trainingInput[1].name, 'target')
-        self.assertEqual(spec.description.trainingInput[1].type.WhichOneof('Type'), 'doubleType')
+        self.assertEqual(spec.description.trainingInput[1].name, 'output_true')
+        self.assertEqual(spec.description.trainingInput[1].type.WhichOneof('Type'), 'multiArrayType')
 
     def test_pipeline_regressor_make_updatable(self):
         builder = self.create_base_builder()
