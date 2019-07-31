@@ -9,6 +9,7 @@ Neural network builder class to construct Core ML models.
 
 from ... import SPECIFICATION_VERSION
 from ... import _MINIMUM_NDARRAY_SPEC_VERSION
+from ... import _MINIMUM_UPDATABLE_SPEC_VERSION
 from ...proto import Model_pb2 as _Model_pb2
 from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
@@ -570,6 +571,10 @@ class NeuralNetworkBuilder(object):
         if self.spec is None:
             return
         self.spec.isUpdatable = True
+
+        if not self.spec.specificationVersion or self.spec.specificationVersion < _MINIMUM_UPDATABLE_SPEC_VERSION:
+            self.spec.specificationVersion = _MINIMUM_UPDATABLE_SPEC_VERSION
+
         self.nn_spec.updateParams.MergeFromString(b'')
         self.set_shuffle()
 
@@ -601,7 +606,7 @@ class NeuralNetworkBuilder(object):
         Parameters
         ----------
         name: The name of the loss layer
-        input: The name of the input, which will be a vector of length N representing the distribution over N categories. It must be the output of a softmax.
+        input: The name of the input, which should be a vector of length N representing the distribution over N categories. This must be the output of a softmax.
 
         Math
         ----------
@@ -653,39 +658,56 @@ class NeuralNetworkBuilder(object):
         loss_layer.categoricalCrossEntropyLossLayer.input = input
         loss_layer.categoricalCrossEntropyLossLayer.target = target
 
-        training_inputs = self.spec.description.input
         classifier_output = self.spec.description.predictedFeatureName
-        training_input = self.spec.description.trainingInput
-        training_input.extend(training_inputs)
-        training_input_ = training_input.add()
+
+        training_inputs = self.spec.description.trainingInput
+        training_inputs.extend(self.spec.description.input)
+        training_input = training_inputs.add()
 
         if updating_classifier:
-            training_input_.name = predicted_feature_name
+            training_input.name = predicted_feature_name
             classifier_output_type = [x.type for x in self.spec.description.output if x.name == predicted_feature_name]
 
             model_type = classifier_output_type[0].WhichOneof('Type')
             if model_type == 'stringType':
-                datatypes._set_datatype(training_input_.type, datatypes.String())
+                datatypes._set_datatype(training_input.type, datatypes.String())
             elif model_type == 'int64Type':
-                datatypes._set_datatype(training_input_.type, datatypes.Int64())
+                datatypes._set_datatype(training_input.type, datatypes.Int64())
         else:
-            training_input_.name = target
-            datatypes._set_datatype(training_input_.type, datatypes.Array(1))
-            training_input_.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.INT32
+            training_input.name = target
+            datatypes._set_datatype(training_input.type, datatypes.Array(1))
+            training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.INT32
 
         print('Now adding input {} as target for categorical cross-entropy loss layer.'.format(target))
 
-    def set_mean_squared_error_loss(self, name, input):
+    def set_mean_squared_error_loss(self, name, input_feature=None):
+        """
+        input_feature: [(str, datatypes.Array)] or None
+            The input feature of the loss layer. Each feature is a (name,
+            array) tuple, where name is the name of the model's tensor our loss will be attached to, 
+            and array is a datatypes.Array object describing the shape of that tensor.
+            Both the name and the array's shape must be provided in the tuple.
+            >>> feature = [('output_tensor', datatypes.Array((299, 299, 3)))]
+        """
         if self.spec is None:
             return
 
         if name in self.layer_specs:
             raise ValueError("Name %s is already used." % name)
 
-        if input is None:
+        if input_feature is None:
             raise ValueError('Loss Layer input must be specified')
 
-        target = input + '_true'
+        if not isinstance(input_feature, tuple):
+            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
+
+        (fname, ftype) = input_feature
+        if not isinstance(fname, str):
+            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
+        if not isinstance(ftype, datatypes.Array):
+            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
+            
+        target = fname + '_true'
 
         loss_layer = self.nn_spec.updateParams.lossLayers.add()
         self.layers.append(name)
@@ -693,26 +715,19 @@ class NeuralNetworkBuilder(object):
         loss_layer.name = name
 
         output_names = [x.name for x in self.spec.description.output]
-
-        if input not in output_names:
-            raise ValueError('Loss Layer input (%s) must be a model output' % input)
-
         if target in output_names:
             raise ValueError('Loss Layer target (%s) must not be a model output' % target)
 
-        loss_layer.meanSquaredErrorLossLayer.input = input
+        loss_layer.meanSquaredErrorLossLayer.input = input_feature[0]
         loss_layer.meanSquaredErrorLossLayer.target = target
 
-        training_inputs = self.spec.description.input
-        training_input = self.spec.description.trainingInput
-        training_input.extend(training_inputs)
-        training_input_ = training_input.add()
-        training_input_.name = target
+        training_inputs = self.spec.description.trainingInput
+        training_inputs.extend(self.spec.description.input)
+        training_input = training_inputs.add()
+        training_input.name = target
 
-        output_descriptor_training_input = [x for x in self.spec.description.output if x.name == input]
-        training_input_shape = [int(x) for x in output_descriptor_training_input[0].type.multiArrayType.shape]
-        datatypes._set_datatype(training_input_.type, datatypes.Array(*training_input_shape))
-        training_input_.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+        datatypes._set_datatype(training_input.type, input_feature[1])
+        training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
         print('Now adding input {} as target for mean squared error loss layer.'.format(target))
 
 
