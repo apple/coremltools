@@ -677,11 +677,9 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.sin(x)}
             self._test_model(spec, {'data': x}, expected, useCPUOnly=True)
 
-    @unittest.skip('To fix, output rank comes out to be 4, prepended by 1')
     def test_shape_flexibility_enumeration_rank3(self):
         self.test_shape_flexibility_enumeration(rank=3)
 
-    @unittest.skip('To fix, output rank comes out to be 4, prepended by two 1s')
     def test_shape_flexibility_enumeration_rank2(self):
         self.test_shape_flexibility_enumeration(rank=2)
 
