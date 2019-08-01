@@ -26,7 +26,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
     def create_base_builder(self):
         self.input_features = [('input', datatypes.Array(3))]
-        self.output_features = [('output', datatypes.Array(3))]
+        self.output_features = [('output', None)]
         self.output_names = ["output"]
 
         builder = NeuralNetworkBuilder(self.input_features, self.output_features)
@@ -151,7 +151,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder = self.create_base_builder()
 
-        builder.set_mean_squared_error_loss(name='mse', input='output')
+        builder.set_mean_squared_error_loss(name='mse', input_feature=('output', datatypes.Array(3)))
 
         builder.set_sgd_optimizer(SgdParams(lr=1e-2, batch=10, momentum=0.0))
 
@@ -195,7 +195,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder = self.create_base_builder()
 
-        builder.set_mean_squared_error_loss(name='cross_entropy', input='output')
+        builder.set_mean_squared_error_loss(name='mse', input_feature=('output', datatypes.Array(3)))
 
         builder.set_adam_optimizer(AdamParams(lr=1e-2, batch=10,
                                    beta1=0.9, beta2=0.999, eps=1e-8))
@@ -268,7 +268,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder = self.create_base_builder()
 
-        builder.set_mean_squared_error_loss(name='mse', input='output')
+        builder.set_mean_squared_error_loss(name='mse', input_feature=('output', datatypes.Array(3)))
 
         builder.set_adam_optimizer(AdamParams(lr=1e-2, batch=10,
                                    beta1=0.9, beta2=0.999, eps=1e-8))
@@ -313,7 +313,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         builder.make_updatable(['ip1', 'ip2'])  # or a dict for weightParams
 
-        builder.set_mean_squared_error_loss(name='mse', input='output')
+        builder.set_mean_squared_error_loss(name='mse', input_feature=('output', datatypes.Array(3)))
 
         builder.set_adam_optimizer(AdamParams(lr=1e-2, batch=10,
                                    beta1=0.9, beta2=0.999, eps=1e-8))
