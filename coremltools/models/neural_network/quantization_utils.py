@@ -22,6 +22,7 @@ from coremltools.models import (
     _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
     _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
     _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
+    _QUANTIZATION_MODE_LINEAR_SYMMETRIC,
     _LUT_BASED_QUANTIZATION
 )
 
@@ -29,6 +30,79 @@ from ..utils import _get_nn_layers, _wp_to_fp16wp, _get_model, macos_version
 from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
 from ... import (_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
                  _MINIMUM_FP16_SPEC_VERSION)
+
+# TODO - add batchedMatmul
+
+class QuantizedLayerSelector(object):
+    """ This is the base class to provide stu
+    """
+    def __init__(self):
+        self.quantizable_layer_types = {
+            'convolution', 'innerProduct', 'embedding',
+            'batchnorm', 'scale', 'bias', 'loadConstant',
+            'simpleRecurrent', 'gru', 'uniDirectionalLSTM',
+            'biDirectionalLSTM',
+        }
+
+    def do_quantize(self, layer, **kwargs):
+        return layer.WhichOneof('layer') in self.quantizable_layer_types
+
+
+class AdvancedQuantizedLayerSelector(QuantizedLayerSelector):
+
+    def __init__(self,
+                 skip_layer_types=[],
+                 minimum_conv_kernel_channels=4,
+                 minimum_conv_weight_count=4096):
+
+        super(AdvancedQuantizedLayerSelector, self).__init__()
+        self.skip_layer_types = skip_layer_types
+        self.minimum_conv_kernel_channels = minimum_conv_kernel_channels
+        self.minimum_conv_weight_count = minimum_conv_weight_count
+
+    def do_quantize(self, layer, weight_param=None):
+        """ weight_param - should be name of the WeightParam field
+        """
+        ret = super(AdvancedQuantizedLayerSelector, self).do_quantize(layer)
+        if not ret:
+            return False
+
+        layer_type = layer.WhichOneof('layer')
+        if layer_type in self.skip_layer_types:
+            return False
+
+        if layer_type == 'convolution':
+            oc = layer.convolution.outputChannels
+            kc = layer.convolution.kernelChannels
+            kh = layer.convolution.kernelSize[0]
+            kw = layer.convolution.kernelSize[1]
+            groups = layer.convolution.nGroups
+            counts = oc * kc * kh * kw
+            has_bias = layer.convolution.hasBias
+
+            if weight_param is None or weight_param == 'weights':
+                if 'depthwiseConv' in self.skip_layer_types and kc == 1 and \
+                    groups > 1:
+                    return False
+
+                if kc < self.minimum_conv_kernel_channels or \
+                    counts < self.minimum_conv_weight_count:
+                    return False
+
+            elif weight_param == 'bias':
+                return not 'bias' in self.skip_layer_types
+            else:
+                raise ValueError('Unrecognized quantization weight field {}'.format(weight_param))
+
+        elif layer_type == 'innerProduct':
+            if weight_param is None or weight_param == 'weights':
+                return True
+            if weight_param == 'bias':
+                return not 'bias' in self.skip_layer_types
+            else:
+                raise ValueError('Unrecognized quantization weight field {}'.format(weight_param))
+
+        return True
 
 
 def _convert_1bit_array_to_byte_array(arr):
@@ -148,7 +222,7 @@ def _get_kmeans_lookup_table_and_weight(nbits, w, init='k-means++', tol=1e-2, n_
     lut[:n_clusters] = kmeans.cluster_centers_.flatten()
     return lut, wq
 
-def _quantize_channelwise_linear(weight, nbits, axis=0):
+def _quantize_channelwise_linear(weight, nbits, axis=0, symmetric=False):
     """
     Linearly quantize weight blob.
 
@@ -160,6 +234,11 @@ def _quantize_channelwise_linear(weight, nbits, axis=0):
 
     axis: int
         Axis of the weight blob to compute channel-wise quantization, can be 0 or 1
+
+    symmetric: bool
+        If true, set quantization range to be symmetrical to 0.
+        Otherwise, set quantization range to be the minimum and maximum of
+        weight parameters.
 
     Returns
     -------
@@ -181,28 +260,27 @@ def _quantize_channelwise_linear(weight, nbits, axis=0):
     num_channels = weight.shape[0]
     shape = weight.shape
     weight = weight.reshape((num_channels, -1)) # [C, L]
+
     a = _np.amin(weight, axis=-1) # [C,]
     b = _np.amax(weight, axis=-1) # [C,]
 
-    # Quantize weights to full range [0, (1 << nbits) - 1]
-    qa = 0
-    qb = (1 << nbits) - 1
-    # Use a mask to filter out channels with very close weight values
-    mask = (b - a) > 1e-5 # [C,1] (normal channels)
-    r_mask = ~mask # (all-same-value) channels
-
-    qw = _np.zeros_like(weight) # [C, L]
-    scale = _np.ones((num_channels,))
-    bias = _np.zeros((num_channels,))
-
-    if _np.any(mask): # normal channels
-        qw[mask] = (weight[mask] - a[mask][:,None]) / (b[mask] - a[mask])[:,None] * (qb - qa) + qa
-        scale[mask] = (b[mask] - a[mask]) / (qb - qa)
-        bias[mask] = - scale[mask] * qa + a[mask]
-    if _np.any(r_mask): # singular channels
-        qw[r_mask] = qa
-        scale[r_mask] = 0
-        bias[r_mask] = a[r_mask]
+    if symmetric:
+        r = _np.maximum(_np.abs(a), _np.abs(b))
+        scale = r / ((1 << nbits) / 2.0 - 1)
+        bias = -(1 << nbits) / 2.0 * scale
+        num = (weight - bias[:,None])
+        denom = scale[:,None]
+        qw = _np.divide(num, denom, out=_np.zeros_like(num),
+                where=(_np.abs(denom) > 1e-6))
+        qw = _np.round(qw)
+    else:
+        qb = (1 << nbits) - 1
+        scale = (b - a) / qb
+        inv_scale = _np.divide(1.0, scale, out=_np.zeros_like(scale),
+                where=(_np.abs(scale) > 1e-6))
+        bias = a
+        qw = (weight - a[:,None]) * inv_scale[:,None]
+        qw = _np.round(qw)
 
     # Reshape
     quantized_weight = qw.reshape(shape)
@@ -238,9 +316,13 @@ def _quantize_wp(wp, nbits, qm, axis=0, **kwargs):
     """
 
     scale = bias = lut = None
+
     # Linear Quantization
-    if qm == _QUANTIZATION_MODE_LINEAR_QUANTIZATION:
-        qw, scale, bias = _quantize_channelwise_linear(wp, nbits, axis)
+    if qm in [_QUANTIZATION_MODE_LINEAR_QUANTIZATION,
+        _QUANTIZATION_MODE_LINEAR_SYMMETRIC]:
+        symmetric = (qm == _QUANTIZATION_MODE_LINEAR_SYMMETRIC)
+        qw, scale, bias = _quantize_channelwise_linear(wp, nbits, axis,
+            symmetric)
     # Lookup tables
     elif qm == _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS:
         lut, qw = _get_kmeans_lookup_table_and_weight(nbits, wp)
@@ -260,7 +342,8 @@ def _quantize_wp(wp, nbits, qm, axis=0, **kwargs):
     elif qm == _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR:
         lut, qw = _get_linear_lookup_table_and_weight(nbits, wp)
     else:
-        raise NotImplementedError('Quantization method "{}" not supported'.format(qm))
+        raise NotImplementedError(
+            'Quantization method "{}" not supported'.format(qm))
 
     quantized_wp = _np.uint8(qw)
     return scale, bias, lut, quantized_wp
@@ -312,7 +395,8 @@ def _quantize_wp_field(wp, nbits, qm, shape, axis=0, **kwargs):
                         'values are 0 (first axis) and 1 (second axis)'.format(axis))
 
     # WeightParam size check - non-linear quantizations are applied on layer level
-    num_channels = shape[axis] if qm == _QUANTIZATION_MODE_LINEAR_QUANTIZATION else 1
+    num_channels = shape[axis] if qm in [_QUANTIZATION_MODE_LINEAR_QUANTIZATION,
+        _QUANTIZATION_MODE_LINEAR_SYMMETRIC] else 1
     if len(wp.floatValue) % num_channels:
         raise Exception('Number of quantization channels does not divide evenly into weights')
 
@@ -322,7 +406,8 @@ def _quantize_wp_field(wp, nbits, qm, shape, axis=0, **kwargs):
     weights = _np.array(wp.floatValue).reshape(shape)
     scale, bias, lut, uint8_weights = _quantize_wp(weights, nbits, qm, axis, **kwargs)
     uint8_weights = uint8_weights.flatten()
-    if qm == _QUANTIZATION_MODE_LINEAR_QUANTIZATION:
+    if qm in [_QUANTIZATION_MODE_LINEAR_QUANTIZATION, 
+              _QUANTIZATION_MODE_LINEAR_SYMMETRIC]:
         qparams.linearQuantization.scale.extend(scale)
         qparams.linearQuantization.bias.extend(bias)
     else:
@@ -332,7 +417,8 @@ def _quantize_wp_field(wp, nbits, qm, shape, axis=0, **kwargs):
     if nbits == 8:
         wp.rawValue += uint8_weights.tobytes()
     else:
-        wp.rawValue += _convert_array_to_nbit_quantized_bytes(uint8_weights, nbits).tobytes()
+        wp.rawValue += _convert_array_to_nbit_quantized_bytes(uint8_weights,
+            nbits).tobytes()
     del wp.floatValue[:]
 
 
@@ -372,7 +458,7 @@ def _dequantize_lut(weight_8bit, lut):
 
 def _dequantize_wp(wp, shape, axis=0):
     if len(wp.floatValue) != 0:
-        raise Exception('WeightParams have unexpected float values')
+        return
 
     is_linear = wp.quantization.WhichOneof('QuantizationType') == 'linearQuantization'
     if is_linear:
@@ -414,26 +500,30 @@ def _dequantize_nn_spec(spec):
 
 
 def _quantize_nn_spec(spec, nbits, qm, **kwargs):
-    quantized_layers = [
-        'convolution', 'innerProduct', 'embedding',
-        'batchnorm', 'scale', 'bias', 'loadConstant',
-        'simpleRecurrent', 'gru', 'uniDirectionalLSTM',
-        'biDirectionalLSTM'
-    ]
+
+    selector = kwargs.get('selector', QuantizedLayerSelector())
+
+    if qm not in _SUPPORTED_QUANTIZATION_MODES:
+        raise Exception('Quantization mode {} not supported'.format(qm))
+
+    if qm != _QUANTIZATION_MODE_DEQUANTIZE:
+        if nbits is None:
+            raise Exception('Missing argument "nbits"')
+        if not (nbits > 0 and nbits <= 8 or nbits == 16):
+            raise Exception('Only half precision (16-bit), 1 to 8-bit '
+                    'quantization is supported')
+
+    if qm == _QUANTIZATION_MODE_LINEAR_SYMMETRIC and nbits != 8:
+        raise Exception('Symmetric quantization is only applicable for 8 bit'
+                        'linear')
 
     # Bump up to appropriate spec version if required
-    if nbits is not None and nbits > 8 and nbits != 16:
-        raise Exception('Only half precision (16-bit), 8-bit and lower '
-                        'quantization is supported')
-
     if nbits == 16:
         spec.specificationVersion = max(_MINIMUM_FP16_SPEC_VERSION,
                                         spec.specificationVersion)
     else:
         spec.specificationVersion = max(_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
                                         spec.specificationVersion)
-        if qm not in _SUPPORTED_QUANTIZATION_MODES:
-            raise Exception('Quantization mode {} not supported'.format(qm))
 
     layers = _get_nn_layers(spec)
 
@@ -443,29 +533,31 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
         _optimize_nn(layers)
         print('Finished optimizing network. Quantizing neural network..')
 
+    # Quantize each layer
     for layer in layers:
         layer_type = layer.WhichOneof('layer')
-
-        if layer_type not in quantized_layers:
+        if not selector.do_quantize(layer):
             continue
-
         print('Quantizing layer {}'.format(layer.name))
-
+        # layer_type = layer.WhichOneof('layer')
         if layer_type == 'convolution':
             output_channels = layer.convolution.outputChannels
             kernel_channels = layer.convolution.kernelChannels
             kernel_height = layer.convolution.kernelSize[0]
             kernel_width = layer.convolution.kernelSize[1]
+            groups = layer.convolution.nGroups
+            counts = output_channels * kernel_channels * kernel_height * kernel_width
+            has_bias = layer.convolution.hasBias
             if layer.convolution.isDeconvolution:
-                groups = layer.convolution.nGroups
                 shape = (kernel_channels, int(output_channels/groups), kernel_height, kernel_width)
                 _quantize_wp_field(layer.convolution.weights, nbits, qm, shape, axis=1, **kwargs)
             else:
                 shape = (output_channels, kernel_channels, kernel_height, kernel_width)
                 _quantize_wp_field(layer.convolution.weights, nbits, qm, shape, **kwargs)
 
-            if layer.convolution.hasBias:
-                _quantize_wp_field(layer.convolution.bias, nbits, qm, shape=(output_channels,), **kwargs)
+            if has_bias and selector.do_quantize(layer, weight_param='bias'):
+                _quantize_wp_field(layer.convolution.bias, nbits, qm,
+                        shape=(output_channels,), **kwargs)
 
         # Batchnorm
         elif layer_type == 'batchnorm':
@@ -479,9 +571,12 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
         elif layer_type == 'innerProduct':
             output_channels = layer.innerProduct.outputChannels
             input_channels = layer.innerProduct.inputChannels
-            _quantize_wp_field(layer.innerProduct.weights, nbits, qm, shape=(output_channels, input_channels), **kwargs)
-            if layer.innerProduct.hasBias:
-                _quantize_wp_field(layer.innerProduct.bias, nbits, qm, shape=(output_channels,), **kwargs)
+            _quantize_wp_field(layer.innerProduct.weights, nbits, qm,
+                shape=(output_channels, input_channels), **kwargs)
+            has_bias = layer.convolution.hasBias
+            if has_bias and selector.do_quantize(layer, weight_param='bias'):
+                _quantize_wp_field(layer.innerProduct.bias, nbits, qm,
+                    shape=(output_channels,), **kwargs)
 
         # Embedding layer
         elif layer_type == 'embedding':
@@ -584,9 +679,6 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
             print ('Skipping custom layer {}. Weights for this layer need to'
                    'be converted manually'.format(layer.name))
 
-        elif layer_type in quantized_layers:
-            raise Exception('Quantization for ' + layer_type + ' not yet implemented\n')
-
         else:
             raise Exception('Unknown layer ' + layer_type + ' to be quantized')
 
@@ -607,8 +699,7 @@ def quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
         for model_spec in spec.pipeline.models:
             quantize_spec_weights(model_spec, nbits, quantization_mode, **kwargs)
 
-    elif spec.WhichOneof('Type') in ['pipelineClassifier',
-                                        'pipelineRegressor']:
+    elif spec.WhichOneof('Type') in ['pipelineClassifier', 'pipelineRegressor']:
         quantize_spec_weights(spec.pipeline, nbits, quantization_mode, **kwargs)
 
     return spec
@@ -892,7 +983,8 @@ def quantize_weights(full_precision_model,
         will be converted.
         
     nbits: int
-        Number of bits per quantized weight. Only 8-bit and lower quantization is supported
+        Number of bits per quantized weight. Only 16-bit float point and 
+            1-8 bit is supported
 
     quantization_mode: str
         One of the following:
@@ -923,10 +1015,13 @@ def quantize_weights(full_precision_model,
         provided.
 
     kwargs: keyword arguments
-            *lut_function* (``callable function``):
+            *lut_function* : (``callable function``)
                 A callable function provided when quantization mode is set to
                 ``_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE``. See ``quantization_mode``
                 for more details.
+            *selector*: QuantizedLayerSelector
+                A QuanatizedLayerSelector object that can be derived to provide
+                custom quantization selection.
 
     Returns
     -------
@@ -942,13 +1037,15 @@ def quantize_weights(full_precision_model,
         >>> model = coremltools.models.MLModel('my_model.mlmodel')
         >>> quantized_model = quantization_utils.quantize_weights(model, 8, "linear")
     """
+
     qmode_mapping = {
         "linear": _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
         "kmeans": _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
         "kmeans_lut": _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
         "linear_lut": _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
         "custom_lut": _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
-        "dequantization": _QUANTIZATION_MODE_DEQUANTIZE
+        "dequantization": _QUANTIZATION_MODE_DEQUANTIZE,
+        "linear_symmetric": _QUANTIZATION_MODE_LINEAR_SYMMETRIC
     }
     try:
         qmode = qmode_mapping[quantization_mode]
@@ -963,7 +1060,8 @@ def quantize_weights(full_precision_model,
     qspec = quantize_spec_weights(spec, nbits, qmode, **kwargs)
 
     if macos_version() < (10, 14):
-        print("WARNING! Unable to return a quantized MLModel instance since OS != macOS 10.14 or later")
+        print("WARNING! Unable to return a quantized MLModel instance since"
+              "OS != macOS 10.14 or later")
         print("Returning quantized model specification instead")
         return qspec
 
