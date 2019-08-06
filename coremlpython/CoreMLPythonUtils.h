@@ -5,6 +5,7 @@
 #pragma clang diagnostic ignored "-Wdocumentation"
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <os/availability.h>
 #pragma clang diagnostic pop
 
 #import <Foundation/Foundation.h>
@@ -34,8 +35,7 @@ namespace CoreML {
             py::object convertArrayValueToPython(MLMultiArray *value);
             py::object convertDictionaryValueToPython(NSDictionary<NSObject *,NSNumber *> * value);
             py::object convertImageValueToPython(CVPixelBufferRef value);
-            API_AVAILABLE(macos(10.14))
-            py::object convertSequenceValueToPython(MLSequence *seq);
+            py::object convertSequenceValueToPython(MLSequence *seq) API_AVAILABLE(macos(10.14));
             py::dict shapeConstraintToPyDict(const ShapeConstraint& constraint);
 
         }

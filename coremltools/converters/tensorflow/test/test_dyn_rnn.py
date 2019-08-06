@@ -3,7 +3,6 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-import os, sys
 import tensorflow as tf
 import numpy as np
 import unittest

@@ -1391,9 +1391,15 @@ message LookUpTableQuantizationParams {
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     A blob with rank greater than equal to 4.
- *     Rank 4 blob represents [Batch, channels, height, width]
+ *     A blob with rank greater than or equal to 4.
+ *     Rank 4 blob represents [Batch, channels, height, width].
  *     For ranks greater than 4, the leading dimensions, starting from 0 to -4 (inclusive), are all treated as batch.
+ *
+ *     From CoreML specification version 4 onwards (iOS >= 13, macOS >= 10.15),
+ *     when two inputs are connected to Convolution layer, the second input is
+ *     the blob representing the weights. The weight blob should have shape
+ *     ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``,
+ *     where kernelChannels == inputChannels / nGroups.
  *
  * Output
  *   Rank is same as the input. e.g.: for rank 4 input, output shape is [B, C_out, H_out, W_out]

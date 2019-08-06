@@ -16,3 +16,5 @@ using namespace CoreML;
  */
 
 template<typename T> Result validateUpdatableNeuralNetwork(const T& nn);
+
+template<typename T> Result validateTrainingInputs(const Specification::ModelDescription& modelDescription, const T& nn);

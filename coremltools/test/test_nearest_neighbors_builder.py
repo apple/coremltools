@@ -161,14 +161,97 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         self.assertEqual(builder.index_type, 'kd_tree')
         self.assertEqual(builder.leaf_size, 12)
 
-    def test_k(self):
+    def test_set_number_of_neighbors_with_bounds(self):
         builder = self.create_builder()
         self.assertIsNotNone(builder)
 
-        self.assertEqual(builder.k, 5)
+        self.assertEqual(builder.number_of_neighbors, 5)
+        (min_value, max_value)  = builder.number_of_neighbors_allowed_range()
+        self.assertEqual(min_value, 1)
+        self.assertEqual(max_value, 1000)
 
-        builder.k = 12
-        self.assertEqual(builder.k, 12)
+        builder.set_number_of_neighbors_with_bounds(12, allowed_range=(2, 24))
+        (min_value, max_value) = builder.number_of_neighbors_allowed_range()
+        self.assertEqual(builder.number_of_neighbors, 12)
+        self.assertEqual(min_value, 2)
+        self.assertEqual(max_value, 24)
+        allowed_values = builder.number_of_neighbors_allowed_set()
+        self.assertIsNone(allowed_values)
+
+        test_set = { 3, 5, 7, 9 }
+        builder.set_number_of_neighbors_with_bounds(7, allowed_set=test_set)
+        self.assertEqual(builder.number_of_neighbors, 7)
+        allowed_values = builder.number_of_neighbors_allowed_set()
+        self.assertIsNotNone(allowed_values)
+        self.assertEqual(allowed_values, test_set)
+
+    def test_set_number_of_neighbors_with_bounds_error_conditions(self):
+        builder = self.create_builder()
+        self.assertIsNotNone(builder)
+
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(3)
+
+        test_range = (3, 15)
+        test_set = { 1, 3, 5 }
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(3, allowed_range=test_range, allowed_set=test_set)
+
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(3, allowed_range=(-5, 5))
+
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(3, allowed_range=(5, 1))
+
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(3, allowed_range=test_range, allowed_set=test_set)
+
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(2, allowed_range=test_range)
+
+        with self.assertRaises(TypeError):
+            builder.set_number_of_neighbors_with_bounds(5, allowed_set={ 5, -3, 7 })
+
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(4, allowed_set=test_set)
+
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(4, allowed_set=test_set)
+
+        with self.assertRaises(TypeError):
+            builder.set_number_of_neighbors_with_bounds(2, allowed_set=[ 1, 2, 3 ])
+
+        with self.assertRaises(TypeError):
+            builder.set_number_of_neighbors_with_bounds(4, allowed_range={ 2, 200 })
+
+        with self.assertRaises(TypeError):
+            builder.set_number_of_neighbors_with_bounds(4, allowed_range=(2, 10, 20))
+
+        with self.assertRaises(TypeError):
+            builder.set_number_of_neighbors_with_bounds(4, allowed_set=set())
+
+        with self.assertRaises(TypeError):
+            builder.set_number_of_neighbors_with_bounds(4, allowed_range=[])
+
+    def test_set_number_of_neighbors(self):
+        builder = self.create_builder()
+        self.assertIsNotNone(builder)
+
+        builder.set_number_of_neighbors_with_bounds(12, allowed_range=(2, 24))
+        self.assertEqual(builder.number_of_neighbors, 12)
+
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(1, allowed_range=(2, 24))
+        builder.set_number_of_neighbors_with_bounds(4, allowed_range=(2, 24))
+        self.assertEqual(builder.number_of_neighbors, 4)
+
+        test_set = {3, 5, 7, 9}
+        builder.set_number_of_neighbors_with_bounds(7, allowed_set=test_set)
+        
+        with self.assertRaises(ValueError):
+            builder.set_number_of_neighbors_with_bounds(4, allowed_set=test_set)
+        builder.set_number_of_neighbors_with_bounds(5, allowed_set=test_set)
+        self.assertEqual(builder.number_of_neighbors, 5)
 
     def test_add_samples_invalid_data(self):
         builder = self.create_builder()

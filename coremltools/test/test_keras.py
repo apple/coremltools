@@ -16,6 +16,7 @@ if HAS_KERAS_TF:
     from coremltools.converters import keras
 
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras1
 class KerasSingleLayerTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.

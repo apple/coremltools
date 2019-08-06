@@ -29,6 +29,7 @@
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
 #include "DataStructures.pb.h"  // IWYU pragma: export
+#include "Parameters.pb.h"  // IWYU pragma: export
 // @@protoc_insertion_point(includes)
 namespace CoreML {
 namespace Specification {
@@ -44,12 +45,18 @@ extern ArrayFeatureType_ShapeDefaultTypeInternal _ArrayFeatureType_Shape_default
 class ArrayFeatureType_ShapeRange;
 class ArrayFeatureType_ShapeRangeDefaultTypeInternal;
 extern ArrayFeatureType_ShapeRangeDefaultTypeInternal _ArrayFeatureType_ShapeRange_default_instance_;
+class BoolParameter;
+class BoolParameterDefaultTypeInternal;
+extern BoolParameterDefaultTypeInternal _BoolParameter_default_instance_;
 class DictionaryFeatureType;
 class DictionaryFeatureTypeDefaultTypeInternal;
 extern DictionaryFeatureTypeDefaultTypeInternal _DictionaryFeatureType_default_instance_;
 class DoubleFeatureType;
 class DoubleFeatureTypeDefaultTypeInternal;
 extern DoubleFeatureTypeDefaultTypeInternal _DoubleFeatureType_default_instance_;
+class DoubleParameter;
+class DoubleParameterDefaultTypeInternal;
+extern DoubleParameterDefaultTypeInternal _DoubleParameter_default_instance_;
 class DoubleRange;
 class DoubleRangeDefaultTypeInternal;
 extern DoubleRangeDefaultTypeInternal _DoubleRange_default_instance_;
@@ -77,6 +84,9 @@ extern ImageFeatureType_ImageSizeRangeDefaultTypeInternal _ImageFeatureType_Imag
 class Int64FeatureType;
 class Int64FeatureTypeDefaultTypeInternal;
 extern Int64FeatureTypeDefaultTypeInternal _Int64FeatureType_default_instance_;
+class Int64Parameter;
+class Int64ParameterDefaultTypeInternal;
+extern Int64ParameterDefaultTypeInternal _Int64Parameter_default_instance_;
 class Int64Range;
 class Int64RangeDefaultTypeInternal;
 extern Int64RangeDefaultTypeInternal _Int64Range_default_instance_;
@@ -125,6 +135,9 @@ extern SquaredEuclideanDistanceDefaultTypeInternal _SquaredEuclideanDistance_def
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;
+class StringParameter;
+class StringParameterDefaultTypeInternal;
+extern StringParameterDefaultTypeInternal _StringParameter_default_instance_;
 class StringToDoubleMap;
 class StringToDoubleMapDefaultTypeInternal;
 extern StringToDoubleMapDefaultTypeInternal _StringToDoubleMap_default_instance_;
@@ -254,11 +267,14 @@ class KNearestNeighborsClassifier : public ::google::protobuf::MessageLite /* @@
   ::CoreML::Specification::NearestNeighborsIndex* release_nearestneighborsindex();
   void set_allocated_nearestneighborsindex(::CoreML::Specification::NearestNeighborsIndex* nearestneighborsindex);
 
-  // int32 k = 2;
-  void clear_k();
-  static const int kKFieldNumber = 2;
-  ::google::protobuf::int32 k() const;
-  void set_k(::google::protobuf::int32 value);
+  // .CoreML.Specification.Int64Parameter numberOfNeighbors = 3;
+  bool has_numberofneighbors() const;
+  void clear_numberofneighbors();
+  static const int kNumberOfNeighborsFieldNumber = 3;
+  const ::CoreML::Specification::Int64Parameter& numberofneighbors() const;
+  ::CoreML::Specification::Int64Parameter* mutable_numberofneighbors();
+  ::CoreML::Specification::Int64Parameter* release_numberofneighbors();
+  void set_allocated_numberofneighbors(::CoreML::Specification::Int64Parameter* numberofneighbors);
 
   // .CoreML.Specification.StringVector stringClassLabels = 100;
   bool has_stringclasslabels() const;
@@ -348,7 +364,7 @@ class KNearestNeighborsClassifier : public ::google::protobuf::MessageLite /* @@
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::CoreML::Specification::NearestNeighborsIndex* nearestneighborsindex_;
-  ::google::protobuf::int32 k_;
+  ::CoreML::Specification::Int64Parameter* numberofneighbors_;
   union ClassLabelsUnion {
     ClassLabelsUnion() {}
     ::CoreML::Specification::StringVector* stringclasslabels_;
@@ -931,18 +947,43 @@ inline void KNearestNeighborsClassifier::set_allocated_nearestneighborsindex(::C
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.KNearestNeighborsClassifier.nearestNeighborsIndex)
 }
 
-// int32 k = 2;
-inline void KNearestNeighborsClassifier::clear_k() {
-  k_ = 0;
+// .CoreML.Specification.Int64Parameter numberOfNeighbors = 3;
+inline bool KNearestNeighborsClassifier::has_numberofneighbors() const {
+  return this != internal_default_instance() && numberofneighbors_ != NULL;
 }
-inline ::google::protobuf::int32 KNearestNeighborsClassifier::k() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.KNearestNeighborsClassifier.k)
-  return k_;
+inline void KNearestNeighborsClassifier::clear_numberofneighbors() {
+  if (GetArenaNoVirtual() == NULL && numberofneighbors_ != NULL) delete numberofneighbors_;
+  numberofneighbors_ = NULL;
 }
-inline void KNearestNeighborsClassifier::set_k(::google::protobuf::int32 value) {
+inline const ::CoreML::Specification::Int64Parameter& KNearestNeighborsClassifier::numberofneighbors() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
+  return numberofneighbors_ != NULL ? *numberofneighbors_
+                         : *::CoreML::Specification::Int64Parameter::internal_default_instance();
+}
+inline ::CoreML::Specification::Int64Parameter* KNearestNeighborsClassifier::mutable_numberofneighbors() {
   
-  k_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.KNearestNeighborsClassifier.k)
+  if (numberofneighbors_ == NULL) {
+    numberofneighbors_ = new ::CoreML::Specification::Int64Parameter;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
+  return numberofneighbors_;
+}
+inline ::CoreML::Specification::Int64Parameter* KNearestNeighborsClassifier::release_numberofneighbors() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
+  
+  ::CoreML::Specification::Int64Parameter* temp = numberofneighbors_;
+  numberofneighbors_ = NULL;
+  return temp;
+}
+inline void KNearestNeighborsClassifier::set_allocated_numberofneighbors(::CoreML::Specification::Int64Parameter* numberofneighbors) {
+  delete numberofneighbors_;
+  numberofneighbors_ = numberofneighbors;
+  if (numberofneighbors) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
 }
 
 // .CoreML.Specification.StringVector stringClassLabels = 100;

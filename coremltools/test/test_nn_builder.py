@@ -77,6 +77,21 @@ class ControlFlowCorrectnessTest(unittest.TestCase):
 @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
 class BasicNumericCorrectnessTest(unittest.TestCase):
 
+    def _build_nn_with_one_ip_layer(self):
+        input_features = [('data', datatypes.Array(3))]
+        output_features = [('out', None)]
+        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        w = np.random.uniform(-0.5, 0.5, (3, 3))
+        builder.add_inner_product(name='ip1',
+                                  W=w,
+                                  b=None,
+                                  input_channels=3,
+                                  output_channels=3,
+                                  has_bias=False,
+                                  input_name='input',
+                                  output_name='hidden')
+        return builder
+
     def test_undefined_shape_single_output(self):
         W = np.ones((3,3))
         input_features = [('data', datatypes.Array(3))]
@@ -322,3 +337,33 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         expected_out[3, :] = [quant_lut[W[0, 0]], quant_lut[W[1, 0]]] + bias
         self.assertTrue(out.shape == expected_out.shape)
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
+
+    def test_set_input(self):
+        builder = self._build_nn_with_one_ip_layer()
+        builder.set_input(input_names=['data_renamed'], input_dims=[(2,)])
+
+        self.assertEquals(builder.spec.description.input[0].type.multiArrayType.shape[0], 2)
+        self.assertEquals(builder.spec.description.input[0].name, 'data_renamed')
+
+    def test_set_input_fail(self):
+        builder = self._build_nn_with_one_ip_layer()
+
+        # fails since input_names and input_dims do not have same size
+        with self.assertRaises(ValueError):
+            builder.set_input(input_names=['data_1', 'data_2'], input_dims=[(3,)])
+
+    def test_set_output(self):
+        builder = self._build_nn_with_one_ip_layer()
+        builder.set_output(output_names=['out_renamed'], output_dims=[(2,)])
+
+        self.assertEquals(builder.spec.description.output[0].type.multiArrayType.shape[0], 2)
+        self.assertEquals(builder.spec.description.output[0].name, 'out_renamed')
+
+    def test_set_output_fail(self):
+        builder = self._build_nn_with_one_ip_layer()
+
+        # fails since output_names and output_dims do not have same size
+        with self.assertRaises(ValueError):
+            builder.set_output(output_names=['out_1', 'out_2'], output_dims=[(3,)])
+
+

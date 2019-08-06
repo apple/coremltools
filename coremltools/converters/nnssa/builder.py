@@ -1324,6 +1324,9 @@ class GraphBuilder(object):
             The name of the paddings spec.
             This should be a constant.
 
+        constant_values: float
+            Constant value for padding.
+
         name: str
             The name of this node
         """
