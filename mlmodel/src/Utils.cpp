@@ -557,9 +557,9 @@ bool CoreML::hasModelOrSubModelProperty(const Specification::Model& model, const
 bool CoreML::isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& layer) {
     
     // Return True if the NN layer is from the set exposed in iOS 12
-    
     switch (layer.layer_case()) {
         case Specification::NeuralNetworkLayer::LayerCase::kConvolution:
+            return (layer.input().size() == 1);
         case Specification::NeuralNetworkLayer::LayerCase::kInnerProduct:
         case Specification::NeuralNetworkLayer::LayerCase::kBatchnorm:
         case Specification::NeuralNetworkLayer::LayerCase::kActivation:

@@ -137,7 +137,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         output_names = ['output'+str(i) for i in range(len(model.outputs))]
         return input_names, output_names, input_data, coreml_input
 
-    def _test_model(self, model, input_name_shape_dict= {},num_samples=1, mode='random', delta=1e-2,
+    def _test_model(self, model, input_name_shape_dict={}, num_samples=1, mode='random', delta=1e-2,
                     model_dir=None, transpose_keras_result=True,
                     one_dim_seq_flags=None,
                     model_precision=_MLMODEL_FULL_PRECISION):
@@ -2760,9 +2760,20 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
     def test_clickbait_cnn_half_precision(self):
         return self.test_clickbait_cnn(model_precision=_MLMODEL_HALF_PRECISION)
 
+    def test_model_with_duplicated_edges(self):
+        # Create a simple model
+        inputs = Input(shape=(20, 20))
+        activation = Activation('relu')(inputs)
+        cropping = Cropping1D(cropping=(1, 1))(activation)
+        conv1d = Conv1D(20, 3, padding='valid')(activation)
+        ouputs = Add()([conv1d, cropping])
+
+        model = Model(inputs, ouputs)
+        self._test_model(model)
+
 
 if __name__ == '__main__':
     unittest.main()
-    #suite = unittest.TestSuite()
-    #suite.addTest(KerasBasicNumericCorrectnessTest("test_lstm_concat_dense_random"))
-    #unittest.TextTestRunner().run(suite)
+    # suite = unittest.TestSuite()
+    # suite.addTest(KerasBasicNumericCorrectnessTest("test_lstm_concat_dense_random"))
+    # unittest.TextTestRunner().run(suite)

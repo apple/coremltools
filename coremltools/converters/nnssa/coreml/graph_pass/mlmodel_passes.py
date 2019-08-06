@@ -41,22 +41,21 @@ def _find_disconnected_load_constants(nn_spec, disconnected_load_constants):
 
 def _delete_disconnected_load_constants(nn_spec, disconnected_load_constants):
     nn_layers = nn_spec.layers
-    for layer in nn_layers:
+    N = len(nn_layers)
+    for i in range(N-1, -1, -1):
+        layer = nn_layers[i]
         layer_type = layer.WhichOneof('layer')
         if layer_type == 'loadConstant' or layer_type == 'loadConstantND':
             if layer.output[0] in disconnected_load_constants:
                 nn_layers.remove(layer)
 
         if layer_type == 'loop':
-            _delete_disconnected_load_constants(
-                layer.loop.conditionNetwork, disconnected_load_constants)
+            _delete_disconnected_load_constants(layer.loop.conditionNetwork, disconnected_load_constants)
             _delete_disconnected_load_constants(layer.loop.bodyNetwork, disconnected_load_constants)
 
         if layer_type == 'branch':
             _delete_disconnected_load_constants(layer.branch.ifBranch, disconnected_load_constants)
-            _delete_disconnected_load_constants(
-                layer.branch.elseBranch, disconnected_load_constants)
-
+            _delete_disconnected_load_constants(layer.branch.elseBranch, disconnected_load_constants)
 
 def remove_disconnected_constants(spec):
     '''
@@ -65,8 +64,8 @@ def remove_disconnected_constants(spec):
     nn_spec = _get_nn_spec(spec)
     disconnected_load_constants = dict()  # output_name -> layer reference
     _find_disconnected_load_constants(nn_spec, disconnected_load_constants)
-    print(
-        '[MLModel Pass] {} disconnected constants are removed from graph.'.format(
-            len(disconnected_load_constants)))
     if len(disconnected_load_constants) > 0:
         _delete_disconnected_load_constants(nn_spec, disconnected_load_constants)
+        print(
+            '[MLModel Pass] {} disconnected constants are removed from graph.'.format(
+                len(disconnected_load_constants)))

@@ -80,6 +80,7 @@ void TableStruct::InitDefaultsImpl() {
 
   ::google::protobuf::internal::InitProtobufDefaults();
   ::CoreML::Specification::protobuf_DataStructures_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_Parameters_2eproto::InitDefaults();
   _KNearestNeighborsClassifier_default_instance_.DefaultConstruct();
   _NearestNeighborsIndex_default_instance_.DefaultConstruct();
   _UniformWeighting_default_instance_.DefaultConstruct();
@@ -89,6 +90,8 @@ void TableStruct::InitDefaultsImpl() {
   _SquaredEuclideanDistance_default_instance_.DefaultConstruct();
   _KNearestNeighborsClassifier_default_instance_.get_mutable()->nearestneighborsindex_ = const_cast< ::CoreML::Specification::NearestNeighborsIndex*>(
       ::CoreML::Specification::NearestNeighborsIndex::internal_default_instance());
+  _KNearestNeighborsClassifier_default_instance_.get_mutable()->numberofneighbors_ = const_cast< ::CoreML::Specification::Int64Parameter*>(
+      ::CoreML::Specification::Int64Parameter::internal_default_instance());
 }
 
 void InitDefaults() {
@@ -98,6 +101,7 @@ void InitDefaults() {
 void AddDescriptorsImpl() {
   InitDefaults();
   ::CoreML::Specification::protobuf_DataStructures_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_Parameters_2eproto::AddDescriptors();
   ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
 }
 
@@ -121,7 +125,7 @@ struct StaticDescriptorInitializer {
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int KNearestNeighborsClassifier::kNearestNeighborsIndexFieldNumber;
-const int KNearestNeighborsClassifier::kKFieldNumber;
+const int KNearestNeighborsClassifier::kNumberOfNeighborsFieldNumber;
 const int KNearestNeighborsClassifier::kStringClassLabelsFieldNumber;
 const int KNearestNeighborsClassifier::kInt64ClassLabelsFieldNumber;
 const int KNearestNeighborsClassifier::kDefaultStringLabelFieldNumber;
@@ -148,7 +152,11 @@ KNearestNeighborsClassifier::KNearestNeighborsClassifier(const KNearestNeighbors
   } else {
     nearestneighborsindex_ = NULL;
   }
-  k_ = from.k_;
+  if (from.has_numberofneighbors()) {
+    numberofneighbors_ = new ::CoreML::Specification::Int64Parameter(*from.numberofneighbors_);
+  } else {
+    numberofneighbors_ = NULL;
+  }
   clear_has_ClassLabels();
   switch (from.ClassLabels_case()) {
     case kStringClassLabels: {
@@ -195,8 +203,8 @@ KNearestNeighborsClassifier::KNearestNeighborsClassifier(const KNearestNeighbors
 }
 
 void KNearestNeighborsClassifier::SharedCtor() {
-  ::memset(&nearestneighborsindex_, 0, reinterpret_cast<char*>(&k_) -
-    reinterpret_cast<char*>(&nearestneighborsindex_) + sizeof(k_));
+  ::memset(&nearestneighborsindex_, 0, reinterpret_cast<char*>(&numberofneighbors_) -
+    reinterpret_cast<char*>(&nearestneighborsindex_) + sizeof(numberofneighbors_));
   clear_has_ClassLabels();
   clear_has_DefaultClassLabel();
   clear_has_WeightingScheme();
@@ -211,6 +219,9 @@ KNearestNeighborsClassifier::~KNearestNeighborsClassifier() {
 void KNearestNeighborsClassifier::SharedDtor() {
   if (this != internal_default_instance()) {
     delete nearestneighborsindex_;
+  }
+  if (this != internal_default_instance()) {
+    delete numberofneighbors_;
   }
   if (has_ClassLabels()) {
     clear_ClassLabels();
@@ -302,7 +313,10 @@ void KNearestNeighborsClassifier::Clear() {
     delete nearestneighborsindex_;
   }
   nearestneighborsindex_ = NULL;
-  k_ = 0;
+  if (GetArenaNoVirtual() == NULL && numberofneighbors_ != NULL) {
+    delete numberofneighbors_;
+  }
+  numberofneighbors_ = NULL;
   clear_ClassLabels();
   clear_DefaultClassLabel();
   clear_WeightingScheme();
@@ -330,14 +344,12 @@ bool KNearestNeighborsClassifier::MergePartialFromCodedStream(
         break;
       }
 
-      // int32 k = 2;
-      case 2: {
+      // .CoreML.Specification.Int64Parameter numberOfNeighbors = 3;
+      case 3: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &k_)));
+            static_cast< ::google::protobuf::uint8>(26u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_numberofneighbors()));
         } else {
           goto handle_unusual;
         }
@@ -456,9 +468,10 @@ void KNearestNeighborsClassifier::SerializeWithCachedSizes(
       1, *this->nearestneighborsindex_, output);
   }
 
-  // int32 k = 2;
-  if (this->k() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->k(), output);
+  // .CoreML.Specification.Int64Parameter numberOfNeighbors = 3;
+  if (this->has_numberofneighbors()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      3, *this->numberofneighbors_, output);
   }
 
   // .CoreML.Specification.StringVector stringClassLabels = 100;
@@ -514,11 +527,11 @@ size_t KNearestNeighborsClassifier::ByteSizeLong() const {
         *this->nearestneighborsindex_);
   }
 
-  // int32 k = 2;
-  if (this->k() != 0) {
+  // .CoreML.Specification.Int64Parameter numberOfNeighbors = 3;
+  if (this->has_numberofneighbors()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->k());
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->numberofneighbors_);
   }
 
   switch (ClassLabels_case()) {
@@ -600,8 +613,8 @@ void KNearestNeighborsClassifier::MergeFrom(const KNearestNeighborsClassifier& f
   if (from.has_nearestneighborsindex()) {
     mutable_nearestneighborsindex()->::CoreML::Specification::NearestNeighborsIndex::MergeFrom(from.nearestneighborsindex());
   }
-  if (from.k() != 0) {
-    set_k(from.k());
+  if (from.has_numberofneighbors()) {
+    mutable_numberofneighbors()->::CoreML::Specification::Int64Parameter::MergeFrom(from.numberofneighbors());
   }
   switch (from.ClassLabels_case()) {
     case kStringClassLabels: {
@@ -661,7 +674,7 @@ void KNearestNeighborsClassifier::Swap(KNearestNeighborsClassifier* other) {
 }
 void KNearestNeighborsClassifier::InternalSwap(KNearestNeighborsClassifier* other) {
   std::swap(nearestneighborsindex_, other->nearestneighborsindex_);
-  std::swap(k_, other->k_);
+  std::swap(numberofneighbors_, other->numberofneighbors_);
   std::swap(ClassLabels_, other->ClassLabels_);
   std::swap(_oneof_case_[0], other->_oneof_case_[0]);
   std::swap(DefaultClassLabel_, other->DefaultClassLabel_);
@@ -717,18 +730,43 @@ void KNearestNeighborsClassifier::set_allocated_nearestneighborsindex(::CoreML::
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.KNearestNeighborsClassifier.nearestNeighborsIndex)
 }
 
-// int32 k = 2;
-void KNearestNeighborsClassifier::clear_k() {
-  k_ = 0;
+// .CoreML.Specification.Int64Parameter numberOfNeighbors = 3;
+bool KNearestNeighborsClassifier::has_numberofneighbors() const {
+  return this != internal_default_instance() && numberofneighbors_ != NULL;
 }
-::google::protobuf::int32 KNearestNeighborsClassifier::k() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.KNearestNeighborsClassifier.k)
-  return k_;
+void KNearestNeighborsClassifier::clear_numberofneighbors() {
+  if (GetArenaNoVirtual() == NULL && numberofneighbors_ != NULL) delete numberofneighbors_;
+  numberofneighbors_ = NULL;
 }
-void KNearestNeighborsClassifier::set_k(::google::protobuf::int32 value) {
+const ::CoreML::Specification::Int64Parameter& KNearestNeighborsClassifier::numberofneighbors() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
+  return numberofneighbors_ != NULL ? *numberofneighbors_
+                         : *::CoreML::Specification::Int64Parameter::internal_default_instance();
+}
+::CoreML::Specification::Int64Parameter* KNearestNeighborsClassifier::mutable_numberofneighbors() {
   
-  k_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.KNearestNeighborsClassifier.k)
+  if (numberofneighbors_ == NULL) {
+    numberofneighbors_ = new ::CoreML::Specification::Int64Parameter;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
+  return numberofneighbors_;
+}
+::CoreML::Specification::Int64Parameter* KNearestNeighborsClassifier::release_numberofneighbors() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
+  
+  ::CoreML::Specification::Int64Parameter* temp = numberofneighbors_;
+  numberofneighbors_ = NULL;
+  return temp;
+}
+void KNearestNeighborsClassifier::set_allocated_numberofneighbors(::CoreML::Specification::Int64Parameter* numberofneighbors) {
+  delete numberofneighbors_;
+  numberofneighbors_ = numberofneighbors;
+  if (numberofneighbors) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
 }
 
 // .CoreML.Specification.StringVector stringClassLabels = 100;

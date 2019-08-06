@@ -92,6 +92,18 @@ try:
   FeatureTypes__pb2 = NearestNeighbors__pb2.FeatureTypes__pb2
 except AttributeError:
   FeatureTypes__pb2 = NearestNeighbors__pb2.FeatureTypes_pb2
+try:
+  Parameters__pb2 = NearestNeighbors__pb2.Parameters__pb2
+except AttributeError:
+  Parameters__pb2 = NearestNeighbors__pb2.Parameters_pb2
+try:
+  DataStructures__pb2 = NearestNeighbors__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = NearestNeighbors__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = NearestNeighbors__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = NearestNeighbors__pb2.FeatureTypes_pb2
 from . import Identity_pb2 as Identity__pb2
 from . import Imputer_pb2 as Imputer__pb2
 try:

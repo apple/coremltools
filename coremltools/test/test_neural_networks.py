@@ -1,4 +1,5 @@
 import unittest
+import pytest
 import numpy as np
 import coremltools
 from coremltools.models import MLModel
@@ -8,7 +9,6 @@ from coremltools.models import MLModel
 from coremltools.models.utils import get_custom_layer_names, replace_custom_layer_name, macos_version
 
 
-
 if HAS_KERAS_TF:
     from keras.models import Sequential
     from keras.layers import Dense, LSTM
@@ -16,7 +16,8 @@ if HAS_KERAS_TF:
 
 
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
-class BasicNumericCorrectnessTest(unittest.TestCase):
+@pytest.mark.keras1
+class KerasBasicNumericCorrectnessTest(unittest.TestCase):
     
     def test_classifier(self):
         np.random.seed(1988)

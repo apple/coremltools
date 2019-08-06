@@ -173,6 +173,7 @@ def set_training_features(spec, training_features):
     for (fname, ftype) in training_features:
         training_input_ = spec.description.trainingInput.add()
         training_input_.name = fname
-        datatypes._set_datatype(training_input_.type, ftype)
+        if ftype:
+            datatypes._set_datatype(training_input_.type, ftype)
 
     return spec

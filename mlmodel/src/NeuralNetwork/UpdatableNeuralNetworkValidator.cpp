@@ -83,6 +83,110 @@ static Result validateLossLayer(const Specification::LossLayer *lossLayer, const
     return r;
 }
 
+template<typename T> Result validateTrainingInputs(const Specification::ModelDescription& modelDescription, const T& nn) {
+    Result r;
+    std::string err;
+
+    if (modelDescription.traininginput_size() <= 1) {
+        err = "Must provide training inputs for updatable neural network (expecting both input and target for loss function).";
+        return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+    }
+
+    std::vector<int> trainingInputExclusiveIndices;
+    for (int i = 0; i < modelDescription.traininginput_size(); i++) {
+        const Specification::FeatureDescription& trainingInput = modelDescription.traininginput(i);
+        bool trainingInputIsPredictionInput = false;
+        for (int j = 0; j < modelDescription.input_size(); j++) {
+            const Specification::FeatureDescription& input = modelDescription.input(j);
+            if (Specification::isEquivalent(trainingInput, input)) {
+                trainingInputIsPredictionInput = true;
+                break;
+            }
+        }
+        if (!trainingInputIsPredictionInput) {
+            trainingInputExclusiveIndices.push_back(i);
+        }
+    }
+
+    // Check that training inputs are specified to at least contain the target (which we'll validate is the target further down)
+    if (trainingInputExclusiveIndices.size() < 1) {
+        err = "Training inputs don't describe required inputs for the loss (needs both the input and the target).";
+        return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+    }
+
+    // Ensure other inputs (excluding the target) are present
+    // This should prevent issues where the only training input described is the target itself
+    // Given we don't yet know what inputs are explicitly required for training we can't vet beyond this for what model inputs to require
+    size_t numberOfNonExclusiveTrainingInputs = static_cast<size_t>(modelDescription.traininginput_size()) - trainingInputExclusiveIndices.size();
+    if (numberOfNonExclusiveTrainingInputs <= 0) { // Given at least one input from the inference model's inputs must be supplied this should be positive
+        err = "The training inputs must include at least one input from the model itself as required for training (should have at least one input in common with those used for prediction).";
+        return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+    }
+
+    std::string target;
+    const Specification::NetworkUpdateParameters& updateParams = nn.updateparams();
+    if (updateParams.losslayers(0).has_categoricalcrossentropylosslayer()) {
+        target = updateParams.losslayers(0).categoricalcrossentropylosslayer().target();
+    } else if (updateParams.losslayers(0).has_meansquarederrorlosslayer()) {
+        target = updateParams.losslayers(0).meansquarederrorlosslayer().target();
+    }
+
+    bool isClassifier = true;
+
+    // Done to detect if the NN is a neuralNetworkClassifier
+    try { (void)(dynamic_cast<const Specification::NeuralNetworkClassifier &>(nn)); } catch (std::bad_cast) { isClassifier = false; }
+
+    bool trainingInputMeetsRequirement = false;
+    for (size_t i = 0; i < trainingInputExclusiveIndices.size(); i++) {
+        const Specification::FeatureDescription& trainingInputDescription = modelDescription.traininginput(trainingInputExclusiveIndices[i]);
+        std::string trainingInputTarget = trainingInputDescription.name();
+
+        // If the neural network is a classifier, check if the predictedFeatureNames is a training input (and ensure matching types)
+        if (isClassifier) {
+            if (trainingInputTarget == modelDescription.predictedfeaturename()) {
+
+                // Find the predictedFeatureName's output and use to check types
+                for (const auto& output : modelDescription.output()) {
+                    if (trainingInputTarget == output.name()) {
+                        if (trainingInputDescription.type() == output.type()) {
+                            trainingInputMeetsRequirement = true;
+                            break;
+                        } else {
+                            std::string typeString = output.type().has_int64type() ? "Int64" : "String";
+                            std::string targetTypeString = trainingInputDescription.type().has_int64type() ? "Int64" : "String";
+                            err = "The type of the training input provided: " + trainingInputTarget + " doesn't match the expected type of the classifier. Found: " + targetTypeString + ", expected: " + typeString + ".";
+                            return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+                        }
+                    }
+                }
+            }
+        }
+
+        // If NN was not a classifier (or predictedFeatureName was not in the training inputs), ensure the target is in the training inputs
+        if (target == trainingInputTarget) {
+            trainingInputMeetsRequirement = true;
+        }
+    }
+
+    // Raise an error if the target isn't found (or if the target or predictedFeatureNames aren't found for classifiers)
+    // Users can supply either / or for a classifier, but if neither is found we'll request the predictedFeatureNames
+    if (!trainingInputMeetsRequirement) {
+        if (isClassifier) {
+            err = "The training inputs don't include the target of the classifier: " + modelDescription.predictedfeaturename();
+            return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+        }
+        err = "The training inputs don't include the loss layer's target: " + target;
+        return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+    }
+
+    return Result();
+}
+
+template Result validateTrainingInputs<CoreML::Specification::NeuralNetwork>(Specification::ModelDescription const&, CoreML::Specification::NeuralNetwork const&);
+template Result validateTrainingInputs<CoreML::Specification::NeuralNetworkRegressor>(Specification::ModelDescription const&, CoreML::Specification::NeuralNetworkRegressor const&);
+template Result validateTrainingInputs<CoreML::Specification::NeuralNetworkClassifier>(Specification::ModelDescription const&, CoreML::Specification::NeuralNetworkClassifier const&);
+
+
 static Result validateOptimizer(const Specification::Optimizer& optimizer) {
     Result r;
     std::string err;
@@ -105,7 +209,7 @@ static Result validateOptimizer(const Specification::Optimizer& optimizer) {
                 return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
             }
             
-            r = validateInt64Parameter("miniBatchSize", sgdOptimizer.minibatchsize());
+            r = validateInt64Parameter("miniBatchSize", sgdOptimizer.minibatchsize(), true);
             if (!r.good()) {return r;}
             
             break;
@@ -127,7 +231,7 @@ static Result validateOptimizer(const Specification::Optimizer& optimizer) {
                 return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
             }
             
-            r = validateInt64Parameter("miniBatchSize", adamOptimizer.minibatchsize());
+            r = validateInt64Parameter("miniBatchSize", adamOptimizer.minibatchsize(), true);
             if (!r.good()) {return r;}
             
             if (false == adamOptimizer.has_beta1()) {
@@ -173,11 +277,11 @@ static Result validateOtherTopLevelUpdateParameters(const Specification::Network
         return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
     }
     
-    r = validateInt64Parameter("epochs", updateParameters.epochs());
+    r = validateInt64Parameter("epochs", updateParameters.epochs(), true);
     if (!r.good()) {return r;}
 
     if (updateParameters.has_seed()) {
-        r = validateInt64Parameter("seed", updateParameters.seed());
+        r = validateInt64Parameter("seed", updateParameters.seed(), false);
         if (!r.good()) {return r;}
     }
 
@@ -219,7 +323,7 @@ template<typename T> static Result isTrainingConfigurationSupported(const T& nn)
     
     r = validateOptimizer(nn.updateparams().optimizer());
     if (!r.good()) {return r;}
-    
+
     r = validateOtherTopLevelUpdateParameters(nn.updateparams());
     if (!r.good()) {return r;}
     

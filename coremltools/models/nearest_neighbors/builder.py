@@ -47,14 +47,14 @@ class KNearestNeighborsClassifierBuilder(object):
     _VALID_DISTANCE_METRICS = ['squared_euclidean']
 
     # Optional parameter keys for constructor
-    _PARAMETER_KEY_K = 'k'
+    _PARAMETER_KEY_NUMBER_OF_NEIGHBORS = 'number_of_neighbors'
     _PARAMETER_KEY_WEIGHTING_SCHEME = 'weighting_scheme'
     _PARAMETER_KEY_INDEX_TYPE = 'index_type'
     _PARAMETER_KEY_LEAF_SIZE = 'leaf_size'
     _PARAMETER_KEY_INPUT_TYPE = 'input_type'
 
     # Optional parameter default values
-    _PARAMETER_DEFAULT_K = 5
+    _PARAMETER_DEFAULT_NUMBER_OF_NEIGHBORS = 5
     _PARAMETER_DEFAULT_WEIGHTING_SCHEME = 'uniform'
     _PARAMETER_DEFAULT_INDEX_TYPE = 'linear'
     _PARAMETER_DEFAULT_LEAF_SIZE = 30
@@ -67,7 +67,7 @@ class KNearestNeighborsClassifierBuilder(object):
         :param output_name: Name of the output
         :param number_of_dimensions: Number of dimensions of the input data
         :param default_class_label: The default class label to use for predictions. Must be either an int64 or a string.
-        :param k: Number of neighbors to use for predictions. Default = 5.
+        :param number_of_neighbors: Number of neighbors to use for predictions. Default = 5 with allowed values between 1-1000.
         :param weighting_scheme: Weight function used in prediction. One of 'uniform' (default) or 'inverse_distance'
         :param index_type: Algorithm to compute nearest neighbors. One of 'linear' (default), or 'kd_tree'.
         :param leaf_size: Leaf size for the kd-tree. Ignored if index type is 'linear'. Default = 30.
@@ -124,10 +124,11 @@ class KNearestNeighborsClassifierBuilder(object):
         self.spec.description.predictedFeatureName = output_label.name
         self.spec.description.predictedProbabilitiesName = output_label_probs.name
 
-        self.k = kwargs.get(self._PARAMETER_KEY_K, self._PARAMETER_DEFAULT_K)
+        number_of_neighbors = kwargs.get(self._PARAMETER_KEY_NUMBER_OF_NEIGHBORS,
+                                         self._PARAMETER_DEFAULT_NUMBER_OF_NEIGHBORS)
+        self.set_number_of_neighbors_with_bounds(number_of_neighbors, allowed_range=(1, 1000)) # Can we think of a more sensible default value?
 
-        self.weighting_scheme = kwargs.get(self._PARAMETER_KEY_WEIGHTING_SCHEME,
-                                           self._PARAMETER_DEFAULT_WEIGHTING_SCHEME)
+        self.weighting_scheme = kwargs.get(self._PARAMETER_KEY_WEIGHTING_SCHEME, self._PARAMETER_DEFAULT_WEIGHTING_SCHEME)
 
         index_type = kwargs.get(self._PARAMETER_KEY_INDEX_TYPE, self._PARAMETER_DEFAULT_INDEX_TYPE)
         leaf_size = kwargs.get(self._PARAMETER_KEY_LEAF_SIZE, self._PARAMETER_DEFAULT_LEAF_SIZE)
@@ -289,23 +290,89 @@ class KNearestNeighborsClassifierBuilder(object):
         return self.spec.kNearestNeighborsClassifier.nearestNeighborsIndex.numberOfDimensions
 
     @property
-    def k(self):
+    def number_of_neighbors(self):
         """
-        Get the k value for the KNearestNeighborsClassifier model
-        :return: the k value
+        Get the number of neighbors value for the KNearestNeighborsClassifier model
+        :return: the number of neighbors default value
         """
-        return self.spec.kNearestNeighborsClassifier.k
+        return self.spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue
 
-    @k.setter
-    def k(self, k):
+    def set_number_of_neighbors_with_bounds(self, number_of_neighbors, allowed_range=None, allowed_set=None):
         """
-        Set the k value for the KNearestNeighborsClassifier model
-        :param k: k
+        Set the numberOfNeighbors parameter for the KNearestNeighborsClassifier model.
+        :param allowed_range: tuple of (min_value, max_value) defining the range of allowed values
+        :param allowed_values: set of allowed values for the number of neighbors
         :return: None
         """
-        if k <= 0:
-            raise ValueError('k must be > 0')
-        self.spec.kNearestNeighborsClassifier.k = k
+        if number_of_neighbors <= 0:
+            raise ValueError('number_of_neighbors must be > 0')
+        if allowed_range is None and allowed_set is None:
+            raise ValueError('Exactly one of allowed_range or allowed_values must be provided')
+        if allowed_range is not None and allowed_set is not None:
+            raise ValueError('Exactly one of allowed_range or allowed_values must be provided')
+
+        if allowed_range is not None:
+            if not isinstance(allowed_range, tuple):
+                raise TypeError('allowed_range expects a tuple of (min_value, max_value)')
+            if len(allowed_range) != 2:
+                raise TypeError('allowed_range expects a tuple of (min_value, max_value)')
+
+            (min_value, max_value) = allowed_range
+            if min_value <= 0:
+                raise ValueError('allowed_range minimum must be > 0')
+            if max_value < min_value:
+                raise ValueError('allowed_range max_value must be >= min_value')
+            if number_of_neighbors < min_value or number_of_neighbors > max_value:
+                raise ValueError('number_of_neighbors is not within allowed range')
+
+            self.spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue = number_of_neighbors
+            self.spec.kNearestNeighborsClassifier.numberOfNeighbors.range.minValue = min_value
+            self.spec.kNearestNeighborsClassifier.numberOfNeighbors.range.maxValue = max_value
+
+        elif allowed_set is not None:
+            if not isinstance(allowed_set, set):
+                raise TypeError('allowed_values expects \'set\' type')
+            if len(allowed_set) == 0:
+                raise TypeError('allowed_values cannot be empty')
+
+            found_match = False
+            for v in allowed_set:
+                if not self._is_valid_number_type(v):
+                    raise TypeError('allowed_values must contain only integer types')
+                if v <= 0:
+                    raise TypeError('allowed_values must only contain values > 0')
+                if number_of_neighbors == v:
+                    found_match = True
+
+            if found_match:
+                self.spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue = number_of_neighbors
+                for v in allowed_set:
+                    self.spec.kNearestNeighborsClassifier.numberOfNeighbors.set.values.append(v)
+            else:
+                raise ValueError('number_of_neighbors is not a valid value')
+
+    def number_of_neighbors_allowed_range(self):
+        """
+        Get the range of allowed values for the numberOfNeighbors parameter.
+        :return: tuple of (min_value, max_value) or None if the range hasn't been set
+        """
+        if self.spec.kNearestNeighborsClassifier.numberOfNeighbors.HasField("range"):
+            return (self.spec.kNearestNeighborsClassifier.numberOfNeighbors.range.minValue,
+                    self.spec.kNearestNeighborsClassifier.numberOfNeighbors.range.maxValue)
+        return None
+
+    def number_of_neighbors_allowed_set(self):
+        """
+        Get the set of allowed values for the numberOfNeighbors parameter.
+        :return: set of allowed values or None if the set of allowed values hasn't been populated
+        """
+        if self.spec.kNearestNeighborsClassifier.numberOfNeighbors.HasField("set"):
+            spec_values = self.spec.kNearestNeighborsClassifier.numberOfNeighbors.set.values
+            allowed_values = set()
+            for v in spec_values:
+                allowed_values.add(v)
+            return allowed_values
+        return None
 
     def add_samples(self, data_points, labels):
         """

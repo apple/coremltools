@@ -721,9 +721,36 @@ namespace CoreML {
             if (aIndex.DistanceFunction_case() != bIndex.DistanceFunction_case()) {
                 return false;
             }
-            if (a.k() != b.k()) {
+            if (a.numberofneighbors().defaultvalue() != b.numberofneighbors().defaultvalue()) {
                 return false;
             }
+            if (a.numberofneighbors().AllowedValues_case() != b.numberofneighbors().AllowedValues_case()) {
+                return false;
+            }
+            switch (a.numberofneighbors().AllowedValues_case()) {
+                case Specification::Int64Parameter::AllowedValuesCase::kRange:
+                {
+                    if (a.numberofneighbors().range().minvalue() != b.numberofneighbors().range().minvalue() || a.numberofneighbors().range().maxvalue() != b.numberofneighbors().range().maxvalue()) {
+                        return false;
+                    }
+                    break;
+                }
+                case Specification::Int64Parameter::AllowedValuesCase::kSet:
+                {
+                    if (a.numberofneighbors().set().values_size() != b.numberofneighbors().set().values_size()) {
+                        return false;
+                    }
+                    int64_t count = a.numberofneighbors().set().values_size();
+                    for (int64_t i = 0; i < count; i++) {
+                        if (a.numberofneighbors().set().values((int)i) != b.numberofneighbors().set().values((int)i)) {
+                            return false;
+                        }
+                    } // for i in set
+                    break;
+                } // case kSet
+                case Specification::Int64Parameter::AllowedValuesCase::ALLOWEDVALUES_NOT_SET:
+                    break;
+            } // switch AllowedValuesCase
             if (a.ClassLabels_case() != b.ClassLabels_case()) {
                 return false;
             }

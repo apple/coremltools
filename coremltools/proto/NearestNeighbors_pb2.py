@@ -18,17 +18,27 @@ try:
   FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes__pb2
 except AttributeError:
   FeatureTypes__pb2 = DataStructures__pb2.FeatureTypes_pb2
+from . import Parameters_pb2 as Parameters__pb2
+try:
+  DataStructures__pb2 = Parameters__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = Parameters__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = Parameters__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = Parameters__pb2.FeatureTypes_pb2
 
 from .DataStructures_pb2 import *
+from .Parameters_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='NearestNeighbors.proto',
   package='CoreML.Specification',
   syntax='proto3',
-  serialized_pb=_b('\n\x16NearestNeighbors.proto\x12\x14\x43oreML.Specification\x1a\x14\x44\x61taStructures.proto\"\x80\x04\n\x1bKNearestNeighborsClassifier\x12J\n\x15nearestNeighborsIndex\x18\x01 \x01(\x0b\x32+.CoreML.Specification.NearestNeighborsIndex\x12\t\n\x01k\x18\x02 \x01(\x05\x12?\n\x11stringClassLabels\x18\x64 \x01(\x0b\x32\".CoreML.Specification.StringVectorH\x00\x12=\n\x10int64ClassLabels\x18\x65 \x01(\x0b\x32!.CoreML.Specification.Int64VectorH\x00\x12\x1c\n\x12\x64\x65\x66\x61ultStringLabel\x18n \x01(\tH\x01\x12\x1b\n\x11\x64\x65\x66\x61ultInt64Label\x18o \x01(\x03H\x01\x12\x43\n\x10uniformWeighting\x18\xc8\x01 \x01(\x0b\x32&.CoreML.Specification.UniformWeightingH\x02\x12S\n\x18inverseDistanceWeighting\x18\xd2\x01 \x01(\x0b\x32..CoreML.Specification.InverseDistanceWeightingH\x02\x42\r\n\x0b\x43lassLabelsB\x13\n\x11\x44\x65\x66\x61ultClassLabelB\x11\n\x0fWeightingScheme\"\xe2\x02\n\x15NearestNeighborsIndex\x12\x1a\n\x12numberOfDimensions\x18\x01 \x01(\x05\x12\x37\n\x0c\x66loatSamples\x18\x02 \x03(\x0b\x32!.CoreML.Specification.FloatVector\x12\x38\n\x0blinearIndex\x18\x64 \x01(\x0b\x32!.CoreML.Specification.LinearIndexH\x00\x12\x44\n\x11singleKdTreeIndex\x18n \x01(\x0b\x32\'.CoreML.Specification.SingleKdTreeIndexH\x00\x12S\n\x18squaredEuclideanDistance\x18\xc8\x01 \x01(\x0b\x32..CoreML.Specification.SquaredEuclideanDistanceH\x01\x42\x0b\n\tIndexTypeB\x12\n\x10\x44istanceFunction\"\x12\n\x10UniformWeighting\"\x1a\n\x18InverseDistanceWeighting\"\r\n\x0bLinearIndex\"%\n\x11SingleKdTreeIndex\x12\x10\n\x08leafSize\x18\x01 \x01(\x05\"\x1a\n\x18SquaredEuclideanDistanceB\x02H\x03P\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x16NearestNeighbors.proto\x12\x14\x43oreML.Specification\x1a\x14\x44\x61taStructures.proto\x1a\x10Parameters.proto\"\xb6\x04\n\x1bKNearestNeighborsClassifier\x12J\n\x15nearestNeighborsIndex\x18\x01 \x01(\x0b\x32+.CoreML.Specification.NearestNeighborsIndex\x12?\n\x11numberOfNeighbors\x18\x03 \x01(\x0b\x32$.CoreML.Specification.Int64Parameter\x12?\n\x11stringClassLabels\x18\x64 \x01(\x0b\x32\".CoreML.Specification.StringVectorH\x00\x12=\n\x10int64ClassLabels\x18\x65 \x01(\x0b\x32!.CoreML.Specification.Int64VectorH\x00\x12\x1c\n\x12\x64\x65\x66\x61ultStringLabel\x18n \x01(\tH\x01\x12\x1b\n\x11\x64\x65\x66\x61ultInt64Label\x18o \x01(\x03H\x01\x12\x43\n\x10uniformWeighting\x18\xc8\x01 \x01(\x0b\x32&.CoreML.Specification.UniformWeightingH\x02\x12S\n\x18inverseDistanceWeighting\x18\xd2\x01 \x01(\x0b\x32..CoreML.Specification.InverseDistanceWeightingH\x02\x42\r\n\x0b\x43lassLabelsB\x13\n\x11\x44\x65\x66\x61ultClassLabelB\x11\n\x0fWeightingScheme\"\xe2\x02\n\x15NearestNeighborsIndex\x12\x1a\n\x12numberOfDimensions\x18\x01 \x01(\x05\x12\x37\n\x0c\x66loatSamples\x18\x02 \x03(\x0b\x32!.CoreML.Specification.FloatVector\x12\x38\n\x0blinearIndex\x18\x64 \x01(\x0b\x32!.CoreML.Specification.LinearIndexH\x00\x12\x44\n\x11singleKdTreeIndex\x18n \x01(\x0b\x32\'.CoreML.Specification.SingleKdTreeIndexH\x00\x12S\n\x18squaredEuclideanDistance\x18\xc8\x01 \x01(\x0b\x32..CoreML.Specification.SquaredEuclideanDistanceH\x01\x42\x0b\n\tIndexTypeB\x12\n\x10\x44istanceFunction\"\x12\n\x10UniformWeighting\"\x1a\n\x18InverseDistanceWeighting\"\r\n\x0bLinearIndex\"%\n\x11SingleKdTreeIndex\x12\x10\n\x08leafSize\x18\x01 \x01(\x05\"\x1a\n\x18SquaredEuclideanDistanceB\x02H\x03P\x00P\x01\x62\x06proto3')
   ,
-  dependencies=[DataStructures__pb2.DESCRIPTOR,],
-  public_dependencies=[DataStructures__pb2.DESCRIPTOR,])
+  dependencies=[DataStructures__pb2.DESCRIPTOR,Parameters__pb2.DESCRIPTOR,],
+  public_dependencies=[DataStructures__pb2.DESCRIPTOR,Parameters__pb2.DESCRIPTOR,])
 
 
 
@@ -48,9 +58,9 @@ _KNEARESTNEIGHBORSCLASSIFIER = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='k', full_name='CoreML.Specification.KNearestNeighborsClassifier.k', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
+      name='numberOfNeighbors', full_name='CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors', index=1,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -117,8 +127,8 @@ _KNEARESTNEIGHBORSCLASSIFIER = _descriptor.Descriptor(
       name='WeightingScheme', full_name='CoreML.Specification.KNearestNeighborsClassifier.WeightingScheme',
       index=2, containing_type=None, fields=[]),
   ],
-  serialized_start=71,
-  serialized_end=583,
+  serialized_start=89,
+  serialized_end=655,
 )
 
 
@@ -182,8 +192,8 @@ _NEARESTNEIGHBORSINDEX = _descriptor.Descriptor(
       name='DistanceFunction', full_name='CoreML.Specification.NearestNeighborsIndex.DistanceFunction',
       index=1, containing_type=None, fields=[]),
   ],
-  serialized_start=586,
-  serialized_end=940,
+  serialized_start=658,
+  serialized_end=1012,
 )
 
 
@@ -206,8 +216,8 @@ _UNIFORMWEIGHTING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=942,
-  serialized_end=960,
+  serialized_start=1014,
+  serialized_end=1032,
 )
 
 
@@ -230,8 +240,8 @@ _INVERSEDISTANCEWEIGHTING = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=962,
-  serialized_end=988,
+  serialized_start=1034,
+  serialized_end=1060,
 )
 
 
@@ -254,8 +264,8 @@ _LINEARINDEX = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=990,
-  serialized_end=1003,
+  serialized_start=1062,
+  serialized_end=1075,
 )
 
 
@@ -285,8 +295,8 @@ _SINGLEKDTREEINDEX = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1005,
-  serialized_end=1042,
+  serialized_start=1077,
+  serialized_end=1114,
 )
 
 
@@ -309,11 +319,12 @@ _SQUAREDEUCLIDEANDISTANCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1044,
-  serialized_end=1070,
+  serialized_start=1116,
+  serialized_end=1142,
 )
 
 _KNEARESTNEIGHBORSCLASSIFIER.fields_by_name['nearestNeighborsIndex'].message_type = _NEARESTNEIGHBORSINDEX
+_KNEARESTNEIGHBORSCLASSIFIER.fields_by_name['numberOfNeighbors'].message_type = Parameters__pb2._INT64PARAMETER
 _KNEARESTNEIGHBORSCLASSIFIER.fields_by_name['stringClassLabels'].message_type = DataStructures__pb2._STRINGVECTOR
 _KNEARESTNEIGHBORSCLASSIFIER.fields_by_name['int64ClassLabels'].message_type = DataStructures__pb2._INT64VECTOR
 _KNEARESTNEIGHBORSCLASSIFIER.fields_by_name['uniformWeighting'].message_type = _UNIFORMWEIGHTING

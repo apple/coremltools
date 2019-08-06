@@ -337,7 +337,18 @@ class TypeInferenceVisitor(object):
             node.attr['symbolic_value'].val = np.all(vala.val)
         return builtins.bool
 
+    def visit_Any(self, node):
+        self.visit(node.inputs[0])
+        vala = self.gdict[node.inputs[0]].attr['symbolic_value']
+        if vala is not None:
+            node.attr['symbolic_value'] = builtins.bool()
+            node.attr['symbolic_value'].val = np.any(vala.val)
+        return builtins.bool
+
     def visit_ArgMax(self, node):
+        return self.visit_reduction_op(node)
+
+    def visit_ArgMin(self, node):
         return self.visit_reduction_op(node)
 
     def visit_Prod(self, node):
@@ -346,7 +357,6 @@ class TypeInferenceVisitor(object):
     def visit_Assign(self, node):
         assert (len(node.inputs) == 2)
         return self.visit(node.inputs[1])
-        pass
 
     def visit_Assert(self, node):
         pass
@@ -425,6 +435,9 @@ class TypeInferenceVisitor(object):
         return self.visit_unary(node)
 
     def visit_Cos(self, node):
+        return self.visit_unary(node)
+
+    def visit_Tan(self, node):
         return self.visit_unary(node)
 
     def visit_Conv2D(self, node):
@@ -689,8 +702,9 @@ class TypeInferenceVisitor(object):
         return builtins.tuple(types)
 
     def visit_BatchMatMul(self, node):
-        # node.op = "MatMul"
-        # Batch matmul was deprecated, we implement this in MatMul
+        return self.visit_MatMul(node)
+
+    def visit_BatchMatMulV2(self, node):
         return self.visit_MatMul(node)
 
     def visit_MatMul(self, node):
@@ -765,7 +779,19 @@ class TypeInferenceVisitor(object):
         lefttype = self.visit(node.inputs[0])
         self.visit(node.inputs[1])
         s = self.gdict[node.inputs[1]].attr['symbolic_value']
-        if s is None:
+        if not s:
+            return self._get_type_from_attr(node)
+        s = s.val
+        retshape = list(lefttype.get_shape())
+        for i in range(len(retshape)):
+            retshape[i] = retshape[i] + s[i][0] + s[i][1]
+        return builtins.tensor(lefttype.get_primitive(), retshape)
+
+    def visit_PadV2(self, node):
+        lefttype = self.visit(node.inputs[0])
+        self.visit(node.inputs[1])
+        s = self.gdict[node.inputs[1]].attr['symbolic_value']
+        if not s:
             return self._get_type_from_attr(node)
         s = s.val
         retshape = list(lefttype.get_shape())
@@ -1468,7 +1494,16 @@ class TypeInferenceVisitor(object):
     def visit_Min(self, node):
         return self.visit_reduction_op(node)
 
+    def visit_Ceil(self, node):
+        return self.visit_unary(node)
+
     def visit_Floor(self, node):
+        return self.visit_unary(node)
+
+    def visit_Round(self, node):
+        return self.visit_unary(node)
+
+    def visit_Abs(self, node):
         return self.visit_unary(node)
 
     def visit_Tile(self, node):
@@ -1794,6 +1829,14 @@ class TypeInferenceVisitor(object):
             raise ValueError('Unknown mode type for LSTMBlock')
 
         return builtins.tuple(types)
+
+    def visit_Size(self, node):
+        input_type = self.visit(node.inputs[0])
+        return input_type
+
+    def visit_Sign(self, node):
+        input_type = self.visit(node.inputs[0])
+        return input_type
 
 
 def type_is_unknown(t):
