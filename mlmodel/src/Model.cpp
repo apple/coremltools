@@ -55,6 +55,10 @@ namespace CoreML {
         }
         
         if (model.isupdatable()){
+            if (model.specificationversion() < MLMODEL_SPECIFICATION_VERSION_IOS13) {
+                std::string err = "Model specification version for an updatable model must be '" + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS13) + "' or above.";
+                return Result(ResultType::INVALID_COMPATIBILITY_VERSION, err);
+            }
             r = validateCanModelBeUpdatable(model);
         }
         if (!r.good()) {

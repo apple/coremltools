@@ -71,10 +71,6 @@ Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model&
             auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
             trainingInput->CopyFrom(feature);
         }
-        for (auto feature : m.description().output()) {
-            auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
-            trainingInput->CopyFrom(feature);
-        }
     }
     
     return neuralNet;
@@ -117,11 +113,9 @@ Specification::NeuralNetwork* addSoftmaxLayer(Specification::Model& m, const cha
     return neuralNet;
 }
 
-template <class NeuralNetworkType> void tempMethod0(NeuralNetworkType *nn) {
-#pragma unused (nn)
-}
-
-Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, std::vector<std::string> classLabels) {
+Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, std::vector<std::string> stringClassLabels, std::vector<int64_t> intClassLabels, bool includeBias) {
+    
+    bool usesStringClassLabels = stringClassLabels.size() > 0;
     
     auto input = m.mutable_description()->add_input();
     auto inputType = new Specification::FeatureType;
@@ -133,14 +127,24 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
     
     auto output = m.mutable_description()->add_output();
     auto outputType = new Specification::FeatureType;
-    outputType->mutable_stringtype();
+    if (usesStringClassLabels) {
+        outputType->mutable_stringtype();
+    } else {
+        outputType->mutable_int64type();
+    }
+    
     output->set_name("predictedClass");
     output->set_allocated_type(outputType);
     
     output = m.mutable_description()->add_output();
     outputType = new Specification::FeatureType;
     auto dictionary = outputType->mutable_dictionarytype();
-    dictionary->mutable_stringkeytype();
+    if (usesStringClassLabels) {
+        dictionary->mutable_stringkeytype();
+    } else {
+        dictionary->mutable_int64keytype();
+    }
+    
     output->set_name("classProbabilities");
     output->set_allocated_type(outputType);
 
@@ -149,8 +153,14 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
     
     auto classifier = m.mutable_neuralnetworkclassifier();
     
-    for (auto className : classLabels) {
-        classifier->mutable_stringclasslabels()->add_vector(className);
+    if (usesStringClassLabels) {
+        for (auto className : stringClassLabels) {
+            classifier->mutable_stringclasslabels()->add_vector(className);
+        }
+    } else {
+        for (auto className : intClassLabels) {
+            classifier->mutable_int64classlabels()->add_vector(className);
+        }
     }
     
     // Add inner product layer
@@ -160,7 +170,13 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
     innerProductLayer->add_output("intermediateOutput");
     
     uint64_t C_in = (uint64_t)inTensorAttr->dimension;
-    uint64_t C_out = (uint64_t)classLabels.size();
+    uint64_t C_out = 0;
+    
+    if (usesStringClassLabels) {
+        C_out = (uint64_t)stringClassLabels.size();
+    } else {
+        C_out = (uint64_t)intClassLabels.size();
+    }
     
     auto innerProductParams = innerProductLayer->mutable_innerproduct();
     innerProductParams->set_inputchannels(C_in);
@@ -176,6 +192,20 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
         }
     }
     
+    if (includeBias) {
+        innerProductParams->set_hasbias(true);
+        
+        ::google::protobuf::RepeatedField<float>* biasWrite = innerProductParams->mutable_bias()->mutable_floatvalue();
+        biasWrite->Resize((int)1 * (int)C_out, 0.0);
+        float *destination_bias = biasWrite->mutable_data();
+        for (uint64_t i = 0; i < 1; i++) {
+            for (uint64_t j = 0; j < C_out; j++) {
+                float random = float(rand())/(RAND_MAX);
+                destination_bias[i * C_out + j] = random;
+            }
+        }
+    }
+    
     // Add inner product layer
     auto softmaxLayer = classifier->add_layers();
     softmaxLayer->set_name("softmax");
@@ -188,18 +218,29 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
         innerProductLayer->set_isupdatable(true);
         innerProductParams->mutable_weights()->set_isupdatable(true);
         
-        auto updateParams = classifier->mutable_updateparams();
-        auto lossLayer = updateParams->add_losslayers();
-        lossLayer->set_name("cross_entropy_loss");
+        if (includeBias) {
+            innerProductParams->mutable_bias()->set_isupdatable(true);
+        }
         
-        auto ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
-        ceLossLayer->set_input("scoreVector");
-        ceLossLayer->set_target("target");
+        addCategoricalCrossEntropyLoss(m, classifier, "cross_entropy_loss", "scoreVector", "target");
         
         addLearningRate(classifier, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
-        addMiniBatchSize(classifier, Specification::Optimizer::kSgdOptimizer, 1, 1, 100, std::set<int64_t>());
-        addEpochs(classifier, 100, 0, 100, std::set<int64_t>());
+        addMiniBatchSize(classifier, Specification::Optimizer::kSgdOptimizer, 32, 1, 100, {16, 32, 64, 128});
+        addEpochs(classifier, 100, 1, 100, std::set<int64_t>());
         addShuffleAndSeed(classifier, 2019, 0, 2019, std::set<int64_t>());
+
+        m.mutable_description()->clear_traininginput();
+        
+        for (auto feature : m.description().input()) {
+            auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
+            trainingInput->CopyFrom(feature);
+        }
+        for (auto feature : m.description().output()) {
+            if (feature.name() == m.description().predictedfeaturename()) {
+                auto trainingInput = m.mutable_description()->mutable_traininginput()->Add();
+                trainingInput->CopyFrom(feature);
+            }
+        }
     }
     
     return classifier;
@@ -223,8 +264,10 @@ Specification::KNearestNeighborsClassifier* buildBasicNearestNeighborClassifier(
     m.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
     
     auto nearestNeighborClassifier = m.mutable_knearestneighborsclassifier();
-    nearestNeighborClassifier->set_k(3);
-    
+    int numberOfNeighbors = 3;
+    nearestNeighborClassifier->mutable_numberofneighbors()->mutable_set()->add_values(numberOfNeighbors);
+    nearestNeighborClassifier->mutable_numberofneighbors()->set_defaultvalue(numberOfNeighbors);
+
     auto nearestNeighborIndex = nearestNeighborClassifier->mutable_nearestneighborsindex();
     
     nearestNeighborIndex->mutable_singlekdtreeindex()->set_leafsize(30);
@@ -311,16 +354,11 @@ void addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(Specification::Mod
     softmaxLayer->add_output("softmax_out");
     softmaxLayer->mutable_softmax();
 
-    Specification::NetworkUpdateParameters *updateParams = neuralNets->mutable_updateparams();
-    Specification::LossLayer *lossLayer = updateParams->add_losslayers();
-    lossLayer->set_name("cross_entropy_loss_layer");
-    Specification::CategoricalCrossEntropyLossLayer *ceLossLayer = lossLayer->mutable_categoricalcrossentropylosslayer();
-    ceLossLayer->set_input("softmax_out");
-    ceLossLayer->set_target("target");
+    addCategoricalCrossEntropyLoss(m, neuralNets, "cross_entropy_loss_layer", "softmax_out", "target");
     
     addLearningRate(neuralNets, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
     addMiniBatchSize(neuralNets, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
-    addEpochs(neuralNets, 100, 0, 100, std::set<int64_t>());
+    addEpochs(neuralNets, 100, 1, 100, std::set<int64_t>());
     addShuffleAndSeed(neuralNets, 2019, 0, 2019, std::set<int64_t>());
 }
 

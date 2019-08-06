@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
+import pytest
 from coremltools._deps import HAS_KERAS_TF
 
 if HAS_KERAS_TF:
@@ -13,6 +14,7 @@ if HAS_KERAS_TF:
 
 
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras1
 class KerasNonSequentialModelTest(unittest.TestCase):
     """
     Unit test class for testing non-sequential Keras models. 

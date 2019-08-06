@@ -3,7 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-import numpy as np
+
 import copy
 from ...commons.basic_graph_ops import delete_node, disconnect_edge, replace_node, replace_control_dest
 
@@ -11,7 +11,7 @@ from ...commons.basic_graph_ops import delete_node, disconnect_edge, replace_nod
 def remove_no_ops_and_shift_control_dependencies(nnssa):
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
-        for name, node in f.graph.items():
+        for name, node in f.graph.copy().items():
             if node.op == "NoOp":
                 for each_control_output in node.control_outputs:
                     f.graph[each_control_output].control_inputs.remove(node.name)

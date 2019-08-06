@@ -184,7 +184,7 @@ def _load_keras_model(model_network_path, model_weight_path, custom_objects=None
 
     return loaded_model
 
-def _convert_training_info(model, builder, output_names):
+def _convert_training_info(model, builder, output_features):
     """
     Convert the training information from the given Keras 'model' into the Core
     ML in 'builder'.
@@ -193,7 +193,7 @@ def _convert_training_info(model, builder, output_names):
         The source Keras model.
     :param builder: NeutralNetworkBuilder
         The target model that will gain the loss and optimizer.
-    :param output_names: list of str
+    :param output_features: list of tuples, (str, datatype)
         The set of tensor names that are output from the layers in the Keras
         model.
     """
@@ -203,15 +203,16 @@ def _convert_training_info(model, builder, output_names):
     builder.set_epochs(1)
     import keras
     try:
-        if model.loss == keras.losses.categorical_crossentropy:
+        if model.loss == keras.losses.categorical_crossentropy or model.loss == 'categorical_crossentropy':
             builder.set_categorical_cross_entropy_loss(
-                name='loss_layer', input=output_names[0]
+                name='loss_layer', input=output_features[0][0]
             )
-        elif model.loss == keras.losses.mean_squared_error:
+        elif model.loss == keras.losses.mean_squared_error or model.loss == 'mean_squared_error':
             builder.set_mean_squared_error_loss(
-                name='loss_layer', input=output_names[0]
+                name='loss_layer', input_feature=output_features[0]
             )
         else:
+            print('Models loss: ' + str(model.loss) + ', vs Keras loss: ' + str(keras.losses.mean_squared_error))
             logging.warning("Loss " + str(model.loss) + " is not yet "
                             "supported by Core ML. The loss layer will "
                             "not be carried over. To train this model, "
@@ -539,7 +540,7 @@ def _convert(model,
     # add in the loss and optimizer, if the network has it and that is
     # appropriate given the flag.
     if respect_trainable:
-        _convert_training_info(model, builder, output_names)
+        _convert_training_info(model, builder, output_features)
 
     # Return the protobuf spec
     spec = builder.spec

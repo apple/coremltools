@@ -10,7 +10,7 @@ from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Dense, Activation, Conv2D, Conv1D, Flatten, BatchNormalization, Conv2DTranspose, \
     SeparableConv2D
 
-from testutils import generate_data, tf_transpose
+from test_utils import generate_data, tf_transpose
 from test_base import TFNetworkTest
 
 DEBUG = False
