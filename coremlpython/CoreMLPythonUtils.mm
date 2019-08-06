@@ -92,10 +92,10 @@ template<typename KEYTYPE, typename VALUETYPE>
 static MLFeatureValue * convertToNSDictionary(const std::unordered_map<KEYTYPE, VALUETYPE>& dict) {
     NSMutableDictionary<NSObject *, NSNumber *> *nsDict = [[NSMutableDictionary<NSObject *, NSNumber *> alloc] init];
     for (const auto& pair : dict) {
-        NSObject *key = convertDictKey(pair.first);
+        NSObject<NSCopying> *key = (NSObject<NSCopying> *)convertDictKey(pair.first);
         NSNumber *value = convertDictValue(pair.second);
         assert(key != nil);
-        nsDict[static_cast<id<NSCopying> _Nonnull>(key)] = value;
+        nsDict[key] = value;
     }
     NSError *error = nil;
     MLFeatureValue * ret = [MLFeatureValue featureValueWithDictionary:nsDict error:&error];

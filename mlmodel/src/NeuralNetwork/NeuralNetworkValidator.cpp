@@ -622,12 +622,6 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
                 }
                 switch (input.type().multiarraytype().ShapeFlexibility_case()) {
                     case CoreML::Specification::ArrayFeatureType::kEnumeratedShapes:
-                        for (const auto &shape : input.type().multiarraytype().enumeratedshapes().shapes()) {
-                            if (shape.shape_size() != rank) {
-                                return Result(ResultType::INVALID_MODEL_INTERFACE, "For MLMultiArray input: Rank of the enumerated shape must match the rank of the default shape.");
-                                break;
-                            }
-                        }
                         break;
                     case CoreML::Specification::ArrayFeatureType::kShapeRange:
                         if (input.type().multiarraytype().shaperange().sizeranges_size() != rank) {
@@ -684,6 +678,9 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
     
     if (isUpdatable) {
         r = validateUpdatableNeuralNetwork(nn);
+        if (!r.good()) { return r; }
+
+        r = validateTrainingInputs(interface, nn);
         if (!r.good()) { return r; }
     }
     

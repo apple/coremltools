@@ -715,7 +715,7 @@ class LSTMLayer(RecurrentLayerTest):
         numerical_failiure = 0
         for param in params:
             ii += 1
-            # print('-------------- %d / %d ------------------- ' % (ii, len(params)))
+            #print('-------------- %d / %d ------------------- ' % (ii, len(params)))
             param = dict(zip(params_dict.keys(), param))
 
             if param['activation'] == 'linear':
@@ -770,6 +770,111 @@ class LSTMLayer(RecurrentLayerTest):
                     coreml_preds = np.reshape(coreml_preds, [Seq, Batch, 2 * h])
                 else:
                     coreml_preds = np.reshape(coreml_preds, [1, Batch, 2 * h])
+                    keras_preds = np.expand_dims(keras_preds, axis=1)
+                coreml_preds = np.transpose(coreml_preds, [1, 0, 2])
+
+                if K.tensorflow_backend._SESSION:
+                    import tensorflow as tf
+                    tf.reset_default_graph()
+                    K.tensorflow_backend._SESSION.close()
+                    K.tensorflow_backend._SESSION = None
+
+                try:
+                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                except AssertionError:
+                    print(
+                        "Shape error:\n param: {}\n\n keras_preds.shape: {}\n\n coreml_preds.shape: {}".format(param, keras_preds.shape, coreml_preds.shape))
+                    shape_err_models.append(param)
+                    i += 1
+                    continue
+                try:
+                    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds.flatten()), np.abs(keras_preds.flatten())), 1.0)
+                    relative_error = coreml_preds.flatten() / max_denominator - keras_preds.flatten() / max_denominator
+                    max_relative_error = np.amax(relative_error)
+                    self.assertLessEqual(max_relative_error, 0.01)
+                except AssertionError:
+                    snr, psnr, signal_energy = _compute_SNR(keras_preds, coreml_preds)
+                    print('-*' * 80)
+                    print('Assertion error. \n param : {} \n'.format(param))
+                    print('max error = %.4f, snr = %.1f, psnr = %.1f, energy = %.6f' % (max_relative_error, snr, psnr, signal_energy))
+                    print('keras preds shape: {}, coreml preds shape = {}'.format(str(keras_preds.shape), str(coreml_preds.shape)))
+                    # for b in range(Batch):
+                    #     snr, psnr, signal_energy = _compute_SNR(keras_preds[b, :, :], coreml_preds[b, :, :])
+                    #     print('snr = %.1f, psnr = %.1f, energy = %.6f' % (snr, psnr, signal_energy))
+                    #     print('batch id = {}, keras_preds = \n{} '.format(b, keras_preds[b, :, :]))
+                    #     print('batch id = {}, coreml_preds = \n{} '.format(b, coreml_preds[b, :, :]))
+                    print('-*' * 80)
+
+                    numerical_failiure += 1
+                    numerical_err_models.append(param)
+                    continue
+
+            i += 1
+
+        self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
+        self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
+
+    def _test_batched_lstm_layer(self):
+        params_dict = dict(
+            input_dims=[[3, 5, 10], [6, 2, 5]],
+            output_dim=[1, 5, 10],
+            activation=['tanh', 'linear', 'sigmoid', 'hard_sigmoid', 'relu'],
+            inner_activation=['tanh', 'linear', 'sigmoid', 'hard_sigmoid', 'relu'],
+            return_sequences=[True, False],
+        )
+        params = list(itertools.product(*params_dict.values()))
+        ii = 0
+        i = 0
+        numerical_err_models = []
+        shape_err_models = []
+        numerical_failiure = 0
+        for param in params:
+            ii += 1
+            #print('-------------- %d / %d ------------------- ' % (ii, len(params)))
+            param = dict(zip(params_dict.keys(), param))
+
+            if param['activation'] == 'linear':
+                keras_act = None
+            else:
+                keras_act = param['activation']
+
+            if param['inner_activation'] == 'linear':
+                keras_inner_act = None
+            else:
+                keras_inner_act = param['inner_activation']
+
+            model = Sequential()
+            model.add(LSTM(
+                        param['output_dim'],
+                        input_shape=(param['input_dims'][1], param['input_dims'][2]),
+                        activation=keras_act,
+                        recurrent_activation=keras_inner_act,
+                        return_sequences=param['return_sequences'],
+                        go_backwards=False,
+                        unroll=False))
+
+            mlmodel = get_mlkit_model_from_path(model)
+
+            Batch = param['input_dims'][0]
+            Seq = param['input_dims'][1]
+            h = param['output_dim']
+            input_size = param['input_dims'][2]
+
+            input_data = generate_input(Batch, Seq, input_size)
+
+            keras_preds = model.predict(input_data)  # (Batch, Seq, h)
+
+            if macos_version() >= (10, 13):
+                input_data = np.transpose(input_data, [1, 0, 2])
+                input_dict = {}
+                input_dict['data'] = input_data
+                input_dict['lstm_1_h_in'] = np.zeros((1, Batch, h), dtype=np.float)
+                input_dict['lstm_1_c_in'] = np.zeros((1, Batch, h), dtype=np.float)
+                coreml_preds = mlmodel.predict(input_dict)['output']  # (Seq, Batch, h, .. )
+                if param['return_sequences']:
+                    coreml_preds = np.reshape(coreml_preds, [Seq, Batch, h])
+                else:
+                    coreml_preds = np.reshape(coreml_preds, [1, Batch, h])
                     keras_preds = np.expand_dims(keras_preds, axis=1)
                 coreml_preds = np.transpose(coreml_preds, [1, 0, 2])
 
@@ -974,6 +1079,11 @@ class LSTMLayer(RecurrentLayerTest):
     @pytest.mark.keras2
     def test_keras2_bilstm_layer_batched(self):
         self._test_bilstm_layer(batched=True)
+
+    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @pytest.mark.keras2
+    def test_keras2_lstm_layer_batched(self):
+        self._test_batched_lstm_layer()
 
 
 class GRULayer(RecurrentLayerTest):

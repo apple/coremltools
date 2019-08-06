@@ -22,6 +22,10 @@ template <class NeuralNetworkClass> void addEpochs(NeuralNetworkClass *nn, int64
 
 template <class NeuralNetworkClass> void addShuffleAndSeed(NeuralNetworkClass *nn, int64_t defaultValue, int64_t minValue, int64_t maxValue, std::set<int64_t> allowedValues);
 
+template <class NeuralNetworkClass> void addCategoricalCrossEntropyLoss(Specification::Model& m, NeuralNetworkClass *nn, const char *lossName, const char *softmaxInputName, const char *targetName);
+
+template <class NeuralNetworkClass> void addMeanSquareError(Specification::Model& m, NeuralNetworkClass *nn, const char *lossName, const char *mseInputName, const char *targetName);
+
 void addMomentum(Specification::NeuralNetwork *nn, Specification::Optimizer::OptimizerTypeCase optimizerType, double defaultValue, double minValue, double maxValue);
 
 void addBeta1(Specification::NeuralNetwork *nn, Specification::Optimizer::OptimizerTypeCase optimizerType, double defaultValue, double minValue, double maxValue);

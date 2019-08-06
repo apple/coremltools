@@ -94,8 +94,7 @@ class SSAFunction(object):
         else:
             for k in sorted_keys:
                 v = self.graph[k]
-                if len(v.inputs
-                       ) == 0 and v.op != "Const" and v.op != "get_global" and v.op != "NoOp":
+                if len(v.inputs) == 0 and v.op not in ['Const', 'get_global', 'NoOp']:
                     self.inputs.append(k)
                     self.input_types.append(v.datatype)
                 elif len(v.inputs) != 0 and v.op == "Placeholder":

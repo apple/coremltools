@@ -6,7 +6,7 @@ from ....commons.basic_graph_ops import delete_node
 
 import sys
 
-sys.setrecursionlimit(2000)  # double recursion limit to support convert large models
+sys.setrecursionlimit(5000)  # increase recursion limit to support convert large models
 
 
 def all_assert_leaves(gdict, nodename, memo):

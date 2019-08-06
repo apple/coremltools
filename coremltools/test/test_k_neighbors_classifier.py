@@ -47,7 +47,9 @@ class KNeighborsClassifierScikitTest(unittest.TestCase):
 
         self.assertIsNotNone(coreml_spec)
         self.assertTrue(coreml_spec.HasField("kNearestNeighborsClassifier"))
-        self.assertEqual(coreml_spec.kNearestNeighborsClassifier.k, 42)
+        self.assertEqual(coreml_spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue, 42)
+        self.assertEqual(coreml_spec.kNearestNeighborsClassifier.numberOfNeighbors.range.minValue, 1)
+        self.assertEqual(coreml_spec.kNearestNeighborsClassifier.numberOfNeighbors.range.maxValue, len(self.iris_X))
         self.assertTrue(coreml_spec.kNearestNeighborsClassifier.HasField("uniformWeighting"))
         self.assertEqual(coreml_spec.kNearestNeighborsClassifier.nearestNeighborsIndex.numberOfDimensions, len(self.iris_X[0]))
         self.assertTrue(coreml_spec.kNearestNeighborsClassifier.nearestNeighborsIndex.HasField("linearIndex"))
@@ -68,7 +70,9 @@ class KNeighborsClassifierScikitTest(unittest.TestCase):
 
         self.assertIsNotNone(coreml_spec)
         self.assertTrue(coreml_spec.HasField("kNearestNeighborsClassifier"))
-        self.assertEqual(coreml_spec.kNearestNeighborsClassifier.k, test_n_neighbors)
+        self.assertEqual(coreml_spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue, test_n_neighbors)
+        self.assertEqual(coreml_spec.kNearestNeighborsClassifier.numberOfNeighbors.range.minValue, 1)
+        self.assertEqual(coreml_spec.kNearestNeighborsClassifier.numberOfNeighbors.range.maxValue, len(self.iris_X))
         self.assertTrue(coreml_spec.kNearestNeighborsClassifier.HasField("uniformWeighting"))
         self.assertEqual(coreml_spec.kNearestNeighborsClassifier.nearestNeighborsIndex.numberOfDimensions, len(self.iris_X[0]))
         self.assertTrue(coreml_spec.kNearestNeighborsClassifier.nearestNeighborsIndex.HasField("singleKdTreeIndex"))

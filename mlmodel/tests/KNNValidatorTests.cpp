@@ -20,6 +20,7 @@ namespace CoreML { namespace KNNValidatorTests {
     void addDataPoints(Specification::KNearestNeighborsClassifier* nnModel);
     void addIntLabels(Specification::KNearestNeighborsClassifier* nnModel);
     void addStringLabels(Specification::KNearestNeighborsClassifier* nnModel);
+    void setNumberOfNeighbors(Specification::KNearestNeighborsClassifier* nnModel, int numberOfNeighbors, bool forRange);
 
     void generateInterface(Specification::Model& m1) {
 
@@ -97,6 +98,24 @@ namespace CoreML { namespace KNNValidatorTests {
 
     }
 
+    // Sets numberOfNeighbors range bounds to 1-10 if forRange is true, else numberOfNeighbors set
+    // containing { numberOfNeighbors, 1, 2, 4, 8 }.
+    void setNumberOfNeighbors(Specification::KNearestNeighborsClassifier* nnModel, int numberOfNeighbors, bool forRange) {
+
+        if (forRange) {
+            nnModel->mutable_numberofneighbors()->mutable_range()->set_minvalue(1);
+            nnModel->mutable_numberofneighbors()->mutable_range()->set_maxvalue(10);
+            nnModel->mutable_numberofneighbors()->set_defaultvalue(numberOfNeighbors);
+        } else {
+            nnModel->mutable_numberofneighbors()->mutable_set()->add_values(numberOfNeighbors);
+            nnModel->mutable_numberofneighbors()->mutable_set()->add_values(1);
+            nnModel->mutable_numberofneighbors()->mutable_set()->add_values(2);
+            nnModel->mutable_numberofneighbors()->mutable_set()->add_values(4);
+            nnModel->mutable_numberofneighbors()->mutable_set()->add_values(8);
+            nnModel->mutable_numberofneighbors()->set_defaultvalue(numberOfNeighbors);
+        }
+    }
+
 }}
 
 int testKNNValidatorNoPoints() {
@@ -106,7 +125,7 @@ int testKNNValidatorNoPoints() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *nnModel = m1.mutable_knearestneighborsclassifier();
-    nnModel->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(nnModel, 3, true);
 
     KNNValidatorTests::addStringLabels(nnModel);
 
@@ -142,7 +161,7 @@ int testKNNValidatorNoDimension() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *nnModel = m1.mutable_knearestneighborsclassifier();
-    nnModel->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(nnModel, 3, true);
 
     KNNValidatorTests::addDataPoints(nnModel);
     KNNValidatorTests::addStringLabels(nnModel);
@@ -163,7 +182,7 @@ int testKNNValidatorNoLabels() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *nnModel = m1.mutable_knearestneighborsclassifier();
-    nnModel->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(nnModel, 3, true);
 
     KNNValidatorTests::addDataPoints(nnModel);
 
@@ -181,7 +200,7 @@ int testKNNValidatorWrongNumberOfLabels() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *nnModel = m1.mutable_knearestneighborsclassifier();
-    nnModel->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(nnModel, 3, true);
 
     KNNValidatorTests::addDataPoints(nnModel);
     KNNValidatorTests::addStringLabels(nnModel);
@@ -201,7 +220,7 @@ int testKNNValidatorNoIndex() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
-    knnClassifier->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(knnClassifier, 3, true);
 
     KNNValidatorTests::addDataPoints(knnClassifier);
     KNNValidatorTests::addStringLabels(knnClassifier);
@@ -220,7 +239,7 @@ int testKNNValidatorLinearIndex() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
-    knnClassifier->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(knnClassifier, 3, true);
     knnClassifier->mutable_uniformweighting();
 
     auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
@@ -244,7 +263,7 @@ int testKNNValidatorSingleKdTreeIndex() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
-    knnClassifier->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(knnClassifier, 3, true);
     knnClassifier->mutable_uniformweighting();
     
     auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
@@ -278,7 +297,7 @@ int testKNNValidatorNoWeightingScheme() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
-    knnClassifier->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(knnClassifier, 3, true);
 
     auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
     nnIndex->mutable_linearindex();
@@ -301,7 +320,7 @@ int testKNNValidatorNoDistanceFunction() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
-    knnClassifier->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(knnClassifier, 3, true);
     knnClassifier->mutable_uniformweighting();
 
     auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
@@ -324,7 +343,7 @@ int testKNNValidatorGood() {
     KNNValidatorTests::generateInterface(m1);
 
     auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
-    knnClassifier->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(knnClassifier, 3, true);
     knnClassifier->mutable_uniformweighting();
 
     auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
@@ -349,7 +368,7 @@ int testEmptyKNNValidationGood() {
     KNNValidatorTests::generateInterface(m1);
     
     auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
-    knnClassifier->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(knnClassifier, 3, true);
     knnClassifier->mutable_uniformweighting();
     
     auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
@@ -383,7 +402,7 @@ int testLabelTypeMismatchTest() {
     KNNValidatorTests::generateInterface(m1);
     
     auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
-    knnClassifier->set_k(3);
+    KNNValidatorTests::setNumberOfNeighbors(knnClassifier, 3, true);
     knnClassifier->mutable_uniformweighting();
     
     auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
@@ -409,4 +428,231 @@ int testLabelTypeMismatchTest() {
     
     return 0;
     
+}
+
+int testNumberOfNeighborsWithDefaultValueInRange() {
+
+    Specification::Model m1;
+
+    KNNValidatorTests::generateInterface(m1);
+
+    auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
+    auto *numberOfNeighbors = knnClassifier->mutable_numberofneighbors();
+    numberOfNeighbors->mutable_range()->set_minvalue(1);
+    numberOfNeighbors->mutable_range()->set_maxvalue(10);
+    numberOfNeighbors->set_defaultvalue(5);
+
+    knnClassifier->mutable_uniformweighting();
+
+    auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
+    nnIndex->mutable_squaredeuclideandistance();
+    auto *kdTree = nnIndex->mutable_singlekdtreeindex();
+    kdTree->set_leafsize(30);
+    knnClassifier->set_defaultstringlabel("Default");
+
+    // Validation should pass since numberOfNeighbors defaultValue is within range bounds.
+    Result res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+
+}
+
+int testNumberOfNeighborsWithDefaultValueOutOfRange() {
+
+    Specification::Model m1;
+
+    KNNValidatorTests::generateInterface(m1);
+
+    auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
+    auto *numberOfNeighbors = knnClassifier->mutable_numberofneighbors();
+    numberOfNeighbors->mutable_range()->set_minvalue(1);
+    numberOfNeighbors->mutable_range()->set_maxvalue(10);
+    numberOfNeighbors->set_defaultvalue(15);
+
+    knnClassifier->mutable_uniformweighting();
+
+    auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
+    nnIndex->mutable_squaredeuclideandistance();
+    auto *kdTree = nnIndex->mutable_singlekdtreeindex();
+    kdTree->set_leafsize(30);
+    knnClassifier->set_defaultstringlabel("Default");
+
+    // Validation should fail since numberOfNeighbors defaultValue is out of range bounds.
+    Result res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    return 0;
+
+}
+
+int testNumberOfNeighborsWithDefaultValueInSet() {
+
+    Specification::Model m1;
+
+    KNNValidatorTests::generateInterface(m1);
+
+    auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
+    auto *numberOfNeighbors = knnClassifier->mutable_numberofneighbors();
+    numberOfNeighbors->mutable_set()->add_values(1);
+    numberOfNeighbors->mutable_set()->add_values(4);
+    numberOfNeighbors->mutable_set()->add_values(7);
+    numberOfNeighbors->set_defaultvalue(4);
+
+    knnClassifier->mutable_uniformweighting();
+
+    auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
+    nnIndex->mutable_squaredeuclideandistance();
+    auto *kdTree = nnIndex->mutable_singlekdtreeindex();
+    kdTree->set_leafsize(30);
+    knnClassifier->set_defaultstringlabel("Default");
+
+    Result res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+
+}
+
+int testNumberOfNeighborsWithDefaultValueNotInSet() {
+
+    Specification::Model m1;
+
+    KNNValidatorTests::generateInterface(m1);
+
+    auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
+    auto *numberOfNeighbors = knnClassifier->mutable_numberofneighbors();
+    numberOfNeighbors->mutable_set()->add_values(1);
+    numberOfNeighbors->mutable_set()->add_values(4);
+    numberOfNeighbors->mutable_set()->add_values(7);
+    numberOfNeighbors->set_defaultvalue(10);
+
+    knnClassifier->mutable_uniformweighting();
+
+    auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
+    nnIndex->mutable_squaredeuclideandistance();
+    auto *kdTree = nnIndex->mutable_singlekdtreeindex();
+    kdTree->set_leafsize(30);
+    knnClassifier->set_defaultstringlabel("Default");
+
+    // Validation should fail since numberOfNeighbors defaultValue is not a value in the set.
+    Result res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    return 0;
+
+}
+
+int testNumberOfNeighborsWithInvalidRange() {
+
+    Specification::Model m1;
+
+    KNNValidatorTests::generateInterface(m1);
+
+    auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
+    auto *numberOfNeighbors = knnClassifier->mutable_numberofneighbors();
+    numberOfNeighbors->mutable_range()->set_minvalue(-1);
+    numberOfNeighbors->mutable_range()->set_maxvalue(10);
+    numberOfNeighbors->set_defaultvalue(5);
+
+    knnClassifier->mutable_uniformweighting();
+
+    auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
+    nnIndex->mutable_squaredeuclideandistance();
+    auto *kdTree = nnIndex->mutable_singlekdtreeindex();
+    kdTree->set_leafsize(30);
+    knnClassifier->set_defaultstringlabel("Default");
+
+    // Validation should fail since range bounds should be > 0
+    Result res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    numberOfNeighbors->mutable_range()->set_minvalue(0);
+    numberOfNeighbors->mutable_range()->set_maxvalue(10);
+    numberOfNeighbors->set_defaultvalue(5);
+
+    // Validation should fail since range bounds should be > 0
+    res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    numberOfNeighbors->mutable_range()->set_minvalue(10);
+    numberOfNeighbors->mutable_range()->set_maxvalue(1);
+    numberOfNeighbors->set_defaultvalue(5);
+
+    // Validation should fail since since range max should be > range min
+    res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    numberOfNeighbors->mutable_range()->set_minvalue(-10);
+    numberOfNeighbors->mutable_range()->set_maxvalue(-5);
+    numberOfNeighbors->set_defaultvalue(5);
+
+    // Validation should fail since range values must be > 0
+    res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    numberOfNeighbors->mutable_range()->set_minvalue(1);
+    numberOfNeighbors->mutable_range()->set_maxvalue(10);
+    numberOfNeighbors->set_defaultvalue(5);
+
+    // Validation should now succeed
+    res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+
+}
+
+int testNumberOfNeighborsWithInvalidSet() {
+
+    Specification::Model m1;
+
+    KNNValidatorTests::generateInterface(m1);
+
+    auto *knnClassifier = m1.mutable_knearestneighborsclassifier();
+    auto *numberOfNeighbors = knnClassifier->mutable_numberofneighbors();
+    numberOfNeighbors->mutable_set()->add_values(0);
+    numberOfNeighbors->mutable_set()->add_values(4);
+    numberOfNeighbors->set_defaultvalue(4);
+
+    knnClassifier->mutable_uniformweighting();
+
+    auto *nnIndex = knnClassifier->mutable_nearestneighborsindex();
+    nnIndex->mutable_squaredeuclideandistance();
+    auto *kdTree = nnIndex->mutable_singlekdtreeindex();
+    kdTree->set_leafsize(30);
+    knnClassifier->set_defaultstringlabel("Default");
+
+    // Validation should fail since defaultValue is not in set
+    Result res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    numberOfNeighbors->mutable_set()->clear_values();
+    numberOfNeighbors->mutable_set()->add_values(-1);
+    numberOfNeighbors->mutable_set()->add_values(4);
+    numberOfNeighbors->set_defaultvalue(4);
+
+    // Validation should fail since set values should be > 0
+    res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    numberOfNeighbors->mutable_set()->clear_values();
+    numberOfNeighbors->mutable_set()->add_values(-1);
+    numberOfNeighbors->mutable_set()->add_values(4);
+    numberOfNeighbors->set_defaultvalue(-1);
+
+    // Validation should fail since set values should be > 0
+    res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_BAD(res);
+
+    numberOfNeighbors->mutable_set()->clear_values();
+    numberOfNeighbors->mutable_set()->add_values(1);
+    numberOfNeighbors->mutable_set()->add_values(4);
+    numberOfNeighbors->set_defaultvalue(4);
+
+    // Validation should now succeed
+    res = validate<MLModelType_kNearestNeighborsClassifier>(m1);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
 }

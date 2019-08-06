@@ -23,7 +23,7 @@ Specification::NeuralNetwork* buildBasicUpdatableNeuralNetworkModel(Specificatio
 
 Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr, int numberOfLayers = 1);
 
-Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, std::vector<std::string> classLabels);
+Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, std::vector<std::string> stringClassLabels, std::vector<int64_t> intClassLabels, bool includeBias);
 
 Specification::KNearestNeighborsClassifier* buildBasicNearestNeighborClassifier(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, const char *outTensorName);
 

@@ -9,6 +9,7 @@
 #include "../build/format/NearestNeighbors_enums.h"
 #include "Validators.hpp"
 #include "ValidatorUtils-inl.hpp"
+#include "ParameterValidator.hpp"
 
 #include <algorithm>
 #include <sstream>
@@ -78,10 +79,9 @@ namespace CoreML {
 
         const Specification::KNearestNeighborsClassifier& knnClassifier = format.knearestneighborsclassifier();
 
-        if (knnClassifier.k() <= 0) {
-            std::stringstream out;
-            out << "KNearestNeighborsClassifier requires k to be a positive integer." << std::endl;
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, out.str());
+        Result res = validateInt64Parameter("numberOfNeighbors", knnClassifier.numberofneighbors(), true);
+        if (!res.good()) {
+            return res;
         }
 
         switch (knnClassifier.WeightingScheme_case()) {
@@ -133,7 +133,7 @@ namespace CoreML {
                 }
         }
         
-        Result res = validateClassifierInterface(format, format.knearestneighborsclassifier(), true, defaultClassLabelIsInt64);
+        res = validateClassifierInterface(format, format.knearestneighborsclassifier(), true, defaultClassLabelIsInt64);
         if (!res.good()) {
             return res;
         }
