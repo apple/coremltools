@@ -174,6 +174,10 @@ class TypeInferenceVisitor(object):
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = self.gdict[node.inputs[0]].attr[
                                                       'symbolic_value'].val / self.gdict[node.inputs[1]].attr['symbolic_value'].val
+            elif node.op == 'Maximum':
+                node.attr['symbolic_value'] = rettype()
+                node.attr['symbolic_value'].val = sm.functions.Max(self.gdict[node.inputs[0]].attr['symbolic_value'].val,
+                                                                   self.gdict[node.inputs[1]].attr['symbolic_value'].val)
         return rettype
 
     def visit_reduction_op(self, node):
@@ -201,7 +205,7 @@ class TypeInferenceVisitor(object):
             reduction_indices = sorted(reduction_indices)[::-1]
             for i in reduction_indices:
                 reduced_shape.pop(i)
-        if len(reduced_shape) == 0 or (len(reduced_shape) == 1 and reduced_shape[0] == 1):
+        if len(reduced_shape) == 0:
             rettype = typea.get_primitive()
         else:
             rettype = builtins.tensor(typea.get_primitive(), reduced_shape)
@@ -224,6 +228,10 @@ class TypeInferenceVisitor(object):
                 method = 'amax'
             elif node.op == 'Min':
                 method = 'amin'
+            elif node.op == 'Any':
+                method = 'any'
+            elif node.op == 'All':
+                method = 'all'
             np_method = getattr(np, method, None)
             if np_method is not None:
                 try:
@@ -286,7 +294,7 @@ class TypeInferenceVisitor(object):
 
     # The main visitors
 
-    def visit_get_tuple(self, node):
+    def visit_get_tuple(self, node): # DO NOT PROPAGATE TYPE INFERENCE ACROSS FUNCTIONS
         assert (len(node.inputs) == 1)
         parent_type = self.visit(node.inputs[0])
         self.propagate_tensor_array(node)
@@ -306,6 +314,11 @@ class TypeInferenceVisitor(object):
         if 'tensorarray_source' in self.gdict[node.inputs[0]].attr:
             node.attr['tensorarray_source'] = self.gdict[node.inputs[0]].attr['tensorarray_source']
         return ret
+
+    def visit_Print(self, node):
+        # this is just identity
+        node.op = 'Identity'
+        return self.visit_unary(node)
 
     def visit_Log(self, node):
         ret = self.visit_unary(node)
@@ -330,20 +343,10 @@ class TypeInferenceVisitor(object):
         return self.visit(node.inputs[0])
 
     def visit_All(self, node):
-        self.visit(node.inputs[0])
-        vala = self.gdict[node.inputs[0]].attr['symbolic_value']
-        if vala is not None:
-            node.attr['symbolic_value'] = builtins.bool()
-            node.attr['symbolic_value'].val = np.all(vala.val)
-        return builtins.bool
+        return self.visit_reduction_op(node)
 
     def visit_Any(self, node):
-        self.visit(node.inputs[0])
-        vala = self.gdict[node.inputs[0]].attr['symbolic_value']
-        if vala is not None:
-            node.attr['symbolic_value'] = builtins.bool()
-            node.attr['symbolic_value'].val = np.any(vala.val)
-        return builtins.bool
+        return self.visit_reduction_op(node)
 
     def visit_ArgMax(self, node):
         return self.visit_reduction_op(node)
@@ -367,10 +370,16 @@ class TypeInferenceVisitor(object):
     def visit_Cast(self, node):
         assert (len(node.inputs) == 1)
         input_type = self.visit(node.inputs[0])
+        value = self.gdict[node.inputs[0]].attr['symbolic_value']
         if builtins.is_tensor(input_type):
-            return builtins.tensor(node.attr['DstT'], input_type.get_shape())
+            rettype = builtins.tensor(node.attr['DstT'], input_type.get_shape())
         else:
-            return node.attr['DstT']
+            rettype =  node.attr['DstT']
+
+        if value is not None:
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = value.val
+        return rettype
 
     def visit_ConcatV2(self, node):
         # Concat takes two tensors and a "axis to be concated"
@@ -431,15 +440,6 @@ class TypeInferenceVisitor(object):
             return node.datatype
         return self._get_type_from_attr(node)
 
-    def visit_Sin(self, node):
-        return self.visit_unary(node)
-
-    def visit_Cos(self, node):
-        return self.visit_unary(node)
-
-    def visit_Tan(self, node):
-        return self.visit_unary(node)
-
     def visit_Conv2D(self, node):
         input_type = self.visit(node.inputs[0])
         filter_type = self.visit(node.inputs[1])
@@ -482,9 +482,16 @@ class TypeInferenceVisitor(object):
                 if node.attr['padding'] == 'VALID':
                     inshape = input_type.get_shape()
                     retshape = []
-                    filtshape = inshape[:]
-                    filtshape[1] = inshape[1] - ksize + 1
-                    filtshape[2] = inshape[2] - ksize + 1
+                    filtshape = list(inshape[:])
+                    if isinstance(ksize, list) and len(ksize) == 4:
+                        filtshape[1] = inshape[1]  + 1 - ksize[1]
+                        filtshape[2] = inshape[2]  + 1 - ksize[2]
+                    elif isinstance(ksize,list) and len(ksize) == 2:
+                        filtshape[1] = inshape[1]  + 1 - ksize[0]
+                        filtshape[2] = inshape[2]  + 1 - ksize[1]
+                    else:
+                        filtshape[1] = inshape[1] - ksize + 1
+                        filtshape[2] = inshape[2] - ksize + 1
                     return builtins.tensor(input_type.get_primitive(), tuple(filtshape))
                 elif node.attr['padding'] == 'SAME':
                     return input_type
@@ -567,7 +574,7 @@ class TypeInferenceVisitor(object):
         else:
             # shape unknown.
             # I should be able to derive a rank
-            shape = tuple(make_symbol(node.name + str(i)) for i in range(len(typea.get_shape())))
+            shape = tuple(make_symbol(node.name + str(i)) for i in range(typea.get_shape()[0]))
             rettype = builtins.tensor(typeb, shape)
             return rettype
 
@@ -742,7 +749,12 @@ class TypeInferenceVisitor(object):
         return self.visit_broadcast_op(node)
 
     def visit_Neg(self, node):
-        return self.visit_unary(node)
+        inputtype = self.visit_unary(node)
+        input = self.gdict[node.inputs[0]]
+        if input.attr['symbolic_value'] is not None:
+            node['symbolic_value'] = inputtype()
+            node['symbolic_value'].val = -input.attr['symbolic_value'].val
+        return inputtype
 
     def visit_NoOp(self, node):
         return builtins.void
@@ -780,7 +792,15 @@ class TypeInferenceVisitor(object):
         self.visit(node.inputs[1])
         s = self.gdict[node.inputs[1]].attr['symbolic_value']
         if not s:
-            return self._get_type_from_attr(node)
+            attr_type = self._get_type_from_attr(node)
+            if not attr_type and self.gdict[node.inputs[1]].datatype and not any_symbolic_or_unknown(
+                self.gdict[node.inputs[1]].datatype.T[1]):
+                # at least we can get a rank
+                rank = self.gdict[node.inputs[1]].datatype.T[1][0]
+                ret_shape = [make_symbol(node.name + "_" + str(i)) for i in range(rank)]
+                return builtins.tensor(lefttype.get_primitive(), ret_shape)
+            else:
+                return attr_type
         s = s.val
         retshape = list(lefttype.get_shape())
         for i in range(len(retshape)):
@@ -788,16 +808,7 @@ class TypeInferenceVisitor(object):
         return builtins.tensor(lefttype.get_primitive(), retshape)
 
     def visit_PadV2(self, node):
-        lefttype = self.visit(node.inputs[0])
-        self.visit(node.inputs[1])
-        s = self.gdict[node.inputs[1]].attr['symbolic_value']
-        if not s:
-            return self._get_type_from_attr(node)
-        s = s.val
-        retshape = list(lefttype.get_shape())
-        for i in range(len(retshape)):
-            retshape[i] = retshape[i] + s[i][0] + s[i][1]
-        return builtins.tensor(lefttype.get_primitive(), retshape)
+        return self.visit_Pad(node)
 
     def visit_Placeholder(self, node):
         return self._get_type_from_attr(node)
@@ -933,7 +944,7 @@ class TypeInferenceVisitor(object):
                     and all(isscalar(a) for a in shape):
                 node.attr['symbolic_value'] = r()
                 node.attr['symbolic_value'].val = \
-                    self.gdict[node.inputs[0]].attr['symbolic_value'].val.reshape(shape)
+                    np.reshape(self.gdict[node.inputs[0]].attr['symbolic_value'].val, shape)
             return r
 
         # check if we have answer from attributes.
@@ -947,7 +958,7 @@ class TypeInferenceVisitor(object):
             return builtins.tensor(attr_type.get_primitive(), shape)
         elif self.gdict[node.inputs[1]].datatype is not None and not any_symbolic_or_unknown(
                 self.gdict[node.inputs[1]].datatype.T[1]):
-            # at least we can get a rank...
+            # at least we can get a rank
             rank = self.gdict[node.inputs[1]].datatype.T[1][0]
             ret_shape = [make_symbol(node.name + "_" + str(i)) for i in range(rank)]
             return builtins.tensor(left_primitive, ret_shape)
@@ -963,14 +974,61 @@ class TypeInferenceVisitor(object):
         assert (len(node.inputs) == 2)
         return self.visit(node.inputs[0])
 
+    def visit_Sin(self, node):
+        rettype = self.visit_unary(node)
+        input = self.gdict[node.inputs[0]]
+        if input.attr['symbolic_value'] is not None:
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = np.sin(input.attr['symbolic_value'].val)
+        return rettype
+
+    def visit_Cos(self, node):
+        rettype = self.visit_unary(node)
+        input = self.gdict[node.inputs[0]]
+        if input.attr['symbolic_value'] is not None:
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = np.cos(input.attr['symbolic_value'].val)
+        return rettype
+
+    def visit_Tan(self, node):
+        rettype = self.visit_unary(node)
+        input = self.gdict[node.inputs[0]]
+        if input.attr['symbolic_value'] is not None:
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = np.tan(input.attr['symbolic_value'].val)
+        return rettype
+
+    def visit_Tanh(self, node):
+        rettype = self.visit_unary(node)
+        input = self.gdict[node.inputs[0]]
+        if input.attr['symbolic_value'] is not None:
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = np.tanh(input.attr['symbolic_value'].val)
+        return rettype
+
     def visit_Sqrt(self, node):
-        return self.visit_unary(node)
+        rettype = self.visit_unary(node)
+        input = self.gdict[node.inputs[0]]
+        if input.attr['symbolic_value'] is not None:
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = input.attr['symbolic_value'].val**(0.5)
+        return rettype
 
     def visit_Rsqrt(self, node):
-        return self.visit_unary(node)
+        rettype = self.visit_unary(node)
+        input = self.gdict[node.inputs[0]]
+        if input.attr['symbolic_value'] is not None:
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = input.attr['symbolic_value'].val**(-0.5)
+        return rettype
 
     def visit_Square(self, node):
-        return self.visit_unary(node)
+        rettype = self.visit_unary(node)
+        input = self.gdict[node.inputs[0]]
+        if input.attr['symbolic_value'] is not None:
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = input.attr['symbolic_value'].val**2
+        return rettype
 
     def visit_Exp(self, node):
         return self.visit_unary(node)
@@ -986,7 +1044,7 @@ class TypeInferenceVisitor(object):
             rettype = builtins.tensor(builtins.int32, [len(shape)])
         else:
             rettype = builtins.tensor(builtins.int32, [make_symbol(node.name + '_shape')])
-        if len(shape) > 0:
+        if len(shape) > 0 and all([dim > 0 for dim in shape]):
             # we have the true value
             node.attr['symbolic_value'] = rettype()
             node.attr['symbolic_value'].val = np.array(shape)
@@ -1016,7 +1074,7 @@ class TypeInferenceVisitor(object):
             compatible, restype = builtins.is_tensor_and_is_compatible_general_shape(typea, typeb)
             if compatible:
                 return restype
-            elif typea == typeb:
+            elif typea.get_shape() == typeb.get_shape():
                 return typea
             else:
                 print(builtins.get_type_info(typea), " != ", builtins.get_type_info(typeb))
@@ -1059,7 +1117,7 @@ class TypeInferenceVisitor(object):
 
     def visit_Where(self, node):
         if len(node.inputs) == 3:
-            return self.visit_iff(node)
+            return self.visit_Select(node)
         assert (len(node.inputs) == 1)
         self.visit(node.inputs[0])
         rank = len(self.gdict[node.inputs[0]].datatype.get_shape())
@@ -1272,7 +1330,7 @@ class TypeInferenceVisitor(object):
         indices = []
         ctr = 0
         if isinstance(i, list):
-            i = 0
+            return i
         while (i > 0):
             if i % 2 == 1:
                 indices.append(ctr)
@@ -1831,13 +1889,33 @@ class TypeInferenceVisitor(object):
         return builtins.tuple(types)
 
     def visit_Size(self, node):
-        input_type = self.visit(node.inputs[0])
-        return input_type
+        self.visit(node.inputs[0])
+        parenttype = self.gdict[node.inputs[0]].datatype
+        rettype = node.attr["out_type"]
+        if parenttype is not None:
+            input_shape = parenttype.get_shape()
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = np.prod(input_shape)
+        return rettype
 
     def visit_Sign(self, node):
         input_type = self.visit(node.inputs[0])
         return input_type
 
+    def visit_Cumsum(self,node):
+        assert (len(node.inputs) == 2)
+        return self.visit(node.inputs[0])
+
+    def visit_ClipByValue(self,node):
+        assert len(node.inputs) == 3
+
+        type_min = self.visit(node.inputs[1])
+        type_max = self.visit(node.inputs[2])
+        if not (builtins.is_tensor(type_max) or builtins.is_tensor(type_min)):
+            node.attr["min_value"] = self.gdict[node.inputs[1]].attr['value'].val
+            node.attr["max_value"] = self.gdict[node.inputs[2]].attr['value'].val
+
+        return self.visit(node.inputs[0])
 
 def type_is_unknown(t):
     if builtins.is_tuple(t):
@@ -1875,7 +1953,8 @@ def type_inference_pass_impl(nnssa):
             if v.op == 'set_global':
                 rettype = TypeInferenceVisitor(graph, nnssa).visit(v)
                 variable = v.attr['variable']
-                if variable in changed_variables:
+                validate_shape =  v.attr.get('validate_shape', True)
+                if (variable in changed_variables) and validate_shape:
                     if builtins.get_type_info(
                             nnssa.variables[variable]) == builtins.get_type_info(rettype):
                         continue
@@ -1886,7 +1965,8 @@ def type_inference_pass_impl(nnssa):
                                     nnssa.variables[variable]), builtins.get_type_info(rettype)))
                 if rettype != type(nnssa.variables[variable]):
                     nnssa.variables[variable] = rettype()
-                    changed_variables.append(variable)
+                    if variable not in changed_variables:
+                        changed_variables.append(variable)
                     print(
                         "Changing variable %s to type %s" %
                         (variable, builtins.get_type_info(rettype)))

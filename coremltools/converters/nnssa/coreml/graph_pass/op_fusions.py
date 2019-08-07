@@ -4,6 +4,7 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 import numpy as np
+from ...commons import builtins
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, delete_node, replace_node
 from ...nnssa import ParsedNode
 
@@ -43,7 +44,13 @@ def _insert_transpose_to_nchw(graph, src, dst):
     tp_node = ParsedNode()
     tp_node.op = 'Transpose'
     tp_node.name = tp_node_name
-    tp_node.datatype = src.datatype
+
+    # Adjust type inference
+    if builtins.is_tensor(src.datatype):
+        s = src.datatype.get_shape()
+        tp_shape = tuple([s[0], s[3], s[1], s[2]])
+        tp_node.datatype = builtins.tensor(src.datatype.get_primitive(), tp_shape)
+
     tp_node.inputs = [src.name]
     tp_node.outputs = [dst.name]
     tp_node.attr['dim'] = [0,3,1,2]
@@ -69,7 +76,13 @@ def _insert_transpose_from_nchw(graph, src, dst):
     tp_node = ParsedNode()
     tp_node.op = 'Transpose'
     tp_node.name = tp_node_name
-    tp_node.datatype = src.datatype
+
+    # Adjust type inference
+    if builtins.is_tensor(src.datatype):
+        s = src.datatype.get_shape()
+        tp_shape = tuple([s[0], s[2], s[3], s[1]])
+        tp_node.datatype = builtins.tensor(src.datatype.get_primitive(), tp_shape)
+
     tp_node.inputs = [src.name]
     tp_node.outputs = [dst.name]
     tp_node.attr['dim'] = [0,2,3,1]
@@ -112,6 +125,12 @@ def transform_nhwc_to_nchw(nnssa):
         for name in nhwc_nodes:
             node = graph[name]
             orig_out_shapes = node.attr['_output_shapes']
+
+            # Adjust type inference
+            if builtins.is_tensor(node.datatype):
+                s = node.datatype.get_shape()
+                new_shape = tuple([s[0], s[3], s[1], s[2]])
+                node.datatype = builtins.tensor(node.datatype.get_primitive(), new_shape)
 
             # Insert NHWC->NCHW tranpose
             for i, inp_node_name in enumerate(node.inputs):

@@ -3020,7 +3020,8 @@ class NeuralNetworkBuilder(object):
         """
         # custom layers require a newer specification version
         from coremltools import _MINIMUM_CUSTOM_LAYER_SPEC_VERSION
-        self.spec.specificationVersion = max(self.spec.specificationVersion, _MINIMUM_CUSTOM_LAYER_SPEC_VERSION)
+        if self.spec:
+            self.spec.specificationVersion = max(self.spec.specificationVersion, _MINIMUM_CUSTOM_LAYER_SPEC_VERSION)
 
         spec_layer = self._add_generic_layer(name, input_names, output_names)
 

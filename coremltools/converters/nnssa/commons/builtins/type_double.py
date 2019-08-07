@@ -4,6 +4,7 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 from .annotate import class_annotate, annotate, delay_type
 from .type_bool import bool
+from .get_type_info import get_type_info
 from .type_spec import *
 import math
 
@@ -114,4 +115,4 @@ double = fp64
 
 
 def is_float(t):
-    return t is fp16 or t is fp32 or t is fp64
+    return any(t is i or isinstance(t,i) for i in [fp16, fp32, fp64])
