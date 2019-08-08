@@ -1506,13 +1506,17 @@ class NeuralNetworkBuilder(object):
 
         # add bias and its shape
         bias = spec_layer_params.bias
+        if len(shape_bias) != 1 and len(shape_bias) != 3:
+            raise ValueError('Shape of bias layer must have length 1 or 3.')
+
         spec_layer_params.shape.extend(shape_bias)
         if isinstance(b, int):
             bias.floatValue.append(float(b))
         else:
             bias.floatValue.extend(map(float, b.flatten()))
         if len(bias.floatValue) != np.prod(shape_bias):
-            raise ValueError("Dimensions of 'shape_bias' do not match the size of the provided 'b' parameter")
+            raise ValueError("Dimensions of 'shape_bias' do not match the size"
+                "of the provided 'b' parameter")
         return spec_layer
 
     def add_sequence_repeat(self, name, nrep, input_name, output_name):
