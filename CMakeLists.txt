@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12.0)
+cmake_minimum_required(VERSION 3.10.2)
 
 set(CMAKE_OSX_ARCHITECTURES x86_64)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)

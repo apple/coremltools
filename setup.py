@@ -10,7 +10,7 @@ with open(README) as f:
     long_description = f.read()
 
 setup(name='coremltools',
-    version='3.0b3',
+    version='3.0b4',
     description='Community Tools for CoreML',
     long_description=long_description,
     author='Apple Inc.',
