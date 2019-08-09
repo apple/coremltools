@@ -1,7 +1,7 @@
 Core ML Community Tools
 =======================
 
-Core ML community tools contains all supporting tools for CoreML model
+Core ML community tools contains all supporting tools for Core ML model
 conversion and validation. This includes Scikit Learn, LIBSVM, Caffe,
 Keras and XGBoost.
 
