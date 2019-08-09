@@ -1821,7 +1821,6 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_slice_dynamic_gpu(self):
         self.test_slice_dynamic_cpu(cpu_only=False)
 
-    @unittest.skip('fix')
     def test_tile_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=5, size=rank)
@@ -1843,7 +1842,6 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    @unittest.skip('fix')
     def test_tile_gpu(self):
         self.test_tile_cpu(cpu_only=False)
 
