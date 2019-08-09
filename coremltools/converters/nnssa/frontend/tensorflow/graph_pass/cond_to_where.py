@@ -67,7 +67,11 @@ class CondToWhere(object):
                 g[s].op = 'Identity'
                 g[s].attr['was_switch'] = g[s].inputs[1]
                 # detach input 1: the switch condition
-                disconnect_edge(g, g[s].inputs[1], s)
+                if g[s].inputs[0] == g[s].inputs[1]:
+                    g[s].inputs.pop()
+                    g[g[s].inputs[0]].outputs.pop()
+                else:
+                    disconnect_edge(g, g[s].inputs[1], s)
 
         # build the final select
         g[self.merge].op = 'iff'
