@@ -314,6 +314,9 @@ class TypeInferenceVisitor(object):
             node.attr['tensorarray_source'] = self.gdict[node.inputs[0]].attr['tensorarray_source']
         return ret
 
+    def visit_ZerosLike(self, node):
+        return self.visit_unary(node)
+
     def visit_Print(self, node):
         # this is just identity
         node.op = 'Identity'
@@ -1346,6 +1349,12 @@ class TypeInferenceVisitor(object):
             ctr += 1
         return indices
 
+    def _isKthBitSet(self, n, k):
+        if n & (1 << (k)):
+            return True
+        else:
+            return False
+
     def visit_StridedSlice(self, node):
         # this is massively complicated
         # https://www.tensorflow.org/api_docs/python/tf/strided_slice
@@ -1364,12 +1373,58 @@ class TypeInferenceVisitor(object):
         stride_value = self.gdict[node.inputs[3]].attr['symbolic_value']
 
         # these masks here are really really complicated
-        assert (node.attr.get('ellipsis_mask', 0) == 0)
-        assert (node.attr.get('new_axis_mask', 0) == 0)
+        assert node.attr.get('new_axis_mask', 0) == 0
 
-        shrink_axes = self._bitstring_to_reverse_indices(node.attr.get('shrink_axis_mask', 0))
-        begin_mask = self._bitstring_to_reverse_indices(node.attr.get('begin_mask', 0))
-        end_mask = self._bitstring_to_reverse_indices(node.attr.get('end_mask', 0))
+        if all([begin_value, end_value, stride_value]):
+            input_rank = len(input_shape)
+            num_spec = len(begin_value.val)
+            assert input_rank >= num_spec
+
+            dim = 0
+            begin_mask, end_mask, shrink_axes = [], [], []
+            begin_ids, end_ids, strides = [], [], []
+            for spec_id in range(num_spec):
+                if self._isKthBitSet(node.attr.get('ellipsis_mask', 0), spec_id):
+                    num_ellipsis_dims = input_rank - num_spec + 1
+                    for _ in range(num_ellipsis_dims):
+                        begin_mask.append(dim)
+                        end_mask.append(dim)
+                        begin_ids.append(0)
+                        end_ids.append(0)
+                        strides.append(1)
+                        dim += 1
+                elif self._isKthBitSet(node.attr.get('shrink_axis_mask', 0), spec_id):
+                    shrink_axes.append(dim)
+                    begin_ids.append(begin_value.val[spec_id])
+                    end_ids.append(end_value.val[spec_id])
+                    strides.append(stride_value.val[spec_id])
+                    dim += 1
+                else:
+                    if self._isKthBitSet(node.attr.get('begin_mask', 0), spec_id):
+                        begin_mask.append(dim)
+
+                    if self._isKthBitSet(node.attr.get('end_mask', 0), spec_id):
+                        end_mask.append(dim)
+
+                    begin_ids.append(begin_value.val[spec_id])
+                    end_ids.append(end_value.val[spec_id])
+                    strides.append(stride_value.val[spec_id])
+                    dim += 1
+
+            begin_value = builtins.tensor(begin_value.get_primitive(), (input_rank,))()
+            begin_value.val = np.array(begin_ids)
+
+            end_value   = builtins.tensor(end_value.get_primitive(), (input_rank,))()
+            end_value.val = np.array(end_ids)
+
+            stride_value = builtins.tensor(stride_value.get_primitive(), (input_rank,))()
+            stride_value.val = np.array(strides)
+        else:
+            assert node.attr.get('ellipsis_mask', 0) == 0
+            shrink_axes = self._bitstring_to_reverse_indices(node.attr.get('shrink_axis_mask', 0))
+            begin_mask = self._bitstring_to_reverse_indices(node.attr.get('begin_mask', 0))
+            end_mask = self._bitstring_to_reverse_indices(node.attr.get('end_mask', 0))
+
         # try to solve for value if possible
         output_value = None
         rettype = None
@@ -1449,8 +1504,8 @@ class TypeInferenceVisitor(object):
                 # we have a non-constant shaped slice
                 # store the sqeeze
                 node.attr['squeeze'] = list(int(i) for i in shrink_axes)
-                node.attr['begin_mask'] = list(int(i) for i in begin_mask)
-                node.attr['end_mask'] = list(int(i) for i in end_mask)
+                node.attr['begin_masks'] = list(int(i) for i in begin_mask)
+                node.attr['end_masks'] = list(int(i) for i in end_mask)
             else:
                 retshape = []
                 begin = list(begin_value.val[:])
@@ -1541,8 +1596,8 @@ class TypeInferenceVisitor(object):
                 if not has_symbolic_slices:
                     node.attr['slice'] = slices
                 node.attr['squeeze'] = list(int(i) for i in shrink_axes)
-                node.attr['begin_mask'] = list(int(i) for i in begin_mask)
-                node.attr['end_mask'] = list(int(i) for i in end_mask)
+                node.attr['begin_masks'] = list(int(i) for i in begin_mask)
+                node.attr['end_masks'] = list(int(i) for i in end_mask)
                 # drop removed axes
                 for a in shrink_axes:
                     assert (retshape[a] == 1 or is_symbolic_or_unknown(retshape[a]))
@@ -1592,7 +1647,7 @@ class TypeInferenceVisitor(object):
         rettype = builtins.tensor(
             input_type.get_primitive(),
             [input_shape[i] * tile_value[i] for i in range(len(tile_value))])
-        if input_value is not None and tile_value is not None:
+        if input_value is not None and tile_value is not None and not any_symbolic_or_unknown(tile_value):
             node.attr['symbolic_value'] = rettype()
             node.attr['symbolic_value'].val = np.tile(input_value, tile_value)
         return rettype
