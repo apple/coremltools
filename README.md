@@ -1,7 +1,7 @@
 Core ML Community Tools
 =======================
 
-Core ML community tools contains all supporting tools for CoreML model
+Core ML community tools contains all supporting tools for Core ML model
 conversion and validation. This includes Scikit Learn, LIBSVM, Caffe,
 Keras and XGBoost.
 
@@ -17,7 +17,7 @@ API
 ---
 - [Example Code Snippets](docs/APIExamples.md)
 - [CoreMLTools Documentation](https://apple.github.io/coremltools)
-- [CoreML Specification Documentation](https://apple.github.io/coremltools/coremlspecification/)
+- [Core ML Specification Documentation](https://apple.github.io/coremltools/coremlspecification/)
 - [IPython Notebooks](https://github.com/apple/coremltools/tree/master/examples)
 
 Installation
@@ -39,7 +39,7 @@ To create a Python virtual environment called `pythonenv` follow these steps:
 mkdir mlvirtualenv
 cd mlvirtualenv
 
-# Create a Python virtual environment for your CoreML project
+# Create a Python virtual environment for your Core ML project
 virtualenv pythonenv
 ```
 
