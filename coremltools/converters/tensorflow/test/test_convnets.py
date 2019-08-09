@@ -1223,6 +1223,15 @@ class TFSingleLayerTest(TFNetworkTest):
             self._test_tf_model_constant(graph, {"input": [1, 10, 10, 3]},
                                          output_name)
 
+    def test_strided_slice_ellipsis_mask(self):
+        shape = [3, 4, 10]
+        graph = tf.Graph()
+
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.strided_slice(a, begin=[-1, 5], end=[1, -6], strides=[1, 1], end_mask=1, ellipsis_mask=2)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
     def test_crop_resize(self):
         graph = tf.Graph()
         with graph.as_default() as g:
@@ -1293,4 +1302,5 @@ if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
     # suite.addTest(TFSingleLayerTest('test_where_v2'))
+    # suite.addTest(TFSingleLayerTest('test_strided_slice_ellipsis_mask'))
     # unittest.TextTestRunner().run(suite)
