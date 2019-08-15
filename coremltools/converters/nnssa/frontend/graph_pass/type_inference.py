@@ -81,7 +81,6 @@ class TypeInferenceVisitor(object):
             node.datatype = ret
         else:
             print("Unable to infer type of node %s (%s)" % (node.name, node.op))
-
         return ret
 
     def visit_all(self):
@@ -470,6 +469,12 @@ class TypeInferenceVisitor(object):
                         filtshape[3]
                     ]
                     return builtins.tensor(input_type.get_primitive(), tuple(retshape))
+        return self._get_type_from_attr(node)
+
+    def visit_ResizeBilinear(self, node):
+        return self._get_type_from_attr(node)
+
+    def visit_ResizeNearestNeighbor(self, node):
         return self._get_type_from_attr(node)
 
     def visit_pooling(self, node):

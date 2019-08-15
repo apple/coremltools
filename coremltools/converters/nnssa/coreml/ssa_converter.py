@@ -18,11 +18,11 @@ except:
 DEBUG = False
 
 
-def _is_scalar(type):
-    if type is None:
+def _is_scalar(type_):
+    if type_ is None:
         return False
-    result = builtins.is_int(type) or builtins.is_float(type) or builtins.is_bool(type)
-    if builtins.is_tensor(type) and (len(type.get_shape()) == 0):
+    result = builtins.is_int(type_) or builtins.is_float(type_) or builtins.is_bool(type_)
+    if builtins.is_tensor(type_) and (len(type_.get_shape()) == 0):
         result = True
     return result
 
@@ -251,7 +251,9 @@ class SSAConverter(object):
             'Pad': self._convert_pad,
             'PadV2': self._convert_pad,
             'TopKV2': self._convert_topk,
-            'iff': self._convert_iff
+            'iff': self._convert_iff,
+            'ResizeBilinear': self._convert_resize_bilinear,
+            'ResizeNearestNeighbor': self._convert_resize_nearest_neighbor,
         }
 
         # converter state variables
@@ -311,14 +313,13 @@ class SSAConverter(object):
         func_name = self.func_stack[-1]
         func = self.net_ensemble.functions[func_name]
         print('[SSAConverter] Converting function %s ...' % func_name)
+
         # Do a topological sort
-        # ?? Why leaving out nodes with all outputs with some value??
-        # I'm assuming restricted_graph is enough to generate all layers
         restricted_graph = {}
         function = self.net_ensemble.functions[func_name]
         for k, v in function.graph.items():
-            if len(v.outputs) > 0 and all([function.graph[i].value is not None for i in v.outputs]):
-                print([function.graph[i].value is not None for i in v.outputs])
+            if len(v.outputs) > 0 and all(
+                [function.graph[i].value is not None for i in v.outputs]):
                 continue
             restricted_graph[k] = v
         instruction_order = topsort(restricted_graph)
@@ -342,11 +343,11 @@ class SSAConverter(object):
             func = self.func_stack[-1]
         return self.func_builder_map[func]
 
-    def _get_tensor_shape_from_type(self, type):
-        if _is_scalar(type):
+    def _get_tensor_shape_from_type(self, type_):
+        if _is_scalar(type_):
             shape = (1,)
-        elif builtins.is_tensor(type):
-            shape = type.get_shape()
+        elif builtins.is_tensor(type_):
+            shape = type_.get_shape()
         else:
             shape = None
         return shape
@@ -388,28 +389,28 @@ class SSAConverter(object):
             func = self.net_ensemble.functions[fname]
             if name in func.graph:
                 node = func.graph[name]
-                return node, node.datatype 
+                return node, node.datatype
 
         for node_name, output_names in self.op_tensor_map.items():
             if name in output_names:
-                node, type = self.__get_node_and_type_by_name(node_name)
-                if builtins.is_tuple(type):
+                node, type_ = self.__get_node_and_type_by_name(node_name)
+                if builtins.is_tuple(type_):
                     Id = output_names.index(name)
-                    type = node.datatype.T[Id]
-                return node, type
+                    type_ = node.datatype.T[Id]
+                return node, type_
             
         return None, None
 
-    def __compare_propagated_and_inferred_shape(self, name, type):
+    def __compare_propagated_and_inferred_shape(self, name, type_):
 
         propagated_shape = self.tensor_shapes[name]
-        if _is_scalar(type):
+        if _is_scalar(type_):
             inferred_shape = (1,)
-        elif builtins.is_tensor(type):
-            inferred_shape = type.get_shape()
-        elif builtins.is_list(type):
-            element_shape = type.T[0].get_shape()
-            for ashape in type.T:
+        elif builtins.is_tensor(type_):
+            inferred_shape = type_.get_shape()
+        elif builtins.is_list(type_):
+            element_shape = type_.T[0].get_shape()
+            for ashape in type_.T:
                 assert ashape.get_shape() == element_shape
             inferred_shape = [-1] + list(element_shape)
         else:
@@ -505,7 +506,8 @@ class SSAConverter(object):
 
         builder = self._get_builder()
 
-        # Note: For simple RNN, node.attr always has a 'slice'; this means slicing is always static
+        # For simple RNN, node.attr always has a 'slice'
+        # This means slicing is always static
         if 'slice' not in node.attr:
             assert node.attr["new_axis_mask"] == 0
             assert len(input_names) >= 4
@@ -658,9 +660,6 @@ class SSAConverter(object):
         current_graph = self.net_ensemble.functions[self.func_stack[-1]].graph
         assert (current_graph[node.inputs[0]].op == 'make_tuple')
         input_nodes, input_names, input_types = self._get_input_tensors(node)
-        # print('[While Loop] input names:')
-        # for i, name in enumerate(input_names):
-        #     print('(%d) %s' %(i,name))
 
         self.op_tensor_map[node.name] = input_names
         builder_top = self._get_builder()
@@ -713,12 +712,9 @@ class SSAConverter(object):
                 break
 
         loop_var_names = self.op_tensor_map[loop_var_tuple_name]
-        assert (
-                len(loop_var_names) == len(input_names)
-        )  # Loop body should have the same input and output
-        # print('[While Loop] output names:')
-        # for i, name in enumerate(loop_var_names):
-        #     print('(%d) %s' %(i,name))
+        assert len(loop_var_names) == len(input_names)
+
+        # Loop body should have the same input and output
         builder_body = self._get_builder()
         for src, dst in zip(loop_var_names, input_names):
             # loop variables may be passed as an input to while op but unused.
@@ -727,7 +723,6 @@ class SSAConverter(object):
             layer = builder_body.add_copy(
                 name='copy_' + src + '_' + dst, input_name=src, output_name=dst)
             shapes.propagate_single_layer(layer, self.tensor_shapes)
-            # print('[While Loop] add copy from "%s" to "%s"' %(src, dst))
 
         # Pop back into while's loop
         self.func_stack.pop()
@@ -1690,6 +1685,79 @@ class SSAConverter(object):
             reduce_all=not reduction_indices
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+
+    def _convert_resize_bilinear(self, node):
+        # In TF, ResizeBilinear requires channel-last image axis order
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        if len(input_names) == 2 and input_nodes[1].op == 'Const':
+            target_size = input_nodes[1].value.val
+        else:
+            raise ValueError('[SSAConverter] Unable to determine target size'
+                'for ResizeBilinear')
+
+        mode = 'STRICT_ALIGN_ENDPOINTS_MODE' if node.attr.get(
+            'align_corners', False) else 'UPSAMPLE_MODE'
+
+        builder = self._get_builder()
+        layer = builder.add_resize_bilinear(
+            name=node.name,
+            input_name=input_names[0],
+            output_name=node.name,
+            target_height=target_size[0],
+            target_width=target_size[1],
+            mode=mode)
+
+        output_shape = self._get_tensor_shape_from_type(node.datatype)
+        shapes.propagate_single_layer(layer, self.tensor_shapes,
+            output_shapes=[output_shape])
+
+    def _convert_resize_nearest_neighbor(self, node):
+        # In TF, ResizeNearestNeighbor requires channel-last image axis order
+        # During conversion, NNSSA's output shape should have been modified
+        # to NCHW in transform_nhwc_to_nchw()
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        if len(input_names) == 2 and input_nodes[1].op == 'Const':
+            target_size = input_nodes[1].value.val
+        else:
+            raise ValueError('[SSAConverter] Unable to determine target size'
+                'for ResizeNearestNeighbor')
+        try:
+            input_shape = self._get_tensor_shape_from_type(input_types[0])
+        except:
+            input_shape = None
+
+        if input_shape is None or len(input_shape) != 4:
+            raise ValueError('[SSAConverter] ResizeNearestNeighbor has invalid'
+                'input shape {}'.format(input_shape))
+
+        if (target_size[0] % input_shape[2] > 0 or
+            target_size[1] % input_shape[3] > 0):
+            raise ValueError('[SSAConverter] Unsupported fractional'
+                'nearest-neighbor upsampling')
+
+        scaling_factor_h = int(target_size[0] / input_shape[2])
+        scaling_factor_w = int(target_size[1] / input_shape[3])
+
+        if scaling_factor_h <= 0 or scaling_factor_w <= 0:
+            raise ValueError('[SSAConverter] Invalid scaling factor.')
+
+        if node.attr.get('align_corners', False) is True:
+            raise ValueError('[SSAConverter] CoreML does not support '
+                'ResizeNearestNeighbor with align_core.')
+
+        builder = self._get_builder()
+        layer = builder.add_upsample(
+            name=node.name,
+            scaling_factor_h = scaling_factor_h,
+            scaling_factor_w = scaling_factor_w,
+            input_name=input_names[0],
+            output_name=node.name,
+            mode='NN')
+
+        output_shape = self._get_tensor_shape_from_type(node.datatype)
+        shapes.propagate_single_layer(layer, self.tensor_shapes,
+            output_shapes=[output_shape])
 
     def _convert_binary_broadcastable(self, node):
         assert len(node.inputs) == 2
