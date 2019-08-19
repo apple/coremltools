@@ -1738,11 +1738,15 @@ class TypeInferenceVisitor(object):
         tensor_put_type = builtins.tensor(
             tensor_put_type.get_primitive(),
             tensor_put_type.get_shape()[1:])
-        # can we override the shape in the node attributes?
-        if len(tensor_put_type.get_shape()) > 0 and tanode is not None and \
-                ('element_shape' not in tanode.attr or tanode.attr['element_shape'].get_shape() is None \
-                 or len(tanode.attr['element_shape'].get_shape()) == 0):
-            tanode.attr['element_shape'] = tensor_put_type
+
+        # Overide the shape in the node attributes
+        if len(tensor_put_type.get_shape()) > 0 and tanode is not None:
+            el_shape = tanode.attr.get('element_shape')
+            es = None if el_shape is None else el_shape.get_shape()
+            if (es is None or len(es) == 0 \
+                or (-1 in es and -1 not in tensor_put_type.get_shape())):
+                tanode.attr['element_shape'] = tensor_put_type
+
         # output is flow
         assert (len(node.inputs) == 3)
         return self.visit(node.inputs[2])
@@ -1770,11 +1774,15 @@ class TypeInferenceVisitor(object):
         tanode = self.find_tensor_array_source_node(node)
 
         tensor_put_type = self.visit(node.inputs[1])
-        # can we overide the shape in the node attributes?
-        if hasattr(tensor_put_type, 'get_shape') and len(tensor_put_type.get_shape()) > 0 and tanode is not None and \
-                ('element_shape' not in tanode.attr or tanode.attr['element_shape'].get_shape() is None \
-                 or len(tanode.attr['element_shape'].get_shape()) == 0):
-            tanode.attr['element_shape'] = tensor_put_type
+        # Overide the shape in the node attributes
+
+        if hasattr(tensor_put_type, 'get_shape') and \
+            len(tensor_put_type.get_shape()) > 0 and tanode is not None:
+            el_shape = tanode.attr.get('element_shape')
+            es = None if el_shape is None else el_shape.get_shape()
+            if (es is None or len(es) == 0 \
+                or (-1 in es and -1 not in tensor_put_type.get_shape())):
+                tanode.attr['element_shape'] = tensor_put_type
 
         assert (len(node.inputs) == 3)
         return self.visit(node.inputs[2])

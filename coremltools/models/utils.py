@@ -38,9 +38,7 @@ def save_spec(spec, filename, auto_set_specification_version=False):
         File path  where the spec gets saved.
 
     auto_set_specification_version: bool
-        If true, will always try to set specification version automatically
-        otherwise, use the original specification version. This option only
-        works for Python 2.
+        If true, will always try to set specification version automatically.
 
     Examples
     --------

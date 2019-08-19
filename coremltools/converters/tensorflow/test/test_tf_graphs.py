@@ -141,15 +141,6 @@ class TFSimpleNetworkTest(TFNetworkTest):
                     act = tf.tanh(product, name='act')
             self._test_tf_model(graph, {'input': [1, 8]}, ['act'], delta=1e-2)
 
-    def test_extract_shape_1d(self):
-        shape = [None, 2]
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            x = tf.placeholder(tf.float32, shape=shape, name='input')
-            m = tf.Variable(tf.truncated_normal([1, 2]))
-            y = tf.shape(x + m, name='output')
-        self._test_tf_model(graph, {'input': [1, 2]}, ['output'], delta=1e-2)
-
     def test_extract_shape(self):
         dims = [2, 3, 4]
         for rank in range(1, len(dims) + 1):
@@ -157,9 +148,9 @@ class TFSimpleNetworkTest(TFNetworkTest):
             batched_shape = [1] + dims[:rank]
             graph = tf.Graph()
             with graph.as_default() as g:
-                x = tf.placeholder(tf.float32, shape=shape, name='input')
-                m = tf.Variable(tf.truncated_normal(batched_shape))
-                y = tf.shape(x + m, name='output')
+                x = tf.placeholder(tf.float32, shape=batched_shape, name='input')
+                m = tf.Variable(tf.truncated_normal(tf.shape(x)))
+                y = tf.identity(x + m, name='output')
             self._test_tf_model(graph, {'input': batched_shape}, ['output'], delta=1e-2)
 
     @unittest.skip

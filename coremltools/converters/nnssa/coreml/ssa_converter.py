@@ -100,8 +100,8 @@ class SSAConverter(object):
         top_ssa = self.net_ensemble.functions[top_func]
 
         # find_inputs_and_outputs() generates a list of required inputs, which
-        # may not be supplied by inputs. We need to make sure that the user-supplied
-        # inputs name and shape are consistent with the NNSSA.
+        # may not be supplied by inputs. We need to make sure that the
+        # user-supplied inputs name and shape are consistent with the NNSSA.
         top_input_shapes = []
         for name in top_input_names:
             node = top_ssa.graph[name]
@@ -571,9 +571,10 @@ class SSAConverter(object):
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_tensorarray_alloc(self, node):
-        # TensorArray is a list of tensors, it will be treated as a rank+1 tensor when converted
-        # The shape information is stored at two different places - node input specifies the length of the list
-        # while the node's datatype stores the shape of each of the tensor allocated.
+        # TensorArray is a list of tensors, it will be treated as a rank+1
+        # tensor when converted. The shape information is stored at two
+        # different places - node input specifies the length of the list
+        # while the node's datatype stores the shape of each tensor allocated.
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         assert (len(input_names) == 1)
 
@@ -581,8 +582,8 @@ class SSAConverter(object):
         if (not node.attr.get('identical_element_shapes', True) or
             not all([atype.get_shape() == element_shape for atype in node.datatype.T])):
             raise ValueError(
-                '[SSAConverter] TensorArray allocation cannot handle arrays with tensors of various shapes'
-            )
+                '[SSAConverter] TensorArray allocation cannot handle arrays'
+                'with tensors of various shapes.')
 
         has_static_element_shape = all([dim > 0 for dim in element_shape])
 
@@ -614,7 +615,8 @@ class SSAConverter(object):
                 shape=[len(element_shape)])
             shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-            # Concatenate list length (the input, should be a constant vector of size 1) with element shape
+            # Concatenate list length (the input, should be a constant vector
+            # of size 1) with element shape
             node_arr_shape_name = node.name + '__arr_shape'
             layer = builder.add_concat_nd(
                 name=node_arr_shape_name,
