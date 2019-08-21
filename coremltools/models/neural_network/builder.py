@@ -4231,7 +4231,6 @@ class NeuralNetworkBuilder(object):
             The name of this layer.
         input_names: list of str
             The input blob names.
-            If input size == 0: all parameters are used
             If input size == 1: end is input, start and step are read from parameters
             If input size == 2: end, start are inputs, step is read from parameters
             If input size == 3: start, end, step are all inputs, none of the parameters are used.
@@ -4246,6 +4245,9 @@ class NeuralNetworkBuilder(object):
         --------
         add_range_static
         """
+
+        if len(input_names) < 1 or len(input_names) > 3:
+            raise ValueError('RangeDynamic layer must have either 1, 2 or 3 inputs.')
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.rangeDynamic.MergeFromString(b'')
