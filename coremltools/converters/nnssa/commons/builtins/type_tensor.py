@@ -148,7 +148,6 @@ def is_tensor(tensor_type):
         return False
     return get_type_info(tensor_type).name == 'tensor'
 
-
 def tensor_has_complete_shape(tensor_type):
     if not is_tensor(tensor_type):
         return True

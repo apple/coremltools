@@ -42,3 +42,6 @@ class bool:
     @annotate(delay_type.str)
     def __str__(self):
         return str(self.val)
+
+def is_bool(t):
+    return t is bool or isinstance(t,bool)

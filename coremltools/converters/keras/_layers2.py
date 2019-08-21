@@ -911,7 +911,7 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer,
 def convert_upsample(builder, layer, input_names, output_names, keras_layer,
                      respect_train):
     """
-    Convert convolution layer from keras to coreml.
+    Convert upsample layer from keras to coreml.
 
     Parameters
     ----------

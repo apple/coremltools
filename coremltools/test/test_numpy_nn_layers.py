@@ -50,6 +50,9 @@ class CorrectnessTest(unittest.TestCase):
         if shape:
             return coreml_preds.shape == shape
         else:
+            # check if shape has 0 valued dimension
+            if np.prod(np_preds.shape) == 0 and np.prod(coreml_preds.shape) == 0:
+                return True
             return coreml_preds.shape == np_preds.shape
 
     def _compare_predictions(self, np_preds, coreml_preds, delta=.01):
@@ -1821,29 +1824,27 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_slice_dynamic_gpu(self):
         self.test_slice_dynamic_cpu(cpu_only=False)
 
-    @unittest.skip('fix')
     def test_tile_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=5, size=rank)
-            reps = list(np.random.randint(low=1, high=4, size=rank))
+            for rep_rank in range(1,rank+1):
+                reps = list(np.random.randint(low=1, high=9, size=rep_rank))
+                input_features = [('data', datatypes.Array(*input_shape))]
+                output_features = [('output', None)]
 
-            input_features = [('data', datatypes.Array(*input_shape))]
-            output_features = [('output', None)]
+                builder = neural_network.NeuralNetworkBuilder(
+                    input_features, output_features,
+                    disable_rank5_shape_mapping=True
+                )
 
-            builder = neural_network.NeuralNetworkBuilder(
-                input_features, output_features,
-                disable_rank5_shape_mapping=True
-            )
+                builder.add_tile('Tile', 'data', 'output', reps)
 
-            builder.add_tile('Tile', 'data', 'output', reps)
+                x = np.random.rand(*input_shape)
+                input = {'data': x}
+                expected = {'output': np.tile(x, reps)}
 
-            x = np.random.rand(*input_shape)
-            input = {'data': x}
-            expected = {'output': np.tile(x, reps)}
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-
-    @unittest.skip('fix')
     def test_tile_gpu(self):
         self.test_tile_cpu(cpu_only=False)
 
@@ -2655,7 +2656,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_lower_triangular_cpu(self, cpu_only=True):
         for rank in range(2, 6):
-            for k in range(-7, 8):
+            for k in range(-3, 4):
                 shape = np.random.randint(low=2, high=6, size=rank)
                 input_features = [('data', datatypes.Array(*shape))]
                 output_features = [('output', None)]
@@ -2675,7 +2676,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_upper_triangular_cpu(self, cpu_only=True):
         for rank in range(2, 6):
-            for k in range(-7, 8):
+            for k in range(-3, 4):
                 shape = np.random.randint(low=2, high=6, size=rank)
                 input_features = [('data', datatypes.Array(*shape))]
                 output_features = [('output', None)]
@@ -3778,8 +3779,9 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 builder.add_where_nonzero('multi_indices', 'data', 'output')
 
-                x = np.random.rand(*shape)
-                input = {'data': x}
+                x = np.random.randint(low=0, high=3, size=shape)
+
+                input = {'data': x.astype(np.float)}
                 expected = {'output': np.transpose(np.nonzero(x)).astype(np.float)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 

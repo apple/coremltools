@@ -37,6 +37,13 @@ def _slice_static(layer_spec, input_shapes):
     return [output_shape]
 
 
+def _slice_dynamic(layer_spec, input_shapes):
+    input_shape = input_shapes[0]
+    rank = len(input_shape)
+    output_shape = [-1] * rank
+    return [output_shape]
+
+
 def _squeeze(layer_spec, input_shapes):
     axes = list(layer_spec.squeeze.axes)
     input_shape = input_shapes[0]
@@ -44,14 +51,15 @@ def _squeeze(layer_spec, input_shapes):
 
     if axes is None or len(axes) == 0:
         raise NotImplementedError('Unspecified axes not implemented.')
-    output_shape = input_shape[:]
-    for axis in axes:
-        idx = axis if axis >= 0 else rank + axis
-        if input_shape[idx] != 1:
+    output_shape = []
+    axes = [axis if axis >= 0 else rank + axis for axis in axes]
+    for dim in range(rank):
+        if dim not in axes:
+            output_shape.append(input_shape[dim])
+        elif input_shape[dim] != 1:
             raise ValueError(
-                '[Shaper] Cannot squeeze on index %d of shape %s' % (axis, str(input_shape)))
-        output_shape = output_shape[:idx] + output_shape[idx + 1:]
-    return [output_shape]
+                '[Shaper] Cannot squeeze on index %d of shape %s' % (dim, str(input_shape)))
+    return [output_shape] if output_shape else [[1]]
 
 
 def _range_dynamic(layer_spec, input_shapes):
@@ -104,7 +112,7 @@ def _broadcastable(layer_spec, input_shapes):
             return None
 
     max_rank = max([len(s) for s in input_shapes])
-    extended_input_shapes = [[1] * (max_rank - len(s)) + s for s in input_shapes]
+    extended_input_shapes = [[1] * (max_rank - len(s)) + list(s) for s in input_shapes]
     output_shape = [1] * max_rank
     for i_dim in range(max_rank):
         for s in extended_input_shapes:
@@ -127,7 +135,7 @@ def _scatter_nd(layer_spec, input_shapes):
 def _gather(layer_spec, input_shapes):
     if len(input_shapes) == 2:
         indices_shape = input_shapes[1]
-        return [indices_shape + input_shapes[0][1:]]
+        return [list(indices_shape) + list(input_shapes[0][1:])]
     else:
         raise ValueError("[Shaper] Gather layer accepts only 2 inputs")
 
@@ -144,12 +152,18 @@ def _gather_nd(layer_spec, input_shapes):
 def _concat_nd(layer_spec, input_shapes):
     axis = layer_spec.concatND.axis
     rank = len(input_shapes[0])
-    output_shape = input_shapes[0][:]
+    output_shape = list(input_shapes[0][:])
     if axis < 0:
         axis += rank
+
+    for shape in input_shapes:
+        if len(shape) != rank:
+            raise ValueError('[Shaper] Unable to shape concatND: ranks mismatch')
+
     for shape in input_shapes[1:]:
         for idx, dim in enumerate(shape):
-            if output_shape[idx] == -1:
+            if output_shape[idx] == -1 or dim == -1:
+                output_shape[idx] = -1
                 continue
             if idx == axis:
                 output_shape[idx] += dim
@@ -206,7 +220,14 @@ def _expand_dims(layer_spec, input_shapes):
 
     output_shape = input_shape[:]
     for axis in axes:
-        output_shape = output_shape[0:axis] + [1] + output_shape[axis:]
+        output_shape = list(output_shape[0:axis]) + [1] + list(output_shape[axis:])
+    return [output_shape]
+
+
+def _where_non_zero(layer_spec, input_shapes):
+    input_shape = input_shapes[0]
+    rank = len(input_shape)
+    output_shape = [-1, rank]
     return [output_shape]
 
 
@@ -223,15 +244,13 @@ def _stack(layer_spec, input_shapes):
 
 def _batched_mat_mul(layer_spec, input_shapes):
     if len(input_shapes) == 1:
-        a_shape = input_shapes[0][:]
+        a_shape = list(input_shapes[0][:])
         a_shape[-1] = int(layer_spec.batchedMatmul.weightMatrixSecondDimension)
         return [a_shape]
     elif len(input_shapes) == 2:
         a_shape, b_shape = input_shapes
         if len(a_shape) < 2 or len(b_shape) < 2:
             raise ValueError('[Shaper] MatMul with 2 inputs require the ranks of both inputs to be no less than 2')
-        if not a_shape[0:-2] == b_shape[0:-2]:
-            raise ValueError('[Shaper] Batch dimensions in BatchedMatMul with 2 inputs mismatch')
         tp_a = layer_spec.batchedMatmul.transposeA
         tp_b = layer_spec.batchedMatmul.transposeB
         r_x, c_x = a_shape[-2:]
@@ -261,7 +280,7 @@ def _conv2d(layer_spec, input_shapes):
 
 def _reshape_static(layer_spec, input_shapes):
     target_shape = list(layer_spec.reshapeStatic.targetShape)
-    return [target_shape]
+    return [target_shape] if target_shape else [[1]]
 
 
 def _reduce(layer_spec, input_shapes):
@@ -330,7 +349,7 @@ def _argmax(layer_spec, input_shapes):
         output_shape[axis] = None
         output_shape = [dim for dim in output_shape if dim is not None]
 
-    return [output_shape]
+    return [output_shape] if output_shape else [[1]]
 
 
 def _argmin(layer_spec, input_shapes):
@@ -345,7 +364,7 @@ def _argmin(layer_spec, input_shapes):
         output_shape[axis] = None
         output_shape = [dim for dim in output_shape if dim is not None]
 
-    return [output_shape]
+    return [output_shape] if output_shape else [[1]]
 
 
 def _tile(layer_spec, input_shapes):
@@ -388,11 +407,19 @@ def _topk(layer_spec, input_shapes):
     return output_shapes
 
 
+def _unidirectional_lstm(layer_spec, input_shapes):
+    shape = input_shapes[0]
+    hidden_size = input_shapes[1][2]
+    shape[2] = hidden_size
+    return [shape] * 3
+
+
 # We'll enable them one by one
 _LAYER_REGISTRY = {
     'transpose': _transpose,
     'getShape': _get_shape,
     'sliceStatic': _slice_static,
+    'sliceDynamic': _slice_dynamic,
     'squeeze': _squeeze,
     'rangeStatic': _range_static,
     'rangeDynamic': _range_dynamic,
@@ -421,6 +448,7 @@ _LAYER_REGISTRY = {
     'copy': _identity,
     'expandDims': _expand_dims,
     'stack': _stack,
+    'whereNonZero': _where_non_zero,
     'addBroadcastable': _broadcastable,
     'subtractBroadcastable': _broadcastable,
     'divideBroadcastable': _broadcastable,
@@ -429,6 +457,7 @@ _LAYER_REGISTRY = {
     'minBroadcastable': _broadcastable,
     'modBroadcastable': _broadcastable,
     'floorDivBroadcastable': _broadcastable,
+    'powBroadcastable': _broadcastable,
     'conv2d': _conv2d,
     'multiplyBroadcastable': _broadcastable,
     'reshapeStatic': _reshape_static,
@@ -457,7 +486,7 @@ _LAYER_REGISTRY = {
     'fillLike': _identity,
     'fillStatic': _fill_static,
     'fillDynamic': _fill_dynamic,
-    'uniDirectionalLSTM': _identity,
+    'uniDirectionalLSTM': _unidirectional_lstm,
     'broadcastToLike': _broadcast_to_like,
     'broadcastToStatic': _broadcast_to_static,
     'constantPad': _pad,
@@ -496,7 +525,7 @@ def get_common_shape(x, y):
     """
     z = None
     if len(x) == len(y):
-        z = x
+        z = list(x)
         for idx in range(len(x)):
             z[idx] = x[idx] if x[idx] == y[idx] else -1
     return z
@@ -514,6 +543,8 @@ def is_a_shape_of(x, y):
     """
     if y is None:
         return True
+    x = (1,) if len(x) == 0 else x # Scalar should be interpreted as an 1-element array
+    y = (1,) if len(y) == 0 else y # Scalar should be interpreted as an 1-element array
     if len(x) != len(y):
         return False
     return all([(a[0] == a[1] or a[1] == -1) for a in zip(x, y)])

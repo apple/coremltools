@@ -6,9 +6,11 @@
 import coremltools
 import unittest
 import tempfile
+import numpy as np
 from coremltools.proto import Model_pb2
-from coremltools.models.utils import rename_feature, save_spec, macos_version
-from coremltools.models import MLModel
+from coremltools.models.utils import rename_feature, save_spec, macos_version, convert_neural_network_spec_weights_to_fp16
+from coremltools.models import MLModel, datatypes
+from coremltools.models.neural_network import NeuralNetworkBuilder
 
 
 class MLModelTest(unittest.TestCase):
@@ -147,3 +149,40 @@ class MLModelTest(unittest.TestCase):
             assert "not able to run predict()" in str(w[-1].message)
         self.spec.specificationVersion = 1
         model = MLModel(self.spec)
+
+    def test_convert_nn_spec_to_half_precision(self):
+        # simple network with quantization layer
+        input_features = [('data', datatypes.Array(3))]
+        output_features = [('out', datatypes.Array(3))]
+        builder = NeuralNetworkBuilder(input_features, output_features)
+        weights = np.random.uniform(-0.5, 0.5, (3, 3))
+        builder.add_inner_product(
+            name='inner_product',
+            W=weights,
+            b=None,
+            input_channels=3,
+            output_channels=3,
+            has_bias=False,
+            input_name='data',
+            output_name='out'
+        )
+        model = MLModel(builder.spec)
+        spec = convert_neural_network_spec_weights_to_fp16(model.get_spec())
+        self.assertIsNotNone(spec)
+
+        # simple network without quantization layer
+        input_features = [('data', datatypes.Array(3))]
+        output_features = [('out', datatypes.Array(3))]
+        builder = NeuralNetworkBuilder(input_features, output_features)
+        builder.add_lrn(
+            name='lrn',
+            input_name='data',
+            output_name='out',
+            alpha=2,
+            beta=3,
+            local_size=1,
+            k=8
+        )
+        model = MLModel(builder.spec)
+        spec = convert_neural_network_spec_weights_to_fp16(model.get_spec())
+        self.assertIsNotNone(spec)
