@@ -1195,32 +1195,33 @@ class TFSingleLayerTest(TFNetworkTest):
             out = tf.strided_slice(a, begin=[0, 1, 0], end=[-1, 2, 5], strides=[1, 2, 1])
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
-    # @unittest.skip
-    # def test_resize_bilinear_non_fractional(self):
-    #   graph = tf.Graph()
-    #   with graph.as_default() as g:
-    #     x_input = tf.placeholder(tf.float32, shape=[None, 10, 10, 3], name="input")
-    #     z = tf.image.resize_bilinear(x_input, size=[20, 30], align_corners=True)
-    #   output_name = [z.op.name]
-    #   self._test_tf_model_constant(graph, {"input:0":[1,10,10,3]}, output_name)
-    #
-    # @unittest.skip
-    # def test_resize_bilinear_non_fractional_upsample_mode(self):
-    #   graph = tf.Graph()
-    #   with graph.as_default() as g:
-    #     x_input = tf.placeholder(tf.float32, shape=[None, 10, 10, 3], name="input")
-    #     z = tf.image.resize_bilinear(x_input, size=[20, 30], align_corners=False)
-    #   output_name = [z.op.name]
-    #   self._test_tf_model_constant(graph, {"input:0":[1,10,10,3]}, output_name)
-    #
-    # @unittest.skip
-    # def test_resize_bilinear_fractional(self):
-    #   graph = tf.Graph()
-    #   with graph.as_default() as g:
-    #     x_input = tf.placeholder(tf.float32, shape=[None, 10, 10, 3], name="input")
-    #     z = tf.image.resize_bilinear(x_input, size=[25, 45], align_corners=False)
-    #   output_name = [z.op.name]
-    #   self._test_tf_model_constant(graph, {"input:0":[1,10,10,3]}, output_name)
+    def test_resize_bilinear(self):
+        sizes = [[20,30], [20,30], [25,45]]
+        align_corners=[True, False, False]
+        for sz, ac in zip(sizes, align_corners):
+            graph = tf.Graph()
+            with graph.as_default() as g:
+                x_input = tf.placeholder(tf.float32, shape=[None, 10, 10, 3],
+                    name="input")
+                z = tf.image.resize_bilinear(x_input, size=sz,
+                    align_corners=ac)
+                output_name = [z.op.name]
+            self._test_tf_model_constant(graph, {"input":[1,10,10,3]},
+                    output_name)
+
+    def test_resize_nearest_neighbor(self):
+        sizes = [[20,30]]
+        align_corners=[False]
+        for sz, ac in zip(sizes, align_corners):
+            graph = tf.Graph()
+            with graph.as_default() as g:
+                x_input = tf.placeholder(tf.float32, shape=[None, 10, 10, 3],
+                    name="input")
+                z = tf.image.resize_nearest_neighbor(x_input, size=sz,
+                    align_corners=ac)
+                output_name = [z.op.name]
+            self._test_tf_model_constant(graph, {"input":[1,10,10,3]},
+                    output_name)
 
     def test_crop_resize(self):
         graph = tf.Graph()
