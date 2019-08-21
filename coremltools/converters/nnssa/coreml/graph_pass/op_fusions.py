@@ -4,6 +4,7 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 import numpy as np
+from ...commons import builtins
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, delete_node, replace_node
 from ...nnssa import ParsedNode
 
@@ -24,16 +25,19 @@ ELEMENTWISE_OPS = [
     'Pow',
 ]
 
-
 def _is_NHWC(graph, node):
+    if (node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor'):
+        return True
     if (node.op == 'Conv2D' or node.op == 'Pooling' or node.op =='MaxPool' or \
         node.op == 'AvgPool') and node.attr.get('data_format') == 'NHWC':
         return True
     if node.op == 'ConcatV2':
         # ConcatV2's last input is axis
-        return all(graph[inp].attr.get('data_format') == 'NHWC' for inp in node.inputs[:-1])
+        return all(graph[inp].attr.get('data_format') == 'NHWC' for inp in
+            node.inputs[:-1])
     if node in ELEMENTWISE_OPS:
-        return all(graph[inp].attr.get('data_format') == 'NHWC' for inp in node.inputs)
+        return all(graph[inp].attr.get('data_format') == 'NHWC' for inp in
+            node.inputs)
     return False
 
 
@@ -43,7 +47,13 @@ def _insert_transpose_to_nchw(graph, src, dst):
     tp_node = ParsedNode()
     tp_node.op = 'Transpose'
     tp_node.name = tp_node_name
-    tp_node.datatype = src.datatype
+
+    # Adjust type inference
+    if builtins.is_tensor(src.datatype):
+        s = src.datatype.get_shape()
+        tp_shape = tuple([s[0], s[3], s[1], s[2]])
+        tp_node.datatype = builtins.tensor(src.datatype.get_primitive(), tp_shape)
+
     tp_node.inputs = [src.name]
     tp_node.outputs = [dst.name]
     tp_node.attr['dim'] = [0,3,1,2]
@@ -69,7 +79,13 @@ def _insert_transpose_from_nchw(graph, src, dst):
     tp_node = ParsedNode()
     tp_node.op = 'Transpose'
     tp_node.name = tp_node_name
-    tp_node.datatype = src.datatype
+
+    # Adjust type inference
+    if builtins.is_tensor(src.datatype):
+        s = src.datatype.get_shape()
+        tp_shape = tuple([s[0], s[2], s[3], s[1]])
+        tp_node.datatype = builtins.tensor(src.datatype.get_primitive(), tp_shape)
+
     tp_node.inputs = [src.name]
     tp_node.outputs = [dst.name]
     tp_node.attr['dim'] = [0,2,3,1]
@@ -94,7 +110,7 @@ def transform_nhwc_to_nchw(nnssa):
     Mark each one of the node with "NHWC", so that the conversion process
     could avoid inserting unnecessary transpositions.
     A node's format is "NHWC" if and only if:
-    (1) it is a conv or pooling layer with "NHWC" data format
+    (1) it is a conv or pooling or image_resize layer with "NHWC" data format
     (2) it is a rank-preserving operation whose inputs are all "NHWC"
     """
     for fn_key in list(nnssa.functions.keys()):
@@ -113,11 +129,17 @@ def transform_nhwc_to_nchw(nnssa):
             node = graph[name]
             orig_out_shapes = node.attr['_output_shapes']
 
+            # Adjust type inference
+            if builtins.is_tensor(node.datatype):
+                s = node.datatype.get_shape()
+                new_shape = tuple([s[0], s[3], s[1], s[2]])
+                node.datatype = builtins.tensor(node.datatype.get_primitive(), new_shape)
+
             # Insert NHWC->NCHW tranpose
             for i, inp_node_name in enumerate(node.inputs):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
-                if node.op == 'Conv2D' and i == 1 and graph[inp_node_name].op == 'Const':
-                    # Skip constant weights
+                if len(node.inputs) == 2 and i == 1 and graph[inp_node_name].op == 'Const':
+                    # Const weights and parameters
                     continue
                 if inp_node_format != 'NHWC':
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
@@ -178,15 +200,7 @@ def fuse_bias_add(nnssa):
         if len(nodes_fused) > 0:
             print("[Op Fusion] fuse_bias_add() deleted {} nodes.".format(len(nodes_fused)))
 
-"""
-def connect_edge(g, source, dest):
-    g[source].outputs.append(dest)
-    g[dest].inputs.append(source)
-def replace_node(g, original_node, new_node):
-    for o in list(g[original_node].outputs):
-        replace_source(g, original_node, o, new_node)
 
-"""
 def onehot_matmul_to_embedding(nnssa):
     # Look for 'MatMul' whose first input is 'OneHot', and replace it with embedding op
     for fn_key in list(nnssa.functions.keys()):

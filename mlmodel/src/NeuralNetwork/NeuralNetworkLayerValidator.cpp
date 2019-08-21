@@ -595,24 +595,23 @@ Result NeuralNetworkSpecValidator::validateBiasLayer(const Specification::Neural
         r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         return r;
     }
-    
+
+    if (params.shape_size() != 1 && params.shape_size() != 3) {
+        std::string err = "Bias layer '" + layer.name() + "' cannot be " + std::to_string(params.shape_size()) + " dimensional. Must be 1D or 3D.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // shape can be ``[1]``, ``[C]``, ``[1, H, W]`` or ``[C, H, W]``
     size_t total_shape = 1;
     for (int i = 0; i < params.shape_size(); i++) {
         total_shape *= params.shape(i);
     }
-    // shape can be ``[1]``, ``[C]``, ``[1, H, W]`` or ``[C, H, W]``
     if (params.shape_size() == 3 && params.shape(0) > 1){
         r = validateGeneralWeightParams(params.bias(), total_shape, params.shape(0), "Bias", layer.name(), "bias");
     } else {
         r = validateGeneralWeightParams(params.bias(), total_shape, 1, "Bias", layer.name(), "bias");
     }
-    if (!r.good()) return r;
-    
-    if (params.shape_size() < 1 || params.shape_size() > 3) {
-        std::string err = "Bias layer '" + layer.name() + "' cannot be " + std::to_string(params.shape_size()) + " dimensional. Must be 1D, 2D, or 3D.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    
+
     return r;
 }
 

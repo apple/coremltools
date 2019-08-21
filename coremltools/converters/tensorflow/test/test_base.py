@@ -10,6 +10,7 @@ import pytest
 import unittest
 import shutil, tempfile
 from tensorflow.python.tools.freeze_graph import freeze_graph
+from tensorflow.tools.graph_transforms import TransformGraph
 
 import coremltools
 

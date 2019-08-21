@@ -1388,16 +1388,18 @@ message LookUpTableQuantizationParams {
  *
  *      y = ConvolutionLayer(x)
  *
- * Requires 1 input and produces 1 output.
+ * Requires 1 or 2 inputs and produces 1 output.
  *
  * Input
- *     A blob with rank greater than or equal to 4.
- *     Rank 4 blob represents [Batch, channels, height, width].
- *     For ranks greater than 4, the leading dimensions, starting from 0 to -4 (inclusive), are all treated as batch.
+ *    First Input:
+ *      A blob with rank greater than or equal to 4.
+ *      Rank 4 blob represents [Batch, channels, height, width].
+ *      For ranks greater than 4, the leading dimensions, starting from 0 to -4 (inclusive), are all treated as batch.
  *
- *     From CoreML specification version 4 onwards (iOS >= 13, macOS >= 10.15),
- *     when two inputs are connected to Convolution layer, the second input is
- *     the blob representing the weights. The weight blob should have shape
+ *     From CoreML specification version 4 onwards (iOS >= 13, macOS >= 10.15).
+ *     convolution layer can have 2 inputs, in which case the second input is
+ *     the blob representing the weights. This is allowed when "isDeconvolution" = False.
+ *     The weight blob should have shape
  *     ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``,
  *     where kernelChannels == inputChannels / nGroups.
  *
@@ -3542,13 +3544,7 @@ message ConcatNDLayerParams {
  *
  * Requires 1 input and produces 1 output.
  *
- * Input
- *     A N-Dimensional tensor.
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
- *
+ * Output shape is same as the input.
  */
 message SoftmaxNDLayerParams {
 
@@ -3561,8 +3557,10 @@ message SoftmaxNDLayerParams {
 
 /**
  * A layer that reverses specific dimensions of the input tensor.
+ * It is similar in functionality to the numpy.flip method.
  *
  * Requires 1 input and produces 1 output.
+ * Output shape is same as the input.
  */
 message ReverseLayerParams {
 
@@ -3579,6 +3577,52 @@ message ReverseLayerParams {
  *
  * Requires 2 inputs and produces 1 output.
  *
+ * 2 inputs, in order are denoted by "data", "seq_lengths".
+ * "seq_lenghts" must be a rank 1 tensor, i.e. seq_lengths.shape = (B,)
+ * which contains the lengths of the amount of sequence to be reversed, for each element of the batch.
+ * Dimension "batchAxis" in "data" must be equal to B, i.e,
+ * data.shape[batchAxis] = B.
+ *
+ * According to the batch axis, input "data" is first divided into a batch of B inputs,
+ * each of which is flipped along the dimension "sequenceAxis", by the amount specified in
+ * "seq_lengths", the second input.
+ * 
+ * e.g.:
+ *
+ * data [shape = (2,4)]:
+ * [0 1 2 3]
+ * [4 5 6 7]
+ * seq_lengths [shape = (2,)]:
+ * [3, 0]
+ * batchAxis = 0
+ * sequenceAxis = 1
+ *
+ * output [shape = (2,4)]:
+ * [2 1 0 3]
+ * [4 5 6 7]
+ *
+ *
+ * data [shape = (2,3,2)]:
+ * [0 1]
+ * [2 3]
+ * [4 5] (slice = 0)
+ * [6 7]
+ * [8 9]
+ * [10 11] (slice = 1)
+ * seq_lengths [shape = (2,)]:
+ * [2, 3]
+ * batchAxis = 0
+ * sequenceAxis = 1
+ *
+ * output [shape = (2,3,2)]:
+ * [2 3]
+ * [0 1]
+ * [4 5] (slice = 0)
+ * [10 11]
+ * [8 9]
+ * [6 7] (slice = 1)
+ *
+ * Output shape is same as the input.
  */
 message ReverseSeqLayerParams {
 
@@ -3596,8 +3640,7 @@ message ReverseSeqLayerParams {
  *
  * Requires no input and produces 1 output.
  *
- * Output:
- *     A blob whose rank is between 1 to 4.
+ * Output: A tensor with shape as provided in the parameter "shape"
  */
 message LoadConstantNDLayerParams {
 
@@ -3610,7 +3653,9 @@ message LoadConstantNDLayerParams {
 }
 
 /**
- * A layer that fills the tensor with a scalar value.
+ * A layer that generates an output tensor with a constant value.
+ * Input is only used to determine the shape of the output.
+ * This layer is used to allocate a tensor with a dynamic shape (that of the input) and constant value.
  *
  * Requires 1 input and produces 1 output.
  *
@@ -3619,10 +3664,11 @@ message LoadConstantNDLayerParams {
  *      y = FillLikeLayer(x)
  *
  * Input
- *     A N-Dimensional tensor.
+ *     A N-Dimensional tensor, whose values are ignored. Only the shape is used to
+ *     infer the shape of the output.
  *
  * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
+ *     A N-Dimensional tensor with the same shape as the input tensor.
  *
  */
 message FillLikeLayerParams {
@@ -3632,7 +3678,8 @@ message FillLikeLayerParams {
 }
 
 /**
- * A layer that fills the tensor with a scalar value.
+ * A layer that generates an output tensor with a constant value.
+ * This layer is used to allocate a tensor with a static shape and constant value.
  *
  * Requires no input and produces 1 output.
  *
@@ -3641,7 +3688,7 @@ message FillLikeLayerParams {
  *      y = FillStaticLayer(x)
  *
  * Output
- *     A N-Dimensional tensor of shape targetShape.
+ *     A N-Dimensional tensor of shape "targetShape".
  *
  */
 message FillStaticLayerParams {
@@ -3652,7 +3699,8 @@ message FillStaticLayerParams {
 }
 
 /**
- * A layer that fills the tensor with a scalar value.
+ * A layer that generates an output tensor with a constant value.
+ * This layer is used to allocate a tensor with a dynamic shape (as specified by the input) and constant value.
  *
  * Requires 1 input and produces 1 output.
  *
@@ -3661,10 +3709,10 @@ message FillStaticLayerParams {
  *      y = FillDynamicLayer(x)
  *
  * Input
- *     A N-Dimensional tensor.
+ *     A rank 1 tensor specifying the shape of the output
  *
  * Output
- *     A N-Dimensional tensor with the same shape specified in the input tensor.
+ *     An N-Dimensional tensor with the shape specified by the values in the input tensor.
  *
  */
 message FillDynamicLayerParams {
@@ -3676,14 +3724,19 @@ message FillDynamicLayerParams {
 /**
  * A layer that returns the elements either from tensor x or tensor y,
  * depending on the value in the condition tensor.
- *
- * .. code::
- *
- *      y = WhereBroadcastableLayer(x)
+ * It is similar in functionality to the numpy.where method with 3 inputs.
  *
  * Requires 3 inputs and produces 1 output.
+ * Inputs, in order, are the condition tensor, x and y.
  *
+ * for each vector index (i,...,j):
+ *    output[i,...,j] = x[i,...,j] if condition[i,...,j] = True
+ *                      y[i,...,j] if condition[i,...,j] = False
  *
+ * All the 3 inputs are first broadcasted to a common shape.
+ * (the shapes must be broadcastable)
+ *
+ * output.rank = max(input[0].rank, input[1].rank, input[2].rank)
  *
  */
 message WhereBroadcastableLayerParams {
@@ -3699,13 +3752,7 @@ message WhereBroadcastableLayerParams {
  *      y = SinLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message SinLayerParams {
@@ -3721,13 +3768,7 @@ message SinLayerParams {
  *      y = CosLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message CosLayerParams {
@@ -3735,7 +3776,7 @@ message CosLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric cosine function.
+ * A layer that computes elementwise trigonometric tangent function.
  *
  *
  * .. code::
@@ -3743,13 +3784,7 @@ message CosLayerParams {
  *      y = TanLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message TanLayerParams {
@@ -3757,7 +3792,7 @@ message TanLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric sine function.
+ * A layer that computes elementwise trigonometric arcsine function.
  *
  *
  * .. code::
@@ -3765,13 +3800,7 @@ message TanLayerParams {
  *      y = AsinLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message AsinLayerParams {
@@ -3779,7 +3808,7 @@ message AsinLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric cosine function.
+ * A layer that computes elementwise trigonometric arccosine function.
  *
  *
  * .. code::
@@ -3787,13 +3816,7 @@ message AsinLayerParams {
  *      y = AcosLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message AcosLayerParams {
@@ -3801,7 +3824,7 @@ message AcosLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric cosine function.
+ * A layer that computes elementwise trigonometric arctangent function.
  *
  *
  * .. code::
@@ -3809,13 +3832,7 @@ message AcosLayerParams {
  *      y = AtanLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message AtanLayerParams {
@@ -3823,7 +3840,7 @@ message AtanLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric sine function.
+ * A layer that computes elementwise trigonometric hyperbolic sine function.
  *
  *
  * .. code::
@@ -3831,13 +3848,7 @@ message AtanLayerParams {
  *      y = SinhLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message SinhLayerParams {
@@ -3845,7 +3856,7 @@ message SinhLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric cosine function.
+ * A layer that computes elementwise trigonometric hyperbolic cosine function.
  *
  *
  * .. code::
@@ -3853,13 +3864,7 @@ message SinhLayerParams {
  *      y = CoshLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message CoshLayerParams {
@@ -3867,7 +3872,7 @@ message CoshLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric cosine function.
+ * A layer that computes elementwise trigonometric hyperbolic tangent function.
  *
  *
  * .. code::
@@ -3875,13 +3880,7 @@ message CoshLayerParams {
  *      y = TanhLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message TanhLayerParams {
@@ -3889,7 +3888,7 @@ message TanhLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric sine function.
+ * A layer that computes elementwise trigonometric hyperbolic arcsine function.
  *
  *
  * .. code::
@@ -3897,13 +3896,7 @@ message TanhLayerParams {
  *      y = AsinhLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message AsinhLayerParams {
@@ -3911,7 +3904,7 @@ message AsinhLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric cosine function.
+ * A layer that computes elementwise trigonometric hyperbolic arccosine function.
  *
  *
  * .. code::
@@ -3919,13 +3912,7 @@ message AsinhLayerParams {
  *      y = AcoshLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message AcoshLayerParams {
@@ -3933,7 +3920,7 @@ message AcoshLayerParams {
 }
 
 /**
- * A layer that computes elementwise trigonometric cosine function.
+ * A layer that computes elementwise trigonometric hyperbolic arctangent function.
  *
  *
  * .. code::
@@ -3941,13 +3928,7 @@ message AcoshLayerParams {
  *      y = AtanhLayer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message AtanhLayerParams {
@@ -3969,7 +3950,7 @@ message AtanhLayerParams {
  *     - Second N-Dimensional tensor
  *
  * Output
- *     A N-Dimensional tensor with the broadcast shape.
+ *     An N-Dimensional tensor with the broadcast shape.
  *
  */
 message PowBroadcastableLayerParams {
@@ -3977,7 +3958,7 @@ message PowBroadcastableLayerParams {
 }
 
 /**
- * A layer that computes the exponential of all elements in the input tensor.
+ * A layer that computes the exponential of all elements in the input tensor, with the base 2.
  *
  *
  * .. code::
@@ -3985,13 +3966,7 @@ message PowBroadcastableLayerParams {
  *      y = Exp2Layer(x)
  *
  * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
- *
+ * Output shape is same as the input.
  *
  */
 message Exp2LayerParams {
@@ -4001,8 +3976,34 @@ message Exp2LayerParams {
 /**
  * A layer that returns a tensor containing the indices of all non-zero
  * elements of input tensor.
+ * It is similar in functionality to the numpy.where method with 1 input.
  *
  * Requires 1 input and produces 1 output.
+ * Output is of rank 2, of shape (N,R),
+ * where N is the number of non-zero elements in the input and R is the rank of the input.
+ *
+ * Output contains indices represented in the multi-index form
+ *
+ * e.g.:
+ * input {shape = (4,)}:
+ * [0 1 0 2]
+ * output {shape = (2,1)}:
+ * [1]
+ * [3]
+ *
+ *
+ * input {shape = (3, 3)}:
+ * [1 2 1]
+ * [0 2 2]
+ * [2 1 0]
+ * output {shape = (7,1)}:
+ * [0. 0.]
+ * [0. 1.]
+ * [0. 2.]
+ * [1. 1.]
+ * [1. 2.]
+ * [2. 0.]
+ * [2. 1.]
  *
  */
 message WhereNonZeroLayerParams {
@@ -4018,6 +4019,11 @@ message WhereNonZeroLayerParams {
  * Parameters for matrix_band_part layer
  * band(m, n) = (num_lower < 0 || (m-n) <= num_lower) && (num_upper < 0 || (n-m) <= num_upper).
  * output[i, j, k, ..., m, n] = band(m, n) * input[i, j, k, ..., m, n]
+ *
+ *
+ * Output shape is same as the input shape.
+ * Rank of the input must be at least 2.
+ * For rank higher than 2, the last 2 dimensions are treated as the matrix, while the rest are treated as batch.
  */
 message MatrixBandPartLayerParams {
 
@@ -4030,6 +4036,10 @@ message MatrixBandPartLayerParams {
  * A layer that copies a tensor setting everything outside upper triangular to zero.
  *
  * Requires 1 input and produces 1 output.
+ *
+ * Output shape is same as the input shape.
+ * Rank of the input must be at least 2.
+ * For rank higher than 2, the last 2 dimensions are treated as the matrix, while the rest are treated as batch.
  */
 message UpperTriangularLayerParams {
 
@@ -4041,6 +4051,10 @@ message UpperTriangularLayerParams {
  * A layer that copies a tensor setting everything outside lower triangular to zero.
  *
  * Requires 1 input and produces 1 output.
+ *
+ * Output shape is same as the input shape.
+ * Rank of the input must be at least 2.
+ * For rank higher than 2, the last 2 dimensions are treated as the matrix, while the rest are treated as batch.
  */
 message LowerTriangularLayerParams {
 
@@ -4052,18 +4066,12 @@ message LowerTriangularLayerParams {
  *
  * A layer that broadcasts a tensor to a new shape.
  *
+ * Requires 2 inputs and produces 1 output.
  *
- * .. code::
+ * First input is broadcast to produce the output, while the second input is only
+ * used to determine the shape of the output. Values of second input are not used.
  *
- *      y = BroadcastToLikeLayer(x)
- *
- * Requires 1 input and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor.
- *
- * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
+ * Output is a tensor with the same shape as the second input.
  *
  */
 message BroadcastToLikeLayerParams {
@@ -4074,20 +4082,10 @@ message BroadcastToLikeLayerParams {
  *
  * A layer that broadcasts a tensor to a new shape.
  *
+ * Requires 1 input and produces 1 output.
  *
- * .. code::
- *
- *      y = BroadcastToStaticLayer(x)
- *
- * Requires 2 inputs and produces 1 output.
- *
- * Input
- *     A N-Dimensional tensor.
- *     A N-Dimensional tensor used for getting target shape.
- *
- * Output
- *     A N-Dimensional tensor of shape targetShape.
- *
+ * Output tensor is the broadcasted version of the input and has shape as specified in the
+ * parameter "targetShape".
  */
 message BroadcastToStaticLayerParams {
 
@@ -4099,17 +4097,11 @@ message BroadcastToStaticLayerParams {
  *
  * A layer that broadcasts a tensor to a new shape.
  *
- * .. code::
- *
- *      y = BroadcastToDynamicLayer(x)
- *
  * Requires 2 inputs and produces 1 output.
  *
- * Input
- *
- * Output
- *
- *
+ * First input is the one that is broadcasted to produce the output.
+ * Second input is a rank 1 tensor specifying the shape of the output.
+ * Output tensor has shape as specified by the values in the 2nd input tensor.
  */
 message BroadcastToDynamicLayerParams {
 
@@ -4188,16 +4180,37 @@ message DivideBroadcastableLayerParams {
 }
 
 /**
- * Gather layer that gathers elements or slices from data and store to a tensor
- * whose shape is defined by indices from the input. This is the reverse
- * operation of the scatter operation.
+ * Gather layer that gathers elements from the first input, along a specified axis,
+ * at indices specified in the second input.
+ * It is similar in functionality to the numpy.take method.
  *
  * Requires 2 inputs and produces 1 output.
  *
  * Given two inputs, 'data' and 'indices', gather the slices of 'data'
  * and store into output.
- * E.g. output[i] = data[indices[i]], for i in [0, length(indices) - 1] (1-D case, axis=0)
- * Support negative indices and negative axis
+ * e.g.
+ * for i in [0, length(indices) - 1]
+ *    output[i] = data[indices[i]]  (1-D case, axis=0)
+ *
+ * if axis = 0:
+ * for each vector index (i,...,j)
+ *    output[i,...,j,:,..,:] = data[indices[i,...,j],:,..,:]
+ *
+ * output.rank = (data.rank - 1) + indices.rank
+ *
+ * Negative indices and negative axis are supported.
+ *
+ * e.g:
+ *
+ * data shape = (2, 3)
+ * indices shape = (6, 8)
+ * axis = 0
+ * output shape = (6, 8) + (3,) = (6, 8, 3)
+ *
+ * data shape = (2, 3, 5)
+ * indices shape = (6, 8)
+ * axis = 1
+ * output shape = (2,) + (6, 8) + (5,) =  (2, 6, 8, 5)
  *
  */
 message GatherLayerParams {
@@ -4223,31 +4236,65 @@ enum ScatterMode {
 
 /*
  * A layer that scatters data into a new tensor according to indices from the input.
+ * This is the inverse operation of Gather.
  *
  * Requires 3 inputs and produces 1 output.
  *
  * Output is initialized with the first input.
  * Then updated with the values in the third input, at indices specified by the second input.
- * That is,
  *
- * Given three inputs, in order, "container", "indices", "slices", where:
+ * An example when axis=0:
+ * Given three inputs, in order, "container", "indices", "updates", where
  *
- * - container is a rank R+1 tensor of shape [D_0, D_1, ..., D_R], which
+ * - "container" is a rank R+1 tensor of shape [D_0, D_1, ..., D_R], which
  *   contains D_0 number of tensors, each with shape [D_1, ..., D_R].
  *
- * - indices is a rank 1 tensor with shape [N], where N is the number of slices.
+ * - "indices" is a rank 1 tensor with shape [N], where N is the number of updates.
  *   The values in this tensor must be in the range [0, D_0 - 1]. (negative indexing is supported)
  *
- * - slices is a rank R+1 tensor with shape [N, D_1, ..., D_R], which represents
+ * - "updates" is a rank R+1 tensor with shape [N, D_1, ..., D_R], which represents
  *   a total number of N tensors, each of shape [D_1, ..., D_R].
  *
  * The effect of this operation is as follows:
  *
  * output = container;
  * For each i in 0, ..., N - 1
- *    output[indices[i], :, ..., :] = slices[i, :, ..., :]
+ *    output[indices[i], :, ..., :] = updates[i, :, ..., :] // if mode == "SCATTER_UPDATE"
  *
- * The output is a rank R+1 tensor of shape [D_0, D_1, ..., D_R], same shape as the first input.
+ * or
+ * For each i in 0, ..., N - 1
+ *    output[indices[i], :, ..., :] += updates[i, :, ..., :] // if mode == "SCATTER_ADD"
+ *
+ * etc
+ *
+ * When "indices" is a tensor of rank greater than 1, the equation becomes (for axis=0):
+ * For each vector index (i,...,j)
+ *   output[indices[i,...,j],...] -= updates[i,...,j,...] // if mode == "SCATTER_SUB"
+ *
+ *
+ * The output has the same shape as the first input.
+ * "indices" input must have rank less than or equal to the "updates" input and its shape
+ * must be a subset of the the shape of the "updates" input.
+ *
+ * e.g:
+ *
+ * container shape = (4, 3)
+ * indices shape = (5, 2, 3)
+ * updates shape = (4, 5, 2, 3)
+ * axis = 1
+ * output shape = (4, 3)
+ *
+ * container shape = (4, 4, 3)
+ * indices shape = (6,)
+ * updates shape = (4, 6, 3)
+ * axis = -2
+ * output shape = (4, 4, 3)
+ *
+ * container shape = (5,)
+ * indices shape = (5, 7, 5, 6)
+ * updates shape = (5, 7, 5, 6)
+ * axis = -1
+ * output shape = (5,)
  */
 
 message ScatterLayerParams {
@@ -4258,33 +4305,80 @@ message ScatterLayerParams {
 }
 
 /**
- * A layer that gathers elements or slices from data and store to a tensor
- * whose shape is defined by indices from the input. This is the reverse
- * operation of the scatter operation.
+ * A layer that gathers elements from the first input, 'params', at the multi-indices specified
+ * by the second input, 'indices'.
  *
  * Requires 2 inputs and produces 1 output.
+ *
+ * 'params' = input[0], 'indices' = input[1]
+ *
+ * 'indices' is a rank K+1 tensor of shape [I_0, I_1, .., I_(K-1), I_K] which is viewed as a collection of
+ * indices of (I_0 * I_1 * ... * I_(K-1)) points in the I_K dimensional space. For instance, the multi-index of the first point
+ * is indices[0,0,...,0,:].
+ *
+ * Here is how the output is constructed:
+ *
+ * for i = 0,1,...,(I_0-1)
+ *   ...
+ *     for j = 0,1,....,(I_(K-1)-1)
+ *          output[i,....,j,:,:,..,:] = params[indices[i,...,j,:], :,:,..,:]
+ *
+ * Hence, output shape is [I_0, I_1,...,I(K-1)] + params.shape[I_K:]
+ *
+ * output.rank = indices.rank - 1 + params.rank - indices.shape[-1]
+ *
+ * e.g:
+ *
+ * input[0] shape = (4, 2, 3, 4)
+ * input[1] shape = (6, 2)
+ * output shape = (6,) + (3, 4) = (6, 3, 4)
+ *
+ * input[0] shape = (3, 3, 3, 4, 7)
+ * input[1] shape = (3, 5)
+ * output shape = (3,) + () = (3,)
+ *
+ * input[0] shape = (5, 3, 2, 5)
+ * input[1] shape = (2, 7, 3, 2)
+ * output shape = (2, 7, 3) + (2, 5) = (2, 7, 3, 2, 5)
+ *
  */
 message GatherNDLayerParams {
 
 }
 
 /*
- * A layer that scatters data into a new tensor according to indices from the input.
- *
- * Given three inputs, container, indices, slices, where:
- * - container is A N-Dimensional array
- * - indices is a 2-Dimensional array [Ni, L], where Ni is the number of slices,
- *   L = 1, ..., 5, indicating the N-Dimensional index of slices.
- *   Each index is a vector of dimension L.
- *   For each i = 1, ..., L, if index[i] > 0, the slice at index[i] is retrieved.
- *   If index[i] < 0, the entire slice is retrieved.
- * - slices is A N-Dimensional array of size [Ni, ...,]
- * The effect of this operation is as follows:
- * output = array;
- * For each i in 1, ..., Ni
- * output[indices[i]] = value[i,:]
+ * A layer that scatters data into a new tensor according to multi-indices from the input.
+ * This is the inverse operation of GatherND.
  *
  * Requires 3 inputs and produces 1 output.
+ * 3 inputs, in order are denoted as "container", "indices", "updates".
+ *
+ * 'indices' is a rank K+1 tensor of shape [I_0, I_1, .., I_(K-1), I_K] which is viewed as a collection of
+ * indices of (I_0 * I_1 * ... * I_(K-1)) points in the I_K dimensional space. For instance, the multi-index of the first point
+ * is indices[0,0,...,0,:].
+ *
+ * container.rank >= I_K
+ * updates.rank = K + (container.rank - I_K)
+ * shape of 'updates' = [I_0, I_1,...,I(K-1)] + container.shape[I_K:]
+ *
+ * output = container
+ * For each vector index (i,...,j) s.t. 0<=i<I_0,..., 0<=j<I_K
+ *   output[indices[i,...,j,:], :,:,..,:] = updates[i,....,j,:,:,..,:] // if mode == "SCATTER_UPDATE"
+ *
+ * The output has the same shape as the first input.
+ *
+ * e.g:
+ *
+ * container shape = (3, 2)
+ * indices shape = (4, 2)
+ * updates shape = (4,)
+ * output shape = (3, 2)
+ *
+ * container shape = (7, 6)
+ * indices shape = (4, 7, 2, 5, 1)
+ * updates shape = (4, 7, 2, 5, 6)
+ * output shape = (7, 6)
+ *
  */
 message ScatterNDLayerParams {
 
@@ -4293,11 +4387,32 @@ message ScatterNDLayerParams {
 }
 
 /**
- * A layer that gathers elements or slices from data and store to a tensor
- * whose shape is defined by indices from the input along the given axis into
- * the output tensor.
+ * Gather layer that gathers elements from the first input, along a specified axis,
+ * at indices specified in the second input.
+ * It is similar in functionality to the numpy.take_along_axis method.
  *
  * Requires 2 inputs and produces 1 output.
+ *
+ * Given two inputs, 'data' and 'indices', gather the slices of 'data'
+ * and store into output.
+ *
+ * Both inputs and output have the same rank.
+ * Output shape is same as the shape of 'indices'
+ * Shapes of 'indices' and 'data' match, except at the 'axis' dimension.
+ *
+ * This operation performs the following operation for axis=0:
+ * for each vector index (i,j,....,k)
+ *    output[i,j,....,k] = data[index[i,j,....,k],j,....,k]
+ *
+ * Negative indices and negative axis are supported.
+ *
+ * e.g:
+ *
+ * data shape = (4, 4, 7)
+ * indices shape = (4, 5, 7)
+ * axis = 1
+ * output shape = (4, 5, 7)
+ *
  */
 message GatherAlongAxisLayerParams {
 
@@ -4308,8 +4423,31 @@ message GatherAlongAxisLayerParams {
 /**
  * A layer that scatters data into a new tensor according to indices from
  * the input along the given axis into the output tensor.
+ * This is the inverse operation of GatherAlongAxis.
+ * It is similar in functionality to the numpy.put_along_axis method.
  *
  * Requires 3 inputs and produces 1 output.
+ * 3 inputs, in order are denoted as "container", "indices", "updates".
+ *
+ * All inputs and output have the same rank.
+ * Output shape is same as the shape of 'container'
+ * Shapes of 'indices' and 'updates' match, which is same as the shape of 'container' except at the 'axis' dimension.
+ *
+ * Negative indices and negative axis are supported.
+ *
+ * This operation performs the following operation for axis=0:
+ * output = container
+ * for each vector index (i,j,....,k)
+ *    output[index[i,j,....,k],j,....,k] = updates[i,j,....,k]
+ *
+ * e.g.:
+ *
+ * container shape = (2, 5, 6)
+ * indices shape = (2, 2, 6)
+ * updates shape = (2, 2, 6)
+ * axis = -2
+ * output shape = (2, 5, 6)
+ *
  */
 message ScatterAlongAxisLayerParams {
 
@@ -4319,11 +4457,26 @@ message ScatterAlongAxisLayerParams {
 }
 
 /**
- * A layer that performs stack operation on a list of tensors into one
- * rank + 1 tensor on the given axis.
- * Support negative indexing
+ * A layer that stacks the input tensors along the given axis.
+ * It is similar in functionality to the numpy.stack method.
  *
  * Requires at least 2 inputs and produces 1 output.
+ * All inputs must have the same shape.
+ * Rank of the output is 1 greater than the rank of the inputs.
+ *
+ * Negative indexing is supported for the "axis" parameter.
+ *
+ * e.g.:
+ *
+ * input shape = (2, 4, 2)
+ * number of inputs = 5
+ * axis = 3
+ * output shape = (2, 4, 2, 5)
+ *
+ * input shape = (2, 4, 2)
+ * number of inputs = 5
+ * axis = -2
+ * output shape = (2, 4, 5, 2)
  */
 message StackLayerParams {
 
@@ -4370,6 +4523,8 @@ message RankPreservingReshapeLayerParams {
  *
  * Requires 1 or 2 inputs and produces 1 output.
  * The amount of padding can be either set as a parameter ("padAmounts") or provided as a second input.
+ *
+ * Output rank is same as the rank of the first input.
  *
  * when "padToGivenOutputSizeMode" is False:
  *
@@ -4421,7 +4576,7 @@ message ConstantPaddingLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with random normal distribution.
+ * A layer that returns a tensor filled with values from the normal distribution.
  *
  * Requires 1 input and produces 1 output.
  *
@@ -4431,10 +4586,11 @@ message ConstantPaddingLayerParams {
  *     stdDev: standard deviation of the normal distribution.
  *
  * Input
- *     A N-Dimensional tensor.
+ *     An N-Dimensional tensor, whose values are ignored. Only the shape is used to
+ *     infer the shape of the output.
  *
  * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
+ *     An N-Dimensional tensor with the same shape as the input tensor.
  *
  */
 message RandomNormalLikeLayerParams {
@@ -4446,7 +4602,7 @@ message RandomNormalLikeLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with random normal distribution.
+ * A layer that returns a tensor filled with values from the normal distribution.
  *
  * Requires no input and produces 1 output.
  *
@@ -4454,10 +4610,10 @@ message RandomNormalLikeLayerParams {
  *     seed: seed used for the normal distribution.
  *     mean: mean of the normal distribution.
  *     stdDev: standard deviation of the normal distribution.
- *     outputShape: shape of the ouput tensor.
+ *     outputShape: shape of the output tensor.
  *
  * Output
- *     A N-Dimensional tensor of shape outputShape.
+ *     An N-Dimensional tensor of shape "outputShape".
  *
  */
 message RandomNormalStaticLayerParams {
@@ -4470,16 +4626,20 @@ message RandomNormalStaticLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with random normal distribution.
+ * A layer that returns a tensor filled with values from the normal distribution.
  *
  * Requires 1 input and produces 1 output.
  *
- * Input:
+ * Parameters:
  *     seed: seed used for the normal distribution.
  *     mean: mean of the normal distribution.
  *     stdDev: standard deviation of the normal distribution.
  *
- * Output:
+ * Input
+ *     A rank 1 tensor specifying the shape of the output
+ *
+ * Output
+ *     An N-Dimensional tensor with the shape specified by the values in the input tensor.
  */
 message RandomNormalDynamicLayerParams {
 
@@ -4490,7 +4650,7 @@ message RandomNormalDynamicLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with random uniform distribution.
+ * A layer that returns a tensor filled with values from the uniform distribution.
  *
  * Requires 1 input and produces 1 output.
  *
@@ -4500,10 +4660,11 @@ message RandomNormalDynamicLayerParams {
  *     maxVal: upper bound on the range of random values for the uniform distribution.
  *
  * Input
- *     A N-Dimensional tensor.
+ *     An N-Dimensional tensor, whose values are ignored. Only the shape is used to
+ *     infer the shape of the output.
  *
  * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
+ *     An N-Dimensional tensor with the same shape as the input tensor.
  *
  */
 message RandomUniformLikeLayerParams {
@@ -4515,7 +4676,7 @@ message RandomUniformLikeLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with random uniform distribution.
+ * A layer that returns a tensor filled with values from the uniform distribution.
  *
  * Requires no input and produces 1 output.
  *
@@ -4526,7 +4687,7 @@ message RandomUniformLikeLayerParams {
  *     outputShape: shape of the output tensor.
  *
  * Output
- *     A N-Dimensional tensor of shape outputShape.
+ *     An N-Dimensional tensor of shape "outputShape".
  *
  */
 message RandomUniformStaticLayerParams {
@@ -4539,7 +4700,7 @@ message RandomUniformStaticLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with random uniform distribution.
+ * A layer that returns a tensor filled with values from the uniform distribution.
  *
  * Requires 1 input and produces 1 output.
  *
@@ -4548,7 +4709,11 @@ message RandomUniformStaticLayerParams {
  *     minVal: lower bound on the range of random values for the uniform distribution.
  *     maxVal: upper bound on the range of random values for the uniform distribution.
  *
- * Output:
+ * Input
+ *     A rank 1 tensor specifying the shape of the output
+ *
+ * Output
+ *     An N-Dimensional tensor with the shape specified by the values in the input tensor.
  *
  */
 message RandomUniformDynamicLayerParams {
@@ -4560,8 +4725,7 @@ message RandomUniformDynamicLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with Bernoulli distribution.
- *
+ * A layer that returns a tensor filled with values from the Bernoulli distribution.
  *
  * Requires 1 input and produces 1 output.
  *
@@ -4570,10 +4734,11 @@ message RandomUniformDynamicLayerParams {
  *     prob: probability of a 1 event.
  *
  * Input
- *     A N-Dimensional tensor.
+ *     An N-Dimensional tensor, whose values are ignored. Only the shape is used to
+ *     infer the shape of the output.
  *
  * Output
- *     A N-Dimensional tensor with the same shape as input tensor.
+ *     An N-Dimensional tensor with the same shape as the input tensor.
  *
  */
 message RandomBernoulliLikeLayerParams {
@@ -4584,7 +4749,7 @@ message RandomBernoulliLikeLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with Bernoulli distribution.
+ * A layer that returns a tensor filled with values from the Bernoulli distribution.
  *
  * Requires no input and produces 1 output.
  *
@@ -4594,7 +4759,7 @@ message RandomBernoulliLikeLayerParams {
  *     outputShape: shape of the output tensor.
  *
  * Output
- *     A N-Dimensional tensor of shape outputShape.
+ *     An N-Dimensional tensor of shape "outputShape".
  */
 message RandomBernoulliStaticLayerParams {
 
@@ -4605,13 +4770,19 @@ message RandomBernoulliStaticLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with Bernoulli distribution.
+ * A layer that returns a tensor filled with values from the Bernoulli distribution.
  *
  * Requires 1 input and produces 1 output.
  *
  * Parameters:
  *     seed: seed used for the Bernoulli distribution.
  *     prob: probability of a 1 event.
+ *
+ * Input
+ *     A rank 1 tensor specifying the shape of the output
+ *
+ * Output
+ *     An N-Dimensional tensor with the shape specified by the values in the input tensor.
  */
 message RandomBernoulliDynamicLayerParams {
 
@@ -4621,18 +4792,20 @@ message RandomBernoulliDynamicLayerParams {
 }
 
 /**
- * A layer that returns a tensor of the specified shape filled with categorical distribution.
+ * A layer that returns a tensor of the specified shape filled with values from the categorical distribution.
  *
  * Requires 1 input and produces 1 output.
  *
- * Input:
+ * Parameter:
  *     seed: seed used for the categorical distribution.
  *     numSamples: number of samples to draw.
  *     isLogits: true if the inputs are logits, false if the inputs are probabilities.
  *     eps: default value is 1e-10.
  *     temperature: default value is 1.0.
- * Output:
- *     tensor.
+ *
+ * Input tensor shape = [D_1, D_2, ... , D_(R-1), D_R] (Rank = R)
+ * Then the shape of the output is [D_1, D_2, ... , D_(R-1), numSamples] (Rank = R)
+ *
  */
 message CategoricalDistributionLayerParams {
 
@@ -4649,6 +4822,11 @@ message CategoricalDistributionLayerParams {
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
  *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
+ *
  */
 message ReduceL1LayerParams {
 
@@ -4663,6 +4841,11 @@ message ReduceL1LayerParams {
  *
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
+ *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
  *
  */
 message ReduceL2LayerParams {
@@ -4679,6 +4862,11 @@ message ReduceL2LayerParams {
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
  *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
+ *
  */
 message ReduceMaxLayerParams {
 
@@ -4693,6 +4881,11 @@ message ReduceMaxLayerParams {
  *
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
+ *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
  *
  */
 message ReduceMinLayerParams {
@@ -4709,6 +4902,11 @@ message ReduceMinLayerParams {
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
  *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
+ *
  */
 message ReduceSumLayerParams {
 
@@ -4723,6 +4921,11 @@ message ReduceSumLayerParams {
  *
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
+ *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
  *
  */
 message ReduceProdLayerParams {
@@ -4739,6 +4942,11 @@ message ReduceProdLayerParams {
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
  *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
+ *
  */
 message ReduceMeanLayerParams {
 
@@ -4753,6 +4961,11 @@ message ReduceMeanLayerParams {
  *
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
+ *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
  *
  */
 message ReduceLogSumLayerParams {
@@ -4769,6 +4982,11 @@ message ReduceLogSumLayerParams {
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
  *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
+ *
  */
 message ReduceSumSquareLayerParams {
 
@@ -4783,6 +5001,11 @@ message ReduceSumSquareLayerParams {
  *
  * Negative indexing is supported.
  * Requires 1 input and produces 1 output.
+ *
+ * Parameters:
+ *    axes: dimensions along which to perform reduction
+ *    keepDims: if True, keep the reduced dimensions (value will be 1), otherwise, reduced dimensions are squeezed
+ *    reduceAll: ignore the "axes" parameter, perform reduction along all axes
  *
  */
 message ReduceLogSumExpLayerParams {
@@ -4827,6 +5050,35 @@ message ExpandDimsLayerParams {
  * A layer that flattens the input tensor into a 2-dimensional matrix.
  *
  * Requires 1 input and produces 1 output.
+ * Output tensor is always rank 2.
+ *
+ * First dimension of output is the product of all the dimensions in input[:axis] ("axis" is exclusive)
+ * Second dimension of output is the product of all the dimensions in input[axis:] ("axis" is inclusive)
+ *
+ * e.g.:
+ * input shape:  (3,)
+ * axis:  -1
+ * output shape:  (1, 3)
+ *
+ * input shape:  (3,)
+ * axis:  1
+ * output shape:  (3, 1)
+ *
+ * input shape:  (4, 3)
+ * axis:  -1
+ * output shape:  (4, 3)
+ *
+ * input shape:  (5, 2)
+ * axis:  0
+ * output shape:  (1, 10)
+ *
+ * input shape:  (5, 5, 3)
+ * axis:  -2
+ * output shape:  (5, 15)
+ *
+ * input shape:  (2, 3, 2)
+ * axis:  -1
+ * output shape:  (6, 2)
  *
  */
 message FlattenTo2DLayerParams {
@@ -4840,11 +5092,8 @@ message FlattenTo2DLayerParams {
  *
  * Requires 1 input and produces 1 output.
  *
- * Input
- *     A N-Dimensional tensor.
- *
- * Output
- *     A N-Dimensional tensor of shape targetShape.
+ * Output tensor is the reshaped version of the input and has shape as specified in the
+ * parameter "targetShape".
  *
  */
 message ReshapeStaticLayerParams {
@@ -4858,12 +5107,10 @@ message ReshapeStaticLayerParams {
  *
  * Requires 2 inputs and produces 1 output.
  *
- * Input
- *     A N-Dimensional tensor.
- *     A N-Dimensional tensor used for getting output shape.
+ * First input is reshaped to produce the output, while the second input is only
+ * used to determine the shape of the output. Values of the second input are not used.
  *
- * Output
- *     A N-Dimensional tensor with the same shape as the second input tensor.
+ * Output is a tensor with the same shape as the second input.
  *
  */
 message ReshapeLikeLayerParams {
@@ -4874,6 +5121,10 @@ message ReshapeLikeLayerParams {
  * A layer that reshapes a tensor.
  *
  * Requires 2 inputs and produces 1 output.
+ *
+ * First input is the one that is reshaped to produce the output.
+ * Second input is a rank 1 tensor specifying the shape of the output.
+ * Output tensor has shape as specified by the values in the 2nd input tensor.
  */
 message ReshapeDynamicLayerParams {
 
@@ -4999,12 +5250,25 @@ message ArgMinLayerParams {
 }
 
 /**
- * A layer layer that splits the input tensor into multiple output tensors.
- * Either uniformly split the input tensor into ``num_splits`` tensors, or
- * split into given size list ``split_sizes`` output tensors.
- * Support unequal splits and negative indexing.
+ * A layer layer that splits the input tensor into multiple output tensors,
+ * along the specified axis.
+ *
+ * The layer either uniformly splits the input tensor into ``num_splits`` tensors, or
+ * splits according to the given split sizes in ``split_sizes``.
+ * Supports unequal splits and negative indexing.
  *
  * Requires 1 input and produces at least 2 outputs.
+ * Rank of all the outputs is same as that of the input.
+ *
+ * If parameter "splitSizes" is provided, value of the parameter "numSplits" is ignored, since in that case
+ * "numSplits" is automatically inferred to be the length of "splitSizes".
+ *
+ *
+ * e.g.:
+ * input shape:  (5, 3, 4)
+ * axis = -3, split_sizes = [3, 2]
+ * output shape:  (3, 3, 4)
+ * output shape:  (2, 3, 4)
  */
 message SplitNDLayerParams {
 
@@ -5019,6 +5283,7 @@ message SplitNDLayerParams {
  * rounds the value to the smallest integer not less than x.
  *
  * Requires 1 input and produces 1 output.
+ * Output shape is same as the input.
  *
  */
 message CeilLayerParams {
@@ -5030,6 +5295,7 @@ message CeilLayerParams {
  * that rounds the value to the nearest integer.
  *
  * Requires 1 input and produces 1 output.
+ * Output shape is same as the input.
  *
  */
 message RoundLayerParams {
@@ -5041,6 +5307,7 @@ message RoundLayerParams {
  * that rounds the value to the largest integer not greater than x.
  *
  * Requires 1 input and produces 1 output.
+ * Output shape is same as the input.
  *
  */
 message FloorLayerParams {
@@ -5049,9 +5316,10 @@ message FloorLayerParams {
 
 /**
  * A layer that performs element-wise sign operation (+1 for positive values,
- * -1 for negative values, 0 for zeroes).
+ * -1 for negative values, 0 for zeros).
  *
  * Requires 1 input and produces 1 output.
+ * Output shape is same as the input.
  *
  */
 message SignLayerParams {
@@ -5068,6 +5336,8 @@ message SignLayerParams {
  * Parameter maxVal: the maximum threshold.
  *
  * output =  min(max(input, minVal), maxVal)
+ *
+ * Output shape is same as the input.
  */
 message ClipLayerParams {
 
@@ -5082,8 +5352,26 @@ message ClipLayerParams {
  * Support negative indexing and negative strides.
  *
  * Requires 1 input and produces 1 output.
+ * Output rank is same as the input rank.
  *
  * Value of beginIds, beginMasks, endIds, endMasks, strides are required parameters.
+ * Lengths of all the parameters must equal the rank of the input.
+ *
+ * i-th element of "beginIds" is ignored and assumed to be 0 if the i-th element of
+ * "beginMasks" is True
+ *
+ * i-th element of "endIds" is ignored and assumed to be -1 if the i-th element of
+ * "endMasks" is True
+ *
+ * e.g.:
+ * input shape:  (5, 5, 5)
+ * beginIds:  [1, 2, 3]
+ * beginMasks:  [True, False, True]
+ * endIds:  [3, -3, 2]
+ * endMasks:  [False, True, True]
+ * strides:  [2, 2, 2]
+ * output shape:  (2, 2, 3)
+ *
  */
 message SliceStaticLayerParams {
 
@@ -5099,11 +5387,21 @@ message SliceStaticLayerParams {
  * A layer that extracts a slice of size ``(end - begin) / stride``
  * from the given input tensor.
  * Support negative indexing and negative strides.
+ * See "SliceStaticLayerParams" for the description and an example of the functionality of the layer.
  *
  * Requires 2 to 6 inputs and produces 1 output.
+ * Rank of the output is same as the rank of the first input.
  *
- * Value of beginIds, beginMasks, endIds, endMasks, strides can be pass in either
+ * Value of beginIds, beginMasks, endIds, endMasks, strides can be passed in either
  * as dynamic inputs or as static parameters.
+ * Lengths of all the parameters or inputs from 2-6 must equal the rank of the first input.
+ *
+ * The 2nd input represents the "beginIds".
+ * The 3rd input, if present, corresponds to "endIds". In this case the value of the "endIds" parameter is ignored.
+ * The 4th input, if present, corresponds to "strides". In this case the value of the "strides" parameter is ignored.
+ * The 5th input, if present, corresponds to "beginMasks". In this case the value of the "beginMasks" parameter is ignored.
+ * The 6th input, if present, corresponds to "endMasks". In this case the value of the "endMasks" parameter is ignored.
+ *
  */
 message SliceDynamicLayerParams {
 
@@ -5115,10 +5413,27 @@ message SliceDynamicLayerParams {
 }
 
 /**
- * A layer that construct a tensor by repeating the input tensor multiple
+ * A layer that constructs a tensor by repeating the input tensor multiple
  * number of times.
  *
  * Requires 1 input and produces 1 output.
+ * Output rank is same as the input rank.
+ *
+ * Length of the "reps" parameter must be at least 1 and
+ * not greater than the rank of the input.
+ * If it is less than the input rank, it is made equal to the input rank by prepending 1's to it.
+ *
+ * e.g.:
+ *
+ * input shape = (2, 4, 2)
+ * reps = (1, 2, 6)
+ * output shape = (2, 8, 12)
+ *
+ * input shape = (2, 4, 2)
+ * reps = (6)
+ * reps after prepending ones = (1, 1, 6)
+ * output shape = (2, 4, 12)
+ *
  */
 message TileLayerParams {
 
@@ -5133,26 +5448,45 @@ message TileLayerParams {
  *
  * Input: a tensor.
  * Output: a vector of length R, where R is the rank of the input tensor
+ * Output is always a rank 1 tensor.
  */
 message GetShapeLayerParams {
 
 }
 
 /**
- * A layer that adds Gauss error function.
+ * A layer that computes the Gauss error function,
+ * which is defined as:
+ *
+ * .. math::
+ *     f(x) = \dfrac{1}{\sqrt{\pi}}\int_{-x}^{x}{e^{-t^2}dt}
  *
  * Requires 1 input and produces 1 output.
+ * Output shape is same as the input.
  */
 message ErfLayerParams {
 
 }
 
 /**
- * A layer that adds Gaussian Error Linear Unit (GELU) activation, which is:
+ * A layer that evaluates the Gaussian Error Linear Unit (GELU) activation.
+ * Following equations are used to compute the activation based on the value of the "mode" parameter:
  *
- * ``y = 0.5 * x * (1 + erf(x/sqrt(2)))``
+ * mode == 'EXACT':
+ * .. math::
+ *     f(x) = 0.5x\left ( 1+\rm{erf}\left ( \frac{x}{\sqrt{2}} \right ) \right )
+ *
+ * mode == 'TANH_APPROXIMATION':
+ * .. math::
+ *     f(x) = 0.5x\left ( 1+\rm{tanh}\left ( \sqrt{2/\pi}\left ( x + 0.044715x^3 \right ) \right ) \right )
+ *
+ * mode == 'SIGMOID_APPROXIMATION':
+ * .. math::
+ *     f(x) = x*\rm{sigmoid}(1.702x)
  *
  * Requires 1 input and produces 1 output.
+ * Output shape is same as the input.
+ *
  */
 message GeluLayerParams {
 
@@ -5170,19 +5504,10 @@ message GeluLayerParams {
 
 /**
  * RangeStatic layer that returns a tensor that contains evenly spaced values.
+ * It is similar in functionality to the numpy.arange method.
  *
- * Requires no input, 3 parameters, and produces 1 output.
- *
- * Parameters
- *     endValue
- *     startValue
- *     stepSizeValue
- *
- * Input
- *     A tensor.
- *
- * Output
- *     A tensor.
+ * Requires no input and produces 1 output.
+ * Output is a rank 1 tensor.
  */
 message RangeStaticLayerParams {
 
@@ -5194,17 +5519,16 @@ message RangeStaticLayerParams {
 
 /**
  * A layer that returns a tensor that contains evenly spaced values.
+ * Its functionality is similar to the numpy.arange method.
  *
- * Requires 0-3 inputs, 0-3 parameters and produces 1 output.
+ * Requires at least 1 input, up to a maximum of 3 inputs.
+ * Produces 1 output, which is a rank 1 tensor.
  *
- * The three inputs are in order: end, start, stepSize.
- * Each input is a scalar, or rank 1 and shape (1,).
-
- * When there are no inputs, all values of the parameters of the layer are used.
- * When there are 1 input, end. Value of parameters startValue and stepSizeValue are used.
- * When there are 2 inputs, end and start. Value of parameters stepSizeValue are used.
- * When there are 3 inputs, end, start and stepSize. Nothing in parameters will be used.
- * Produces a rank 1 output.
+ * Each input must be a scalar, or rank 1 and shape (1,).
+ *
+ * The first input represents the "endValue".
+ * The second input, if present, corresponds to "startValue". In this case the value of the "startValue" parameter is ignored.
+ * The third input, if present, corresponds to "stepSizeValue". In this case the value of the "stepSizeValue" parameter is ignored.
  *
  */
 message RangeDynamicLayerParams {
@@ -5225,10 +5549,10 @@ message RangeDynamicLayerParams {
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     A N-Dimensional tensor.
+ *     An N-Dimensional tensor.
  *
  * Output
- *     A N+1 dimensional tensor.
+ *     An (N+1)-Dimensional tensor.
  *
  * This operation behaves as following:
  *      - if axis = 0 & input is rank 1 (L,). Output shape will be (M, W).
@@ -5253,17 +5577,22 @@ message SlidingWindowsLayerParams {
  *
  * Requires 1 input and produces 1 output.
  *
+ * output = gamma * (input - comptuted_mean) / (sqrt(computed_variance + eps)) + beta
+ *
  * Parameters
- *     normalizedShape:
- *     gamma:
- *     beta:
- *     eps:
+ *     normalizedShape: subset of the input shape, along with layer norm is performed, rest of the input shape is treated as the batch dimension. The mean and variance are computed for the input, over the last few dimensions as specified by the normalizedShape parameter.
+ *     gamma: must have shape = "normalizedShape"
+ *     beta: must have shape = "normalizedShape"
+ *     eps: small constant to avoid division by 0
  *
- * Input
- *     A N-Dimensional tensor.
+ * Output shape is same as the input.
  *
- * Output
- *     A N-Dimensional tensor.
+ * e.g.:
+ * input shape = (10,5)
+ * normalized shape = (5,) or (10,5)
+ *
+ * input shape = (10,5,6,7)
+ * normalized shape = (7,) or (6,7) or (5,6,7) or (10,5,6,7)
  */
 message LayerNormalizationLayerParams {
 

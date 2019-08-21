@@ -14,9 +14,9 @@ import six as _six
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
 
 
-
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
+
 
 def _to_unicode(x):
     if isinstance(x, _six.binary_type):
@@ -170,20 +170,12 @@ def _wp_to_fp16wp(wp):
 
 
 def _convert_nn_spec_to_half_precision(spec):
-    ignored_layers = [
-        'pooling', 'mvn', 'l2normalize', 'softmax',
-        'lrn', 'crop', 'padding', 'upsample', 'unary', 'add',
-        'multiply', 'average', 'max', 'min', 'dot', 'reduce',
-        'reshape', 'flatten', 'permute', 'concat', 'split',
-        'sequenceRepeat', 'reorganizeData', 'slice', 'custom',
-        'resizeBilinear', 'cropResize'
-    ]
-
     quantized_layers = [
         'convolution', 'innerProduct', 'embedding',
         'batchnorm', 'scale', 'bias', 'loadConstant',
         'simpleRecurrent', 'gru', 'uniDirectionalLSTM',
-        'biDirectionalLSTM', 'batchedMatmul', 'embeddingND'
+        'biDirectionalLSTM', 'batchedMatmul', 'embeddingND',
+        'activation'
     ]
 
     from coremltools import _MINIMUM_FP16_SPEC_VERSION
@@ -198,8 +190,19 @@ def _convert_nn_spec_to_half_precision(spec):
     for layer in layers:
         layer_type = layer.WhichOneof('layer')
 
-        if layer_type in ignored_layers:
+        if layer_type == 'custom':
+            print('Skipping custom layer {}. Weights for this layer need to'
+                  'be converted manually'.format(layer.name))
             continue
+
+        if layer_type not in quantized_layers:
+            params = getattr(layer, layer_type, None)
+            params = params.ListFields() if params else []
+            param_types = [p[0].message_type.name if p[0].message_type else None for p in params]
+
+            if 'WeightParams' in param_types:
+                raise NotImplementedError('Quantization for layer "' + layer_type + '" not implemented.')
+            continue  # print('Skipping layer {}. No need to quantize.'.format(layer.name))
 
         # Convolution
         if layer_type == 'convolution':
@@ -321,17 +324,6 @@ def _convert_nn_spec_to_half_precision(spec):
                         lstm_wp=lstm_wp,
                         has_peephole=layer.biDirectionalLSTM.params.hasPeepholeVectors
                     )
-
-        elif layer_type == 'custom':
-            print ('Skipping custom layer {}. Weights for this layer need to'
-                   'be converted manually'.format(layer.name))
-            continue
-
-        elif layer_type in quantized_layers:
-            raise Exception('Half precision for ' + layer_type +
-                            ' not yet implemented\n')
-        else:
-            raise Exception('Unknown layer ' + layer_type)
 
     return spec
 
@@ -920,6 +912,7 @@ def _get_feature(spec, feature_name):
             return output_feature
 
     raise Exception('Feature with name {} does not exist'.format(feature_name))
+
 
 def _get_input_names(spec):
     """
