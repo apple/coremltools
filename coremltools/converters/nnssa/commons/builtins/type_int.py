@@ -3,6 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from .annotate import class_annotate, annotate, delay_type
+from .get_type_info import get_type_info
 from .type_bool import bool
 from .type_spec import *
 import math
@@ -126,4 +127,4 @@ uint = uint64
 
 
 def is_int(t):
-    return any(t is i for i in [int8, int16, int32, int64, uint8, uint16, uint32, uint64])
+    return any(t is i or isinstance(t,i) for i in [int8, int16, int32, int64, uint8, uint16, uint32, uint64])

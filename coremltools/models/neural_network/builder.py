@@ -1506,13 +1506,17 @@ class NeuralNetworkBuilder(object):
 
         # add bias and its shape
         bias = spec_layer_params.bias
+        if len(shape_bias) != 1 and len(shape_bias) != 3:
+            raise ValueError('Shape of bias layer must have length 1 or 3.')
+
         spec_layer_params.shape.extend(shape_bias)
         if isinstance(b, int):
             bias.floatValue.append(float(b))
         else:
             bias.floatValue.extend(map(float, b.flatten()))
         if len(bias.floatValue) != np.prod(shape_bias):
-            raise ValueError("Dimensions of 'shape_bias' do not match the size of the provided 'b' parameter")
+            raise ValueError("Dimensions of 'shape_bias' do not match the size"
+                "of the provided 'b' parameter")
         return spec_layer
 
     def add_sequence_repeat(self, name, nrep, input_name, output_name):
@@ -3020,7 +3024,8 @@ class NeuralNetworkBuilder(object):
         """
         # custom layers require a newer specification version
         from coremltools import _MINIMUM_CUSTOM_LAYER_SPEC_VERSION
-        self.spec.specificationVersion = max(self.spec.specificationVersion, _MINIMUM_CUSTOM_LAYER_SPEC_VERSION)
+        if self.spec:
+            self.spec.specificationVersion = max(self.spec.specificationVersion, _MINIMUM_CUSTOM_LAYER_SPEC_VERSION)
 
         spec_layer = self._add_generic_layer(name, input_names, output_names)
 
@@ -4226,7 +4231,6 @@ class NeuralNetworkBuilder(object):
             The name of this layer.
         input_names: list of str
             The input blob names.
-            If input size == 0: all parameters are used
             If input size == 1: end is input, start and step are read from parameters
             If input size == 2: end, start are inputs, step is read from parameters
             If input size == 3: start, end, step are all inputs, none of the parameters are used.
@@ -4241,6 +4245,9 @@ class NeuralNetworkBuilder(object):
         --------
         add_range_static
         """
+
+        if len(input_names) < 1 or len(input_names) > 3:
+            raise ValueError('RangeDynamic layer must have either 1, 2 or 3 inputs.')
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.rangeDynamic.MergeFromString(b'')
