@@ -243,6 +243,17 @@ class TFSimpleNetworkTest(TFNetworkTest):
             self._test_tf_model(graph, {"input_data": data_shape, "input_weight": weight_shape}, ["output"], delta=1e-2,
                                 graph_optimizations=None)
 
+    def test_layer_norm(self):
+        shapes = [(3,4), (3,4,5), (3,4,5,6)]
+        for shape in shapes:
+            graph = tf.Graph()
+            with graph.as_default() as g:
+                x = tf.placeholder(tf.float32, shape=shape, name='input')
+                y = tf.contrib.layers.layer_norm(x, begin_norm_axis=-1,
+                    begin_params_axis=-1)
+                z = tf.identity(y, name='output')
+            self._test_tf_model(graph, {'input': shape}, ['output'], delta=1e-2)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -53,6 +53,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
     passes = [
         constant_weight_link_removal, fuse_bias_add,
         onehot_matmul_to_embedding,
+        fuse_layer_norm,
         transform_nhwc_to_nchw,
         remove_identity,
         remove_no_ops_and_shift_control_dependencies,
@@ -254,6 +255,7 @@ class SSAConverter(object):
             'iff': self._convert_iff,
             'ResizeBilinear': self._convert_resize_bilinear,
             'ResizeNearestNeighbor': self._convert_resize_nearest_neighbor,
+            'LayerNormalization': self._convert_layer_normalization,
         }
 
         # converter state variables
@@ -1758,6 +1760,56 @@ class SSAConverter(object):
         output_shape = self._get_tensor_shape_from_type(node.datatype)
         shapes.propagate_single_layer(layer, self.tensor_shapes,
             output_shapes=[output_shape])
+
+
+    def _convert_layer_normalization(self, node):
+        assert len(node.inputs) == 1
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        input_name = input_names[0]
+        builder = self._get_builder()
+        gamma = node.attr['gamma']
+        beta = node.attr['beta']
+        axes = node.attr['axes']
+        epsilon = node.attr['epsilon']
+        input_shape = list(input_types[0].get_shape())
+
+        if len(input_shape) == 3 and len(axes) == 1 and axes[0] == 2:
+            # Performance enhancement for some models with layer-norm
+            builder.add_reshape_static(name=input_name + '_reshape',
+                input_name=input_name,
+                output_name=input_name + '_reshape',
+                output_shape=input_shape + [1,1])
+
+            builder.add_mvn(name=input_name + '_mvn',
+                input_name=input_name + '_reshape',
+                output_name=input_name + '_mvn', across_channels=True,
+                normalize_variance=True, epsilon=epsilon)
+
+            builder.add_scale(name=node.name + '_5d',
+                input_name=input_name + '_mvn',
+                output_name=node.name + '_5d', W=gamma, b=beta, has_bias=True,
+                shape_scale=[len(gamma)], shape_bias=[len(beta)])
+
+            builder.add_reshape_static(name=node.name,
+                input_name=node.name + '_5d',
+                output_name=node.name,
+                output_shape=input_shape)
+        else:
+            # General implementation
+            input_shape = input_types[0].get_shape()
+            rdims = len(axes)
+            normalized_shape = node.datatype.get_shape()[-rdims:]
+            if gamma.shape != normalized_shape:
+                gamma = np.zeros(normalized_shape) + gamma
+            if beta.shape != normalized_shape:
+                beta = np.zeros(normalized_shape) + beta
+
+            builder.add_layer_normalization(node.name, input_name, node.name,
+                                        normalized_shape, gamma, beta, eps=1e-5)
+        
+        self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(
+            node.datatype)
+
 
     def _convert_binary_broadcastable(self, node):
         assert len(node.inputs) == 2
