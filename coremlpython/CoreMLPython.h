@@ -23,6 +23,7 @@ namespace CoreML {
             ~Model();
             explicit Model(const std::string& urlStr, bool useCPUOnly);
             py::dict predict(const py::dict& input, bool useCPUOnly);
+            static py::bytes autoSetSpecificationVersion(const py::bytes& modelBytes);
             static int32_t maximumSupportedSpecificationVersion();
             std::string toString() const;
         };
@@ -43,4 +44,3 @@ namespace CoreML {
 
     }
 }
-
