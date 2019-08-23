@@ -117,8 +117,9 @@ void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
     if (!pModel) { return; }
 
 
-    if (pModel->specificationversion() == 0) {
-         // If mistakenly never set and left as default, lets start at the newest version and downgrade from there
+    if (pModel->specificationversion() == 0 || pModel->specificationversion() > MLMODEL_SPECIFICATION_VERSION_NEWEST) {
+        // If mistakenly set specification verion or never set and left as default
+        // lets start at the newest specification version and downgrade from there
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
     }
 
