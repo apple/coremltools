@@ -309,6 +309,7 @@ def _match_layernorm_pattern(gf, entry_node):
 
 def _fuse_layer_norm(graph):
     keys = list(graph.keys())
+    count = 0
     for k in keys:
         if k not in graph:
             continue
@@ -328,19 +329,112 @@ def _fuse_layer_norm(graph):
 
             graph[fused_ln_node.name] = fused_ln_node
 
+            # Connect fused node to entry and output nodes
+            connect_edge(graph, current_node.name, fused_ln_node.name)
+            replace_node(graph, out_node.name, fused_ln_node.name)
+            # connect_dests(graph, fused_ln_node.name, ln_outputs)
+
             # Delete nodes
             ln_node_names = [x.name for x in ln_nodes]
             for name in ln_node_names:
                 delete_node(graph, name)
 
-            # Connect fused node to entry and output nodes
-            connect_edge(graph, current_node.name, fused_ln_node.name)
-            connect_dests(graph, fused_ln_node.name, ln_outputs)
+            count += 1
 
-            print('[Op Fusion] Fused layer normalization.')
+    if count > 0:
+        print('[Op Fusion] Fused {} layer normalizations.'.format(count))
 
 
 def fuse_layer_norm(nnssa):
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_layer_norm(f.graph)
+
+
+def _match_gelu_pattern(gf, entry_node):
+    """ Return the nodes that form the subgraph of a GELU layer
+    """
+    try:
+        if not len(entry_node.outputs) == 3:
+            return None
+        pow_1, add_2, mul_3 = [gf[x] for x in entry_node.outputs]
+        if not (pow_1.op == 'Pow' and add_2.op == 'Add' and mul_3.op == 'Mul'):
+            return None
+        const_4 = gf[pow_1.inputs[1]]
+        if not (const_4.op == 'Const' and int(round(const_4.value.val)) == 3):
+            return None
+        mul_5 = gf[pow_1.outputs[0]]
+        const_6 = gf[mul_5.inputs[0]]
+        if not (const_6.op == 'Const' and \
+            abs(const_6.value.val - 0.0447) < 1e-3):
+            return None
+        if not (gf[add_2.inputs[0]] == entry_node and \
+            gf[add_2.inputs[1]] == mul_5):
+            return None
+        mul_7 = gf[add_2.outputs[0]]
+        const_8 = gf[mul_7.inputs[0]]
+        if not abs(const_8.value.val - np.sqrt(2 / np.pi)) < 1e-3:
+            return None
+        tanh_9 = gf[mul_7.outputs[0]]
+        add_10 = gf[tanh_9.outputs[0]]
+        const_11 = gf[add_10.inputs[0]]
+        if not (tanh_9.op == 'Tanh' and add_10.op == 'Add' and \
+            const_11.op == 'Const' and int(round(const_11.value.val)) == 1):
+            return None
+        mul_12 = gf[add_10.outputs[0]]
+        const_13 = gf[mul_12.inputs[0]]
+        if not (mul_12.op == 'Mul' and const_13.op == 'Const' and \
+            abs(const_13.value.val - 0.5) < 1e-3):
+            return None
+        if not (gf[mul_3.inputs[0]] == entry_node and \
+            gf[mul_3.inputs[1]] == mul_12):
+            return None
+
+        gelu_nodes = [pow_1, add_2, mul_3, const_4, mul_5, const_6, mul_7,
+            const_8, tanh_9, add_10, const_11, mul_12, const_13]
+
+        return gelu_nodes
+
+    except:
+        return None
+
+def _fuse_gelu(graph):
+    keys = list(graph.keys())
+    count = 0
+    for k in keys:
+        if k not in graph:
+            continue
+        current_node = graph[k]
+        gelu_nodes = _match_gelu_pattern(graph, current_node)
+        if gelu_nodes is not None:
+            out_node = gelu_nodes[2]
+            gelu_outputs = out_node.outputs[:]
+
+            # Instantiate a new fused node in the graph
+            fused_gelu_node = ParsedNode()
+            fused_gelu_node.op = 'GeLU'
+            fused_gelu_node.name = out_node.name + '_gelu'
+            fused_gelu_node.attr = {}
+            fused_gelu_node.datatype = current_node.datatype
+
+            graph[fused_gelu_node.name] = fused_gelu_node
+
+            # Delete nodes
+            gelu_node_names = [x.name for x in gelu_nodes]
+            for name in gelu_node_names:
+                delete_node(graph, name)
+
+            # Connect fused node to entry and output nodes
+            connect_edge(graph, current_node.name, fused_gelu_node.name)
+            connect_dests(graph, fused_gelu_node.name, gelu_outputs)
+
+            count += 1
+
+    if count > 0:
+        print('[Op Fusion] Fused {} GeLUs.'.format(count))
+
+
+def fuse_gelu(nnssa):
+    for fn_key in list(nnssa.functions.keys()):
+        f = nnssa.functions[fn_key]
+        _fuse_gelu(f.graph)

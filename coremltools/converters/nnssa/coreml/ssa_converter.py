@@ -54,6 +54,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
         constant_weight_link_removal, fuse_bias_add,
         onehot_matmul_to_embedding,
         fuse_layer_norm,
+        fuse_gelu,
         transform_nhwc_to_nchw,
         remove_identity,
         remove_no_ops_and_shift_control_dependencies,
@@ -226,6 +227,7 @@ class SSAConverter(object):
             'Sin': self._convert_unary_trigonometric,
             'Cos': self._convert_unary_trigonometric,
             'Tan': self._convert_unary_trigonometric,
+            'GeLU': self._convert_gelu,
             'SelectMask': self._convert_select,
             'Where': self._convert_select,
             'Conv2D': self._convert_conv2d,
@@ -1656,6 +1658,21 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
+    def _convert_gelu(self, node):
+        assert len(node.inputs) == 1
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+
+        # CoreML has 3 modes: EXACT, TANH_APPROXIMATION,SIGMOID_APPROXIMATION
+        layer = self._get_builder().add_gelu(
+            name=node.name,
+            input_name=input_names[0],
+            output_name=node.name,
+            mode='EXACT')
+
+        output_shape = self._get_tensor_shape_from_type(node.datatype)
+        shapes.propagate_single_layer(layer, self.tensor_shapes,
+            output_shapes=[output_shape])
+
     def _convert_reduction(self, node):
         assert len(node.inputs) == 2
         input_nodes, input_names, input_types = self._get_input_tensors(node)
@@ -1773,7 +1790,8 @@ class SSAConverter(object):
         epsilon = node.attr['epsilon']
         input_shape = list(input_types[0].get_shape())
 
-        if len(input_shape) == 3 and len(axes) == 1 and axes[0] == 2:
+        if (len(input_shape) in [2,3] and len(axes) == 1 and \
+            axes[0] == len(input_shape) - 1):
             # Performance enhancement for some models with layer-norm
             builder.add_reshape_static(name=input_name + '_reshape',
                 input_name=input_name,
@@ -1794,6 +1812,7 @@ class SSAConverter(object):
                 input_name=node.name + '_5d',
                 output_name=node.name,
                 output_shape=input_shape)
+
         else:
             # General implementation
             input_shape = input_types[0].get_shape()
