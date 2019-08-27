@@ -335,7 +335,7 @@ class NetworkEnsemble(object):
                 ret += "    %s\n" % (out)
         return ret
 
-    def get_dot_string(self, name_and_op_style=False, annotation=False):
+    def get_dot_string(self, name_and_op_style=False, annotation=False, highlight_debug_nodes=[]):
         """
         Return the dot string that can be used to show the whole graph
         with dot. By default, the graph contains op and type. If 
@@ -346,6 +346,7 @@ class NetworkEnsemble(object):
         * constant nodes : azure
         * output nodes : goldenrod2
         * nodes with variable shaped tensors : cyan
+        * node names or op types that user wants to highlight: green
 
         Parameters
         ----------
@@ -373,6 +374,8 @@ class NetworkEnsemble(object):
                         builtins.is_tensor(n.datatype) and \
                         (len(n.datatype.get_shape()) == 0 or -1 in n.datatype.get_shape())):
                     unknown_sized_tensor_ops.append(v)
+                if n.op in highlight_debug_nodes:
+                    highlight_debug_nodes.append(v)
 
             v = self.functions[k]
             vis = DotVisitor(annotation)
@@ -380,6 +383,8 @@ class NetworkEnsemble(object):
                .highlight_nodes(const_nodes, 'azure2') \
                .highlight_nodes(v.outputs,'goldenrod2') \
                .highlight_nodes(unknown_sized_tensor_ops,'cyan2')
+            if len(highlight_debug_nodes) > 0:
+                vis.highlight_nodes(highlight_debug_nodes, 'green')
             if name_and_op_style:
                 vis.labeller(lambda n: n.name + ': ' + n.op)
 

@@ -54,8 +54,9 @@ except:
 
 # ---------------------------------------------------------------------------------------
 HAS_TF = True
+HAS_TF_1_14 = True
 TF_MIN_VERSION = '1.0.0'
-TF_MAX_VERSION = '1.13.1'
+TF_MAX_VERSION = '1.14.0'
 
 try:
     import tensorflow
@@ -69,8 +70,12 @@ try:
     if tf_ver > _StrictVersion(TF_MAX_VERSION):
         _logging.warn(('TensorFlow version %s detected. Last version known to be fully compatible is %s .')
                       % (tensorflow.__version__, TF_MAX_VERSION))
+
+    if tf_ver < _StrictVersion('1.14.0'):
+        HAS_TF_1_14 = False
 except:
     HAS_TF = False
+    HAS_TF_1_14 = False
 
 # ---------------------------------------------------------------------------------------
 HAS_KERAS_TF = True
