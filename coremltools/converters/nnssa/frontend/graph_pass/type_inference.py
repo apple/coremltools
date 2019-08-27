@@ -1056,7 +1056,7 @@ class TypeInferenceVisitor(object):
         return rettype
 
     def visit_Select(self, node):
-        assert (len(node.inputs) == 3)
+        assert len(node.inputs) == 3
         typecond = self.visit(node.inputs[0])
 
         if builtins.is_tensor(typecond):
@@ -1091,6 +1091,9 @@ class TypeInferenceVisitor(object):
             return typeb
 
     def visit_SelectMask(self, node):
+        return self.visit_Select(node)
+
+    def visit_SelectV2(self, node):
         return self.visit_Select(node)
 
     def visit_iff(self, node):
@@ -1915,11 +1918,11 @@ class TypeInferenceVisitor(object):
         input_type = self.visit(node.inputs[0])
         return input_type
 
-    def visit_Cumsum(self,node):
+    def visit_Cumsum(self, node):
         assert (len(node.inputs) == 2)
         return self.visit(node.inputs[0])
 
-    def visit_ClipByValue(self,node):
+    def visit_ClipByValue(self, node):
         assert len(node.inputs) == 3
 
         type_min = self.visit(node.inputs[1])
@@ -1929,6 +1932,13 @@ class TypeInferenceVisitor(object):
             node.attr["max_value"] = self.gdict[node.inputs[2]].attr['value'].val
 
         return self.visit(node.inputs[0])
+
+    def visit_SpaceToDepth(self, node):
+        return self.visit_unary(node)
+
+    def visit_DepthToSpace(self, node):
+        return self.visit_unary(node)
+
 
 def type_is_unknown(t):
     if builtins.is_tuple(t):

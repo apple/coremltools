@@ -414,6 +414,21 @@ def _unidirectional_lstm(layer_spec, input_shapes):
     return [shape] * 3
 
 
+def _reorganize_data(layer_spec, input_shapes):
+    block_size = layer_spec.reorganizeData.blockSize
+    input_shape = input_shapes[0][:]
+    output_shape = input_shapes[0][:]
+    if layer_spec.name == 'SpaceToDepth':
+        output_shape[0] = input_shape[1] // block_size
+        output_shape[1] = input_shape[2] // block_size
+        output_shape[2] = input_shape[0] * block_size * block_size
+    else:  # layer_spec.name == DepthToSpace
+        output_shape[0] = input_shape[0] * block_size
+        output_shape[1] = input_shape[1] * block_size
+        output_shape[2] = input_shape[2] // (block_size * block_size)
+    return [output_shape]
+
+
 # We'll enable them one by one
 _LAYER_REGISTRY = {
     'transpose': _transpose,
@@ -495,6 +510,7 @@ _LAYER_REGISTRY = {
     'floor': _identity,
     'round': _identity,
     'topK': _topk,
+    'reorganizeData': _reorganize_data,
 }
 
 
