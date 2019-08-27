@@ -6,7 +6,7 @@ from __future__ import absolute_import as _
 import numpy as np
 from ...commons import builtins
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
-    delete_node, replace_node, connect_dests
+    delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
 
 ELEMENTWISE_OPS = [
@@ -26,6 +26,16 @@ ELEMENTWISE_OPS = [
     'Pow',
 ]
 
+def _check_number_inputs(node, n):
+    return len(node.inputs) == n
+
+def _check_number_outputs(node, n):
+    return len(node.outputs) == n
+
+def _check_single_out_vector_constant_node(node):
+    return(node.op == 'Const' and len(node.outputs) == 1 and \
+            node.value is not None and len(np.squeeze(node.value.val).shape) == 1)
+
 def _is_NHWC(graph, node):
     if (node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor'):
         return True
@@ -34,76 +44,97 @@ def _is_NHWC(graph, node):
         return True
     if node.op == 'ConcatV2':
         # ConcatV2's last input is axis
-        return all(graph[inp].attr.get('data_format') == 'NHWC' for inp in
+        return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted' for inp in
             node.inputs[:-1])
-    if node in ELEMENTWISE_OPS:
-        return all(graph[inp].attr.get('data_format') == 'NHWC' for inp in
-            node.inputs)
+    if node.op in ELEMENTWISE_OPS:
+        # if its an elementwise op
+        # and if all of its parent(s) are "NHWC_format_inserted" or
+        # given that at least one of the parents is "NHWC_format_inserted" and rest are
+        # vector constants, then the node is also
+        # declared to be "NHWC_format_inserted"
+
+        NHWC_parent = any(
+            [graph[inp].attr.get('data_format', None) == 'NHWC_format_inserted' for inp in node.inputs])
+
+        if NHWC_parent:
+            for inp in node.inputs:
+                parent_node = graph[inp]
+                if parent_node.attr.get('data_format', None) == 'NHWC_format_inserted':
+                    continue
+                elif parent_node.value is not None:
+                    # check that the input is a constant and a vector (rank 1)
+                    val = np.array(parent_node.value.val)
+                    if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
+                        continue
+                    else:
+                        return False
+                else:
+                    return False
+            return True
+
     return False
 
 
-def _insert_transpose_to_nchw(graph, src, dst):
+def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, transpose_params=[0,3,1,2]):
 
-    tp_node_name = src.name + "_to_nchw"
-    tp_node = ParsedNode()
-    tp_node.op = 'Transpose'
-    tp_node.name = tp_node_name
+    '''
+    Insert a node called "transpose_node_name" between src and dst
+    This node should be a transpose node with params "transpose_params"
+    '''
 
-    # Adjust type inference
-    if builtins.is_tensor(src.datatype):
-        s = src.datatype.get_shape()
-        tp_shape = tuple([s[0], s[3], s[1], s[2]])
-        tp_node.datatype = builtins.tensor(src.datatype.get_primitive(), tp_shape)
+    # First check whether the node already exists in the graph or not.
 
-    tp_node.inputs = [src.name]
-    tp_node.outputs = [dst.name]
-    tp_node.attr['dim'] = [0,3,1,2]
-    input_shape = src.attr['_output_shapes'][0]
-    n,h,w,c = input_shape
-    tp_node.attr['_output_shapes'] = [[n,c,h,w]]
-    graph[tp_node_name] = tp_node
+    if transpose_node_name in graph:
+        tp_node = graph[transpose_node_name]
+        if dst.name not in tp_node.outputs:
+            tp_node.outputs.append(dst.name)
+    else:
+        # the node does not exist, so create a fresh one
+        tp_node = ParsedNode()
+        tp_node.op = 'Transpose'
+        tp_node.name = transpose_node_name
 
-    # Rename dst's input 'src' to 'tp_node'
+        # Adjust type inference
+        if builtins.is_tensor(src.datatype):
+            s = src.datatype.get_shape()
+            if len(s) == 4:
+                tp_shape = tuple([s[transpose_params[0]], s[transpose_params[1]], s[transpose_params[2]], s[transpose_params[3]]])
+                tp_node.datatype = builtins.tensor(src.datatype.get_primitive(), tp_shape)
+
+        tp_node.inputs = [src.name]
+        tp_node.outputs = [dst.name]
+        tp_node.attr['dim'] = transpose_params
+        if '_output_shapes' in src.attr:
+            input_shape = src.attr['_output_shapes'][0]
+            tp_node.attr['_output_shapes'] = [[input_shape[transpose_params[0]],input_shape[transpose_params[1]],input_shape[transpose_params[2]],input_shape[transpose_params[3]]]]
+        graph[transpose_node_name] = tp_node
+
+    # Rename dst's input 'src' to 'transpose_node_name'
     for idx, inp in enumerate(dst.inputs):
         if inp == src.name:
-            dst.inputs[idx] = tp_node_name
+            dst.inputs[idx] = transpose_node_name
+            break
 
-    # Rename src's output from 'dst' to 'tp_node'
-    for idx, outp in enumerate(src.outputs):
-        if outp == dst.name:
-            src.outputs[idx] = tp_node_name
+    # Rename src's output from 'dst' to 'transpose_node_name'
+    if transpose_node_name in src.outputs:
+        # 'transpose_node_name' already exists as an output of the src,
+        # we just need to delete dst node from the output list of src, instead of replacing it
+        if dst.name in src.outputs:
+            src.outputs.remove(dst.name)
+    else:
+        for idx, outp in enumerate(src.outputs):
+            if outp == dst.name:
+                src.outputs[idx] = transpose_node_name
+                break
 
+
+def _insert_transpose_to_nchw(graph, src, dst):
+    tp_node_name = src.name + "_to_nchw"
+    _insert_transpose_to_or_from_nchw(graph, src, dst, tp_node_name, [0,3,1,2])
 
 def _insert_transpose_from_nchw(graph, src, dst):
-
     tp_node_name = src.name + "_to_nhwc"
-    tp_node = ParsedNode()
-    tp_node.op = 'Transpose'
-    tp_node.name = tp_node_name
-
-    # Adjust type inference
-    if builtins.is_tensor(src.datatype):
-        s = src.datatype.get_shape()
-        tp_shape = tuple([s[0], s[2], s[3], s[1]])
-        tp_node.datatype = builtins.tensor(src.datatype.get_primitive(), tp_shape)
-
-    tp_node.inputs = [src.name]
-    tp_node.outputs = [dst.name]
-    tp_node.attr['dim'] = [0,2,3,1]
-    input_shape = src.attr['_output_shapes'][0]
-    n,c,h,w = input_shape
-    tp_node.attr['_output_shapes'] = [[n,h,w,c]]
-    graph[tp_node_name] = tp_node
-
-    # Rename dst's input 'src' to 'tp_node'
-    for idx, inp in enumerate(dst.inputs):
-        if inp == src.name:
-            dst.inputs[idx] = tp_node_name
-
-    # Rename src's output from 'dst' to 'tp_node'
-    for idx, outp in enumerate(src.outputs):
-        if outp == dst.name:
-            src.outputs[idx] = tp_node_name
+    _insert_transpose_to_or_from_nchw(graph, src, dst, tp_node_name, [0,2,3,1])
 
 
 def transform_nhwc_to_nchw(nnssa):
@@ -116,43 +147,61 @@ def transform_nhwc_to_nchw(nnssa):
     """
     for fn_key in list(nnssa.functions.keys()):
         graph = nnssa.functions[fn_key].graph
-        node_names = list(graph.keys())
+        # this pass needs the ssa to be in the topologically sorted order
+        node_names = topsort(graph)
 
         # Mark all NHWC nodes
         nhwc_nodes = []
         for name in node_names:
             node = graph[name]
             if len(node.outputs) > 0 and len(node.inputs) > 0 and _is_NHWC(graph, node):
-                node.attr['data_format'] = 'NHWC'
+                node.attr['data_format'] = 'NHWC_format_inserted'
                 nhwc_nodes.append(name)
 
         for name in nhwc_nodes:
+
             node = graph[name]
-            orig_out_shapes = node.attr['_output_shapes']
 
             # Adjust type inference
             if builtins.is_tensor(node.datatype):
                 s = node.datatype.get_shape()
-                new_shape = tuple([s[0], s[3], s[1], s[2]])
-                node.datatype = builtins.tensor(node.datatype.get_primitive(), new_shape)
+                if len(s) == 4:
+                    new_shape = tuple([s[0], s[3], s[1], s[2]])
+                    node.datatype = builtins.tensor(node.datatype.get_primitive(), new_shape)
+                    node.attr['symbolic_datatype'] = node.datatype
 
-            # Insert NHWC->NCHW tranpose
+            if '_output_shapes' in node.attr:
+                orig_out_shapes = node.attr['_output_shapes']
+                if len(orig_out_shapes) == 1 and len(orig_out_shapes[0]) == 4:
+                    s = orig_out_shapes[0]
+                    node.attr['_output_shapes'] = [[s[0], s[3], s[1], s[2]]]
+
+            if node.op in ELEMENTWISE_OPS:
+                for inp in node.inputs:
+                    parent_node = graph[inp]
+                    if parent_node.value is not None:
+                        val = np.array(parent_node.value.val)
+                        if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype):
+                            parent_node.datatype = builtins.tensor(parent_node.datatype.get_primitive(),
+                                                                   (1, val.shape[0], 1, 1))
+                            parent_node.value.val = np.reshape(parent_node.value.val, (1, val.shape[0], 1, 1))
+
+            # Insert NHWC->NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
-                if len(node.inputs) == 2 and i == 1 and graph[inp_node_name].op == 'Const':
+                if graph[inp_node_name].op == 'Const':
                     # Const weights and parameters
                     continue
-                if inp_node_format != 'NHWC':
+                if inp_node_format != 'NHWC_format_inserted':
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
 
-            # Insert NCHW->NHWC tranpose
+            # Insert NCHW->NHWC transpose
             for i, out_node_name in enumerate(node.outputs):
                 out_node_format = graph[out_node_name].attr.get('data_format')
-                if out_node_format != 'NHWC':
+                if out_node_format != 'NHWC_format_inserted':
                     _insert_transpose_from_nchw(graph, node, graph[out_node_name])
 
             # Adjust output shape and concat layer's axis parameter
-            node.attr['_output_shapes'] = [[s[0], s[3], s[1], s[2]] for s in orig_out_shapes]
             if node.op == 'ConcatV2' and len(node.inputs) > 1 and graph[node.inputs[-1]].value is not None:
                 axis = graph[node.inputs[-1]].value.val
                 axis = 4 + axis if axis < 0 else axis
@@ -452,3 +501,83 @@ def fuse_gelu(nnssa):
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_gelu(f.graph)
+
+
+def fuse_conv_mul_add_into_batchnorm(nnssa):
+    '''
+            Const vector  Const vector
+                  |          |
+                  |          |
+                  |          |
+                  V          V
+    Conv2D ----> Mul -----> Add ---->     =========>    Conv2D ---> BN --->
+    '''
+
+    def _match_mul_add_bn_pattern(gd, conv2d_node):
+        try:
+            if not _check_number_outputs(conv2d_node, 1):
+                return None
+            mul_node = gd[conv2d_node.outputs[0]]
+            if not (mul_node.op == 'Mul' and _check_number_outputs(mul_node, 1) and _check_number_inputs(mul_node, 2)):
+                return None
+            mul_const_node = gd[mul_node.inputs[0]] if mul_node.inputs[1] == conv2d_node.name else gd[mul_node.inputs[1]]
+            if not _check_single_out_vector_constant_node(mul_const_node):
+                return None
+            add_node = gd[mul_node.outputs[0]]
+            if not (add_node.op == 'Add' and _check_number_inputs(add_node, 2)):
+                return None
+            add_const_node = gd[add_node.inputs[0]] if add_node.inputs[1] == mul_node.name else gd[add_node.inputs[1]]
+            if not _check_single_out_vector_constant_node(add_const_node):
+                return None
+
+            return [mul_const_node, mul_node, add_const_node, add_node]
+
+        except Exception as e:
+            return None
+
+
+    def _fuse_conv_mul_add_into_batchnorm(graph):
+        keys = list(graph.keys())
+        count = 0
+        for k in keys:
+            if k not in graph:
+                continue
+            current_node = graph[k]
+            if current_node.op != 'Conv2D':
+                continue
+
+            # BN_nodes order : [Const, Mul, Const, Add]
+            BN_nodes = _match_mul_add_bn_pattern(graph, current_node)
+            if BN_nodes is not None:
+                assert len(BN_nodes) == 4
+                out_node = BN_nodes[-1]
+                bn_outputs = out_node.outputs[:]
+
+                # Instantiate a new fused node in the graph
+                fused_bn_node = ParsedNode()
+                fused_bn_node.op = 'BatchNorm'
+                fused_bn_node.name = out_node.name + '_batch_norm'
+                fused_bn_node.attr = {}
+                fused_bn_node.attr['gamma'] = np.squeeze(BN_nodes[0].value.val)
+                fused_bn_node.attr['beta'] = np.squeeze(BN_nodes[2].value.val)
+                fused_bn_node.datatype = current_node.datatype
+                graph[fused_bn_node.name] = fused_bn_node
+
+                # Delete nodes
+                BN_node_names = [x.name for x in BN_nodes]
+                for name in BN_node_names:
+                    delete_node(graph, name)
+
+                # Connect fused node to entry and output nodes
+                connect_edge(graph, current_node.name, fused_bn_node.name)
+                connect_dests(graph, fused_bn_node.name, bn_outputs)
+
+                count += 1
+        if count > 0:
+            print('[Op Fusion] Fused {} BatchNorms.'.format(count))
+
+    for fn_key in list(nnssa.functions.keys()):
+        f = nnssa.functions[fn_key]
+        _fuse_conv_mul_add_into_batchnorm(f.graph)
+
+
