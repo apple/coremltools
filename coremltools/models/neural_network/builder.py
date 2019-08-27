@@ -3022,6 +3022,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer_params.shape.extend(shape)
 
+        self.rank_dict[output_name] = 5
         if len(data.floatValue) != np.prod(shape):
             raise ValueError("Dimensions of 'shape' do not match the size of the provided constant")
         if not self._disable_rank5_shape_mapping:
