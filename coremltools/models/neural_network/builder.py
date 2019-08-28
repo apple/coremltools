@@ -832,12 +832,9 @@ class NeuralNetworkBuilder(object):
         # Pass Rank Information
         # Generic Layer copies rank of first input to all of its output
         # All the layers that modifies rank apart from first input must override
-        if len(input_names) > 0:
-            if input_names[0] not in self.rank_dict:
-               raise ValueError('Error while adding Layer with name \"%s\" rank information for node %s not available!' % (name, input_names[0]))        
-                
+        if input_names is not None and len(input_names) > 0:
             for output_ in output_names:
-               self.rank_dict[output_] = self.rank_dict[input_names[0]]
+               self.rank_dict[output_] = self.get_rank(input_names[0])
         return generic_layer
 
     def inspect_layers(self, last=-1, verbose=False):
@@ -980,17 +977,24 @@ class NeuralNetworkBuilder(object):
         print('outputChannels: {}'.format(output_channels))
 
     def get_rank(self, name):
-        if name not in self.rank_dict:
-                raise ValueError('Rank information for node %s not available!' % (name))        
-        return self.rank_dict[name]
+        return self.rank_dict[name] if name in self.rank_dict else -1
 
-    def log_maximum_rank_from_inputs(self, input_names, output_name):
+    def set_maximum_rank_from_inputs(self, input_names, output_name):
         if len(input_names) == 0:
             raise ValueError('Input name list empty for collecting rank information')
         self.rank_dict[output_name] = self.get_rank(input_names[0])
         for i in range(1, len(input_names)):
             self.rank_dict[output_name] = max(self.get_rank(output_name), self.get_rank(input_names[i]))
 
+    def set_rank_for_reduce_op(self, input_name, output_name, keepdims, reduce_all):
+        if keepdims:
+            self.rank_dict[output_name] = self.get_rank(input_name)
+        else:
+            if reduce_all or self.get_rank(input_name) == 1:
+                self.rank_dict[output_name] = 1
+            else:
+                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+    
     def add_inner_product(self, name, W, b, input_channels, output_channels, has_bias,
                           input_name, output_name, **kwargs):
         """
@@ -2726,6 +2730,7 @@ class NeuralNetworkBuilder(object):
 
         if len(target_shape) != 4 and len(target_shape) != 3:
             raise ValueError("Length of the 'target-shape' parameter must be equal to 3 or 4")
+        self.rank_dict[output_name] = len(target_shape)
         return spec_layer
 
     def add_reduce(self, name, input_name, output_name, axis, mode, epsilon=1e-6):
@@ -3735,7 +3740,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.addBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_multiply_broadcastable(self, name, input_names, output_name):
@@ -3756,7 +3761,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.multiplyBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_divide_broadcastable(self, name, input_names, output_name):
@@ -3777,7 +3782,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.divideBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_subtract_broadcastable(self, name, input_names, output_name):
@@ -3798,7 +3803,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.subtractBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_max_broadcastable(self, name, input_names, output_name):
@@ -3819,7 +3824,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.maxBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_min_broadcastable(self, name, input_names, output_name):
@@ -3840,7 +3845,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.minBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_floor_div_broadcastable(self, name, input_names, output_name):
@@ -3865,7 +3870,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.floorDivBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_mod_broadcastable(self, name, input_names, output_name):
@@ -3886,7 +3891,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.modBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_pow_broadcastable(self, name, input_names, output_name):
@@ -3907,7 +3912,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.powBroadcastable.MergeFromString(b'')
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
         return spec_layer
 
     def add_stack(self, name, input_names, output_name, axis=0):
@@ -3930,7 +3935,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.stack.axis = axis
-        self.rank_dict[output_name] = get_rank(input_names[0]) + 1
+        self.rank_dict[output_name] = self.get_rank(input_names[0]) + 1
         return spec_layer
 
     def add_ceil(self, name, input_name, output_name):
@@ -4438,6 +4443,12 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer.copy.MergeFromString(b'')
+        # If output name rank is different than earlier,
+        # mark it as unknown
+        if output_name in self.rank_dict and self.get_rank(output_name) != self.get_rank(input_name):
+            self.rank_dict[output_name] = -1
+        else:
+            self.rank_dict[output_name] = self.get_rank(input_name)
         return spec_layer
 
     def add_greater_than(self, name, input_names, output_name, use_greater_than_equal=False, alpha=0.):
@@ -4892,9 +4903,12 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.gatherND.MergeFromString(b'')
-        self.rank_dict[output_name] = self.get_rank(input_names[1]) - 1 + self.get_rank(input_names[0])
-        # TODO: output rank needs to add following for completion
-        # + shape_dict[input_names[1]][-1]
+        # NOTE: ideally, following is formula for computing output rank
+        # self.rank_dict[output_name] = self.get_rank(input_names[1]) - 1 + self.get_rank(input_names[0])
+        #                               + shape_dict[input_names[1]][-1]
+        # But, shape of indices (input_names[1]) is unknown and hence marking as -1
+        # Converter should update rank if indices are known
+        self.rank_dict[output_name] = -1
         return spec_layer
 
     def add_scatter_nd(self, name, input_names, output_name, mode='UPDATE'):
@@ -5483,7 +5497,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.fillDynamic
         spec_layer_params.value = value
-        self.rank_dict[output_name] = self.get_rank(input_name)
+        self.rank_dict[output_name] = -1
         return spec_layer
 
     def add_broadcast_to_like(self, name, input_names, output_name):
@@ -5635,11 +5649,11 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.squeezeAll = squeeze_all
 
         if squeeze_all or axes is None:
-            self.rank_dict[output_name] = self.get_rank(input_name) - len(axes)
-        else:
             # All the dimensions that are 1 will be squeezed
             # converter should update rank if shape is known
             self.rank_dict[output_name] = -1
+        else:
+            self.rank_dict[output_name] = self.get_rank(input_name) - len(axes)
         return spec_layer
 
     def add_flatten_to_2d(self, name, input_name, output_name, axis=1):
@@ -5746,6 +5760,9 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.reshapeDynamic.MergeFromString(b'')
+        # Setting rank to -1 is a hint that Rank was not computed
+        # converter can modify if it's a constant and known
+        self.rank_dict[output_name] = -1
         return spec_layer
 
     def add_rank_preserving_reshape(self, name, input_name, output_name, output_shape):
@@ -5965,7 +5982,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.minVal = minval
         spec_layer_params.maxVal = maxval
         spec_layer_params.seed = seed
-        self.rand_dict[output_name] = len(output_shape)
+        self.rank_dict[output_name] = len(output_shape)
         return spec_layer
 
     def add_random_uniform_dynamic(self, name, input_names, output_name, minval=0., maxval=1., seed=-1):
@@ -6192,13 +6209,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_prod(self, name, input_name, output_name,
@@ -6244,13 +6255,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_mean(self, name, input_name, output_name,
@@ -6294,13 +6299,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_max(self, name, input_name, output_name,
@@ -6344,13 +6343,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_min(self, name, input_name, output_name,
@@ -6394,13 +6387,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_l2(self, name, input_name, output_name,
@@ -6444,13 +6431,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_l1(self, name, input_name, output_name,
@@ -6494,13 +6475,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_sumsquare(self, name, input_name, output_name,
@@ -6544,13 +6519,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_logsum(self, name, input_name, output_name,
@@ -6594,13 +6563,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_reduce_logsumexp(self, name, input_name, output_name,
@@ -6644,13 +6607,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.keepDims = keepdims
         spec_layer_params.reduceAll = reduce_all
 
-        if keepdims:
-            self.rank_dict[output_name] = self.get_rank(input_name)
-        else:
-            if reduce_all:
-                self.rank_dict[output_name] = 1
-            else:
-                self.rank_dict[output_name] = self.get_rank(input_name) - 1
+        self.set_rank_for_reduce_op(input_name, output_name, keepdims, reduce_all)
         return spec_layer
 
     def add_where_nonzero(self, name, input_name, output_name):
@@ -6796,7 +6753,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.whereBroadcastable.MergeFromString(b'')
 
-        self.log_maximum_rank_from_inputs(input_names, output_name)
+        self.set_maximum_rank_from_inputs(input_names, output_name)
 
         return spec_layer
 
