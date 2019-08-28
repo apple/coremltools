@@ -25,7 +25,7 @@ def _to_unicode(x):
         return x
 
 
-def save_spec(spec, filename, auto_set_specification_version=True):
+def save_spec(spec, filename, auto_set_specification_version=False):
     """
     Save a protobuf model specification to file.
 
@@ -39,7 +39,8 @@ def save_spec(spec, filename, auto_set_specification_version=True):
 
     auto_set_specification_version: bool
         If true, will always try to set specification version automatically
-        otherwise, use the original specification version
+        otherwise, use the original specification version. This option only
+        works for Python 2.
 
     Examples
     --------
@@ -59,14 +60,14 @@ def save_spec(spec, filename, auto_set_specification_version=True):
             raise Exception("Extension must be .mlmodel (not %s)" % ext)
 
     spec = spec.SerializeToString()
-
     if auto_set_specification_version:
         try:
             # always try to downgrade the specification version to the
             # minimal version that supports everything in this mlmodel
             from ..libcoremlpython import _MLModelProxy
             spec = _MLModelProxy.auto_set_specification_version(spec)
-        except Exception:
+        except Exception as e:
+            print(e)
             warnings.warn(
                 "Failed to automatic set specification version for this model.",
                 RuntimeWarning)
