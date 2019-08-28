@@ -979,7 +979,7 @@ class NeuralNetworkBuilder(object):
     def get_rank(self, name):
         return self.rank_dict[name] if name in self.rank_dict else -1
 
-    def set_maximum_rank_from_inputs(self, input_names, output_name):
+    def set_max_input_rank(self, input_names, output_name):
         if len(input_names) == 0:
             raise ValueError('Input name list empty for collecting rank information')
         self.rank_dict[output_name] = self.get_rank(input_names[0])
@@ -3740,7 +3740,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.addBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_multiply_broadcastable(self, name, input_names, output_name):
@@ -3761,7 +3761,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.multiplyBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_divide_broadcastable(self, name, input_names, output_name):
@@ -3782,7 +3782,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.divideBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_subtract_broadcastable(self, name, input_names, output_name):
@@ -3803,7 +3803,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.subtractBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_max_broadcastable(self, name, input_names, output_name):
@@ -3824,7 +3824,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.maxBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_min_broadcastable(self, name, input_names, output_name):
@@ -3845,7 +3845,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.minBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_floor_div_broadcastable(self, name, input_names, output_name):
@@ -3870,7 +3870,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.floorDivBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_mod_broadcastable(self, name, input_names, output_name):
@@ -3891,7 +3891,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.modBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_pow_broadcastable(self, name, input_names, output_name):
@@ -3912,7 +3912,7 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.powBroadcastable.MergeFromString(b'')
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
         return spec_layer
 
     def add_stack(self, name, input_names, output_name, axis=0):
@@ -6753,7 +6753,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.whereBroadcastable.MergeFromString(b'')
 
-        self.set_maximum_rank_from_inputs(input_names, output_name)
+        self.set_max_input_rank(input_names, output_name)
 
         return spec_layer
 
