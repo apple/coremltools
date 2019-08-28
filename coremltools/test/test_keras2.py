@@ -1159,9 +1159,6 @@ class KerasSingleLayerTest(unittest.TestCase):
         """
         import coremltools
         from keras.layers import Dense
-        from keras.losses import categorical_crossentropy
-        from keras.optimizers import SGD
-
         updatable = Sequential()
         updatable.add(Dense(128, input_shape=(16,)))
         updatable.add(Dense(10, name="foo", activation='softmax',
@@ -1177,3 +1174,176 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertIsNotNone(layers[1].innerProduct)
         self.assertTrue(layers[1].innerProduct)
         self.assertTrue(layers[1].isUpdatable)
+
+    # <rdar://problem/53688606>
+    # when loss was specified as a string the converter had failed to work.
+    def test_updatable_model_flag_mse_string_adam(self):
+        """
+        Tests the 'respect_trainable' flag when used along with string
+        for the loss(here mse), conversion is successful
+        """
+        import coremltools
+        from keras.layers import Dense
+        from keras.optimizers import Adam
+
+        updatable = Sequential()
+        updatable.add(Dense(128, input_shape=(16,)))
+        updatable.add(Dense(10, name="foo", activation='relu',
+                            trainable=True))
+        updatable.compile(loss='mean_squared_error',
+                          optimizer=Adam(lr=1.0, beta_1=0.5, beta_2=0.75,
+                                         epsilon=0.25),
+                          metrics=['accuracy'])
+        input = ['data']
+        output = ['output']
+        cml = coremltools.converters.keras.convert(
+            updatable, input, output, respect_trainable=True
+        )
+        spec = cml.get_spec()
+        self.assertTrue(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertTrue(layers[1].isUpdatable)
+
+        self.assertEqual(len(spec.neuralNetwork.updateParams.lossLayers), 1)
+        # check that mean squared error input name and output name is set
+        # check length is non-zero for mse
+        self.assertTrue(len(spec.neuralNetwork.updateParams.lossLayers[
+                            0].meanSquaredErrorLossLayer.input))
+        self.assertTrue(len(spec.neuralNetwork.updateParams.lossLayers[
+                                0].meanSquaredErrorLossLayer.target))
+        # check length is 0 for cce
+        self.assertFalse(len(spec.neuralNetwork.updateParams.lossLayers[
+                                0].categoricalCrossEntropyLossLayer.input))
+        self.assertFalse(len(spec.neuralNetwork.updateParams.lossLayers[
+                                 0].categoricalCrossEntropyLossLayer.target))
+
+        adopt = spec.neuralNetwork.updateParams.optimizer.adamOptimizer
+        # verify default values
+        self.assertEqual(adopt.learningRate.defaultValue, 1.0)
+        self.assertEqual(adopt.beta1.defaultValue, 0.5)
+        self.assertEqual(adopt.beta2.defaultValue, 0.75)
+        self.assertEqual(adopt.eps.defaultValue, 0.25)
+
+    # <rdar://problem/53688606>
+    def test_updatable_model_flag_cce_string_sgd(self):
+        """
+        Tests the 'respect_trainable' flag when used along with string
+        for the loss(here cce), conversion is successful
+        """
+        import coremltools
+        from keras.layers import Dense
+        from keras.optimizers import SGD
+
+        updatable = Sequential()
+        updatable.add(Dense(128, input_shape=(16,)))
+        updatable.add(Dense(10, name="foo", activation='softmax',
+                            trainable=True))
+        updatable.compile(loss='categorical_crossentropy',
+                          optimizer=SGD(lr=1.0), metrics=['accuracy'])
+        input = ['data']
+        output = ['output']
+        cml = coremltools.converters.keras.convert(
+            updatable, input, output, respect_trainable=True
+        )
+        spec = cml.get_spec()
+        self.assertTrue(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertTrue(layers[1].isUpdatable)
+        self.assertEqual(len(spec.neuralNetwork.updateParams.lossLayers), 1)
+
+        # check that cce input name and output name is set
+        # check length is non-zero for cce
+        self.assertTrue(len(spec.neuralNetwork.updateParams.lossLayers[
+                            0].categoricalCrossEntropyLossLayer.input))
+        self.assertTrue(len(spec.neuralNetwork.updateParams.lossLayers[
+                                0].categoricalCrossEntropyLossLayer.target))
+        # check length is 0 for mse
+        self.assertFalse(len(spec.neuralNetwork.updateParams.lossLayers[
+                                0].meanSquaredErrorLossLayer.input))
+        self.assertFalse(len(spec.neuralNetwork.updateParams.lossLayers[
+                                 0].meanSquaredErrorLossLayer.target))
+
+        sgdopt = spec.neuralNetwork.updateParams.optimizer.sgdOptimizer
+        self.assertEqual(sgdopt.learningRate.defaultValue, 1.0)
+        self.assertEqual(sgdopt.miniBatchSize.defaultValue, 16)
+        self.assertEqual(sgdopt.momentum.defaultValue, 0.0)
+
+    
+    def test_updatable_model_flag_cce_sgd_string(self):
+        """
+        Tests the 'respect_trainable' flag when used along with string
+        for the optimizer(keras internally creates an instance, here sgd),
+        conversion is successful
+        """
+        import coremltools
+        from keras.layers import Dense, Input
+        from keras.losses import categorical_crossentropy
+        input = ['data']
+        output = ['output']
+
+        # This should result in an updatable model.
+        inputs = Input(shape=(16,))
+        d1 = Dense(128)(inputs)
+        d2 = Dense(10, name="foo", activation='softmax', trainable=True)(d1)
+        kmodel = Model(inputs=inputs, outputs=d2)
+        kmodel.compile(loss=categorical_crossentropy,
+                       optimizer='sgd', metrics=['accuracy'])
+        cml = coremltools.converters.keras.convert(
+            kmodel, input, output, respect_trainable=True
+        )
+        spec = cml.get_spec()
+        self.assertTrue(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertTrue(layers[1].isUpdatable)
+        self.assertEqual(len(spec.neuralNetwork.updateParams.lossLayers), 1)
+        sgdopt = spec.neuralNetwork.updateParams.optimizer.sgdOptimizer
+        # use almost equal for default verification with at least 5 decimal
+        # places of closeness
+        self.assertAlmostEqual(sgdopt.learningRate.defaultValue, 0.01,
+                               places=5)
+        self.assertEqual(sgdopt.miniBatchSize.defaultValue, 16)
+        self.assertEqual(sgdopt.momentum.defaultValue, 0.0)
+
+    def test_updatable_model_flag_cce_adam_string(self):
+        """
+        Tests the 'respect_trainable' flag when used along with string
+        for the optimizer(keras internally creates an instance, here adam),
+        conversion is successful
+        """
+        import coremltools
+        from keras.layers import Dense, Input
+        from keras.losses import categorical_crossentropy
+        input = ['data']
+        output = ['output']
+
+        # This should result in an updatable model.
+        inputs = Input(shape=(16,))
+        d1 = Dense(128)(inputs)
+        d2 = Dense(10, name="foo", activation='softmax', trainable=True)(d1)
+        kmodel = Model(inputs=inputs, outputs=d2)
+        kmodel.compile(loss=categorical_crossentropy,
+                       optimizer='adam', metrics=['accuracy'])
+        cml = coremltools.converters.keras.convert(
+            kmodel, input, output, respect_trainable=True
+        )
+        spec = cml.get_spec()
+        self.assertTrue(spec.isUpdatable)
+        layers = spec.neuralNetwork.layers
+        self.assertIsNotNone(layers[1].innerProduct)
+        self.assertTrue(layers[1].innerProduct)
+        self.assertTrue(layers[1].isUpdatable)
+        self.assertEqual(len(spec.neuralNetwork.updateParams.lossLayers), 1)
+        adopt = spec.neuralNetwork.updateParams.optimizer.adamOptimizer
+        # use almost equal for default verification with at least 5 decimal
+        # places of closeness
+        self.assertAlmostEqual(adopt.learningRate.defaultValue, 0.001, places=5)
+        self.assertAlmostEqual(adopt.miniBatchSize.defaultValue, 16)
+        self.assertAlmostEqual(adopt.beta1.defaultValue, 0.90, places=5)
+        self.assertAlmostEqual(adopt.beta2.defaultValue, 0.999, places=5)
+
