@@ -25,10 +25,12 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
         for diagnosing 'unconvertible' graphs. Setting this flag to True
         will cause graph pass errors to be ignored, forcefully returning
         a NetworkEnsemble object.
-    inputs: list of str
-        Input features of Core ML specification.
+    inputs: dict or None
+        Dictionary containing {name: shape} for each input. When not provided,
+        The converter assumes all Placeholder or PlaceholderWithDefault
+        as inputs.
     outputs: list of str
-        Output features of Core ML specification.
+        A list of names of output TF nodes.
     """
     if hasattr(tfgraph, 'as_graph_def'):
         gd = tfgraph.as_graph_def(add_shapes=True)
@@ -37,14 +39,15 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
 
     ssa = graphdef_to_ssa(gd)
 
-    placeholder_shape = kwargs.get("placeholder_shape", {})
+    placeholder_shape = kwargs.get("inputs", {})
     for k, v in placeholder_shape.items():
         assert (k in ssa.functions['main'].graph)
-        ssa.functions['main'].graph[k].tfattr['_output_shapes'] = [v]
+        ssa.functions['main'].graph[k].attr['_output_shapes'] = [v]
 
     passes = [
-        delete_asserts, functionalize_loops, constant_propagation, cond_to_where,
-        remove_variable_nodes, fusedbatchnorm_rewrite, lstmblockcell_rewrite
+        delete_asserts, functionalize_loops, constant_propagation,
+        cond_to_where, remove_variable_nodes, fusedbatchnorm_rewrite,
+        lstmblockcell_rewrite
     ]
 
     if resume_on_errors is False:
@@ -69,5 +72,5 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
     if resume_on_errors is False:
         for f in ssa.functions.values():
             for n in f.graph.values():
-                assert (n.datatype is not None)
+                assert n.datatype is not None
     return ssa

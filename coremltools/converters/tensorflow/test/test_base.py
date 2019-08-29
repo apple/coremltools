@@ -213,6 +213,9 @@ class TFNetworkTest(unittest.TestCase):
             Output tensor names.
         data_mode: str
             Data mode for the placeholder data generation.
+        input_refs: a dictionary of reference input in tensorFlow axis order.
+            Each entry is str:shape. When using auto-generated input vectors,
+            set input_refs to None.
         delta: float
             Delta for error checking, default 1e-2.
         use_cpu_only: bool
