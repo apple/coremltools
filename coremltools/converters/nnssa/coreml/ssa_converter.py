@@ -53,6 +53,8 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
     passes = [
         constant_weight_link_removal, fuse_bias_add,
         onehot_matmul_to_embedding,
+        fuse_layer_norm,
+        fuse_gelu,
         transform_nhwc_to_nchw,
         remove_identity,
         remove_no_ops_and_shift_control_dependencies,
@@ -98,8 +100,8 @@ class SSAConverter(object):
         top_ssa = self.net_ensemble.functions[top_func]
 
         # find_inputs_and_outputs() generates a list of required inputs, which
-        # may not be supplied by inputs. We need to make sure that the user-supplied
-        # inputs name and shape are consistent with the NNSSA.
+        # may not be supplied by inputs. We need to make sure that the
+        # user-supplied inputs name and shape are consistent with the NNSSA.
         top_input_shapes = []
         for name in top_input_names:
             node = top_ssa.graph[name]
@@ -225,6 +227,7 @@ class SSAConverter(object):
             'Sin': self._convert_unary_trigonometric,
             'Cos': self._convert_unary_trigonometric,
             'Tan': self._convert_unary_trigonometric,
+            'GeLU': self._convert_gelu,
             'SelectMask': self._convert_select,
             'Where': self._convert_select,
             'Conv2D': self._convert_conv2d,
@@ -254,6 +257,7 @@ class SSAConverter(object):
             'iff': self._convert_iff,
             'ResizeBilinear': self._convert_resize_bilinear,
             'ResizeNearestNeighbor': self._convert_resize_nearest_neighbor,
+            'LayerNormalization': self._convert_layer_normalization,
         }
 
         # converter state variables
@@ -567,9 +571,10 @@ class SSAConverter(object):
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_tensorarray_alloc(self, node):
-        # TensorArray is a list of tensors, it will be treated as a rank+1 tensor when converted
-        # The shape information is stored at two different places - node input specifies the length of the list
-        # while the node's datatype stores the shape of each of the tensor allocated.
+        # TensorArray is a list of tensors, it will be treated as a rank+1
+        # tensor when converted. The shape information is stored at two
+        # different places - node input specifies the length of the list
+        # while the node's datatype stores the shape of each tensor allocated.
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         assert (len(input_names) == 1)
 
@@ -577,8 +582,8 @@ class SSAConverter(object):
         if (not node.attr.get('identical_element_shapes', True) or
             not all([atype.get_shape() == element_shape for atype in node.datatype.T])):
             raise ValueError(
-                '[SSAConverter] TensorArray allocation cannot handle arrays with tensors of various shapes'
-            )
+                '[SSAConverter] TensorArray allocation cannot handle arrays'
+                'with tensors of various shapes.')
 
         has_static_element_shape = all([dim > 0 for dim in element_shape])
 
@@ -610,7 +615,8 @@ class SSAConverter(object):
                 shape=[len(element_shape)])
             shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-            # Concatenate list length (the input, should be a constant vector of size 1) with element shape
+            # Concatenate list length (the input, should be a constant vector
+            # of size 1) with element shape
             node_arr_shape_name = node.name + '__arr_shape'
             layer = builder.add_concat_nd(
                 name=node_arr_shape_name,
@@ -1654,6 +1660,21 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
+    def _convert_gelu(self, node):
+        assert len(node.inputs) == 1
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+
+        # CoreML has 3 modes: EXACT, TANH_APPROXIMATION,SIGMOID_APPROXIMATION
+        layer = self._get_builder().add_gelu(
+            name=node.name,
+            input_name=input_names[0],
+            output_name=node.name,
+            mode='EXACT')
+
+        output_shape = self._get_tensor_shape_from_type(node.datatype)
+        shapes.propagate_single_layer(layer, self.tensor_shapes,
+            output_shapes=[output_shape])
+
     def _convert_reduction(self, node):
         assert len(node.inputs) == 2
         input_nodes, input_names, input_types = self._get_input_tensors(node)
@@ -1758,6 +1779,58 @@ class SSAConverter(object):
         output_shape = self._get_tensor_shape_from_type(node.datatype)
         shapes.propagate_single_layer(layer, self.tensor_shapes,
             output_shapes=[output_shape])
+
+
+    def _convert_layer_normalization(self, node):
+        assert len(node.inputs) == 1
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        input_name = input_names[0]
+        builder = self._get_builder()
+        gamma = node.attr['gamma']
+        beta = node.attr['beta']
+        axes = node.attr['axes']
+        epsilon = node.attr['epsilon']
+        input_shape = list(input_types[0].get_shape())
+
+        if (len(input_shape) in [2,3] and len(axes) == 1 and \
+            axes[0] == len(input_shape) - 1):
+            # Performance enhancement for some models with layer-norm
+            builder.add_reshape_static(name=input_name + '_reshape',
+                input_name=input_name,
+                output_name=input_name + '_reshape',
+                output_shape=input_shape + [1,1])
+
+            builder.add_mvn(name=input_name + '_mvn',
+                input_name=input_name + '_reshape',
+                output_name=input_name + '_mvn', across_channels=True,
+                normalize_variance=True, epsilon=epsilon)
+
+            builder.add_scale(name=node.name + '_5d',
+                input_name=input_name + '_mvn',
+                output_name=node.name + '_5d', W=gamma, b=beta, has_bias=True,
+                shape_scale=[len(gamma)], shape_bias=[len(beta)])
+
+            builder.add_reshape_static(name=node.name,
+                input_name=node.name + '_5d',
+                output_name=node.name,
+                output_shape=input_shape)
+
+        else:
+            # General implementation
+            input_shape = input_types[0].get_shape()
+            rdims = len(axes)
+            normalized_shape = node.datatype.get_shape()[-rdims:]
+            if gamma.shape != normalized_shape:
+                gamma = np.zeros(normalized_shape) + gamma
+            if beta.shape != normalized_shape:
+                beta = np.zeros(normalized_shape) + beta
+
+            builder.add_layer_normalization(node.name, input_name, node.name,
+                                        normalized_shape, gamma, beta, eps=1e-5)
+        
+        self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(
+            node.datatype)
+
 
     def _convert_binary_broadcastable(self, node):
         assert len(node.inputs) == 2

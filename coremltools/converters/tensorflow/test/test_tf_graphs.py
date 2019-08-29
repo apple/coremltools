@@ -141,15 +141,6 @@ class TFSimpleNetworkTest(TFNetworkTest):
                     act = tf.tanh(product, name='act')
             self._test_tf_model(graph, {'input': [1, 8]}, ['act'], delta=1e-2)
 
-    def test_extract_shape_1d(self):
-        shape = [None, 2]
-        graph = tf.Graph()
-        with graph.as_default() as g:
-            x = tf.placeholder(tf.float32, shape=shape, name='input')
-            m = tf.Variable(tf.truncated_normal([1, 2]))
-            y = tf.shape(x + m, name='output')
-        self._test_tf_model(graph, {'input': [1, 2]}, ['output'], delta=1e-2)
-
     def test_extract_shape(self):
         dims = [2, 3, 4]
         for rank in range(1, len(dims) + 1):
@@ -157,9 +148,9 @@ class TFSimpleNetworkTest(TFNetworkTest):
             batched_shape = [1] + dims[:rank]
             graph = tf.Graph()
             with graph.as_default() as g:
-                x = tf.placeholder(tf.float32, shape=shape, name='input')
-                m = tf.Variable(tf.truncated_normal(batched_shape))
-                y = tf.shape(x + m, name='output')
+                x = tf.placeholder(tf.float32, shape=batched_shape, name='input')
+                m = tf.Variable(tf.truncated_normal(tf.shape(x)))
+                y = tf.identity(x + m, name='output')
             self._test_tf_model(graph, {'input': batched_shape}, ['output'], delta=1e-2)
 
     @unittest.skip
@@ -243,6 +234,31 @@ class TFSimpleNetworkTest(TFNetworkTest):
             self._test_tf_model(graph, {"input_data": data_shape, "input_weight": weight_shape}, ["output"], delta=1e-2,
                                 graph_optimizations=None)
 
+    def test_layer_norm(self):
+        shapes = [(3,4), (3,4,5), (3,4,5,6)]
+        for shape in shapes:
+            graph = tf.Graph()
+            with graph.as_default() as g:
+                x = tf.placeholder(tf.float32, shape=shape, name='input')
+                y = tf.contrib.layers.layer_norm(x, begin_norm_axis=-1,
+                    begin_params_axis=-1)
+                z = tf.identity(y, name='output')
+            self._test_tf_model(graph, {'input': shape}, ['output'], delta=1e-2)
+
+    def test_gelu_tanh_approx(self):
+        def gelu(x):
+            cdf = 0.5 * (1.0 + tf.tanh(
+                (np.sqrt(2 / np.pi) * (x + 0.044715 * tf.pow(x, 3)))))
+            return x * cdf
+
+        shapes = [(3,4), (3,4,5), (3,4,5,6)]
+        for shape in shapes:
+            graph = tf.Graph()
+            with graph.as_default() as g:
+                x = tf.placeholder(tf.float32, shape=shape, name='input')
+                y = gelu(x)
+                z = tf.identity(y, name='output')
+            self._test_tf_model_constant(graph, {'input': shape}, ['output'], delta=1e-2)
 
 if __name__ == '__main__':
     unittest.main()
