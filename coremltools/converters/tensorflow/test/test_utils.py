@@ -36,7 +36,12 @@ def generate_data(shape, mode='random_zero_mean'):
     return x
 
 
-def tf_transpose(x, channel_last=False):
+def tf_transpose(x, channel_last_to_first=False):
+    """ Transpose TensorFlow expected input which has channel_last or
+    channel_first option.
+    channel_last_to_first: set this flag to True if TensorFlow is expecting
+    a channel_last 4D Tensor x, while CoreML expects a channel_first 4D Tensor.
+    """
     if not hasattr(x, 'shape'):
         return np.array([x], dtype=np.float)
     elif len(x.shape) == 0:
@@ -48,7 +53,7 @@ def tf_transpose(x, channel_last=False):
     elif len(x.shape) == 3:
         return x
     elif len(x.shape) == 4:
-        if channel_last:
+        if channel_last_to_first:
             return np.transpose(x, (0, 3, 1, 2))
         else:
             return x
