@@ -193,6 +193,7 @@ class MLModelTest(unittest.TestCase):
         spec = convert_neural_network_spec_weights_to_fp16(model.get_spec())
         self.assertIsNotNone(spec)
 
+    @unittest.skip
     def test_downgrade_specification_version(self):
         # manually set a invalid specification version
         self.spec.specificationVersion = -1
@@ -202,7 +203,7 @@ class MLModelTest(unittest.TestCase):
         # manually set a high specification version
         self.spec.specificationVersion = 4
         filename = tempfile.mktemp(suffix='.mlmodel')
-        save_spec(self.spec, filename)
+        save_spec(self.spec, filename, auto_set_specification_version=True)
         model = MLModel(filename)
         assert model.get_spec().specificationVersion == 1
 

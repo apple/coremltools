@@ -7,5 +7,6 @@ from .op_removals import remove_no_ops_and_shift_control_dependencies
 from .op_removals import constant_weight_link_removal
 from .op_removals import remove_single_isolated_node
 from .op_removals import remove_identity
-from .op_fusions import fuse_bias_add, transform_nhwc_to_nchw, onehot_matmul_to_embedding
+from .op_fusions import fuse_bias_add, transform_nhwc_to_nchw, \
+    onehot_matmul_to_embedding, fuse_layer_norm, fuse_gelu
 from .mlmodel_passes import remove_disconnected_constants
