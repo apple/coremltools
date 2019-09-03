@@ -1054,6 +1054,14 @@ Result NeuralNetworkSpecValidator::validateGRULayer(const Specification::NeuralN
     gateRecursionMatrixValueType = valueType(params.updategaterecursionmatrix());
     gateBiasVectorValueType = valueType(params.updategatebiasvector());
     
+    if (gateWeightMatrixValueType == gateRecursionMatrixValueType && gateRecursionMatrixValueType == gateBiasVectorValueType) {
+        // By transitivity all three types match.
+    } else {
+        const std::string err = "GRU layer '" + layer.name() + "' has mismatched weight parameters. "
+        "Weight parameter value types should match";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    
     std::vector<CoreML::WeightParamType> weightTypeList;
     weightTypeList.push_back(valueType(params.updategateweightmatrix()));
     weightTypeList.push_back(valueType(params.updategaterecursionmatrix()));
