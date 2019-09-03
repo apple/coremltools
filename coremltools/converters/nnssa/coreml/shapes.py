@@ -305,7 +305,7 @@ def _reduce_general(params, input_shapes):
         return [[1]]
 
     axes = list(params.axes)
-    output_shape = input_shapes[0][:]
+    output_shape = list(input_shapes[0][:])
     if params.keepDims:
         for axis in axes:
             output_shape[axis] = 1

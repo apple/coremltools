@@ -18,7 +18,7 @@ def convert(filename, inputs=None, outputs=None, **kwargs):
     # convert from TensorFlow to SSA
     try:
         from ..nnssa.frontend.tensorflow import load as frontend_load
-        ssa = frontend_load(filename, resume_on_errors=False, **kwargs)
+        ssa = frontend_load(filename, resume_on_errors=False, inputs=inputs, outputs=outputs, **kwargs)
     except ImportError as err:
         raise ImportError("Frontend converter not found! Error message:\n%s" % err)
 
