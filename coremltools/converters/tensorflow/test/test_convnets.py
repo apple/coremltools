@@ -1196,32 +1196,32 @@ class TFSingleLayerTest(TFNetworkTest):
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     def test_resize_bilinear(self):
-        sizes = [[20,30], [20,30], [25,45]]
-        align_corners=[True, False, False]
+        sizes = [[20, 30], [20, 30], [25, 45]]
+        align_corners = [True, False, False]
         for sz, ac in zip(sizes, align_corners):
             graph = tf.Graph()
             with graph.as_default() as g:
                 x_input = tf.placeholder(tf.float32, shape=[None, 10, 10, 3],
-                    name="input")
+                                         name="input")
                 z = tf.image.resize_bilinear(x_input, size=sz,
-                    align_corners=ac)
+                                             align_corners=ac)
                 output_name = [z.op.name]
-            self._test_tf_model_constant(graph, {"input":[1,10,10,3]},
-                    output_name)
+            self._test_tf_model_constant(graph, {"input": [1, 10, 10, 3]},
+                                         output_name)
 
     def test_resize_nearest_neighbor(self):
-        sizes = [[20,30]]
-        align_corners=[False]
+        sizes = [[20, 30]]
+        align_corners = [False]
         for sz, ac in zip(sizes, align_corners):
             graph = tf.Graph()
             with graph.as_default() as g:
                 x_input = tf.placeholder(tf.float32, shape=[None, 10, 10, 3],
-                    name="input")
+                                         name="input")
                 z = tf.image.resize_nearest_neighbor(x_input, size=sz,
-                    align_corners=ac)
+                                                     align_corners=ac)
                 output_name = [z.op.name]
-            self._test_tf_model_constant(graph, {"input":[1,10,10,3]},
-                    output_name)
+            self._test_tf_model_constant(graph, {"input": [1, 10, 10, 3]},
+                                         output_name)
 
     def test_crop_resize(self):
         graph = tf.Graph()
@@ -1241,9 +1241,56 @@ class TFSingleLayerTest(TFNetworkTest):
         # batched
         self._test_tf_model(graph, {'test_linear/input': [8, 20]}, [y.op.name])
 
+    def test_where(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            b = tf.placeholder(tf.float32, shape=shape)
+            c = tf.placeholder(tf.bool, shape=shape)
+            out = tf.where(c, a, b)
+        self._test_tf_model_constant(graph, {
+            a.op.name: shape, b.op.name: shape, c.op.name: shape}, [out.op.name])
+
+    def test_where_v2(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            b = tf.placeholder(tf.float32, shape=shape)
+            c = tf.placeholder(tf.bool, shape=shape)
+            out = tf.where_v2(c, a, b)
+        self._test_tf_model_constant(graph, {
+            a.op.name: shape, b.op.name: shape, c.op.name: shape}, [out.op.name])
+
+    def test_transpose(self):
+        shape = [4, 3, 1]
+        graph = tf.Graph()
+        with graph.as_default():
+            axes = np.random.permutation(len(shape))
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.transpose(a, axes)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_space_to_depth(self):
+        shape = [1, 4, 6, 1]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.space_to_depth(a, 2)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_depth_to_space(self):
+        shape = [1, 2, 3, 4]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.depth_to_space(a, 2)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
 
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest('test_greater'))
+    # suite.addTest(TFSingleLayerTest('test_where_v2'))
     # unittest.TextTestRunner().run(suite)
