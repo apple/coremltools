@@ -175,7 +175,7 @@ class SimpleTest(CorrectnessTest):
         }
 
         self._test_model(builder.spec, input, expected)
-        self.assertEquals(len(input_dim), builder.get_rank('output'))
+        self.assertEquals(len(input_dim), builder._get_rank('output'))
 
     def test_LRN(self):
         input_dim = (1, 3, 3)
@@ -195,7 +195,7 @@ class SimpleTest(CorrectnessTest):
         }
 
         self._test_model(builder.spec, input, expected)
-        self.assertEqual(len(input_dim), builder.get_rank('output'))
+        self.assertEqual(len(input_dim), builder._get_rank('output'))
 
     def test_MVN(self):
         input_dim = (2, 2, 2)
@@ -319,7 +319,7 @@ class SimpleTest(CorrectnessTest):
 
         self._test_model(builder.spec, input, expected)
         for output_ in output_names:
-            self.assertEqual(len(input_dim), builder.get_rank(output_))
+            self.assertEqual(len(input_dim), builder._get_rank(output_))
         
     def test_scale_constant(self):
         input_dim = (1, 2, 2)
@@ -410,7 +410,7 @@ class SimpleTest(CorrectnessTest):
         expected = {'output': x + b}
 
         self._test_model(builder.spec, input, expected, model_precision)
-        self.assertEqual(len(input_dim), builder.get_rank('output'))
+        self.assertEqual(len(input_dim), builder._get_rank('output'))
 
     def test_load_constant_half_precision(self):
         self.test_load_constant(model_precision=_MLMODEL_HALF_PRECISION)
@@ -433,7 +433,7 @@ class SimpleTest(CorrectnessTest):
         expected = {'output': np.minimum(x1, x2)}
 
         self._test_model(builder.spec, input, expected)
-        self.assertEqual(len(input_dim), builder.get_rank('output'))
+        self.assertEqual(len(input_dim), builder._get_rank('output'))
 
     def test_conv_same_padding(self):
         input_dim = (10, 15, 15)
@@ -459,7 +459,7 @@ class SimpleTest(CorrectnessTest):
 
         self._test_model(
             builder.spec, input, expected, validate_shapes_only=True)
-        self.assertEqual(len(input_dim), builder.get_rank('output'))
+        self.assertEqual(len(input_dim), builder._get_rank('output'))
 
     def test_deconv_valid_padding(self):
         input_dim = (10, 15, 15)
@@ -594,7 +594,7 @@ class SimpleTest(CorrectnessTest):
         expected = {'output': np.reshape(x, (10, 1, 1))}
 
         self._test_model(builder.spec, input, expected)
-        self.assertEqual(len(target_dim), builder.get_rank('output'))
+        self.assertEqual(len(target_dim), builder._get_rank('output'))
 
     def test_reshape_target_shape_4(self):
         input_dim = (1, 2, 5)  # (C,H,W)
@@ -613,7 +613,7 @@ class SimpleTest(CorrectnessTest):
         expected = {'output': np.reshape(x, (1, 10, 1, 1))}
 
         self._test_model(builder.spec, input, expected)
-        self.assertEqual(len(target_dim), builder.get_rank('output'))  
+        self.assertEqual(len(target_dim), builder._get_rank('output'))  
 
     def test_bias_matrix_cpu(self):
         input_dim = (1, 2, 2)
@@ -847,7 +847,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             shape_dict = {'output': outShape}
             self._test_model(builder.spec, input_, expected, useCPUOnly=cpu_only,
                              output_name_shape_dict=shape_dict)
-            self.assertEqual(len(outShape), builder.get_rank('output'))
+            self.assertEqual(len(outShape), builder._get_rank('output'))
 
     def test_batched_mat_mul_gpu(self):
         self.test_batched_mat_mul_cpu(cpu_only=False)
@@ -1079,7 +1079,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': data + value}
 
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-            self.assertEqual(len(shape), builder.get_rank('output'))
+            self.assertEqual(len(shape), builder._get_rank('output'))
 
     def test_fill_static_gpu(self):
         self.test_fill_static_cpu(cpu_only=False)
@@ -1103,7 +1103,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.zeros(input_shape) + value}
 
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-            self.assertEqual(builder.get_rank('output'), -1)
+            self.assertEqual(builder._get_rank('output'), -1)
 
     def test_fill_dynamic_gpu(self):
         self.test_fill_dynamic_cpu(cpu_only=False)
@@ -1167,7 +1167,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.broadcast_to(data, target_shape)}
 
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-            self.assertEqual(target_rank, builder.get_rank('output'))
+            self.assertEqual(target_rank, builder._get_rank('output'))
 
     def test_broadcast_to_static_gpu(self):
         self.test_broadcast_to_static_cpu(cpu_only=False)
@@ -1199,7 +1199,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.broadcast_to(data, target_shape)}
 
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-            self.assertEqual(builder.get_rank('output'), -1)
+            self.assertEqual(builder._get_rank('output'), -1)
 
     def test_broadcast_to_dynamic_gpu(self):
         self.test_broadcast_to_dynamic_cpu(cpu_only=False)
@@ -1484,7 +1484,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': np.stack(input_tensors, axis)}
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-                self.assertEqual(input_rank + 1, builder.get_rank('output'))
+                self.assertEqual(input_rank + 1, builder._get_rank('output'))
 
     def test_stack_gpu(self):
         self.test_stack_cpu(cpu_only=False)
@@ -1506,7 +1506,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.ceil(x)}
 
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-            self.assertEqual(rank, builder.get_rank('output'))
+            self.assertEqual(rank, builder._get_rank('output'))
 
     def test_ceil_gpu(self):
         self.test_ceil_cpu(cpu_only=False)
@@ -1644,7 +1644,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
                 for output_ in output_names:
-                    self.assertEqual(rank, builder.get_rank(output_))
+                    self.assertEqual(rank, builder._get_rank(output_))
 
     def test_split_nd_gpu(self):
         self.test_split_nd_cpu(cpu_only=False)
@@ -1688,7 +1688,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
                 for output_ in output_names:
-                    self.assertEqual(rank, builder.get_rank(output_))
+                    self.assertEqual(rank, builder._get_rank(output_))
 
     def test_split_nd_with_split_sizes_gpu(self):
         self.test_split_nd_with_split_sizes_cpu(cpu_only=False)
@@ -1733,7 +1733,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': x[tuple(objs)]}
 
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-                self.assertEqual(rank, builder.get_rank('output'))
+                self.assertEqual(rank, builder._get_rank('output'))
 
     def test_slice_static_gpu(self):
         self.test_slice_static_cpu(cpu_only=False)
@@ -1843,7 +1843,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': x[tuple(objs)]}
 
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-                self.assertEqual(rank, builder.get_rank('output'))
+                self.assertEqual(rank, builder._get_rank('output'))
 
     def test_slice_dynamic_gpu(self):
         self.test_slice_dynamic_cpu(cpu_only=False)
@@ -1920,7 +1920,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': numpy_sliding_windows(x, axis, window_size, step)}
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-                self.assertEqual(rank+1, builder.get_rank('output'))
+                self.assertEqual(rank+1, builder._get_rank('output'))
 
     def test_sliding_windows_gpu(self):
         self.test_sliding_windows_cpu(cpu_only=False)
@@ -1955,7 +1955,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.arange(start, end, step)}
 
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-            self.assertEqual(1, builder.get_rank('output'))
+            self.assertEqual(1, builder._get_rank('output'))
 
     def test_range_static_gpu(self):
         self.test_range_static_cpu(cpu_only=False)
@@ -2010,7 +2010,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': np.arange(start, end, step)}
 
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-                self.assertEqual(1, builder.get_rank('output'))
+                self.assertEqual(1, builder._get_rank('output'))
 
     def test_range_dynamic_gpu(self):
         self.test_range_dynamic_cpu(cpu_only=False)
@@ -2459,7 +2459,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.reshape(x, output_shapes[i])}
 
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
-            self.assertEqual(len(output_shapes[i]), builder.get_rank('output'))
+            self.assertEqual(len(output_shapes[i]), builder._get_rank('output'))
 
     def test_expand_dims(self):
         input_shapes = [(10, 5), (10, 5), (10, 5), (10, 5), (10,)]
@@ -2483,7 +2483,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.reshape(x, output_shapes[i])}
 
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
-            self.assertEqual(len(output_shapes[i]), builder.get_rank('output'))
+            self.assertEqual(len(output_shapes[i]), builder._get_rank('output'))
 
     def test_squeeze(self):
         input_shapes = [(1, 1, 10, 5), (1, 10, 1, 5), (10, 5, 1, 1),
@@ -2507,7 +2507,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.reshape(x, output_shapes[i])}
 
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
-            self.assertEqual(len(output_shapes[i]), builder.get_rank('output'))
+            self.assertEqual(len(output_shapes[i]), builder._get_rank('output'))
 
     def test_squeeze_all(self):
         input_shapes = [
@@ -2533,7 +2533,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': reference}
 
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
-            self.assertEqual(-1, builder.get_rank('output'))
+            self.assertEqual(-1, builder._get_rank('output'))
 
     def test_argmax_argmin(self):
         test_input_shapes = [(9,), (8, 6), (9, 8, 10), (5, 9, 7, 9), (12, 8, 6, 6, 7)]
@@ -2576,7 +2576,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                             expected = {'output': np_out}
 
                             self._test_model(builder.spec, input, expected, useCPUOnly=True)
-                            self.assertEqual(len(np_out.shape), builder.get_rank('output'))
+                            self.assertEqual(len(np_out.shape), builder._get_rank('output'))
 
     def test_get_shape(self):
         dims = [1, 2, 3, 4, 5]
@@ -2595,7 +2595,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': np.array(input_shape)}
 
             self._test_model(builder.spec, feed, expected, useCPUOnly=True)
-            self.assertEqual(1, builder.get_rank('output'))
+            self.assertEqual(1, builder._get_rank('output'))
 
     def test_load_constant_nd(self):
         dims = [2, 3, 4, 5, 6]
@@ -2616,7 +2616,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {'output': feed['data'] + 1}
 
             self._test_model(builder.spec, feed, expected, useCPUOnly=True)
-            self.assertEqual(rank, builder.get_rank('output'))
+            self.assertEqual(rank, builder._get_rank('output'))
 
     @unittest.skip('fix')
     def test_simple_array_alloc_scatter(self):
@@ -2771,7 +2771,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             input = {'cond': cond, 'true': true, 'false': false}
             expected = {'output': np.where(cond, true, false)}
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-            self.assertEqual(len(expected['output'].shape), builder.get_rank('output'))
+            self.assertEqual(len(expected['output'].shape), builder._get_rank('output'))
 
     def test_where_broadcastable_gpu(self):
         self.test_where_broadcastable_cpu(cpu_only=False)
@@ -2839,7 +2839,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected, num_moments=2)
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-            self.assertEqual(rank, builder.get_rank('output'))
+            self.assertEqual(rank, builder._get_rank('output'))
 
     def test_random_normal_static_gpu(self):
         self.test_random_normal_static_cpu(cpu_only=False)
@@ -2869,7 +2869,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected, num_moments=2)
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-            self.assertEqual(-1, builder.get_rank('output'))
+            self.assertEqual(-1, builder._get_rank('output'))
 
     def test_random_normal_dynamic_gpu(self):
         self.test_random_normal_dynamic_cpu(cpu_only=False)
@@ -2900,7 +2900,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-            self.assertEqual(rank, builder.get_rank('output'))
+            self.assertEqual(rank, builder._get_rank('output'))
 
     def test_random_uniform_like_gpu(self):
         self.test_random_uniform_like_cpu(cpu_only=False)
@@ -2933,7 +2933,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-            self.assertEqual(rank, builder.get_rank('output'))
+            self.assertEqual(rank, builder._get_rank('output'))
 
     def test_random_uniform_static_gpu(self):
         self.test_random_uniform_static_cpu(cpu_only=False)
@@ -2963,7 +2963,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-            self.assertEqual(-1, builder.get_rank('output'))
+            self.assertEqual(-1, builder._get_rank('output'))
 
     def test_random_uniform_dynamic_gpu(self):
         self.test_random_uniform_dynamic_cpu(cpu_only=False)
@@ -3294,7 +3294,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 input = {'data': x}
                 expected = {'output': ref}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-                self.assertEqual(2, builder.get_rank('output'))
+                self.assertEqual(2, builder._get_rank('output'))
 
     def test_flatten_to_2d_gpu(self):
         self.test_flatten_to_2d_cpu(cpu_only=False)
@@ -3333,7 +3333,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': np.reshape(data, target_shape)}
 
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-                self.assertEqual(target_rank, builder.get_rank('output'))
+                self.assertEqual(target_rank, builder._get_rank('output'))
 
     def test_reshape_like_gpu(self):
         self.test_reshape_like_cpu(cpu_only=False)
@@ -3372,7 +3372,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': np.reshape(data, target_shape)}
 
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-                self.assertEqual(len(target_shape), builder.get_rank('output'))
+                self.assertEqual(len(target_shape), builder._get_rank('output'))
 
     def test_reshape_static_gpu(self):
         self.test_reshape_static_cpu(cpu_only=False)
@@ -3411,7 +3411,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': np.reshape(data, target_shape)}
 
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
-                self.assertEqual(-1, builder.get_rank('output'))
+                self.assertEqual(-1, builder._get_rank('output'))
 
     def test_reshape_dynamic_gpu(self):
         self.test_reshape_dynamic_cpu(cpu_only=False)
@@ -3450,7 +3450,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     expected_rank = len(expected['output'].shape)
                     if expected_rank == 0:
                         expected_rank = 1
-                    self.assertEqual(expected_rank, builder.get_rank('output'))
+                    self.assertEqual(expected_rank, builder._get_rank('output'))
     
     def test_reduce_sum_gpu(self):
         self.test_reduce_sum_cpu(cpu_only=False)
@@ -3490,7 +3490,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     expected_rank = len(expected['output'].shape)
                     if expected_rank == 0:
                         expected_rank = 1
-                    self.assertEqual(expected_rank, builder.get_rank('output'))
+                    self.assertEqual(expected_rank, builder._get_rank('output'))
 
     def test_reduce_prod_gpu(self):
         self.test_reduce_prod_cpu(cpu_only=False)
@@ -3875,7 +3875,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': np.take(a, b, axis=axis)}
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-                self.assertEqual(len(expected['output'].shape), builder.get_rank('output'))
+                self.assertEqual(len(expected['output'].shape), builder._get_rank('output'))
 
     def test_gather_gpu(self):
         self.test_gather_cpu(cpu_only=False)
@@ -3904,7 +3904,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     input = {'params': a, 'indices': b.astype(np.float)}
                     expected = {'output': np.take_along_axis(a, b, axis=axis)}
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-                    self.assertEqual(len(expected['output'].shape), builder.get_rank('output'))
+                    self.assertEqual(len(expected['output'].shape), builder._get_rank('output'))
 
     def test_gather_along_axis_gpu(self):
         self.test_gather_along_axis_cpu(cpu_only=False)
@@ -3944,8 +3944,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     expected = {'output': sess.run(tf_op)}
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-                print(expected['output'])
-                self.assertEqual(-1, builder.get_rank('output'))
+                self.assertEqual(-1, builder._get_rank('output'))
 
     def test_gather_nd_gpu(self):
         self.test_gather_nd_cpu(cpu_only=False)
