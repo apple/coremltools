@@ -140,11 +140,16 @@ class SSAConverter(object):
 
         # TODO - verify outputs
         if outputs is not None:
+            top_output_features = []
             for name in outputs:
-                if name not in top_output_names and name not in self.net_ensemble.variables.keys():
+                if name in self.net_ensemble.variables.keys(): # Variable/States are optional inputs & outputs to be added later
+                    continue
+                elif name in top_output_names:
+                    top_output_features.append((name, None))
+                else:
                     raise ValueError('Output "%s" is not a NNSSA output.' % name)
-
-        top_output_features = list(zip(top_output_names, [None] * len(top_output_names)))
+        else:
+            top_output_features = list(zip(top_output_names, [None] * len(top_output_names)))
 
         self.top_builder = NeuralNetworkBuilder(
             input_features=top_input_features,
@@ -519,8 +524,8 @@ class SSAConverter(object):
             assert node.attr["new_axis_mask"] == 0
             assert len(input_names) >= 4
             rank = len(self._get_tensor_shape_from_type(input_nodes[0].datatype))
-            begin_masks = [True if i in node.attr['begin_mask'] else False for i in range(rank)]
-            end_masks = [True if i in node.attr['end_mask'] else False for i in range(rank)]
+            begin_masks = [True if i in node.attr['begin_masks'] else False for i in range(rank)]
+            end_masks = [True if i in node.attr['end_masks'] else False for i in range(rank)]
             layer = builder.add_slice_dynamic(name=slice_output_name,
                                               input_names=input_names[:4],
                                               output_name=slice_output_name,

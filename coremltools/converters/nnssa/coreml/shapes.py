@@ -216,7 +216,7 @@ def _expand_dims(layer_spec, input_shapes):
     input_shape = input_shapes[0]
     axes = list(layer_spec.expandDims.axes)
     target_rank = len(input_shape) + len(axes)
-    axes = [axis if axis >= 0 else axis + target_rank + 1 for axis in axes]
+    axes = [axis if axis >= 0 else axis + target_rank for axis in axes]
 
     output_shape = input_shape[:]
     for axis in axes:
