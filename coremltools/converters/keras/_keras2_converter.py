@@ -20,7 +20,7 @@ if _HAS_KERAS2_TF:
     import keras as _keras
     from . import _layers2
     from . import _topology2
-    _KERAS_LAYER_REGISTRY  = {
+    _KERAS_LAYER_REGISTRY = {
 
         _keras.layers.core.Dense: _layers2.convert_dense,
         _keras.layers.core.Activation: _layers2.convert_activation,
@@ -100,6 +100,7 @@ def _is_merge_layer(layer):
                 return True
     return False
 
+
 def _is_activation_layer(layer):
     return (isinstance(layer, _keras.layers.core.Activation) or
             isinstance(layer, _keras.layers.advanced_activations.LeakyReLU) or
@@ -109,7 +110,8 @@ def _is_activation_layer(layer):
                        _keras.layers.advanced_activations.ThresholdedReLU) or
             isinstance(layer, _keras.layers.advanced_activations.Softmax))
 
-def _check_unsupported_layers(model, add_custom_layers = False):
+
+def _check_unsupported_layers(model, add_custom_layers=False):
     # When add_custom_layers = True, we just convert all layers not present in
     # registry as custom layer placeholders
     if add_custom_layers:
@@ -131,7 +133,8 @@ def _check_unsupported_layers(model, add_custom_layers = False):
                         "Keras bi-directional wrapper conversion supports "
                         "only LSTM layer at this time. ")
 
-def _get_layer_converter_fn(layer, add_custom_layers = False):
+
+def _get_layer_converter_fn(layer, add_custom_layers=False):
     """Get the right converter function for Keras
     """
     layer_type = type(layer)
@@ -183,6 +186,7 @@ def _load_keras_model(model_network_path, model_weight_path, custom_objects=None
     loaded_model.load_weights(model_weight_path)
 
     return loaded_model
+
 
 def _convert_training_info(model, builder, output_features):
     """
@@ -276,33 +280,34 @@ def _convert_training_info(model, builder, output_features):
                         "trainable parameters from the Keras model, but "
                         "the input model does not include an optimizer.")
 
-def _convert(model, 
-            input_names = None, 
-            output_names = None, 
-            image_input_names = None,
-            input_name_shape_dict = {},
-            is_bgr = False, 
-            red_bias = 0.0, 
-            green_bias = 0.0, 
-            blue_bias = 0.0, 
-            gray_bias = 0.0, 
-            image_scale = 1.0, 
-            class_labels = None, 
-            predicted_feature_name = None,
-            predicted_probabilities_output = '',
-            add_custom_layers = False,
-            custom_conversion_functions = None,
-            custom_objects = None,
-            input_shapes = None,
-            output_shapes = None,
-            respect_trainable = False):
+
+def _convert(model,
+             input_names=None,
+             output_names=None,
+             image_input_names=None,
+             input_name_shape_dict={},
+             is_bgr=False,
+             red_bias=0.0,
+             green_bias=0.0,
+             blue_bias=0.0,
+             gray_bias=0.0,
+             image_scale=1.0,
+             class_labels=None,
+             predicted_feature_name=None,
+             predicted_probabilities_output='',
+             add_custom_layers=False,
+             custom_conversion_functions=None,
+             custom_objects=None,
+             input_shapes=None,
+             output_shapes=None,
+             respect_trainable=False):
 
     # Check Keras format
     if _keras.backend.image_data_format() == 'channels_first':
         print("Keras image data format 'channels_first' detected. Currently "
               "only 'channels_last' is supported. "
-            "Changing to 'channels_last', but your model may not be converted "
-            "converted properly.")
+              "Changing to 'channels_last', but your model may not be converted "
+              "converted properly.")
         _keras.backend.set_image_data_format('channels_last')
     
     # Check custom conversion functions / custom objects
@@ -380,13 +385,13 @@ def _convert(model,
             if len(dim) == 1:
                 input_dims[idx] = dim  # dim is just a number
             else:
-                errMsg =  "Invalid input shape for {}.\n".format(input_names[idx])
+                errMsg = "Invalid input shape for '{}'.\n".format(input_names[idx])
                 errMsg += "Please provide a finite channel value (D) using input_name_shape_dict arg "
                 errMsg += "with key = '{}' and value = [D]".format(input_names[idx])
                 raise ValueError(errMsg)
 
         elif len(unfiltered_shape) == 2:
-            if len(dim) == 2:# [Seq, D]
+            if len(dim) == 2:  # [Seq, D]
                 input_dims[idx] = (dim[1],)
             elif len(dim) == 1:
                 s = graph.get_successors(inputs[idx])[0]
@@ -396,49 +401,48 @@ def _convert(model,
                     input_dims[idx] = (1,)
                 else:
                     input_dims[idx] = dim  # dim is just a number
-            else: # Used to be [None, None] before filtering; indicating unknown
+            else:  # Used to be [None, None] before filtering; indicating unknown
                 # sequence length
                 input_dims[idx] = tuple([1])
 
         elif len(unfiltered_shape) == 3:
-            if len(dim) == 3:# keras provided fixed batch and sequence length,
+            if len(dim) == 3:  # keras provided fixed batch and sequence length,
                 # so the input was (batch, sequence, channel)
                 input_dims[idx] = (dim[2],)
-            elif len(dim) == 2:# [None, Seq, D]
+            elif len(dim) == 2:  # [None, Seq, D]
                 input_dims[idx] = (dim[1],)
             elif len(dim) == 1:
                 input_dims[idx] = dim  # dim is just a number
             else:
-                errMsg =  "Invalid input shape for {}.\n".format(input_names[idx])
+                errMsg = "Invalid input shape for '{}'.\n".format(input_names[idx])
                 errMsg += "Please provide a finite channel value (D) using "
                 errMsg += "input_name_shape_dict arg with key = '{}' and " \
-                          "value = [None,None,D]".format(input_names[idx])
+                          "value = [None, None, D]".format(input_names[idx])
                 raise ValueError(errMsg)
 
         elif len(unfiltered_shape) == 4:
-            if len(dim) == 3:# keras uses the reverse notation from CoreML
+            if len(dim) == 3:  # keras uses the reverse notation from CoreML
                 input_dims[idx] = (dim[2], dim[0], dim[1])
             else:
-                errMsg =  "Invalid input shape for {}.\n".format(input_names[idx])
+                errMsg = "Invalid input shape for '{}'.\n".format(input_names[idx])
                 errMsg += "Please provide a finite height (H), width (W) & " \
                           "channel value (C) "
                 errMsg += "using input_name_shape_dict arg with key = '{}' " \
-                          "and value = [None,H,W,C]\n".format(input_names[idx])
+                          "and value = [None, H, W, C]\n".format(input_names[idx])
                 errMsg += "Converted .mlmodel can be modified to have flexible " \
                           "input shape using coremltools.models.neural_network.flexible_shape_utils"
                 raise ValueError(errMsg)
 
         elif len(unfiltered_shape) == 5:
-            if len(dim) == 4:# keras uses the reverse notation from CoreML
+            if len(dim) == 4:  # keras uses the reverse notation from CoreML
                 input_dims[idx] = (dim[-1], dim[-3], dim[-2])
             else:
-                errMsg = "Invalid input shape for input: {}, shape:{}.\n".format(input_names[idx],
-                                                                                 str(unfiltered_shape))
+                errMsg = "Invalid input shape for '{}', shape:{}.\n".format(input_names[idx],
+                                                                            str(unfiltered_shape))
                 raise ValueError(errMsg)
         else:
             raise ValueError("Input '%s' has input shape of length %d"
                              % (input_names[idx], len(dim)))
-
 
     # Retrieve output shapes from model
     if len(model._outbound_nodes) > 1 and output_shapes is not None:
@@ -528,14 +532,14 @@ def _convert(model,
         else:
             builder.set_class_labels(classes)
 
-    # Set pre-processing paramsters
-    builder.set_pre_processing_parameters(image_input_names = image_input_names, 
-                                          is_bgr = is_bgr, 
-                                          red_bias = red_bias, 
-                                          green_bias = green_bias, 
-                                          blue_bias = blue_bias, 
-                                          gray_bias = gray_bias, 
-                                          image_scale = image_scale)
+    # Set pre-processing parameters
+    builder.set_pre_processing_parameters(image_input_names=image_input_names,
+                                          is_bgr=is_bgr,
+                                          red_bias=red_bias,
+                                          green_bias=green_bias,
+                                          blue_bias=blue_bias,
+                                          gray_bias=gray_bias,
+                                          image_scale=image_scale)
 
     # add in the loss and optimizer, if the network has it and that is
     # appropriate given the flag.
