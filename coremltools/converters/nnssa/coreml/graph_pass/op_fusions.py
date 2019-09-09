@@ -240,6 +240,12 @@ def onehot_matmul_to_embedding(nnssa):
                 print('[Op Fusion] Node %s is removed.' %(inp_node.name))
 
 
+def _search_nodes_by_type(gf, node_names, op_type):
+    for name in node_names:
+        if gf[name].op == op_type:
+            return gf[name]
+
+
 def _match_layernorm_pattern(gf, entry_node):
     """ Return the nodes that form the subgraph of a LayerNormalization layer
     """
@@ -248,7 +254,10 @@ def _match_layernorm_pattern(gf, entry_node):
 
     try:
         params = {}
-        mean_1, sqdiff_2, mul_3 = [gf[x] for x in entry_node.outputs]
+        mean_1 = _search_nodes_by_type(gf, entry_node.outputs, 'Mean')
+        sqdiff_2 = _search_nodes_by_type(gf, entry_node.outputs, 'SquaredDifference')
+        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, 'Mul')
+
         if not (mean_1.op == 'Mean' and sqdiff_2.op == 'SquaredDifference' and
             mul_3.op == 'Mul'):
             return None
@@ -284,9 +293,11 @@ def _match_layernorm_pattern(gf, entry_node):
             return None
         const_11 = gf[mul_10.inputs[1]]
         params['gamma'] = const_11.value.val
-        if not (gf[mul_10.outputs[0]] == mul_3 and len(mul_10.outputs) == 2):
+        if not (mul_3.name in mul_10.outputs and len(mul_10.outputs) == 2):
             return None
-        mul_12 = gf[mul_10.outputs[1]]
+        mul_12 = gf[mul_10.outputs[1]] if gf[mul_10.outputs[0]] == mul_3 else \
+            gf[mul_10.outputs[0]]
+
         sub_13 = gf[mul_12.outputs[0]]
         if not (mul_12.op == 'Mul' and sub_13.op == 'Sub'):
             return None
@@ -303,7 +314,7 @@ def _match_layernorm_pattern(gf, entry_node):
             add_15]
 
         return (layernorm_nodes, params)
-    except:
+    except Exception as e:
         return None
 
 
@@ -357,7 +368,10 @@ def _match_gelu_pattern(gf, entry_node):
     try:
         if not len(entry_node.outputs) == 3:
             return None
-        pow_1, add_2, mul_3 = [gf[x] for x in entry_node.outputs]
+        pow_1 = _search_nodes_by_type(gf, entry_node.outputs, 'Pow')
+        add_2 = _search_nodes_by_type(gf, entry_node.outputs, 'Add')
+        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, 'Mul')
+
         if not (pow_1.op == 'Pow' and add_2.op == 'Add' and mul_3.op == 'Mul'):
             return None
         const_4 = gf[pow_1.inputs[1]]
