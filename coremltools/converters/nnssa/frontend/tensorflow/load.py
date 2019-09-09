@@ -40,9 +40,15 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
     ssa = graphdef_to_ssa(gd)
 
     placeholder_shape = kwargs.get("inputs", {})
-    for k, v in placeholder_shape.items():
-        assert (k in ssa.functions['main'].graph)
-        ssa.functions['main'].graph[k].attr['_output_shapes'] = [v]
+
+    if len(placeholder_shape) > 0:
+        graph = ssa.functions['main'].graph
+        required_plhd_nodes = [node for node in graph if 
+            graph[node].op == 'Placeholder']
+        for name in required_plhd_nodes:
+            if name not in placeholder_shape:
+                raise ValueError('Shape of required input {} is not provided.'.format(name))
+            graph[name].attr['_output_shapes'] = [placeholder_shape[name]]
 
     passes = [
         delete_asserts, functionalize_loops, constant_propagation,
