@@ -64,15 +64,14 @@ class TypeInferenceVisitor(object):
         method = 'visit_' + node.op
         visitor = getattr(self, method, None)
         if visitor is None:
-            print("Op " + node.op + " Not implemented")
-            return None
+            raise NotImplementedError('[TypeInference] Op "{}" not implemented.'.format(node.op))
 
         # find the type of the node
         ret = None
         try:
             ret = visitor(node)
         except Exception as e:
-            print("Failed to infer type of %s:%s" % (node.name, node.op))
+            print("Failed to infer type of node %s (%s)" % (node.name, node.op))
             print(e)
             print(traceback.format_exc())
 
@@ -472,6 +471,36 @@ class TypeInferenceVisitor(object):
                         filtshape[3]
                     ]
                     return builtins.tensor(input_type.get_primitive(), tuple(retshape))
+        return self._get_type_from_attr(node)
+
+    def visit_Conv2DBackpropInput(self, node):
+        filter_type = self.visit(node.inputs[1])
+        input_type = self.visit(node.inputs[2])
+        if input_type and filter_type:
+            # we implement shape inference for a simple case
+            if node.attr['data_format'] == 'NHWC' and \
+                    all(d == 1 for d in node.attr['dilations']) and \
+                    all(d == 1 for d in node.attr['strides']):
+                input_shape = input_type.get_shape()
+                filter_shape = filter_type.get_shape()
+                if node.attr['padding'].lower() == 'valid':
+                    assert len(input_shape) == 4
+                    assert len(filter_shape) == 4
+                    ret_shape = [
+                        input_shape[0],
+                        input_shape[1] - filter_shape[0] + 1,
+                        input_shape[2] - filter_shape[1] + 1,
+                        filter_shape[2]
+                    ]
+                    return builtins.tensor(input_type.get_primitive(), tuple(ret_shape))
+                elif node.attr['padding'].lower() == 'same':
+                    ret_shape = [
+                        input_shape[0],
+                        input_shape[1],
+                        input_shape[2],
+                        filter_shape[2]
+                    ]
+                    return builtins.tensor(input_type.get_primitive(), tuple(ret_shape))
         return self._get_type_from_attr(node)
 
     def visit_ResizeBilinear(self, node):
@@ -880,6 +909,9 @@ class TypeInferenceVisitor(object):
         return builtins.int32
 
     def visit_Relu(self, node):
+        return self.visit_unary(node)
+
+    def visit_Relu6(self, node):
         return self.visit_unary(node)
 
     def visit_LeakyRelu(self, node):
@@ -1989,10 +2021,20 @@ class TypeInferenceVisitor(object):
         return self.visit(node.inputs[0])
 
     def visit_SpaceToDepth(self, node):
-        return self.visit_unary(node)
+        primitive = self.visit_unary(node).get_primitive()
+        return builtins.tensor(primitive, node.attr['_output_shapes'][0])
 
     def visit_DepthToSpace(self, node):
-        return self.visit_unary(node)
+        primitive = self.visit_unary(node).get_primitive()
+        return builtins.tensor(primitive, node.attr['_output_shapes'][0])
+
+    def visit_SpaceToBatchND(self, node):
+        primitive = self.visit_unary(node).get_primitive()
+        return builtins.tensor(primitive, node.attr['_output_shapes'][0])
+
+    def visit_BatchToSpaceND(self, node):
+        primitive = self.visit_unary(node).get_primitive()
+        return builtins.tensor(primitive, node.attr['_output_shapes'][0])
 
 
 def type_is_unknown(t):

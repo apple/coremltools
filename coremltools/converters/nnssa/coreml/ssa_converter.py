@@ -148,7 +148,7 @@ class SSAConverter(object):
         if outputs is not None:
             top_output_features = []
             for name in outputs:
-                if name in self.net_ensemble.variables.keys(): # Variable/States are optional inputs & outputs to be added later
+                if name in self.net_ensemble.variables.keys():  # Variable/States are optional inputs & outputs to be added later
                     continue
                 elif name in top_output_names:
                     top_output_features.append((name, None))
@@ -219,6 +219,7 @@ class SSAConverter(object):
             'SplitV': self._convert_split,
             'Sigmoid': self._convert_unary_activation,
             'Relu': self._convert_unary_activation,
+            'Relu6': self._convert_unary_activation_relu6,
             'LeakyRelu': self._convert_unary_activation,
             'Tanh': self._convert_unary_activation,
             'Elu': self._convert_unary_activation,
@@ -247,6 +248,7 @@ class SSAConverter(object):
             'SelectMask': self._convert_select,
             'Where': self._convert_where,
             'Conv2D': self._convert_conv2d,
+            'Conv2DBackpropInput': self._convert_conv2d_transpose,
             'MaxPool': self._convert_maxpool,
             'AvgPool': self._convert_avgpool,
             'Reshape': self._convert_reshape,
@@ -276,6 +278,8 @@ class SSAConverter(object):
             'LayerNormalization': self._convert_layer_normalization,
             'SpaceToDepth': self._convert_reorganize_data,
             'DepthToSpace': self._convert_reorganize_data,
+            'SpaceToBatchND': self._convert_space_to_batch_nd,
+            'BatchToSpaceND': self._convert_batch_to_space_nd,
             'BatchNorm': self._convert_batchnorm,
         }
 
@@ -352,16 +356,15 @@ class SSAConverter(object):
             op_type = node.op
             if op_type not in self.CONVERT_FUNCTION_MAP:
                 raise NotImplementedError(
-                    '[SSAConverter] Conversion for op %s not implemented, terminating...' %
-                    (op_type))
+                    '[SSAConverter] Op type "{}" not implemented.'.format(op_type))
             if builtins.is_tensor(node.datatype):
                 print(
-                    '[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\' (output shape: {})'.format(
-                        idx + 1, len(instruction_order), op_type, node_name, node.datatype.get_shape()))
+                    '[SSAConverter] [{}/{}] Converting op "{}" of type "{}", output shape: {}'.format(
+                        idx + 1, len(instruction_order), node_name, op_type, node.datatype.get_shape()))
             else:
                 print(
-                '[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\''.format(
-                    idx + 1, len(instruction_order), op_type, node_name))
+                    '[SSAConverter] [{}/{}] Converting op "{}" of type "{}"'.format(
+                        idx + 1, len(instruction_order), op_type, node_name))
 
             convert_func = self.CONVERT_FUNCTION_MAP[op_type]
             convert_func(node)
@@ -1024,7 +1027,7 @@ class SSAConverter(object):
             layer = self._get_builder().add_elementwise(node.name, input_names, node.name, 'CONCAT')
         else:
             layer = self._get_builder().add_concat_nd(
-                        name=node.name, input_names=input_names, output_name=node.name, axis=axis)
+                name=node.name, input_names=input_names, output_name=node.name, axis=axis)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_batched_mat_mul(self, node):
@@ -1265,7 +1268,7 @@ class SSAConverter(object):
 
         border_mode = node.attr.get('padding').lower()
 
-        layer = builder.add_convolution(
+        builder.add_convolution(
             name=conv_output_name,
             kernel_channels=weight.shape[2],
             output_channels=weight.shape[3],
@@ -1671,7 +1674,7 @@ class SSAConverter(object):
         C = len(gamma)
         beta = node.attr.get('beta')
         mean = node.attr.get('mean', np.zeros((C,)))
-        variance  = node.attr.get('mean', np.ones((C,)))
+        variance = node.attr.get('mean', np.ones((C,)))
         layer = self._get_builder().add_batchnorm(
             name=node.name,
             channels=C,
@@ -1724,11 +1727,31 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
+    def _convert_unary_activation_relu6(self, node):
+        assert len(node.inputs) == 1
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        builder = self._get_builder()
+        layer = builder.add_activation(
+            name=node.name + '_relu',
+            input_name=input_names[0],
+            output_name=node.name + '_relu',
+            non_linearity='RELU',
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_clip(
+            name=node.name,
+            input_name=node.name + '_relu',
+            output_name=node.name,
+            max_value=6.0
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
     def _convert_gelu(self, node):
         assert len(node.inputs) == 1
         input_nodes, input_names, input_types = self._get_input_tensors(node)
 
-        # CoreML has 3 modes: EXACT, TANH_APPROXIMATION,SIGMOID_APPROXIMATION
+        # Core ML has 3 modes: EXACT, TANH_APPROXIMATION,SIGMOID_APPROXIMATION
         layer = self._get_builder().add_gelu(
             name=node.name,
             input_name=input_names[0],
@@ -1737,7 +1760,7 @@ class SSAConverter(object):
 
         output_shape = self._get_tensor_shape_from_type(node.datatype)
         shapes.propagate_single_layer(layer, self.tensor_shapes,
-            output_shapes=[output_shape])
+                                      output_shapes=[output_shape])
 
     def _convert_reduction(self, node):
         assert len(node.inputs) == 2
@@ -1843,7 +1866,6 @@ class SSAConverter(object):
         shapes.propagate_single_layer(layer, self.tensor_shapes,
                                       output_shapes=[output_shape])
 
-
     def _convert_layer_normalization(self, node):
         assert len(node.inputs) == 1
         input_nodes, input_names, input_types = self._get_input_tensors(node)
@@ -1855,28 +1877,28 @@ class SSAConverter(object):
         epsilon = node.attr['epsilon']
         input_shape = list(input_types[0].get_shape())
 
-        if (len(input_shape) in [2,3] and len(axes) == 1 and \
-            axes[0] == len(input_shape) - 1):
+        if (len(input_shape) in [2, 3] and len(axes) == 1 and \
+                axes[0] == len(input_shape) - 1):
             # Performance enhancement for some models with layer-norm
             builder.add_reshape_static(name=input_name + '_reshape',
-                input_name=input_name,
-                output_name=input_name + '_reshape',
-                output_shape=input_shape + [1,1])
+                                       input_name=input_name,
+                                       output_name=input_name + '_reshape',
+                                       output_shape=input_shape + [1, 1])
 
             builder.add_mvn(name=input_name + '_mvn',
-                input_name=input_name + '_reshape',
-                output_name=input_name + '_mvn', across_channels=True,
-                normalize_variance=True, epsilon=epsilon)
+                            input_name=input_name + '_reshape',
+                            output_name=input_name + '_mvn', across_channels=True,
+                            normalize_variance=True, epsilon=epsilon)
 
             builder.add_scale(name=node.name + '_5d',
-                input_name=input_name + '_mvn',
-                output_name=node.name + '_5d', W=gamma, b=beta, has_bias=True,
-                shape_scale=[len(gamma)], shape_bias=[len(beta)])
+                              input_name=input_name + '_mvn',
+                              output_name=node.name + '_5d', W=gamma, b=beta, has_bias=True,
+                              shape_scale=[len(gamma)], shape_bias=[len(beta)])
 
             builder.add_reshape_static(name=node.name,
-                input_name=node.name + '_5d',
-                output_name=node.name,
-                output_shape=input_shape)
+                                       input_name=node.name + '_5d',
+                                       output_name=node.name,
+                                       output_shape=input_shape)
 
         else:
             # General implementation
@@ -1889,11 +1911,10 @@ class SSAConverter(object):
                 beta = np.zeros(normalized_shape) + beta
 
             builder.add_layer_normalization(node.name, input_name, node.name,
-                                        normalized_shape, gamma, beta, eps=1e-5)
-        
+                                            normalized_shape, gamma, beta, eps=1e-5)
+
         self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(
             node.datatype)
-
 
     def _convert_binary_broadcastable(self, node):
         assert len(node.inputs) == 2
@@ -1997,28 +2018,21 @@ class SSAConverter(object):
         block_size = node.attr.get('block_size', 2)
         if node.op == 'SpaceToDepth':
             mode = 'SPACE_TO_DEPTH'
-        else:  # node.op == DepthToSpace
+        else:  # node.op == 'DepthToSpace':
             mode = 'DEPTH_TO_SPACE'
-        builder = self._get_builder()
 
-        layer = builder.add_squeeze(
-            name=node.name + '_squeeze',
-            input_name=input_names[0],
-            output_name=node.name + '_squeeze',
-            axes=[0]
-        )
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
+        builder = self._get_builder()
 
         layer = builder.add_transpose(
             name=node.name + '_transpose1',
-            input_name=node.name + '_squeeze',
+            input_name=input_names[0],
             output_name=node.name + '_transpose1',
-            axes=[2, 0, 1]
+            axes=[0, 3, 1, 2]
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
         layer = builder.add_reorganize_data(
-            name=node.name,
+            name=node.name + '_reorganize',
             input_name=node.name + '_transpose1',
             output_name=node.name + '_reorganize',
             mode=mode,
@@ -2027,17 +2041,122 @@ class SSAConverter(object):
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
         layer = builder.add_transpose(
-            name=node.name + '_transpose2',
+            name=node.name,
             input_name=node.name + '_reorganize',
-            output_name=node.name + '_transpose2',
-            axes=[1, 2, 0]
+            output_name=node.name,
+            axes=[0, 2, 3, 1]
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-        layer = builder.add_expand_dims(
-            name=node.name + '_expand_dims',
-            input_name=node.name + '_transpose2',
-            output_name=node.name,
-            axes=[0]
+    def _convert_space_to_batch_nd(self, node):
+        assert len(node.inputs) == 3
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        block_shape = input_nodes[1].value.val
+        if block_shape[0] != block_shape[1]:
+            raise NotImplementedError('non-equal block shape is not yet supported')
+        paddings = input_nodes[2].value.val
+        if any(paddings.flatten()):
+            raise NotImplementedError('paddings are not yet supported')
+
+        builder = self._get_builder()
+
+        layer = builder.add_transpose(
+            name=node.name + '_transpose1',
+            input_name=input_names[0],
+            output_name=node.name + '_transpose1',
+            axes=[3, 0, 1, 2]
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_reorganize_data(
+            name=node.name + '_reorganize',
+            input_name=node.name + '_transpose1',
+            output_name=node.name + '_reorganize',
+            mode='space_to_depth'.upper(),
+            block_size=block_shape[0]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_transpose(
+            name=node.name,
+            input_name=node.name + '_reorganize',
+            output_name=node.name,
+            axes=[1, 2, 3, 0]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_batch_to_space_nd(self, node):
+        assert len(node.inputs) == 3
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        block_shape = input_nodes[1].value.val
+        if block_shape[0] != block_shape[1]:
+            raise NotImplementedError('non-equal block shape is not yet supported')
+        crops = input_nodes[2].value.val
+        if any(crops.flatten()):
+            raise NotImplementedError('crops are not yet supported')
+
+        builder = self._get_builder()
+
+        layer = builder.add_transpose(
+            name=node.name + '_transpose1',
+            input_name=input_names[0],
+            output_name=node.name + '_transpose1',
+            axes=[3, 0, 1, 2]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_reorganize_data(
+            name=node.name + '_reorganize',
+            input_name=node.name + '_transpose1',
+            output_name=node.name + '_reorganize',
+            mode='depth_to_space'.upper(),
+            block_size=block_shape[0]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        layer = builder.add_transpose(
+            name=node.name,
+            input_name=node.name + '_reorganize',
+            output_name=node.name,
+            axes=[1, 2, 3, 0]
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_conv2d_transpose(self, node):
+        assert len(node.inputs) == 3
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+
+        input_name = input_names[2]
+        weight = input_nodes[1].value.val
+        bias = node.attr.get('bias')
+
+        strides = node.attr.get('strides')
+        border_mode = node.attr.get('padding').lower()
+        stride_height = strides[1]
+        stride_width = strides[2]
+        input_shape = self.tensor_shapes[input_name]
+        output_shape = self.tensor_shapes[input_names[0]]
+
+        kernel_channels = input_shape[1]
+        output_channels = output_shape[-1]
+
+        self._get_builder().add_convolution(
+            name=node.name,
+            kernel_channels=kernel_channels,
+            output_channels=output_channels,
+            height=weight.shape[0],
+            width=weight.shape[1],
+            stride_height=stride_height,
+            stride_width=stride_width,
+            border_mode=border_mode,
+            groups=1,
+            W=np.transpose(weight, (0, 1, 3, 2)),
+            b=bias,
+            has_bias=(bias is not None),
+            is_deconv=True,
+            output_shape=None,
+            input_name=input_name,
+            output_name=node.name
+        )
+
+        self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
