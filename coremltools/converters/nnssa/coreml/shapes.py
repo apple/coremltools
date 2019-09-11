@@ -420,14 +420,14 @@ def _reorganize_data(layer_spec, input_shapes):
     block_size = layer_spec.reorganizeData.blockSize
     input_shape = input_shapes[0][:]
     output_shape = input_shapes[0][:]
-    if layer_spec.name == 'SpaceToDepth':
-        output_shape[0] = input_shape[1] // block_size
-        output_shape[1] = input_shape[2] // block_size
-        output_shape[2] = input_shape[0] * block_size * block_size
-    else:  # layer_spec.name == DepthToSpace
-        output_shape[0] = input_shape[0] * block_size
-        output_shape[1] = input_shape[1] * block_size
-        output_shape[2] = input_shape[2] // (block_size * block_size)
+    if 'SpaceToDepth' in layer_spec.name or 'SpaceToBatchND' in layer_spec.name:
+        output_shape[2] //= block_size
+        output_shape[3] //= block_size
+        output_shape[1] = output_shape[1] * block_size * block_size
+    elif 'DepthToSpace' in layer_spec.name or 'BatchToSpaceND' in layer_spec.name:
+        output_shape[2] *= block_size
+        output_shape[3] *= block_size
+        output_shape[1] = input_shape[2] // (block_size * block_size)
     return [output_shape]
 
 
@@ -515,6 +515,7 @@ _LAYER_REGISTRY = {
     'topK': _topk,
     'reorganizeData': _reorganize_data,
     'batchnorm': _identity,
+    'clip': _identity,
 }
 
 
@@ -604,7 +605,7 @@ def _propagate_shapes(nn_spec, blob_names, shapes, srcs, dsts, layer_specs):
         layer_type = layer.WhichOneof('layer')
         if layer_type not in _LAYER_REGISTRY:
             raise NotImplementedError(
-                '[Shaper] Layer %s of type %s is not supported' % (layer_name, layer_type))
+                '[Shaper] Layer "{}" of type "{}" not implemented'.format(layer_name, layer_type))
         if layer_type == 'forloop':
             # If a nested network, recursively traverse into it
             _propagate_shapes(layer.condition)
@@ -763,7 +764,7 @@ def propagate_single_layer(layer, shapes, output_shapes=None):
     if output_shapes is None:
         if layer_type not in _LAYER_REGISTRY:
             raise NotImplementedError(
-                '[Shaper] Layer %s of type %s is not supported' % (layer.name, layer_type))
+                '[Shaper] Layer "{}" of type "{}" not implemented'.format(layer.name, layer_type))
         layer_translator = _get_translator_function(layer_type)
         input_shapes = [list(shapes[b]) for b in layer.input]
         output_shapes = layer_translator(layer, input_shapes)
