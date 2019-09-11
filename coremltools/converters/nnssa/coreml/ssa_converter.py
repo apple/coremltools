@@ -245,7 +245,7 @@ class SSAConverter(object):
             'Tan': self._convert_unary_trigonometric,
             'GeLU': self._convert_gelu,
             'SelectMask': self._convert_select,
-            'Where': self._convert_select,
+            'Where': self._convert_where,
             'Conv2D': self._convert_conv2d,
             'MaxPool': self._convert_maxpool,
             'AvgPool': self._convert_avgpool,
@@ -872,6 +872,19 @@ class SSAConverter(object):
             input_names=[cond_name, true_name, false_name],
             output_name=node.name)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_where(self, node):
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+
+        if len(input_names) == 3:
+            self._convert_select(node)
+        else:
+            assert len(input_names) == 1
+            layer = self._get_builder().add_where_nonzero(name=node.name,
+                                                          input_name=input_names[0],
+                                                          output_name=node.name)
+
+            self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
 
     def _convert_softmax(self, node):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
