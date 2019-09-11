@@ -1675,7 +1675,7 @@ class SSAConverter(object):
             name=node.name,
             input_name=input_names[0],
             output_name=node.name,
-            mode='EXACT')
+            mode='TANH_APPROXIMATION')
 
         output_shape = self._get_tensor_shape_from_type(node.datatype)
         shapes.propagate_single_layer(layer, self.tensor_shapes,
