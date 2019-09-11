@@ -59,7 +59,7 @@ def constant_propagation(nnssa):
         if len(constant_nodes) > 0:
             with tf.Graph().as_default() as graph:
                 tf.import_graph_def(new_graph, name="")
-                with tf.Session(graph=graph) as sess:
+                with tf.compat.v1.Session(graph=graph) as sess:
                     query_list = []
                     for c in constant_nodes:
                         for j in range(constant_node_num_outputs[c]):

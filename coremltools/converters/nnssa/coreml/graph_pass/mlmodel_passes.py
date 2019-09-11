@@ -57,15 +57,15 @@ def _delete_disconnected_load_constants(nn_spec, disconnected_load_constants):
             _delete_disconnected_load_constants(layer.branch.ifBranch, disconnected_load_constants)
             _delete_disconnected_load_constants(layer.branch.elseBranch, disconnected_load_constants)
 
+
 def remove_disconnected_constants(spec):
-    '''
+    """
     remove constant layers whose outputs are not connected to any other layer
-    '''
+    """
     nn_spec = _get_nn_spec(spec)
     disconnected_load_constants = dict()  # output_name -> layer reference
     _find_disconnected_load_constants(nn_spec, disconnected_load_constants)
     if len(disconnected_load_constants) > 0:
         _delete_disconnected_load_constants(nn_spec, disconnected_load_constants)
-        print(
-            '[MLModel Pass] {} disconnected constants are removed from graph.'.format(
-                len(disconnected_load_constants)))
+        print('[Core ML Pass] {} disconnected constants nodes deleted'.format(
+            len(disconnected_load_constants)))
