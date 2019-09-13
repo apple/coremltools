@@ -166,7 +166,7 @@ builder.add_convolution(name='conv',
                         input_name='data', output_name='conv')
 
 builder.add_activation(name='prelu',
-                       non_linearity = 'PRELU',
+                       non_linearity='PRELU',
                        input_name='conv', output_name='output',
                        params=np.array([1.0,2.0,3.0]))
 
@@ -177,4 +177,45 @@ model.save('conv_prelu.mlmodel')
 output_dict = model.predict({'data':np.ones((3,10,10))}, useCPUOnly=False)
 print(output_dict['output'].shape)
 print(output_dict['output'].flatten()[:3])
+```
+
+## Quantizing a neural network mlmodel
+```python
+from coremltools.models.neural_network.quantization_utils import quantize_weights
+
+model = coremltools.models.MLModel('model.mlmodel')
+# Example 1: 8-bit linear
+quantized_model = quantize_weights(model, nbits=8, quantization_mode="linear")
+
+# Example 2: 4-bit k-means generated look-up table
+quantized_model = quantize_weights(model, nbits=4, quantization_mode="kmeans")
+
+# Example 3: 8-bit symmetric linear quantization skipping bias, 
+# batchnorm, depthwise-convolution, and small convolution
+# with less than 4 channels or 4086 elements
+from coremltools.models.neural_network.quantization_utils import AdvancedQuantizedLayerSelector
+selector = AdvancedQuantizedLayerSelector(
+        skip_layer_types=['batchnorm', 'bias', 'depthwiseConv'],
+        minimum_conv_kernel_channels=4,
+        minimum_conv_weight_count=4096)
+quantized_model = quantize_weights(model, 8, quantization_mode='linear_symmetric',
+        selector=selector)
+
+# Example 4: 8-bit linear quantization skipping the layer with name 'dense_2'
+from coremltools.models.neural_network.quantization_utils import QuantizedLayerSelector
+class MyLayerSelector(QuantizedLayerSelector):
+
+    def __init__(self):
+        super(MyLayerSelector, self).__init__()
+
+    def do_quantize(self, layer, **kwargs):
+        ret = super(MyLayerSelector, self).do_quantize(layer)
+        if not ret or layer.name == 'dense_2':
+            return False
+		return True
+
+selector = MyLayerSelector()
+quantized_model = quantize_weights(mlmodel, 8, 
+        quantization_mode='linear')
+
 ```
