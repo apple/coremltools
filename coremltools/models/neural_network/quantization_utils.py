@@ -31,8 +31,6 @@ from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
 from ... import (_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
                  _MINIMUM_FP16_SPEC_VERSION)
 
-# TODO - add batchedMatmul
-
 class QuantizedLayerSelector(object):
     """ This is the base class to provide stu
     """
@@ -41,7 +39,7 @@ class QuantizedLayerSelector(object):
             'convolution', 'innerProduct', 'embedding',
             'batchnorm', 'scale', 'bias', 'loadConstant',
             'simpleRecurrent', 'gru', 'uniDirectionalLSTM',
-            'biDirectionalLSTM',
+            'biDirectionalLSTM', 'batchedMatmul'
         }
 
     def do_quantize(self, layer, **kwargs):
@@ -94,7 +92,7 @@ class AdvancedQuantizedLayerSelector(QuantizedLayerSelector):
             else:
                 raise ValueError('Unrecognized quantization weight field {}'.format(weight_param))
 
-        elif layer_type == 'innerProduct':
+        elif layer_type == 'innerProduct' or 'batchedMatmul':
             if weight_param is None or weight_param == 'weights':
                 return True
             if weight_param == 'bias':
@@ -577,6 +575,16 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
             if has_bias and selector.do_quantize(layer, weight_param='bias'):
                 _quantize_wp_field(layer.innerProduct.bias, nbits, qm,
                     shape=(output_channels,), **kwargs)
+
+        elif layer_type == 'batchedMatmul':
+            x1 = layer.batchedMatmul.weightMatrixFirstDimension
+            x2 = layer.batchedMatmul.weightMatrixSecondDimension
+            _quantize_wp_field(layer.batchedMatmul.weights, nbits, qm,
+                shape=(x1, x2), **kwargs)
+            has_bias = layer.batchedMatmul.hasBias
+            if has_bias and selector.do_quantize(layer, weight_param='bias'):
+                _quantize_wp_field(layer.batchedMatmul.bias, nbits, qm,
+                    shape=(x2,), **kwargs)
 
         # Embedding layer
         elif layer_type == 'embedding':
