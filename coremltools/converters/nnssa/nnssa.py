@@ -430,3 +430,19 @@ class NetworkEnsemble(object):
                 idx += 1
             else:
                 return name
+
+    def get_image_format(self):
+        """
+        Iterates over graph and returns input format (`NCHW` or `NHWC`)
+        if input is of type Image, otherwise `None`
+        """
+        for fn_key in list(self.functions.keys()):
+            graph = self.functions[fn_key].graph
+
+            for name in graph:
+                node = graph[name]
+                if node.attr.get('data_format', None) == 'NHWC' or node.attr.get('data_format') == 'NHWC_format_inserted':
+                    return 'NHWC'
+                elif node.attr.get('data_format', None) == 'NCHW':
+                    return 'NCHW'
+        return None
