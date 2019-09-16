@@ -187,12 +187,15 @@ model = coremltools.models.MLModel('model.mlmodel')
 # Example 1: 8-bit linear
 quantized_model = quantize_weights(model, nbits=8, quantization_mode="linear")
 
-# Example 2: 4-bit k-means generated look-up table
+# Example 2: Quantize to FP-16 weights
+quantized_model = quantize_weights(model, nbits=16)
+
+# Example 3: 4-bit k-means generated look-up table
 quantized_model = quantize_weights(model, nbits=4, quantization_mode="kmeans")
 
-# Example 3: 8-bit symmetric linear quantization skipping bias, 
-# batchnorm, depthwise-convolution, and small convolution
-# with less than 4 channels or 4086 elements
+# Example 4: 8-bit symmetric linear quantization skipping bias,
+# batchnorm, depthwise-convolution, and convolution layers
+# with less than 4 channels or 4096 elements
 from coremltools.models.neural_network.quantization_utils import AdvancedQuantizedLayerSelector
 selector = AdvancedQuantizedLayerSelector(
         skip_layer_types=['batchnorm', 'bias', 'depthwiseConv'],
@@ -201,7 +204,7 @@ selector = AdvancedQuantizedLayerSelector(
 quantized_model = quantize_weights(model, 8, quantization_mode='linear_symmetric',
         selector=selector)
 
-# Example 4: 8-bit linear quantization skipping the layer with name 'dense_2'
+# Example 5: 8-bit linear quantization skipping the layer with name 'dense_2'
 from coremltools.models.neural_network.quantization_utils import QuantizedLayerSelector
 class MyLayerSelector(QuantizedLayerSelector):
 
@@ -215,7 +218,7 @@ class MyLayerSelector(QuantizedLayerSelector):
 		return True
 
 selector = MyLayerSelector()
-quantized_model = quantize_weights(mlmodel, 8, 
-        quantization_mode='linear')
+quantized_model = quantize_weights(mlmodel, 8, quantization_mode='linear',
+        selector=selector)
 
 ```

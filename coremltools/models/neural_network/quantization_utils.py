@@ -32,14 +32,36 @@ from ... import (_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
                  _MINIMUM_FP16_SPEC_VERSION)
 
 class QuantizedLayerSelector(object):
-    """ This is the base class to provide stu
+    """ This is the base class to implement custom selectors to skip certain
+    layers during quantization. To implement a custom selector, create a class
+    that inherits this class and override `do_quantize()` method.
+
+    Examples
+    --------
+    .. highlight:: python
+    .. code-block:: python
+
+        class MyLayerSelector(QuantizedLayerSelector):
+
+            def __init__(self):
+                super(MyLayerSelector, self).__init__()
+
+            def do_quantize(self, layer, **kwargs):
+                ret = super(MyLayerSelector, self).do_quantize(layer)
+                if not ret or layer.name == 'dense_2':
+                    return False
+                return True
+
+        selector = MyLayerSelector()
+        quantized_model = quantize_weights(mlmodel, 8, quantization_mode='linear', selector=selector)
+
     """
     def __init__(self):
         self.quantizable_layer_types = {
             'convolution', 'innerProduct', 'embedding',
             'batchnorm', 'scale', 'bias', 'loadConstant',
             'simpleRecurrent', 'gru', 'uniDirectionalLSTM',
-            'biDirectionalLSTM', 'batchedMatmul'
+            'biDirectionalLSTM', 'batchedMatmul', 'depthwiseConv',
         }
 
     def do_quantize(self, layer, **kwargs):
@@ -47,7 +69,23 @@ class QuantizedLayerSelector(object):
 
 
 class AdvancedQuantizedLayerSelector(QuantizedLayerSelector):
+    """ Quantized layer selector allowing the user to specify some types of
+    layers to skip during quantization process and the minimum size parameters
+    in quantized convolution layers.
 
+    Examples
+    --------
+    .. highlight:: python
+    .. code-block:: python
+
+        from coremltools.models.neural_network.quantization_utils import AdvancedQuantizedLayerSelector
+        selector = AdvancedQuantizedLayerSelector(
+                skip_layer_types=['batchnorm', 'bias', 'depthwiseConv'],
+                minimum_conv_kernel_channels=4,
+                minimum_conv_weight_count=4096)
+        quantized_model = quantize_weights(model, 8, selector=selector)
+
+    """
     def __init__(self,
                  skip_layer_types=[],
                  minimum_conv_kernel_channels=4,
@@ -55,6 +93,17 @@ class AdvancedQuantizedLayerSelector(QuantizedLayerSelector):
 
         super(AdvancedQuantizedLayerSelector, self).__init__()
         self.skip_layer_types = skip_layer_types
+
+        # Error checking
+        invalid_skip_types = []
+        for lt in skip_layer_types:
+            if lt not in self.quantizable_layer_types:
+                invalid_skip_types.append(lt)
+        if len(invalid_skip_types) > 0:
+            err_msg = 'Skip quantization layer types ({}) is not supported.\n'.format(','.join(invalid_skip_types))
+            err_msg += 'Supported quantization layers: ({})'.format(','.join(self.quantizable_layer_types))
+            raise ValueError(err_msg)
+
         self.minimum_conv_kernel_channels = minimum_conv_kernel_channels
         self.minimum_conv_weight_count = minimum_conv_weight_count
 
@@ -998,7 +1047,8 @@ def quantize_weights(full_precision_model,
         One of the following:
 
         "linear":
-            Simple linear quantization with scale and bias
+            Linear quantization with scale and bias assuming the range of weight
+            values is [A, B], where A = min(weight), B = max(weight)
         "linear_lut":
             Simple linear quantization represented as a lookup table
         "kmeans_lut":
@@ -1013,6 +1063,9 @@ def quantize_weights(full_precision_model,
             where lut is an array of length (2^n bits)containing LUT values and
             qw is the list of quantized weight parameters. See
             ``_get_linear_lookup_table_and_weight`` for a sample implementation.
+        "linear_symmetric":
+            Linear quantization with scale and bias assuming the range of weight
+            values is [-A, A], where A = max(abs(weight)).
 
     sample_data: str | [dict]
         Data used to characterize performance of the quantized model in
