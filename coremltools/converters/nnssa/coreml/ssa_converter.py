@@ -4,6 +4,7 @@ from coremltools.models import datatypes
 from coremltools.proto import NeuralNetwork_pb2
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from collections import Iterable
+import coremltools
 
 from ..commons import builtins
 from ..commons.basic_graph_ops import topsort, check_connections
@@ -47,12 +48,13 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True)
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
     passes = [
-        constant_weight_link_removal, fuse_bias_add,
+        constant_weight_link_removal,
+        fuse_bias_add,
         onehot_matmul_to_embedding,
         fuse_layer_norm,
         fuse_gelu,
@@ -60,18 +62,19 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
         remove_identity,
         remove_no_ops_and_shift_control_dependencies,
         remove_single_isolated_node,
+        fuse_conv_mul_add_into_batchnorm,
     ]
 
     for p in passes:
         p(ssa)
 
-    for f in list(ssa.functions.values()):
-        check_connections(f.graph)
-
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True)
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
+
+    for f in list(ssa.functions.values()):
+        check_connections(f.graph)
 
     converter = SSAConverter(ssa, top_func=top_func, inputs=inputs, outputs=outputs)
     converter.convert()
@@ -80,6 +83,9 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
     mlmodel_passes = [remove_disconnected_constants]
     for p in mlmodel_passes:
         p(mlmodel_spec)
+
+    if DEBUG:
+        coremltools.models.utils.save_spec(mlmodel_spec, '/tmp/model_from_spec.mlmodel')
 
     return mlmodel_spec
 
@@ -147,7 +153,11 @@ class SSAConverter(object):
                 elif name in top_output_names:
                     top_output_features.append((name, None))
                 else:
-                    raise ValueError('Output "%s" is not a NNSSA output.' % name)
+                    if len(top_output_names) == 1:
+                        raise ValueError('Output "{}" is not an output node in the source graph. Do you mean "{}"?'
+                                         .format(name, top_output_names[0]))
+                    else:
+                        raise ValueError('Output "%s" is not an output node in the source graph.' % name)
         else:
             top_output_features = list(zip(top_output_names, [None] * len(top_output_names)))
 
@@ -266,6 +276,7 @@ class SSAConverter(object):
             'LayerNormalization': self._convert_layer_normalization,
             'SpaceToDepth': self._convert_reorganize_data,
             'DepthToSpace': self._convert_reorganize_data,
+            'BatchNorm': self._convert_batchnorm,
         }
 
         # converter state variables
@@ -343,9 +354,14 @@ class SSAConverter(object):
                 raise NotImplementedError(
                     '[SSAConverter] Conversion for op %s not implemented, terminating...' %
                     (op_type))
-            print(
-                '[SSAConverter] [{}/{}] Converting op {}: {}'.format(
-                    idx + 1, len(instruction_order), node_name, op_type))
+            if builtins.is_tensor(node.datatype):
+                print(
+                    '[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\' (output shape: {})'.format(
+                        idx + 1, len(instruction_order), op_type, node_name, node.datatype.get_shape()))
+            else:
+                print(
+                '[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\''.format(
+                    idx + 1, len(instruction_order), op_type, node_name))
 
             convert_func = self.CONVERT_FUNCTION_MAP[op_type]
             convert_func(node)
@@ -985,14 +1001,17 @@ class SSAConverter(object):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         axis = node.attr.get('axis')
         if axis is None:
-            axis = input_nodes[-1].value
+            axis = input_nodes[-1].value.val
         if axis is None:
             raise NotImplementedError('[SSAConverter] Dynamic concatenation is not supported')
-        axis = axis.val
         input_names = input_names[:-1]
         input_names = [name for i, name in enumerate(input_names) if self._get_tensor_shape_from_type(input_types[i])[axis] != 0]
-        layer = self._get_builder().add_concat_nd(
-            name=node.name, input_names=input_names, output_name=node.name, axis=axis)
+
+        if node.attr.get('data_format', None) == 'NHWC_format_inserted' and (axis == 1 or axis == -3):
+            layer = self._get_builder().add_elementwise(node.name, input_names, node.name, 'CONCAT')
+        else:
+            layer = self._get_builder().add_concat_nd(
+                        name=node.name, input_names=input_names, output_name=node.name, axis=axis)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_batched_mat_mul(self, node):
@@ -1224,7 +1243,7 @@ class SSAConverter(object):
         conv_output_name = node.name
         builder = self._get_builder()
 
-        if data_format == 'NHWC':
+        if data_format == 'NHWC' or data_format == 'NHWC_format_inserted':
             stride_height = node.attr.get('strides', [1, 1, 1, 1])[1]
             stride_width = node.attr.get('strides', [1, 1, 1, 1])[2]
         else:
@@ -1261,7 +1280,7 @@ class SSAConverter(object):
         stride_sizes = node.attr.get('strides', [1, 1, 1, 1])
         padding_type = node.attr.get('padding')
 
-        if data_format == 'NHWC':
+        if data_format == 'NHWC' or data_format == 'NHWC_format_inserted':
             kernel_height = kernel_sizes[1]
             kernel_width = kernel_sizes[2]
             stride_height = stride_sizes[1]
@@ -1295,6 +1314,10 @@ class SSAConverter(object):
     def _convert_reshape(self, node):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         if _is_scalar(node.datatype) and self._get_tensor_shape_from_type(input_types[0]) == (1,):  # skip/identity op in that case
+            self.op_tensor_map[node.name] = [input_names[0]]
+        elif self._get_tensor_shape_from_type(input_types[0]) == self._get_tensor_shape_from_type(node.datatype) \
+                and sum([i < 0 for i in self._get_tensor_shape_from_type(node.datatype)]) <= 1:
+            # in this case reshape is not changing the shape
             self.op_tensor_map[node.name] = [input_names[0]]
         elif (builtins.is_tensor(node.datatype) and
               sum([i < 0 for i in self._get_tensor_shape_from_type(node.datatype)]) <= 1):
@@ -1623,6 +1646,28 @@ class SSAConverter(object):
             input_name=node.name + '_softmax',
             output_name=node.name,
             mode='log'
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_batchnorm(self, node):
+        assert len(node.inputs) == 1
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        if 'gamma' not in node.attr or 'beta' not in node.attr:
+            raise ValueError('BatchNorm node must have attributes \'gamma\' and \'beta\'')
+        gamma = node.attr.get('gamma')
+        C = len(gamma)
+        beta = node.attr.get('beta')
+        mean = node.attr.get('mean', np.zeros((C,)))
+        variance  = node.attr.get('mean', np.ones((C,)))
+        layer = self._get_builder().add_batchnorm(
+            name=node.name,
+            channels=C,
+            gamma=gamma,
+            beta=beta,
+            mean=mean,
+            variance=variance,
+            input_name=input_names[0],
+            output_name=node.name
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
