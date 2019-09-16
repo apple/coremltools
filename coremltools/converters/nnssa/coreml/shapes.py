@@ -150,7 +150,10 @@ def _gather_nd(layer_spec, input_shapes):
 
 
 def _concat_nd(layer_spec, input_shapes):
-    axis = layer_spec.concatND.axis
+    if layer_spec.WhichOneof('layer') == 'concat':
+        axis = -3
+    else:
+        axis = layer_spec.concatND.axis
     rank = len(input_shapes[0])
     output_shape = list(input_shapes[0][:])
     if axis < 0:
@@ -169,7 +172,6 @@ def _concat_nd(layer_spec, input_shapes):
                 output_shape[idx] += dim
             elif output_shape[idx] != dim:
                 raise ValueError('[Shaper] Unable to shape concatND: shapes mismatch')
-
     return [output_shape]
 
 
@@ -456,6 +458,7 @@ _LAYER_REGISTRY = {
     'add': _add,
     'multiply': _add,
     'concatND': _concat_nd,
+    'concat': _concat_nd,
     'innerProduct': _inner_product,
     'activation': _identity,
     'reverse': _identity,
@@ -511,6 +514,7 @@ _LAYER_REGISTRY = {
     'round': _identity,
     'topK': _topk,
     'reorganizeData': _reorganize_data,
+    'batchnorm': _identity,
 }
 
 

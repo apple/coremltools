@@ -1,6 +1,7 @@
 import unittest
 import tensorflow as tf
 import numpy as np
+from coremltools._deps import HAS_TF_1_14
 
 from test_base import TFNetworkTest
 
@@ -1261,6 +1262,7 @@ class TFSingleLayerTest(TFNetworkTest):
         self._test_tf_model_constant(graph, {
             a.op.name: shape, b.op.name: shape, c.op.name: shape}, [out.op.name])
 
+    @unittest.skipIf(not HAS_TF_1_14, 'Missing TF 1.14. Skipping test.')
     def test_where_v2(self):
         shape = [3, 4, 5]
         graph = tf.Graph()
