@@ -1,5 +1,7 @@
 import numpy as np
 
+from six import string_types as _string_types
+
 from coremltools.models import datatypes
 from coremltools.proto import NeuralNetwork_pb2
 from coremltools.models.neural_network import NeuralNetworkBuilder
@@ -18,7 +20,6 @@ except:
 
 DEBUG = False
 
-
 def _is_scalar(type_):
     if type_ is None:
         return False
@@ -31,10 +32,19 @@ def ssa_convert(ssa,
                 top_func='main',
                 inputs=None,
                 outputs=None,
+                image_input_names=None,
+                is_bgr=False,
+                red_bias=0.0,
+                green_bias=0.0,
+                blue_bias=0.0,
+                gray_bias=0.0,
+                image_scale=1.0,
+                class_labels=None,
+                predicted_feature_name=None,
+                predicted_probabilities_output='',
                 add_custom_layers=False,
                 custom_conversion_functions={},
-                custom_shape_functions={}
-                ):
+                custom_shape_functions={}):
     """
     Convert NNSSA into CoreML spec.
     ssa : NetworkEnsemble
@@ -109,20 +119,69 @@ def ssa_convert(ssa,
     for f in list(ssa.functions.values()):
         check_connections(f.graph)
 
+    # Set classifier flag
+    is_classifier = class_labels is not None
+    neural_network_type = 'classifier' if is_classifier else None
+
     converter = SSAConverter(ssa,
                              top_func=top_func,
                              inputs=inputs,
                              outputs=outputs,
+                             neural_network_type=neural_network_type,
                              add_custom_layers=add_custom_layers,
                              custom_conversion_functions=custom_conversion_functions,
                              custom_shape_functions=custom_shape_functions)
     converter.convert()
+
+    builder = converter._get_builder(func=top_func)
+    # Add image input identifier
+    if image_input_names is not None and isinstance(
+        image_input_names, _string_types):
+        image_input_names = [image_input_names]
+
+    # Add classifier classes (if applicable)
+    if is_classifier:
+        classes_in = class_labels
+        if isinstance(classes_in, _string_types):
+            import os
+            if not os.path.isfile(classes_in):
+                raise ValueError("Path to class labels (%s) does not exist." % \
+                    classes_in)
+                with open(classes_in, 'r') as f:
+                    classes = f.read()
+                classes = classes.splitlines()
+            elif type(classes_in) is list: # list[int or str]
+                classes = classes_in
+            else:
+                raise ValueError('Class labels must be a list of integers / strings,'\
+                    ' or a file path')
+
+            if predicted_feature_name is not None:
+                builder.set_class_labels(
+                    classes, predicted_feature_name=predicted_feature_name,
+                    prediction_blob=predicted_probabilities_output)
+            else:
+                builder.set_class_labels(classes)
+
+    image_format = ssa.get_image_format()
+    # Set pre-processing parameters
+    builder.set_pre_processing_parameters(image_input_names=image_input_names,
+                                          is_bgr=is_bgr,
+                                          red_bias=red_bias,
+                                          green_bias=green_bias,
+                                          blue_bias=blue_bias,
+                                          gray_bias=gray_bias,
+                                          image_scale=image_scale,
+                                          image_format=image_format)
+
     mlmodel_spec = converter.get_spec()
 
+    # MLModel passes
     mlmodel_passes = [remove_disconnected_constants]
     for p in mlmodel_passes:
         p(mlmodel_spec)
 
+    
     if DEBUG:
         coremltools.models.utils.save_spec(mlmodel_spec, '/tmp/model_from_spec.mlmodel')
 
@@ -130,12 +189,12 @@ def ssa_convert(ssa,
 
 
 class SSAConverter(object):
-
     def __init__(self,
                  net_ensemble, # type: NetworkEnsemble
                  top_func='main', # type: str
                  inputs=None, # type: List[str]
                  outputs=None, # type: List[str]
+                 neural_network_type=None, # type: str
                  add_custom_layers=False,  # type: bool
                  custom_conversion_functions={},  # type: Dict[Text, Any]
                  custom_shape_functions={} # type: Dict[Text, Any]
@@ -213,10 +272,10 @@ class SSAConverter(object):
         else:
             top_output_features = list(zip(top_output_names, [None] * len(top_output_names)))
 
-        self.top_builder = NeuralNetworkBuilder(
-            input_features=top_input_features,
-            output_features=top_output_features,
-            disable_rank5_shape_mapping=True)
+        self.top_builder = NeuralNetworkBuilder(input_features=top_input_features,
+                                                output_features=top_output_features,
+                                                disable_rank5_shape_mapping=True,
+                                                mode=neural_network_type)
 
         self.spec = self.top_builder.spec
 
@@ -574,6 +633,7 @@ class SSAConverter(object):
             raise ValueError('[SSAConverter] Cannot handle dynamic Transpose')
         dim = list(dim)
         builder = self._get_builder()
+
         layer = builder.add_transpose(
             name=node.name, axes=dim, input_name=input_names[0], output_name=node.name)
 
