@@ -1274,6 +1274,14 @@ class TFSingleLayerTest(TFNetworkTest):
         self._test_tf_model_constant(graph, {
             a.op.name: shape, b.op.name: shape, c.op.name: shape}, [out.op.name])
 
+    def test_where_non_zero(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.where(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name], data_mode='random_zeros_ones')
+
     def test_transpose(self):
         shape = [4, 3, 1]
         graph = tf.Graph()
@@ -1303,6 +1311,6 @@ class TFSingleLayerTest(TFNetworkTest):
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest('test_where_v2'))
+    # suite.addTest(TFSingleLayerTest('test_where_non_zero'))
     # suite.addTest(TFSingleLayerTest('test_strided_slice_ellipsis_mask'))
     # unittest.TextTestRunner().run(suite)

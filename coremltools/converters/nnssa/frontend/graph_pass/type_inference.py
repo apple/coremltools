@@ -1104,7 +1104,7 @@ class TypeInferenceVisitor(object):
         # IF cond: true: false
         assert (len(node.inputs) == 3)
         typecond = self.visit(node.inputs[0])
-        assert (builtins.is_tensor(typecond) == False)
+        # assert (builtins.is_tensor(typecond) == False)
 
         typea = self.visit(node.inputs[1])
         typeb = self.visit(node.inputs[2])
