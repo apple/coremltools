@@ -746,14 +746,16 @@ def propagate_shapes(mlmodel_spec, overwrite=True):
                     (layer.name, str(existing_shape), str(shape)))
 
 
-def propagate_single_layer(layer, shapes, output_shapes=None):
+def propagate_single_layer(layer, shapes, output_shapes=None, custom_shape_function=None):
     """
     Propagate input shape to output shape for a single layer, which could have nested networks
-    layer: a layer spec
-    shapes: a dictionary that stores all known shapes
-    output_shapes: if None, the output tensors' shapes are computed by its shape propagation function,
+    layer : a layer spec
+    shapes : a dictionary that stores all known shapes
+    output_shapes : if None, the output tensors' shapes are computed by its shape propagation function,
         defined by _get_translator_function(layer_type). If not None, will force output_shapes to be
         written as the output spec of the layer.
+    custom_shape_function : if None, shape function from _LAYER_REGISTRY will be used to infer shape,
+        If not None, provided function will be used to compute output shape.
     """
     for j, blob_name in enumerate(layer.input):
         if blob_name not in shapes:
@@ -763,10 +765,10 @@ def propagate_single_layer(layer, shapes, output_shapes=None):
 
     layer_type = layer.WhichOneof('layer')
     if output_shapes is None:
-        if layer_type not in _LAYER_REGISTRY:
+        if layer_type not in _LAYER_REGISTRY and custom_shape_function is None:
             raise NotImplementedError(
                 '[Shaper] Layer "{}" of type "{}" not implemented'.format(layer.name, layer_type))
-        layer_translator = _get_translator_function(layer_type)
+        layer_translator = _get_translator_function(layer_type) if layer_type in _LAYER_REGISTRY else custom_shape_function
         input_shapes = [list(shapes[b]) for b in layer.input]
         output_shapes = layer_translator(layer, input_shapes)
 
