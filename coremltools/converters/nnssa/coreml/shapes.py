@@ -129,7 +129,7 @@ def _scatter(layer_spec, input_shapes):
 
 def _scatter_nd(layer_spec, input_shapes):
     # get the values of the shape input
-    return [[-1] * input_shapes[0][0]]
+    return [input_shapes[0]]
 
 
 def _gather(layer_spec, input_shapes):
@@ -259,7 +259,7 @@ def _batched_mat_mul(layer_spec, input_shapes):
         r_y, c_y = b_shape[-2:]
         r_o = c_x if tp_a else r_x
         c_o = r_y if tp_b else c_y
-        output_shape = a_shape[0:-2] + [r_o, c_o]
+        output_shape = list(a_shape[0:-2]) + [r_o, c_o]
         return [output_shape]
     else:
         raise NotImplementedError('[Shaper] Batched MatMul requires either 1 or 2 inputs')
@@ -765,7 +765,7 @@ def propagate_single_layer(layer, shapes, output_shapes=None):
             raise NotImplementedError(
                 '[Shaper] Layer %s of type %s is not supported' % (layer.name, layer_type))
         layer_translator = _get_translator_function(layer_type)
-        input_shapes = [shapes[b] for b in layer.input]
+        input_shapes = [list(shapes[b]) for b in layer.input]
         output_shapes = layer_translator(layer, input_shapes)
 
     # Register output blobs
