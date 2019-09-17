@@ -16,7 +16,7 @@ try:
 except:
     from . import shapes
 
-DEBUG = False
+DEBUG = True
 
 
 def _is_scalar(type_):
@@ -70,7 +70,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=['Transpose', 'FusedBatchNorm'])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=['Transpose', 'Pad', 'Conv2D'])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     for f in list(ssa.functions.values()):
