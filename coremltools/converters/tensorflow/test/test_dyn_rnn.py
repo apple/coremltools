@@ -24,7 +24,9 @@ class TFDynRNNTest(TFNetworkTest):
             delta=1e-2,
             use_cpu_only=True,
             graph_optimizations="freeze",  # one of ["freeze", "convert_variables_to_constants", None]
-            quantize_tf_model=False):
+            quantize_tf_model=False,
+            quantize_mlmodel=False,
+            quantize_config={}):
         super(TFDynRNNTest, self)._test_tf_model(
             graph,
             input_shapes,
@@ -34,11 +36,15 @@ class TFDynRNNTest(TFNetworkTest):
             delta=delta,
             use_cpu_only=use_cpu_only,
             graph_optimizations=graph_optimizations,
-            quantize_tf_model=quantize_tf_model)
+            quantize_tf_model=quantize_tf_model,
+            quantize_mlmodel=quantize_mlmodel,
+            quantize_config=quantize_config)
 
-    def test_simple_lstm(self):
+    def test_simple_lstm(self, **kwargs):
+        # (batch_size, seq_len, input_dim)
         batch_size, sequence_length, hidden_size = 1, 5, 10
-        input_shape = [batch_size, sequence_length, hidden_size]  # (batch_size, seq_len, input_dim)
+        input_shape = [batch_size, sequence_length, hidden_size]
+
         graph = tf.Graph()
         with graph.as_default() as g:
             lstm_initializer = tf.constant_initializer(0.8)
@@ -50,8 +56,16 @@ class TFDynRNNTest(TFNetworkTest):
             init_state = cell.zero_state(batch_size, dtype=tf.float32)
             val, state = tf.nn.dynamic_rnn(cell, data, initial_state=init_state, dtype=tf.float32)
 
-        self._test_tf_model(
-            graph, {'input': input_shape}, [val.op.name, state[0].op.name, state[1].op.name])
+        self._test_tf_model(graph, {'input': input_shape},
+            [val.op.name, state[0].op.name, state[1].op.name],
+            quantize_mlmodel=kwargs.get('quantize_mlmodel',False),
+            quantize_config=kwargs.get('quantize_config', {}))
+
+    def test_simple_lstm_quantized_8bit_linear(self):
+        np.random.seed(2019)
+        quantize_config = {'nbits': 8, 'mode': 'linear'}
+        self.test_simple_lstm(quantize_mlmodel=True,
+                              quantize_config=quantize_config)
 
     def test_lstm_block_fused_cell(self):
         sequence_length, batch_size, input_dim, hidden_size = 5, 1, 24, 32

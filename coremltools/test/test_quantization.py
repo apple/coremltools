@@ -88,19 +88,19 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         # as our full precision model since quantizing this model again will
         # result in 0 quantization error.
 
-        coreml_spec = quantization_utils.quantize_spec_weights(
-            spec=coreml_model.get_spec(),
+        coreml_spec = coreml_model.get_spec()
+        quantization_utils.quantize_spec_weights(
+            spec=coreml_spec,
             nbits=self.qbits,
             quantization_mode=self.qmode,
             lut_function=self.custom_lut
         )
 
         # De-quantize model
-        full_precision_model_spec = quantization_utils._dequantize_nn_spec(
-            spec=coreml_spec
-        )
+        quantization_utils._dequantize_nn_spec(spec=coreml_spec.neuralNetwork)
+        full_precision_model_spec = coreml_spec
 
-        # Quantize model again
+        # Quantize model from another copy
         quantized_model_spec = quantization_utils.quantize_spec_weights(
             spec=coreml_model.get_spec(),
             nbits=self.qbits,

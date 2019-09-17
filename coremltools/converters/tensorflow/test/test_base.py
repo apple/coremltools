@@ -82,7 +82,9 @@ class TFNetworkTest(unittest.TestCase):
             delta=1e-2,
             use_cpu_only=False,
             graph_optimizations="freeze",  # one of ["freeze", "convert_variables_to_constants", None]
-            quantize_tf_model=False):
+            quantize_tf_model=False,
+            quantize_mlmodel=False,
+            quantize_config={}):
         """
         Common entry to testing routine.
         graph - defined TensorFlow graph.
@@ -95,7 +97,10 @@ class TFNetworkTest(unittest.TestCase):
         use_cpu_only - If True, instantiate and run CoreML model with CPU only
         graph_optimizations == "freeze" - Force TensorFlow graph to be frozen before converting.
         quantize_tf_model - If True, try to quantize TensorFlow model before converting
+        quantize_mlmodel - If True, quantize the mlmodel after converting.
+        quantize_config - Dictionary with test quantization parameters
         """
+
         # Some file processing
         model_dir = tempfile.mkdtemp()
         graph_def_file = os.path.join(model_dir, 'tf_graph.pb')
@@ -156,6 +161,13 @@ class TFNetworkTest(unittest.TestCase):
             inputs=input_shapes,
             outputs=output_node_names,
             use_cpu_only=use_cpu_only)
+
+        # Quantize MLModel if needed
+        if quantize_mlmodel:
+            from coremltools.models.neural_network.quantization_utils import quantize_weights
+            nbits = quantize_config['nbits']
+            mode = quantize_config['mode']
+            mlmodel = quantize_weights(mlmodel, nbits, quantization_mode=mode)
 
         if DEBUG:
             print('\n mlmodel description: \n')

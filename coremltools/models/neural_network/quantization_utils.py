@@ -42,7 +42,6 @@ class QuantizedLayerSelector(object):
     .. code-block:: python
 
         class MyLayerSelector(QuantizedLayerSelector):
-
             def __init__(self):
                 super(MyLayerSelector, self).__init__()
 
@@ -62,6 +61,7 @@ class QuantizedLayerSelector(object):
             'batchnorm', 'scale', 'bias', 'loadConstant',
             'simpleRecurrent', 'gru', 'uniDirectionalLSTM',
             'biDirectionalLSTM', 'batchedMatmul', 'depthwiseConv',
+            'loop', 'branch'
         }
 
     def do_quantize(self, layer, **kwargs):
@@ -543,11 +543,14 @@ def _dequantize_wp(wp, shape, axis=0):
 
 
 def _dequantize_nn_spec(spec):
-    return _quantize_nn_spec(spec, None, _QUANTIZATION_MODE_DEQUANTIZE)
+    """ Dequantize weights in NeuralNetwork type mlmodel specifications.
+    """
+    _quantize_nn_spec(spec, None, _QUANTIZATION_MODE_DEQUANTIZE)
 
 
-def _quantize_nn_spec(spec, nbits, qm, **kwargs):
-
+def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
+    """ Quantize weights in NeuralNetwork type mlmodel specifications.
+    """
     selector = kwargs.get('selector', QuantizedLayerSelector())
 
     if qm not in _SUPPORTED_QUANTIZATION_MODES:
@@ -564,15 +567,7 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
         raise Exception('Symmetric quantization is only applicable for 8 bit'
                         'linear')
 
-    # Bump up to appropriate spec version if required
-    if nbits == 16:
-        spec.specificationVersion = max(_MINIMUM_FP16_SPEC_VERSION,
-                                        spec.specificationVersion)
-    else:
-        spec.specificationVersion = max(_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
-                                        spec.specificationVersion)
-
-    layers = _get_nn_layers(spec)
+    layers = nn_spec.layers
 
     # Perform optimization step
     if nbits is not None and nbits < 16 and qm != _QUANTIZATION_MODE_DEQUANTIZE:
@@ -586,7 +581,8 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
         if not selector.do_quantize(layer):
             continue
         print('Quantizing layer {}'.format(layer.name))
-        # layer_type = layer.WhichOneof('layer')
+
+        # Convolution
         if layer_type == 'convolution':
             output_channels = layer.convolution.outputChannels
             kernel_channels = layer.convolution.kernelChannels
@@ -625,11 +621,12 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
                 _quantize_wp_field(layer.innerProduct.bias, nbits, qm,
                     shape=(output_channels,), **kwargs)
 
+        # BatchedMatmul
         elif layer_type == 'batchedMatmul':
             x1 = layer.batchedMatmul.weightMatrixFirstDimension
             x2 = layer.batchedMatmul.weightMatrixSecondDimension
             _quantize_wp_field(layer.batchedMatmul.weights, nbits, qm,
-                shape=(x1, x2), **kwargs)
+                shape=(x2, x1), **kwargs)
             has_bias = layer.batchedMatmul.hasBias
             if has_bias and selector.do_quantize(layer, weight_param='bias'):
                 _quantize_wp_field(layer.batchedMatmul.bias, nbits, qm,
@@ -733,13 +730,16 @@ def _quantize_nn_spec(spec, nbits, qm, **kwargs):
                         has_peephole=layer.biDirectionalLSTM.params.hasPeepholeVectors)
 
         elif layer_type == 'custom':
-            print ('Skipping custom layer {}. Weights for this layer need to'
+            print('Skipping custom layer {}. Weights for this layer need to'
                    'be converted manually'.format(layer.name))
-
+        elif layer_type == 'branch':
+            _quantize_nn_spec(layer.branch.ifBranch, nbits, qm, **kwargs)
+            _quantize_nn_spec(layer.branch.elseBranch, nbits, qm, **kwargs)
+        elif layer_type == 'loop':
+            _quantize_nn_spec(layer.loop.conditionNetwork, nbits, qm, **kwargs)
+            _quantize_nn_spec(layer.loop.bodyNetwork, nbits, qm, **kwargs)
         else:
             raise Exception('Unknown layer ' + layer_type + ' to be quantized')
-
-    return spec
 
 
 def quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
@@ -747,9 +747,29 @@ def quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
     nn_model_types = ['neuralNetwork', 'neuralNetworkClassifier',
                       'neuralNetworkRegressor']
 
+    model_type = spec.WhichOneof('Type')
+
     # Neural network models
-    if spec.WhichOneof('Type') in nn_model_types:
-        return _quantize_nn_spec(spec, nbits, quantization_mode, **kwargs)
+    if model_type in nn_model_types:
+        # Bump up to appropriate spec version if required
+        if nbits == 16:
+            spec.specificationVersion = max(_MINIMUM_FP16_SPEC_VERSION,
+                                            spec.specificationVersion)
+        else:
+            spec.specificationVersion = max(_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
+                                            spec.specificationVersion)
+
+        if spec.WhichOneof('Type') == 'neuralNetwork':
+            _quantize_nn_spec(spec.neuralNetwork, nbits, quantization_mode,
+                    **kwargs)
+
+        elif spec.WhichOneof('Type') in 'neuralNetworkClassifier':
+            _quantize_nn_spec(spec.neuralNetworkClassifier, nbits,
+                    quantization_mode, **kwargs)
+
+        elif spec.WhichOneof('Type') in 'neuralNetworkRegressor':
+            _quantize_nn_spec(spec.neuralNetworkRegressor, nbits,
+                    quantization_mode, **kwargs)
 
     # Recursively convert all pipeline models
     elif spec.WhichOneof('Type') == 'pipeline':
