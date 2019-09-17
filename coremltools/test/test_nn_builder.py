@@ -6,7 +6,8 @@ import coremltools
 from coremltools.models import datatypes, MLModel
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models.utils import macos_version
-from coremltools.models.neural_network.quantization_utils import _convert_array_to_nbit_quantized_bytes
+from coremltools.models.neural_network.quantization_utils import \
+    _convert_array_to_nbit_quantized_bytes, quantize_weights
 import pytest
 
 @unittest.skipIf(macos_version() < (10, 15), 'Only supported on macOS 10.15+')
@@ -260,6 +261,35 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         expected_out = np.matmul(data, W_unquantized) + bias
         self.assertTrue(out.shape == expected_out.shape)
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
+
+    def test_linear_quant_batchedmatmul_8bit(self):
+        np.random.seed(1988)
+        W = np.random.rand(32, 32) * 2.0 - 1
+        bias = np.random.rand(32)
+
+        input_features = [('data', datatypes.Array(2, 32))]
+        output_features = [('out', None)]
+        builder = NeuralNetworkBuilder(input_features, output_features,
+                disable_rank5_shape_mapping=True)
+        builder.add_batched_mat_mul(
+                name='batched_matmul', input_names=['data'],
+                output_name='out', weight_matrix_rows=32,
+                weight_matrix_columns=32, W=W, bias=bias)
+        mlmodel = MLModel(builder.spec)
+        q_mlmodel = quantize_weights(mlmodel, 8)
+        q_spec = q_mlmodel.get_spec()
+        q_layer = q_spec.neuralNetwork.layers[0].batchedMatmul
+
+        self.assertTrue(len(q_layer.weights.floatValue) == 0)
+        self.assertTrue(len(q_layer.weights.rawValue) > 0)
+
+        data = np.random.rand(2, 32)
+        data_dict = {'data': data}
+        out = q_mlmodel.predict(data_dict, useCPUOnly=True)['out']
+        expected_out = np.matmul(data, W) + bias
+        self.assertTrue(out.shape == expected_out.shape)
+        self.assertTrue(np.allclose(out.flatten(), expected_out.flatten(),
+                atol=0.1))
 
     def test_linear_quant_embedding_7bit(self):
         embed_size = 2
