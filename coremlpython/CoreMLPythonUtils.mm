@@ -326,7 +326,10 @@ static MLFeatureValue * convertValueToImage(const py::handle& handle) {
     status = CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
     handleCVReturn(status);
 
-    return [MLFeatureValue featureValueWithPixelBuffer:pixelBuffer];
+    MLFeatureValue *fv = [MLFeatureValue featureValueWithPixelBuffer:pixelBuffer];
+    CVPixelBufferRelease(pixelBuffer);
+    
+    return fv;
 }
 
 static bool IsPILImage(const py::handle& handle) {
