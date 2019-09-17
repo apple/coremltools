@@ -25,7 +25,6 @@ ELEMENTWISE_OPS = {
     'Rsqrt',
     'Pow',
     'Pad',
-
 }
 
 # Native SSA nodes with data_format attributes of NHWC / NCHW
@@ -58,12 +57,12 @@ def _is_NHWC(graph, node):
         return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
             for inp in node.inputs[:-1])
     if node.op in ELEMENTWISE_OPS:
-        # if its an elementwise op and if all of its parent(s) are
+
+        # if its an element-wise op and if all of its parent(s) are
         # "NHWC_format_inserted" or given that at least one of the parents
         # is "NHWC_format_inserted" and rest are vector constants, then the
         # node is also declared to be "NHWC_format_inserted"
-        NHWC_parent = any([graph[inp].attr.get('data_format',
-            None) == 'NHWC_format_inserted' for inp in node.inputs])
+        NHWC_parent = any([graph[inp].attr.get('data_format', None) == 'NHWC_format_inserted' for inp in node.inputs])
 
         if NHWC_parent:
             for inp in node.inputs:
@@ -75,6 +74,11 @@ def _is_NHWC(graph, node):
                     val = np.array(parent_node.value.val)
                     if len(val.shape) == 1 and builtins.is_tensor(
                         parent_node.datatype) and len(parent_node.outputs) == 1:
+                        continue
+                    elif node.op.lower() == 'pad' and len(val.shape) == 2 and \
+                            builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
+                        # adjust padding values for pad operator
+                        parent_node.value.val[[1, 3]] = parent_node.value.val[[3, 1]]
                         continue
                     else:
                         return False
@@ -118,7 +122,7 @@ def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, tran
         tp_node.attr['dim'] = transpose_params
         if '_output_shapes' in src.attr:
             input_shape = src.attr['_output_shapes'][0]
-            tp_node.attr['_output_shapes'] = [[input_shape[transpose_params[0]],input_shape[transpose_params[1]],input_shape[transpose_params[2]],input_shape[transpose_params[3]]]]
+            tp_node.attr['_output_shapes'] = [[input_shape[transpose_params[0]], input_shape[transpose_params[1]], input_shape[transpose_params[2]], input_shape[transpose_params[3]]]]
         graph[transpose_node_name] = tp_node
 
     # Rename dst's input 'src' to 'transpose_node_name'
@@ -539,14 +543,14 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
     [Conv2D] --> [Sub] --> [Mul] --> [Add] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
     """
 
-    def _match_mul_add_bn_pattern(gd, conv2d_node):
+    def _match_mul_add_bn_pattern(gd, entry_node):
         try:
-            if not _check_number_outputs(conv2d_node, 1):
+            if not _check_number_outputs(entry_node, 1):
                 return None
-            mul_node = gd[conv2d_node.outputs[0]]
+            mul_node = gd[entry_node.outputs[0]]
             if not (mul_node.op == 'Mul' and _check_number_outputs(mul_node, 1) and _check_number_inputs(mul_node, 2)):
                 return None
-            mul_const_node = gd[mul_node.inputs[0]] if mul_node.inputs[1] == conv2d_node.name else gd[mul_node.inputs[1]]
+            mul_const_node = gd[mul_node.inputs[0]] if mul_node.inputs[1] == entry_node.name else gd[mul_node.inputs[1]]
             if not _check_single_out_vector_constant_node(mul_const_node):
                 return None
             add_node = gd[mul_node.outputs[0]]
@@ -561,20 +565,20 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
         except Exception as e:
             return None
 
-    def _match_sub_mul_add_batchnorm_pattern(graph, conv2d_node):
+    def _match_sub_mul_add_batchnorm_pattern(graph, entry_node):
         try:
-            if not _check_number_outputs(conv2d_node, 1):
+            if not _check_number_outputs(entry_node, 1):
                 return None
-            sub_node = graph[conv2d_node.outputs[0]]
+            sub_node = graph[entry_node.outputs[0]]
             if not (sub_node.op == 'Sub' and _check_number_outputs(sub_node, 1) and _check_number_inputs(sub_node, 2)):
                 return None
-            sub_const_node = graph[sub_node.inputs[0]] if sub_node.inputs[1] == conv2d_node.name else graph[sub_node.inputs[1]]
+            sub_const_node = graph[sub_node.inputs[0]] if sub_node.inputs[1] == entry_node.name else graph[sub_node.inputs[1]]
             if not _check_single_out_vector_constant_node(sub_const_node):
                 return None
             mul_node = graph[sub_node.outputs[0]]
             if not (mul_node.op == 'Mul' and _check_number_outputs(mul_node, 1) and _check_number_inputs(mul_node, 2)):
                 return None
-            mul_const_node = graph[mul_node.inputs[0]] if mul_node.inputs[1] == conv2d_node.name else graph[mul_node.inputs[1]]
+            mul_const_node = graph[mul_node.inputs[0]] if mul_node.inputs[1] == entry_node.name else graph[mul_node.inputs[1]]
             if not _check_single_out_vector_constant_node(mul_const_node):
                 return None
             add_node = graph[mul_node.outputs[0]]
@@ -665,3 +669,41 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_conv_mul_add_into_batchnorm(f.graph)
+
+
+def fuse_pad_into_conv(nnssa):
+    """
+    A graph pass that match and fuses following op patterns into one Conv2D op.
+
+    Pattern 1:
+    [Const]
+      |
+      V
+    [Pad] --> [Conv2D] --> [...] to [Conv2D] --> [...]
+    """
+
+    def _match_pad_conv2d_pattern(graph, entry_node):
+
+        return None
+
+    def _fuse_pad_into_conv(graph):
+        keys = list(graph.keys())
+        count = 0
+        for k in keys:
+            if k not in graph:
+                continue
+            current_node = graph[k]
+            if current_node.op != 'Pad':
+                continue
+
+            pad_nodes = _match_pad_conv2d_pattern(graph, current_node)
+
+            if pad_nodes:
+                pass  # perform fuse
+
+        if count > 0:
+            print('[Op Fusion] Fused {} Pad nodes to Conv2D.'.format(count))
+
+    for fn_key in list(nnssa.functions.keys()):
+        f = nnssa.functions[fn_key]
+        _fuse_pad_into_conv(f.graph)
