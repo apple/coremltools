@@ -23,6 +23,7 @@ class KNearestNeighborsClassifierBuilder(object):
     Examples
     --------
     .. sourcecode:: python
+
         from coremltools.models.nearest_neighbors import KNearestNeighborsClassifierBuilder
         from coremltools.models.utils import save_spec
 
@@ -414,7 +415,7 @@ class KNearestNeighborsClassifierBuilder(object):
         Ensure the label types matched the expected types.
         :param spec: the spec
         :param labels: the list of labels
-        :return: None, throws a TypeError if not expeted
+        :return: None, throws a TypeError if not expected
         """
         if self.spec.kNearestNeighborsClassifier.HasField("int64ClassLabels"):
             check_is_valid = KNearestNeighborsClassifierBuilder._is_valid_number_type

@@ -12,48 +12,49 @@ Next, we'll define a utility method that reads sample images from the app bundle
 
 ```swift
 func createTrainingBatchProvider() throws -> MLBatchProvider {
-    
+
     let trainingSamples = [MLFeatureProvider]()
-    
+
     // sample images are assumed to be bundled with the app and named as "<TrueClassLabel>_<ImageIndex>.png"
     // we use 10 images per class for the purpose of training the MNIST model
-    
+
     // iterate over all class labels
     for trueClassLabel in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] {
-        
+
         // iterate over 10 images per class
         for imageIndex in 0 ..< 10 {
-            
+
             // access image URL from the app bundle
-			let imageURL = Bundle.main.url(forResource: "\(trueClassLabel)_\(imageIndex)",
+            let imageURL = Bundle.main.url(forResource: "\(trueClassLabel)_\(imageIndex)",
 			                               withExtension: "png")!
-            
+
             // create a CVPixelBuffer containing the image used for training
-			let imageBuffer = try MLFeatureValue(imageAt: imageURL,
+            let imageBuffer = try MLFeatureValue(imageAt: imageURL,
+
 			                                     pixelsWide: 28,
 			                                     pixelsHigh: 28,
 			                                     pixelFormatType: kCVPixelFormatType_OneComponent8,
 			                                     options: nil).imageBufferValue!
 
             // create a training sample as a MLFeatureProvider
-			let trainingSample = UpdatableMNISTDigitClassifierTrainingInput(image: imageBuffer,
-                                                                digit: trueClassLabel)
-                
+            let trainingSample = UpdatableMNISTDigitClassifierTrainingInput(image: imageBuffer,
+                                                                            digit: trueClassLabel)
+
             // and, hold on to the training sample
             trainingSamples.append(trainingSample)
         }
     }
-    
+
     // return training samples as a MLBatchProvider
     return MLArrayBatchProvider(array: trainingSamples)
 }
 ```
 
-We'll define a progress handler block that gets invoked during the training for all specified events. If necessary, we could update the `digitClassifier` model to use the updated model before running predictions to compute accuracy of the updated model so far. 
+We'll define a progress handler block that gets invoked during the training for all specified events. If necessary, we could update the `digitClassifier` model to use the updated model before running predictions to compute accuracy of the updated model so far.
 
 ```swift
 func progressHandler(_ context: MLUpdateContext) {
-    
+
     // replace the underlying MLModel instance with updated model from context
     digitClassifier.model = context.model
 
@@ -61,7 +62,7 @@ func progressHandler(_ context: MLUpdateContext) {
 }
 ```
 
-We'll define a completion handler block which gets invoked when the training is successful or when it fails with an error. Similar to the progress handler, we could compute predition accuracy with the updated model from completion handler. We could also save this model to disk for later use. 
+We'll define a completion handler block which gets invoked when the training is successful or when it fails with an error. Similar to the progress handler, we could compute prediction accuracy with the updated model from completion handler. We could also save this model to disk for later use.
 
 ```swift
 func completionHandler(_ context: MLUpdateContext) {
@@ -90,7 +91,7 @@ func completionHandler(_ context: MLUpdateContext) {
 }
 ```
 
-Once the handlers have been defined, we'll collect necessary information in order to kick off the training process. 
+Once the handlers have been defined, we'll collect necessary information in order to kick off the training process.
 
 * Get the updatable model URL from the app bundle:
 

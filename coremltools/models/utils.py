@@ -57,6 +57,10 @@ def save_spec(spec, filename, auto_set_specification_version=False):
         if ext != '.mlmodel':
             raise Exception("Extension must be .mlmodel (not %s)" % ext)
 
+    # set model coremltools version
+    from coremltools import __version__
+    spec.description.metadata.userDefined['coremltoolsVersion'] = __version__
+
     spec = spec.SerializeToString()
     if auto_set_specification_version:
         try:
@@ -76,12 +80,12 @@ def save_spec(spec, filename, auto_set_specification_version=False):
 
 def load_spec(filename):
     """
-    Load a protobuf model specification from file
+    Load a protobuf model specification from file.
 
     Parameters
     ----------
     filename: str
-        Location on disk (a valid filepath) from which the file is loaded
+        Location on disk (a valid file path) from which the file is loaded
         as a protobuf spec.
 
     Returns
@@ -409,11 +413,11 @@ def evaluate_regressor(model, data, target="target", verbose=False):
 
     Parameters
     ----------
-    filename: [str | MLModel]
+    filename: list of str or list of MLModel
         File path from which to load the MLModel from (OR) a loaded version of
         MLModel.
 
-    data: [str | Dataframe]
+    data: list of str or list of Dataframe
         Test data on which to evaluate the models (dataframe,
         or path to a .csv file).
 
@@ -469,17 +473,17 @@ def evaluate_regressor(model, data, target="target", verbose=False):
 
 def evaluate_classifier(model, data, target='target', verbose=False):
     """
-    Evaluate a CoreML classifier model and compare against predictions
-    from the original framework (for testing correctness of conversion). Use
-    this evaluation for models that don't deal with probabilities.
+    Evaluate a Core ML classifier model and compare against predictions
+    from the original framework (for testing correctness of conversion). 
+    Use this evaluation for models that don't deal with probabilities.
 
     Parameters
     ----------
-    filename: [str | MLModel]
+    filename: list of str or list of MLModel
         File from where to load the model from (OR) a loaded
         version of the MLModel.
 
-    data: [str | Dataframe]
+    data: list of str or list of Dataframe
         Test data on which to evaluate the models (dataframe,
         or path to a csv file).
 
@@ -742,14 +746,14 @@ def evaluate_transformer(model, input_data, reference_output,
 
     Parameters
     ----------
-    spec: [str | MLModel]
+    spec: list of str or list of MLModel
         File from where to load the Model from (OR) a loaded
         version of MLModel.
 
-    input_data: list[dict]
+    input_data: list of dict
         Test data on which to evaluate the models.
 
-    reference_output: list[dict]
+    reference_output: list of dict
         Expected results for the model.
 
     verbose: bool
@@ -866,7 +870,6 @@ def get_custom_layers(spec):
     -------
 
     [NN layer] A list of custom layer implementations
-
     """
     layers = _get_nn_layers(spec)
     layers_out = []
@@ -933,7 +936,7 @@ def _get_input_names(spec):
     """
     Returns a list of the names of the inputs to this model.
     :param spec: The model protobuf specification
-    :return: [str] A list of input feature names
+    :return: list of str A list of input feature names
     """
     retval = [feature.name for feature in spec.description.input]
     return retval

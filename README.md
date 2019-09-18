@@ -6,8 +6,9 @@ conversion and validation. This includes scikit-learn, LIBSVM, Caffe,
 Keras and XGBoost.
 
 coremltools 3.0
---------------------
+---------------
 [Release notes](https://github.com/apple/coremltools/releases/)
+
 ```shell
 # Install using pip
 pip install coremltools==3.0
@@ -70,7 +71,7 @@ you are converting models of these formats:
 - Keras (1.2.2, 2.0.4+) with corresponding TensorFlow version
 - XGBoost (0.7+)
 - scikit-learn (0.17+)
-- libSVM
+- LIBSVM
 
 
 Building from source
@@ -110,7 +111,7 @@ make dist
 
 Running Unit Tests
 -------------------
-In order to run unit tests, you need pytest, pandas, and h5py.
+In order to run unit tests, you need `pytest`, `pandas`, and `h5py`.
 
 ```shell
 pip install pytest pandas h5py
@@ -120,13 +121,13 @@ To add a new unit test, add it to the `coremltools/test` folder. Make sure you
 name the file with a 'test' as the prefix.
 
 Additionally, running unit-tests would require more packages (like
-libsvm)
+LIBSVM)
 
 ```shell
 pip install -r test_requirements.pip
 ```
 
-To install libsvm
+To install LIBSVM
 
 ```shell
 git clone https://github.com/cjlin1/libsvm.git
@@ -136,7 +137,7 @@ cd python/
 make
 ```
 
-To make sure you can run libsvm python bindings everywhere, you need the
+To make sure you can run LIBSVM python bindings everywhere, you need the
 following command, replacing `<LIBSVM_PATH>` with the path to the root of
 your repository.
 
@@ -144,7 +145,7 @@ your repository.
 export PYTHONPATH=${PYTHONPATH}:<LIBSVM_PATH>/python
 ```
 
-To install xgboost
+To install XGBoost
 
 ```shell
 git clone --recursive https://github.com/dmlc/xgboost
@@ -155,13 +156,13 @@ make config=make/config.mk -j8
 cd python-package; python setup.py develop
 ```
 
-To install keras (Version >= 2.0)
+To install Keras (Version >= 2.0)
 
 ```shell
 pip install keras tensorflow
 ```
 
-If you'd like to use the old keras version, you can:
+If you'd like to use the old Keras version, you can:
 
 ```shell
 pip install keras==1.2.2 tensorflow
@@ -184,7 +185,7 @@ Building Documentation
 First install all external dependencies.
 
 ```shell
-pip install Sphinx==1.5.3 sphinx-rtd-theme==0.2.4 numpydoc
+pip install Sphinx==1.8.5 sphinx-rtd-theme==0.4.3 numpydoc==0.9.1
 pip install -e git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
 ```
 
@@ -200,7 +201,8 @@ open _build/html/index.html
 
 External Tools
 --------------
-In addition to the conversion tools in this package, TensorFlow and MXNet have their own conversion tools:
+In addition to the conversion tools in this package, TensorFlow, ONNX, and MXNet have their own conversion tools:
 
 - [TensorFlow](https://pypi.python.org/pypi/tfcoreml)
 - [MXNet](https://github.com/apache/incubator-mxnet/tree/master/tools/coreml)
+- [ONNX](https://github.com/onnx/onnx-coreml
