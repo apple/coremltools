@@ -17,3 +17,5 @@ The model is a 'linked' pipeline composed of a 'linked' drawing embedding model 
 
 - [Updatable Nearest Neighbor Classifier](https://github.com/apple/coremltools/tree/master/examples/updatable_models/updatable_nearest_neighbor_classifier.ipynb)  
 This notebook makes an empty updatable nearest neighbor classifier. Before updating with training examples it predicts 'defaultLabel' for all input. 
+
+In addition of the above examples, a short document on CoreML 3.0 Update Task API usage is provided [here](https://github.com/apple/coremltools/tree/master/examples/updatable_models/OnDeviceTraining_API_Usage.html).
