@@ -180,12 +180,11 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
                     kp = k_pred.flatten()
                 cp = c_preds[idx].flatten()
                 # Compare predictions
-                self.assertEquals(len(kp), len(cp))
+                self.assertEqual(len(kp), len(cp))
                 for i in range(len(kp)):
                     max_den = max(1.0, kp[i], cp[i])
-                    self.assertAlmostEquals(kp[i]/max_den, 
-                                            cp[i]/max_den, 
-                                            delta=delta)
+                    self.assertAlmostEqual(kp[i]/max_den, cp[i]/max_den,
+                        delta=delta)
 
         # Cleanup files - models on disk no longer useful
         if use_tmp_folder and os.path.exists(model_dir):
