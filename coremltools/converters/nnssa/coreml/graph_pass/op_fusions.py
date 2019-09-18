@@ -26,20 +26,24 @@ ELEMENTWISE_OPS = [
     'Pow',
 ]
 
+
 def _check_number_inputs(node, n):
     return len(node.inputs) == n
+
 
 def _check_number_outputs(node, n):
     return len(node.outputs) == n
 
+
 def _check_single_out_vector_constant_node(node):
-    return(node.op == 'Const' and len(node.outputs) == 1 and \
+    return (node.op == 'Const' and len(node.outputs) == 1 and \
             node.value is not None and len(np.squeeze(node.value.val).shape) == 1)
 
+
 def _is_NHWC(graph, node):
-    if (node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor'):
+    if node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor':
         return True
-    if (node.op == 'Conv2D' or node.op == 'Pooling' or node.op =='MaxPool' or \
+    if (node.op == 'Conv2D' or node.op == 'Conv2DBackpropInput' or node.op == 'Pooling' or node.op == 'MaxPool' or
         node.op == 'AvgPool') and node.attr.get('data_format') == 'NHWC':
         return True
     if node.op == 'ConcatV2':
@@ -75,8 +79,7 @@ def _is_NHWC(graph, node):
     return False
 
 
-def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, transpose_params=[0,3,1,2]):
-
+def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, transpose_params=[0, 3, 1, 2]):
     '''
     Insert a node called "transpose_node_name" between src and dst
     This node should be a transpose node with params "transpose_params"
@@ -130,11 +133,12 @@ def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, tran
 
 def _insert_transpose_to_nchw(graph, src, dst):
     tp_node_name = src.name + "_to_nchw"
-    _insert_transpose_to_or_from_nchw(graph, src, dst, tp_node_name, [0,3,1,2])
+    _insert_transpose_to_or_from_nchw(graph, src, dst, tp_node_name, [0, 3, 1, 2])
+
 
 def _insert_transpose_from_nchw(graph, src, dst):
     tp_node_name = src.name + "_to_nhwc"
-    _insert_transpose_to_or_from_nchw(graph, src, dst, tp_node_name, [0,2,3,1])
+    _insert_transpose_to_or_from_nchw(graph, src, dst, tp_node_name, [0, 2, 3, 1])
 
 
 def transform_nhwc_to_nchw(nnssa):
@@ -535,7 +539,6 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
         except Exception as e:
             return None
 
-
     def _fuse_conv_mul_add_into_batchnorm(graph):
         keys = list(graph.keys())
         count = 0
@@ -557,9 +560,10 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
                 fused_bn_node = ParsedNode()
                 fused_bn_node.op = 'BatchNorm'
                 fused_bn_node.name = out_node.name + '_batch_norm'
-                fused_bn_node.attr = {}
-                fused_bn_node.attr['gamma'] = np.squeeze(BN_nodes[0].value.val)
-                fused_bn_node.attr['beta'] = np.squeeze(BN_nodes[2].value.val)
+                fused_bn_node.attr = {
+                    'gamma': np.squeeze(BN_nodes[0].value.val),
+                    'beta': np.squeeze(BN_nodes[2].value.val)
+                }
                 fused_bn_node.datatype = current_node.datatype
                 graph[fused_bn_node.name] = fused_bn_node
 

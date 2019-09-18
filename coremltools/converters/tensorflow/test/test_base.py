@@ -4,7 +4,7 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 import os, sys
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import numpy as np
 import pytest
 import unittest

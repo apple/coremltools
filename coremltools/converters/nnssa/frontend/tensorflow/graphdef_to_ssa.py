@@ -18,8 +18,8 @@ def load_tf_graph(graph_file):
     """
     # We load the protobuf file from the disk and parse it to retrieve the
     # unserialized graph_def
-    with tf.gfile.GFile(graph_file, "rb") as f:
-        graph_def = tf.GraphDef()
+    with tf.io.gfile.GFile(graph_file, "rb") as f:
+        graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
 
     # Then, we import the graph_def into a new Graph and returns it
