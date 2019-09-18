@@ -34,6 +34,8 @@ def _slice_static(layer_spec, input_shapes):
             begin = 0 if params.beginMasks[idx] else begin_indices[idx]
             end = dim if params.endMasks[idx] else end_indices[idx]
             output_shape[idx] = (end - begin) // params.strides[idx]
+            if (end - begin) % params.strides[idx] != 0:
+                output_shape[idx] += 1
     return [output_shape]
 
 
@@ -45,6 +47,8 @@ def _slice_dynamic(layer_spec, input_shapes):
 
 
 def _squeeze(layer_spec, input_shapes):
+    if layer_spec.squeeze.squeezeAll:
+        return [[1]]
     axes = list(layer_spec.squeeze.axes)
     input_shape = input_shapes[0]
     rank = len(input_shape)
@@ -56,7 +60,7 @@ def _squeeze(layer_spec, input_shapes):
     for dim in range(rank):
         if dim not in axes:
             output_shape.append(input_shape[dim])
-        elif input_shape[dim] != 1:
+        elif input_shape[dim] > 0 and input_shape[dim] != 1:
             raise ValueError(
                 '[Shaper] Cannot squeeze on index %d of shape %s' % (dim, str(input_shape)))
     return [output_shape] if output_shape else [[1]]
@@ -319,6 +323,9 @@ def _reduce_general(params, input_shapes):
     return [output_shape] if output_shape else [[1]]
 
 
+def _reduce_logsumexp(layer_spec, input_shapes):
+    return _reduce_general(layer_spec.reduceLogSumExp, input_shapes)
+
 def _reduce_prod(layer_spec, input_shapes):
     return _reduce_general(layer_spec.reduceProd, input_shapes)
 
@@ -355,7 +362,7 @@ def _argmax(layer_spec, input_shapes):
 
 
 def _argmin(layer_spec, input_shapes):
-    params = layer_spec.argMax
+    params = layer_spec.argMin
     axis = params.axis
     keepdims = not params.removeDim
 
@@ -427,7 +434,7 @@ def _reorganize_data(layer_spec, input_shapes):
     elif 'DepthToSpace' in layer_spec.name or 'BatchToSpaceND' in layer_spec.name:
         output_shape[2] *= block_size
         output_shape[3] *= block_size
-        output_shape[1] = input_shape[2] // (block_size * block_size)
+        output_shape[1] = input_shape[1] // (block_size * block_size)
     return [output_shape]
 
 
@@ -490,6 +497,7 @@ _LAYER_REGISTRY = {
     'reduce': _reduce,
     'argMax': _argmax,
     'argMin': _argmin,
+    'reduceLogSumExp': _reduce_logsumexp,
     'reduceProd': _reduce_prod,
     'reduceMean': _reduce_mean,
     'reduceSum': _reduce_sum,
