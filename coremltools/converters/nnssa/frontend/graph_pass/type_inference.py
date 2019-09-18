@@ -177,7 +177,7 @@ class TypeInferenceVisitor(object):
             elif node.op == 'FloorDiv':
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = self.gdict[node.inputs[0]].attr[
-                                                      'symbolic_value'].val / self.gdict[node.inputs[1]].attr['symbolic_value'].val
+                                                      'symbolic_value'].val // self.gdict[node.inputs[1]].attr['symbolic_value'].val
             elif node.op == 'RealDiv':
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = self.gdict[node.inputs[0]].attr[
@@ -186,6 +186,12 @@ class TypeInferenceVisitor(object):
                 node.attr['symbolic_value'] = rettype()
                 node.attr['symbolic_value'].val = sm.functions.Max(self.gdict[node.inputs[0]].attr['symbolic_value'].val,
                                                                    self.gdict[node.inputs[1]].attr['symbolic_value'].val)
+            elif node.op == 'Equal':
+                node.attr['symbolic_value'] = rettype()
+                node.attr['symbolic_value'].val = (vala.val == valb.val)
+            elif node.op == 'NotEqual':
+                node.attr['symbolic_value'] = rettype()
+                node.attr['symbolic_value'].val = (vala.val != valb.val)
         return rettype
 
     def visit_reduction_op(self, node):
@@ -551,35 +557,10 @@ class TypeInferenceVisitor(object):
         return self.visit_pooling(node)
 
     def visit_Equal(self, node):
-        assert (len(node.inputs) == 2)
-        inputtype = self.visit(node.inputs[0])
-        self.visit(node.inputs[1])
-        if not builtins.is_tensor(inputtype):
-            rettype = builtins.bool
-        else:
-            rettype = builtins.tensor(builtins.bool, inputtype.get_shape())
-
-        vala = self.gdict[node.inputs[0]].attr['symbolic_value']
-        valb = self.gdict[node.inputs[1]].attr['symbolic_value']
-        if vala is not None and valb is not None:
-            node.attr['symbolic_value'] = rettype()
-            node.attr['symbolic_value'].val = (vala.val == valb.val)
-        return rettype
+        return self.visit_broadcast_op(node)
 
     def visit_NotEqual(self, node):
-        assert (len(node.inputs) == 2)
-        inputtype = self.visit(node.inputs[0])
-        self.visit(node.inputs[1])
-        if not builtins.is_tensor(inputtype):
-            return builtins.bool
-        rettype = builtins.tensor(builtins.bool, inputtype.get_shape())
-
-        vala = self.gdict[node.inputs[0]].attr['symbolic_value']
-        valb = self.gdict[node.inputs[1]].attr['symbolic_value']
-        if vala is not None and valb is not None:
-            node.attr['symbolic_value'] = rettype()
-            node.attr['symbolic_value'].val = (vala.val == valb.val)
-        return rettype
+        return self.visit_broadcast_op(node)
 
     def visit_ExpandDims(self, node):
         assert (len(node.inputs) == 2)
@@ -1203,6 +1184,8 @@ class TypeInferenceVisitor(object):
             ]
             slices = [[int(begin[i]), int(end[i]), 1] for i in range(len(begin))]
             node.attr['slice'] = slices
+            node.attr['begin_masks'] = [idx for idx, value in enumerate(begin) if value == 0]
+            node.attr['end_masks'] = [idx for idx, value in enumerate(end) if value == 2147483647]
             output_value = None
             if input_value is not None:
                 slices = [slice(*i) for i in slices]
@@ -1511,11 +1494,13 @@ class TypeInferenceVisitor(object):
             # if we have a complete value, we can force it
 
             slicesv = [[begin[i], end[i], stride_value.val[i]] for i in range(len(begin))]
-            for s in slicesv:
+            for idx, s in enumerate(slicesv):
                 if s[0] is None:
                     s[0] = 0
+                    begin_mask.append(idx)
                 if s[1] is None:
                     s[1] = 2147483647
+                    end_mask.append(idx)
                 if s[2] is None:
                     s[2] = 1
                 s[0] = int(s[0])
@@ -1524,8 +1509,14 @@ class TypeInferenceVisitor(object):
             # insert missing slices
             for i in range(len(slicesv), len(input_shape)):
                 slicesv.append([0, 2147483647, 1])
+                if i not in begin_mask:
+                    begin_mask.append(i)
+                if i not in end_mask:
+                    end_mask.append(i)
             node.attr['slice'] = slicesv
             node.attr['squeeze'] = list(int(i) for i in shrink_axes)
+            node.attr['begin_masks'] = list(int(i) for i in begin_mask)
+            node.attr['end_masks'] = list(int(i) for i in end_mask)
             if isscalar(res):
                 rettype = input_type.get_primitive()
                 output_value = rettype()
@@ -1615,11 +1606,13 @@ class TypeInferenceVisitor(object):
                         retshape.append(thisslicelen)
                 slices = [[begin[i], end[i], stride_value[i]] for i in range(len(begin))]
                 has_symbolic_slices = False
-                for s in slices:
+                for idx, s in enumerate(slices):
                     if s[0] is None:
                         s[0] = 0
+                        begin_mask.append(idx)
                     if s[1] is None:
                         s[1] = 2147483647
+                        end_mask.append(idx)
                     if s[2] is None:
                         s[2] = 1
                     try:
@@ -1641,6 +1634,11 @@ class TypeInferenceVisitor(object):
                 for i in range(len(slices), len(input_shape)):
                     slices.append([0, 2147483647, 1])
                     retshape.append(input_shape[i])
+                    if i not in begin_mask:
+                        begin_mask.append(i)
+                    if i not in end_mask:
+                        end_mask.append(i)
+
                 if not has_symbolic_slices:
                     node.attr['slice'] = slices
                 node.attr['squeeze'] = list(int(i) for i in shrink_axes)
@@ -1654,6 +1652,7 @@ class TypeInferenceVisitor(object):
                     rettype = input_type.get_primitive()
                 else:
                     rettype = builtins.tensor(input_type.get_primitive(), retshape)
+
         node.attr['symbolic_value'] = output_value
         return rettype
 

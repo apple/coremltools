@@ -972,6 +972,26 @@ class NewLayersSimpleTest(CorrectnessTest):
         self.test_embedding_nd_cpu(
             model_precision=_MLMODEL_HALF_PRECISION, use_cpu_only=False)
 
+    def test_softmax_nan_bug_cpu(self):
+        input_shape = [2,2]
+        input_features = [('data', datatypes.Array(*input_shape))]
+        output_features = [('output', None)]
+        for axis in [0,1]:
+            builder = neural_network.NeuralNetworkBuilder(
+                input_features, output_features,
+                disable_rank5_shape_mapping=True)
+
+            builder.add_softmax_nd(name='softmax_nd', input_name='data',
+                                   output_name='output', axis=axis)
+
+            x = np.array([[0.5, 0.5],[1e8, 1e8]])
+            input = {'data': x}
+            y = np.exp(x - np.max(x, axis=axis, keepdims=True))
+            y = y / np.sum(y, axis=axis, keepdims=True)
+            expected = {'output': y}
+
+            self._test_model(builder.spec, input, expected, useCPUOnly=True)
+
     def test_softmax_nd_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for axis in range(-rank, rank):
@@ -4546,6 +4566,6 @@ class CoreML3NetworkStressTest(CorrectnessTest):
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(NewLayersSimpleTest("test_nms_cpu"))
+    # suite.addTest(NewLayersSimpleTest("test_softmax_nan_bug_cpu"))
     # #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
     # unittest.TextTestRunner().run(suite)
