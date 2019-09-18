@@ -58,7 +58,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
 
             for idx, full_value in enumerate(f_out):
                 quantized_value = q_out[idx]
-                self.assertAlmostEquals(
+                self.assertAlmostEqual(
                     full_value, quantized_value, delta=delta)
 
     def _test_model(self, model, num_samples=1, mode='random', delta=1e-2,
@@ -88,19 +88,19 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         # as our full precision model since quantizing this model again will
         # result in 0 quantization error.
 
-        coreml_spec = quantization_utils.quantize_spec_weights(
-            spec=coreml_model.get_spec(),
+        coreml_spec = coreml_model.get_spec()
+        quantization_utils.quantize_spec_weights(
+            spec=coreml_spec,
             nbits=self.qbits,
             quantization_mode=self.qmode,
             lut_function=self.custom_lut
         )
 
         # De-quantize model
-        full_precision_model_spec = quantization_utils._dequantize_nn_spec(
-            spec=coreml_spec
-        )
+        quantization_utils._dequantize_nn_spec(spec=coreml_spec.neuralNetwork)
+        full_precision_model_spec = coreml_spec
 
-        # Quantize model again
+        # Quantize model from another copy
         quantized_model_spec = quantization_utils.quantize_spec_weights(
             spec=coreml_model.get_spec(),
             nbits=self.qbits,
@@ -406,3 +406,64 @@ class LUTCustomQuantizationNumericalCorrectnessTests(
         self.qbits = 8
         self.qmode = _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE
         self.custom_lut = quantization_utils._get_linear_lookup_table_and_weight
+
+
+from coremltools.converters import keras as keras_converter
+
+@unittest.skipIf(coremltools.utils.macos_version() < (10, 14),
+                 'Missing macOS 10.14+. Skipping tests.')
+@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras2
+class AdvancedQuantizationNumericalCorrectnessTests(unittest.TestCase):
+    """ Quantization tests for advanced settings
+    """
+    def test_8bit_symmetric_and_skips(self):
+        from keras.models import Sequential
+        from keras.layers import Conv2D
+
+        def stable_rel_error(x, ref):
+            err = x - ref
+            denom = np.maximum(np.abs(ref), np.ones_like(ref))
+            return np.abs(err) / denom
+
+        np.random.seed(1988)
+        input_dim = 16
+        num_kernels, kernel_height, kernel_width, input_channels = 64, 3, 3, 32
+
+        # Define a model
+        model = Sequential()
+        model.add(Conv2D(input_shape=(input_dim, input_dim, input_channels),
+            filters=num_kernels, kernel_size=(kernel_height, kernel_width)))
+
+        # Set some random weights
+        weight, bias = model.layers[0].get_weights()
+        num_filters = weight.shape[-1]
+        filter_shape = weight.shape[:-1]
+
+        new_weight = np.stack([4.0 * np.random.rand(*filter_shape) - 2 for
+            i in range(num_filters)], axis=-1)
+        model.layers[0].set_weights([new_weight, bias])
+
+        mlmodel = keras_converter.convert(model, ['data'], ['output_0'])
+        selector = quantization_utils.AdvancedQuantizedLayerSelector(
+                skip_layer_types=['batchnorm', 'bias', 'depthwiseConv'],
+                minimum_conv_kernel_channels=4,
+                minimum_conv_weight_count=4096)
+
+        q_mlmodel = quantization_utils.quantize_weights(mlmodel, 8,
+                selector=selector)
+
+        input_shape = (1,1,input_channels,input_dim,input_dim)
+        input_val = 2 * np.random.rand(*input_shape) - 1
+
+        coreml_input = {'data' : input_val}
+        coreml_output = mlmodel.predict(coreml_input)
+        q_coreml_output = q_mlmodel.predict(coreml_input)
+
+        val = coreml_output['output_0']
+        q_val = q_coreml_output['output_0']
+        rel_err = stable_rel_error(q_val, val)
+        max_rel_err, mean_rel_err = np.max(rel_err), np.mean(rel_err)
+        self.assertTrue(max_rel_err < 0.25)
+        self.assertTrue(max_rel_err > 0.01)
+        self.assertTrue(mean_rel_err < 0.02)

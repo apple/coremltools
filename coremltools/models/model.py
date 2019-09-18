@@ -36,12 +36,15 @@ _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS = '_lookup_table_quantization_kmeans'
 _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE = '_lookup_table_quantization_custom'
 # Dequantization
 _QUANTIZATION_MODE_DEQUANTIZE = '_dequantize_network'  # used for testing
+# Symmetric linear quantization
+_QUANTIZATION_MODE_LINEAR_SYMMETRIC = '_linear_quantization_symmetric'
 
 _SUPPORTED_QUANTIZATION_MODES = [_QUANTIZATION_MODE_LINEAR_QUANTIZATION,
                                  _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
                                  _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
                                  _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
-                                 _QUANTIZATION_MODE_DEQUANTIZE]
+                                 _QUANTIZATION_MODE_DEQUANTIZE,
+                                 _QUANTIZATION_MODE_LINEAR_SYMMETRIC]
 
 _LUT_BASED_QUANTIZATION = [_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
                            _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
