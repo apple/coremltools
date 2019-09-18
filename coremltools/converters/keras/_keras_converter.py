@@ -620,8 +620,7 @@ def convert(model,
         - a Keras model object
         - a string with the path to a Keras model file (h5)
         - a tuple of strings, where the first is the path to a Keras model
-        architecture (.json file), the second is the path to its weights
-        stored in h5 file.
+    architecture (.json file), the second is the path to its weights stored in h5 file.
 
     input_names: [str] | str
         Optional name(s) that can be given to the inputs of the Keras model.

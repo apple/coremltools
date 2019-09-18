@@ -85,7 +85,7 @@ def ssa_convert(ssa,
         Both options can be used in conjunction in which case, custom function will be invoked for provided ops and
         custom layer will be added for ops with no respective conversion function. This option gives finer control to user.
         One use case could be to modify input attributes or certain graph properties before calling existing conversion function.
-        Note that, It is custom conversion function's responsibility to add respective CoreML layer into builder(coreml tools's NeuralNetworkBuilder)
+        Note that, It is custom conversion function's responsibility to add respective Core ML layer into builder (coremltools's NeuralNetworkBuilder)
     custom_shape_functions : dict of str -> functions or empty dict
         Specify custom function to compute `output` shape given `input` shape for given custom operator
         This is required for new converter path, which maintains and propagates shapes while converting operators.
