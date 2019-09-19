@@ -16,7 +16,7 @@ try:
 except:
     from . import shapes
 
-DEBUG = True
+DEBUG = False
 
 
 def _is_scalar(type_):
@@ -48,7 +48,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=['Transpose'])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
@@ -63,6 +63,8 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
         remove_no_ops_and_shift_control_dependencies,
         remove_single_isolated_node,
         fuse_conv_mul_add_into_batchnorm,
+        spatial_reduce_to_global_pool,
+        fuse_pad_into_conv,
     ]
 
     for p in passes:
@@ -70,7 +72,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=['Transpose', 'Pad', 'Conv2D'])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     for f in list(ssa.functions.values()):
@@ -211,6 +213,7 @@ class SSAConverter(object):
             'Pow': self._convert_binary_broadcastable,
             'FloorMod': self._convert_floor_mod,
             'SquaredDifference': self._convert_squared_difference,
+            'Concat': self._convert_concat_nd,
             'ConcatV2': self._convert_concat_nd,
             'MatMul': self._convert_batched_mat_mul,
             'BatchMatMul': self._convert_batched_mat_mul,
@@ -281,6 +284,7 @@ class SSAConverter(object):
             'SpaceToBatchND': self._convert_space_to_batch_nd,
             'BatchToSpaceND': self._convert_batch_to_space_nd,
             'BatchNorm': self._convert_batchnorm,
+            'LRN': self._convert_lrn,
         }
 
         # converter state variables
@@ -1013,14 +1017,15 @@ class SSAConverter(object):
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_concat_nd(self, node):
-        assert (len(node.inputs) > 1)
+        assert len(node.inputs) > 1
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         axis = node.attr.get('axis')
         if axis is None:
-            axis = input_nodes[-1].value.val
+            axis = input_nodes[-1].value.val if node.op == 'ConcatV2' else input_nodes[0].value.val
         if axis is None:
             raise NotImplementedError('[SSAConverter] Dynamic concatenation is not supported')
-        input_names = input_names[:-1]
+        input_names = input_names[:-1] if node.op == 'ConcatV2' else input_names[1:]
+        input_types = input_types if node.op == 'ConcatV2' else input_types[1:]
         input_names = [name for i, name in enumerate(input_names) if self._get_tensor_shape_from_type(input_types[i])[axis] != 0]
 
         if node.attr.get('data_format', None) == 'NHWC_format_inserted' and (axis == 1 or axis == -3):
@@ -1251,6 +1256,12 @@ class SSAConverter(object):
             raise NotImplementedError(
                 '[SSAConverter] Dynamic weights in convolution not implemented')
 
+        dilations = node.attr.get('dilations', [1, 1, 1, 1])
+        # TF uses SpaceToBatch to implement dilated convolutions
+        if any([df != 1 for df in dilations]):
+            raise NotImplementedError(
+                '[SSAConverter] Dilated Convolution not implemented')
+
         assert len(weight.shape) == 4, 'Conv2d: weight parameter not rank 4'
 
         data_format = node.attr.get('data_format', 'NHWC')
@@ -1267,6 +1278,19 @@ class SSAConverter(object):
             stride_width = node.attr.get('strides', [1, 1, 1, 1])[-1]
 
         border_mode = node.attr.get('padding').lower()
+
+        groups = 1
+        kernel_height, kernel_width, kernel_channels, output_channels = weight.shape
+        if node.op == 'DepthwiseConv2dNative':
+            depth_multiplier = weight.shape[3]
+            weight = np.reshape(weight,
+                (kernel_height, kernel_width, 1, kernel_channels * depth_multiplier))
+            output_channels = kernel_channels * depth_multiplier
+            groups = kernel_channels
+            kernel_channels = 1
+
+        pad_h = node.attr.get('pad_h', [0, 0])
+        pad_w = node.attr.get('pad_w', [0, 0])
 
         builder.add_convolution(
             name=conv_output_name,
@@ -1285,7 +1309,12 @@ class SSAConverter(object):
             output_shape=None,
             input_name=conv_input_name,
             output_name=conv_output_name,
-            dilation_factors=[1, 1])
+            dilation_factors=[1, 1],
+            padding_bottom=pad_h[0],
+            padding_top=pad_h[1],
+            padding_left=pad_w[0],
+            padding_right=pad_w[1]
+        )
 
         self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
 
@@ -1295,6 +1324,7 @@ class SSAConverter(object):
         kernel_sizes = node.attr.get('ksize', [1, 1, 1, 1])
         stride_sizes = node.attr.get('strides', [1, 1, 1, 1])
         padding_type = node.attr.get('padding')
+        global_pooling = node.attr.get('global_pooling', False)
 
         if data_format == 'NHWC' or data_format == 'NHWC_format_inserted':
             kernel_height = kernel_sizes[1]
@@ -1307,7 +1337,7 @@ class SSAConverter(object):
             stride_height = stride_sizes[-2]
             stride_width = stride_sizes[-1]
 
-        layer = self._get_builder().add_pooling(
+        self._get_builder().add_pooling(
             name=node.name,
             height=kernel_height,
             width=kernel_width,
@@ -1317,7 +1347,9 @@ class SSAConverter(object):
             padding_type=padding_type,
             input_name=input_names[0],
             output_name=node.name,
-            exclude_pad_area=True)
+            exclude_pad_area=True,
+            is_global=global_pooling
+        )
 
         self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
 
@@ -1767,7 +1799,7 @@ class SSAConverter(object):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
 
         if len(input_names) == 2:
-            axes = input_nodes[1].value.val
+            axes = np.array(input_nodes[1].value.val).flatten()
             reduction_indices = list(axes) if isinstance(axes, Iterable) else [axes]
         elif 'reduction_indices' in node.attr:
             reduction_indices = node.attr['reduction_indices']
@@ -2160,3 +2192,23 @@ class SSAConverter(object):
         )
 
         self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
+
+    def _convert_lrn(self, node):
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        alpha = node.attr.get('alpha')
+        beta = node.attr.get('beta')
+        bias = node.attr.get('bias')
+        depth_radius = node.attr.get('depth_radius')
+        n_channels = self._get_tensor_shape_from_type(input_types[-1])[-1]
+        if node.attr.get('data_format') == 'NHWC_format_inserted':
+            n_channels = self._get_tensor_shape_from_type(input_types[-1])[1]
+        layer = self._get_builder().add_lrn(
+            name=node.name,
+            input_name=input_names[0],
+            output_name=node.name,
+            alpha=alpha * n_channels,
+            beta=beta,
+            local_size=depth_radius,
+            k=bias
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)

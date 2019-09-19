@@ -9,6 +9,7 @@ from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
     delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
 
+
 ELEMENTWISE_OPS = {
     'Maximum',
     'Minimum',
@@ -25,6 +26,9 @@ ELEMENTWISE_OPS = {
     'Rsqrt',
     'Pow',
     'Pad',
+    'LRN',
+    'Mean',
+    'Max'
 }
 
 # Native SSA nodes with data_format attributes of NHWC / NCHW
@@ -53,17 +57,20 @@ def _is_NHWC(graph, node):
     if (node.op == 'Conv2D' or node.op == 'Conv2DBackpropInput' or node.op == 'Pooling' or node.op == 'MaxPool' or
         node.op == 'AvgPool') and node.attr.get('data_format') == 'NHWC':
         return True
-    if node.op == 'ConcatV2':
-        # ConcatV2's last input is axis
-        return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted' for inp in
-            node.inputs[:-1])
+    if node.op == 'Concat':  # Concat's first input is axis
+        return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
+                   for inp in node.inputs[1:])
+    if node.op == 'ConcatV2':  # ConcatV2's last input is axis
+        return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
+                   for inp in node.inputs[:-1])
     if node.op in ELEMENTWISE_OPS:
-
         # if its an element-wise op and if all of its parent(s) are
         # "NHWC_format_inserted" or given that at least one of the parents
         # is "NHWC_format_inserted" and rest are vector constants, then the
         # node is also declared to be "NHWC_format_inserted"
-        NHWC_parent = any([graph[inp].attr.get('data_format', None) == 'NHWC_format_inserted' for inp in node.inputs])
+
+        NHWC_parent = any([graph[inp].attr.get('data_format',
+            None) == 'NHWC_format_inserted' for inp in node.inputs])
 
         if NHWC_parent:
             for inp in node.inputs:
@@ -71,10 +78,14 @@ def _is_NHWC(graph, node):
                 if parent_node.attr.get('data_format', None) == 'NHWC_format_inserted':
                     continue
                 elif parent_node.value is not None:
-                    # check that the input is a constant and a vector (rank 1)
                     val = np.array(parent_node.value.val)
+                    # constant scalar
+                    if val.shape == () and not builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
+                        continue
+                    # constant vector
                     if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
                         continue
+                    # constant padding values
                     elif node.op.lower() == 'pad' and len(val.shape) == 2 and \
                             builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
                         # adjust padding values for pad operator
@@ -122,7 +133,12 @@ def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, tran
         tp_node.attr['dim'] = transpose_params
         if '_output_shapes' in src.attr:
             input_shape = src.attr['_output_shapes'][0]
-            tp_node.attr['_output_shapes'] = [[input_shape[transpose_params[0]], input_shape[transpose_params[1]], input_shape[transpose_params[2]], input_shape[transpose_params[3]]]]
+            tp_node.attr['_output_shapes'] = [
+                [input_shape[transpose_params[0]],
+                 input_shape[transpose_params[1]],
+                 input_shape[transpose_params[2]],
+                 input_shape[transpose_params[3]]]
+            ]
         graph[transpose_node_name] = tp_node
 
     # Rename dst's input 'src' to 'transpose_node_name'
@@ -197,11 +213,18 @@ def transform_nhwc_to_nchw(nnssa):
                 for inp in node.inputs:
                     parent_node = graph[inp]
                     if parent_node.value is not None:
+                        # if there is a constant vector input
                         val = np.array(parent_node.value.val)
                         if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype):
-                            parent_node.datatype = builtins.tensor(parent_node.datatype.get_primitive(),
-                                                                   (1, val.shape[0], 1, 1))
-                            parent_node.value.val = np.reshape(parent_node.value.val, (1, val.shape[0], 1, 1))
+                            new_shape = (1, val.shape[0], 1, 1)
+                            parent_node.datatype = builtins.tensor(parent_node.datatype.get_primitive(), new_shape)
+                            parent_node.value.val = np.reshape(parent_node.value.val, new_shape)
+                        # if there is axis attribute
+                        if node.op == 'Mean' or node.op == 'Max':
+                            m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1}
+                            reduction_indices = np.array([m_nhwc_to_nchw[x] for x in val], dtype=np.int32)
+                            parent_node.value.val = np.reshape(reduction_indices, parent_node.value.val.shape)
+                            node.attr['reduction_indices'] = reduction_indices
 
             # Insert NHWC -> NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
@@ -219,6 +242,16 @@ def transform_nhwc_to_nchw(nnssa):
                     _insert_transpose_from_nchw(graph, node, graph[out_node_name])
 
             # Adjust output shape and concat layer's axis parameter
+            if node.op == 'Concat' and len(node.inputs) > 1 and graph[node.inputs[0]].value is not None:
+                axis = graph[node.inputs[0]].value.val
+                axis = 4 + axis if axis < 0 else axis
+                if axis == 3:
+                    node.attr['axis'] = 1
+                elif axis == 2 or axis == 1:
+                    node.attr['axis'] = axis + 1
+                else:
+                    node.attr['axis'] = axis
+
             if node.op == 'ConcatV2' and len(node.inputs) > 1 and graph[node.inputs[-1]].value is not None:
                 axis = graph[node.inputs[-1]].value.val
                 axis = 4 + axis if axis < 0 else axis
@@ -678,8 +711,14 @@ def fuse_pad_into_conv(nnssa):
     """
 
     def _match_pad_conv2d_pattern(graph, entry_node):
-
-        return None
+        if not _check_number_outputs(entry_node, 1):
+            return None
+        conv2d_node = graph[entry_node.outputs[0]]
+        if not (conv2d_node.op == 'Conv2D' and _check_number_outputs(conv2d_node, 1) and _check_number_inputs(conv2d_node, 1)):
+            return None
+        if conv2d_node.attr.get('padding', '').lower() != 'valid':
+            return None
+        return [entry_node, conv2d_node]
 
     def _fuse_pad_into_conv(graph):
         keys = list(graph.keys())
@@ -691,14 +730,77 @@ def fuse_pad_into_conv(nnssa):
             if current_node.op != 'Pad':
                 continue
 
-            pad_nodes = _match_pad_conv2d_pattern(graph, current_node)
+            nodes = _match_pad_conv2d_pattern(graph, current_node)  # [Pad, Conv2D]
 
-            if pad_nodes:
-                pass  # perform fuse
+            if nodes:
+                pad_node, conv2d_node = nodes
+                previous_node = pad_node.inputs[0]
+                paddings = graph[pad_node.inputs[1]].value.val
+                pad_h, pad_w = paddings[-2], paddings[-1]
+
+                # fused node in the graph
+                conv2d_node.attr.update({
+                    'pad_h': pad_h, 'pad_w': pad_w
+                })
+                graph[conv2d_node.name] = conv2d_node
+
+                # delete pad const node and pad node
+                delete_node(graph, pad_node.inputs[1])
+                delete_node(graph, pad_node.name)
+                connect_edge(graph, previous_node, conv2d_node.name)
+
+                count += 1
 
         if count > 0:
-            print('[Op Fusion] Fused {} Pad nodes to Conv2D.'.format(count))
+            print('[Op Fusion] Fused {} Pad nodes into Conv2D.'.format(count))
 
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_pad_into_conv(f.graph)
+
+
+def spatial_reduce_to_global_pool(nnssa):
+    """
+    A graph pass to translate a spatial reduce op to global pool op for better GPU performance.
+    """
+    reduce_ops = {'mean', 'max'}
+
+    def _spatial_reduce_to_global_pool(graph):
+        keys = list(graph.keys())
+        count = 0
+        for k in keys:
+            if k not in graph:
+                continue
+            current_node = graph[k]
+            if current_node.op.lower() not in reduce_ops:
+                continue
+            reduction_indices = current_node.attr.get('reduction_indices')
+            # reduction on height and weight dimensions
+            hw_dims = {(2, 3), (3, 2), (-2, -1), (-1, -2), (2, -1), (-1, 2), (-2, 3), (3, -2)}
+            if tuple(reduction_indices) in hw_dims:
+                # replace reduce op to global pooling op
+                previous_node = current_node.inputs[0]
+                output_nodes = current_node.outputs[:]
+
+                pooling_node = ParsedNode()
+                pooling_node.op = 'AvgPool' if current_node.op.lower() == 'mean' else 'MaxPool'
+                pooling_node.name = current_node.name + '_pooling'
+                pooling_node.attr = {
+                    'padding': 'valid'.upper(),
+                    'global_pooling': True,
+                }
+                pooling_node.datatype = current_node.datatype
+                graph[pooling_node.name] = pooling_node
+
+                delete_node(graph, current_node.name)
+                connect_edge(graph, previous_node, pooling_node.name)
+                connect_dests(graph, pooling_node.name, output_nodes)
+
+                count += 1
+
+        if count > 0:
+            print('[Op Fusion] Tuned {} Reductions.'.format(count))
+
+    for fn_key in list(nnssa.functions.keys()):
+        f = nnssa.functions[fn_key]
+        _spatial_reduce_to_global_pool(f.graph)

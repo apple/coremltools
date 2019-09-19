@@ -1249,9 +1249,18 @@ class TFSingleLayerTest(TFNetworkTest):
                 out = tf.batch_to_space_nd(a, [2, 2], [[0, 0], [0, 0]])
             self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
+    @unittest.skip('numeric')
+    def test_lrn(self):
+        shape = [1, 4, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.nn.lrn(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
 
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest('test_conv2d'))
+    # suite.addTest(TFSingleLayerTest('test_lrn'))
     # unittest.TextTestRunner().run(suite)
