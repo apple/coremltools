@@ -464,6 +464,7 @@ class TypeInferenceVisitor(object):
         return self._get_type_from_attr(node)
 
     def visit_Conv2D(self, node):
+
         output_shapes = node.attr.get('_output_shapes')
         if output_shapes is None or len(output_shapes) == 0:
             return self._get_type_from_attr(node)

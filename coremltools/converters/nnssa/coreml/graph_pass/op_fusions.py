@@ -54,8 +54,7 @@ def _check_single_out_vector_constant_node(node):
 def _is_NHWC(graph, node):
     if node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor':
         return True
-    if (node.op == 'Conv2D' or node.op == 'Conv2DBackpropInput' or node.op == 'Pooling' or node.op == 'MaxPool' or
-        node.op == 'AvgPool') and node.attr.get('data_format') == 'NHWC':
+    if node.op in NATIVE_NHWC_OPS and node.attr.get('data_format') == 'NHWC':
         return True
     if node.op == 'Concat':  # Concat's first input is axis
         return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
