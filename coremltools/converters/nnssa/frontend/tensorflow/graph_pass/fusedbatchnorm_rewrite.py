@@ -8,24 +8,16 @@ from ....commons.basic_graph_ops import replace_node, delete_node
 from ..parsed_tf_node import ParsedTFNode
 
 
-def Linear(builder, mul1, mul2, add, name=None):
-    mul = builder.add_matmul([mul1, mul2], name=name)
-    return builder.add_elementwise("Add", [mul, add], name=name)
-
-
 def expand_fusedbatchnorm_cell(graph, node):
     assert (node.op == 'FusedBatchNorm')
     assert (len(node.inputs) == 5)
-    """
-    Inputs:
-    const Tensor& x_input,
-    const Tensor& scale_input,
-    const Tensor& offset_input,
-    const Tensor& estimated_mean_input,
-    const Tensor& estimated_variance_input
-    """
 
     x, scale, offset, estimated_mean, estimated_variance = node.inputs
+
+    epsilon = node.attr.get('epsilon', 1e-4)
+    var_node = graph[estimated_variance]
+    if var_node.value is not None:
+        var_node.value.val += epsilon
 
     for o in node.outputs:
         assert (graph[o].op == 'get_tuple')

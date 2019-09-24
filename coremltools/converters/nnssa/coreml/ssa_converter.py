@@ -48,7 +48,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=['Transpose'])
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
@@ -70,7 +70,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=['Transpose', 'FusedBatchNorm'])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     for f in list(ssa.functions.values()):
@@ -249,6 +249,7 @@ class SSAConverter(object):
             'Where': self._convert_where,
             'Conv2D': self._convert_conv2d,
             'Conv2DBackpropInput': self._convert_conv2d_transpose,
+            'DepthwiseConv2dNative': self._convert_conv2d,
             'MaxPool': self._convert_maxpool,
             'AvgPool': self._convert_avgpool,
             'Reshape': self._convert_reshape,
@@ -1251,6 +1252,12 @@ class SSAConverter(object):
             raise NotImplementedError(
                 '[SSAConverter] Dynamic weights in convolution not implemented')
 
+        dilations = node.attr.get('dilations', [1,1,1,1])
+        # TF uses SpaceToBatch to implement dilated convolutions
+        if any([df != 1 for df in dilations]):
+            raise NotImplementedError(
+                '[SSAConverter] Dilated Convolution not implemented')
+
         assert len(weight.shape) == 4, 'Conv2d: weight parameter not rank 4'
 
         data_format = node.attr.get('data_format', 'NHWC')
@@ -1268,16 +1275,26 @@ class SSAConverter(object):
 
         border_mode = node.attr.get('padding').lower()
 
+        groups = 1
+        kernel_height, kernel_width, kernel_channels, output_channels = weight.shape
+        if node.op == 'DepthwiseConv2dNative':
+            depth_multiplier = weight.shape[3]
+            weight = np.reshape(weight,
+                (kernel_height, kernel_width, 1, kernel_channels * depth_multiplier))
+            output_channels = kernel_channels * depth_multiplier
+            groups = kernel_channels
+            kernel_channels = 1
+
         builder.add_convolution(
             name=conv_output_name,
-            kernel_channels=weight.shape[2],
-            output_channels=weight.shape[3],
-            height=weight.shape[0],
-            width=weight.shape[1],
+            kernel_channels=kernel_channels,
+            output_channels=output_channels,
+            height=kernel_height,
+            width=kernel_width,
             stride_height=stride_height,
             stride_width=stride_width,
             border_mode=border_mode,
-            groups=1,
+            groups=groups,
             W=weight,
             b=bias,
             has_bias=(bias is not None),
@@ -1674,7 +1691,7 @@ class SSAConverter(object):
         C = len(gamma)
         beta = node.attr.get('beta')
         mean = node.attr.get('mean', np.zeros((C,)))
-        variance = node.attr.get('mean', np.ones((C,)))
+        variance = node.attr.get('variance', np.ones((C,)))
         layer = self._get_builder().add_batchnorm(
             name=node.name,
             channels=C,
