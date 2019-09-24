@@ -576,10 +576,10 @@ def _propagate_shapes(nn_spec, blob_names, shapes, srcs, dsts, layer_specs):
     Traverse the neural network spec. The spec may not be top level.
     This should be used as the internal recursive call. Use traverse() to do the top level traversal.
     blob_names - a list of blob names
-    shapes - a dictionary of \{blob_name : shape\}
-    srcs - a dictionary of \{ blob_name : layers_writing_to_it \}
-    dsts - a dictionary of \{ blob_name : layers_reading_from_it \}
-    layer_specs - a dictionary of \{layer_name : layer_spec\} for easy access to parameters.
+    shapes - a dictionary of {blob_name: shape}
+    srcs - a dictionary of {blob_name: layers_writing_to_it}
+    dsts - a dictionary of {blob_name: layers_reading_from_it}
+    layer_specs - a dictionary of {layer_name: layer_spec} for easy access to parameters.
 
     srcs, dsts, and layer_specs are byproducts that are not necessary for propagating the shapes.
     I made these for debugging purposes.
@@ -638,7 +638,7 @@ def _finalize_spec(nn_spec, shapes, overwrite=True):
     """
     This is the internal recursive call. Use propagate_shapes() to do the top level traversal.
     nn_spec: spec for the neural network
-    shapes: a \{str : shape\} dictionary tracking the name -> coreml_shape pair
+    shapes: a {str : shape} dictionary tracking the name -> coreml_shape pair
     overwrite: If True, will discard existing tensor shapes in the spec.
                If False, will check for tensor shape existence, write it if spec does not have tensor field,
                otherwise will check for consistency.
