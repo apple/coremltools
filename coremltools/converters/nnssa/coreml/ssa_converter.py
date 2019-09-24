@@ -48,7 +48,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=['Transpose'])
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
@@ -70,7 +70,7 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=['Transpose', 'FusedBatchNorm'])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     for f in list(ssa.functions.values()):
@@ -1674,7 +1674,7 @@ class SSAConverter(object):
         C = len(gamma)
         beta = node.attr.get('beta')
         mean = node.attr.get('mean', np.zeros((C,)))
-        variance = node.attr.get('mean', np.ones((C,)))
+        variance = node.attr.get('variance', np.ones((C,)))
         layer = self._get_builder().add_batchnorm(
             name=node.name,
             channels=C,

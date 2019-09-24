@@ -5,7 +5,7 @@ from __future__ import absolute_import as _
 import traceback
 import numpy as np
 import sympy as sm
-import sys
+import sys, math
 
 PY3 = False
 if sys.version_info >= (3, 0):
@@ -15,6 +15,15 @@ from ...commons import builtins
 from ...commons.symbolic import *
 
 short_var_name_cache = {}
+
+def get_conv_outdim(in_dim, ks, stride, dl, padding_type):
+    if padding_type == 'VALID':
+        ks_dilated = (ks - 1) * dl + 1
+        return (in_dim - ks_dilated) / stride + 1
+    elif padding_type == 'SAME':
+        return math.ceil(in_dim * 1.0 / stride)
+    else:
+        raise ValueError('[Type Inference] Unrecognized padding type.')
 
 
 def get_short_var_name(name):
@@ -292,7 +301,7 @@ class TypeInferenceVisitor(object):
 
     # The main visitors
 
-    def visit_get_tuple(self, node): # DO NOT PROPAGATE TYPE INFERENCE ACROSS FUNCTIONS
+    def visit_get_tuple(self, node):  # DO NOT PROPAGATE TYPE INFERENCE ACROSS FUNCTIONS
         assert (len(node.inputs) == 1)
         parent_type = self.visit(node.inputs[0])
         self.propagate_tensor_array(node)
@@ -442,36 +451,43 @@ class TypeInferenceVisitor(object):
         return self._get_type_from_attr(node)
 
     def visit_Conv2D(self, node):
+        output_shapes = node.attr.get('_output_shapes')
+        if output_shapes is None or len(output_shapes) == 0:
+            return self._get_type_from_attr(node)
+
         input_type = self.visit(node.inputs[0])
         filter_type = self.visit(node.inputs[1])
-        if input_type is not None and filter_type is not None:
-            # we implement shape inference for a simple case
-            if node.attr['data_format'] == 'NHWC' and \
-                    all(d == 1 for d in node.attr['dilations']) and \
-                    all(d == 1 for d in node.attr['strides']):
-                inshape = input_type.get_shape()
-                filtshape = filter_type.get_shape()
-                if node.attr['padding'] == 'VALID':
-                    # filtshape is [H, W, in_channels, out_channels]
-                    assert (len(inshape) == 4)
-                    assert (len(filtshape) == 4)
-                    retshape = [
-                        inshape[0],  # N copies
-                        inshape[1] - filtshape[0] + 1,
-                        inshape[2] - filtshape[1] + 1,
-                        filtshape[3]
-                    ]
-                    return builtins.tensor(input_type.get_primitive(), tuple(retshape))
 
-                elif node.attr['padding'] == 'SAME':
-                    retshape = [
-                        inshape[0],  # N copies
-                        inshape[1],
-                        inshape[2],
-                        filtshape[3]
-                    ]
-                    return builtins.tensor(input_type.get_primitive(), tuple(retshape))
+        if all([dim > 0 for dim in output_shapes[0]]):
+            return builtins.tensor(input_type.get_primitive(), tuple(output_shapes[0]))
+
+        if input_type is not None and filter_type is not None:
+            inshape = input_type.get_shape()
+            filtshape = filter_type.get_shape()
+            assert len(inshape) == 4
+            assert len(filtshape) == 4
+            strides = node.attr['strides']
+            padding = node.attr['padding']
+            dilations = node.attr['dilations']
+            retshape = output_shapes[0]
+            if node.attr['data_format'] == 'NHWC':
+
+                retshape[1] = get_conv_outdim(inshape[1], filtshape[0],
+                    strides[1], dilations[1], padding)
+                retshape[2] = get_conv_outdim(inshape[2], filtshape[1],
+                    strides[2], dilations[2], padding)
+            else:
+                retshape[2] = get_conv_outdim(inshape[2], filtshape[0],
+                    strides[2], dilations[2], padding)
+                retshape[3] = get_conv_outdim(inshape[3], filtshape[1],
+                    strides[3], dilations[3], padding)
+
+            return builtins.tensor(input_type.get_primitive(), tuple(retshape))
+
         return self._get_type_from_attr(node)
+
+    def visit_DepthwiseConv2dNative(self, node):
+        return self.visit_Conv2D(node)
 
     def visit_Conv2DBackpropInput(self, node):
         filter_type = self.visit(node.inputs[1])
@@ -2021,20 +2037,16 @@ class TypeInferenceVisitor(object):
         return self.visit(node.inputs[0])
 
     def visit_SpaceToDepth(self, node):
-        primitive = self.visit_unary(node).get_primitive()
-        return builtins.tensor(primitive, node.attr['_output_shapes'][0])
+        return self._get_type_from_attr(node)
 
     def visit_DepthToSpace(self, node):
-        primitive = self.visit_unary(node).get_primitive()
-        return builtins.tensor(primitive, node.attr['_output_shapes'][0])
+        return self._get_type_from_attr(node)
 
     def visit_SpaceToBatchND(self, node):
-        primitive = self.visit_unary(node).get_primitive()
-        return builtins.tensor(primitive, node.attr['_output_shapes'][0])
+        return self._get_type_from_attr(node)
 
     def visit_BatchToSpaceND(self, node):
-        primitive = self.visit_unary(node).get_primitive()
-        return builtins.tensor(primitive, node.attr['_output_shapes'][0])
+        return self._get_type_from_attr(node)
 
 
 def type_is_unknown(t):

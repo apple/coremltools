@@ -82,6 +82,17 @@ class TFConvNetTest(TFNetworkTest):
         self._test_tf_model(graph, {a.op.name: [1, 8, 8, 3]}, [x.op.name])
         self._test_tf_model(graph, {a.op.name: [10, 8, 8, 3]}, [x.op.name])
 
+    def test_convnet_batchnorm(self):
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=[None, 8, 8, 3])
+            W1 = tf.Variable(tf.truncated_normal([3, 3, 3, 4], stddev=0.3))
+            x = conv_cell(a, W1, has_batchnorm=True)
+            W2 = tf.Variable(tf.truncated_normal([3, 3, 4, 2], stddev=0.3))
+            x = conv_cell(x, W2, has_batchnorm=True)
+        self._test_tf_model(graph, {a.op.name: [1, 8, 8, 3]}, [x.op.name])
+        self._test_tf_model(graph, {a.op.name: [10, 8, 8, 3]}, [x.op.name])
+
     def test_simple_convnet(self):
         def weight_variable(shape):
             initial = tf.truncated_normal(shape, stddev=0.1)

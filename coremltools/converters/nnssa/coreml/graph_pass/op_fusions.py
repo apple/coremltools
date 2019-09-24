@@ -9,7 +9,7 @@ from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
     delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
 
-ELEMENTWISE_OPS = [
+ELEMENTWISE_OPS = {
     'Maximum',
     'Minimum',
     'Add',
@@ -17,14 +17,22 @@ ELEMENTWISE_OPS = [
     'BiasAdd',
     'Mul',
     'Sigmoid',
-    'Relu',
+    'Relu', 'Relu6',
     'LeakyRelu',
     'Tanh',
     'Identity',
     'Sqrt',
     'Rsqrt',
     'Pow',
-]
+    'Pad',
+
+}
+
+# Native SSA nodes with data_format attributes of NHWC / NCHW
+NATIVE_NHWC_OPS = {
+    'Conv2D', 'Conv2DBackpropInput', 'DepthwiseConv2dNative',
+    'Pooling', 'MaxPool', 'AvgPool'
+}
 
 
 def _check_number_inputs(node, n):
@@ -36,8 +44,8 @@ def _check_number_outputs(node, n):
 
 
 def _check_single_out_vector_constant_node(node):
-    return (node.op == 'Const' and len(node.outputs) == 1 and \
-            node.value is not None and len(np.squeeze(node.value.val).shape) == 1)
+    return node.op == 'Const' and len(node.outputs) == 1 and \
+           node.value is not None and len(np.squeeze(node.value.val).shape) == 1
 
 
 def _is_NHWC(graph, node):
@@ -51,14 +59,12 @@ def _is_NHWC(graph, node):
         return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted' for inp in
             node.inputs[:-1])
     if node.op in ELEMENTWISE_OPS:
-        # if its an elementwise op
-        # and if all of its parent(s) are "NHWC_format_inserted" or
-        # given that at least one of the parents is "NHWC_format_inserted" and rest are
-        # vector constants, then the node is also
-        # declared to be "NHWC_format_inserted"
-
-        NHWC_parent = any(
-            [graph[inp].attr.get('data_format', None) == 'NHWC_format_inserted' for inp in node.inputs])
+        # if its an elementwise op and if all of its parent(s) are
+        # "NHWC_format_inserted" or given that at least one of the parents
+        # is "NHWC_format_inserted" and rest are vector constants, then the
+        # node is also declared to be "NHWC_format_inserted"
+        NHWC_parent = any([graph[inp].attr.get('data_format',
+            None) == 'NHWC_format_inserted' for inp in node.inputs])
 
         if NHWC_parent:
             for inp in node.inputs:
@@ -79,11 +85,14 @@ def _is_NHWC(graph, node):
     return False
 
 
-def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, transpose_params=[0, 3, 1, 2]):
-    '''
-    Insert a node called "transpose_node_name" between src and dst
-    This node should be a transpose node with params "transpose_params"
-    '''
+def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, transpose_params=None):
+    """
+    Insert a node called 'transpose_node_name' between src and dst
+    This node should be a transpose node with params 'transpose_params'
+    """
+
+    if not transpose_params:
+        transpose_params = [0, 3, 1, 2]
 
     # First check whether the node already exists in the graph or not.
 
@@ -181,6 +190,11 @@ def transform_nhwc_to_nchw(nnssa):
                     node.attr['_output_shapes'] = [[s[0], s[3], s[1], s[2]]]
 
             if node.op in ELEMENTWISE_OPS:
+                if node.op == 'Relu':
+                    print('relu')
+                if node.op == 'Pad':
+                    print('pad')
+
                 for inp in node.inputs:
                     parent_node = graph[inp]
                     if parent_node.value is not None:
@@ -190,7 +204,7 @@ def transform_nhwc_to_nchw(nnssa):
                                                                    (1, val.shape[0], 1, 1))
                             parent_node.value.val = np.reshape(parent_node.value.val, (1, val.shape[0], 1, 1))
 
-            # Insert NHWC->NCHW transpose
+            # Insert NHWC -> NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
                 if graph[inp_node_name].op == 'Const':
@@ -199,7 +213,7 @@ def transform_nhwc_to_nchw(nnssa):
                 if inp_node_format != 'NHWC_format_inserted':
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
 
-            # Insert NCHW->NHWC transpose
+            # Insert NCHW -> NHWC transpose
             for i, out_node_name in enumerate(node.outputs):
                 out_node_format = graph[out_node_name].attr.get('data_format')
                 if out_node_format != 'NHWC_format_inserted':
@@ -465,6 +479,7 @@ def _match_gelu_pattern(gf, entry_node):
     except:
         return None
 
+
 def _fuse_gelu(graph):
     keys = list(graph.keys())
     count = 0
@@ -508,14 +523,21 @@ def fuse_gelu(nnssa):
 
 
 def fuse_conv_mul_add_into_batchnorm(nnssa):
-    '''
-            Const vector  Const vector
-                  |          |
-                  |          |
-                  |          |
-                  V          V
-    Conv2D ----> Mul -----> Add ---->     =========>    Conv2D ---> BN --->
-    '''
+    """
+    A graph pass that match and fuses following op patterns into one BatchNorm op.
+
+    Pattern 1:
+                [Const]   [Const]
+                   |         |
+                   V         V
+    [Conv2D] --> [Mul] --> [Add] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
+
+    Pattern 2:
+                [Const]   [Const]   [Const]
+                   |         |         |
+                   V         V         V
+    [Conv2D] --> [Sub] --> [Mul] --> [Add] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
+    """
 
     def _match_mul_add_bn_pattern(gd, conv2d_node):
         try:
@@ -539,6 +561,34 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
         except Exception as e:
             return None
 
+    def _match_sub_mul_add_batchnorm_pattern(graph, conv2d_node):
+        try:
+            if not _check_number_outputs(conv2d_node, 1):
+                return None
+            sub_node = graph[conv2d_node.outputs[0]]
+            if not (sub_node.op == 'Sub' and _check_number_outputs(sub_node, 1) and _check_number_inputs(sub_node, 2)):
+                return None
+            sub_const_node = graph[sub_node.inputs[0]] if sub_node.inputs[1] == conv2d_node.name else graph[sub_node.inputs[1]]
+            if not _check_single_out_vector_constant_node(sub_const_node):
+                return None
+            mul_node = graph[sub_node.outputs[0]]
+            if not (mul_node.op == 'Mul' and _check_number_outputs(mul_node, 1) and _check_number_inputs(mul_node, 2)):
+                return None
+            mul_const_node = graph[mul_node.inputs[0]] if mul_node.inputs[1] == conv2d_node.name else graph[mul_node.inputs[1]]
+            if not _check_single_out_vector_constant_node(mul_const_node):
+                return None
+            add_node = graph[mul_node.outputs[0]]
+            if not (add_node.op == 'Add' and _check_number_inputs(add_node, 2)):
+                return None
+            add_const_node = graph[add_node.inputs[0]] if add_node.inputs[1] == mul_node.name else graph[add_node.inputs[1]]
+            if not _check_single_out_vector_constant_node(add_const_node):
+                return None
+
+            return [sub_const_node, sub_node, mul_const_node, mul_node, add_const_node, add_node]
+
+        except Exception:
+            return None
+
     def _fuse_conv_mul_add_into_batchnorm(graph):
         keys = list(graph.keys())
         count = 0
@@ -546,14 +596,17 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
             if k not in graph:
                 continue
             current_node = graph[k]
-            if current_node.op != 'Conv2D':
+            if current_node.op not in ['Conv2D', 'DepthwiseConv2dNative']:
                 continue
 
-            # BN_nodes order : [Const, Mul, Const, Add]
-            BN_nodes = _match_mul_add_bn_pattern(graph, current_node)
-            if BN_nodes is not None:
-                assert len(BN_nodes) == 4
-                out_node = BN_nodes[-1]
+            # BN_nodes1 order: [Const, Mul, Const, Add]
+            bn_nodes1 = _match_mul_add_bn_pattern(graph, current_node)
+            # bn_nodes2 order: [Const, Sub, Const, Mul, Const, Add]
+            bn_nodes2 = _match_sub_mul_add_batchnorm_pattern(graph, current_node)
+
+            if bn_nodes1:
+                assert len(bn_nodes1) == 4
+                out_node = bn_nodes1[-1]
                 bn_outputs = out_node.outputs[:]
 
                 # Instantiate a new fused node in the graph
@@ -561,15 +614,15 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
                 fused_bn_node.op = 'BatchNorm'
                 fused_bn_node.name = out_node.name + '_batch_norm'
                 fused_bn_node.attr = {
-                    'gamma': np.squeeze(BN_nodes[0].value.val),
-                    'beta': np.squeeze(BN_nodes[2].value.val)
+                    'gamma': np.squeeze(bn_nodes1[0].value.val),
+                    'beta': np.squeeze(bn_nodes1[2].value.val),
                 }
                 fused_bn_node.datatype = current_node.datatype
                 graph[fused_bn_node.name] = fused_bn_node
 
                 # Delete nodes
-                BN_node_names = [x.name for x in BN_nodes]
-                for name in BN_node_names:
+                bn_node_names = [x.name for x in bn_nodes1]
+                for name in bn_node_names:
                     delete_node(graph, name)
 
                 # Connect fused node to entry and output nodes
@@ -577,11 +630,38 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
                 connect_dests(graph, fused_bn_node.name, bn_outputs)
 
                 count += 1
+
+            if bn_nodes2:
+                assert len(bn_nodes2) == 6
+                out_node = bn_nodes2[-1]
+                bn_outputs = out_node.outputs[:]
+
+                # Instantiate a new fused node in the graph
+                fused_bn_node = ParsedNode()
+                fused_bn_node.op = 'BatchNorm'
+                fused_bn_node.name = out_node.name + '_batch_norm'
+                fused_bn_node.attr = {
+                    'mean': np.squeeze(bn_nodes2[0].value.val),
+                    'gamma': np.squeeze(bn_nodes2[2].value.val),
+                    'beta': np.squeeze(bn_nodes2[4].value.val),
+                }
+                fused_bn_node.datatype = current_node.datatype
+                graph[fused_bn_node.name] = fused_bn_node
+
+                # Delete nodes
+                bn_node_names = [x.name for x in bn_nodes2]
+                for name in bn_node_names:
+                    delete_node(graph, name)
+
+                # Connect fused node to entry and output nodes
+                connect_edge(graph, current_node.name, fused_bn_node.name)
+                connect_dests(graph, fused_bn_node.name, bn_outputs)
+
+                count += 1
+
         if count > 0:
             print('[Op Fusion] Fused {} BatchNorms.'.format(count))
 
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_conv_mul_add_into_batchnorm(f.graph)
-
-
