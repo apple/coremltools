@@ -51,8 +51,12 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
             graph[name].attr['_output_shapes'] = [placeholder_shape[name]]
 
     passes = [
-        delete_asserts, functionalize_loops, constant_propagation,
-        cond_to_where, remove_variable_nodes, fusedbatchnorm_rewrite,
+        delete_asserts,
+        functionalize_loops,
+        constant_propagation,
+        cond_to_where,
+        remove_variable_nodes,
+        fusedbatchnorm_rewrite,
         lstmblockcell_rewrite
     ]
 

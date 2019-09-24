@@ -4,7 +4,7 @@ import numpy as np
 from coremltools._deps import HAS_TF_1_14
 
 from test_base import TFNetworkTest
-
+import itertools
 
 # IMPORTANT NOTE TO ADD NEW TESTS:
 # For each test function you should set up your own graph and session.
@@ -79,6 +79,17 @@ class TFConvNetTest(TFNetworkTest):
             x = conv_cell(a, W1)
             W2 = tf.Variable(tf.truncated_normal([3, 3, 4, 2], stddev=0.3))
             x = conv_cell(x, W2)
+        self._test_tf_model(graph, {a.op.name: [1, 8, 8, 3]}, [x.op.name])
+        self._test_tf_model(graph, {a.op.name: [10, 8, 8, 3]}, [x.op.name])
+
+    def test_convnet_batchnorm(self):
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=[None, 8, 8, 3])
+            W1 = tf.Variable(tf.truncated_normal([3, 3, 3, 4], stddev=0.3))
+            x = conv_cell(a, W1, has_batchnorm=True)
+            W2 = tf.Variable(tf.truncated_normal([3, 3, 4, 2], stddev=0.3))
+            x = conv_cell(x, W2, has_batchnorm=True)
         self._test_tf_model(graph, {a.op.name: [1, 8, 8, 3]}, [x.op.name])
         self._test_tf_model(graph, {a.op.name: [10, 8, 8, 3]}, [x.op.name])
 
@@ -175,8 +186,28 @@ class TFConvNetTest(TFNetworkTest):
                 output = tf.nn.convolution(
                     x, W, strides=[1, 1], padding='VALID', dilation_rate=[d, d])
             output_name = [output.op.name]
-            self._test_tf_model(graph, {x.op.name: [1, Hin, Win, Cin]}, output_name, delta=.05)
+            self._test_tf_model(graph, {x.op.name: [1, Hin, Win, Cin]}, output_name, delta=.01)
 
+    def test_depthwise_conv2d_native(self):
+        options = dict(
+            depthwise_multiplier = [1,2],
+            strides = [[1,1,1,1], [1,2,2,1]],
+            padding = ['VALID', 'SAME'],
+        )
+        product = itertools.product(*options.values())
+        for prod in product:
+            params = dict(zip(options.keys(), prod))
+            graph = tf.Graph()
+            with graph.as_default():
+                x_image = tf.placeholder(tf.float32, shape=[None, 16, 16, 3])
+                kernels = tf.Variable(
+                    tf.truncated_normal([3, 3, 3, params['depthwise_multiplier']],
+                    stddev=0.3))
+                conv1 = tf.nn.depthwise_conv2d_native(
+                    input=x_image, filter=kernels, strides=params['strides'],
+                    padding=params['padding'])
+            output_name = [conv1.op.name]
+            self._test_tf_model(graph, {x_image.op.name: [1, 16, 16, 3]}, output_name)
 
 class TFSingleLayerTest(TFNetworkTest):
     """
