@@ -660,6 +660,7 @@ class TypeInferenceVisitor(object):
         pass
 
     def visit_Gather(self, node):
+
         params_type = self.visit(node.inputs[0])
         indices_type = self.visit(node.inputs[1])
         axis_value = 0
@@ -669,14 +670,17 @@ class TypeInferenceVisitor(object):
         node.attr['axis'] = axis_value
         if params_type is None or indices_type is None:
             return None
-        indices_shape = []
+
+        params_shape = list(params_type.get_shape())
         if not builtins.is_tensor(indices_type):
             indices_shape = []
         else:
             indices_shape = list(indices_type.get_shape())
-        params_shape = list(params_type.get_shape())
+            if len(indices_shape) == 0:
+                indices_shape = [1]
+
         retshape = params_shape[:axis_value] + indices_shape + params_shape[axis_value + 1:]
-        if len(indices_shape) == 0:
+        if len(indices_shape) == 0 and len(retshape) == 0:
             rettype = params_type.get_primitive()
         else:
             rettype = builtins.tensor(params_type.get_primitive(), retshape)
@@ -787,10 +791,12 @@ class TypeInferenceVisitor(object):
                 matb_shape = list(matb_shape)
                 matb_shape[-1], matb_shape[-2] = matb_shape[-2], matb_shape[-1]
                 matb_shape = tuple(matb_shape)
-            assert (len(mata_shape) == len(matb_shape))
-            assert (
-                    mata_shape[-1] == matb_shape[-2] or is_symbolic_or_unknown(mata_shape[-1])
-                    or is_symbolic_or_unknown(matb_shape[-2]))
+            if len(mata_shape) != len(matb_shape):
+                return None
+
+            assert (mata_shape[-1] == matb_shape[-2] or \
+                    is_symbolic_or_unknown(mata_shape[-1]) or \
+                    is_symbolic_or_unknown(matb_shape[-2]))
             shape = list(mata_shape)
             shape[-1] = matb_shape[-1]
             if len(shape) > 2:
@@ -1785,6 +1791,7 @@ class TypeInferenceVisitor(object):
                     node.inputs[-1]].attr['tensorarray_source']
 
     def visit_TensorArrayV3(self, node):
+
         # input is size
         assert (len(node.inputs) <= 1)
         self.visit(node.inputs[0])
