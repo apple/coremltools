@@ -190,11 +190,6 @@ def transform_nhwc_to_nchw(nnssa):
                     node.attr['_output_shapes'] = [[s[0], s[3], s[1], s[2]]]
 
             if node.op in ELEMENTWISE_OPS:
-                if node.op == 'Relu':
-                    print('relu')
-                if node.op == 'Pad':
-                    print('pad')
-
                 for inp in node.inputs:
                     parent_node = graph[inp]
                     if parent_node.value is not None:
