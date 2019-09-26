@@ -516,6 +516,7 @@ _LAYER_REGISTRY = {
     'reorganizeData': _reorganize_data,
     'batchnorm': _identity,
     'clip': _identity,
+    'lrn': _identity,
 }
 
 

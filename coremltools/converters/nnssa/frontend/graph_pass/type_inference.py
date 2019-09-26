@@ -80,7 +80,7 @@ class TypeInferenceVisitor(object):
         try:
             ret = visitor(node)
         except Exception as e:
-            print("Failed to infer type of node %s (%s)" % (node.name, node.op))
+            print('[TypeInference] Failed to infer type of node "%s" (%s)' % (node.name, node.op))
             print(e)
             print(traceback.format_exc())
 
@@ -88,7 +88,7 @@ class TypeInferenceVisitor(object):
             self.visited[node.name] = 1
             node.datatype = ret
         else:
-            print("Unable to infer type of node %s (%s)" % (node.name, node.op))
+            print('[TypeInference] Unable to infer type of node "%s" (%s)' % (node.name, node.op))
         return ret
 
     def visit_all(self):
@@ -391,14 +391,24 @@ class TypeInferenceVisitor(object):
             node.attr['symbolic_value'].val = value.val
         return rettype
 
-    def visit_ConcatV2(self, node):
+    def visit_Concat(self, node):
+        return self.visit_ConcatV2(node, is_v2=False)
+
+    def visit_ConcatV2(self, node, is_v2=True):
         # Concat takes two tensors and a "axis to be concated"
         # get most specific type of all the concated variables
-        self.visit(node.inputs[-1])
-        if self.gdict[node.inputs[-1]].attr['symbolic_value'] is not None:
-            concat_axis = int(self.gdict[node.inputs[-1]].attr['symbolic_value'].val)
+        if is_v2:
+            axis_node = node.inputs[-1]
+        else:
+            axis_node = node.inputs[0]
+        self.visit(axis_node)
+        if self.gdict[axis_node].attr['symbolic_value'] is not None:
+            concat_axis = self.gdict[axis_node].attr['symbolic_value'].val
             # visit each the inputs
-            input_types = [self.visit(inp) for inp in node.inputs[:-1]]
+            if is_v2:
+                input_types = [self.visit(inp) for inp in node.inputs[:-1]]
+            else:
+                input_types = [self.visit(inp) for inp in node.inputs[1:]]
             rettype = input_types[0]
             # find the most specific tensor shape
             for t in input_types[1:]:
@@ -432,7 +442,10 @@ class TypeInferenceVisitor(object):
             rettype = builtins.tensor(rettype.get_primitive(), retshape)
 
             if self.all_inputs_have_values(node):
-                inputs = self.get_all_input_values(node)[:-1]
+                if is_v2:
+                    inputs = self.get_all_input_values(node)[:-1]
+                else:
+                    inputs = self.get_all_input_values(node)[1:]
                 for i in range(len(inputs)):
                     if isscalar(inputs[i]):
                         inputs[i] = np.array(inputs[i])
@@ -474,14 +487,14 @@ class TypeInferenceVisitor(object):
             if node.attr['data_format'] == 'NHWC':
 
                 retshape[1] = get_conv_outdim(inshape[1], filtshape[0],
-                    strides[1], dilations[1], padding)
+                                              strides[1], dilations[1], padding)
                 retshape[2] = get_conv_outdim(inshape[2], filtshape[1],
-                    strides[2], dilations[2], padding)
+                                              strides[2], dilations[2], padding)
             else:
                 retshape[2] = get_conv_outdim(inshape[2], filtshape[0],
-                    strides[2], dilations[2], padding)
+                                              strides[2], dilations[2], padding)
                 retshape[3] = get_conv_outdim(inshape[3], filtshape[1],
-                    strides[3], dilations[3], padding)
+                                              strides[3], dilations[3], padding)
 
             return builtins.tensor(input_type.get_primitive(), tuple(retshape))
 
@@ -497,7 +510,7 @@ class TypeInferenceVisitor(object):
             return attr_output_type
         else:
             raise ValueError("[Type Inference] Conv2DBackpropInput type "
-                "inference case not handled")
+                             "inference case not handled")
 
     def visit_ResizeBilinear(self, node):
         return self._get_type_from_attr(node)
@@ -517,11 +530,11 @@ class TypeInferenceVisitor(object):
                     retshape = []
                     filtshape = list(inshape[:])
                     if isinstance(ksize, list) and len(ksize) == 4:
-                        filtshape[1] = inshape[1]  + 1 - ksize[1]
-                        filtshape[2] = inshape[2]  + 1 - ksize[2]
-                    elif isinstance(ksize,list) and len(ksize) == 2:
-                        filtshape[1] = inshape[1]  + 1 - ksize[0]
-                        filtshape[2] = inshape[2]  + 1 - ksize[1]
+                        filtshape[1] = inshape[1] + 1 - ksize[1]
+                        filtshape[2] = inshape[2] + 1 - ksize[2]
+                    elif isinstance(ksize, list) and len(ksize) == 2:
+                        filtshape[1] = inshape[1] + 1 - ksize[0]
+                        filtshape[2] = inshape[2] + 1 - ksize[1]
                     else:
                         filtshape[1] = inshape[1] - ksize + 1
                         filtshape[2] = inshape[2] - ksize + 1
@@ -2034,6 +2047,9 @@ class TypeInferenceVisitor(object):
 
     def visit_BatchToSpaceND(self, node):
         return self._get_type_from_attr(node)
+
+    def visit_LRN(self, node):
+        return self.visit_unary(node)
 
 
 def type_is_unknown(t):
