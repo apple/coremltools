@@ -17,8 +17,10 @@ ELEMENTWISE_OPS = {
     'Sub',
     'BiasAdd',
     'Mul',
+    'RealDiv',
     'Sigmoid',
-    'Relu', 'Relu6',
+    'Relu',
+    'Relu6',
     'LeakyRelu',
     'Tanh',
     'Identity',
@@ -28,7 +30,9 @@ ELEMENTWISE_OPS = {
     'Pad',
     'LRN',
     'Mean',
-    'Max'
+    'Max',
+    'Square',
+    'SquaredDifference'
 }
 
 # Native SSA nodes with data_format attributes of NHWC / NCHW
@@ -52,6 +56,8 @@ def _check_single_out_vector_constant_node(node):
 
 
 def _is_NHWC(graph, node):
+    if node.name == 'conv0/moments/Squeeze_1':
+        print('TODO: delete debug')
     if node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor':
         return True
     if node.op in NATIVE_NHWC_OPS and node.attr.get('data_format') == 'NHWC':
