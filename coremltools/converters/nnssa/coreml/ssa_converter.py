@@ -19,7 +19,7 @@ try:
 except:
     from . import shapes
 
-DEBUG = False
+DEBUG = True
 
 def _is_scalar(type_):
     if type_ is None:
@@ -93,7 +93,7 @@ def ssa_convert(ssa,
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
@@ -117,7 +117,7 @@ def ssa_convert(ssa,
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=True, highlight_debug_nodes=['Transpose', 'Squeeze'])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     for f in list(ssa.functions.values()):
@@ -390,6 +390,7 @@ class SSAConverter(object):
             'ScatterNd': self._convert_scatter_nd,
             'Square': self._convert_unary_square,
             'Neg': self._convert_unary_neg,
+            'Reciprocal': self._convert_unary_inverse,
             'Sqrt': self._convert_unary_common,
             'Rsqrt': self._convert_unary_common,
             'Exp': self._convert_unary_common,
@@ -1905,6 +1906,17 @@ class SSAConverter(object):
             output_name=node.name
         )
 
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_unary_inverse(self, node):
+        assert len(node.inputs) == 1
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        layer = self._get_builder().add_unary(
+            name=node.name,
+            input_name=input_names[0],
+            output_name=node.name,
+            mode='inverse'
+        )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_batchnorm(self, node):
