@@ -928,7 +928,7 @@ class SSAConverter(object):
         assert (len(input_names) == 3)
 
         index_name, value_name, array_name = input_names
-        if input_nodes[-1].attr['dynamic_size']:
+        if 'dynamic_size' in input_nodes[-1].attr:
             builder = self._get_builder()
             layer = builder.add_get_shape(
                 name=array_name + '_full_shape',
