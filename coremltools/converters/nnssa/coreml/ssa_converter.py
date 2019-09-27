@@ -27,21 +27,52 @@ def _is_scalar(type_):
         result = True
     return result
 
-
-def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
+def ssa_convert(ssa,
+                top_func='main',
+                inputs=None,
+                outputs=None,
+                add_custom_layers=False,
+                custom_conversion_functions={},
+                custom_shape_functions={}
+                ):
     """
     Convert NNSSA into CoreML spec.
-    ssa - NNSSA to be converted to CoreML spec.
-    inputs - Input features of CoreML specs. Must be a dictionary with
-             name as key and shape as value {name: shape},
-             where name is the input's name, shape is the
-             shape of the feature tensor. The shape must be static - all
-             dimensions of shape should be a positive integer.
-             When not provided, SSA converter will treat all input nodes
-             in top level NNSSA as inputs.
-    outputs - Output features of CoreML specs. Must be a list of [name].
-              When not provided, SSA converter will treat all output nodes
-              in top level NNSSA as outputs.
+    ssa : NetworkEnsemble
+        Required parameter
+        NNSSA to be converted to CoreML spec.
+    top_func : str or 'main'
+        Function entry point
+    inputs : list of str or None
+        Input features of CoreML specs. Must be a dictionary with
+        name as key and shape as value {name: shape},
+        where name is the input's name, shape is the
+        shape of the feature tensor. The shape must be static - all
+        dimensions of shape should be a positive integer.
+        When not provided, SSA converter will treat all input nodes
+        in top level NNSSA as inputs.
+    outputs : list of str or None
+        Output features of CoreML specs. Must be a list of [name].
+        When not provided, SSA converter will treat all output nodes
+        in top level NNSSA as outputs.
+    add_custom_layers : bool or False
+        If True, then `custom` layers will be added to the model in place
+        for unsupported ops.
+        Parameters for these custom layers should be filled manually by editing the mlmodel
+        or the 'custom_conversion_functions' argument can be used to do the same during the process of conversion
+    custom_conversion_functions : dict of str -> function or empty dict
+        Specify custom function to be used for conversion for given op. User can override existing conversion
+        function and provide their own custom implementation to convert certain ops. Dictionary key must be string
+        specifying Op name or Op type and value must be a function implementation available in current context.
+        If user provides two separate functions for node name and node type, then custom function tied to node name will be used.
+        As, function tied to node type is more generic than one tied to node name.
+        custom_conversion_functions option is different than add_custom_layers.
+        Both options can be used in conjuction in which case, custom function will be invoked for provided ops and
+        custom layer will be added for ops with no respective conversion function. This option gives finer control to user.
+        One use case could be to modify input attributes or certain graph properties before calling existing conversion function.
+        Note that, It is custom conversion function's responsibility to add respective CoreML layer into builder(coreml tools's NeuralNetworkBuilder)
+    custom_shape_functions : dict of str -> functions or empty dict
+        Specify custom function to compute `output` shape given `input` shape for given custom operator
+        This is required for new converter path, which maintains and propogates shapes while converting operators.
     """
     if outputs is not None:
         ssa.extract_subgraph(outputs, name=top_func)
@@ -78,7 +109,13 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
     for f in list(ssa.functions.values()):
         check_connections(f.graph)
 
-    converter = SSAConverter(ssa, top_func=top_func, inputs=inputs, outputs=outputs)
+    converter = SSAConverter(ssa,
+                             top_func=top_func,
+                             inputs=inputs,
+                             outputs=outputs,
+                             add_custom_layers=add_custom_layers,
+                             custom_conversion_functions=custom_conversion_functions,
+                             custom_shape_functions=custom_shape_functions)
     converter.convert()
     mlmodel_spec = converter.get_spec()
 
@@ -93,8 +130,16 @@ def ssa_convert(ssa, top_func='main', inputs=None, outputs=None):
 
 
 class SSAConverter(object):
-    def __init__(self, net_ensemble, top_func='main', inputs=None, outputs=None):
 
+    def __init__(self,
+                 net_ensemble, # type: NetworkEnsemble
+                 top_func='main', # type: str
+                 inputs=None, # type: List[str]
+                 outputs=None, # type: List[str]
+                 add_custom_layers=False,  # type: bool
+                 custom_conversion_functions={},  # type: Dict[Text, Any]
+                 custom_shape_functions={} # type: Dict[Text, Any]
+                 ):
         self.net_ensemble = net_ensemble
         self.top_func = top_func  # string indicating the top level function
         if self.top_func not in self.net_ensemble.functions:
@@ -107,6 +152,11 @@ class SSAConverter(object):
         top_output_names = list(map(str, self.net_ensemble.functions[top_func].outputs))
 
         top_ssa = self.net_ensemble.functions[top_func]
+
+        # custom conversion functions
+        self.custom_conversion_functions = custom_conversion_functions
+        self.add_custom_layers = add_custom_layers
+        self.custom_shape_functions = custom_shape_functions
 
         # find_inputs_and_outputs() generates a list of required inputs, which
         # may not be supplied by inputs. We need to make sure that the
@@ -359,21 +409,39 @@ class SSAConverter(object):
         for idx, node_name in enumerate(instruction_order):
             node = func.graph[node_name]
             op_type = node.op
-            if op_type not in self.CONVERT_FUNCTION_MAP:
+ 
+            custom_conversion_name = None
+            if node_name in self.custom_conversion_functions:
+                custom_conversion_name = node_name
+            elif op_type in self.custom_conversion_functions:
+                custom_conversion_name = op_type
+
+            # conversion_message to indicate how this function is being converted
+            conversion_message = ''
+            if custom_conversion_name is not None:
+                conversion_message = ' with custom conversion function'
+            elif op_type in self.CONVERT_FUNCTION_MAP:
+                convert_func = self.CONVERT_FUNCTION_MAP[op_type]
+            elif self.add_custom_layers:
+                # Add custom layer
+                convert_func = self._convert_custom_layer
+                conversion_message = ' with custom layer'
+            else:       
                 raise NotImplementedError(
-                    '[SSAConverter] Op type "{}" not implemented.'.format(op_type))
-            if builtins.is_tensor(node.datatype):
-                print(
-                    '[SSAConverter] [{}/{}] Converting op "{}" of type "{}", output shape: {}'.format(
-                        idx + 1, len(instruction_order), node_name, op_type, node.datatype.get_shape()))
+                    '[SSAConverter] Conversion for op %s not implemented, terminating...' %
+                    (op_type))
+            
+            print('[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\' {} {}'.format(
+                  idx + 1, len(instruction_order), op_type, node_name, conversion_message,
+                  (('(output shape: ' + str(node.datatype.get_shape()) +')') if builtins.is_tensor(node.datatype) else '')))
+            
+            # If custom conversion method is provided, use it
+            # Otherwise, invoke internal conversion method
+            if custom_conversion_name is not None:
+                self.custom_conversion_functions[custom_conversion_name](self, node)
             else:
-                print(
-                    '[SSAConverter] [{}/{}] Converting op "{}" of type "{}"'.format(
-                        idx + 1, len(instruction_order), op_type, node_name))
-
-            convert_func = self.CONVERT_FUNCTION_MAP[op_type]
-            convert_func(node)
-
+                convert_func(node)
+                
     def _get_builder(self, func=None):
         if func is None:
             func = self.func_stack[-1]
@@ -479,6 +547,22 @@ class SSAConverter(object):
         layer = builder.add_load_constant_nd(
             name=node.name, output_name=node.name, constant_value=val, shape=val.shape)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_custom_layer(self, node):
+        """ Add custom layer
+        """
+        params = NeuralNetwork_pb2.CustomLayerParams()
+        params.className = node.op
+        params.description = "Custom layer that corresponds to the TensorFlow op {}".format(node.op)
+        builder = self._get_builder()
+        layer = builder.add_custom(name=node.name,
+                                   input_names=node.inputs,
+                                   output_names=[node.name],
+                                   custom_proto_spec=params)
+
+        if node.op not in self.custom_shape_functions:
+            raise ValueError('Custom Shape Function for {} not provided!'.format(node.op))
+        shapes.propagate_single_layer(layer, self.tensor_shapes, custom_shape_function=self.custom_shape_functions[node.op])
 
     def _convert_transpose(self, node):
         """ Convert a transpose op.

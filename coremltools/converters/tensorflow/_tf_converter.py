@@ -8,7 +8,13 @@ import os.path
 from ...models import MLModel
 
 
-def convert(filename, inputs=None, outputs=None, **kwargs):
+def convert(filename,
+            inputs=None,
+            outputs=None,
+            add_custom_layers=False,  # type: bool
+            custom_conversion_functions={},  # type: Dict[Text, Any]
+            custom_shape_functions={}, # type: Dict[Text, Any]
+            **kwargs):
     if not filename or not isinstance(filename, str) or not os.path.exists(filename) or not os.path.isfile(filename):
         raise ValueError('invalid input tf_model_path: {}.'.format(filename))
 
@@ -25,7 +31,14 @@ def convert(filename, inputs=None, outputs=None, **kwargs):
     # convert from SSA to Core ML
     try:
         from ..nnssa.coreml.ssa_converter import ssa_convert
-        mlmodelspec = ssa_convert(ssa, top_func='main', inputs=inputs, outputs=outputs)
+        mlmodelspec = ssa_convert(ssa,
+                                  top_func='main',
+                                  inputs=inputs,
+                                  outputs=outputs,
+                                  add_custom_layers=add_custom_layers,
+                                  custom_conversion_functions=custom_conversion_functions,
+                                  custom_shape_functions=custom_shape_functions
+                                  )
     except ImportError as err:
         raise ImportError("Backend converter not found! Error message:\n%s" % err)
 
