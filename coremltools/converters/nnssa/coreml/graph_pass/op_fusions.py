@@ -27,7 +27,6 @@ ELEMENTWISE_OPS = {
     'Sqrt',
     'Rsqrt',
     'Pow',
-    'Pad',
     'LRN',
     'Mean',
     'Max',
@@ -56,18 +55,27 @@ def _check_single_out_vector_constant_node(node):
 
 
 def _is_NHWC(graph, node):
-    if node.name == 'conv0/moments/Squeeze_1':
-        print('TODO: delete debug')
-    if node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor':
+    if node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor' \
+            or node.op == 'MirrorPad':
         return True
     if node.op in NATIVE_NHWC_OPS and node.attr.get('data_format') == 'NHWC':
         return True
+
     if node.op == 'Concat':  # Concat's first input is axis
         return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
                    for inp in node.inputs[1:])
     if node.op == 'ConcatV2':  # ConcatV2's last input is axis
         return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
                    for inp in node.inputs[:-1])
+
+    if node.op == 'Pad':
+        # adjust constant padding values
+        parent_node = graph[node.inputs[1]]
+        val = np.array(parent_node.value.val)
+        if len(val) == 4 and builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
+            parent_node.value.val = parent_node.value.val[[0, 3, 1, 2]]
+        return True
+
     if node.op in ELEMENTWISE_OPS:
         # if its an element-wise op and if all of its parent(s) are
         # "NHWC_format_inserted" or given that at least one of the parents
@@ -89,12 +97,6 @@ def _is_NHWC(graph, node):
                         continue
                     # constant vector
                     if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
-                        continue
-                    # constant padding values
-                    elif node.op.lower() == 'pad' and len(val.shape) == 2 and \
-                            builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
-                        # adjust padding values for pad operator
-                        parent_node.value.val[[1, 3]] = parent_node.value.val[[3, 1]]
                         continue
                     else:
                         return False
@@ -139,10 +141,7 @@ def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, tran
         if '_output_shapes' in src.attr:
             input_shape = src.attr['_output_shapes'][0]
             tp_node.attr['_output_shapes'] = [
-                [input_shape[transpose_params[0]],
-                 input_shape[transpose_params[1]],
-                 input_shape[transpose_params[2]],
-                 input_shape[transpose_params[3]]]
+                input_shape[transpose_params[k]] for k in range(len(input_shape))
             ]
         graph[transpose_node_name] = tp_node
 
@@ -224,7 +223,7 @@ def transform_nhwc_to_nchw(nnssa):
                             new_shape = (1, val.shape[0], 1, 1)
                             parent_node.datatype = builtins.tensor(parent_node.datatype.get_primitive(), new_shape)
                             parent_node.value.val = np.reshape(parent_node.value.val, new_shape)
-                        # if there is axis attribute
+                        # adjust axis/dims/reduction_indices attribute
                         if node.op == 'Mean' or node.op == 'Max':
                             m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1}
                             reduction_indices = np.array([m_nhwc_to_nchw[x] for x in val], dtype=np.int32)
@@ -576,7 +575,7 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
     [Conv2D] --> [Sub] --> [Mul] --> [Add] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
     """
 
-    def _match_mul_add_bn_pattern(gd, entry_node):
+    def _match_pattern_1(gd, entry_node):
         try:
             if not _check_number_outputs(entry_node, 1):
                 return None
@@ -598,7 +597,7 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
         except Exception as e:
             return None
 
-    def _match_sub_mul_add_batchnorm_pattern(graph, entry_node):
+    def _match_pattern_2(graph, entry_node):
         try:
             if not _check_number_outputs(entry_node, 1):
                 return None
@@ -637,9 +636,9 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
                 continue
 
             # BN_nodes1 order: [Const, Mul, Const, Add]
-            bn_nodes1 = _match_mul_add_bn_pattern(graph, current_node)
+            bn_nodes1 = _match_pattern_1(graph, current_node)
             # bn_nodes2 order: [Const, Sub, Const, Mul, Const, Add]
-            bn_nodes2 = _match_sub_mul_add_batchnorm_pattern(graph, current_node)
+            bn_nodes2 = _match_pattern_2(graph, current_node)
 
             if bn_nodes1:
                 assert len(bn_nodes1) == 4

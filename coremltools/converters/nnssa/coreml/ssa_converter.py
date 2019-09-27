@@ -19,7 +19,7 @@ try:
 except:
     from . import shapes
 
-DEBUG = True
+DEBUG = False
 
 def _is_scalar(type_):
     if type_ is None:
@@ -93,7 +93,7 @@ def ssa_convert(ssa,
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
@@ -117,7 +117,7 @@ def ssa_convert(ssa,
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=True, highlight_debug_nodes=['Transpose', 'Squeeze'])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     for f in list(ssa.functions.values()):
@@ -429,8 +429,9 @@ class SSAConverter(object):
             'Tile': self._convert_tile,
             'Fill': self._convert_fill,
             'LSTMBlock': self._convert_lstm_block_cell,
-            'Pad': self._convert_pad,
-            'PadV2': self._convert_pad,
+            'Pad': self._convert_constant_pad,
+            'PadV2': self._convert_constant_pad,
+            'MirrorPad': self._convert_mirror_pad,
             'TopKV2': self._convert_topk,
             'iff': self._convert_iff,
             'ResizeBilinear': self._convert_resize_bilinear,
@@ -1842,7 +1843,7 @@ class SSAConverter(object):
             node.name + '_out', node.name + '_h', node.name + '_c'
         ]
 
-    def _convert_pad(self, node):
+    def _convert_constant_pad(self, node):
         # operator Pad has 2 inputs, PadV2 has 3 inputs
         assert len(node.inputs) == 2 or len(node.inputs) == 3
         input_nodes, input_names, input_types = self._get_input_tensors(node)
@@ -1864,6 +1865,29 @@ class SSAConverter(object):
             input_names=input_names,
             output_name=node.name,
             value=constant_value
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_mirror_pad(self, node):
+        assert len(node.inputs) == 2
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        paddings = input_nodes[1].value.val  # rank 4, nhwc
+        left, right = paddings[2][0], paddings[2][1]
+        top, bottom = paddings[1][0], paddings[1][1]
+
+        if node.attr.get('mode', '').lower() == 'symmetric':
+            raise NotImplementedError('symmetric mode is not supported.')
+        builder = self._get_builder()
+
+        layer = builder.add_padding(
+            name=node.name,
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
+            input_name=input_names[0],
+            output_name=node.name,
+            padding_type='reflection'
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
@@ -2306,12 +2330,10 @@ class SSAConverter(object):
         assert len(node.inputs) == 3
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         block_shape = input_nodes[1].value.val
-        if block_shape[0] != block_shape[1]:
+        if len(block_shape.flatten()) != 2 or block_shape[0] != block_shape[1]:
             raise NotImplementedError('non-equal block shape is not yet supported')
         paddings = input_nodes[2].value.val
-        if any(paddings.flatten()):
-            raise NotImplementedError('paddings are not yet supported')
-
+        needs_paddings = any(paddings.flatten())
         builder = self._get_builder()
 
         layer = builder.add_transpose(
@@ -2322,9 +2344,23 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
+        if needs_paddings:
+            left, right = paddings[1][0], paddings[1][1]
+            top, bottom = paddings[0][0], paddings[0][1]
+            layer = builder.add_padding(
+                name=node.name + '_padding',
+                left=left,
+                right=right,
+                top=top,
+                bottom=bottom,
+                input_name=node.name + '_transpose1',
+                output_name=node.name + '_padding'
+            )
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+
         layer = builder.add_reorganize_data(
             name=node.name + '_reorganize',
-            input_name=node.name + '_transpose1',
+            input_name=node.name + '_transpose1' if not needs_paddings else node.name + '_padding',
             output_name=node.name + '_reorganize',
             mode='space_to_depth'.upper(),
             block_size=block_shape[0]
@@ -2346,8 +2382,7 @@ class SSAConverter(object):
         if block_shape[0] != block_shape[1]:
             raise NotImplementedError('non-equal block shape is not yet supported')
         crops = input_nodes[2].value.val
-        if any(crops.flatten()):
-            raise NotImplementedError('crops are not yet supported')
+        needs_cropping = any(crops.flatten())
 
         builder = self._get_builder()
 
@@ -2368,14 +2403,28 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
+        if needs_cropping:
+            left, right = crops[1][0], crops[1][1]
+            top, bottom = crops[0][0], crops[0][1]
+            layer = builder.add_crop(
+                name=node.name + '_cropping',
+                left=left,
+                right=right,
+                top=top,
+                bottom=bottom,
+                offset=0,
+                input_names=[node.name + '_reorganize'],
+                output_name=node.name + '_cropping'
+            )
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+
         layer = builder.add_transpose(
             name=node.name,
-            input_name=node.name + '_reorganize',
+            input_name=node.name + '_reorganize' if not needs_cropping else node.name + '_cropping',
             output_name=node.name,
             axes=[1, 2, 3, 0]
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
-
     def _convert_conv2d_transpose(self, node):
         assert len(node.inputs) == 3
         input_nodes, input_names, input_types = self._get_input_tensors(node)

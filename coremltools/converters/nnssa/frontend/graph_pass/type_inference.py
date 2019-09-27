@@ -848,6 +848,9 @@ class TypeInferenceVisitor(object):
     def visit_PadV2(self, node):
         return self.visit_Pad(node)
 
+    def visit_MirrorPad(self, node):
+        return self.visit_Pad(node)
+
     def visit_Placeholder(self, node):
         return self._get_type_from_attr(node)
 
@@ -2057,6 +2060,7 @@ class TypeInferenceVisitor(object):
 
     def visit_Reciprocal(self, node):
         return self.visit_unary(node)
+
 
 def type_is_unknown(t):
     if builtins.is_tuple(t):
