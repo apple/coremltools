@@ -73,7 +73,8 @@ class TypeInferenceVisitor(object):
         method = 'visit_' + node.op
         visitor = getattr(self, method, None)
         if visitor is None:
-            raise NotImplementedError('[TypeInference] Op "{}" not implemented.'.format(node.op))
+            print('WARNING [TypeInference]: Op {} not implemented. Inferring shape from node attribute!'.format(node.op))
+            visitor = self._get_type_from_attr
 
         # find the type of the node
         ret = None
