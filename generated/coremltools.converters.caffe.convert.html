@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.converters.caffe.convert &mdash; coremltools 2.0 documentation</title>
+  <title>coremltools.converters.caffe.convert &mdash; coremltools 3.0 documentation</title>
   
 
   
@@ -17,45 +17,40 @@
   
 
   
+  <script type="text/javascript" src="../static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../static/documentation_options.js"></script>
+        <script type="text/javascript" src="../static/jquery.js"></script>
+        <script type="text/javascript" src="../static/underscore.js"></script>
+        <script type="text/javascript" src="../static/doctools.js"></script>
+        <script type="text/javascript" src="../static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
-        <link rel="up" title="Converters" href="../coremltools.converters.html"/>
-        <link rel="next" title="coremltools.converters.keras.convert" href="coremltools.converters.keras.convert.html"/>
-        <link rel="prev" title="Converters" href="../coremltools.converters.html"/>
+  <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="coremltools.converters.keras.convert" href="coremltools.converters.keras.convert.html" />
+    <link rel="prev" title="Converters" href="../coremltools.converters.html" />
     <link href="../static/style.css" rel="stylesheet" type="text/css">
-
-
-  
-  <script src="../static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
           
 
           
@@ -69,7 +64,7 @@
             
             
               <div class="version">
-                2.0
+                3.0
               </div>
             
           
@@ -94,7 +89,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.converters.caffe.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
@@ -102,8 +97,20 @@
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.models.html">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
 </ul>
 
             
@@ -115,7 +122,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">coremltools</a>
@@ -123,9 +130,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -148,7 +156,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a> &raquo;</li>
+          <li><a href="../coremltools.converters.html">Converters</a> &raquo;</li>
         
       <li>coremltools.converters.caffe.convert</li>
     
@@ -173,7 +181,7 @@
 <h1>coremltools.converters.caffe.convert<a class="headerlink" href="#coremltools-converters-caffe-convert" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="coremltools.converters.caffe.convert">
-<code class="descclassname">coremltools.converters.caffe.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>image_input_names=[]</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>green_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em>, <em>model_precision=’float32’</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.caffe.convert" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.converters.caffe.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>image_input_names=[]</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>green_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em>, <em>model_precision='float32'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.caffe.convert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a Caffe model to Core ML format.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -231,10 +239,7 @@ Applicable only if image_input_names is specified.
 To specify different values for each image input provide a dictionary with input names as keys.</p>
 </dd>
 <dt><strong>gray_bias: float | dict()</strong></dt>
-<dd><blockquote class="first">
-<div><p>Bias value to be added to the input image (in grayscale).</p>
-</div></blockquote>
-<p class="last">Defaults to 0.0.
+<dd><p class="first last">Bias value to be added to the input image (in grayscale). Defaults to 0.0.
 Applicable only if image_input_names is specified.
 To specify different values for each image input provide a dictionary with input names as keys.</p>
 </dd>
@@ -261,7 +266,7 @@ model (applies to classifiers only). Defaults to ‘classLabel’</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>model: MLModel</strong></dt>
+<dt>model: MLModel</dt>
 <dd><p class="first last">Model in Core ML format.</p>
 </dd>
 </dl>
@@ -270,7 +275,7 @@ model (applies to classifiers only). Defaults to ‘classLabel’</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Convert it with default input and output names</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert it with default input and output names</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">coremltools</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">)</span>
 
@@ -281,13 +286,13 @@ model (applies to classifiers only). Defaults to ‘classLabel’</p>
 <p>Sometimes, critical information in the Caffe converter is missing from the
 .caffemodel file. This information is present in the deploy.prototxt file.
 You can provide us with both files in the conversion process.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;my_deploy.prototxt&#39;</span><span class="p">))</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;my_deploy.prototxt&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>Some models (like Resnet-50) also require a mean image file which is
 subtracted from the input image before passing through the network. This
 file can also be provided during conversion:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                <span class="s1">&#39;my_deploy.prototxt&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_image.binaryproto&#39;</span><span class="p">),</span> <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;image_input&#39;</span><span class="p">)</span>
 
 <span class="go"># Multiple mean images for preprocessing</span>
@@ -312,7 +317,7 @@ which do not feed as input to any other layer are taken as outputs. The .prototx
 custom input and output names.</p>
 <p>The converted Core ML model is of type classifier when the argument “class_labels” is specified.</p>
 <p>Advanced usage with custom classifiers, and images:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Mark some inputs as Images</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Mark some inputs as Images</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;my_caffe_model.prototxt&#39;</span><span class="p">),</span>
 <span class="o">...</span>                   <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;my_image_input&#39;</span><span class="p">)</span>
 
@@ -324,7 +329,7 @@ custom input and output names.</p>
 <p>Sometimes the converter might return a message about not able to infer input data dimensions. 
 This happens when the input size information is absent from the deploy.prototxt file. This can be easily provided by editing 
 the .prototxt in a text editor. Simply add a snippet in the beginning, similar to the following, for each of the inputs to the model:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>input: <span class="s2">&quot;my_image_input&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>input: <span class="s2">&quot;my_image_input&quot;</span>
 input_dim: <span class="m">1</span>
 input_dim: <span class="m">3</span>
 input_dim: <span class="m">227</span>
@@ -339,9 +344,7 @@ Input name string (“my_image_input”) must also match the name of the input (
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -350,7 +353,7 @@ Input name string (“my_image_input”) must also match the name of the input (
         <a href="coremltools.converters.keras.convert.html" class="btn btn-neutral float-right" title="coremltools.converters.keras.convert" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../coremltools.converters.html" class="btn btn-neutral" title="Converters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../coremltools.converters.html" class="btn btn-neutral float-left" title="Converters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -359,11 +362,11 @@ Input name string (“my_image_input”) must also match the name of the input (
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Apple Inc..
+        &copy; Copyright 2017-2019, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -376,37 +379,15 @@ Input name string (“my_image_input”) must also match the name of the input (
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'2.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../static/jquery.js"></script>
-      <script type="text/javascript" src="../static/underscore.js"></script>
-      <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

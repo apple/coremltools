@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools 2.0 documentation</title>
+  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools 3.0 documentation</title>
   
 
   
@@ -17,45 +17,40 @@
   
 
   
+  <script type="text/javascript" src="../static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../static/documentation_options.js"></script>
+        <script type="text/javascript" src="../static/jquery.js"></script>
+        <script type="text/javascript" src="../static/underscore.js"></script>
+        <script type="text/javascript" src="../static/doctools.js"></script>
+        <script type="text/javascript" src="../static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
-        <link rel="up" title="Models" href="../coremltools.models.html"/>
-        <link rel="next" title="Utilities" href="../coremltools.utils.html"/>
-        <link rel="prev" title="coremltools.models.neural_network.flexible_shape_utils" href="coremltools.models.neural_network.flexible_shape_utils.html"/>
+  <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="coremltools.models.neural_network.update_optimizer_utils" href="coremltools.models.neural_network.update_optimizer_utils.html" />
+    <link rel="prev" title="coremltools.models.neural_network.flexible_shape_utils" href="coremltools.models.neural_network.flexible_shape_utils.html" />
     <link href="../static/style.css" rel="stylesheet" type="text/css">
-
-
-  
-  <script src="../static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
           
 
           
@@ -69,7 +64,7 @@
             
             
               <div class="version">
-                2.0
+                3.0
               </div>
             
           
@@ -94,17 +89,28 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html">Models</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
 </ul>
 
             
@@ -116,7 +122,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">coremltools</a>
@@ -124,9 +130,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -149,7 +156,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a> &raquo;</li>
+          <li><a href="../coremltools.models.html">Models</a> &raquo;</li>
         
       <li>coremltools.models.neural_network.quantization_utils</li>
     
@@ -181,19 +188,16 @@ Only available in coremltools 2.0b1 and onwards</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.compare_models" title="coremltools.models.neural_network.quantization_utils.compare_models"><code class="xref py py-obj docutils literal"><span class="pre">compare_models</span></code></a>(full_precision_model,&nbsp;…)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.compare_models" title="coremltools.models.neural_network.quantization_utils.compare_models"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compare_models</span></code></a>(full_precision_model,&nbsp;…)</td>
 <td>Utility function to compare the performance of a full precision vs quantized model</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">macos_version</span></code>()</td>
-<td>Returns macOS version as a tuple of integers, making it easy to do proper version comparisons.</td>
-</tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">quantize_spec_weights</span></code>(spec,&nbsp;nbits,&nbsp;…)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize_spec_weights</span></code>(spec,&nbsp;nbits,&nbsp;…)</td>
 <td></td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="coremltools.models.neural_network.quantization_utils.quantize_weights"><code class="xref py py-obj docutils literal"><span class="pre">quantize_weights</span></code></a>(full_precision_model,&nbsp;nbits)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="coremltools.models.neural_network.quantization_utils.quantize_weights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantize_weights</span></code></a>(full_precision_model,&nbsp;nbits)</td>
 <td>Utility function to convert a full precision (float) MLModel to a nbit quantized MLModel (float16).</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">unpack_to_bytes</span></code>(byte_arr,&nbsp;num_weights,&nbsp;nbits)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">unpack_to_bytes</span></code>(byte_arr,&nbsp;num_weights,&nbsp;nbits)</td>
 <td></td>
 </tr>
 </tbody>
@@ -205,27 +209,62 @@ Only available in coremltools 2.0b1 and onwards</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.ModelMetrics" title="coremltools.models.neural_network.quantization_utils.ModelMetrics"><code class="xref py py-obj docutils literal"><span class="pre">ModelMetrics</span></code></a>(spec)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector" title="coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AdvancedQuantizedLayerSelector</span></code></a>([…])</td>
+<td>Quantized layer selector allowing the user to specify some types of layers to skip during quantization process and the minimum size parameters in quantized convolution layers.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.ModelMetrics" title="coremltools.models.neural_network.quantization_utils.ModelMetrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ModelMetrics</span></code></a>(spec)</td>
 <td>A utility class to hold evaluation metrics</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">NoiseMetrics</span></code>()</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">NoiseMetrics</span></code>()</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.OutputMetric" title="coremltools.models.neural_network.quantization_utils.OutputMetric"><code class="xref py py-obj docutils literal"><span class="pre">OutputMetric</span></code></a>(name,&nbsp;type)</td>
-<td>Utility class to calculate and hold metrics between</td>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.OutputMetric" title="coremltools.models.neural_network.quantization_utils.OutputMetric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OutputMetric</span></code></a>(name,&nbsp;type)</td>
+<td>Utility class to calculate and hold metrics between two model outputs</td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">TopKMetrics</span></code>(topk)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector" title="coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">QuantizedLayerSelector</span></code></a>()</td>
+<td>This is the base class to implement custom selectors to skip certain layers during quantization.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">TopKMetrics</span></code>(topk)</td>
 <td></td>
 </tr>
 </tbody>
 </table>
+<dl class="class">
+<dt id="coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector">
+<em class="property">class </em><code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">AdvancedQuantizedLayerSelector</code><span class="sig-paren">(</span><em>skip_layer_types=[]</em>, <em>minimum_conv_kernel_channels=4</em>, <em>minimum_conv_weight_count=4096</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quantized layer selector allowing the user to specify some types of
+layers to skip during quantization process and the minimum size parameters
+in quantized convolution layers.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="n">AdvancedQuantizedLayerSelector</span>
+<span class="n">selector</span> <span class="o">=</span> <span class="n">AdvancedQuantizedLayerSelector</span><span class="p">(</span>
+        <span class="n">skip_layer_types</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;batchnorm&#39;</span><span class="p">,</span> <span class="s1">&#39;bias&#39;</span><span class="p">,</span> <span class="s1">&#39;depthwiseConv&#39;</span><span class="p">],</span>
+        <span class="n">minimum_conv_kernel_channels</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="n">minimum_conv_weight_count</span><span class="o">=</span><span class="mi">4096</span><span class="p">)</span>
+<span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quantize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>skip_layer_types=[]</em>, <em>minimum_conv_kernel_channels=4</em>, <em>minimum_conv_weight_count=4096</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>x.__init__(…) initializes x; see help(type(x)) for signature</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.do_quantize">
+<code class="descname">do_quantize</code><span class="sig-paren">(</span><em>self</em>, <em>layer</em>, <em>weight_param=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.do_quantize" title="Permalink to this definition">¶</a></dt>
+<dd><p>weight_param - should be name of the WeightParam field</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="coremltools.models.neural_network.quantization_utils.ModelMetrics">
 <em class="property">class </em><code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">ModelMetrics</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.ModelMetrics" title="Permalink to this definition">¶</a></dt>
 <dd><p>A utility class to hold evaluation metrics</p>
 <dl class="method">
 <dt id="coremltools.models.neural_network.quantization_utils.ModelMetrics.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.ModelMetrics.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.ModelMetrics.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -237,8 +276,37 @@ Only available in coremltools 2.0b1 and onwards</p>
 two model outputs</p>
 <dl class="method">
 <dt id="coremltools.models.neural_network.quantization_utils.OutputMetric.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em>, <em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.OutputMetric.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>name</em>, <em>type</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.OutputMetric.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">
+<em class="property">class </em><code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">QuantizedLayerSelector</code><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the base class to implement custom selectors to skip certain
+layers during quantization. To implement a custom selector, create a class
+that inherits this class and override <cite>do_quantize()</cite> method.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MyLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MyLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span> <span class="ow">or</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;dense_2&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">False</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+<span class="n">selector</span> <span class="o">=</span> <span class="n">MyLayerSelector</span><span class="p">()</span>
+<span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quantize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>x.__init__(…) initializes x; see help(type(x)) for signature</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -246,27 +314,24 @@ two model outputs</p>
 <dt id="coremltools.models.neural_network.quantization_utils.compare_models">
 <code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">compare_models</code><span class="sig-paren">(</span><em>full_precision_model</em>, <em>quantized_model</em>, <em>sample_data</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.compare_models" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility function to compare the performance of a full precision vs quantized model</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>full_precision_model</strong> – MLModel
-The full precision model with float32 weights</li>
-<li><strong>quantized_model</strong> – MLModel
-Quantized version of the model with quantized weights</li>
-<li><strong>sample_data</strong> – str | [dict]
-Data used to characterize performance of the quantized model in
+<dl class="docutils">
+<dt>full_precision_model: MLModel</dt>
+<dd>The full precision model with float32 weights</dd>
+<dt>quantized_model: MLModel</dt>
+<dd>Quantized version of the model with quantized weights</dd>
+<dt>sample_data: str | [dict]</dt>
+<dd>Data used to characterize performance of the quantized model in
 comparison to the full precision model. Either a list of sample input
 dictionaries or an absolute path to a directory containing images.
 Path to a directory containing images is only valid for models with
 one image input. For all other models a list of sample inputs must be
-provided.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None. Performance metrics are printed out</p>
-</td>
+provided.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None. Performance metrics are printed out</td>
 </tr>
 </tbody>
 </table>
@@ -274,68 +339,71 @@ provided.</li>
 
 <dl class="function">
 <dt id="coremltools.models.neural_network.quantization_utils.quantize_weights">
-<code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">quantize_weights</code><span class="sig-paren">(</span><em>full_precision_model</em>, <em>nbits</em>, <em>quantization_mode=’linear’</em>, <em>sample_data=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.neural_network.quantization_utils.</code><code class="descname">quantize_weights</code><span class="sig-paren">(</span><em>full_precision_model</em>, <em>nbits</em>, <em>quantization_mode='linear'</em>, <em>sample_data=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.quantization_utils.quantize_weights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility function to convert a full precision (float) MLModel to a
 nbit quantized MLModel (float16).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>full_precision_model</strong> – MLModel
-Model which will be converted to half precision. Currently conversion
+<dl class="docutils">
+<dt>full_precision_model: MLModel</dt>
+<dd>Model which will be converted to half precision. Currently conversion
 for only neural network models is supported. If a pipeline model is
 passed in then all embedded neural network models embedded within
-will be converted.</li>
-<li><strong>nbits</strong> – Int
-Number of bits per quantized weight. Only 8-bit and lower
-quantization is supported</li>
-<li><strong>quantization_mode</strong> – <p>str
-One of:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>”linear”:</dt>
-<dd>Simple linear quantization with scale and bias</dd>
-<dt>”linear_lut”:</dt>
+will be converted.</dd>
+<dt>nbits: int</dt>
+<dd><dl class="first last docutils">
+<dt>Number of bits per quantized weight. Only 16-bit float point and </dt>
+<dd>1-8 bit is supported</dd>
+</dl>
+</dd>
+<dt>quantization_mode: str</dt>
+<dd><p class="first">One of the following:</p>
+<dl class="last docutils">
+<dt>“linear”:</dt>
+<dd>Linear quantization with scale and bias assuming the range of weight
+values is [A, B], where A = min(weight), B = max(weight)</dd>
+<dt>“linear_lut”:</dt>
 <dd>Simple linear quantization represented as a lookup table</dd>
-<dt>”kmeans_lut”:</dt>
+<dt>“kmeans_lut”:</dt>
 <dd>LUT based quantization, where LUT is generated by K-Means clustering</dd>
-<dt>”custom_lut”:</dt>
+<dt>“custom_lut”:</dt>
 <dd>LUT quantization where LUT and quantized weight params are
 calculated using a custom function. If this mode is selected then
 a custom function must be passed in kwargs with key lut_function.
 The function must have input params (nbits, wp) where nbits is the
 number of quantization bits and wp is the list of weights for a
 given layer. The function should return two parameters (lut, qw)
-where lut is an array of length (2^nbits)containing LUT values and
+where lut is an array of length (2^n bits)containing LUT values and
 qw is the list of quantized weight parameters. See
-_get_linear_lookup_table_and_weight for a sample implementation.</dd>
+<code class="docutils literal notranslate"><span class="pre">_get_linear_lookup_table_and_weight</span></code> for a sample implementation.</dd>
+<dt>“linear_symmetric”:</dt>
+<dd>Linear quantization with scale and bias assuming the range of weight
+values is [-A, A], where A = max(abs(weight)).</dd>
 </dl>
-</div></blockquote>
-</li>
-<li><strong>sample_data</strong> – str | [dict]
-Data used to characterize performance of the quantized model in
+</dd>
+<dt>sample_data: str | [dict]</dt>
+<dd>Data used to characterize performance of the quantized model in
 comparison to the full precision model. Either a list of sample input
 dictionaries or an absolute path to a directory containing images.
 Path to a directory containing images is only valid for models with
 one image input. For all other models a list of sample inputs must be
-provided.</li>
-<li><strong>**kwargs</strong> – <p>See below</p>
-</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Keyword Arguments:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body"><ul class="first simple">
-<li><em>lut_function</em> (<code class="docutils literal"><span class="pre">callable</span> <span class="pre">function</span></code>) –
-A callable function provided when quantization mode is set to
-_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE. See quantization_mode for
-more details</li>
-</ul>
-</td>
-</tr>
+provided.</dd>
+<dt>kwargs: keyword arguments</dt>
+<dd><dl class="first last docutils">
+<dt><em>lut_function</em> <span class="classifier-delimiter">:</span> <span class="classifier">(<code class="docutils literal notranslate"><span class="pre">callable</span> <span class="pre">function</span></code>)</span></dt>
+<dd>A callable function provided when quantization mode is set to
+<code class="docutils literal notranslate"><span class="pre">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span></code>. See <code class="docutils literal notranslate"><span class="pre">quantization_mode</span></code>
+for more details.</dd>
+<dt><em>selector</em>: QuantizedLayerSelector</dt>
+<dd>A QuanatizedLayerSelector object that can be derived to provide
+custom quantization selection.</dd>
+</dl>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>model: MLModel</strong></dt>
+<dt>model: MLModel</dt>
 <dd><p class="first last">The quantized MLModel instance if running on macOS 10.14 or later,
 otherwise the quantized model specification is returned</p>
 </dd>
@@ -345,24 +413,28 @@ otherwise the quantized model specification is returned</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">quantization_utils</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;my_model.mlmodel&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quantization_utils</span><span class="o">.</span><span class="n">quantize_weights</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../coremltools.utils.html" class="btn btn-neutral float-right" title="Utilities" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="coremltools.models.neural_network.update_optimizer_utils.html" class="btn btn-neutral float-right" title="coremltools.models.neural_network.update_optimizer_utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="coremltools.models.neural_network.flexible_shape_utils.html" class="btn btn-neutral" title="coremltools.models.neural_network.flexible_shape_utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="coremltools.models.neural_network.flexible_shape_utils.html" class="btn btn-neutral float-left" title="coremltools.models.neural_network.flexible_shape_utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -371,11 +443,11 @@ otherwise the quantized model specification is returned</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Apple Inc..
+        &copy; Copyright 2017-2019, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -388,37 +460,15 @@ otherwise the quantized model specification is returned</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'2.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../static/jquery.js"></script>
-      <script type="text/javascript" src="../static/underscore.js"></script>
-      <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

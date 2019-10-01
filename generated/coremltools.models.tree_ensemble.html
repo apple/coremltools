@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.tree_ensemble &mdash; coremltools 2.0 documentation</title>
+  <title>coremltools.models.tree_ensemble &mdash; coremltools 3.0 documentation</title>
   
 
   
@@ -17,45 +17,40 @@
   
 
   
+  <script type="text/javascript" src="../static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../static/documentation_options.js"></script>
+        <script type="text/javascript" src="../static/jquery.js"></script>
+        <script type="text/javascript" src="../static/underscore.js"></script>
+        <script type="text/javascript" src="../static/doctools.js"></script>
+        <script type="text/javascript" src="../static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
-        <link rel="up" title="Models" href="../coremltools.models.html"/>
-        <link rel="next" title="coremltools.models.neural_network.builder" href="coremltools.models.neural_network.builder.html"/>
-        <link rel="prev" title="coremltools.models.pipeline" href="coremltools.models.pipeline.html"/>
+  <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="coremltools.models.nearest_neighbors.builder" href="coremltools.models.nearest_neighbors.builder.html" />
+    <link rel="prev" title="coremltools.models.pipeline" href="coremltools.models.pipeline.html" />
     <link href="../static/style.css" rel="stylesheet" type="text/css">
-
-
-  
-  <script src="../static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
           
 
           
@@ -69,7 +64,7 @@
             
             
               <div class="version">
-                2.0
+                3.0
               </div>
             
           
@@ -94,17 +89,28 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html">Models</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
 </ul>
 
             
@@ -116,7 +122,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">coremltools</a>
@@ -124,9 +130,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -149,7 +156,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a> &raquo;</li>
+          <li><a href="../coremltools.models.html">Models</a> &raquo;</li>
         
       <li>coremltools.models.tree_ensemble</li>
     
@@ -173,21 +180,6 @@
   <div class="section" id="module-coremltools.models.tree_ensemble">
 <span id="coremltools-models-tree-ensemble"></span><h1>coremltools.models.tree_ensemble<a class="headerlink" href="#module-coremltools.models.tree_ensemble" title="Permalink to this headline">¶</a></h1>
 <p>Tree ensemble builder class to construct CoreML models.</p>
-<p class="rubric">Functions</p>
-<table border="1" class="longtable docutils">
-<colgroup>
-<col width="10%" />
-<col width="90%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">set_classifier_interface_params</span></code>(spec,&nbsp;…[,&nbsp;…])</td>
-<td>Common utilities to set the regression interface params.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">set_regressor_interface_params</span></code>(spec,&nbsp;…)</td>
-<td>Common utilities to set the regressor interface params.</td>
-</tr>
-</tbody>
-</table>
 <p class="rubric">Classes</p>
 <table border="1" class="longtable docutils">
 <colgroup>
@@ -195,13 +187,13 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase" title="coremltools.models.tree_ensemble.TreeEnsembleBase"><code class="xref py py-obj docutils literal"><span class="pre">TreeEnsembleBase</span></code></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase" title="coremltools.models.tree_ensemble.TreeEnsembleBase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TreeEnsembleBase</span></code></a>()</td>
 <td>Base class for the tree ensemble builder class.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="coremltools.models.tree_ensemble.TreeEnsembleClassifier"><code class="xref py py-obj docutils literal"><span class="pre">TreeEnsembleClassifier</span></code></a>(features,&nbsp;…)</td>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="coremltools.models.tree_ensemble.TreeEnsembleClassifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TreeEnsembleClassifier</span></code></a>(features,&nbsp;…)</td>
 <td>Tree Ensemble builder class to construct a Tree Ensemble classification model.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="coremltools.models.tree_ensemble.TreeEnsembleRegressor"><code class="xref py py-obj docutils literal"><span class="pre">TreeEnsembleRegressor</span></code></a>(features,&nbsp;target)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="coremltools.models.tree_ensemble.TreeEnsembleRegressor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TreeEnsembleRegressor</span></code></a>(features,&nbsp;target)</td>
 <td>Tree Ensemble builder class to construct a Tree Ensemble regression model.</td>
 </tr>
 </tbody>
@@ -210,17 +202,17 @@
 <dt id="coremltools.models.tree_ensemble.TreeEnsembleBase">
 <em class="property">class </em><code class="descclassname">coremltools.models.tree_ensemble.</code><code class="descname">TreeEnsembleBase</code><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for the tree ensemble builder class.  This should be instantiated
-either through the <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="coremltools.models.tree_ensemble.TreeEnsembleRegressor"><code class="xref py py-class docutils literal"><span class="pre">TreeEnsembleRegressor</span></code></a> or 
-<a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="coremltools.models.tree_ensemble.TreeEnsembleClassifier"><code class="xref py py-class docutils literal"><span class="pre">TreeEnsembleClassifier</span></code></a> classes.</p>
+either through the <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="coremltools.models.tree_ensemble.TreeEnsembleRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TreeEnsembleRegressor</span></code></a> or 
+<a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="coremltools.models.tree_ensemble.TreeEnsembleClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">TreeEnsembleClassifier</span></code></a> classes.</p>
 <dl class="method">
 <dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>High level Python API to build a tree ensemble model for Core ML.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node">
-<code class="descname">add_branch_node</code><span class="sig-paren">(</span><em>tree_id</em>, <em>node_id</em>, <em>feature_index</em>, <em>feature_value</em>, <em>branch_mode</em>, <em>true_child_id</em>, <em>false_child_id</em>, <em>relative_hit_rate=None</em>, <em>missing_value_tracks_true_child=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_branch_node</code><span class="sig-paren">(</span><em>self</em>, <em>tree_id</em>, <em>node_id</em>, <em>feature_index</em>, <em>feature_value</em>, <em>branch_mode</em>, <em>true_child_id</em>, <em>false_child_id</em>, <em>relative_hit_rate=None</em>, <em>missing_value_tracks_true_child=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a branch node to the tree ensemble.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -299,7 +291,7 @@ flag determines which direction a NaN value traverses.</p>
 
 <dl class="method">
 <dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node">
-<code class="descname">add_leaf_node</code><span class="sig-paren">(</span><em>tree_id</em>, <em>node_id</em>, <em>values</em>, <em>relative_hit_rate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_leaf_node</code><span class="sig-paren">(</span><em>self</em>, <em>tree_id</em>, <em>node_id</em>, <em>values</em>, <em>relative_hit_rate=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a leaf node to the tree ensemble.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -320,7 +312,7 @@ value is specified as a float or integer value.</p>
 with length matching the dimension of the predictions or a dictionary
 mapping index to value added to that dimension.</p>
 <p class="last">Note that the dimension of any tree must match the dimension given
-when <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value" title="coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value"><code class="xref py py-meth docutils literal"><span class="pre">set_default_prediction_value()</span></code></a> is called.</p>
+when <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value" title="coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_default_prediction_value()</span></code></a> is called.</p>
 </dd>
 </dl>
 </td>
@@ -331,7 +323,7 @@ when <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeE
 
 <dl class="method">
 <dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value">
-<code class="descname">set_default_prediction_value</code><span class="sig-paren">(</span><em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_default_prediction_value</code><span class="sig-paren">(</span><em>self</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the default prediction value(s).</p>
 <p>The values given here form the base prediction value that the values 
 at activated leaves are added to.  If values is a scalar, then 
@@ -354,7 +346,7 @@ must be a list with length matching the dimension of values in the tree.</p>
 
 <dl class="method">
 <dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform">
-<code class="descname">set_post_evaluation_transform</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_post_evaluation_transform</code><span class="sig-paren">(</span><em>self</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the post processing transform applied after the prediction value 
 from the tree ensemble.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -372,7 +364,7 @@ from the tree ensemble.</p>
 non-negative scores that sum to 1.  The transformation applied to
 dimension <cite>i</cite> is equivalent to:</p>
 <blockquote>
-<div><div class="math">
+<div><div class="math notranslate nohighlight">
 \[\frac{e^{x_i}}{\sum_j e^{x_j}}\]</div>
 </div></blockquote>
 <p>Note: This is the output transformation applied by the XGBoost package 
@@ -381,7 +373,7 @@ with multiclass classification.</p>
 <li><p class="first">“Regression_Logistic”.</p>
 <p>Applies a logistic transform the predicted value, specifically:</p>
 <blockquote>
-<div><div class="math">
+<div><div class="math notranslate nohighlight">
 \[(1 + e^{-v})^{-1}\]</div>
 </div></blockquote>
 <p>This is the transformation used in binary classification.</p>
@@ -404,7 +396,7 @@ with multiclass classification.</p>
 <p>The TreeEnsembleClassifier class constructs a Tree Ensemble model incrementally
 using methods to add branch and leaf nodes specifying the behavior of the model.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span> <span class="o">=</span> <span class="n">TreeEnsembleClassifier</span><span class="p">(</span><span class="n">features</span> <span class="o">=</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> 
 <span class="go">                                output_features = &quot;predicted_class&quot;)</span>
@@ -430,7 +422,7 @@ using methods to add branch and leaf nodes specifying the behavior of the model.
 </div>
 <dl class="method">
 <dt id="coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>features</em>, <em>class_labels</em>, <em>output_features</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>features</em>, <em>class_labels</em>, <em>output_features</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a tree ensemble classifier model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -439,8 +431,8 @@ using methods to add branch and leaf nodes specifying the behavior of the model.
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
 <dt><strong>features: [list of features]</strong></dt>
 <dd><p class="first last">Name(s) of the input features, given as a list of <cite>(‘name’, datatype)</cite>
-tuples.  The features are one of <code class="xref py py-class docutils literal"><span class="pre">models.datatypes.Int64</span></code>, 
-<code class="xref py py-class docutils literal"><span class="pre">datatypes.Double</span></code>, or <code class="xref py py-class docutils literal"><span class="pre">models.datatypes.Array</span></code>.  
+tuples.  The features are one of <code class="xref py py-class docutils literal notranslate"><span class="pre">models.datatypes.Int64</span></code>, 
+<code class="xref py py-class docutils literal notranslate"><span class="pre">datatypes.Double</span></code>, or <code class="xref py py-class docutils literal notranslate"><span class="pre">models.datatypes.Array</span></code>.  
 Feature indices in the nodes are counted sequentially from 0 through 
 the features.</p>
 </dd>
@@ -472,7 +464,7 @@ scores is set to the default value of <cite>“classProbability.”</cite></p>
 <p>The TreeEnsembleRegressor class constructs a Tree Ensemble model incrementally
 using methods to add branch and leaf nodes specifying the behavior of the model.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span> <span class="o">=</span> <span class="n">TreeEnsembleClassifier</span><span class="p">(</span><span class="n">features</span> <span class="o">=</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> 
 <span class="go">                                output_features = &quot;predicted_value&quot;)</span>
@@ -495,7 +487,7 @@ using methods to add branch and leaf nodes specifying the behavior of the model.
 </div>
 <dl class="method">
 <dt id="coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>features</em>, <em>target</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>features</em>, <em>target</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a Tree Ensemble regression model that takes one or more input 
 features and maps them to an output feature.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -505,8 +497,8 @@ features and maps them to an output feature.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
 <dt><strong>features: [list of features]</strong></dt>
 <dd><p class="first last">Name(s) of the input features, given as a list of <cite>(‘name’, datatype)</cite>
-tuples.  The features are one of <code class="xref py py-class docutils literal"><span class="pre">models.datatypes.Int64</span></code>, 
-<code class="xref py py-class docutils literal"><span class="pre">datatypes.Double</span></code>, or <code class="xref py py-class docutils literal"><span class="pre">models.datatypes.Array</span></code>.  
+tuples.  The features are one of <code class="xref py py-class docutils literal notranslate"><span class="pre">models.datatypes.Int64</span></code>, 
+<code class="xref py py-class docutils literal notranslate"><span class="pre">datatypes.Double</span></code>, or <code class="xref py py-class docutils literal notranslate"><span class="pre">models.datatypes.Array</span></code>.  
 Feature indices in the nodes are counted sequentially from 0 through 
 the features.</p>
 </dd>
@@ -526,18 +518,16 @@ the features.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="coremltools.models.neural_network.builder.html" class="btn btn-neutral float-right" title="coremltools.models.neural_network.builder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="coremltools.models.nearest_neighbors.builder.html" class="btn btn-neutral float-right" title="coremltools.models.nearest_neighbors.builder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="coremltools.models.pipeline.html" class="btn btn-neutral" title="coremltools.models.pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="coremltools.models.pipeline.html" class="btn btn-neutral float-left" title="coremltools.models.pipeline" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -546,11 +536,11 @@ the features.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Apple Inc..
+        &copy; Copyright 2017-2019, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -563,37 +553,15 @@ the features.</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'2.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../static/jquery.js"></script>
-      <script type="text/javascript" src="../static/underscore.js"></script>
-      <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

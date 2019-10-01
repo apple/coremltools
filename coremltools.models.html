@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Models &mdash; coremltools 2.0 documentation</title>
+  <title>Models &mdash; coremltools 3.0 documentation</title>
   
 
   
@@ -17,44 +17,40 @@
   
 
   
+  <script type="text/javascript" src="static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="static/documentation_options.js"></script>
+        <script type="text/javascript" src="static/jquery.js"></script>
+        <script type="text/javascript" src="static/underscore.js"></script>
+        <script type="text/javascript" src="static/doctools.js"></script>
+        <script type="text/javascript" src="static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="coremltools 2.0 documentation" href="index.html"/>
-        <link rel="next" title="coremltools.models.MLModel" href="generated/coremltools.models.MLModel.html"/>
-        <link rel="prev" title="coremltools.converters.xgboost.convert" href="generated/coremltools.converters.xgboost.convert.html"/>
+  <link rel="stylesheet" href="static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="coremltools.models.MLModel" href="generated/coremltools.models.MLModel.html" />
+    <link rel="prev" title="coremltools.converters.xgboost.convert" href="generated/coremltools.converters.xgboost.convert.html" />
     <link href="static/style.css" rel="stylesheet" type="text/css">
-
-
-  
-  <script src="static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
           
 
           
@@ -68,7 +64,7 @@
             
             
               <div class="version">
-                2.0
+                3.0
               </div>
             
           
@@ -93,17 +89,28 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">Models</span></code></a><ul>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
 </ul>
 
             
@@ -115,7 +122,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">coremltools</a>
@@ -123,9 +130,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -148,7 +156,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li><code class="docutils literal"><span class="pre">Models</span></code></li>
+      <li>Models</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -168,20 +176,20 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-coremltools.models">
-<span id="models"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">Models</span></code><a class="headerlink" href="#module-coremltools.models" title="Permalink to this headline">¶</a></h1>
-<table border="1" class="longtable docutils">
+<span id="models"></span><h1>Models<a class="headerlink" href="#module-coremltools.models" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-coremltools.models.nearest_neighbors"></span><table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.MLModel.html#coremltools.models.MLModel" title="coremltools.models.MLModel"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.MLModel</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.MLModel.html#coremltools.models.MLModel" title="coremltools.models.MLModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.MLModel</span></code></a></td>
 <td>This class defines the minimal interface to a CoreML object in Python.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.pipeline.html#module-coremltools.models.pipeline" title="coremltools.models.pipeline"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.pipeline</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.pipeline.html#module-coremltools.models.pipeline" title="coremltools.models.pipeline"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.pipeline</span></code></a></td>
 <td>Pipeline utils for this package.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.tree_ensemble.html#module-coremltools.models.tree_ensemble" title="coremltools.models.tree_ensemble"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.tree_ensemble</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.tree_ensemble.html#module-coremltools.models.tree_ensemble" title="coremltools.models.tree_ensemble"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.tree_ensemble</span></code></a></td>
 <td>Tree ensemble builder class to construct CoreML models.</td>
 </tr>
 </tbody>
@@ -192,14 +200,20 @@
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.neural_network.builder.html#module-coremltools.models.neural_network.builder" title="coremltools.models.neural_network.builder"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.neural_network.builder</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.nearest_neighbors.builder.html#module-coremltools.models.nearest_neighbors.builder" title="coremltools.models.nearest_neighbors.builder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.nearest_neighbors.builder</span></code></a></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.neural_network.builder.html#module-coremltools.models.neural_network.builder" title="coremltools.models.neural_network.builder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.neural_network.builder</span></code></a></td>
 <td>Neural network builder class to construct Core ML models.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.neural_network.flexible_shape_utils.html#module-coremltools.models.neural_network.flexible_shape_utils" title="coremltools.models.neural_network.flexible_shape_utils"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.neural_network.flexible_shape_utils</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.neural_network.flexible_shape_utils.html#module-coremltools.models.neural_network.flexible_shape_utils" title="coremltools.models.neural_network.flexible_shape_utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.neural_network.flexible_shape_utils</span></code></a></td>
 <td>Utilities to annotate Neural Network Features with flexible shape information.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.neural_network.quantization_utils.html#module-coremltools.models.neural_network.quantization_utils" title="coremltools.models.neural_network.quantization_utils"><code class="xref py py-obj docutils literal"><span class="pre">coremltools.models.neural_network.quantization_utils</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.models.neural_network.quantization_utils.html#module-coremltools.models.neural_network.quantization_utils" title="coremltools.models.neural_network.quantization_utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.neural_network.quantization_utils</span></code></a></td>
 <td>Utilities to compress Neural Network Models.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.models.neural_network.update_optimizer_utils.html#module-coremltools.models.neural_network.update_optimizer_utils" title="coremltools.models.neural_network.update_optimizer_utils"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.neural_network.update_optimizer_utils</span></code></a></td>
+<td>Neural Network optimizer utilities.</td>
 </tr>
 </tbody>
 </table>
@@ -207,9 +221,7 @@
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -218,7 +230,7 @@
         <a href="generated/coremltools.models.MLModel.html" class="btn btn-neutral float-right" title="coremltools.models.MLModel" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="generated/coremltools.converters.xgboost.convert.html" class="btn btn-neutral" title="coremltools.converters.xgboost.convert" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="generated/coremltools.converters.xgboost.convert.html" class="btn btn-neutral float-left" title="coremltools.converters.xgboost.convert" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -227,11 +239,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Apple Inc..
+        &copy; Copyright 2017-2019, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -244,37 +256,15 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'2.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="static/jquery.js"></script>
-      <script type="text/javascript" src="static/underscore.js"></script>
-      <script type="text/javascript" src="static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

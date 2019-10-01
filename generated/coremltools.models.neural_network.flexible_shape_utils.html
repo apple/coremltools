@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network.flexible_shape_utils &mdash; coremltools 2.0 documentation</title>
+  <title>coremltools.models.neural_network.flexible_shape_utils &mdash; coremltools 3.0 documentation</title>
   
 
   
@@ -17,45 +17,40 @@
   
 
   
+  <script type="text/javascript" src="../static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../static/documentation_options.js"></script>
+        <script type="text/javascript" src="../static/jquery.js"></script>
+        <script type="text/javascript" src="../static/underscore.js"></script>
+        <script type="text/javascript" src="../static/doctools.js"></script>
+        <script type="text/javascript" src="../static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
-        <link rel="up" title="Models" href="../coremltools.models.html"/>
-        <link rel="next" title="coremltools.models.neural_network.quantization_utils" href="coremltools.models.neural_network.quantization_utils.html"/>
-        <link rel="prev" title="coremltools.models.neural_network.builder" href="coremltools.models.neural_network.builder.html"/>
+  <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="coremltools.models.neural_network.quantization_utils" href="coremltools.models.neural_network.quantization_utils.html" />
+    <link rel="prev" title="coremltools.models.neural_network.builder" href="coremltools.models.neural_network.builder.html" />
     <link href="../static/style.css" rel="stylesheet" type="text/css">
-
-
-  
-  <script src="../static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
           
 
           
@@ -69,7 +64,7 @@
             
             
               <div class="version">
-                2.0
+                3.0
               </div>
             
           
@@ -94,17 +89,28 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html">Models</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.models.neural_network.flexible_shape_utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
 </ul>
 
             
@@ -116,7 +122,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">coremltools</a>
@@ -124,9 +130,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -149,7 +156,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a> &raquo;</li>
+          <li><a href="../coremltools.models.html">Models</a> &raquo;</li>
         
       <li>coremltools.models.neural_network.flexible_shape_utils</li>
     
@@ -181,23 +188,29 @@ Only available in coremltools 2.0b1 and onwards</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_image_sizes" title="coremltools.models.neural_network.flexible_shape_utils.add_enumerated_image_sizes"><code class="xref py py-obj docutils literal"><span class="pre">add_enumerated_image_sizes</span></code></a>(spec,&nbsp;…)</td>
-<td>Annotate an input or output image feature in a Neural Network spec to</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_image_sizes" title="coremltools.models.neural_network.flexible_shape_utils.add_enumerated_image_sizes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_enumerated_image_sizes</span></code></a>(spec,&nbsp;…)</td>
+<td>Annotate an input or output image feature in a Neural Network spec to to accommodate a list of enumerated image sizes</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_multiarray_shapes" title="coremltools.models.neural_network.flexible_shape_utils.add_enumerated_multiarray_shapes"><code class="xref py py-obj docutils literal"><span class="pre">add_enumerated_multiarray_shapes</span></code></a>(spec,&nbsp;…)</td>
-<td>Annotate an input or output multiArray feature in a Neural Network spec to</td>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_multiarray_shapes" title="coremltools.models.neural_network.flexible_shape_utils.add_enumerated_multiarray_shapes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_enumerated_multiarray_shapes</span></code></a>(spec,&nbsp;…)</td>
+<td>Annotate an input or output multiArray feature in a Neural Network spec to to accommodate a list of enumerated array shapes</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes" title="coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes"><code class="xref py py-obj docutils literal"><span class="pre">can_allow_multiple_input_shapes</span></code></a>(spec)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration" title="coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_multiarray_ndshape_enumeration</span></code></a>(spec,&nbsp;…)</td>
+<td>Annotate an input or output MLMultiArray feature in a Neural Network spec to accommodate a range of shapes.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes" title="coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">can_allow_multiple_input_shapes</span></code></a>(spec)</td>
 <td>Examines a model specification and determines if it can compute results for more than one output shape.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges" title="coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges"><code class="xref py py-obj docutils literal"><span class="pre">get_allowed_shape_ranges</span></code></a>(spec)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges" title="coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_allowed_shape_ranges</span></code></a>(spec)</td>
 <td>For a given model specification, returns a dictionary with a shape range object for each input feature name.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.update_image_size_range" title="coremltools.models.neural_network.flexible_shape_utils.update_image_size_range"><code class="xref py py-obj docutils literal"><span class="pre">update_image_size_range</span></code></a>(spec,&nbsp;feature_name,&nbsp;…)</td>
-<td>Annotate an input or output Image feature in a Neural Network spec to</td>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range" title="coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_multiarray_ndshape_range</span></code></a>(spec,&nbsp;…)</td>
+<td>Annotate an input or output MLMultiArray feature in a Neural Network spec to accommodate a range of shapes.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.update_multiarray_shape_range" title="coremltools.models.neural_network.flexible_shape_utils.update_multiarray_shape_range"><code class="xref py py-obj docutils literal"><span class="pre">update_multiarray_shape_range</span></code></a>(spec,&nbsp;…)</td>
-<td>Annotate an input or output MLMultiArray feature in a Neural Network spec</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.update_image_size_range" title="coremltools.models.neural_network.flexible_shape_utils.update_image_size_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_image_size_range</span></code></a>(spec,&nbsp;feature_name,&nbsp;…)</td>
+<td>Annotate an input or output Image feature in a Neural Network spec to to accommodate a range of image sizes</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.update_multiarray_shape_range" title="coremltools.models.neural_network.flexible_shape_utils.update_multiarray_shape_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_multiarray_shape_range</span></code></a>(spec,&nbsp;…)</td>
+<td>Annotate an input or output MLMultiArray feature in a Neural Network spec to accommodate a range of shapes</td>
 </tr>
 </tbody>
 </table>
@@ -208,28 +221,25 @@ Only available in coremltools 2.0b1 and onwards</p>
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize" title="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkImageSize</span></code></a>([height,&nbsp;width])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize" title="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NeuralNetworkImageSize</span></code></a>([height,&nbsp;width])</td>
 <td>An object representing a size for an image feature inside a neural network.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange" title="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkImageSizeRange</span></code></a>([height_range,&nbsp;…])</td>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange" title="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NeuralNetworkImageSizeRange</span></code></a>([height_range,&nbsp;…])</td>
 <td>An object representing a range of sizes for an image feature inside a neural network.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape" title="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkMultiArrayShape</span></code></a>([channel,&nbsp;…])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape" title="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NeuralNetworkMultiArrayShape</span></code></a>([channel,&nbsp;…])</td>
 <td>An object representing a shape for a multiArray feature in a neural network.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange" title="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange"><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkMultiArrayShapeRange</span></code></a>([input_ranges])</td>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange" title="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NeuralNetworkMultiArrayShapeRange</span></code></a>([input_ranges])</td>
 <td>An object representing a range of shapes for a multiArray feature in a neural network.</td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">NeuralNetworkShaper</span></code>(model[,&nbsp;…])</td>
-<td>This class computes the intermediate tensor shapes for a neural network model.</td>
-</tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">Shape</span></code>(shape_value)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Shape</span></code>(shape_value)</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">ShapeRange</span></code>(lowerBound,&nbsp;upperBound)</td>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">ShapeRange</span></code>(lowerBound,&nbsp;upperBound)</td>
 <td></td>
 </tr>
-<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">Size</span></code>(size_value)</td>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">Size</span></code>(size_value)</td>
 <td></td>
 </tr>
 </tbody>
@@ -241,7 +251,7 @@ Only available in coremltools 2.0b1 and onwards</p>
 neural network. Valid sizess for height and width are &gt; 0.</p>
 <dl class="method">
 <dt id="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>height=None</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>height=None</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -255,7 +265,7 @@ upper bound value for either width or height represents an unbounded size
 for that dimension.</p>
 <dl class="method">
 <dt id="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>height_range=None</em>, <em>width_range=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>height_range=None</em>, <em>width_range=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -268,7 +278,7 @@ neural network. Valid shapes must have have only the Channel [C]
 shape or the Channel, Height and Width [C, H, W] shapes populated</p>
 <dl class="method">
 <dt id="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>channel=None</em>, <em>height=None</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>channel=None</em>, <em>height=None</em>, <em>width=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -282,12 +292,12 @@ range or the Channel, Height and Width [C, H, W] ranges populated. A “-1”
 value in an upper bound represents an unbounded range.</p>
 <dl class="method">
 <dt id="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>input_ranges=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>input_ranges=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.isFlexible">
-<code class="descname">isFlexible</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.isFlexible" title="Permalink to this definition">¶</a></dt>
+<code class="descname">isFlexible</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.isFlexible" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns true if any one of the channel, height, or width ranges of this shape allow more than one input value.</p>
 </dd></dl>
 
@@ -318,7 +328,7 @@ size information for a image feature</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;mymodel.mlmodel&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">image_sizes</span> <span class="o">=</span> <span class="p">[</span><span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">NeuralNetworkImageSize</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)]</span>
@@ -361,7 +371,7 @@ size information for a image feature</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;mymodel.mlmodel&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">array_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">NeuralNetworkMultiArrayShape</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span>
@@ -378,6 +388,50 @@ size information for a image feature</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None. The spec object is updated</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration">
+<code class="descclassname">coremltools.models.neural_network.flexible_shape_utils.</code><code class="descname">add_multiarray_ndshape_enumeration</code><span class="sig-paren">(</span><em>spec</em>, <em>feature_name</em>, <em>enumerated_shapes</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Annotate an input or output MLMultiArray feature in a Neural Network spec
+to accommodate a range of shapes.
+Add provided enumerated shapes to the list of shapes already present.
+This method is different from “add_enumerated_multiarray_shapes”, which is applicable
+for rank 5 mapping, SBCHW, arrays.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>spec</strong> – MLModel
+The MLModel spec containing the feature</li>
+<li><strong>feature_name</strong> – str
+The name of the feature for which to add shape range
+information. If the feature is not found in the input or output
+descriptions then an exception is thrown</li>
+<li><strong>enumerated_shapes</strong> – List[Tuple(int)]
+list of shapes, where each shape is specified as a tuple of integers.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;mymodel.mlmodel&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># say, the default shape of &quot;my_multiarray_featurename&quot; is (2,3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">add_multiarray_ndshape_enumeration</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="o">=</span><span class="s1">&#39;my_multiarray_featurename&#39;</span><span class="p">,</span> <span class="n">enumerated_shapes</span><span class="o">=</span><span class="p">[(</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">6</span><span class="p">)])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None. The spec is updated</td>
 </tr>
 </tbody>
 </table>
@@ -408,6 +462,54 @@ Returns True if the model can allow multiple input shapes, False otherwise.</td>
 </dd></dl>
 
 <dl class="function">
+<dt id="coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range">
+<code class="descclassname">coremltools.models.neural_network.flexible_shape_utils.</code><code class="descname">set_multiarray_ndshape_range</code><span class="sig-paren">(</span><em>spec</em>, <em>feature_name</em>, <em>lower_bounds</em>, <em>upper_bounds</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Annotate an input or output MLMultiArray feature in a Neural Network spec
+to accommodate a range of shapes.
+This is different from “update_multiarray_shape_range”, which works with rank 5
+SBCHW mapping.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>spec</strong> – MLModel
+The MLModel spec containing the feature</li>
+<li><strong>feature_name</strong> – str
+The name of the feature for which to add shape range
+information. If the feature is not found in the input or output
+descriptions then an exception is thrown</li>
+<li><strong>lower_bounds</strong> – List[int]
+list of integers specifying the lower bounds of each dimension.
+Length must be same as the rank (length of shape) of the feature_name.</li>
+<li><strong>upper_bounds</strong> – List[int]
+list of integers specifying the upper bounds of each dimension.
+-1 corresponds to unbounded range.
+Length must be same as the rank (length of shape) of the feature_name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;mymodel.mlmodel&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># say, the default shape of &quot;my_multiarray_featurename&quot; is (2,3)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">set_multiarray_ndshape_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="o">=</span><span class="s1">&#39;my_multiarray_featurename&#39;</span><span class="p">,</span> <span class="n">lower_bounds</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">upper_bounds</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">None. The spec is updated</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="coremltools.models.neural_network.flexible_shape_utils.update_image_size_range">
 <code class="descclassname">coremltools.models.neural_network.flexible_shape_utils.</code><code class="descname">update_image_size_range</code><span class="sig-paren">(</span><em>spec</em>, <em>feature_name</em>, <em>size_range</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.update_image_size_range" title="Permalink to this definition">¶</a></dt>
 <dd><p>Annotate an input or output Image feature in a Neural Network spec to
@@ -432,7 +534,7 @@ range information.</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;mymodel.mlmodel&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">img_size_ranges</span> <span class="o">=</span> <span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">NeuralNetworkImageSizeRange</span><span class="p">()</span>
@@ -478,7 +580,7 @@ the object is invalid then an exception is thrown</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.neural_network</span> <span class="kn">import</span> <span class="n">flexible_shape_utils</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;mymodel.mlmodel&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">shape_range</span> <span class="o">=</span> <span class="n">flexible_shape_utils</span><span class="o">.</span><span class="n">NeuralNetworkMultiArrayShapeRange</span><span class="p">()</span>
@@ -502,9 +604,7 @@ the object is invalid then an exception is thrown</li>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -513,7 +613,7 @@ the object is invalid then an exception is thrown</li>
         <a href="coremltools.models.neural_network.quantization_utils.html" class="btn btn-neutral float-right" title="coremltools.models.neural_network.quantization_utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="coremltools.models.neural_network.builder.html" class="btn btn-neutral" title="coremltools.models.neural_network.builder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="coremltools.models.neural_network.builder.html" class="btn btn-neutral float-left" title="coremltools.models.neural_network.builder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -522,11 +622,11 @@ the object is invalid then an exception is thrown</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Apple Inc..
+        &copy; Copyright 2017-2019, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -539,37 +639,15 @@ the object is invalid then an exception is thrown</li>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'2.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../static/jquery.js"></script>
-      <script type="text/javascript" src="../static/underscore.js"></script>
-      <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>
