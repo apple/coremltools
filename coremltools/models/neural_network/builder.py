@@ -3204,7 +3204,8 @@ class NeuralNetworkBuilder(object):
         return spec_layer
 
     def set_pre_processing_parameters(self, image_input_names=None, is_bgr=False,
-                                      red_bias=0.0, green_bias=0.0, blue_bias=0.0, gray_bias=0.0, image_scale=1.0):
+                                      red_bias=0.0, green_bias=0.0, blue_bias=0.0, gray_bias=0.0, image_scale=1.0,
+                                      image_format='NCHW'):
         """
         Add a pre-processing parameters layer to the neural network object.
 
@@ -3232,6 +3233,9 @@ class NeuralNetworkBuilder(object):
 
         image_scale: float or dict()
             Value by which to scale the images.
+        
+        image_format: str
+            Image format, either 'NCHW' / 'NHWC'
 
         See Also
         --------
@@ -3240,6 +3244,9 @@ class NeuralNetworkBuilder(object):
         spec = self.spec
         if not image_input_names:
             return  # nothing to do here
+
+        if image_format != 'NCHW' and image_format != 'NHWC':
+            raise ValueError("Input image format must be either 'NCHW' or 'NHWC'. Provided {}".format(image_format))
 
         if not isinstance(is_bgr, dict):
             is_bgr = dict.fromkeys(image_input_names, is_bgr)
@@ -3259,7 +3266,43 @@ class NeuralNetworkBuilder(object):
             if input_.name in image_input_names:
                 if input_.type.WhichOneof('Type') == 'multiArrayType':
                     array_shape = tuple(input_.type.multiArrayType.shape)
-                    channels, height, width = array_shape
+
+                    if len(array_shape) == 4:
+                        input_indices = [0, 1, 2, 3] if image_format == 'NCHW' else [0, 3, 1, 2]
+                    elif len(array_shape) == 3:
+                        # Adding dummy index for 'batch' for compatibility
+                        input_indices = [0, 0, 1, 2] if image_format == 'NCHW' else [0, 2, 0, 1]
+                    else:
+                        raise ValueError("Invalid input shape. Input of rank {}, but expecting input of either rank 3 or rank 4".format(len(array_shape)))
+
+                    # Extract image shape depending on input format
+                    _, channels, height, width = [array_shape[e] for e in input_indices]
+
+                    if image_format == 'NHWC':
+                        # If input format is 'NHWC', then add transpose
+                        # after the input and replace all use of input
+                        # with output of transpose
+                        axes = [1, 2, 0]
+                        if len(array_shape) == 4:
+                            axes = [0, 2, 3, 1]
+                        input_transpose = input_.name + '_to_nhwc'
+                        transpose_layer = self.add_transpose(
+                                                name=input_transpose,
+                                                axes=axes,
+                                                input_name=input_.name,
+                                                output_name=input_transpose
+                                                )
+                        layers = spec.neuralNetwork.layers
+                        layers.insert(0, layers.pop())
+                        for layer_ in layers:
+                            for i in range(len(layer_.input)):
+                                if layer_.name == input_transpose:
+                                    continue
+                                if layer_.input[i] == input_.name:
+                                    layer_.input[i] = input_transpose
+                    
+                    # TODO: If input is not rank 3 or 4, then accordingly handle
+                    # e.g. for rank-2 input, squeeze additional dimension in case of Gray scale image
                     if channels == 1:
                         input_.type.imageType.colorSpace = _FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value(
                             'GRAYSCALE')
