@@ -7,10 +7,19 @@
 import os.path
 from ...models import MLModel
 
-
 def convert(filename,
             inputs=None,
             outputs=None,
+            image_input_names=None,
+            is_bgr=False,
+            red_bias=0.0,
+            green_bias=0.0,
+            blue_bias=0.0,
+            gray_bias=0.0,
+            image_scale=1.0,
+            class_labels=None,
+            predicted_feature_name=None,
+            predicted_probabilities_output='',
             add_custom_layers=False,  # type: bool
             custom_conversion_functions={},  # type: Dict[Text, Any]
             custom_shape_functions={}, # type: Dict[Text, Any]
@@ -20,7 +29,6 @@ def convert(filename,
 
     if not filename.endswith('.pb'):
         raise ValueError('invalid input tf_model_path format, expecting TensorFlow frozen graph (.pb) model.')
-
     # convert from TensorFlow to SSA
     try:
         from ..nnssa.frontend.tensorflow import load as frontend_load
@@ -35,10 +43,19 @@ def convert(filename,
                                   top_func='main',
                                   inputs=inputs,
                                   outputs=outputs,
+                                  image_input_names=image_input_names,
+                                  is_bgr=is_bgr,
+                                  red_bias=red_bias,
+                                  green_bias=green_bias,
+                                  blue_bias=blue_bias,
+                                  gray_bias=gray_bias,
+                                  image_scale=image_scale,
+                                  class_labels=class_labels,
+                                  predicted_feature_name=predicted_feature_name,
+                                  predicted_probabilities_output=predicted_probabilities_output,
                                   add_custom_layers=add_custom_layers,
                                   custom_conversion_functions=custom_conversion_functions,
-                                  custom_shape_functions=custom_shape_functions
-                                  )
+                                  custom_shape_functions=custom_shape_functions)
     except ImportError as err:
         raise ImportError("Backend converter not found! Error message:\n%s" % err)
 
