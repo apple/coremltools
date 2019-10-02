@@ -21,6 +21,7 @@ except:
 
 DEBUG = False
 
+
 def _is_scalar(type_):
     if type_ is None:
         return False
@@ -28,6 +29,7 @@ def _is_scalar(type_):
     if builtins.is_tensor(type_) and (len(type_.get_shape()) == 0):
         result = True
     return result
+
 
 def ssa_convert(ssa,
                 top_func='main',
@@ -50,7 +52,7 @@ def ssa_convert(ssa,
                 ):
 
     """
-    Convert NNSSA into CoreML spec.
+    Convert NNSSA into Core ML spec.
     ssa : NetworkEnsemble
         Required parameter
         NNSSA to be converted to CoreML spec.
@@ -80,13 +82,13 @@ def ssa_convert(ssa,
         If user provides two separate functions for node name and node type, then custom function tied to node name will be used.
         As, function tied to node type is more generic than one tied to node name.
         custom_conversion_functions option is different than add_custom_layers.
-        Both options can be used in conjuction in which case, custom function will be invoked for provided ops and
+        Both options can be used in conjunction in which case, custom function will be invoked for provided ops and
         custom layer will be added for ops with no respective conversion function. This option gives finer control to user.
         One use case could be to modify input attributes or certain graph properties before calling existing conversion function.
         Note that, It is custom conversion function's responsibility to add respective CoreML layer into builder(coreml tools's NeuralNetworkBuilder)
     custom_shape_functions : dict of str -> functions or empty dict
         Specify custom function to compute `output` shape given `input` shape for given custom operator
-        This is required for new converter path, which maintains and propogates shapes while converting operators.
+        This is required for new converter path, which maintains and propagates shapes while converting operators.
     """
     if outputs is not None:
         ssa.extract_subgraph(outputs, name=top_func)
@@ -517,7 +519,7 @@ class SSAConverter(object):
         for idx, node_name in enumerate(instruction_order):
             node = func.graph[node_name]
             op_type = node.op
- 
+
             custom_conversion_name = None
             if node_name in self.custom_conversion_functions:
                 custom_conversion_name = node_name
@@ -534,22 +536,21 @@ class SSAConverter(object):
                 # Add custom layer
                 convert_func = self._convert_custom_layer
                 conversion_message = ' with custom layer'
-            else:       
+            else:
                 raise NotImplementedError(
-                    '[SSAConverter] Conversion for op %s not implemented, terminating...' %
-                    (op_type))
-            
-            print('[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\' {} {}'.format(
-                  idx + 1, len(instruction_order), op_type, node_name, conversion_message,
-                  (('(output shape: ' + str(node.datatype.get_shape()) +')') if builtins.is_tensor(node.datatype) else '')))
-            
+                    '[SSAConverter] Conversion for op %s not implemented, terminating...' % op_type)
+
+            print('[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\' {}'.format(
+                idx + 1, len(instruction_order), op_type, node_name, conversion_message,
+                (('(output shape: ' + str(node.datatype.get_shape()) + ')') if builtins.is_tensor(node.datatype) else '')))
+
             # If custom conversion method is provided, use it
             # Otherwise, invoke internal conversion method
             if custom_conversion_name is not None:
                 self.custom_conversion_functions[custom_conversion_name](self, node)
             else:
                 convert_func(node)
-                
+
     def _get_builder(self, func=None):
         if func is None:
             func = self.func_stack[-1]
@@ -2425,6 +2426,7 @@ class SSAConverter(object):
             axes=[1, 2, 3, 0]
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
+
     def _convert_conv2d_transpose(self, node):
         assert len(node.inputs) == 3
         input_nodes, input_names, input_types = self._get_input_tensors(node)
