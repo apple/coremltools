@@ -28,8 +28,6 @@ ELEMENTWISE_OPS = {
     'Rsqrt',
     'Pow',
     'LRN',
-    'Mean',
-    'Max',
     'Square',
     'SquaredDifference'
 }
@@ -38,6 +36,11 @@ ELEMENTWISE_OPS = {
 NATIVE_NHWC_OPS = {
     'Conv2D', 'Conv2DBackpropInput', 'DepthwiseConv2dNative',
     'Pooling', 'MaxPool', 'AvgPool'
+}
+
+REDUCTION_OPS = {
+    'Mean',
+    'Max'
 }
 
 
@@ -74,6 +77,21 @@ def _is_NHWC(graph, node):
         val = np.array(parent_node.value.val)
         if len(val) == 4 and builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
             parent_node.value.val = parent_node.value.val[[0, 3, 1, 2]]
+        return True
+
+    if node.op in REDUCTION_OPS:
+        if not any([graph[inp].attr.get('data_format' '') ==
+                    'NHWC_format_inserted' for inp in node.inputs]):
+            return False
+        # adjust axis / dims / reduction_indices values
+        for inp in node.inputs:
+            parent_node = graph[inp]
+            if parent_node.value is not None:
+                val = np.array(parent_node.value.val)
+                m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1}
+                reduction_indices = np.array([m_nhwc_to_nchw[x] for x in val], dtype=np.int32)
+                parent_node.value.val = np.reshape(reduction_indices, parent_node.value.val.shape)
+                node.attr['reduction_indices'] = reduction_indices
         return True
 
     if node.op in ELEMENTWISE_OPS:
@@ -141,7 +159,10 @@ def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, tran
         if '_output_shapes' in src.attr:
             input_shape = src.attr['_output_shapes'][0]
             tp_node.attr['_output_shapes'] = [
-                input_shape[transpose_params[k]] for k in range(len(input_shape))
+                [input_shape[transpose_params[0]],
+                 input_shape[transpose_params[1]],
+                 input_shape[transpose_params[2]],
+                 input_shape[transpose_params[3]]]
             ]
         graph[transpose_node_name] = tp_node
 
@@ -223,12 +244,6 @@ def transform_nhwc_to_nchw(nnssa):
                             new_shape = (1, val.shape[0], 1, 1)
                             parent_node.datatype = builtins.tensor(parent_node.datatype.get_primitive(), new_shape)
                             parent_node.value.val = np.reshape(parent_node.value.val, new_shape)
-                        # adjust axis/dims/reduction_indices attribute
-                        if node.op == 'Mean' or node.op == 'Max':
-                            m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1}
-                            reduction_indices = np.array([m_nhwc_to_nchw[x] for x in val], dtype=np.int32)
-                            parent_node.value.val = np.reshape(reduction_indices, parent_node.value.val.shape)
-                            node.attr['reduction_indices'] = reduction_indices
 
             # Insert NHWC -> NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
@@ -334,13 +349,13 @@ def onehot_matmul_to_embedding(nnssa):
 
                 # Now delete the OneHot node and other input nodes
                 delete_node(f.graph, onehot_inp_node_names[1])
-                print('[Op Fusion] Node %s is removed.' %(onehot_inp_node_names[1]))
+                print('[Op Fusion] Node %s is removed.' % (onehot_inp_node_names[1]))
                 delete_node(f.graph, onehot_inp_node_names[2])
-                print('[Op Fusion] Node %s is removed.' %(onehot_inp_node_names[2]))
+                print('[Op Fusion] Node %s is removed.' % (onehot_inp_node_names[2]))
                 delete_node(f.graph, onehot_inp_node_names[3])
-                print('[Op Fusion] Node %s is removed.' %(onehot_inp_node_names[3]))
+                print('[Op Fusion] Node %s is removed.' % (onehot_inp_node_names[3]))
                 delete_node(f.graph, inp_node.name)
-                print('[Op Fusion] Node %s is removed.' %(inp_node.name))
+                print('[Op Fusion] Node %s is removed.' % inp_node.name)
 
 
 def _search_nodes_by_type(gf, node_names, op_type):
@@ -573,57 +588,79 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
                    |         |         |
                    V         V         V
     [Conv2D] --> [Sub] --> [Mul] --> [Add] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
+
+    Pattern 3:
+                [Const]   [Const]       [Const]     [Const]
+                   |         |            |            |
+                   V         V            V            V
+    [Conv2D] --> [Sub] --> [RealDiv] --> [Mul] --> [BiasAdd] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
     """
 
-    def _match_pattern_1(gd, entry_node):
-        try:
-            if not _check_number_outputs(entry_node, 1):
-                return None
-            mul_node = gd[entry_node.outputs[0]]
-            if not (mul_node.op == 'Mul' and _check_number_outputs(mul_node, 1) and _check_number_inputs(mul_node, 2)):
-                return None
-            mul_const_node = gd[mul_node.inputs[0]] if mul_node.inputs[1] == entry_node.name else gd[mul_node.inputs[1]]
-            if not _check_single_out_vector_constant_node(mul_const_node):
-                return None
-            add_node = gd[mul_node.outputs[0]]
-            if not (add_node.op == 'Add' and _check_number_inputs(add_node, 2)):
-                return None
-            add_const_node = gd[add_node.inputs[0]] if add_node.inputs[1] == mul_node.name else gd[add_node.inputs[1]]
-            if not _check_single_out_vector_constant_node(add_const_node):
-                return None
-
-            return [mul_const_node, mul_node, add_const_node, add_node]
-
-        except Exception as e:
+    def _match_batch_norm_pattern(graph, entry_node, pattern_ops):
+        if not _check_number_outputs(entry_node, 1):
             return None
-
-    def _match_pattern_2(graph, entry_node):
-        try:
-            if not _check_number_outputs(entry_node, 1):
+        nodes_to_merge = list()
+        node = graph[entry_node.outputs[0]]
+        for i, op in enumerate(pattern_ops):
+            if node.op != op:
                 return None
-            sub_node = graph[entry_node.outputs[0]]
-            if not (sub_node.op == 'Sub' and _check_number_outputs(sub_node, 1) and _check_number_inputs(sub_node, 2)):
+            if node.op != pattern_ops[-1] and not _check_number_outputs(node, 1):
                 return None
-            sub_const_node = graph[sub_node.inputs[0]] if sub_node.inputs[1] == entry_node.name else graph[sub_node.inputs[1]]
-            if not _check_single_out_vector_constant_node(sub_const_node):
+            if not _check_number_inputs(node, 2):
                 return None
-            mul_node = graph[sub_node.outputs[0]]
-            if not (mul_node.op == 'Mul' and _check_number_outputs(mul_node, 1) and _check_number_inputs(mul_node, 2)):
+            const_node = graph[node.inputs[1]]
+            if not _check_single_out_vector_constant_node(const_node):
                 return None
-            mul_const_node = graph[mul_node.inputs[0]] if mul_node.inputs[1] == entry_node.name else graph[mul_node.inputs[1]]
-            if not _check_single_out_vector_constant_node(mul_const_node):
-                return None
-            add_node = graph[mul_node.outputs[0]]
-            if not (add_node.op == 'Add' and _check_number_inputs(add_node, 2)):
-                return None
-            add_const_node = graph[add_node.inputs[0]] if add_node.inputs[1] == mul_node.name else graph[add_node.inputs[1]]
-            if not _check_single_out_vector_constant_node(add_const_node):
-                return None
-
-            return [sub_const_node, sub_node, mul_const_node, mul_node, add_const_node, add_node]
-
-        except Exception:
+            nodes_to_merge.extend([const_node, node])
+            node = graph[node.outputs[0]]
+        if len(nodes_to_merge) != len(pattern_ops) * 2:
             return None
+        return nodes_to_merge
+
+    def _merge_into_batchnorm(graph, nodes, pattern_id=1):
+        expected_num_nodes = 4
+        if pattern_id == 2:
+            expected_num_nodes = 6
+        elif pattern_id == 3:
+            expected_num_nodes = 8
+        assert len(nodes) == expected_num_nodes
+
+        current_node = graph[nodes[1].inputs[0]]
+        out_node = nodes[-1]
+        bn_outputs = out_node.outputs[:]
+
+        fused_bn_node = ParsedNode()
+        fused_bn_node.op = 'BatchNorm'
+        fused_bn_node.name = out_node.name + '_batch_norm'
+
+        fused_bn_node.attr = {
+            'gamma': np.squeeze(nodes[0].value.val),
+            'beta': np.squeeze(nodes[2].value.val),
+        }
+        if pattern_id == 2:
+            fused_bn_node.attr = {
+                'mean': np.squeeze(nodes[0].value.val),
+                'gamma': np.squeeze(nodes[2].value.val),
+                'beta': np.squeeze(nodes[4].value.val),
+            }
+        elif pattern_id == 3:
+            fused_bn_node.attr = {
+                'mean': np.squeeze(nodes[0].value.val),
+                'gamma': np.squeeze(nodes[4].value.val) / np.squeeze(nodes[2].value.val),
+                'beta': np.squeeze(nodes[6].value.val),
+            }
+
+        fused_bn_node.datatype = current_node.datatype
+        graph[fused_bn_node.name] = fused_bn_node
+
+        # Delete nodes
+        bn_node_names = [x.name for x in nodes]
+        for name in bn_node_names:
+            delete_node(graph, name)
+
+        # Connect fused node to entry and output nodes
+        connect_edge(graph, current_node.name, fused_bn_node.name)
+        connect_dests(graph, fused_bn_node.name, bn_outputs)
 
     def _fuse_conv_mul_add_into_batchnorm(graph):
         keys = list(graph.keys())
@@ -635,68 +672,27 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
             if current_node.op not in ['Conv2D', 'DepthwiseConv2dNative']:
                 continue
 
-            # BN_nodes1 order: [Const, Mul, Const, Add]
-            bn_nodes1 = _match_pattern_1(graph, current_node)
-            # bn_nodes2 order: [Const, Sub, Const, Mul, Const, Add]
-            bn_nodes2 = _match_pattern_2(graph, current_node)
+            # return nodes order: : [Const, Mul, Const, Add]
+            nodes1 = _match_batch_norm_pattern(graph, current_node, ['Mul', 'Add'])
+            # return nodes order: : [Const, Sub, Const, Mul, Const, Add]
+            nodes2 = _match_batch_norm_pattern(graph, current_node, ['Sub', 'Mul', 'Add'])
+            # return nodes order: [Const, Sub, Const, RealDiv, Const, Mul, Const, BiasAdd]
+            nodes3 = _match_batch_norm_pattern(graph, current_node, ['Sub', 'RealDiv', 'Mul', 'BiasAdd'])
 
-            if bn_nodes1:
-                assert len(bn_nodes1) == 4
-                out_node = bn_nodes1[-1]
-                bn_outputs = out_node.outputs[:]
+            if nodes1:
+                _merge_into_batchnorm(graph, nodes=nodes1, pattern_id=1)
+                count += len(nodes1)
 
-                # Instantiate a new fused node in the graph
-                fused_bn_node = ParsedNode()
-                fused_bn_node.op = 'BatchNorm'
-                fused_bn_node.name = out_node.name + '_batch_norm'
-                fused_bn_node.attr = {
-                    'gamma': np.squeeze(bn_nodes1[0].value.val),
-                    'beta': np.squeeze(bn_nodes1[2].value.val),
-                }
-                fused_bn_node.datatype = current_node.datatype
-                graph[fused_bn_node.name] = fused_bn_node
+            if nodes2:
+                _merge_into_batchnorm(graph, nodes=nodes2, pattern_id=2)
+                count += len(nodes2)
 
-                # Delete nodes
-                bn_node_names = [x.name for x in bn_nodes1]
-                for name in bn_node_names:
-                    delete_node(graph, name)
-
-                # Connect fused node to entry and output nodes
-                connect_edge(graph, current_node.name, fused_bn_node.name)
-                connect_dests(graph, fused_bn_node.name, bn_outputs)
-
-                count += 1
-
-            if bn_nodes2:
-                assert len(bn_nodes2) == 6
-                out_node = bn_nodes2[-1]
-                bn_outputs = out_node.outputs[:]
-
-                # Instantiate a new fused node in the graph
-                fused_bn_node = ParsedNode()
-                fused_bn_node.op = 'BatchNorm'
-                fused_bn_node.name = out_node.name + '_batch_norm'
-                fused_bn_node.attr = {
-                    'mean': np.squeeze(bn_nodes2[0].value.val),
-                    'gamma': np.squeeze(bn_nodes2[2].value.val),
-                    'beta': np.squeeze(bn_nodes2[4].value.val),
-                }
-                fused_bn_node.datatype = current_node.datatype
-                graph[fused_bn_node.name] = fused_bn_node
-
-                # Delete nodes
-                bn_node_names = [x.name for x in bn_nodes2]
-                for name in bn_node_names:
-                    delete_node(graph, name)
-
-                # Connect fused node to entry and output nodes
-                connect_edge(graph, current_node.name, fused_bn_node.name)
-                connect_dests(graph, fused_bn_node.name, bn_outputs)
-
-                count += 1
+            if nodes3:
+                _merge_into_batchnorm(graph, nodes=nodes3, pattern_id=3)
+                count += len(nodes3)
 
         if count > 0:
-            print('[Op Fusion] Fused {} BatchNorms.'.format(count))
+            print('[Op Fusion] Fused {} nodes into BatchNorms.'.format(count))
 
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
