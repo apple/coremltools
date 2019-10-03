@@ -250,7 +250,10 @@ class TFNetworkTest(unittest.TestCase):
             # initialize
             sess.run(tf.global_variables_initializer())
             # run the result
-            fetches = [graph.get_operation_by_name(name).outputs[0] for name in output_node_names]
+            fetches = []
+            for name in output_node_names:
+                fetches += graph.get_operation_by_name(name).outputs
+
             result = sess.run(fetches, feed_dict=feed_dict)
 
             output_graph_def = tf.graph_util.convert_variables_to_constants(
@@ -285,21 +288,27 @@ class TFNetworkTest(unittest.TestCase):
         # Run predict in CoreML
         coreml_output = mlmodel.predict(coreml_inputs, useCPUOnly=use_cpu_only)
 
-        for idx, out_name in enumerate(output_node_names):
-            tf_out = result[idx]
-            if len(tf_out.shape) == 0:
-                tf_out = np.array([tf_out])
-            tp = tf_out.flatten()
-            coreml_out = coreml_output[out_name]
-            cp = coreml_out.flatten()
+        idx = 0
+        for node_name in output_node_names:
+            num_outputs = len(graph.get_operation_by_name(node_name).outputs)
+            for out_id in range(num_outputs):
+                tf_out = result[idx]
+                if len(tf_out.shape) == 0:
+                    tf_out = np.array([tf_out])
+                tp = tf_out.flatten()
+                out_name = node_name if num_outputs == 1 else node_name + '_' + str(out_id)
+                coreml_out = coreml_output[out_name]
+                cp = coreml_out.flatten()
 
-            self.assertTrue(tf_out.shape == coreml_out.shape, msg=(tf_out.shape, 'vs.', coreml_out.shape))
+                self.assertTrue(tf_out.shape == coreml_out.shape, msg=(tf_out.shape, 'vs.', coreml_out.shape))
 
-            if validate_bool_only:
-                cp = np.logical_and(cp, cp)
-            for i in range(len(tp)):
-                max_den = max(1.0, tp[i], cp[i])
-                self.assertAlmostEqual(tp[i] / max_den, cp[i] / max_den, delta=delta)
+                if validate_bool_only:
+                    cp = np.logical_and(cp, cp)
+                for i in range(len(tp)):
+                    max_den = max(1.0, tp[i], cp[i])
+                    self.assertAlmostEqual(tp[i] / max_den, cp[i] / max_den, delta=delta)
+
+                idx += 1
 
         # Cleanup files - models on disk no longer useful
         if os.path.exists(model_dir):
