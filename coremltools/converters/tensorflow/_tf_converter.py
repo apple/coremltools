@@ -24,6 +24,13 @@ def convert(filename,
             custom_conversion_functions={},  # type: Dict[Text, Any]
             custom_shape_functions={}, # type: Dict[Text, Any]
             **kwargs):
+    
+    use_cpu_only = kwargs.get('use_cpu_only')
+    use_cpu_only = use_cpu_only if use_cpu_only is not None else False
+    
+    optional_inputs = kwargs.get('optional_inputs')
+    optional_inputs = optional_inputs if optional_inputs is not None else []
+    
     if not filename or not isinstance(filename, str) or not os.path.exists(filename) or not os.path.isfile(filename):
         raise ValueError('invalid input tf_model_path: {}.'.format(filename))
 
@@ -55,10 +62,11 @@ def convert(filename,
                                   predicted_probabilities_output=predicted_probabilities_output,
                                   add_custom_layers=add_custom_layers,
                                   custom_conversion_functions=custom_conversion_functions,
-                                  custom_shape_functions=custom_shape_functions)
+                                  custom_shape_functions=custom_shape_functions,
+                                  optional_inputs = optional_inputs
+                                  )
     except ImportError as err:
         raise ImportError("Backend converter not found! Error message:\n%s" % err)
 
-    use_cpu_only = kwargs.get('use_cpu_only')
-    use_cpu_only = use_cpu_only if use_cpu_only is not None else False
+
     return MLModel(mlmodelspec, useCPUOnly=use_cpu_only)
