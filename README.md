@@ -8,6 +8,7 @@ Keras and XGBoost.
 coremltools 3.0
 ---------------
 [Release notes](https://github.com/apple/coremltools/releases/)
+Please take this quick poll and let us know how you liked this release, [here](https://github.com/apple/coremltools/blob/master/release-feedback.md)!
 
 ```shell
 # Install using pip
