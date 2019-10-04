@@ -21,6 +21,7 @@ except:
 
 DEBUG = False
 
+
 def _is_scalar(type_):
     if type_ is None:
         return False
@@ -28,6 +29,7 @@ def _is_scalar(type_):
     if builtins.is_tensor(type_) and (len(type_.get_shape()) == 0):
         result = True
     return result
+
 
 def ssa_convert(ssa,
                 top_func='main',
@@ -50,7 +52,7 @@ def ssa_convert(ssa,
                 ):
 
     """
-    Convert NNSSA into CoreML spec.
+    Convert NNSSA into Core ML spec.
     ssa : NetworkEnsemble
         Required parameter
         NNSSA to be converted to CoreML spec.
@@ -80,13 +82,13 @@ def ssa_convert(ssa,
         If user provides two separate functions for node name and node type, then custom function tied to node name will be used.
         As, function tied to node type is more generic than one tied to node name.
         custom_conversion_functions option is different than add_custom_layers.
-        Both options can be used in conjuction in which case, custom function will be invoked for provided ops and
+        Both options can be used in conjunction in which case, custom function will be invoked for provided ops and
         custom layer will be added for ops with no respective conversion function. This option gives finer control to user.
         One use case could be to modify input attributes or certain graph properties before calling existing conversion function.
-        Note that, It is custom conversion function's responsibility to add respective CoreML layer into builder(coreml tools's NeuralNetworkBuilder)
+        Note that, It is custom conversion function's responsibility to add respective Core ML layer into builder (coremltools's NeuralNetworkBuilder)
     custom_shape_functions : dict of str -> functions or empty dict
         Specify custom function to compute `output` shape given `input` shape for given custom operator
-        This is required for new converter path, which maintains and propogates shapes while converting operators.
+        This is required for new converter path, which maintains and propagates shapes while converting operators.
     """
     if outputs is not None:
         ssa.extract_subgraph(outputs, name=top_func)
@@ -390,6 +392,7 @@ class SSAConverter(object):
             'ScatterNd': self._convert_scatter_nd,
             'Square': self._convert_unary_square,
             'Neg': self._convert_unary_neg,
+            'Reciprocal': self._convert_unary_inverse,
             'Sqrt': self._convert_unary_common,
             'Rsqrt': self._convert_unary_common,
             'Exp': self._convert_unary_common,
@@ -428,8 +431,9 @@ class SSAConverter(object):
             'Tile': self._convert_tile,
             'Fill': self._convert_fill,
             'LSTMBlock': self._convert_lstm_block_cell,
-            'Pad': self._convert_pad,
-            'PadV2': self._convert_pad,
+            'Pad': self._convert_constant_pad,
+            'PadV2': self._convert_constant_pad,
+            'MirrorPad': self._convert_mirror_pad,
             'TopKV2': self._convert_topk,
             'iff': self._convert_iff,
             'ResizeBilinear': self._convert_resize_bilinear,
@@ -515,7 +519,7 @@ class SSAConverter(object):
         for idx, node_name in enumerate(instruction_order):
             node = func.graph[node_name]
             op_type = node.op
- 
+
             custom_conversion_name = None
             if node_name in self.custom_conversion_functions:
                 custom_conversion_name = node_name
@@ -532,22 +536,21 @@ class SSAConverter(object):
                 # Add custom layer
                 convert_func = self._convert_custom_layer
                 conversion_message = ' with custom layer'
-            else:       
+            else:
                 raise NotImplementedError(
-                    '[SSAConverter] Conversion for op %s not implemented, terminating...' %
-                    (op_type))
-            
-            print('[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\' {} {}'.format(
-                  idx + 1, len(instruction_order), op_type, node_name, conversion_message,
-                  (('(output shape: ' + str(node.datatype.get_shape()) +')') if builtins.is_tensor(node.datatype) else '')))
-            
+                    '[SSAConverter] Conversion for op %s not implemented, terminating...' % op_type)
+
+            print('[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\' {}'.format(
+                idx + 1, len(instruction_order), op_type, node_name, conversion_message,
+                (('(output shape: ' + str(node.datatype.get_shape()) + ')') if builtins.is_tensor(node.datatype) else '')))
+
             # If custom conversion method is provided, use it
             # Otherwise, invoke internal conversion method
             if custom_conversion_name is not None:
                 self.custom_conversion_functions[custom_conversion_name](self, node)
             else:
                 convert_func(node)
-                
+
     def _get_builder(self, func=None):
         if func is None:
             func = self.func_stack[-1]
@@ -1841,7 +1844,7 @@ class SSAConverter(object):
             node.name + '_out', node.name + '_h', node.name + '_c'
         ]
 
-    def _convert_pad(self, node):
+    def _convert_constant_pad(self, node):
         # operator Pad has 2 inputs, PadV2 has 3 inputs
         assert len(node.inputs) == 2 or len(node.inputs) == 3
         input_nodes, input_names, input_types = self._get_input_tensors(node)
@@ -1863,6 +1866,29 @@ class SSAConverter(object):
             input_names=input_names,
             output_name=node.name,
             value=constant_value
+        )
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_mirror_pad(self, node):
+        assert len(node.inputs) == 2
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        paddings = input_nodes[1].value.val  # rank 4, nhwc
+        left, right = paddings[2][0], paddings[2][1]
+        top, bottom = paddings[1][0], paddings[1][1]
+
+        if node.attr.get('mode', '').lower() == 'symmetric':
+            raise NotImplementedError('symmetric mode is not supported.')
+        builder = self._get_builder()
+
+        layer = builder.add_padding(
+            name=node.name,
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
+            input_name=input_names[0],
+            output_name=node.name,
+            padding_type='reflection'
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
@@ -1905,6 +1931,17 @@ class SSAConverter(object):
             output_name=node.name
         )
 
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_unary_inverse(self, node):
+        assert len(node.inputs) == 1
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        layer = self._get_builder().add_unary(
+            name=node.name,
+            input_name=input_names[0],
+            output_name=node.name,
+            mode='inverse'
+        )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_batchnorm(self, node):
@@ -2294,12 +2331,10 @@ class SSAConverter(object):
         assert len(node.inputs) == 3
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         block_shape = input_nodes[1].value.val
-        if block_shape[0] != block_shape[1]:
+        if len(block_shape.flatten()) != 2 or block_shape[0] != block_shape[1]:
             raise NotImplementedError('non-equal block shape is not yet supported')
         paddings = input_nodes[2].value.val
-        if any(paddings.flatten()):
-            raise NotImplementedError('paddings are not yet supported')
-
+        needs_paddings = any(paddings.flatten())
         builder = self._get_builder()
 
         layer = builder.add_transpose(
@@ -2310,9 +2345,23 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
+        if needs_paddings:
+            left, right = paddings[1][0], paddings[1][1]
+            top, bottom = paddings[0][0], paddings[0][1]
+            layer = builder.add_padding(
+                name=node.name + '_padding',
+                left=left,
+                right=right,
+                top=top,
+                bottom=bottom,
+                input_name=node.name + '_transpose1',
+                output_name=node.name + '_padding'
+            )
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+
         layer = builder.add_reorganize_data(
             name=node.name + '_reorganize',
-            input_name=node.name + '_transpose1',
+            input_name=node.name + '_transpose1' if not needs_paddings else node.name + '_padding',
             output_name=node.name + '_reorganize',
             mode='space_to_depth'.upper(),
             block_size=block_shape[0]
@@ -2334,8 +2383,7 @@ class SSAConverter(object):
         if block_shape[0] != block_shape[1]:
             raise NotImplementedError('non-equal block shape is not yet supported')
         crops = input_nodes[2].value.val
-        if any(crops.flatten()):
-            raise NotImplementedError('crops are not yet supported')
+        needs_cropping = any(crops.flatten())
 
         builder = self._get_builder()
 
@@ -2356,9 +2404,24 @@ class SSAConverter(object):
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
+        if needs_cropping:
+            left, right = crops[1][0], crops[1][1]
+            top, bottom = crops[0][0], crops[0][1]
+            layer = builder.add_crop(
+                name=node.name + '_cropping',
+                left=left,
+                right=right,
+                top=top,
+                bottom=bottom,
+                offset=0,
+                input_names=[node.name + '_reorganize'],
+                output_name=node.name + '_cropping'
+            )
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+
         layer = builder.add_transpose(
             name=node.name,
-            input_name=node.name + '_reorganize',
+            input_name=node.name + '_reorganize' if not needs_cropping else node.name + '_cropping',
             output_name=node.name,
             axes=[1, 2, 3, 0]
         )

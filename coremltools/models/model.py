@@ -200,10 +200,10 @@ class MLModel(object):
 
         Parameters
         ----------
-        model: str | Model_pb2
+        model: str or Model_pb2
             If a string is given it should be the location of the .mlmodel to load.
 
-        useCPUOnly : bool
+        useCPUOnly: bool
             Set to true to restrict loading of model on CPU Only. Defaults to False.
 
         Examples
@@ -271,7 +271,7 @@ class MLModel(object):
 
         Parameters
         ----------
-        location : str
+        filename: str
             Target filename for the model.
 
         See Also
@@ -307,16 +307,16 @@ class MLModel(object):
 
         Parameters
         ----------
-        data : dict[str, value]
+        data: dict[str, value]
             Dictionary of data to make predictions from where the keys are
             the names of the input features.
 
-        useCPUOnly : bool
+        useCPUOnly: bool
             Set to true to restrict computation to use only the CPU. Defaults to False.
 
         Returns
         -------
-        out : dict[str, value]
+        out: dict[str, value]
             Predictions as a dictionary where each key is the output feature
             name.
 
@@ -359,10 +359,10 @@ class MLModel(object):
 
         Parameters
         ----------
-        port : int
+        port: int
             if server is to be hosted on specific localhost port
 
-        input_shape_dict : dict
+        input_shape_dict: dict
             The shapes are calculated assuming the batch and sequence
             are 1 i.e. (1, 1, C, H, W). If either is not 1, then provide
             full input shape

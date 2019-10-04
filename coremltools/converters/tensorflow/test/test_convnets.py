@@ -1013,21 +1013,30 @@ class TFSingleLayerTest(TFNetworkTest):
         self._test_tf_model_constant(graph, {updates.op.name: [2, 4, 4]}, [out.op.name])
 
     def test_constant_pad(self):
-        shape = [2, 3]
+        shape = [1, 2, 2, 5]
         graph = tf.Graph()
         with graph.as_default():
-            paddings = tf.constant([[1, 1], [2, 2]])
+            paddings = tf.constant([[0, 0], [1, 1], [2, 2], [0, 0]])
             a = tf.placeholder(tf.float32, shape=shape)
             out = tf.pad(a, paddings=paddings, mode='constant')
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     def test_constant_pad_v2(self):
-        shape = [2, 3]
+        shape = [1, 2, 2, 5]
         graph = tf.Graph()
         with graph.as_default():
-            paddings = tf.constant([[1, 1], [2, 2]])
+            paddings = tf.constant([[0, 0], [1, 1], [2, 2], [0, 0]])
             a = tf.placeholder(tf.float32, shape=shape)
             out = tf.pad(a, paddings=paddings, mode='constant', constant_values=1)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_mirror_pad(self):
+        shape = [1, 2, 2, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            paddings = tf.constant([[0, 0], [1, 1], [1, 1], [0, 0]])
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.pad(a, paddings=paddings, mode='reflect')
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     def test_one_hot(self):
@@ -1257,7 +1266,16 @@ class TFSingleLayerTest(TFNetworkTest):
             graph = tf.Graph()
             with graph.as_default():
                 a = tf.placeholder(tf.float32, shape=shape)
-                out = tf.space_to_batch_nd(a, [2, 2], [[0, 0], [0, 0]])
+                out = tf.space_to_batch_nd(a, block_shape=[2, 2], paddings=[[0, 0], [0, 0]])
+            self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_space_to_batch_nd_with_paddings(self):
+        shapes = [[1, 2, 2, 1], [1, 2, 2, 3], [1, 4, 4, 1], [2, 2, 4, 1]]
+        for shape in shapes:
+            graph = tf.Graph()
+            with graph.as_default():
+                a = tf.placeholder(tf.float32, shape=shape)
+                out = tf.space_to_batch_nd(a, block_shape=[2, 2], paddings=[[2, 2], [3, 3]])
             self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     def test_batch_to_space_nd(self):
@@ -1266,7 +1284,16 @@ class TFSingleLayerTest(TFNetworkTest):
             graph = tf.Graph()
             with graph.as_default():
                 a = tf.placeholder(tf.float32, shape=shape)
-                out = tf.batch_to_space_nd(a, [2, 2], [[0, 0], [0, 0]])
+                out = tf.batch_to_space_nd(a, block_shape=[2, 2], crops=[[0, 0], [0, 0]])
+            self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_batch_to_space_nd_with_cropping(self):
+        shapes = [[4, 3, 3, 1], [4, 3, 3, 3], [4, 2, 2, 1], [8, 5, 3, 1]]
+        for shape in shapes:
+            graph = tf.Graph()
+            with graph.as_default():
+                a = tf.placeholder(tf.float32, shape=shape)
+                out = tf.batch_to_space_nd(a, block_shape=[2, 2], crops=[[1, 2], [1, 1]])
             self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     @unittest.skip('numeric')
@@ -1282,5 +1309,5 @@ class TFSingleLayerTest(TFNetworkTest):
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest('test_lrn'))
+    # suite.addTest(TFSingleLayerTest('test_mirror_pad'))
     # unittest.TextTestRunner().run(suite)
