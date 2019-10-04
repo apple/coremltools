@@ -1,16 +1,9 @@
-coremltools.models.neural_network.builder
-=========================================
+coremltools.models.neural\_network.builder
+==========================================
 
 .. automodule:: coremltools.models.neural_network.builder
 
    
-   
-   .. rubric:: Functions
-
-   .. autosummary::
-   
-      set_transform_interface_params
-      unpack_to_bytes
    
    
 

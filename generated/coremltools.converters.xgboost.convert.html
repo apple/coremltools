@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.converters.xgboost.convert &mdash; coremltools 2.0 documentation</title>
+  <title>coremltools.converters.xgboost.convert &mdash; coremltools 3.0 documentation</title>
   
 
   
@@ -17,45 +17,40 @@
   
 
   
+  <script type="text/javascript" src="../static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../static/documentation_options.js"></script>
+        <script type="text/javascript" src="../static/jquery.js"></script>
+        <script type="text/javascript" src="../static/underscore.js"></script>
+        <script type="text/javascript" src="../static/doctools.js"></script>
+        <script type="text/javascript" src="../static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="coremltools 2.0 documentation" href="../index.html"/>
-        <link rel="up" title="Converters" href="../coremltools.converters.html"/>
-        <link rel="next" title="Models" href="../coremltools.models.html"/>
-        <link rel="prev" title="coremltools.converters.sklearn.convert" href="coremltools.converters.sklearn.convert.html"/>
+  <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Models" href="../coremltools.models.html" />
+    <link rel="prev" title="coremltools.converters.sklearn.convert" href="coremltools.converters.sklearn.convert.html" />
     <link href="../static/style.css" rel="stylesheet" type="text/css">
-
-
-  
-  <script src="../static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
           
 
           
@@ -69,7 +64,7 @@
             
             
               <div class="version">
-                2.0
+                3.0
               </div>
             
           
@@ -94,7 +89,7 @@
             
             
               <ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
@@ -102,8 +97,20 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.converters.xgboost.convert</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.models.html">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
 </ul>
 
             
@@ -115,7 +122,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">coremltools</a>
@@ -123,9 +130,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -148,7 +156,7 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="../coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a> &raquo;</li>
+          <li><a href="../coremltools.converters.html">Converters</a> &raquo;</li>
         
       <li>coremltools.converters.xgboost.convert</li>
     
@@ -173,7 +181,7 @@
 <h1>coremltools.converters.xgboost.convert<a class="headerlink" href="#coremltools-converters-xgboost-convert" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="coremltools.converters.xgboost.convert">
-<code class="descclassname">coremltools.converters.xgboost.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>feature_names=None</em>, <em>target=’target’</em>, <em>force_32bit_float=True</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.xgboost.convert" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.converters.xgboost.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>feature_names=None</em>, <em>target='target'</em>, <em>force_32bit_float=True</em>, <em>mode='regressor'</em>, <em>class_labels=None</em>, <em>n_classes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.xgboost.convert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a trained XGBoost model to Core ML format.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -200,11 +208,22 @@ order as the XGboost model.</li>
 <dt><strong>force_32bit_float: bool</strong></dt>
 <dd><p class="first last">If True, then the resulting CoreML model will use 32 bit floats internally.</p>
 </dd>
+<dt><strong>mode: str in [‘regressor’, ‘classifier’]</strong></dt>
+<dd><p class="first last">Mode of the tree model.</p>
+</dd>
+<dt><strong>class_labels: list[int] or None</strong></dt>
+<dd><p class="first last">List of classes. When set to None, the class labels are just the range from
+0 to n_classes - 1.</p>
+</dd>
+<dt><strong>n_classes: int or None</strong></dt>
+<dd><p class="first last">Number of classes in classification. When set to None, the number of
+classes is expected from the model or class_labels should be provided.</p>
+</dd>
 </dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>model:MLModel</strong></dt>
+<dt>model:MLModel</dt>
 <dd><p class="first last">Returns an MLModel instance representing a Core ML model.</p>
 </dd>
 </dl>
@@ -213,7 +232,7 @@ order as the XGboost model.</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Convert it with default input and output names</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert it with default input and output names</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">coremltools</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">xgboost</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
@@ -227,9 +246,7 @@ order as the XGboost model.</li>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -238,7 +255,7 @@ order as the XGboost model.</li>
         <a href="../coremltools.models.html" class="btn btn-neutral float-right" title="Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="coremltools.converters.sklearn.convert.html" class="btn btn-neutral" title="coremltools.converters.sklearn.convert" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="coremltools.converters.sklearn.convert.html" class="btn btn-neutral float-left" title="coremltools.converters.sklearn.convert" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -247,11 +264,11 @@ order as the XGboost model.</li>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Apple Inc..
+        &copy; Copyright 2017-2019, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -264,37 +281,15 @@ order as the XGboost model.</li>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'2.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../static/jquery.js"></script>
-      <script type="text/javascript" src="../static/underscore.js"></script>
-      <script type="text/javascript" src="../static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

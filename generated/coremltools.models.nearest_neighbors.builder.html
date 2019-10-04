@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>coremltools.models.nearest_neighbors.builder &mdash; coremltools 3.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../static/documentation_options.js"></script>
+        <script type="text/javascript" src="../static/jquery.js"></script>
+        <script type="text/javascript" src="../static/underscore.js"></script>
+        <script type="text/javascript" src="../static/doctools.js"></script>
+        <script type="text/javascript" src="../static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="coremltools.models.neural_network.builder" href="coremltools.models.neural_network.builder.html" />
+    <link rel="prev" title="coremltools.models.tree_ensemble" href="coremltools.models.tree_ensemble.html" />
+    <link href="../static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> coremltools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.models.html">Models</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.models.nearest_neighbors.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../coremltools.models.html">Models</a> &raquo;</li>
+        
+      <li>coremltools.models.nearest_neighbors.builder</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../sources/generated/coremltools.models.nearest_neighbors.builder.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-coremltools.models.nearest_neighbors.builder">
+<span id="coremltools-models-nearest-neighbors-builder"></span><h1>coremltools.models.nearest_neighbors.builder<a class="headerlink" href="#module-coremltools.models.nearest_neighbors.builder" title="Permalink to this headline">¶</a></h1>
+<p class="rubric">Classes</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder" title="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder</span></code></a>(…)</td>
+<td>KNearestNeighborsClassifierBuilder class to construct a CoreML KNearestNeighborsClassifier specification.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">
+<em class="property">class </em><code class="descclassname">coremltools.models.nearest_neighbors.builder.</code><code class="descname">KNearestNeighborsClassifierBuilder</code><span class="sig-paren">(</span><em>input_name</em>, <em>output_name</em>, <em>number_of_dimensions</em>, <em>default_class_label</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>KNearestNeighborsClassifierBuilder class to construct a CoreML KNearestNeighborsClassifier specification.</p>
+<p>Please see the Core ML Nearest Neighbors protobuf message for more information
+on KNearestNeighborsClassifier parameters.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">MLModel</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">save_spec</span></code></dt>
+<dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.nearest_neighbors</span> <span class="kn">import</span> <span class="n">KNearestNeighborsClassifierBuilder</span>
+<span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">save_spec</span>
+
+<span class="c1"># Create a KNearestNeighborsClassifier model that takes 4-dimensional input data and outputs a string label.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span> <span class="o">=</span> <span class="n">KNearestNeighborsClassifierBuilder</span><span class="p">(</span><span class="n">input_name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span>
+<span class="o">...</span>                                              <span class="n">output_name</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">,</span>
+<span class="o">...</span>                                              <span class="n">number_of_dimensions</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="o">...</span>                                              <span class="n">default_class_label</span><span class="o">=</span><span class="s1">&#39;default_label&#39;</span><span class="p">)</span>
+
+<span class="c1"># save the spec by the builder</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">save_spec</span><span class="p">(</span><span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;knnclassifier.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>input_name</em>, <em>output_name</em>, <em>number_of_dimensions</em>, <em>default_class_label</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a KNearestNeighborsClassifierBuilder object.
+:param input_name: Name of the model input
+:param output_name: Name of the output
+:param number_of_dimensions: Number of dimensions of the input data
+:param default_class_label: The default class label to use for predictions. Must be either an int64 or a string.
+:param number_of_neighbors: Number of neighbors to use for predictions. Default = 5 with allowed values between 1-1000.
+:param weighting_scheme: Weight function used in prediction. One of ‘uniform’ (default) or ‘inverse_distance’
+:param index_type: Algorithm to compute nearest neighbors. One of ‘linear’ (default), or ‘kd_tree’.
+:param leaf_size: Leaf size for the kd-tree. Ignored if index type is ‘linear’. Default = 30.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples">
+<code class="descname">add_samples</code><span class="sig-paren">(</span><em>self</em>, <em>data_points</em>, <em>labels</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add some samples to the KNearestNeighborsClassifier model
+:param data_points: List of input data points
+:param labels: List of corresponding labels
+:return: None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.author">
+<code class="descname">author</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the author for the KNearestNeighborsClassifier model
+:return: the author</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description">
+<code class="descname">description</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the description for the KNearestNeighborsClassifier model
+:return: the description</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.index_type">
+<code class="descname">index_type</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.index_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the index type for the KNearestNeighborsClassifier model
+:return: the index type</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.is_updatable">
+<code class="descname">is_updatable</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.is_updatable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the KNearestNeighborsClassifier is updatable
+:return: is updatable</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size">
+<code class="descname">leaf_size</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the leaf size for the KNearestNeighborsClassifier
+:return: the leaf size</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.license">
+<code class="descname">license</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.license" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the author for the KNearestNeighborsClassifier model
+:return: the author</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions">
+<code class="descname">number_of_dimensions</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of dimensions of the input data for the KNearestNeighborsClassifier model
+:return: number of dimensions</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors">
+<code class="descname">number_of_neighbors</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of neighbors value for the KNearestNeighborsClassifier model
+:return: the number of neighbors default value</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range">
+<code class="descname">number_of_neighbors_allowed_range</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the range of allowed values for the numberOfNeighbors parameter.
+:return: tuple of (min_value, max_value) or None if the range hasn’t been set</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set">
+<code class="descname">number_of_neighbors_allowed_set</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the set of allowed values for the numberOfNeighbors parameter.
+:return: set of allowed values or None if the set of allowed values hasn’t been populated</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type">
+<code class="descname">set_index_type</code><span class="sig-paren">(</span><em>self</em>, <em>index_type</em>, <em>leaf_size=30</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the index type for the KNearestNeighborsClassifier model
+:param index_type: One of [ ‘linear’, ‘kd_tree’ ]
+:param leaf_size: For kd_tree indexes, the leaf size to use (default = 30)
+:return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds">
+<code class="descname">set_number_of_neighbors_with_bounds</code><span class="sig-paren">(</span><em>self</em>, <em>number_of_neighbors</em>, <em>allowed_range=None</em>, <em>allowed_set=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the numberOfNeighbors parameter for the KNearestNeighborsClassifier model.
+:param allowed_range: tuple of (min_value, max_value) defining the range of allowed values
+:param allowed_values: set of allowed values for the number of neighbors
+:return: None</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme">
+<code class="descname">weighting_scheme</code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the weighting scheme for the KNearestNeighborsClassifier model
+:return: the weighting scheme</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="coremltools.models.neural_network.builder.html" class="btn btn-neutral float-right" title="coremltools.models.neural_network.builder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="coremltools.models.tree_ensemble.html" class="btn btn-neutral float-left" title="coremltools.models.tree_ensemble" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-2019, Apple Inc
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

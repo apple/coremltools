@@ -1,0 +1,22 @@
+coremltools.models.nearest\_neighbors.builder
+=============================================
+
+.. automodule:: coremltools.models.nearest_neighbors.builder
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      KNearestNeighborsClassifierBuilder
+   
+   
+
+   
+   
+   

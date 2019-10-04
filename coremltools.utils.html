@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; coremltools 2.0 documentation</title>
+  <title>Utilities &mdash; coremltools 3.0 documentation</title>
   
 
   
@@ -17,43 +17,39 @@
   
 
   
+  <script type="text/javascript" src="static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="static/documentation_options.js"></script>
+        <script type="text/javascript" src="static/jquery.js"></script>
+        <script type="text/javascript" src="static/underscore.js"></script>
+        <script type="text/javascript" src="static/doctools.js"></script>
+        <script type="text/javascript" src="static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="coremltools 2.0 documentation" href="index.html"/>
-        <link rel="prev" title="coremltools.models.neural_network.quantization_utils" href="generated/coremltools.models.neural_network.quantization_utils.html"/>
+  <link rel="stylesheet" href="static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="coremltools.models.neural_network.update_optimizer_utils" href="generated/coremltools.models.neural_network.update_optimizer_utils.html" />
     <link href="static/style.css" rel="stylesheet" type="text/css">
-
-
-  
-  <script src="static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
           
 
           
@@ -67,7 +63,7 @@
             
             
               <div class="version">
-                2.0
+                3.0
               </div>
             
           
@@ -92,9 +88,26 @@
             
             
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#"><code class="docutils literal"><span class="pre">Utilities</span></code></a><ul class="simple">
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Utilities</a><ul class="simple">
 </ul>
 </li>
 </ul>
@@ -108,7 +121,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">coremltools</a>
@@ -116,9 +129,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -141,7 +155,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li><code class="docutils literal"><span class="pre">Utilities</span></code></li>
+      <li>Utilities</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -161,7 +175,7 @@
            <div itemprop="articleBody">
             
   <div class="section" id="module-coremltools.models.utils">
-<span id="utilities"></span><h1><code class="xref py py-mod docutils literal"><span class="pre">Utilities</span></code><a class="headerlink" href="#module-coremltools.models.utils" title="Permalink to this headline">¶</a></h1>
+<span id="utilities"></span><h1>Utilities<a class="headerlink" href="#module-coremltools.models.utils" title="Permalink to this headline">¶</a></h1>
 <p>Utilities for the entire package.</p>
 <dl class="function">
 <dt id="coremltools.models.utils.convert_neural_network_weights_to_fp16">
@@ -172,8 +186,18 @@ half precision MLModel (float16).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>model: MLModel</strong></dt>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>full_precision_model: MLModel</strong></dt>
+<dd><p class="first last">Model which will be converted to half precision. Currently conversion
+for only neural network models is supported. If a pipeline model is
+passed in then all embedded neural network models embedded within
+will be converted.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>model: MLModel</dt>
 <dd><p class="first last">The converted half precision MLModel</p>
 </dd>
 </dl>
@@ -182,27 +206,27 @@ half precision MLModel (float16).</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">half_precision_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">convert_neural_network_weights_to_fp16</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">half_precision_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">convert_neural_network_weights_to_fp16</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
 <dt id="coremltools.models.utils.evaluate_classifier">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target=’target’</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Permalink to this definition">¶</a></dt>
-<dd><p>Evaluate a CoreML classifier model and compare against predictions
-from the original framework (for testing correctness of conversion). Use
-this evaluation for models that don’t deal with probabilities.</p>
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target='target'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate a Core ML classifier model and compare against predictions
+from the original framework (for testing correctness of conversion). 
+Use this evaluation for models that don’t deal with probabilities.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>filename: [str | MLModel]</strong></dt>
+<dt><strong>filename: list of str or list of MLModel</strong></dt>
 <dd><p class="first last">File from where to load the model from (OR) a loaded
 version of the MLModel.</p>
 </dd>
-<dt><strong>data: [str | Dataframe]</strong></dt>
+<dt><strong>data: list of str or list of Dataframe</strong></dt>
 <dd><p class="first last">Test data on which to evaluate the models (dataframe,
 or path to a csv file).</p>
 </dd>
@@ -219,10 +243,13 @@ or path to a csv file).</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.utils.evaluate_regressor" title="coremltools.models.utils.evaluate_regressor"><code class="xref py py-obj docutils literal"><span class="pre">evaluate_regressor</span></code></a>, <a class="reference internal" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="coremltools.models.utils.evaluate_classifier_with_probabilities"><code class="xref py py-obj docutils literal"><span class="pre">evaluate_classifier_with_probabilities</span></code></a></p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#coremltools.models.utils.evaluate_regressor" title="coremltools.models.utils.evaluate_regressor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_regressor</span></code></a>, <a class="reference internal" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="coremltools.models.utils.evaluate_classifier_with_probabilities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_classifier_with_probabilities</span></code></a></dt>
+<dd></dd>
+</dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span>  <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_classifier</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;data_and_predictions.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span>  <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_classifier</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;data_and_predictions.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
 <span class="go">{&quot;samples&quot;: 10, num_errors: 0}</span>
 </pre></div>
@@ -231,7 +258,7 @@ or path to a csv file).</p>
 
 <dl class="function">
 <dt id="coremltools.models.utils.evaluate_classifier_with_probabilities">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier_with_probabilities</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>probabilities=’probabilities’</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier_with_probabilities</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>probabilities='probabilities'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate a classifier specification for testing.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -261,7 +288,7 @@ or path to a csv file).</p>
 
 <dl class="function">
 <dt id="coremltools.models.utils.evaluate_regressor">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_regressor</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target=’target’</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_regressor" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_regressor</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target='target'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_regressor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate a CoreML regression model and compare against predictions
 from the original framework (for testing correctness of conversion)</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -269,11 +296,11 @@ from the original framework (for testing correctness of conversion)</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>filename: [str | MLModel]</strong></dt>
+<dt><strong>filename: list of str or list of MLModel</strong></dt>
 <dd><p class="first last">File path from which to load the MLModel from (OR) a loaded version of
 MLModel.</p>
 </dd>
-<dt><strong>data: [str | Dataframe]</strong></dt>
+<dt><strong>data: list of str or list of Dataframe</strong></dt>
 <dd><p class="first last">Test data on which to evaluate the models (dataframe,
 or path to a .csv file).</p>
 </dd>
@@ -291,10 +318,13 @@ as the target column.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier" title="coremltools.models.utils.evaluate_classifier"><code class="xref py py-obj docutils literal"><span class="pre">evaluate_classifier</span></code></a></p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier" title="coremltools.models.utils.evaluate_classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_classifier</span></code></a></dt>
+<dd></dd>
+</dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_regressor</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;data_and_predictions.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_regressor</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;data_and_predictions.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
 <span class="go">{&quot;samples&quot;: 10, &quot;rmse&quot;: 0.0, max_error: 0.0}</span>
 </pre></div>
@@ -310,14 +340,14 @@ as the target column.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>spec: [str | MLModel]</strong></dt>
+<dt><strong>spec: list of str or list of MLModel</strong></dt>
 <dd><p class="first last">File from where to load the Model from (OR) a loaded
 version of MLModel.</p>
 </dd>
-<dt><strong>input_data: list[dict]</strong></dt>
+<dt><strong>input_data: list of dict</strong></dt>
 <dd><p class="first last">Test data on which to evaluate the models.</p>
 </dd>
-<dt><strong>reference_output: list[dict]</strong></dt>
+<dt><strong>reference_output: list of dict</strong></dt>
 <dd><p class="first last">Expected results for the model.</p>
 </dd>
 <dt><strong>verbose: bool</strong></dt>
@@ -330,10 +360,13 @@ version of MLModel.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.utils.evaluate_regressor" title="coremltools.models.utils.evaluate_regressor"><code class="xref py py-obj docutils literal"><span class="pre">evaluate_regressor</span></code></a>, <a class="reference internal" href="#coremltools.models.utils.evaluate_classifier" title="coremltools.models.utils.evaluate_classifier"><code class="xref py py-obj docutils literal"><span class="pre">evaluate_classifier</span></code></a></p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#coremltools.models.utils.evaluate_regressor" title="coremltools.models.utils.evaluate_regressor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_regressor</span></code></a>, <a class="reference internal" href="#coremltools.models.utils.evaluate_classifier" title="coremltools.models.utils.evaluate_classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_classifier</span></code></a></dt>
+<dd></dd>
+</dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">expected_output</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mf">1.3</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mf">2.3</span><span class="p">}]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_transformer</span><span class="p">(</span><span class="n">scaler_spec</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">expected_output</span><span class="p">)</span>
 </pre></div>
@@ -355,7 +388,7 @@ version of MLModel.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>set(str) A set of unique className fields of custom layers that appear in the model.</strong></dt>
+<dt>set(str) A set of unique className fields of custom layers that appear in the model.</dt>
 <dd></dd>
 </dl>
 </td>
@@ -379,7 +412,7 @@ version of MLModel.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>[NN layer] A list of custom layer implementations</strong></dt>
+<dt>[NN layer] A list of custom layer implementations</dt>
 <dd></dd>
 </dl>
 </td>
@@ -403,7 +436,7 @@ version of MLModel.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>True if the protobuf specification contains a neural network with a custom layer, False otherwise.</strong></dt>
+<dt>True if the protobuf specification contains a neural network with a custom layer, False otherwise.</dt>
 <dd></dd>
 </dl>
 </td>
@@ -415,21 +448,21 @@ version of MLModel.</p>
 <dl class="function">
 <dt id="coremltools.models.utils.load_spec">
 <code class="descclassname">coremltools.models.utils.</code><code class="descname">load_spec</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.load_spec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Load a protobuf model specification from file</p>
+<dd><p>Load a protobuf model specification from file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
 <dt><strong>filename: str</strong></dt>
-<dd><p class="first last">Location on disk (a valid filepath) from which the file is loaded
+<dd><p class="first last">Location on disk (a valid file path) from which the file is loaded
 as a protobuf spec.</p>
 </dd>
 </dl>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>model_spec: Model_pb</strong></dt>
+<dt>model_spec: Model_pb</dt>
 <dd><p class="first last">Protobuf representation of the model</p>
 </dd>
 </dl>
@@ -439,10 +472,13 @@ as a protobuf spec.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.utils.save_spec" title="coremltools.models.utils.save_spec"><code class="xref py py-obj docutils literal"><span class="pre">save_spec</span></code></a></p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#coremltools.models.utils.save_spec" title="coremltools.models.utils.save_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_spec</span></code></a></dt>
+<dd></dd>
+</dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -487,7 +523,7 @@ features)</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># In-place rename of spec</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># In-place rename of spec</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">rename_feature</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;old_feature&#39;</span><span class="p">,</span> <span class="s1">&#39;new_feature_name&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -513,7 +549,7 @@ layers with className=oldname, then the spec is unchanged.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong>An mlmodel spec.</strong></dt>
+<dt>An mlmodel spec.</dt>
 <dd></dd>
 </dl>
 </td>
@@ -524,7 +560,7 @@ layers with className=oldname, then the spec is unchanged.</p>
 
 <dl class="function">
 <dt id="coremltools.models.utils.save_spec">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">save_spec</code><span class="sig-paren">(</span><em>spec</em>, <em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.save_spec" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">save_spec</code><span class="sig-paren">(</span><em>spec</em>, <em>filename</em>, <em>auto_set_specification_version=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.save_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save a protobuf model specification to file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -537,6 +573,9 @@ layers with className=oldname, then the spec is unchanged.</p>
 <dt><strong>filename: str</strong></dt>
 <dd><p class="first last">File path  where the spec gets saved.</p>
 </dd>
+<dt><strong>auto_set_specification_version: bool</strong></dt>
+<dd><p class="first last">If true, will always try to set specification version automatically.</p>
+</dd>
 </dl>
 </td>
 </tr>
@@ -544,10 +583,13 @@ layers with className=oldname, then the spec is unchanged.</p>
 </table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
-<p class="last"><a class="reference internal" href="#coremltools.models.utils.load_spec" title="coremltools.models.utils.load_spec"><code class="xref py py-obj docutils literal"><span class="pre">load_spec</span></code></a></p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#coremltools.models.utils.load_spec" title="coremltools.models.utils.load_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_spec</span></code></a></dt>
+<dd></dd>
+</dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -564,16 +606,14 @@ layers with className=oldname, then the spec is unchanged.</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="generated/coremltools.models.neural_network.quantization_utils.html" class="btn btn-neutral" title="coremltools.models.neural_network.quantization_utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="generated/coremltools.models.neural_network.update_optimizer_utils.html" class="btn btn-neutral float-left" title="coremltools.models.neural_network.update_optimizer_utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -582,11 +622,11 @@ layers with className=oldname, then the spec is unchanged.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Apple Inc..
+        &copy; Copyright 2017-2019, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -599,37 +639,15 @@ layers with className=oldname, then the spec is unchanged.</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'2.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="static/jquery.js"></script>
-      <script type="text/javascript" src="static/underscore.js"></script>
-      <script type="text/javascript" src="static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

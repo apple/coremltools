@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools &mdash; coremltools 2.0 documentation</title>
+  <title>coremltools &mdash; coremltools 3.0 documentation</title>
   
 
   
@@ -17,43 +17,39 @@
   
 
   
+  <script type="text/javascript" src="static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="static/documentation_options.js"></script>
+        <script type="text/javascript" src="static/jquery.js"></script>
+        <script type="text/javascript" src="static/underscore.js"></script>
+        <script type="text/javascript" src="static/doctools.js"></script>
+        <script type="text/javascript" src="static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="coremltools 2.0 documentation" href="#"/>
-        <link rel="next" title="Converters" href="coremltools.converters.html"/>
+  <link rel="stylesheet" href="static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Converters" href="coremltools.converters.html" />
     <link href="static/style.css" rel="stylesheet" type="text/css">
-
-
-  
-  <script src="static/js/modernizr.min.js"></script>
 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
           
 
           
@@ -67,7 +63,7 @@
             
             
               <div class="version">
-                2.0
+                3.0
               </div>
             
           
@@ -92,9 +88,28 @@
             
             
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
 </ul>
 
             
@@ -106,7 +121,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="#">coremltools</a>
@@ -114,9 +129,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -160,16 +176,16 @@
             
   <div class="section" id="coremltools">
 <h1>coremltools<a class="headerlink" href="#coremltools" title="Permalink to this headline">¶</a></h1>
-<p id="about">Core ML is an Apple framework that allows developers to easily integrate
-machine learning (ML) models into apps. Core ML is available on iOS, watchOS,
-macOS, and tvOS. Core ML introduces a public file format (.mlmodel) for a broad
-set of ML methods including deep neural networks (convolutional and recurrent),
-tree ensembles (boosted trees, random forest, decision trees), and generalized
-linear models. Core ML models directly integrate into apps within Xcode.</p>
-<p><code class="code docutils literal"><span class="pre">coremltools</span></code> is a Python package that can be used to:</p>
+<p id="about"><strong>Core ML</strong> is an Apple framework that allows developers to easily integrate
+machine learning (ML) models into apps. Core ML is available on iOS, iPadOS,
+watchOS, macOS, and tvOS. Core ML introduces a public file format (.mlmodel)
+for a broad set of ML methods including deep neural networks (convolutional
+and recurrent), tree ensembles (boosted trees, random forest, decision trees),
+and generalized linear models. Core ML models can be directly integrated into
+apps within Xcode.</p>
+<p><strong>coremltools</strong> is a Python package that can be used to:</p>
 <ul class="simple">
-<li>Convert trained models from popular machine learning tools (including
-Keras, Caffe, scikit-learn, libsvm, and XGBoost) into Core ML format
+<li>Convert trained models from popular machine learning tools into Core ML format
 (.mlmodel).</li>
 <li>Write models to Core ML format with a simple API.</li>
 <li>Making predictions using the Core ML framework (on select platforms) to
@@ -177,7 +193,7 @@ verify conversion.</li>
 </ul>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p><code class="code docutils literal"><span class="pre">coremltools</span></code> has the following dependencies:</p>
+<p><strong>coremltools</strong> has the following dependencies:</p>
 <ul class="simple">
 <li>numpy (1.12.1+)</li>
 <li>protobuf (3.1.0+)</li>
@@ -185,38 +201,37 @@ verify conversion.</li>
 <p>In addition, it has the following soft dependencies that are only needed when
 you are converting models of these formats:</p>
 <ul class="simple">
-<li>Keras (1.2.2, 2.0.4+) with Tensorflow (1.0.x, 1.1.x)</li>
-<li>Xgboost (0.6+)</li>
+<li>Keras (1.2.2, 2.0.4+) with TensorFlow (1.0+)</li>
+<li>XGBoost (0.6+)</li>
 <li>scikit-learn (0.15+)</li>
-<li>libSVM</li>
+<li>LIBSVM</li>
 </ul>
-<p>The method for installing <code class="code docutils literal"><span class="pre">coremltools</span></code> follows the
+<p>The method for installing <strong>coremltools</strong> follows the
 <a class="reference external" href="https://packaging.python.org/installing/">standard python package installation steps</a>.
 Once you have set up a python environment, run:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">coremltools</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">coremltools</span>
 </pre></div>
 </div>
-<p>to install <code class="code docutils literal"><span class="pre">coremltools</span></code>.</p>
+<p>to install <strong>coremltools</strong>.</p>
 <div class="section" id="model-conversion">
 <h3>Model Conversion<a class="headerlink" href="#model-conversion" title="Permalink to this headline">¶</a></h3>
-<p>coremltools easily converts trained models from existing libraries. The
-following example shows how to convert a Caffe model (<a class="reference external" href="http://dl.caffe.berkeleyvision.org/bvlc_googlenet.caffemodel">Inception</a>) to Core ML
-format (.mlmodel)</p>
-<p>Supporing files: <a class="reference external" href="http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel">bvlc_alexnet.caffemodel</a>, <a class="reference external" href="https://raw.githubusercontent.com/BVLC/caffe/master/models/bvlc_alexnet/deploy.prototxt">deploy.prototxt</a>, <a class="reference external" href="https://raw.githubusercontent.com/torch/tutorials/master/7_imagenet_classification/synset_words.txt">class_labels.txt</a></p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
+<p><strong>coremltools</strong> easily converts trained models from existing libraries. The
+following example shows how to convert a Caffe model (<a class="reference external" href="http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel">AlexNet</a>) to Core ML
+format (.mlmodel).</p>
+<p>Supporting files: <a class="reference external" href="http://dl.caffe.berkeleyvision.org/bvlc_alexnet.caffemodel">bvlc_alexnet.caffemodel</a>, <a class="reference external" href="https://raw.githubusercontent.com/BVLC/caffe/master/models/bvlc_alexnet/deploy.prototxt">deploy.prototxt</a>, <a class="reference external" href="https://raw.githubusercontent.com/torch/tutorials/master/7_imagenet_classification/synset_words.txt">class_labels.txt</a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
 
-<span class="c1"># Convert a caffe model to a classifier in Core ML</span>
-<span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;bvlc_alexnet.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;deploy.prototxt&#39;</span><span class="p">),</span>
-                                                    <span class="n">predicted_feature_name</span><span class="o">=</span><span class="s1">&#39;class_labels.txt&#39;</span>
-                                                   <span class="p">)</span>
-
+<span class="c1"># Convert a Caffe model to a classifier in Core ML</span>
+<span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="p">(</span><span class="s1">&#39;bvlc_alexnet.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;deploy.prototxt&#39;</span><span class="p">),</span> <span class="n">predicted_feature_name</span><span class="o">=</span><span class="s1">&#39;class_labels.txt&#39;</span>
+<span class="p">)</span>
 
 <span class="c1"># Now save the model</span>
 <span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;BVLCObjectClassifier.mlmodel&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Here is another example with scikit-learn:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 
 <span class="c1"># Load data</span>
@@ -226,8 +241,9 @@ format (.mlmodel)</p>
 <span class="n">model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
 <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;bedroom&quot;</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">]],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">])</span>
 
- <span class="c1"># Convert and save the scikit-learn model</span>
+<span class="c1"># Convert and save the scikit-learn model</span>
 <span class="kn">import</span> <span class="nn">coremltools</span>
+
 <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">sklearn</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;bedroom&quot;</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">],</span> <span class="s2">&quot;price&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -238,10 +254,10 @@ format (.mlmodel)</p>
 easier to consume in Xcode. The license, author, and other metadata get
 surfaced in the Xcode UI while the input and output descriptions are surfaced
 as comments in the code generated by Xcode for the model consumer.</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1"># Set model metadata</span>
-<span class="n">coreml_model</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="s1">&#39;John Smith&#39;</span>
-<span class="n">coreml_model</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="s1">&#39;BSD&#39;</span>
-<span class="n">coreml_model</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s1">&#39;Predicts the price of a house in the Seattle area.&#39;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set model metadata</span>
+<span class="n">model</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="s1">&#39;John Smith&#39;</span>
+<span class="n">model</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="s1">&#39;BSD&#39;</span>
+<span class="n">model</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s1">&#39;Predicts the price of a house in the Seattle area.&#39;</span>
 
 <span class="c1"># Set feature descriptions manually</span>
 <span class="n">model</span><span class="o">.</span><span class="n">input_description</span><span class="p">[</span><span class="s1">&#39;bedroom&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Number of bedrooms&#39;</span>
@@ -259,14 +275,14 @@ as comments in the code generated by Xcode for the model consumer.</p>
 <div class="section" id="model-evaluation">
 <h3>Model Evaluation<a class="headerlink" href="#model-evaluation" title="Permalink to this headline">¶</a></h3>
 <p>After conversion, you might want to verify that the predictions made by Core ML
-match up with the source framework. To facilitate programatic verification of
+match up with the source framework. To facilitate programmatic verification of
 the conversion, we provide a way for you to easily evaluate Core ML models.</p>
-<p>Here is an example using making predictions using the <code class="code docutils literal"><span class="pre">HousePricer.mlmodel</span></code>
+<p>Here is an example using making predictions using the <code class="code docutils literal notranslate"><span class="pre">HousePricer.mlmodel</span></code>
 that we converted in the previous example:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
 
 <span class="c1"># Load the model</span>
-<span class="n">model</span> <span class="o">=</span>  <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
 
 <span class="c1"># Make predictions</span>
 <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">})</span>
@@ -290,16 +306,16 @@ by model type:</p>
 </thead>
 <tbody valign="top">
 <tr class="row-even"><td>Neural Networks</td>
-<td>Keras (1.2.2, 2.0.4+), Caffe 1.0</td>
+<td>Keras (1.2.2, 2.0.4+), Caffe (1.0)</td>
 </tr>
 <tr class="row-odd"><td>Tree Ensembles</td>
-<td>XGboost (0.6), scikit-learn 0.18.1</td>
+<td>XGBoost (0.6), scikit-learn (0.18.1)</td>
 </tr>
 <tr class="row-even"><td>Generalized Linear Models</td>
 <td>scikit-learn (0.18.1)</td>
 </tr>
 <tr class="row-odd"><td>Support Vector Machines</td>
-<td>libSVM (3.22), scikit-learn (0.18.1)</td>
+<td>LIBSVM (3.22), scikit-learn (0.18.1)</td>
 </tr>
 <tr class="row-even"><td>Feature Engineering</td>
 <td>scikit-learn (0.18.1)</td>
@@ -314,11 +330,11 @@ by model type:</p>
 <h3>Model Visualization<a class="headerlink" href="#model-visualization" title="Permalink to this headline">¶</a></h3>
 <p>Core ML supports visualizing a converted model. This can be used to see all
 the building blocks of the model.</p>
-<p>Here is an example of visualizing the <code class="code docutils literal"><span class="pre">HousePricer.mlmodel</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
+<p>Here is an example of visualizing the <code class="code docutils literal notranslate"><span class="pre">HousePricer.mlmodel</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
 
 <span class="c1"># Load the model</span>
-<span class="n">model</span> <span class="o">=</span>  <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
 
 <span class="c1"># Visualize the model</span>
 <span class="n">model</span><span class="o">.</span><span class="n">visualize_spec</span><span class="p">()</span>
@@ -329,14 +345,14 @@ the building blocks of the model.</p>
 <h3>Model Specification<a class="headerlink" href="#model-specification" title="Permalink to this headline">¶</a></h3>
 <p>A key component of Core ML is the public specification for representing machine
 learning models. This specification is defined in <a class="reference external" href="https://developers.google.com/protocol-buffers/">protobuf</a> and can be created
-using any language supported by protobuf (e.g. python, C++, Java, C#, Perl, etc…).</p>
+using any language supported by protobuf (e.g., Python, C++, Java, C#, Perl, etc.).</p>
 <p>At a high level, the protobuf specification consists of:</p>
 <ul class="simple">
 <li>Model description: Encodes names and type information of the inputs and outputs to the model.</li>
 <li>Model parameters: The set of parameters required to represent a specific instance of the model.</li>
 <li>Metadata: Information about the origin, license, and author of the model.</li>
 </ul>
-<p>For more information, please take a look at the <a class="reference external" href="https://apple.github.io/coremltools/coremlspecification">Core ML model specification</a></p>
+<p>For more information, please take a look at the <a class="reference external" href="https://apple.github.io/coremltools/coremlspecification">Core ML model specification</a>.</p>
 </div>
 <div class="section" id="external-tools">
 <h3>External Tools<a class="headerlink" href="#external-tools" title="Permalink to this headline">¶</a></h3>
@@ -351,9 +367,9 @@ using any language supported by protobuf (e.g. python, C++, Java, C#, Perl, etc�
 <h3>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h3>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html"><code class="docutils literal"><span class="pre">Converters</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html"><code class="docutils literal"><span class="pre">Models</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.utils.html"><code class="docutils literal"><span class="pre">Utilities</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.utils.html">Utilities</a></li>
 </ul>
 </div>
 </div>
@@ -362,9 +378,7 @@ using any language supported by protobuf (e.g. python, C++, Java, C#, Perl, etc�
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -380,11 +394,11 @@ using any language supported by protobuf (e.g. python, C++, Java, C#, Perl, etc�
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018, Apple Inc..
+        &copy; Copyright 2017-2019, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -397,37 +411,15 @@ using any language supported by protobuf (e.g. python, C++, Java, C#, Perl, etc�
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'2.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="static/jquery.js"></script>
-      <script type="text/javascript" src="static/underscore.js"></script>
-      <script type="text/javascript" src="static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

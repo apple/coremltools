@@ -1,5 +1,5 @@
-coremltools.models.neural_network.flexible_shape_utils
-======================================================
+coremltools.models.neural\_network.flexible\_shape\_utils
+=========================================================
 
 .. automodule:: coremltools.models.neural_network.flexible_shape_utils
 
@@ -11,8 +11,10 @@ coremltools.models.neural_network.flexible_shape_utils
    
       add_enumerated_image_sizes
       add_enumerated_multiarray_shapes
+      add_multiarray_ndshape_enumeration
       can_allow_multiple_input_shapes
       get_allowed_shape_ranges
+      set_multiarray_ndshape_range
       update_image_size_range
       update_multiarray_shape_range
    
@@ -28,7 +30,6 @@ coremltools.models.neural_network.flexible_shape_utils
       NeuralNetworkImageSizeRange
       NeuralNetworkMultiArrayShape
       NeuralNetworkMultiArrayShapeRange
-      NeuralNetworkShaper
       Shape
       ShapeRange
       Size
