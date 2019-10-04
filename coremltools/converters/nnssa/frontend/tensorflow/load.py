@@ -40,6 +40,7 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
     ssa = graphdef_to_ssa(gd)
 
     placeholder_shape = kwargs.get("inputs", {})
+
     if len(placeholder_shape) > 0:
         graph = ssa.functions['main'].graph
         required_plhd_nodes = [node for node in graph if 
