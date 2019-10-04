@@ -17,42 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Feature Engineering" href="FeatureEngineering.html"/>
-        <link rel="prev" title="Generalized Linear Models" href="GLM.html"/> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Feature Engineering" href="FeatureEngineering.html" />
+    <link rel="prev" title="Generalized Linear Models" href="GLM.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -132,7 +126,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">mlmodel</a>
@@ -140,9 +134,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -191,8 +186,8 @@
 <p>A linear kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/ca807a379ae5dc11ced477419c2186de1eb55612.svg" alt="K(\boldsymbol{x}, \boldsymbol{x'}) = \boldsymbol{x}^T \boldsymbol{x'}"/></p>
-</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearKernel</span> <span class="p">{</span>
+<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \boldsymbol{x}^T \boldsymbol{x'}</span></p>
+</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearKernel</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -202,9 +197,9 @@
 <p>A Gaussian radial basis function (RBF) kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/f154062eb1c5345fa8b94882044cae5a8df9c78e.svg" alt="K(\boldsymbol{x}, \boldsymbol{x'}) = \
-     \exp(-\gamma || \boldsymbol{x} - \boldsymbol{x'} ||^2 )"/></p>
-</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">RBFKernel</span> <span class="p">{</span>
+<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
+     \exp(-\gamma || \boldsymbol{x} - \boldsymbol{x'} ||^2 )</span></p>
+</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">RBFKernel</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -215,9 +210,9 @@
 <p>A polynomial kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/940a579024f7c3c5e1696135b2a4500d7957fadb.svg" alt="K(\boldsymbol{x}, \boldsymbol{x'}) = \
-      (\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)^{degree}"/></p>
-</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PolyKernel</span> <span class="p">{</span>
+<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
+      (\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)^{degree}</span></p>
+</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PolyKernel</span> <span class="p">{</span>
     <span class="kt">int32</span> <span class="na">degree</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
@@ -230,9 +225,9 @@
 <p>A sigmoid kernel.</p>
 <p>This function has the following formula:</p>
 <div class="math">
-<p><img src="../_images/math/a32d058671bc020baee94849a7ae5d72c3413862.svg" alt="K(\boldsymbol{x}, \boldsymbol{x'}) = \
-      \tanh(\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)"/></p>
-</div><div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SigmoidKernel</span> <span class="p">{</span>
+<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
+      \tanh(\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)</span></p>
+</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SigmoidKernel</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -242,7 +237,7 @@
 <div class="section" id="kernel">
 <h2>Kernel<a class="headerlink" href="#kernel" title="Permalink to this headline">¶</a></h2>
 <p>A kernel.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Kernel</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Kernel</span> <span class="p">{</span>
     <span class="k">oneof</span> <span class="n">kernel</span> <span class="p">{</span>
         <span class="n">LinearKernel</span> <span class="na">linearKernel</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
         <span class="n">RBFKernel</span> <span class="na">rbfKernel</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -256,7 +251,7 @@
 <div class="section" id="sparsenode">
 <h2>SparseNode<a class="headerlink" href="#sparsenode" title="Permalink to this headline">¶</a></h2>
 <p>A sparse node.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseNode</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseNode</span> <span class="p">{</span>
     <span class="kt">int32</span> <span class="na">index</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// 1-based indexes, like libsvm</span>
     <span class="kt">double</span> <span class="na">value</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -266,7 +261,7 @@
 <div class="section" id="sparsevector">
 <h2>SparseVector<a class="headerlink" href="#sparsevector" title="Permalink to this headline">¶</a></h2>
 <p>A sparse vector.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseVector</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseVector</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">SparseNode</span> <span class="na">nodes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -275,7 +270,7 @@
 <div class="section" id="sparsesupportvectors">
 <h2>SparseSupportVectors<a class="headerlink" href="#sparsesupportvectors" title="Permalink to this headline">¶</a></h2>
 <p>One or more sparse support vectors.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseSupportVectors</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseSupportVectors</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">SparseVector</span> <span class="na">vectors</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -284,7 +279,7 @@
 <div class="section" id="densevector">
 <h2>DenseVector<a class="headerlink" href="#densevector" title="Permalink to this headline">¶</a></h2>
 <p>A dense vector.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DenseVector</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DenseVector</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">double</span> <span class="na">values</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -293,7 +288,7 @@
 <div class="section" id="densesupportvectors">
 <h2>DenseSupportVectors<a class="headerlink" href="#densesupportvectors" title="Permalink to this headline">¶</a></h2>
 <p>One or more dense support vectors.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DenseSupportVectors</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DenseSupportVectors</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="n">DenseVector</span> <span class="na">vectors</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -302,7 +297,7 @@
 <div class="section" id="coefficients">
 <h2>Coefficients<a class="headerlink" href="#coefficients" title="Permalink to this headline">¶</a></h2>
 <p>One or more coefficients.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Coefficients</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Coefficients</span> <span class="p">{</span>
     <span class="k">repeated</span> <span class="kt">double</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -311,7 +306,7 @@
 <div class="section" id="supportvectorregressor">
 <h2>SupportVectorRegressor<a class="headerlink" href="#supportvectorregressor" title="Permalink to this headline">¶</a></h2>
 <p>A support vector regressor.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SupportVectorRegressor</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SupportVectorRegressor</span> <span class="p">{</span>
     <span class="n">Kernel</span> <span class="na">kernel</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
     <span class="c1">// Support vectors, either sparse or dense format</span>
@@ -331,7 +326,7 @@
 <div class="section" id="supportvectorclassifier">
 <h2>SupportVectorClassifier<a class="headerlink" href="#supportvectorclassifier" title="Permalink to this headline">¶</a></h2>
 <p>A support vector classifier</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SupportVectorClassifier</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SupportVectorClassifier</span> <span class="p">{</span>
     <span class="n">Kernel</span> <span class="na">kernel</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
     <span class="k">repeated</span> <span class="kt">int32</span> <span class="na">numberOfSupportVectorsPerClass</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -360,9 +355,7 @@
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -371,7 +364,7 @@
         <a href="FeatureEngineering.html" class="btn btn-neutral float-right" title="Feature Engineering" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="GLM.html" class="btn btn-neutral" title="Generalized Linear Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="GLM.html" class="btn btn-neutral float-left" title="Generalized Linear Models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -380,11 +373,11 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc.
+        &copy; Copyright 2017, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -397,36 +390,15 @@
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'3.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>
