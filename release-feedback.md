@@ -3,6 +3,7 @@ coremltools 3.0 - Release Feedback
 =======================
 
 Please feel free to give us feedback on the release! We would love to hear from you.
+To vote on each question, simply click on the option you would like to vote for and your response will be automatically recorded.
 
 **Question 1: Which feature from this release do you find the most useful?**
 
