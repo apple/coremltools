@@ -10,7 +10,7 @@ with open(README) as f:
     long_description = f.read()
 
 setup(name='coremltools',
-    version='3.0b6',
+    version='3.0',
     description='Community Tools for CoreML',
     long_description=long_description,
     author='Apple Inc.',
@@ -60,7 +60,7 @@ setup(name='coremltools',
         'console_scripts': ['coremlconverter = coremltools:_main']
     },
     classifiers=[
-          'Development Status :: 4 - Beta',
+          'Development Status :: 5 - Production/Stable',
           'Intended Audience :: End Users/Desktop',
           'Intended Audience :: Developers',
           'Operating System :: MacOS :: MacOS X',
