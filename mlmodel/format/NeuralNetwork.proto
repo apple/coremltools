@@ -3517,7 +3517,7 @@ message BatchedMatMulLayerParams {
  *
  *      y = ConcatNDLayer(x1,x2,....)
  *
- * Requires at least 1 input and produces 1 output.
+ * Requires at least 2 input and produces 1 output.
  *
  * Input
  *     A Sequence of N-dimensional tensors. The rank of the input tensors must match and all dimensions except 'axis' must be equal.
