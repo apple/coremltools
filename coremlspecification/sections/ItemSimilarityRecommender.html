@@ -17,42 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Data Structures &amp; Feature Types" href="DataStructuresAndFeatureTypes.html"/>
-        <link rel="prev" title="Sound Analysis Preprocessing" href="SoundAnalysisPreprocessing.html"/> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Data Structures &amp; Feature Types" href="DataStructuresAndFeatureTypes.html" />
+    <link rel="prev" title="Sound Analysis Preprocessing" href="SoundAnalysisPreprocessing.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -120,7 +114,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">mlmodel</a>
@@ -128,9 +122,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -178,8 +173,8 @@
 each of which is identified by a unique identifier.</p>
 <p>Each node is either a branch or a leaf node.
 A branch node evaluates a value according to a behavior;
-if true, the node identified by <code class="docutils literal"><span class="pre">true_child_node_id</span></code> is evaluated next,
-if false, the node identified by <code class="docutils literal"><span class="pre">false_child_node_id</span></code> is evaluated next.
+if true, the node identified by <code class="docutils literal notranslate"><span class="pre">true_child_node_id</span></code> is evaluated next,
+if false, the node identified by <code class="docutils literal notranslate"><span class="pre">false_child_node_id</span></code> is evaluated next.
 A leaf node adds the evaluation value to the base prediction value
 to get the final prediction.</p>
 <p>A tree must have exactly one root node,
@@ -202,11 +197,11 @@ items but not part of that item set.</p>
 </dl>
 <p>Because only the most similar scores for each item i are stored,
 sim_(k,i) is often zero.</p>
-<p>For many models, the score adjustment parameter shift_j is zero &#8211; it&#8217;s occasionally used
+<p>For many models, the score adjustment parameter shift_j is zero – it’s occasionally used
 to counteract global biases for popular items.</p>
 <p>References:</p>
 </div></blockquote>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ItemSimilarityRecommender</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ItemSimilarityRecommender</span> <span class="p">{</span>
 
     <span class="kd">message</span> <span class="nc">ConnectedItem</span> <span class="p">{</span>
         <span class="kt">uint64</span> <span class="na">itemId</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
@@ -234,7 +229,7 @@ to counteract global biases for popular items.</p>
 <div class="section" id="itemsimilarityrecommender-connecteditem">
 <h3>ItemSimilarityRecommender.ConnectedItem<a class="headerlink" href="#itemsimilarityrecommender-connecteditem" title="Permalink to this headline">¶</a></h3>
 <p>The items similar to a given base item.</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ConnectedItem</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ConnectedItem</span> <span class="p">{</span>
     <span class="kt">uint64</span> <span class="na">itemId</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">similarityScore</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -249,7 +244,7 @@ to counteract global biases for popular items.</p>
 all the known sim(k,i) scores for i given by itemID and k given by the itemID parameter in
 the similarItemList.</dd>
 </dl>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SimilarItems</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SimilarItems</span> <span class="p">{</span>
     <span class="kt">uint64</span> <span class="na">itemId</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="k">repeated</span> <span class="n">ConnectedItem</span> <span class="na">similarItemList</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">itemScoreAdjustment</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
@@ -262,9 +257,7 @@ the similarItemList.</dd>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -273,7 +266,7 @@ the similarItemList.</dd>
         <a href="DataStructuresAndFeatureTypes.html" class="btn btn-neutral float-right" title="Data Structures &amp; Feature Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="SoundAnalysisPreprocessing.html" class="btn btn-neutral" title="Sound Analysis Preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="SoundAnalysisPreprocessing.html" class="btn btn-neutral float-left" title="Sound Analysis Preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -282,11 +275,11 @@ the similarItemList.</dd>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc.
+        &copy; Copyright 2017, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -299,36 +292,15 @@ the similarItemList.</dd>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'3.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

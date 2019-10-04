@@ -17,42 +17,36 @@
   
 
   
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-  
     
 
   
-
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="mlmodel 3.0.0 documentation" href="../index.html"/>
-        <link rel="next" title="Tree Ensembles" href="TreeEnsembles.html"/>
-        <link rel="prev" title="Word Tagger" href="WordTagger.html"/> 
-
-  
-  <script src="../_static/js/modernizr.min.js"></script>
-
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tree Ensembles" href="TreeEnsembles.html" />
+    <link rel="prev" title="Word Tagger" href="WordTagger.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
    
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
+        <div class="wy-side-nav-search" >
           
 
           
@@ -120,7 +114,7 @@
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+      <nav class="wy-nav-top" aria-label="top navigation">
         
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">mlmodel</a>
@@ -128,9 +122,10 @@
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
+        
           
 
 
@@ -178,7 +173,7 @@
 <h2>VisionFeaturePrint<a class="headerlink" href="#visionfeatureprint" title="Permalink to this headline">¶</a></h2>
 <p>A model which takes an input image and outputs an array of features
 according to the specified feature types</p>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">VisionFeaturePrint</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">VisionFeaturePrint</span> <span class="p">{</span>
 
     <span class="c1">// Specific vision feature print types</span>
 
@@ -205,7 +200,7 @@ according to the specified feature types</p>
 </div>
 <div class="section" id="visionfeatureprint-scene">
 <h3>VisionFeaturePrint.Scene<a class="headerlink" href="#visionfeatureprint-scene" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Scene</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Scene</span> <span class="p">{</span>
     <span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
         <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
         <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
@@ -220,7 +215,7 @@ according to the specified feature types</p>
 </div>
 <div class="section" id="visionfeatureprint-scene-sceneversion">
 <h3>VisionFeaturePrint.Scene.SceneVersion<a class="headerlink" href="#visionfeatureprint-scene-sceneversion" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-proto"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
     <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
     <span class="c1">// It uses a 299x299 input image and yields a 2048 float feature vector</span>
@@ -234,9 +229,7 @@ according to the specified feature types</p>
 
 
            </div>
-           <div class="articleComments">
-            
-           </div>
+           
           </div>
           <footer>
   
@@ -245,7 +238,7 @@ according to the specified feature types</p>
         <a href="TreeEnsembles.html" class="btn btn-neutral float-right" title="Tree Ensembles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="WordTagger.html" class="btn btn-neutral" title="Word Tagger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="WordTagger.html" class="btn btn-neutral float-left" title="Word Tagger" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -254,11 +247,11 @@ according to the specified feature types</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc.
+        &copy; Copyright 2017, Apple Inc
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
 
@@ -271,36 +264,15 @@ according to the specified feature types</p>
   
 
 
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'3.0.0',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true,
-            SOURCELINK_SUFFIX: '.txt'
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>
