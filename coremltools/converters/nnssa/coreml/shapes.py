@@ -409,6 +409,20 @@ def _pad(layer_spec, input_shapes):
     return [[-1] * len(input_shapes[0])]
 
 
+def _mirror_pad(layer_spec, input_shapes):
+    params = layer_spec.padding
+    pad_h = params.paddingAmounts.borderAmounts[0]
+    pad_w = params.paddingAmounts.borderAmounts[1]
+    output_shape = input_shapes[0]
+    output_shape[2] += pad_h.startEdgeSize + pad_h.endEdgeSize
+    output_shape[3] += pad_w.startEdgeSize + pad_w.endEdgeSize
+    return [output_shape]
+
+
+def _crop(layer_spec, input_shapes):
+    return [[-1] * len(input_shapes[0])]
+
+
 def _topk(layer_spec, input_shapes):
     params = layer_spec.topK
     value_shape = index_shape = input_shapes[0][:-1] + [params.K]
@@ -425,7 +439,6 @@ def _unidirectional_lstm(layer_spec, input_shapes):
 
 def _reorganize_data(layer_spec, input_shapes):
     block_size = layer_spec.reorganizeData.blockSize
-    input_shape = input_shapes[0][:]
     output_shape = input_shapes[0][:]
     if 'SpaceToDepth' in layer_spec.name or 'SpaceToBatchND' in layer_spec.name:
         output_shape[2] //= block_size
@@ -434,7 +447,7 @@ def _reorganize_data(layer_spec, input_shapes):
     elif 'DepthToSpace' in layer_spec.name or 'BatchToSpaceND' in layer_spec.name:
         output_shape[2] *= block_size
         output_shape[3] *= block_size
-        output_shape[1] = input_shape[1] // (block_size * block_size)
+        output_shape[1] = output_shape[1] // (block_size * block_size)
     return [output_shape]
 
 
@@ -516,6 +529,8 @@ _LAYER_REGISTRY = {
     'broadcastToLike': _broadcast_to_like,
     'broadcastToStatic': _broadcast_to_static,
     'constantPad': _pad,
+    'padding': _mirror_pad,
+    'crop': _crop,
     'sign': _identity,
     'ceil': _identity,
     'floor': _identity,

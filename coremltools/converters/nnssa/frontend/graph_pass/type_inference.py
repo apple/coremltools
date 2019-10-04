@@ -16,14 +16,18 @@ from ...commons.symbolic import *
 
 short_var_name_cache = {}
 
+
 def get_conv_outdim(in_dim, ks, stride, dl, padding_type):
-    if padding_type == 'VALID':
-        ks_dilated = (ks - 1) * dl + 1
-        return (in_dim - ks_dilated) / stride + 1
-    elif padding_type == 'SAME':
-        return math.ceil(in_dim * 1.0 / stride)
-    else:
-        raise ValueError('[Type Inference] Unrecognized padding type.')
+    try:
+        if padding_type == 'VALID':
+            ks_dilated = (ks - 1) * dl + 1
+            return (in_dim - ks_dilated) / stride + 1
+        elif padding_type == 'SAME':
+            return math.ceil(in_dim * 1.0 / stride)
+        else:
+            raise ValueError('[TypeInference] Unrecognized padding type.')
+    except Exception as e:
+        raise ValueError('[TypeInference] Error fetching padding values: {}'.format(e))
 
 
 def get_short_var_name(name):
@@ -842,6 +846,9 @@ class TypeInferenceVisitor(object):
         return builtins.tensor(lefttype.get_primitive(), retshape)
 
     def visit_PadV2(self, node):
+        return self.visit_Pad(node)
+
+    def visit_MirrorPad(self, node):
         return self.visit_Pad(node)
 
     def visit_Placeholder(self, node):
@@ -2049,6 +2056,9 @@ class TypeInferenceVisitor(object):
         return self._get_type_from_attr(node)
 
     def visit_LRN(self, node):
+        return self.visit_unary(node)
+
+    def visit_Reciprocal(self, node):
         return self.visit_unary(node)
 
 
