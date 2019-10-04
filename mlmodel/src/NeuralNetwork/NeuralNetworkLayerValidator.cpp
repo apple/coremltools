@@ -1048,12 +1048,6 @@ Result NeuralNetworkSpecValidator::validateGRULayer(const Specification::NeuralN
     const auto& params = layer.gru();
     bool hasBiasVectors = params.hasbiasvectors();
     
-    // Validate that all weightParam types match
-    WeightParamType gateWeightMatrixValueType, gateRecursionMatrixValueType, gateBiasVectorValueType;
-    gateWeightMatrixValueType = valueType(params.updategateweightmatrix());
-    gateRecursionMatrixValueType = valueType(params.updategaterecursionmatrix());
-    gateBiasVectorValueType = valueType(params.updategatebiasvector());
-    
     std::vector<CoreML::WeightParamType> weightTypeList;
     weightTypeList.push_back(valueType(params.updategateweightmatrix()));
     weightTypeList.push_back(valueType(params.updategaterecursionmatrix()));
