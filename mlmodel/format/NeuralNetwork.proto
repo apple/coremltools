@@ -22,7 +22,7 @@
  * and a layer may not have input or output names that
  * refer to layers that are not yet defined.
  *
- * For CoreML specification version <=3,
+ * For Core ML specification version <=3,
  * all inputs are mapped to static rank 5 tensors, with axis notations
  * [Sequence, Batch, Channel, Height, Width].
  *
@@ -73,7 +73,7 @@ enum NeuralNetworkMultiArrayShapeMapping {
      */
 
     /*
-     * Default legacy value. Only supported for CoreML Specification version <= 3.
+     * Default legacy value. Only supported for Core ML Specification version <= 3.
      *
      * The default legacy shape mapping resolves all input shapes to a rank 5 equivalent
      * with axis notation of [Seq, Batch, Channel, Height, Width].
@@ -481,7 +481,7 @@ message NeuralNetworkLayer {
         InnerProductLayerParams innerProduct = 140;
         EmbeddingLayerParams embedding = 150;
 
-        // Normalization related layers
+        // Normalization-related Layers
         BatchnormLayerParams batchnorm = 160;
         MeanVarianceNormalizeLayerParams mvn = 165;
         L2NormalizeLayerParams l2normalize = 170;
@@ -497,7 +497,7 @@ message NeuralNetworkLayer {
 
         UnaryFunctionLayerParams unary = 220;
 
-        // Elementwise operations
+        // Element-wise Operations
         AddLayerParams add = 230;
         MultiplyLayerParams multiply = 231;
 
@@ -512,7 +512,7 @@ message NeuralNetworkLayer {
         ReduceLayerParams reduce = 280;
         LoadConstantLayerParams loadConstant = 290;
 
-        // Data reorganization
+        // Data Reorganization
         ReshapeLayerParams reshape = 300;
         FlattenLayerParams flatten = 301;
         PermuteLayerParams permute = 310;
@@ -532,7 +532,7 @@ message NeuralNetworkLayer {
         // Custom (user-implemented) Layer
         CustomLayerParams custom = 500;
 
-        // Following layers are available only after CoreML Specification
+        // Following layers are available only after Core ML Specification
         // version >= 4 (iOS >= 13, macOS >= 10.15)
 
         // Control Flow related Layers
@@ -546,7 +546,7 @@ message NeuralNetworkLayer {
         RangeStaticLayerParams rangeStatic = 635;
         RangeDynamicLayerParams rangeDynamic = 640;
 
-        // Elementwise Unary Layers
+        // Element-wise Unary Layers
         ClipLayerParams clip = 660;
         CeilLayerParams ceil = 665;
         FloorLayerParams floor = 670;
@@ -575,7 +575,7 @@ message NeuralNetworkLayer {
         ErfLayerParams erf = 790;
         GeluLayerParams gelu = 795;
 
-        // Elementwise Binary with Broadcasting Support
+        // Element-wise Binary with Broadcasting Support
         EqualLayerParams equal = 815;
         NotEqualLayerParams notEqual = 820;
         LessThanLayerParams lessThan = 825;
@@ -627,7 +627,7 @@ message NeuralNetworkLayer {
         EmbeddingNDLayerParams embeddingND = 1040;
         BatchedMatMulLayerParams batchedMatmul = 1045;
 
-        // Tensor Allocation / Reshape sort of operations
+        // Tensor Allocation / Reshape-related Operations
         GetShapeLayerParams getShape = 1065;
         LoadConstantNDLayerParams loadConstantND = 1070;
 
@@ -664,7 +664,7 @@ message NeuralNetworkLayer {
 
         CategoricalDistributionLayerParams categoricalDistribution = 1230;
 
-        // Reduction related Layers:
+        // Reduction-related Layers:
         ReduceL1LayerParams reduceL1 = 1250;
         ReduceL2LayerParams reduceL2 = 1255;
         ReduceMaxLayerParams reduceMax = 1260;
@@ -695,7 +695,7 @@ message NeuralNetworkLayer {
 /**
  * Branching Layer
  *
- * A layer that providies the functionality of branching or an If-Else block.
+ * A layer that provides the functionality of branching or an If-Else block.
  *
  * Must have 1 input. There are no outputs as the execution is transferred to either the
  * if or the else branch based on the value of the input.
@@ -721,7 +721,7 @@ message BranchLayerParams {
 /**
  * Loop Layer
  *
- * A layer that providies the functionality of a "for" loop or a "while" loop.
+ * A layer that provides the functionality of a "for" loop or a "while" loop.
  *
  * There are either no inputs or 1 input. When an input is present, it corresponds to the maximum loop count,
  * in that case the value of the "maxLoopIterations" field is ignored. Input must be a scalar.
@@ -1396,7 +1396,7 @@ message LookUpTableQuantizationParams {
  *      Rank 4 blob represents [Batch, channels, height, width].
  *      For ranks greater than 4, the leading dimensions, starting from 0 to -4 (inclusive), are all treated as batch.
  *
- *     From CoreML specification version 4 onwards (iOS >= 13, macOS >= 10.15).
+ *     From Core ML specification version 4 onwards (iOS >= 13, macOS >= 10.15).
  *     convolution layer can have 2 inputs, in which case the second input is
  *     the blob representing the weights. This is allowed when "isDeconvolution" = False.
  *     The weight blob should have shape
@@ -2227,13 +2227,13 @@ message ResizeBilinearLayerParams {
 *
 *     If RoI shape = ``[N, 1, 5, 1, 1]``
 *                     The first element of the axis=-3 specifies the input batch id from which to extract the RoI and
-*					            must be in the interval ``[0, Batch - 1]``. That is, n-th RoI is extracted from the RoI[n,0,0,0,0]-th
+*                               must be in the interval ``[0, Batch - 1]``. That is, n-th RoI is extracted from the RoI[n,0,0,0,0]-th
 *                     input batch id. The last four elements of the axis=-3 specify the bounding box coordinates.
 *
 * Output
 *     A blob with rank 5.
-*			- Shape is [N, Batch, C, H_out, W_out] if input RoI shape is [N, 1, 4, 1, 1]
-*			- Shape is [N, 1, C, H_out, W_out] if input RoI shape is [N, 1, 5, 1, 1]
+*           - Shape is [N, Batch, C, H_out, W_out] if input RoI shape is [N, 1, 4, 1, 1]
+*           - Shape is [N, 1, C, H_out, W_out] if input RoI shape is [N, 1, 5, 1, 1]
 *
 */
 message CropResizeLayerParams {
@@ -2519,7 +2519,7 @@ message ReshapeLayerParams {
  *     Must be a rank 5 blob.
  *     e.g.: shape ``[Seq, B, C, H, W]``.
  * Output
- *     Rank 5 blob. Tranposed version of the input, such that dimensions at axis=1 or axis=-4 is unchanged.
+ *     Rank 5 blob. Transposed version of the input, such that dimensions at axis=1 or axis=-4 is unchanged.
  *
  *
  * Examples:
@@ -2648,7 +2648,7 @@ message SliceLayerParams {
  *     A blob that can, in general, have any rank. However, depending on the value of "axis" ,
  *      there may be additional rank constraints.
  * Output
- *     A blob with the same rank as the input, which has 1s on the dimensions specififed in the parameter "axis"
+ *     A blob with the same rank as the input, which has 1s on the dimensions specified in the parameter "axis"
  *
  *     Values supported for axis are [-1], [-2], [-3], [-2,-1], [-3,-2,-1]
  *     and the equivalent positive values (depending on the rank of the input)
@@ -2919,8 +2919,8 @@ message DotProductLayerParams {
  *     A blob with the same shape as the input.
  *
  * If ``acrossChannels == true``
- * normalization is performed on flattened input, i.e. the input is reshaped to (Batch,C), where "Batch" constains
- * all dimensions from 0 to -4 (inclusive), and C constains dimensions -1, -2, -3.
+ * normalization is performed on flattened input, i.e. the input is reshaped to (Batch,C), where "Batch" contains
+ * all dimensions from 0 to -4 (inclusive), and C contains dimensions -1, -2, -3.
  *
  * If ``acrossChannels == false``
  * normalization is performed within a channel,
@@ -3586,7 +3586,7 @@ message ReverseLayerParams {
  * According to the batch axis, input "data" is first divided into a batch of B inputs,
  * each of which is flipped along the dimension "sequenceAxis", by the amount specified in
  * "seq_lengths", the second input.
- * 
+ *
  * e.g.:
  *
  * data [shape = (2,4)]:
@@ -4503,8 +4503,6 @@ message StackLayerParams {
  * input shape = (10,3,5)
  * targetShape = (25,0,-1)
  * output shape = (25,3,2)
- *
- *
  */
 message RankPreservingReshapeLayerParams {
 
@@ -4552,8 +4550,6 @@ message RankPreservingReshapeLayerParams {
  * input shape = (20,10,5)
  * padAmounts = [0,0,17,0,0,14]
  * output shape = (20,17,14)
- *
- *
  */
 message ConstantPaddingLayerParams {
     /**
@@ -5498,7 +5494,7 @@ message GeluLayerParams {
 
     }
 
-    GeluMode mode = 1; /// mode of Gelu operation.
+    GeluMode mode = 1; /// mode of GELU operation.
 
 }
 
@@ -5577,7 +5573,7 @@ message SlidingWindowsLayerParams {
  *
  * Requires 1 input and produces 1 output.
  *
- * output = gamma * (input - comptuted_mean) / (sqrt(computed_variance + eps)) + beta
+ * output = gamma * (input - computed_mean) / (sqrt(computed_variance + eps)) + beta
  *
  * Parameters
  *     normalizedShape: subset of the input shape, along with layer norm is performed, rest of the input shape is treated as the batch dimension. The mean and variance are computed for the input, over the last few dimensions as specified by the normalizedShape parameter.
@@ -5626,7 +5622,7 @@ message LayerNormalizationLayerParams {
  * output 3, shape (B,maxBoxes): indices of the surviving boxes. Hence it will have values in the range [0,N-1], except for padding.
  * output 4, shape (B,): number of boxes selected after the NMS algorithm, for each batch.
  *
- * When survivng boxes are less than "maxBoxes", the first 3 outputs are padded.
+ * When surviving boxes are less than "maxBoxes", the first 3 outputs are padded.
  * For the first two outputs, the padding is done using values 0, whereas for the third output the
  * padding value used is -1, since the output values represent indices.
  *

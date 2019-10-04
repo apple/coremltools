@@ -31,6 +31,7 @@ from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
 from ... import (_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
                  _MINIMUM_FP16_SPEC_VERSION)
 
+
 class QuantizedLayerSelector(object):
     """ This is the base class to implement custom selectors to skip certain
     layers during quantization. To implement a custom selector, create a class
@@ -1113,6 +1114,7 @@ def quantize_weights(full_precision_model,
     Examples
     --------
     .. sourcecode:: python
+
         >>> import coremltools
         >>> from coremltools.models.neural_network import quantization_utils
         >>> model = coremltools.models.MLModel('my_model.mlmodel')
