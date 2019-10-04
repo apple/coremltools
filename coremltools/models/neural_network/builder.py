@@ -168,6 +168,7 @@ class NeuralNetworkBuilder(object):
     Examples
     --------
     .. sourcecode:: python
+
         from coremltools.models.neural_network import datatypes, NeuralNetworkBuilder
         from coremltools.models.utils import save_spec
 
@@ -258,7 +259,7 @@ class NeuralNetworkBuilder(object):
         --------
         .. sourcecode:: python
 
-            # Construct a builder that builds a neural network classifier with a 299x299x3
+            # Construct a builder that builds a neural network classifier with a 299 x 299 x 3
             # dimensional input and 1000 dimensional output
             >>> input_features = [('data', datatypes.Array((299, 299, 3)))]
             >>> output_features = [('probs', datatypes.Array((1000,)))]
@@ -612,8 +613,7 @@ class NeuralNetworkBuilder(object):
         name: The name of the loss layer
         input: The name of the input, which should be a vector of length N representing the distribution over N categories. This must be the output of a softmax.
 
-        Math
-        ----------
+        .. math::
         Loss_ {CCE}(input, target) = -\sum_{i = 1} ^ {N}(target == i) log(input[i]) = - log(input[target])
         """
         if self.spec is None:
@@ -688,7 +688,7 @@ class NeuralNetworkBuilder(object):
         """
         input_feature: [(str, datatypes.Array)] or None
             The input feature of the loss layer. Each feature is a (name,
-            array) tuple, where name is the name of the model's tensor our loss will be attached to, 
+            array) tuple, where name is the name of the model's tensor our loss will be attached to,
             and array is a datatypes.Array object describing the shape of that tensor.
             Both the name and the array's shape must be provided in the tuple.
             >>> feature = [('output_tensor', datatypes.Array((299, 299, 3)))]
@@ -710,7 +710,7 @@ class NeuralNetworkBuilder(object):
             raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
         if not isinstance(ftype, datatypes.Array):
             raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-            
+
         target = fname + '_true'
 
         loss_layer = self.nn_spec.updateParams.lossLayers.add()
@@ -997,7 +997,7 @@ class NeuralNetworkBuilder(object):
                 self.rank_dict[output_name] = rank if rank != 0 else 1
             else:
                 raise ValueError('Reduce Ops must provide axes to reduce on if reduce_all is False')
-            
+
     def add_inner_product(self, name, W, b, input_channels, output_channels, has_bias,
                           input_name, output_name, **kwargs):
         """
@@ -1639,7 +1639,7 @@ class NeuralNetworkBuilder(object):
             When is_deconv == False, this parameter is ignored.
             If it is None, the output shape is calculated automatically using the border_mode.
 
-        input_name: str or [str]
+        input_name: str or list of str
             The input blob name(s) of this layer.
         output_name: str
             The output blob name of this layer.
@@ -5123,7 +5123,7 @@ class NeuralNetworkBuilder(object):
         ----------
         name: str
             The name of this layer.
-        input_name: [str]
+        input_name: list of str
             The input blob name(s) of this layer.
         output_name: str
             The output blob name of this layer.
@@ -5161,9 +5161,9 @@ class NeuralNetworkBuilder(object):
         ----------
         name: str
             The name of this layer.
-        input_names: [str]
+        input_names: list of str
             The input blob names of this layer. Must be at least 2, and maximum 5.
-        output_names: [str]
+        output_names: list of str
             The output blob names of this layer. Must be of length 4 exactly.
         iou_threshold: float
             intersection over union threshold for suppression. Ignored if 3rd input is present.
@@ -5356,7 +5356,7 @@ class NeuralNetworkBuilder(object):
         self.rank_dict[output_name] = 2
         for input_ in input_names:
             self.rank_dict[output_name] = max(self._get_rank(output_name), self._get_rank(input_))
-    
+
         if len(input_names) == 1:
             spec_layer_params.weightMatrixFirstDimension = weight_matrix_rows
             spec_layer_params.weightMatrixSecondDimension = weight_matrix_columns
