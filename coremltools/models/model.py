@@ -102,11 +102,6 @@ def _get_proxy_and_spec(filename, use_cpu_only=False):
             # version of the engine can support so we'll not try to have a proxy object
             return None, specification
 
-        # check if there are custom layers
-        if _has_custom_layer(specification):
-            # custom layers can't be supported directly by compiling and loading the model here
-            return None, specification
-
         try:
             return _MLModelProxy(filename, use_cpu_only), specification
         except RuntimeError as e:
