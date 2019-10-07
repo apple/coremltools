@@ -3439,7 +3439,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reduce_sum_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3478,7 +3478,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reduce_prod_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3517,7 +3517,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_reduce_mean_cpu(self, cpu_only=True):
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3552,7 +3552,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_reduce_max_cpu(self, cpu_only=True):
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3586,7 +3586,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_reduce_min_cpu(self, cpu_only=True):
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3620,7 +3620,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_reduce_l2_cpu(self, cpu_only=True):
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3654,7 +3654,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_reduce_l1_cpu(self, cpu_only=True):
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3688,7 +3688,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_reduce_sumsquare_cpu(self, cpu_only=True):
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3723,7 +3723,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_reduce_logsum_cpu(self, cpu_only=True):
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
@@ -3758,7 +3758,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_reduce_logsumexp_cpu(self, cpu_only=True):
         for rank in range(1, 6):
-            axes_list = [axes for len in range(1, rank + 1) for axes in itertools.combinations(range(rank), len)]
+            axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
             axes_list.append(None)
 
             for axes in axes_list:
