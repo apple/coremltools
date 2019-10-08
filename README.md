@@ -208,4 +208,4 @@ In addition to the conversion tools in this package, TensorFlow, ONNX, and MXNet
 
 - [TensorFlow](https://pypi.python.org/pypi/tfcoreml)
 - [MXNet](https://github.com/apache/incubator-mxnet/tree/master/tools/coreml)
-- [ONNX](https://github.com/onnx/onnx-coreml
+- [ONNX](https://github.com/onnx/onnx-coreml)
