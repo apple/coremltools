@@ -1224,6 +1224,43 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_broadcast_to_dynamic_gpu(self):
         self.test_broadcast_to_dynamic_cpu(cpu_only=False)
 
+    # Test Rank being set to unknown when one of the input rank is unknown
+    # For max rank case
+    def test_unknown_rank(self, cpu_only=True):
+
+        for rank in range(1, 6):
+            input_shape = np.random.randint(low=2, high=8, size=rank)
+            mask = [np.random.choice([True, False, False]) for _ in range(rank)]
+            input_shape = np.where(mask, 1, input_shape)
+
+            target_rank = np.random.randint(low=rank, high=6)
+            target_shape = [np.random.randint(low=2, high=8) if (-i > rank or input_shape[i] == 1)
+                            else input_shape[i] for i in range(-1, -target_rank - 1, -1)][::-1]
+
+            input_features = [('x', datatypes.Array(*input_shape)),
+                              ('shape', datatypes.Array(len(target_shape)))]
+
+            builder = neural_network.NeuralNetworkBuilder(
+                                    input_features, [('output', None)],
+                                    disable_rank5_shape_mapping=True)
+
+            builder.add_broadcast_to_dynamic(name='broadcast_to_dynamic',
+                                             input_names=['x', 'shape'],
+                                             output_name='y')
+
+            condition = np.random.randn((*input_shape)) < 0.0
+            builder.add_load_constant_nd(name='load_constant_condition',
+                                         output_name='condition',
+                                         constant_value=condition,
+                                         shape=input_shape)
+
+            builder.add_where_broadcastable(name='where',
+                                            input_names=['condition', 'x', 'y'],
+                                            output_name='output')
+            
+            self.assertEqual(builder._get_rank('output'), -1)
+
+
     def test_trigonometry_cpu(self, cpu_only=True):
 
         ops = ['sin', 'cos', 'tan',
