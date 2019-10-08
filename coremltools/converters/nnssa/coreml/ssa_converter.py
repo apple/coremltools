@@ -471,8 +471,8 @@ class SSAConverter(object):
                 assert builtins.is_tensor(aVariable)
                 shape = list([int(i) if i and i > 0 else 1 for i in self._get_tensor_shape_from_type(aVariable)])
 
-            self.top_builder.add_optionals([(name, shape)], [(name, shape)])
-            self.tensor_shapes[name] = shape
+            self.top_builder.add_optionals([(name + '__invar__', shape)], [(name + '__outvar__', shape)])
+            self.tensor_shapes[name + '__invar__'] = shape
 
     def get_spec(self):
         return self.spec
@@ -516,6 +516,16 @@ class SSAConverter(object):
             restricted_graph[k] = v
         instruction_order = topsort(restricted_graph)
 
+        # Make a buffer between variable inputs
+        builder = self._get_builder()
+        for name, var in self.net_ensemble.variables.items():
+            layer = builder.add_copy(
+                name=name + '_copy',
+                input_name=name+'__invar__',
+                output_name=name)
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        # Convert operations one by one
         for idx, node_name in enumerate(instruction_order):
             node = func.graph[node_name]
             op_type = node.op
@@ -526,7 +536,7 @@ class SSAConverter(object):
             elif op_type in self.custom_conversion_functions:
                 custom_conversion_name = op_type
 
-            # conversion_message to indicate how this function is being converted
+            # Set conversion function and message
             conversion_message = ''
             if custom_conversion_name is not None:
                 conversion_message = ' with custom conversion function'
@@ -550,6 +560,16 @@ class SSAConverter(object):
                 self.custom_conversion_functions[custom_conversion_name](self, node)
             else:
                 convert_func(node)
+
+        # Make a buffer between variable inputs
+        builder = self._get_builder()
+        for name, var in self.net_ensemble.variables.items():
+            layer = builder.add_copy(
+                name=name + '_copy_r',
+                input_name=name,
+                output_name=name+'__outvar__')
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+
 
     def _get_builder(self, func=None):
         if func is None:
@@ -1360,6 +1380,7 @@ class SSAConverter(object):
         axis = node.attr.get('axis')
         axis = axis if axis else 0
         input_nodes, input_names, input_types = self._get_input_tensors(node)
+
         if len(input_names) == 1:
             if _is_scalar(input_types[0]):  # skip /identity op in this case
                 self.op_tensor_map[node.name] = input_names

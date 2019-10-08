@@ -19,6 +19,19 @@ from test_utils import generate_data, tf_transpose
 
 DEBUG = False
 
+def _parse_coreml_input_shapes(mlmodel):
+    return {x.name : list(x.type.multiArrayType.shape) for x in
+        mlmodel._spec.description.input}
+
+def _parse_coreml_name_to_tf(coreml_name):
+    if coreml_name.endswith('__invar__'):
+        tf_name = coreml_name.replace('__invar__', '')
+    elif coreml_name.endswith('__outvar__'):
+        tf_name = coreml_name.replace('__outvar__', '')
+    else:
+        tf_name = coreml_name
+    return tf_name
+
 
 class TFNetworkTest(unittest.TestCase):
 
@@ -176,11 +189,18 @@ class TFNetworkTest(unittest.TestCase):
             mlmodel.save(coreml_model_file)
             print('\n mlmodel saved at %s' % coreml_model_file)
 
+        coreml_input_names = [str(x) for x in mlmodel.input_description]
+        coreml_input_shapes = _parse_coreml_input_shapes(mlmodel)
+
         # Transpose input data as CoreML requires
-        coreml_inputs = {
-            name: tf_transpose(feed_dict[self._get_tf_tensor_name(graph, name)])
-            for name in input_shapes
-        }
+        coreml_inputs = {}
+        for name in coreml_input_names:
+            tfop_name = _parse_coreml_name_to_tf(name)
+            if tfop_name in input_shapes:
+                coreml_inputs[name] = tf_transpose(
+                    feed_dict[self._get_tf_tensor_name(graph, tfop_name)])
+            else:
+                coreml_inputs[name] = np.zeros(coreml_input_shapes[name])
 
         # Run predict in CoreML
         coreml_output = mlmodel.predict(coreml_inputs, useCPUOnly=use_cpu_only)
@@ -191,7 +211,13 @@ class TFNetworkTest(unittest.TestCase):
                 tf_out = np.array([tf_out])
 
             tp = tf_out.flatten()
-            coreml_out = coreml_output[out_name]
+            if out_name in coreml_output:
+                coreml_out = coreml_output[out_name]
+            elif out_name+'__outvar__' in coreml_output:
+                coreml_out = coreml_output[out_name+'__outvar__']
+            else:
+                self.assertTrue(False, 'CoreML output not found')
+
             cp = coreml_out.flatten()
 
             self.assertTrue(tf_out.shape == coreml_out.shape)
