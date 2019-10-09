@@ -246,10 +246,19 @@ class TreeEnsembleRegressor(TreeEnsembleBase):
 
     .. sourcecode:: python
 
-        >>> input_features = [("a", datatypes.Array(3)), "b", datatypes.Double()]
+        >>> # Required inputs
+        >>> import coremltools
+        >>> from coremltools.models import datatypes
+        >>> from coremltools.models.tree_ensemble import TreeEnsembleRegressor
+        >>> import numpy as np
 
-        >>> tm = TreeEnsembleClassifier(features = input_features, class_labels = [0, 1], 
-                                        output_features = "predicted_value")
+        >>> # Define input features
+        >>> input_features = [("a", datatypes.Array(3)), ("b", (datatypes.Double()))]
+
+        >>> # Define output_features
+        >>> output_features = [("predicted_values", datatypes.Double())]
+
+        >>> tm = TreeEnsembleRegressor(features = input_features, target = output_features)
 
         >>> # Split on a[2] <= 3
         >>> tm.add_branch_node(0, 0, 2, 3, "BranchOnValueLessThanEqual", 1, 2)
@@ -265,6 +274,22 @@ class TreeEnsembleRegressor(TreeEnsembleBase):
 
         >>> # Add leaf to the false branch of node 2 that subtracts 1 from the result.
         >>> tm.add_leaf_node(0, 4, -1)
+
+        >>> tm.set_default_prediction_value([0, 0])
+
+        >>> # save the model to a .mlmodel file
+        >>> model_path = './tree.mlmodel'
+        >>> coremltools.models.utils.save_spec(tm.spec, model_path)
+
+        >>> # load the .mlmodel
+        >>> mlmodel = coremltools.models.MLModel(model_path)
+
+        >>> # make predictions
+        >>> test_input = {
+        >>>     'a': np.array([0, 1, 2]).astype(np.float32),
+        >>>     "b": 3.0,
+        >>> }
+        >>> predictions = mlmodel.predict(test_input)
 
     """
 
@@ -306,7 +331,7 @@ class TreeEnsembleClassifier(TreeEnsembleBase):
 
     .. sourcecode:: python
 
-        >>> input_features = [("a", datatypes.Array(3)), "b", datatypes.Double()]
+        >>> input_features = [("a", datatypes.Array(3)), ("b", datatypes.Double())]
 
         >>> tm = TreeEnsembleClassifier(features = input_features, class_labels = [0, 1], 
                                         output_features = "predicted_class")
@@ -328,6 +353,22 @@ class TreeEnsembleClassifier(TreeEnsembleBase):
 
         >>> # Put in a softmax transform to translate these into probabilities. 
         >>> tm.set_post_evaluation_transform("Classification_SoftMax")
+
+        >>> tm.set_default_prediction_value([0, 0])
+
+        >>> # save the model to a .mlmodel file
+        >>> model_path = './tree.mlmodel'
+        >>> coremltools.models.utils.save_spec(tm.spec, model_path)
+
+        >>> # load the .mlmodel
+        >>> mlmodel = coremltools.models.MLModel(model_path)
+
+        >>> # make predictions
+        >>> test_input = {
+        >>>     'a': np.array([0, 1, 2]).astype(np.float32),
+        >>>     "b": 3.0,
+        >>> }
+        >>> predictions = mlmodel.predict(test_input)
 
     """
 
