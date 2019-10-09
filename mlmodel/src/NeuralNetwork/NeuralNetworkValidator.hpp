@@ -176,7 +176,9 @@ namespace CoreML {
         Result validateLayerNormalizationLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateConstantPadLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateNMSLayer(const Specification::NeuralNetworkLayer& layer);
-
+        Result validateOneHotLayer(const Specification::NeuralNetworkLayer& layer);
+        Result validateCumSumLayer(const Specification::NeuralNetworkLayer& layer);
+        
         Result validateFailUnknownType(const Specification::NeuralNetworkLayer& layer);
     };
 }

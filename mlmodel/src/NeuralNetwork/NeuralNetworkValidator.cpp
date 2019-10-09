@@ -315,6 +315,10 @@ Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetw
             return validateConstantPadLayer(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kNonMaximumSuppression:
             return validateNMSLayer(layer);
+        case Specification::NeuralNetworkLayer::LayerCase::kOneHot:
+            return validateOneHotLayer(layer);
+        case Specification::NeuralNetworkLayer::LayerCase::kCumSum:
+            return validateCumSumLayer(layer);
         default:
             return validateFailUnknownType(layer);
     }

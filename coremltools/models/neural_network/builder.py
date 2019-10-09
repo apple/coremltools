@@ -6850,3 +6850,67 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.eps = eps
 
         return spec_layer
+
+    def add_one_hot(self, name, input_names, output_name,
+                    one_hot_vector_size = None, axis = -1, on_value = 1.0, off_value = 0.0):
+        """
+        Add a one hot layer to the model that computes the one hot representation of the input tensor.
+        Refer to the **OneHotLayerParams** message in specification
+        (NeuralNetwork.proto) for more details.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_names: list of str
+            The input blob names of this layer.
+        output_name: str
+            The output blob name of this layer.
+        one_hot_vector_size:  int > 0
+            size of the one hot vector.
+        axis: int, optional
+            refers to the axis in the output tensor, default: -1.
+        on_value: float, optional
+            Constant value on locations represented by first input, default: 1.0.
+        off_value: float, optional
+            Constant value at all other locations, default: 0.0.
+        """
+
+        spec_layer = self._add_generic_layer(name, input_names, [output_name])
+        spec_layer_params = spec_layer.oneHot
+        spec_layer_params.axis = axis
+        if one_hot_vector_size:
+            spec_layer_params.oneHotVectorSize = one_hot_vector_size
+        spec_layer_params.onValue = on_value
+        spec_layer_params.offValue = off_value
+        return spec_layer
+
+    def add_cumsum(self, name, input_names, output_name,
+                    axis = -1, reverse = False, exclusive = False):
+        """
+        Add a cum sum layer to the model computes the cumulative sum values of the input along a given axis.
+        Refer to the **CumSumLayerParams** message in specification
+        (NeuralNetwork.proto) for more details.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_names: list of str
+            The input blob names of this layer.
+        output_name: str
+            The output blob name of this layer.
+        axis: int, optional
+            Axis to perform the operation, default: -1.
+        reverse: bool, optional
+            if true, cumsum is performed in the opposite direction, default: False.
+        exclusive: bool, optional
+            whether to perform exclusive or inclusive cumulative summation, default: False.
+        """
+
+        spec_layer = self._add_generic_layer(name, input_names, [output_name])
+        spec_layer_params = spec_layer.cumSum
+        spec_layer_params.axis = axis
+        spec_layer_params.reverse = reverse
+        spec_layer_params.excludeFinalSum = exclusive
+        return spec_layer

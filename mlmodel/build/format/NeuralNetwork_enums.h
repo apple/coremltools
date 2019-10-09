@@ -242,6 +242,8 @@ enum MLNeuralNetworkLayerlayer: int {
     MLNeuralNetworkLayerlayer_whereBroadcastable = 1330,
     MLNeuralNetworkLayerlayer_layerNormalization = 1350,
     MLNeuralNetworkLayerlayer_NonMaximumSuppression = 1400,
+    MLNeuralNetworkLayerlayer_oneHot = 1450,
+    MLNeuralNetworkLayerlayer_cumSum = 1455,
     MLNeuralNetworkLayerlayer_NOT_SET = 0,
 };
 
@@ -548,6 +550,10 @@ static const char * MLNeuralNetworkLayerlayer_Name(MLNeuralNetworkLayerlayer x) 
             return "MLNeuralNetworkLayerlayer_layerNormalization";
         case MLNeuralNetworkLayerlayer_NonMaximumSuppression:
             return "MLNeuralNetworkLayerlayer_NonMaximumSuppression";
+        case MLNeuralNetworkLayerlayer_oneHot:
+            return "MLNeuralNetworkLayerlayer_oneHot";
+        case MLNeuralNetworkLayerlayer_cumSum:
+            return "MLNeuralNetworkLayerlayer_cumSum";
         case MLNeuralNetworkLayerlayer_NOT_SET:
             return "INVALID";
     }

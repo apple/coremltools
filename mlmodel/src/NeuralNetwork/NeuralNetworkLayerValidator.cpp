@@ -3264,6 +3264,25 @@ Result NeuralNetworkSpecValidator::validateNMSLayer(const Specification::NeuralN
     return r;
 }
 
+Result NeuralNetworkSpecValidator::validateOneHotLayer(const Specification::NeuralNetworkLayer& layer) {
+    Result r;
+    r = validateInputCount(layer, 1, 2);
+    if (r.good()) {
+        r = validateOutputCount(layer, 1, 1);
+    }
+    return r;
+}
+
+Result NeuralNetworkSpecValidator::validateCumSumLayer(const Specification::NeuralNetworkLayer& layer) {
+    Result r;
+    r = validateInputCount(layer, 1, 2);
+    if (r.good()) {
+        r = validateOutputCount(layer, 1, 1);
+    }
+    return r;
+}
+
+
 Result NeuralNetworkSpecValidator::validateFailUnknownType(const Specification::NeuralNetworkLayer& layer) {
     return Result(ResultType::INVALID_MODEL_PARAMETERS, "Unsupported layer type (" + layer.GetTypeName() + ") for layer '" + layer.name() + "'.");
 }

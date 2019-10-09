@@ -4184,6 +4184,105 @@ class NewLayersSimpleTest(CorrectnessTest):
         self.test_layer_normalization_cpu(cpu_only=False)
 
 
+    def test_onehot_layer_cpu(self, cpu_only=True):
+        ctr = 0
+        params_dict = dict(
+                        input_rank=[1,2,3,4],
+                        negative_axis = [True, False],
+                        depth = [30],
+                        on_value = [30.0],
+                        off_value = [-4.0]
+        )
+        params = list(itertools.product(*params_dict.values()))
+        for param in params:
+            param = dict(zip(params_dict.keys(), param))
+            input_rank = param['input_rank']
+            vectorSize = param['depth']
+            on_value = param['on_value']
+            off_value = param['off_value']
+
+            for axis in range(input_rank+1):
+                ctr+=1
+                if param['negative_axis']:
+                    axis_param = axis - (input_rank+1)
+                else:
+                    axis_param = axis
+
+                input_shape = np.random.randint(1, 10, size=(input_rank,))
+
+                input_features = [('data', datatypes.Array(*input_shape))]
+                output_features = [('output', None)]
+                builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                               disable_rank5_shape_mapping=True)
+
+                builder.add_one_hot('one_hot', ['data'], 'output', one_hot_vector_size=vectorSize,
+                                    axis=axis_param, on_value=on_value, off_value=off_value)
+
+                x = np.random.randint(0, vectorSize, size=input_shape)
+                # x[::4] -= vectorSize  # [To do] Need to Handle this case.
+
+                with tf.Graph().as_default(), tf.Session() as sess:
+                    # TF seems to have a bug with axis < -1
+                    if axis_param < -1:
+                        axis_param += input_rank+1
+                    tf_op = tf.one_hot(x, axis = axis_param, depth=vectorSize, on_value=on_value, off_value=off_value)
+                    expected = {'output': sess.run(tf_op)}
+
+                input = {'data' : x.astype(np.float)}
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+    def test_cumsum_layer_cpu(self, cpu_only = True):
+        ctr = 0
+        params_dict = dict(
+                        rank=[1,2,3,4,5],
+                        exclusive = [False,True],
+                        reverse = [False,True],
+                        n_inputs = [1,2]
+        )
+        params = list(itertools.product(*params_dict.values()))
+        for param in params:
+            param = dict(zip(params_dict.keys(), param))
+            rank = param['rank']
+            exclusive = param['exclusive']
+            reverse = param['reverse']
+            n_inputs = param['n_inputs']
+
+            for axis in range(rank):
+                ctr+=1
+                if (np.random.rand(1) > 0.5):
+                    axis_param = axis
+                else:
+                    axis_param = axis - rank
+
+                input_shape = np.random.randint(1, 10, size=(rank,))
+
+                input_features = [('data', datatypes.Array(*input_shape))]
+                if n_inputs == 2:
+                    input_features.append(('axis', datatypes.Array(1,)))
+
+                output_features = [('output', None)]
+                builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                               disable_rank5_shape_mapping=True)
+
+                if n_inputs==1:
+                    builder.add_cumsum('cumsum',  ['data'], 'output',
+                                       axis=axis_param, reverse=reverse, exclusive=exclusive)
+                else:
+                    builder.add_cumsum('cumsum', ['data','axis'], 'output',
+                                       reverse = reverse, exclusive = exclusive)
+
+                x = np.random.rand(*input_shape)
+
+                with tf.Graph().as_default(), tf.Session() as sess:
+                    tf_op = tf.cumsum(x, axis = axis_param, exclusive=exclusive, reverse=reverse)
+                    expected = {'output': sess.run(tf_op)}
+
+                input = {'data' : x}
+                if n_inputs==2:
+                    input['axis'] = axis_param * np.ones((1,), dtype=np.float)
+
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
 def get_size_after_stride(X, params):
     start = params["start"]
     end = params["end"]

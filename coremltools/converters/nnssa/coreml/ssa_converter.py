@@ -446,6 +446,8 @@ class SSAConverter(object):
             'BatchNorm': self._convert_batchnorm,
             'LRN': self._convert_lrn,
             'ClipByValue': self._convert_clip,
+            'OneHot': self._convert_one_hot,
+            'Cumsum': self._convert_cumsum
         }
 
         # converter state variables
@@ -2498,5 +2500,57 @@ class SSAConverter(object):
                                              output_name=node.name,
                                              min_value=min_value,
                                              max_value=max_value)
+
+        self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
+
+
+    def _convert_one_hot(self, node):
+
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+
+        is_dynamic_node = input_nodes[1].op != 'Const'
+        on_value = input_nodes[2].value.val
+        off_value = input_nodes[3].value.val
+
+        if is_dynamic_node:
+            layer = self._get_builder().add_one_hot(name = node.name,
+                                                    input_names = input_names[:2],
+                                                    output_name=node.name,
+                                                    axis = node.attr['axis'],
+                                                    on_value = on_value,
+                                                    off_value = off_value)
+        else:
+            depth = input_nodes[1].value.val
+            layer = self._get_builder().add_one_hot(name=node.name,
+                                                    input_names=input_names[:1],
+                                                    output_name=node.name,
+                                                    one_hot_vector_size=depth,
+                                                    axis=node.attr['axis'],
+                                                    on_value=on_value,
+                                                    off_value=off_value)
+
+        self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
+
+
+    def _convert_cumsum(self, node):
+
+        assert len(node.inputs) == 2
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+
+        axis = input_nodes[-1].value.val if input_nodes[-1].op == "Const" else None
+
+        if axis:
+            layer = self._get_builder().add_cumsum(name=node.name,
+                                                   input_names=input_names[:1],
+                                                   output_name=node.name,
+                                                   axis = axis,
+                                                   reverse=node.attr["reverse"],
+                                                   exclusive=node.attr["exclusive"])
+        else:
+            layer = self._get_builder().add_cumsum(name=node.name,
+                                                   input_names=input_names[:2],
+                                                   output_name=node.name,
+                                                   reverse=node.attr["reverse"],
+                                                   exclusive=node.attr["exclusive"])
 
         self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
