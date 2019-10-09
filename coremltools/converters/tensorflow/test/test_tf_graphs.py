@@ -203,6 +203,30 @@ class TFSimpleNetworkTest(TFNetworkTest):
 
         self._test_tf_model(graph, {"data": [1, 2]}, ["output/Exit"])
 
+
+    def test_simple_branch(self):
+        graph = tf.Graph()
+        with graph.as_default():
+            data = tf.placeholder(tf.float32, shape=[None, 2], name='data')
+            switch = tf.placeholder(tf.float32, shape=(), name='switch')
+            m = tf.Variable(1.0)
+            result = tf.cond(switch > 0,
+                lambda: tf.add(data, m),
+                lambda: tf.subtract(data, m),
+                name='output')
+
+        self._test_tf_model(graph=graph,
+            input_shapes={"data": [1, 2], "switch": []},
+            output_node_names=[result.op.name],
+            input_refs={'data': np.array([0.1, 0.2]).reshape((1,2)),
+                        'switch': 1.0})
+
+        self._test_tf_model(graph=graph,
+            input_shapes={"data": [1, 2], "switch": []},
+            output_node_names=[result.op.name],
+            input_refs={'data': np.array([0.1, 0.2]).reshape((1,2)),
+                        'switch': -1.0})
+
     def test_onehot_matmul_encoding(self):
         seq_len = 6
         embedding_dim = 10  # depth
@@ -262,7 +286,7 @@ class TFSimpleNetworkTest(TFNetworkTest):
 
 
 if __name__ == '__main__':
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(TFSimpleNetworkTest("test_array_scatter"))
-    # unittest.TextTestRunner().run(suite)
+    # unittest.main()
+    suite = unittest.TestSuite()
+    suite.addTest(TFSimpleNetworkTest("test_simple_branch"))
+    unittest.TextTestRunner().run(suite)
