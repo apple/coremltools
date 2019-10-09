@@ -1248,7 +1248,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                                              input_names=['x', 'shape'],
                                              output_name='y')
 
-            condition = np.random.randn((*input_shape)) < 0.0
+            condition = np.random.randint(0, 2, input_shape).astype(np.float32)
             builder.add_load_constant_nd(name='load_constant_condition',
                                          output_name='condition',
                                          constant_value=condition,
