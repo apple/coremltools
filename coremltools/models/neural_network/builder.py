@@ -982,9 +982,13 @@ class NeuralNetworkBuilder(object):
     def _set_max_input_rank(self, input_names, output_name):
         if len(input_names) == 0:
             raise ValueError('Input name list empty for collecting rank information')
-        self.rank_dict[output_name] = self._get_rank(input_names[0])
-        for i in range(1, len(input_names)):
-            self.rank_dict[output_name] = max(self._get_rank(output_name), self._get_rank(input_names[i]))
+        self.rank_dict[output_name] = -1
+        for i in range(0, len(input_names)):
+            input_rank = self._get_rank(input_names[i])
+            if input_rank == -1:
+                self.rank_dict[output_name] = -1
+                return
+            self.rank_dict[output_name] = max(self._get_rank(output_name), input_rank)
 
     def _set_rank_for_reduce_op(self, input_name, output_name, axes, keepdims, reduce_all):
         if keepdims:
