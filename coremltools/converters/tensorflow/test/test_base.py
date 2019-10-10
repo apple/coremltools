@@ -339,3 +339,71 @@ class TFNetworkTest(unittest.TestCase):
         # Cleanup files - models on disk no longer useful
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
+
+class TFNetworkBatchTest(TFNetworkTest):
+
+    def _test_tf_model(
+            self,
+            graph,
+            input_tensor_shapes,
+            output_node_names,
+            data_mode='random',
+            delta=1e-2,
+            use_cpu_only=False,
+            graph_optimizations="freeze",
+            quantize_tf_model=False,
+            batch_sizes=None):
+        """ Test function for TFConvNetTest.
+        graph: TensorFlow graph representing the model.
+        input_tensor_shapes: dict of input op and the shape of tensor it generates.
+        output_node_names: A list of names of output nodes.
+        graph_optimizations: one of ["freeze", "convert_variables_to_constants", None].
+            graph optimizations performed on the TensorFlow graph before conversion.
+        quantize_tf_model: If true, will run TF-quantization utility on TF graph.
+        batch_sizes: If not None, and if all input shapes' first dimension is None,
+            test the TF graph with each batch size in batch_sizes
+        """
+
+        variable_batch_size = False
+        for name, shape in input_tensor_shapes.items():
+            if len(shape) > 1 and shape[0] is None:
+                variable_batch_size = True
+                break
+
+        if variable_batch_size: # batched case
+            if batch_sizes is None or len(batch_sizes) == 0:
+                batch_sizes = [1]
+            elif 1 not in batch_sizes:
+                batch_sizes = [1] + batch_sizes
+
+            for bs in batch_sizes:
+                input_shapes = {}
+                for name, shape in input_tensor_shapes.items():
+                    if shape[0] is None:
+                        input_shapes[name] = [bs] + list(shape[1:])
+                    else:
+                        input_shapes[name] = shape
+
+                super(TFNetworkBatchTest, self)._test_tf_model(
+                    graph,
+                    input_shapes,
+                    output_node_names,
+                    data_mode=data_mode,
+                    input_refs=None,
+                    delta=delta,
+                    use_cpu_only=use_cpu_only,
+                    graph_optimizations=graph_optimizations,
+                    quantize_tf_model=quantize_tf_model)
+
+        else:
+            super(TFNetworkBatchTest, self)._test_tf_model(
+                graph,
+                input_tensor_shapes,
+                output_node_names,
+                data_mode=data_mode,
+                input_refs=None,
+                delta=delta,
+                use_cpu_only=use_cpu_only,
+                graph_optimizations=graph_optimizations,
+                quantize_tf_model=quantize_tf_model)
+
