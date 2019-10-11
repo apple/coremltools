@@ -1,8 +1,4 @@
-import numpy as np
-import copy
-
 from ....builder import GraphBuilder
-from ....commons import builtins
 from ....commons.basic_graph_ops import replace_node, delete_node
 
 from ..parsed_tf_node import ParsedTFNode
@@ -11,6 +7,14 @@ from ..parsed_tf_node import ParsedTFNode
 def expand_fusedbatchnorm_cell(graph, node):
     assert (node.op == 'FusedBatchNorm')
     assert (len(node.inputs) == 5)
+    """
+    Inputs:
+    const Tensor& x_input,
+    const Tensor& scale_input,
+    const Tensor& offset_input,
+    const Tensor& estimated_mean_input,
+    const Tensor& estimated_variance_input
+    """  # pylint: disable=pointless-string-statement
 
     x, scale, offset, estimated_mean, estimated_variance = node.inputs
 

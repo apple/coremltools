@@ -4,8 +4,8 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 from .annotate import annotate
 from .type_void import void
-from .type_int import *
-from .type_spec import *
+from . import type_int
+from .type_spec import Type
 from .get_type_info import get_type_info
 
 
@@ -43,20 +43,20 @@ def list(arg):
             assert (isinstance(other, self.T[0]))
             self.val.append(other)
 
-        @annotate(T[0], index=int)
+        @annotate(T[0], index=type_int.int)
         def __getitem__(self, index):
-            assert (isinstance(index, int))
+            assert (isinstance(index, type_int.int))
             return self.val[index.val]
 
-        @annotate(void, index=int, newval=T[0])
+        @annotate(void, index=type_int.int, newval=T[0])
         def __setitem__(self, index, newval):
-            assert (isinstance(index, int))
+            assert (isinstance(index, type_int.int))
             assert (isinstance(newval, self.T[0]))
             self.val[index.val] = newval
 
-        @annotate(int)
+        @annotate(type_int.int)
         def __len__(self):
-            return int(len(self.val))
+            return type_int.int(len(self.val))
 
     list.__template_name__ = "list[" + arg.__name__ + "]"
     return list

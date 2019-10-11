@@ -26,7 +26,7 @@ class file_writer:
         self.handle.write(struct.pack('d', i))
 
     def write_str(self, i):
-        if isinstance(i, bytes) or isinstance(i, str):
+        if isinstance(i, (bytes, str)):
             self.handle.write(i)
         else:
             i = str(i)

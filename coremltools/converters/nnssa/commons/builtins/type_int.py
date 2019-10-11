@@ -3,9 +3,8 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from .annotate import class_annotate, annotate, delay_type
-from .get_type_info import get_type_info
 from .type_bool import bool
-from .type_spec import *
+from .type_spec import Type
 import math
 
 

@@ -3,7 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from .annotate import class_annotate, annotate, delay_type
-from .type_spec import *
+from .type_spec import Type
 
 
 @class_annotate()
@@ -24,7 +24,7 @@ class bool:
         return bool(self.val != other.val)
 
     @annotate(delay_type.bool)
-    def __not__(self):
+    def __not__(self, other):
         return bool(not other.val)
 
     @annotate(delay_type.bool)

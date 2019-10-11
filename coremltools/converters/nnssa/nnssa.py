@@ -3,10 +3,12 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 import copy
+import logging
 
 from .commons import builtins
-from .commons.dot_visitor import DotVisitor
 from .commons.basic_graph_ops import check_connections, const_determined_nodes
+from .commons.dot_visitor import DotVisitor
+from .commons.utils import escape_fn_name
 
 
 class ParsedNode(object):
@@ -40,17 +42,19 @@ class ParsedNode(object):
         self.attr = {}
 
     def __copy__(self):
-        ret = ParsedNode()
-        ret.name = self.name
-        ret.op = self.op
-        ret.datatype = self.datatype
-        ret.value = copy.deepcopy(self.value)
-        ret.inputs = self.inputs[:]
-        ret.control_inputs = self.control_inputs[:]
-        ret.outputs = self.outputs[:]
-        ret.control_outputs = self.control_outputs[:]
-        ret.attr = {k: copy.deepcopy(v) for k, v in self.attr.items()}
-        return ret
+        return self._copy_impl(ParsedNode())
+
+    def _copy_impl(self, dest):
+        dest.name = self.name
+        dest.op = self.op
+        dest.datatype = self.datatype
+        dest.value = copy.deepcopy(self.value)
+        dest.inputs = self.inputs[:]
+        dest.control_inputs = self.control_inputs[:]
+        dest.outputs = self.outputs[:]
+        dest.control_outputs = self.control_outputs[:]
+        dest.attr = {k: copy.deepcopy(v) for k, v in self.attr.items()}
+        return dest
 
     def copy(self):
         return self.__copy__()
@@ -59,7 +63,9 @@ class ParsedNode(object):
 class SSAFunction(object):
     __slots__ = ["graph", "inputs", "input_types", "outputs", "output_types"]
 
-    def __init__(self, gdict={}):
+    def __init__(self, gdict=None):
+        if gdict is None:
+            gdict = {}
         self.graph = gdict
         self.inputs = []
         self.outputs = []
@@ -136,14 +142,14 @@ class NetworkEnsemble(object):
         Renames the function with function name (src_func) to (tgt_func)
         """
         if src_func not in self.functions:
-            print("Couldn't find function name (%s)." % (src_func))
+            logging.warning("Couldn't find function name (%s).", src_func)
             return
         if tgt_func in self.functions:
-            print("(%s) already exists in some function name." % (tgt_func))
+            logging.warning("(%s) already exists in some function name.", tgt_func)
             return
 
         self.functions[tgt_func] = self.functions.pop(src_func)
-        print("Successfully changed function name from (%s) to (%s)" % (src_func, tgt_func))
+        logging.debug("Successfully changed function name from (%s) to (%s)", src_func, tgt_func)
 
     def rename_node(self, src_node, tgt_node):
         """
@@ -157,7 +163,7 @@ class NetworkEnsemble(object):
             if src_node in ssa.graph:
                 in_ssa = True
                 if tgt_node in ssa.graph:
-                    print("(%s) already exists in function (%s)." % (tgt_node, func))
+                    logging.warning("(%s) already exists in function (%s).", tgt_node, func)
                     break
                 success = func
                 ssa.graph[tgt_node] = ssa.graph.pop(src_node)
@@ -188,25 +194,27 @@ class NetworkEnsemble(object):
                 break
 
         if not in_ssa:
-            print("Couldn't find (%s) in any functions" % (src_node))
+            logging.warning("Couldn't find (%s) in any functions", src_node)
         if success is not None:
-            print("Changed (%s) to (%s) in function (%s)" % (src_node, tgt_node, success))
+            logging.debug("Changed (%s) to (%s) in function (%s)", src_node, tgt_node, success)
 
     def extract_subgraph(self, outputs, target_inputs=None, name=""):
-        """
-        Given a list of outputs, determine which nodes are needed for      
-        producing the outputs and build a new SSAFunction in the original
-        NetworkEnsemble that would produce the target outputs.
-        The function name for the new function would be concatenating all
-        outputs together unless specified.
+        """Add a new SSAFunction to the current NetworkEnsemble to produce the given outputs.
+
+        Args:
+            outputs: The outputs the new function must produce.
+            traget_inputs:
+            name: The name of the new function to create. If unspecified, a name will be generated
+                  by joining output names.
+        Returns:
+            The name of the new function.
         """
         if not isinstance(outputs, list):
-            print("Feed a list of output names for subgraph extraction.\nArgument is not a list.")
-            return
+            raise TypeError("Expected a list of output names for subgraph extraction")
 
         if name == "":
             outputs.sort()
-            name = "_".join(outputs)
+            name = escape_fn_name("_".join(outputs))
 
         if target_inputs is None:
             target_inputs = []
@@ -303,13 +311,14 @@ class NetworkEnsemble(object):
                 gdict[output] = output_node
 
             self.functions[name] = SSAFunction(gdict)
+        return name
 
     def delete_subgraph(self, name):
         """
         Delete the SSAfunction with function_name. 
         """
         if name not in self.functions:
-            print("(%s) not in NetworkEnsemble" % (name))
+            logging.warning("(%s) not in NetworkEnsemble", name)
             return
         del self.functions[name]
 
@@ -335,7 +344,7 @@ class NetworkEnsemble(object):
                 ret += "    %s\n" % (out)
         return ret
 
-    def get_dot_string(self, name_and_op_style=False, annotation=False, highlight_debug_nodes=[]):
+    def get_dot_string(self, name_and_op_style=False, annotation=False, highlight_debug_nodes=None):
         """
         Return the dot string that can be used to show the whole graph
         with dot. By default, the graph contains op and type. If 
@@ -360,6 +369,8 @@ class NetworkEnsemble(object):
         >>> graphviz.Source(network.get_dot_string()).view()
         
         """
+        if highlight_debug_nodes is None:
+            highlight_debug_nodes = []
         function_names = sorted(self.functions.keys())
 
         dotstring = 'digraph g {\n' + \
@@ -407,7 +418,6 @@ class NetworkEnsemble(object):
         self.functions[f] = ssa
 
     def __copy__(self):
-        import copy
         ret = self.__class__()
         ret.functions = {k: copy.copy(v) for k, v in self.functions.items()}
         ret.variables = {k: copy.copy(v) for k, v in self.variables.items()}

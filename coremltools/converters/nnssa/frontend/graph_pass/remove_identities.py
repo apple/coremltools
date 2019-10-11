@@ -3,7 +3,6 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from ...commons.basic_graph_ops import replace_source, delete_node
-from ...commons import builtins
 
 
 class RemoveIdentities(object):

@@ -2,9 +2,10 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-from ..parsed_tf_node import ParsedTFNode
 from ....commons.basic_graph_ops import delete_node, disconnect_edge
-from .functionalize_loops import *
+from .visitors import FindAllUpstreamTerminals
+
+import logging
 
 
 def compute_max_rank(graph):
@@ -12,13 +13,13 @@ def compute_max_rank(graph):
     ret = {}
     # begin at max rank
     for v in graph.keys():
-        if graph[v].inputs == 0:
+        if len(graph[v].inputs) == 0:
             ret[v] = 0
         else:
             ret[v] = len(graph)
 
     changes = True
-    while changes == True:
+    while changes:
         changes = False
         for v in graph.keys():
             if len(graph[v].inputs) > 0:
@@ -30,39 +31,38 @@ def compute_max_rank(graph):
 
 
 class CondToWhere(object):
-    # this should run AFTER functionalize loops
-    def __init__(self):
-        self.switches = None
-        self.merge = ''
+    @staticmethod
+    def _search(g, node_name):
+        """
+        Find the nearest Switch nodes upstream of node_name.
+        """
+        node = g[node_name]
 
-    def _search(self, g, node):
-        if not isinstance(node, ParsedTFNode):
-            node = g[node]
-        self.merge = node.name
-        # we look for Merge nodes
-        if node.op == "Merge":
-            print("Fixing cond at merge location: %s" % (node.name))
-            self.switches = FindAllUpstreamTerminals(lambda x: x.op == 'Switch').visit(
-                g, node.name).get_result()
-            if len(self.switches) == 0:
-                self.switches = FindAllUpstreamTerminals(
-                    lambda x: x.op == 'Switch' or x.attr.get('was_switch') is not None).visit(
-                        g, node.name).get_result()
+        switches = FindAllUpstreamTerminals(lambda x: x.op == 'Switch').visit(
+            g, node.name).get_result()
+        if len(switches) == 0:
+            switches = FindAllUpstreamTerminals(
+                lambda x: x.op == 'Switch' or x.attr.get('was_switch') is not None).visit(
+                    g, node.name).get_result()
+        return switches
 
-    def _fix_found_cond(self, g):
-        if g[self.switches[0]].op == 'Switch':
-            condition_input = g[self.switches[0]].inputs[1]
+    @staticmethod
+    def _fix_found_cond(g, merge, switches):
+        """
+        Convert a Merge's Switch nodes to Identity ops and the Merge to iff.
+        """
+        if g[switches[0]].op == 'Switch':
+            condition_input = g[switches[0]].inputs[1]
         else:
-            condition_input = g[self.switches[0]].attr['was_switch']
+            condition_input = g[switches[0]].attr['was_switch']
 
         # convert the merge to a select
-        # Tensorflow seems to ensure the condition that the first
+        # TensorFlow seems to ensure the condition that the first
         # merge input is the True branch and the second merge input
         # is the false branch.
-        #
 
         # we convert switches to identity, detaching to switch condition
-        for s in self.switches:
+        for s in switches:
             if g[s].op == 'Switch':
                 g[s].op = 'Identity'
                 g[s].attr['was_switch'] = g[s].inputs[1]
@@ -74,14 +74,12 @@ class CondToWhere(object):
                     disconnect_edge(g, g[s].inputs[1], s)
 
         # build the final select
-        g[self.merge].op = 'iff'
+        g[merge].op = 'iff'
         # swap true branch with false branch to get the right semantics for IFF
-        g[self.merge].inputs[0], g[self.merge].inputs[1] = g[self.merge].inputs[1], g[
-            self.merge].inputs[0]
+        g[merge].inputs[0], g[merge].inputs[1] = g[merge].inputs[1], g[merge].inputs[0]
 
-        g[self.merge].inputs = [condition_input] + g[self.merge].inputs
-        g[condition_input].outputs.append(self.merge)
-        return True
+        g[merge].inputs = [condition_input] + g[merge].inputs
+        g[condition_input].outputs.append(merge)
 
     def cond_to_where(self, graph):
         stuff_done = False
@@ -92,10 +90,11 @@ class CondToWhere(object):
         if len(merges) == 0:
             return False
         for m in merges:
-            self._search(g, m)
-            ret = self._fix_found_cond(g)
-            if ret:
-                stuff_done = True
+            logging.debug("Fixing cond at merge location: %s", m)
+            switches = self._search(g, m)
+            self._fix_found_cond(g, m, switches)
+            stuff_done = True
+
         # delete the extra switches that seem to just lead to identities
         # which then lead nowhere but into control dependencies
         extra_switches = [a for a in g if g[a].op == 'Switch']
@@ -112,5 +111,5 @@ def cond_to_where(ssa):
     for k, v in ssa.functions.items():
         while True:
             stuff_done = CondToWhere().cond_to_where(v.graph)
-            if stuff_done == False:
+            if not stuff_done:
                 break

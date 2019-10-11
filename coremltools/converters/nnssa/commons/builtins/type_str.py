@@ -3,7 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from .annotate import class_annotate, annotate, delay_type
-from .type_spec import *
+from .type_spec import Type
 
 
 @class_annotate()

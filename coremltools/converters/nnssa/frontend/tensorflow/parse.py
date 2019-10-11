@@ -3,57 +3,33 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-import copy
-
 from ...commons import builtins
-from ...commons.builtins import get_type_info
 from .parsed_tf_node import ParsedTFNode
+from tensorflow.core.framework.types_pb2 import DataType
 
-# https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/types.proto
-# DT_INT32 = 3;
-# DT_UINT8 = 4;
-# DT_INT16 = 5;
-# DT_INT8 = 6;
-# DT_STRING = 7;
-# DT_COMPLEX64 = 8;  // Single-precision complex
-# DT_INT64 = 9;
-# DT_BOOL = 10;
-# DT_QINT8 = 11;     // Quantized int8
-# DT_QUINT8 = 12;    // Quantized uint8
-# DT_QINT32 = 13;    // Quantized int32
-# DT_BFLOAT16 = 14;  // Float32 truncated to 16 bits.  Only for cast ops.
-# DT_QINT16 = 15;    // Quantized int16
-# DT_QUINT16 = 16;   // Quantized uint16
-# DT_UINT16 = 17;
-# DT_COMPLEX128 = 18;  // Double-precision complex
-# DT_HALF = 19;
-# DT_RESOURCE = 20;
-# DT_VARIANT = 21;  // Arbitrary C++ data types
-# DT_UINT32 = 22;
-# DT_UINT64 = 23;
-#
+import logging
 
 
 def parse_type(t):
     mapping = {
-        1: builtins.float,
-        2: builtins.double,
-        3: builtins.int32,
-        4: builtins.uint8,
-        5: builtins.int16,
-        6: builtins.int8,
-        7: builtins.str,
-        9: builtins.int64,
-        10: builtins.bool,
-        17: builtins.uint16,
-        22: builtins.uint32,
-        23: builtins.uint64
+        DataType.DT_FLOAT: builtins.float,
+        DataType.DT_DOUBLE: builtins.double,
+        DataType.DT_INT32: builtins.int32,
+        DataType.DT_UINT8: builtins.uint8,
+        DataType.DT_INT16: builtins.int16,
+        DataType.DT_INT8: builtins.int8,
+        DataType.DT_STRING: builtins.str,
+        DataType.DT_INT64: builtins.int64,
+        DataType.DT_BOOL: builtins.bool,
+        DataType.DT_UINT16: builtins.uint16,
+        DataType.DT_UINT32: builtins.uint32,
+        DataType.DT_UINT64: builtins.uint64
     }
     t = int(t)
     if t in mapping:
         return mapping[t]
     else:
-        print("Type %d cannot be mapped" % t)
+        logging.warning("Type %d cannot be mapped", t)
         return None
 
 
@@ -93,9 +69,16 @@ def parse_tensor(t):
     return retobj
 
 
+def parse_string(s):
+    if isinstance(s, bytes):
+        return s.decode('utf-8')
+    else:
+        return s
+
+
 def parse_list(t):
     if len(t.s) > 0:
-        return list(t.s)
+        return list(parse_string(s) for s in t.s)
     elif len(t.i) > 0:
         return list(t.i)
     elif len(t.f) > 0:
@@ -114,7 +97,7 @@ def parse_list(t):
 
 def parse_attr(attr):
     if attr.HasField('s'):
-        return attr.s if isinstance(attr.s, str) else attr.s.decode()
+        return parse_string(attr.s)
     elif attr.HasField('i'):
         return attr.i
     elif attr.HasField('f'):
@@ -133,6 +116,7 @@ def parse_attr(attr):
         raise NotImplementedError("func not yet implemented")
     elif attr.HasField('placeholder'):
         raise NotImplementedError("placeholder not yet implemented")
+    raise ValueError('unintelligible TFNode attributes')
 
 
 def graphdef_to_dict(gd):

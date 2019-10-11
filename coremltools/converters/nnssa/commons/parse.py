@@ -6,7 +6,6 @@ from __future__ import absolute_import as _
 import numpy as np
 
 from . import builtins
-from .builtins import get_type_info
 
 
 def numpy_primitive_type_to_builtin_type(nptype):
@@ -29,6 +28,9 @@ def numpy_primitive_type_to_builtin_type(nptype):
         return builtins.int32
     elif np.issubclass_(nptype, np.uint64):
         return builtins.int64
+    elif np.issubclass_(nptype, np.int):
+        # Catch all int
+        return builtins.int32
     elif np.issubclass_(nptype, np.float16):
         return builtins.fp16
     elif np.issubclass_(nptype, np.float32):
@@ -76,7 +78,6 @@ def parse_reverse_shape(t):
         return t.get_shape()
     if builtins.is_tuple(t) or builtins.is_list(t):
         if len(t.T) > 1:
-            print(t.T)
             raise ValueError("parse_reverse_shape doesn't support nested non-simple tuple/list")
         return [-1] + list(parse_reverse_shape(t.T[0]))
     raise ValueError("Unsupported type (%s)" % (builtins.get_type_info(t)))

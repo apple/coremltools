@@ -3,10 +3,9 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from .annotate import annotate
-from .type_void import void
-from .type_int import *
-from .type_unknown import *
-from .type_spec import *
+from . import type_int
+from . import type_unknown
+from .type_spec import Type
 from .get_type_info import get_type_info
 
 _global_tuple = tuple
@@ -44,7 +43,7 @@ def tuple(args):
         def __type_info__(cls):
             return Type("tuple", [get_type_info(arg) for arg in args], python_class=cls)
 
-        @annotate(int)
+        @annotate(type_int.int)
         def __len__(self):
             return len(args)
 

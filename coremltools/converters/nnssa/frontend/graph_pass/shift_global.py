@@ -1,4 +1,4 @@
-from ...commons.basic_graph_ops import topsort, delete_node, replace_source, connect_edge, check_connections
+from ...commons.basic_graph_ops import topsort, replace_source, connect_edge, check_connections
 from ...nnssa import ParsedNode
 
 

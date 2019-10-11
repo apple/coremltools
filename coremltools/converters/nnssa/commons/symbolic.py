@@ -3,11 +3,11 @@ import numpy as np
 
 
 def is_symbolic_or_known(val):
-    return (np.isscalar(val) and val != -1) or issubclass(type(val), sm.Basic)
+    return (np.isscalar(val) and val != -1) or issubclass(type(val), sm.Basic)  # pylint: disable=consider-using-ternary
 
 
 def is_symbolic_or_unknown(val):
-    return (np.isscalar(val) and val == -1) or issubclass(type(val), sm.Basic)
+    return (np.isscalar(val) and val == -1) or issubclass(type(val), sm.Basic)  # pylint: disable=consider-using-ternary
 
 
 def is_symbolic(val):

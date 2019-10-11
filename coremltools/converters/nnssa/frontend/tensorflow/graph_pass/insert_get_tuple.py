@@ -28,7 +28,6 @@ def insert_get_tuple(gddict):
 
     node1 -> node2
     """
-    import copy
     retdict = {}
     get_tuple_op_var_index = 1
 

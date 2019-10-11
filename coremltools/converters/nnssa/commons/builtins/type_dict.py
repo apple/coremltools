@@ -3,10 +3,9 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from .annotate import annotate
-from .type_spec import *
-from .type_list import *
-from .type_bool import *
-from .type_int import *
+from .type_spec import Type
+from . import type_bool
+from . import type_int
 from .type_void import void
 from .get_type_info import get_type_info
 
@@ -51,11 +50,11 @@ def dict(keytype, valuetype):
             assert (isinstance(newval, self.T[1]))
             self.val[key] = newval
 
-        @annotate(int)
+        @annotate(type_int.int)
         def __len__(self):
-            return int(len(self.val))
+            return type_int.int(len(self.val))
 
-        @annotate(bool, key=T[0])
+        @annotate(type_bool.bool, key=T[0])
         def __contains__(self, key):
             return key in self.val[key]
 

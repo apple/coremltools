@@ -2,8 +2,6 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-from ....commons import builtins
-from ....commons.basic_graph_ops import delete_node
 
 # A TensorArray is essentially a runtime vector<Tensor> with
 #

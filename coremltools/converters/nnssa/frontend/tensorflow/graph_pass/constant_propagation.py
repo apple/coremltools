@@ -2,12 +2,38 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
+import logging
 import tensorflow as tf
 
 from ...graph_pass.delete_constant import delete_unnecessary_constant_nodes
 from ....commons import builtins
 from ....commons.parse import numpy_val_to_builtin_val
-from ....commons.basic_graph_ops import const_determined_nodes
+from ....commons.basic_graph_ops import const_determined_nodes, delete_node, disconnect_edge
+
+
+def convert_constant_nodes_to_const_ops(nnssa):
+    """
+    Convert nodes with known constant value to Const nodes
+    """
+    for f in nnssa.functions.values():
+        for v in f.graph.values():
+            if v.value is not None:
+                v.op = 'Const'
+                # delete all upstream edges now that this is constant
+                inv = v.inputs[:]
+                for i in inv:
+                    curnode = i
+                    nextnode = v.name
+                    disconnect_edge(f.graph, curnode, nextnode)
+
+                    # keep deleting upwards as long as it is a chain
+                    while (curnode is not None):
+                        prevnode = None
+                        if len(f.graph[curnode].outputs) == 0:
+                            if len(f.graph[curnode].inputs) == 1:
+                                prevnode = f.graph[curnode].inputs[0]
+                            delete_node(f.graph, curnode)
+                        curnode = prevnode
 
 
 def constant_propagation(nnssa):
@@ -66,7 +92,7 @@ def constant_propagation(nnssa):
                             query_list.append(c + ':' + str(j))
                     result_list = sess.run(query_list)
                     result = {query_list[i]: result_list[i] for i in range(len(query_list))}
-                    print(query_list)
+                    logging.debug('Constant propagation query_list: %s', str(query_list))
             for f in nnssa.functions.values():
                 for k, v in f.graph.items():
                     if k in constant_node_num_outputs:
@@ -75,8 +101,8 @@ def constant_propagation(nnssa):
                             try:
                                 v.value, v.datatype = numpy_val_to_builtin_val(result[result_entry])
                             except:
-                                print(result_entry)
-                                print(result[result_entry])
+                                logging.error(result_entry)
+                                logging.error(result[result_entry])
                         else:
                             values = [
                                 result[k + ':' + str(i)]
@@ -87,8 +113,8 @@ def constant_propagation(nnssa):
                                 v.value = [val[0] for val in npval]
                                 v.datatype = builtins.tuple(tuple([val[1] for val in npval]))
                             except:
-                                print(values)
+                                logging.error(values)
     except:
-        print("Constant Propagation pass failed")
+        logging.exception("Constant Propagation pass failed")
 
     delete_unnecessary_constant_nodes(nnssa)

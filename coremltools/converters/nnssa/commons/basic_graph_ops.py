@@ -152,12 +152,14 @@ def check_connections(gd):
             assert (k in gd[i].control_inputs)
 
 
-def const_determined_nodes(gd, assume_variable_nodes=[]):
+def const_determined_nodes(gd, assume_variable_nodes=None):
     """
     Given a graph, extract all nodes that only depends on const nodes.
     
     # TODO: extract nodes that depends on the "const part" of placeholders.
     """
+    if assume_variable_nodes is None:
+        assume_variable_nodes = []
     vis = {}
 
     def visit(node):

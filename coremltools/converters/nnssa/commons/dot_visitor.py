@@ -9,7 +9,6 @@ class DotVisitor(object):
     """
     Generates a dot description of a graph in dictionary form.
     """
-
     def __init__(self, annotation=None):
         self.result = []
         self.visited_memo = {}
@@ -28,7 +27,7 @@ class DotVisitor(object):
 
     def visit(self, graph, node, nodename_prefix=''):
         if node.name in self.visited_memo:
-            return
+            return self
 
         # For printing datatype, breaks type
         if node.attr.get('symbolic_datatype', None) is not None:

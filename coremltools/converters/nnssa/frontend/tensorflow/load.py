@@ -2,11 +2,10 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-
-import traceback
+import logging
 
 from .graphdef_to_ssa import graphdef_to_ssa
-from .graph_pass import *
+from .graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from ..common_pass import common_pass
 
 
@@ -51,16 +50,11 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
             graph[name].attr['_output_shapes'] = [placeholder_shape[name]]
 
     passes = [
-        delete_asserts,
-        functionalize_loops,
-        constant_propagation,
-        cond_to_where,
-        remove_variable_nodes,
-        fusedbatchnorm_rewrite,
-        lstmblockcell_rewrite
+        delete_asserts, functionalize_loops, constant_propagation, cond_to_where,
+        remove_variable_nodes, fusedbatchnorm_rewrite, lstmblockcell_rewrite, grublockcell_rewrite
     ]
 
-    if resume_on_errors is False:
+    if not resume_on_errors:
         for p in passes:
             p(ssa)
     else:
@@ -68,18 +62,15 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
             try:
                 p(ssa)
             except:
-                tb = traceback.format_exc()
-                print("Exception in pass " + str(p))
-                print(tb)
-                print("Ignoring and continuing to next pass")
+                logging.exception("Exception in pass %s", str(p))
+                logging.info("Ignoring exception and continuing to next pass")
 
-    common_pass(ssa, resume_on_errors)
+    common_pass(ssa, resume_on_errors, **kwargs)
 
     for f in ssa.functions.values():
         f.find_inputs_and_outputs()
-
-    # make sure type inference is complete
-    if resume_on_errors is False:
+    # check that type inference is complete
+    if not resume_on_errors:
         for f in ssa.functions.values():
             for n in f.graph.values():
                 assert n.datatype is not None

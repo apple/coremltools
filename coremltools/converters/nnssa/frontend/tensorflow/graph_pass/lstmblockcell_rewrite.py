@@ -5,9 +5,9 @@ from ....commons.basic_graph_ops import replace_node, delete_node
 from ..parsed_tf_node import ParsedTFNode
 
 
-def linear(builder, mul1, mul2, add, name=None):
+def Linear(builder, mul1, mul2, add, name=None):
     mul = builder.add_matmul([mul1, mul2], name=name)
-    return builder.add_elementwise('Add', [mul, add], name=name)
+    return builder.add_elementwise("Add", [mul, add], name=name)
 
 
 def expand_lstm_block_cell(graph, node):
@@ -114,17 +114,21 @@ def expand_lstm_block_cell(graph, node):
     o = sigmoid(cs * wco + o)
     co = tanh(cs)
     h = co .* o
-    """
+    """  # pylint: disable=pointless-string-statement
     builder = GraphBuilder(graph, node.name + '/', ParsedTFNode)
-    zero = builtins.int32()
-    zero.val = 0
+    if node.op == 'BlockLSTM': # BlockLSTM takes a list of tensor objects, therefore it's rank is 1 more than the input rank needed for LSTMBlock
+        zero = builtins.int32()
+        zero.val = 0
+        expand_axis = builder.add_const(zero, name='expand_axis')
+        h_prev_expand = builder.add_expanddims(h_prev, expand_axis)
+    else:
+        h_prev_expand = h_prev
+
     one = builtins.int32()
     one.val = 1
     concat_axis = builder.add_const(one, name='concat_axis')
-    expand_axis = builder.add_const(zero, name='expand_axis')
-    h_prev_expand = builder.add_expanddims(h_prev, expand_axis)
     xh = builder.add_concat([x, h_prev_expand], concat_axis)
-    icifo_presplit = linear(builder, xh, w, b)
+    icifo_presplit = Linear(builder, xh, w, b)
     icifo = builder.add_split(value=icifo_presplit, split_dim=concat_axis, num_split=4)
     i = builder.add_get_tuple(icifo, index=0)
     ci = builder.add_get_tuple(icifo, index=1)
@@ -136,8 +140,8 @@ def expand_lstm_block_cell(graph, node):
         bias = builder.add_const(fb, name='forget_bias')
         f = builder.add_elementwise("Add", [f, bias])
     if peephole:
-        i = builder.add_activation('Sigmoid', linear(builder, cs_prev, wci, i))
-        f = builder.add_activation('Sigmoid', linear(builder, cs_prev, wcf, f))
+        i = builder.add_activation('Sigmoid', Linear(builder, cs_prev, wci, i))
+        f = builder.add_activation('Sigmoid', Linear(builder, cs_prev, wcf, f))
     else:
         i = builder.add_activation('Sigmoid', i)
         f = builder.add_activation('Sigmoid', f)
@@ -156,7 +160,7 @@ def expand_lstm_block_cell(graph, node):
         cs = builder.add_elementwise('Maximum', [cs, lower_clip])
         cs = builder.add_elementwise('Minimum', [cs, upper_clip])
     if peephole:
-        o = builder.add_activation('Sigmoid', linear(builder, cs, wco, o))
+        o = builder.add_activation('Sigmoid', Linear(builder, cs, wco, o))
     else:
         o = builder.add_activation('Sigmoid', o)
     co = builder.add_activation('Tanh', cs)
@@ -173,7 +177,7 @@ def expand_lstm_block_cell(graph, node):
     delete_node(graph, node.name)
 
 
-def rewrite_to_lstm_block(graph, node):
+def rewrite_to_lstmblock(graph, node):
     assert ((node.op == 'LSTMBlockCell' and len(node.inputs) == 8)
             or (node.op == 'BlockLSTM' and len(node.inputs) == 9))
 
@@ -185,10 +189,8 @@ def rewrite_to_lstm_block(graph, node):
 
     builder = GraphBuilder(graph, node.name + '/', ParsedTFNode)
 
-    lstm_cell = builder.add_LSTMBlock(x, w, b,
-                                      prev_h=h_prev,
-                                      prev_cs=cs_prev,
-                                      forget_bias=forget_bias)
+    lstm_cell = builder.add_LSTMBlock(
+        x, w, b, prev_h=h_prev, prev_cs=cs_prev, forget_bias=forget_bias, mode="cell")
 
     for o in node.outputs:
         assert (graph[o].op == 'get_tuple')
@@ -206,7 +208,7 @@ def rewrite_to_lstm_block(graph, node):
                 h = builder.add_get_tuple(lstm_cell, index=1)
             replace_node(graph, o, h)
         else:
-            raise ValueError('Output option for LSTMBlockCell unsupported')
+            raise ValueError("Output option for LSTMBlockCell unsupported")
         delete_node(graph, o)
     delete_node(graph, node.name)
 
@@ -235,9 +237,9 @@ def need_expand(graph, node):
 def lstmblockcell_rewrite(nnssa):
     for i in list(nnssa.functions):
         graph = nnssa.functions[i].graph
-        block_cells = [k for k, v in graph.items() if v.op == 'LSTMBlock' or v.op == 'BlockLSTM']
+        block_cells = [k for k, v in graph.items() if v.op == 'LSTMBlockCell' or v.op == 'BlockLSTM']
         for b in block_cells:
             if need_expand(graph, graph[b]):
                 expand_lstm_block_cell(graph, graph[b])
             else:
-                rewrite_to_lstm_block(graph, graph[b])
+                rewrite_to_lstmblock(graph, graph[b])

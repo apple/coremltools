@@ -3,17 +3,14 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from .file_writer import file_writer
-import io
-import sys
+import six
 import numpy as np
 from .. import builtins
-from .types import *
+from .types import dump_np_types, py_types
 
 
 def _dump_impl(obj, writer, expected_type=None):
-    if isinstance(obj, bool) or isinstance(
-            obj, int) or ((sys.version_info < (3, 0)) and isinstance(obj, long)) or issubclass(
-                type(obj), int) or isinstance(obj, np.integer):
+    if isinstance(obj, (np.bool_, np.integer, six.integer_types)) or issubclass(type(obj), int):
         assert (expected_type is None or builtins.get_type_info(expected_type).name == 'int')
         writer.write_byte(py_types.int.value)
         writer.write_int(obj)
@@ -23,13 +20,13 @@ def _dump_impl(obj, writer, expected_type=None):
         writer.write_byte(py_types.str.value)
         writer.write_int(len(obj))
         writer.write_str(obj)
-    elif isinstance(obj, str) or ((sys.version_info < (3, 0)) and isinstance(obj, unicode)):
+    elif isinstance(obj, six.string_types):
         assert (expected_type is None or builtins.get_type_info(expected_type).name == 'str')
         writer.write_byte(py_types.str.value)
         obj = obj.encode('latin-1')
         writer.write_int(len(obj))
         writer.write_str(obj)
-    elif isinstance(obj, float) or isinstance(obj, np.float32) or isinstance(obj, np.double):
+    elif isinstance(obj, (float, np.float32, np.double)):
         assert (expected_type is None or builtins.get_type_info(expected_type).name == 'double')
         writer.write_byte(py_types.double.value)
         writer.write_double(obj)
@@ -60,8 +57,6 @@ def _dump_impl(obj, writer, expected_type=None):
         writer.write_str(np.ravel(obj, order='C').tobytes())
 
     elif hasattr(obj, '__slots__'):
-        import pdb
-        pdb.set_trace()
         assert (hasattr(obj, '__slot_types__'))
         assert (len(obj.__slots__) == len(obj.__slot_types__))
         _dump_impl(obj.__version__(), writer)

@@ -3,7 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-import sys
+import six
 
 _varname_charset = set([chr(i) for i in range(ord('A'),
                                               ord('Z') + 1)] +
@@ -11,11 +11,6 @@ _varname_charset = set([chr(i) for i in range(ord('A'),
                                               ord('z') + 1)] +
                        [chr(i) for i in range(ord('0'),
                                               ord('9') + 1)] + ['_'])
-
-if sys.version_info >= (3, 0):
-    str_types = (str)
-else:
-    str_types = (str, unicode)
 
 
 def escape_name(name):
@@ -36,6 +31,6 @@ def escape_fn_name(name):
 
 
 def normalize_names(names):
-    if isinstance(names, str_types):
+    if isinstance(names, six.string_types):
         return names.replace(':', '__').replace('/', '__')
     return [i.replace(':', '__').replace('/', '__') for i in names]

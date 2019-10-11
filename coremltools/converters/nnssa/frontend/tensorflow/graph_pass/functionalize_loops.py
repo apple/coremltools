@@ -3,233 +3,11 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from ..parsed_tf_node import ParsedTFNode
-from ....commons.basic_graph_ops import *
+from ....commons.basic_graph_ops import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from ....nnssa import SSAFunction
-
-
-class FindAllDownstreamTerminals(object):
-    # Find all nodes matching a particular function
-    # which is downstream reachable from a set of nodes.
-    def __init__(self, fn):
-        self.result = []
-        self.fn = fn
-        self.memo = {}
-
-    def visit(self, g, node):
-        if not isinstance(node, ParsedTFNode):
-            node = g[node]
-
-        if node.name in self.memo:
-            return self
-        self.memo[node.name] = 1
-
-        if self.fn(node):
-            self.result.append(node.name)
-            return self
-
-        for i in node.outputs:
-            self.visit(g, g[i])
-
-        return self
-
-    def visit_many(self, g, nodes):
-        for i in nodes:
-            self.visit(g, i)
-        return self
-
-    def get_result(self):
-        return self.result
-
-
-class FindAllReachableNodes(object):
-    # Find all nodes reachable from a set of nodes which satisfy a criteria
-    def __init__(self, fn):
-        self.result = []
-        self.fn = fn
-        self.memo = {}
-
-    def visit(self, g, node):
-        if not isinstance(node, ParsedTFNode):
-            node = g[node]
-
-        if node.name in self.memo:
-            return self
-        self.memo[node.name] = 1
-
-        if self.fn(node):
-            self.result.append(node.name)
-
-        for i in node.outputs:
-            self.visit(g, g[i])
-
-        for i in node.inputs:
-            self.visit(g, g[i])
-
-        return self
-
-    def visit_many(self, g, nodes):
-        for i in nodes:
-            self.visit(g, i)
-        return self
-
-    def get_result(self):
-        return self.result
-
-
-class FindImmediateUpstreamNodes(object):
-    # Find all nodes matching a particular function which is immediately above a set of nodes
-    def __init__(self, fn):
-        self.result = []
-        self.fn = fn
-
-    def visit(self, g, node):
-        if not isinstance(node, ParsedTFNode):
-            node = g[node]
-
-        for i in node.inputs:
-            if self.fn(g[i]):
-                self.result.append(i)
-
-        return self
-
-    def visit_many(self, g, nodes):
-        for i in nodes:
-            self.visit(g, i)
-        return self
-
-    def get_result(self):
-        return self.result
-
-
-class FindImmediateDownstreamNodes(object):
-    # Find all nodes matching a particular function which is immediately above a set of nodes
-    def __init__(self, fn):
-        self.result = []
-        self.fn = fn
-
-    def visit(self, g, node):
-        if not isinstance(node, ParsedTFNode):
-            node = g[node]
-
-        for i in node.outputs:
-            if self.fn(g[i]):
-                self.result.append(i)
-
-        return self
-
-    def visit_many(self, g, nodes):
-        for i in nodes:
-            self.visit(g, i)
-        self.result = list(set(self.result))
-        return self
-
-    def get_result(self):
-        return self.result
-
-
-class FindAllUpstreamTerminals(object):
-    # Find all nodes matching a particular function
-    # which is upstream reachable from a set of nodes.
-    def __init__(self, fn, control_dependencies=False):
-        self.result = []
-        self.fn = fn
-        self.control_dependencies = control_dependencies
-        self.memo = {}
-
-    def visit(self, g, node):
-        if not isinstance(node, ParsedTFNode):
-            node = g[node]
-
-        if node.name in self.memo:
-            return self
-        self.memo[node.name] = 1
-
-        if self.fn(node):
-            self.result.append(node.name)
-            return self
-
-        for i in node.inputs:
-            self.visit(g, g[i])
-        if self.control_dependencies:
-            for i in node.control_inputs:
-                self.visit(g, g[i])
-        return self
-
-    def visit_many(self, g, nodes):
-        for i in nodes:
-            self.visit(g, i)
-        self.result = list(set(self.result))
-        return self
-
-    def get_result(self):
-        return self.result
-
-
-class FindSubgraph(object):
-    # Find all nodes between a set of sources and a set of terminals
-    # Sources are not returned, but reached terminals are returned
-    def __init__(self, terminal_nodes):
-        self.memo = {}
-        self.terminal = terminal_nodes
-
-    def visit_impl(self, g, node):
-        if not isinstance(node, ParsedTFNode):
-            node = g[node]
-
-        if node.name in self.terminal:
-            self.memo[node.name] = True
-            return True
-
-        if node.name in self.memo:
-            return self.memo[node.name]
-
-        # add self to memo first otherwise cycles will not terminate
-        self.memo[node.name] = None
-        reachable = None
-        all_unreachable = True
-        for i in node.outputs + node.control_outputs:
-            visit_result = self.visit_impl(g, g[i])
-            if visit_result == True:
-                reachable = True
-            if visit_result != False:
-                all_unreachable = False
-
-        if reachable:
-            self.memo[node.name] = reachable
-        elif all_unreachable:
-            self.memo[node.name] = False
-        else:
-            self.memo[node.name] = None
-
-        return reachable
-
-    def visit(self, g, node):
-        self.visit_impl(g, node)
-        while (True):
-            if None in iter(self.memo.values()):
-                revisit = [k for k, v in self.memo.items() if v is None]
-                self.memo = {k: v for k, v in self.memo.items() if v is not None}
-                for n in revisit:
-                    self.visit_impl(g, n)
-            else:
-                break
-        return self
-
-    def visit_many(self, g, nodes):
-        for node in nodes:
-            self.visit_impl(g, node)
-        while (True):
-            if None in iter(self.memo.values()):
-                revisit = [k for k, v in self.memo.items() if v is None]
-                self.memo = {k: v for k, v in self.memo.items() if v is not None}
-                for n in revisit:
-                    self.visit_impl(g, n)
-            else:
-                break
-        return self
-
-    def get_result(self):
-        return [k for k, v in self.memo.items() if v]
+from .visitors import FindAllReachableNodes, FindImmediateDownstreamNodes, FindImmediateUpstreamNodes,\
+    FindSubgraph
+import logging
 
 
 class FunctionalizeLoops(object):
@@ -252,55 +30,55 @@ class FunctionalizeLoops(object):
 
     Instead, use functionalize_loops.
     """
-
     def __init__(self):
         self.exits = None
         self.merges = None
         self.enters = None
+        self.constant_enters = None
         self.switches = None
         self.subgraph = None
         self.loopcond = None
-        pass
+        self.is_constant = None
+        self.next_iterations = None
+        self.cond = None
+        self.body = None
 
     def _search(self, g, node):
         if not isinstance(node, ParsedTFNode):
             node = g[node]
+
         # we look for NextIteration nodes
-        if node.op == "Enter":
-            frame_name = node.attr['frame_name']
-            print("Fixing frame name: %s" % (frame_name))
-            # find all the enter args
-            # this is basically the enter frame
-            # functionalize_control_flow.cc:FunctionalizeControlFlow (1160-1196)
-            self.enters = [k for k, v in g.items() if v.attr.get('frame_name', '') == frame_name]
-            self.is_constant = [bool(g[n].attr.get('is_constant', False)) for n in self.enters]
-            self.merges = FindImmediateDownstreamNodes(lambda x: x.op == "Merge").visit_many(
-                g, self.enters).get_result()
-            self.next_iterations = FindImmediateUpstreamNodes(
-                lambda x: x.op == "NextIteration").visit_many(g, self.merges).get_result()
-            self.switches = FindImmediateDownstreamNodes(lambda x: x.op == "Switch").visit_many(
-                g, self.merges).get_result()
-            self.exits = FindImmediateDownstreamNodes(lambda x: x.op == "Exit").visit_many(
-                g, self.switches).get_result()
-            self.loopcond = list(
-                set(
-                    FindImmediateUpstreamNodes(lambda x: x.op == "LoopCond").visit_many(
-                        g, self.switches).get_result()))
+        assert node.op == "Enter"
 
-            self.subgraph = FindSubgraph(self.exits).visit_many(g, self.enters).get_result()
-            self.cond = FindSubgraph(self.switches).visit_many(g, self.merges).get_result()
-            self.body = FindSubgraph([node.name] + self.exits).visit_many(
-                g, self.switches).get_result()
-            # drop merges and switches from cond and body
-            self.cond = [
-                i for i in self.cond if i not in (self.merges + self.switches + self.enters)
-            ]
-            self.body = [i for i in self.body if i not in ([node.name] + self.switches)
-                         ] + [node.name] + self.switches + self.merges + self.enters
+        frame_name = node.attr['frame_name']
+        logging.debug("Fixing frame name: %s", frame_name)
+        # find all the enter args
+        # this is basically the enter frame
+        # functionalize_control_flow.cc:FunctionalizeControlFlow (1160-1196)
+        self.enters = [k for k, v in g.items() if v.attr.get('frame_name', '') == frame_name]
+        self.is_constant = [bool(g[n].attr.get('is_constant', False)) for n in self.enters]
+        self.merges = FindImmediateDownstreamNodes(lambda x: x.op == "Merge").visit_many(
+            g, self.enters).get_result()
+        self.next_iterations = FindImmediateUpstreamNodes(
+            lambda x: x.op == "NextIteration").visit_many(g, self.merges).get_result()
+        self.switches = FindImmediateDownstreamNodes(lambda x: x.op == "Switch").visit_many(
+            g, self.merges).get_result()
+        self.exits = FindImmediateDownstreamNodes(lambda x: x.op == "Exit").visit_many(
+            g, self.switches).get_result()
+        self.loopcond = list(
+            set(
+                FindImmediateUpstreamNodes(lambda x: x.op == "LoopCond").visit_many(
+                    g, self.switches).get_result()))
 
-            # ok. we can now rebuild.
-        else:
-            pass
+        self.subgraph = FindSubgraph(self.exits).visit_many(g, self.enters).get_result()
+        self.cond = FindSubgraph(self.switches).visit_many(g, self.merges).get_result()
+        self.body = FindSubgraph([node.name] + self.exits).visit_many(g, self.switches).get_result()
+        # drop merges and switches from cond and body
+        self.cond = [i for i in self.cond if i not in (self.merges + self.switches + self.enters)]
+        self.body = [i for i in self.body if i not in ([node.name] + self.switches)
+                     ] + [node.name] + self.switches + self.merges + self.enters
+
+        # ok. we can now rebuild.
 
     def _fix_graph_invariants(self, g):
         import copy
@@ -331,7 +109,7 @@ class FunctionalizeLoops(object):
                 new_enter_node.outputs = []
                 new_enter_node.name = node.name + "/trsplit%d" % (j)
                 g[new_enter_node.name] = new_enter_node
-                print("splitting %s" % (node.name))
+                logging.debug("splitting %s", node.name)
                 # connect the new node
                 enter_output = node_output_copy[j]
                 disconnect_edge(g, node.name, enter_output)
@@ -547,7 +325,7 @@ class FunctionalizeLoops(object):
             g, cond_function).get_result()
         body_constants = FindImmediateUpstreamNodes(lambda x: x.op == "Const").visit_many(
             g, body_function).get_result()
-        #for const_node in cond_constants + body_constants:
+        # for const_node in cond_constants + body_constants:
         #    assert(len(g[const_node].outputs) == 1)
 
         cond_function = cond_function.union(set(cond_constants))
@@ -557,7 +335,8 @@ class FunctionalizeLoops(object):
             g, cond_function).get_result()
         downstream_cond = set(downstream_cond) - cond_function
         if len(downstream_cond) > 0:
-            print("Disconnecting unused variables in condition function ", downstream_cond)
+            logging.debug(
+                "Disconnecting unused variables in condition function %s", downstream_cond)
             for i in downstream_cond:
                 delete_node(g, i)
 
@@ -565,7 +344,7 @@ class FunctionalizeLoops(object):
             g, body_function).get_result()
         downstream_body = set(downstream_body) - body_function
         if len(downstream_body) > 0:
-            print("Disconnecting unused variables in body function ", downstream_body)
+            logging.debug("Disconnecting unused variables in body function %s", downstream_body)
             for i in downstream_body:
                 delete_node(g, i)
 
@@ -606,10 +385,10 @@ def functionalize_loops(ssa):
     Functionalize all loops in an SSA
     """
     done = False
-    while (done == False):
+    while not done:
         done = True
         for f in list(ssa.functions.keys()):
             functionalize = FunctionalizeLoops()
             ret = functionalize.functionalize_loops(ssa, f)
-            if ret == True:
+            if ret:
                 done = False

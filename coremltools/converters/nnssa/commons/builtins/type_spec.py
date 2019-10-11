@@ -15,7 +15,9 @@ class Type:
     """
     __slots__ = ['name', 'tparam', 'python_class']
 
-    def __init__(self, name, tparam=[], python_class=None):
+    def __init__(self, name, tparam=None, python_class=None):
+        if tparam is None:
+            tparam = []
         assert (isinstance(name, str))
         assert (isinstance(tparam, list))
         self.name = name
@@ -53,10 +55,10 @@ class FunctionType:
     """
     - FunctionType.inputs : A list of Type objects defining the types of the input
     - FunctionType.output: A Type object defining the type of the output
-    - FunctionType.python\_function : The original python function implementing 
-                                      this type. Two FunctionType objects compare 
-                                      equal only on inputs and output and not 
-                                      python_function 
+    - FunctionType.python_function : The original python function implementing 
+                                     this type. Two FunctionType objects compare 
+                                     equal only on inputs and output and not 
+                                     python_function 
     """
     __slots__ = ['inputs', 'output', 'python_function']
 

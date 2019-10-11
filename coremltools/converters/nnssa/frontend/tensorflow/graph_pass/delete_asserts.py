@@ -3,37 +3,61 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from ....commons.basic_graph_ops import delete_node
-
+import logging
 import sys
 
 sys.setrecursionlimit(5000)  # increase recursion limit to support convert large models
 
 
-def all_assert_leaves(gdict, nodename, memo):
-    if nodename in memo:
-        return memo[nodename]
-    memo[nodename] = None
-    if len(gdict[nodename].outputs) == 0:
-        if gdict[nodename].op in ['Assert', 'CheckNumerics']:
-            memo[nodename] = True
-        else:
-            memo[nodename] = False
-    else:
-        memo[nodename] = all(all_assert_leaves(gdict, o, memo) for o in gdict[nodename].outputs)
+def _all_assert_leaves(gdict, nodename, memo):
+    """
+    Does the given node lead to only assertions?
 
-    return memo[nodename]
+    Args:
+        gdict (dict): The node's graph.
+        nodename (str): The name of the node to test.
+        memo (dict): Storage for memoization.
+    """
+    work = [nodename]
+    while True:
+        assert len(work) <= len(gdict)  # If true, this algorithm is broken
+        node = gdict[work.pop()]
+
+        # Entries in memo have one of the following values for a given node:
+        #  None: the node is in the stack; this node is downstream.
+        #  True: the node is an assertion or leads only to assertions.
+        # False: the node does not lead only to assertions.
+        if not isinstance(memo.get(node.name), bool):
+            memo[node.name] = None
+            outputs = node.outputs
+            if len(outputs) == 0:
+                # Leaf node: stack shrinks
+                memo[node.name] = node.op in ('Assert', 'CheckNumerics')
+            else:
+                outputs_to_process = [n for n in outputs if n not in memo]
+                if len(outputs_to_process) == 0:
+                    # Non-leaf node with fully processed outputs: stack shrinks
+                    memo[node.name] = all(memo[n] for n in outputs)
+                else:
+                    # Non-leaf node with unprocess outputs: stack grows
+                    work.append(node.name)
+                    work.extend(outputs_to_process)
+        if len(work) == 0:
+            return memo[node.name]
 
 
 def delete_asserts(nnssa):
-    # look for nodes which only end up at asserts
+    """
+    Delete all nodes that lead only to assertions.
+    """
     delete_count = 0
     for f in nnssa.functions.values():
         memo = {}
         for n in f.graph:
-            all_assert_leaves(f.graph, n, memo)
+            _all_assert_leaves(f.graph, n, memo)
         for m in memo:
-            if memo[m] is True:
+            if memo[m]:
                 delete_count += 1
                 delete_node(f.graph, m)
-    print(str(delete_count) + " assert nodes deleted")
+    logging.debug("%d assert nodes deleted", delete_count)
     return delete_count

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=wildcard-import
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
@@ -15,6 +16,7 @@ from .type_void import void
 from .type_globals_pseudo_type import globals_pseudo_type
 from .type_unknown import unknown
 from .type_tuple import tuple, is_tuple
+from .utils import is_primitive, is_scalar
 from .annotate import annotate
 from .annotate import class_annotate
 from .annotate import apply_delayed_types

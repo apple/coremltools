@@ -1,7 +1,6 @@
-import sympy as sm
 import numpy as np
-from ...commons.symbolic import *
-from ...commons.basic_graph_ops import topsort, replace_source, disconnect_edge, connect_edge
+from ...commons.symbolic import isscalar, is_symbolic
+from ...commons.basic_graph_ops import topsort, replace_source
 
 
 def make_hashable(v):
@@ -35,16 +34,16 @@ def common_symbolic_value_elimination_impl(gdict):
     for k in order:
         n = gdict[k]
         nodeval = n.attr.get('symbolic_value')
-        try:
-            if nodeval is None:
-                continue
-            elif isscalar(nodeval.val) and nodeval.val == -1:
-                continue
-            elif (not isscalar(nodeval.val)) and -1 in nodeval.val:
-                continue
-            elif isinstance(val, np.ndarray) and np.issctype(val.dtype) and val.size > 100:
-                continue
-        except:
+        if nodeval is None:
+            continue
+
+        val_list = nodeval.val if isinstance(nodeval.val, list) else [nodeval.val]
+        if any([isscalar(v) and v == -1 for v in val_list]):
+            continue
+        if any([(not isscalar(v)) and -1 in v for v in val_list]):
+            continue
+        if any([isinstance(v, np.ndarray) and np.issctype(v.dtype) and v.size > 100
+                for v in val_list]):
             continue
 
         hashable_val, any_symbolic = make_hashable(nodeval.val)
@@ -80,7 +79,7 @@ def common_symbolic_value_elimination_impl2(gdict):
         except:
             build_val = True
 
-        if build_val == False:
+        if not build_val:
             hashable_val, _ = make_hashable(nodeval.val)
         else:
             effective_val = [n.op, sorted(list(n.attr)), [node_values[v] for v in n.inputs]]

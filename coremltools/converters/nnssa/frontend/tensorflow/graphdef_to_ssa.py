@@ -4,8 +4,8 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 import tensorflow as tf
 from .parse import graphdef_to_dict
-from ...commons.basic_graph_ops import *
-from ...nnssa import *
+from ...commons.basic_graph_ops import fill_outputs
+from ...nnssa import NetworkEnsemble, SSAFunction
 from .graph_pass import insert_get_tuple
 from .graph_pass import delete_disconnected_nodes
 from .graph_pass import tensor_array_resource_removal

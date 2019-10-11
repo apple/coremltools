@@ -3,8 +3,9 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-import numpy as np
 from ...commons.basic_graph_ops import delete_node, check_connections, disconnect_edge
+
+import logging
 
 
 def convert_constant_nodes_to_const_ops(nnssa):
@@ -57,7 +58,7 @@ def delete_nodes_with_only_constant_descendents(nnssa):
             if to_delete:
                 delete_count += 1
                 delete_node(f.graph, k)
-        # also delete all Const nodes with no descendents
+        # also delete all Const nodes with no descendants
         keys = list(f.graph.keys())
         for k in keys:
             if k not in f.graph:
@@ -73,5 +74,5 @@ def delete_unnecessary_constant_nodes(nnssa):
     for f in list(nnssa.functions.values()):
         check_connections(f.graph)
     convert_constant_nodes_to_const_ops(nnssa)
-    print("%s nodes deleted" % (delete_count))
+    logging.debug("%s nodes deleted", delete_count)
     return delete_count

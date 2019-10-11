@@ -29,7 +29,8 @@ class ConstantTracing(object):
         # takes C as an input, and the node is not one of get_tuple, make_tuple and while
         const_usages = {}
         for (fname, nodename), v in self.node_value_trace.items():
-            if type(v) is tuple and self.whole_graph.functions[v[0]].graph[v[1]].value is not None:
+            if isinstance(v,
+                          tuple) and self.whole_graph.functions[v[0]].graph[v[1]].value is not None:
                 fn = self.whole_graph.functions[fname]
                 node = fn.graph[nodename]
                 for o in node.outputs:
@@ -55,7 +56,6 @@ class ConstantTracing(object):
         for k, v in const_usages.items():
             if k[0] not in v and len(v) == 1:
                 remap_candidates[k] = list(v)[0]
-                print(k, list(v)[0])
 
         # remap_candidates[(fn,const_node,)] -> target_function
         # means that we can move this const_node into that particular function
@@ -95,7 +95,7 @@ class ConstantTracing(object):
                     fname,
                     node.inputs[0],
                 )]
-                if type(inval) is list:
+                if isinstance(inval, list):
                     # input is a tuple we traced
                     self.node_value_trace[(
                         fname,
@@ -225,7 +225,7 @@ class ConstantTracing(object):
                     fname,
                     nodename,
                 )
-                if type(self.node_value_trace[cur_node_key]) is list and \
+                if isinstance(self.node_value_trace[cur_node_key], list) and \
                         self.node_value_trace[cur_node_key].count(source_const_key) > 0:
                     # remove the input
                     idx = self.node_value_trace[cur_node_key].index(source_const_key)
@@ -238,7 +238,7 @@ class ConstantTracing(object):
                         node.datatype = builtins.tuple(newtype)
                     # update the trace. maintain invariants
                     self.node_value_trace[cur_node_key].pop(idx)
-                elif type(self.node_value_trace[cur_node_key]) is tuple and \
+                elif isinstance(self.node_value_trace[cur_node_key], tuple) and \
                         self.node_value_trace[cur_node_key] == source_const_key:
                     delete_nodes.append(nodename)
                 elif node.op == 'get_tuple':
@@ -250,7 +250,7 @@ class ConstantTracing(object):
                         fname,
                         node.inputs[0],
                     )]
-                    if type(parent_trace) is list:
+                    if isinstance(parent_trace, list):
                         node.attr['index'] = parent_trace.index(my_trace)
 
             if fname == source_fname:

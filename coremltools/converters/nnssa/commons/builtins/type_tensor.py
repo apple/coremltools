@@ -2,11 +2,9 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-from .annotate import annotate
-from .type_void import void
-from .type_int import *
-from .type_spec import *
+from .type_spec import Type
 from .get_type_info import get_type_info
+from .utils import promote_types
 import sympy as sm
 
 
@@ -61,24 +59,43 @@ def tensor(primitive, shape):
     return tensor
 
 
-def is_tensor_and_is_compatible(tensor_type1, tensor_type2):
-    # returns a pair of (bool, type)
-    # If Both are tensors, and have compatible shape, the first return is true
-    # The return will be the most specific version of the tensor type.
-    # Note that this may not be either tensor types. i.e.
-    #
-    # is_tensor_and_is_compatible(tensor[fp32,[10,-1]] ,tensor[fp32,[-1,20]])
-    # will return True, tensor[fp32, [10,20]]
+def is_tensor_and_is_compatible(tensor_type1, tensor_type2, allow_promotion=False):
+    """
+    Try to find a tensor type compatible with both input types.
 
-    if tensor_type1 is None or tensor_type2 is None:
-        return False, None
-    if get_type_info(tensor_type1).name != 'tensor' or get_type_info(tensor_type2).name != 'tensor':
+    Compatible means that the tensors have the same rank and matching or unspecified
+    dimensions. For example, (10, -1) is compatible with (-1, 20) with the compatible
+    shape (10, 20).
+
+    Args:
+        tensor_type1 (builtins.tensor)
+        tensor_type2 (builtins.tensor)
+        allow_promotion (bool): If True, allow primitive types to be promoted.
+
+    Returns:
+        A pair of (bool, type). If the given types are not tensor types with
+        (1) compatible shapes and (2) either identical primitive types or
+        allow_promition=True, return is False, None. Otherwise, return True
+        and the compatible shape. Note that the returned shape may
+        not be the same as either input. For example,
+
+        is_tensor_and_is_compatible(
+            tensor[fp32,[10,-1]],
+            tensor[fp32,[-1,20]]) --> tensor[fp32, [10,20]]
+    """
+
+    if not is_tensor(tensor_type1) or not is_tensor(tensor_type2):
         return False, None
     shape1 = tensor_type1.get_shape()
     shape2 = tensor_type2.get_shape()
 
-    if tensor_type1.get_primitive() != tensor_type2.get_primitive():
-        return False, None
+    primitive_type = tensor_type1.get_primitive()
+    if primitive_type != tensor_type2.get_primitive():
+        promoted_type = promote_types(primitive_type, tensor_type2.get_primitive())
+        if allow_promotion:
+            primitive_type = promoted_type
+        else:
+            return False, promoted_type
 
     if len(shape1) == 0:
         return True, tensor_type2
@@ -99,7 +116,7 @@ def is_tensor_and_is_compatible(tensor_type1, tensor_type2):
         elif shape1[i] != shape2[i]:
             return False, None
 
-    return True, tensor(tensor_type1.get_primitive(), most_specific_shape)
+    return True, tensor(primitive_type, most_specific_shape)
 
 
 def is_tensor_and_is_compatible_general_shape(tensor_type1, tensor_type2):
@@ -111,9 +128,7 @@ def is_tensor_and_is_compatible_general_shape(tensor_type1, tensor_type2):
     # is_tensor_and_is_compatible(tensor[fp32,[10,-1]] ,tensor[fp32,[-1,20]])
     # will return True, tensor[fp32, [-1,-1]]
 
-    if tensor_type1 is None or tensor_type2 is None:
-        return False, None
-    if get_type_info(tensor_type1).name != 'tensor' or get_type_info(tensor_type2).name != 'tensor':
+    if not is_tensor(tensor_type1) or not is_tensor(tensor_type2):
         return False, None
     shape1 = tensor_type1.get_shape()
     shape2 = tensor_type2.get_shape()

@@ -3,7 +3,6 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 from ...commons.basic_graph_ops import replace_source, delete_node, disconnect_edge
-from ...commons import builtins
 
 
 def remove_unused_nodes(ssa):

@@ -94,10 +94,11 @@ def class_annotate():
     return decorator
 
 
-def apply_delayed_types(type_map=annotated_class_list, fnlist=annotated_function_list):
+def apply_delayed_types(type_map=annotated_class_list, fnlist=annotated_function_list):  # pylint: disable=dangerous-default-value
     """
     Apply all delayed types. See annotate()
     """
+    # pylint: disable=no-member
     # type name is a dict from str to type
     for func in fnlist:
         if hasattr(func, 'return_type') and \

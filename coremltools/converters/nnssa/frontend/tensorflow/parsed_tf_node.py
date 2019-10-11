@@ -20,7 +20,6 @@ class ParsedTFNode(ParsedNode):
     outputs: The list of nodes which consume the result of this node (list[str])
     control_outputs: The list of nodes which have to be executed after this node (list[str])
     """
-
     def __init__(self, tfnode=None):
         ParsedNode.__init__(self)
         self.original_node = tfnode
@@ -64,19 +63,10 @@ class ParsedTFNode(ParsedNode):
         elif 'dtype' in self.attr:
             self.datatype = self.attr['dtype']
 
-    def __copy__(self):
-        import copy
-        ret = ParsedTFNode()
-        ret.name = self.name
-        ret.op = self.op
-        ret.datatype = self.datatype
-        ret.value = copy.deepcopy(self.value)
-        ret.inputs = self.inputs[:]
-        ret.control_inputs = self.control_inputs[:]
-        ret.attr = {k: copy.deepcopy(v) for k, v in self.attr.items()}
-        ret.outputs = self.outputs[:]
-        ret.control_outputs = self.control_outputs[:]
-        return ret
+    def _copy_impl(self, dest):
+        dest = super(ParsedTFNode, self)._copy_impl(dest)
+        dest.original_node = self.original_node
+        return dest
 
-    def copy(self):
-        return self.__copy__()
+    def __copy__(self):
+        return self._copy_impl(ParsedTFNode())

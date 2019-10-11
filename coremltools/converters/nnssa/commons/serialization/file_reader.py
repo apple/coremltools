@@ -4,7 +4,7 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 import struct
 import numpy as np
-from .types import *
+from .types import np_types, py_types
 
 
 class file_reader:
