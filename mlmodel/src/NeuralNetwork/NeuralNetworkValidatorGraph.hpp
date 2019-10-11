@@ -15,6 +15,7 @@ static bool isLayerSupportedForBackprop(const Specification::NeuralNetworkLayer*
         case Specification::NeuralNetworkLayer::kFlatten:
         case Specification::NeuralNetworkLayer::kPooling:
         case Specification::NeuralNetworkLayer::kBatchnorm:
+        case Specification::NeuralNetworkLayer::kReshape:
             return true;
         case Specification::NeuralNetworkLayer::kActivation:{
             switch(layer->activation().NonlinearityType_case()) {
