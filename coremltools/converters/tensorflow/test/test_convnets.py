@@ -3,8 +3,8 @@ import tensorflow.compat.v1 as tf
 import numpy as np
 from coremltools._deps import HAS_TF_1_14
 
-from test_base import TFNetworkTest
-
+from test_base import TFNetworkTest, TFNetworkBatchTest
+import itertools
 
 # IMPORTANT NOTE TO ADD NEW TESTS:
 # For each test function you should set up your own graph and session.
@@ -17,35 +17,13 @@ def conv_cell(inp, conv_weights, bias=None, activation=None, pooling=None, has_b
     return x
 
 
-class TFConvNetTest(TFNetworkTest):
+class TFConvNetTest(TFNetworkBatchTest):
     @classmethod
     def setUpClass(self):
         """
         Set up the unit test by loading common utilities.
         """
         pass
-
-    # Backend - set use_cpu_only to be True when working on Intel GPU macs
-    def _test_tf_model(
-            self,
-            graph,
-            input_tensor_shapes,
-            output_node_names,
-            data_mode='random',
-            delta=1e-2,
-            use_cpu_only=True,
-            graph_optimizations="freeze",  # one of ["freeze", "convert_variables_to_constants", None]
-            quantize_tf_model=False):
-        super(TFConvNetTest, self)._test_tf_model(
-            graph,
-            input_tensor_shapes,
-            output_node_names,
-            data_mode=data_mode,
-            input_refs=None,
-            delta=delta,
-            use_cpu_only=use_cpu_only,
-            graph_optimizations=graph_optimizations,
-            quantize_tf_model=quantize_tf_model)
 
     def test_toy(self):
         graph = tf.Graph()
@@ -68,8 +46,8 @@ class TFConvNetTest(TFNetworkTest):
 
             y = tf.matmul(x, W) + b
             output_name = [y.op.name]
-        self._test_tf_model(graph, {x.op.name: [1, 20]}, output_name)
-        self._test_tf_model(graph, {x.op.name: [8, 20]}, output_name)
+        self._test_tf_model(graph, {x.op.name: [None, 20]}, output_name,
+                batch_sizes=[1,8])
 
     def test_convnet(self):
         graph = tf.Graph()
@@ -79,8 +57,8 @@ class TFConvNetTest(TFNetworkTest):
             x = conv_cell(a, W1)
             W2 = tf.Variable(tf.truncated_normal([3, 3, 4, 2], stddev=0.3))
             x = conv_cell(x, W2)
-        self._test_tf_model(graph, {a.op.name: [1, 8, 8, 3]}, [x.op.name])
-        self._test_tf_model(graph, {a.op.name: [10, 8, 8, 3]}, [x.op.name])
+        self._test_tf_model(graph, {a.op.name: [None, 8, 8, 3]}, [x.op.name],
+                batch_sizes=[1,4])
 
     def test_convnet_batchnorm(self):
         graph = tf.Graph()
@@ -90,8 +68,8 @@ class TFConvNetTest(TFNetworkTest):
             x = conv_cell(a, W1, has_batchnorm=True)
             W2 = tf.Variable(tf.truncated_normal([3, 3, 4, 2], stddev=0.3))
             x = conv_cell(x, W2, has_batchnorm=True)
-        self._test_tf_model(graph, {a.op.name: [1, 8, 8, 3]}, [x.op.name])
-        self._test_tf_model(graph, {a.op.name: [10, 8, 8, 3]}, [x.op.name])
+        self._test_tf_model(graph, {a.op.name: [None, 8, 8, 3]}, [x.op.name],
+                batch_sizes=[1,4])
 
     def test_simple_convnet(self):
         def weight_variable(shape):
@@ -127,7 +105,8 @@ class TFConvNetTest(TFNetworkTest):
             h_pool2 = avg_pool_2x2(h_conv2)
 
         output_name = [h_pool2.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 28, 28, 1]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 28, 28, 1]},
+                output_name, batch_sizes=[1,4])
 
     def test_convnet_classifier(self):
         graph = tf.Graph()
@@ -139,8 +118,8 @@ class TFConvNetTest(TFNetworkTest):
             W_fc1 = tf.Variable(tf.truncated_normal([8 * 8 * 2, 4], stddev=0.3))
             h_fc1 = tf.matmul(h_conv1_flat, W_fc1)
         output_name = [h_fc1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 8, 8, 3]}, output_name)
-        self._test_tf_model(graph, {x_image.op.name: [10, 8, 8, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 8, 8, 3]}, output_name,
+                batch_sizes=[1,10])
 
     @unittest.skip('Type 12 cannot be mapped')
     def test_convnet_quantized(self):
@@ -170,7 +149,8 @@ class TFConvNetTest(TFNetworkTest):
             x_pad = tf.pad(x, paddings, "CONSTANT")
             output = tf.nn.conv2d(x_pad, W, strides=[1, 1, 1, 1], padding='VALID')
         output_name = [output.op.name]
-        self._test_tf_model(graph, {x.op.name: [1, 32, 18, 3]}, output_name, delta=.05)
+        self._test_tf_model(graph, {x.op.name: [None, 32, 18, 3]}, output_name,
+            delta=.05, batch_sizes=[1,4])
 
     def test_dilated_conv(self):
         Cin = 3
@@ -186,10 +166,34 @@ class TFConvNetTest(TFNetworkTest):
                 output = tf.nn.convolution(
                     x, W, strides=[1, 1], padding='VALID', dilation_rate=[d, d])
             output_name = [output.op.name]
-            self._test_tf_model(graph, {x.op.name: [1, Hin, Win, Cin]}, output_name, delta=.05)
+
+            self._test_tf_model(graph, {x.op.name: [None, Hin, Win, Cin]},
+                    output_name, delta=.01, batch_sizes=[1,4])
+
+    def test_depthwise_conv2d_native(self):
+        options = dict(
+            depthwise_multiplier = [1,2],
+            strides = [[1,1,1,1], [1,2,2,1]],
+            padding = ['VALID', 'SAME'],
+        )
+        product = itertools.product(*options.values())
+        for prod in product:
+            params = dict(zip(options.keys(), prod))
+            graph = tf.Graph()
+            with graph.as_default():
+                x_image = tf.placeholder(tf.float32, shape=[None, 16, 16, 3])
+                kernels = tf.Variable(
+                    tf.truncated_normal([3, 3, 3, params['depthwise_multiplier']],
+                    stddev=0.3))
+                conv1 = tf.nn.depthwise_conv2d_native(
+                    input=x_image, filter=kernels, strides=params['strides'],
+                    padding=params['padding'])
+            output_name = [conv1.op.name]
+            self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
+                    output_name, batch_sizes=[1,4])
 
 
-class TFSingleLayerTest(TFNetworkTest):
+class TFSingleLayerTest(TFNetworkBatchTest):
     """
     Small models from tensorflow.layers
     """
@@ -206,11 +210,12 @@ class TFSingleLayerTest(TFNetworkTest):
                 bias_initializer=tf.random_uniform_initializer)
         output_name = [y.op.name]
         self._test_tf_model(
-            graph, {x.op.name: [1, 10]},
+            graph, {x.op.name: [None, 10]},
             output_name,
             delta=1e-2,
             quantize_tf_model=False,
-            use_cpu_only=True)
+            use_cpu_only=True,
+            batch_sizes=[1,10])
 
     @unittest.skip('Type 12 cannot be mapped')
     def test_dense_quantized(self):
@@ -226,7 +231,8 @@ class TFSingleLayerTest(TFNetworkTest):
 
         output_name = [y.op.name]
         self._test_tf_model(
-            graph, {x.op.name: [1, 10]}, output_name, delta=0.05, quantize_tf_model=True)
+            graph, {x.op.name: [None, 10]}, output_name, delta=0.05,
+            quantize_tf_model=True, batch_sizes=[1,4])
 
     def test_dense_concat(self):
         graph = tf.Graph()
@@ -255,7 +261,8 @@ class TFSingleLayerTest(TFNetworkTest):
             z = tf.concat([z1, z2, z3], axis=1)
 
         output_name = [z.op.name]
-        self._test_tf_model(graph, {x.op.name: [1, 10]}, output_name, use_cpu_only=True)
+        self._test_tf_model(graph, {x.op.name: [None, 10]}, output_name,
+                use_cpu_only=True, batch_sizes=[1,4])
 
     def test_conv2d_no_bias(self):
         graph = tf.Graph()
@@ -265,14 +272,16 @@ class TFSingleLayerTest(TFNetworkTest):
             conv1 = tf.nn.conv2d(input=x_image, filter=W, strides=[1, 1, 1, 1], padding='SAME')
         output_name = [conv1.op.name]
         self._test_tf_model(
-            graph, {x_image.op.name: [1, 8, 8, 3]},
+            graph, {x_image.op.name: [None, 8, 8, 3]},
             output_name,
             delta=1e-2,
             quantize_tf_model=False,
-            use_cpu_only=True)
+            use_cpu_only=True,
+            batch_sizes=[1,4])
 
     def test_conv2d(self):
         graph = tf.Graph()
+        batch_sizes = [1,10]
         with graph.as_default():
             x_image = tf.placeholder(tf.float32, shape=[None, 8, 8, 3])
             conv1 = tf.layers.conv2d(
@@ -283,12 +292,8 @@ class TFSingleLayerTest(TFNetworkTest):
                 activation=tf.nn.relu,
                 bias_initializer=tf.constant_initializer([1, 2, 3, 4]))
         output_name = [conv1.op.name]
-        self._test_tf_model(
-            graph, {x_image.op.name: [1, 8, 8, 3]},
-            output_name,
-            delta=1e-2,
-            quantize_tf_model=False,
-            use_cpu_only=True)
+        self._test_tf_model(graph, {x_image.op.name: [None, 8, 8, 3]},
+                output_name, delta=1e-2, use_cpu_only=True, batch_sizes=[1,4])
 
     @unittest.skip('Type 12 cannot be mapped')
     def test_conv2d_quantized(self):
@@ -306,10 +311,11 @@ class TFSingleLayerTest(TFNetworkTest):
 
         output_name = [conv1.op.name]
         self._test_tf_model(
-            graph, {x_image.op.name: [1, 8, 8, 3]},
+            graph, {x_image.op.name: [None, 8, 8, 3]},
             output_name,
             delta=0.05,
-            quantize_tf_model=True)
+            quantize_tf_model=True,
+            batch_sizes=[1,4])
 
     def test_conv2d_valid(self):
         graph = tf.Graph()
@@ -323,7 +329,8 @@ class TFSingleLayerTest(TFNetworkTest):
                 activation=tf.nn.relu,
                 bias_initializer=tf.random_uniform_initializer)
         output_name = [conv1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 8, 8, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 8, 8, 3]},
+                output_name, batch_sizes=[1,4])
 
     def test_conv2d_stride2(self):
         graph = tf.Graph()
@@ -337,7 +344,8 @@ class TFSingleLayerTest(TFNetworkTest):
                 strides=(2, 2),
                 bias_initializer=tf.random_uniform_initializer)
         output_name = [conv1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 8, 8, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 8, 8, 3]},
+                output_name, batch_sizes=[1,4])
 
     @unittest.skip('SpaceToBatchND, BatchToSpaceND does not yet support some of the inputs')
     def test_conv2d_dilated(self):
@@ -352,12 +360,13 @@ class TFSingleLayerTest(TFNetworkTest):
                 dilation_rate=(3, 4),  # does not yet support non-equal dilation rate
                 bias_initializer=tf.random_uniform_initializer)
         output_name = [conv1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 32, 32, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 32, 32, 3]},
+                output_name, batch_sizes=[1,4])
 
     def test_conv2d_transpose(self):
         graph = tf.Graph()
         with graph.as_default():
-            x_image = tf.placeholder(tf.float32, shape=[1, 2, 2, 8])
+            x_image = tf.placeholder(tf.float32, shape=[None, 2, 2, 8])
             conv1 = tf.layers.conv2d_transpose(
                 inputs=x_image,
                 filters=4,
@@ -408,9 +417,11 @@ class TFSingleLayerTest(TFNetworkTest):
                 padding='same',
                 activation=tf.nn.relu,
                 bias_initializer=tf.random_uniform_initializer)
-            pool1 = tf.layers.average_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
+            pool1 = tf.layers.average_pooling2d(inputs=conv1, pool_size=[2, 2],
+                strides=2)
         output_name = [pool1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 16, 16, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
+                output_name, batch_sizes=[1,4])
 
     def test_conv2d_max_pooling(self):
         graph = tf.Graph()
@@ -423,14 +434,16 @@ class TFSingleLayerTest(TFNetworkTest):
                 padding='same',
                 activation=tf.nn.relu,
                 bias_initializer=tf.random_uniform_initializer)
-            pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3, 3], strides=1, padding='same')
+            pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3, 3],
+                strides=1, padding='same')
         output_name = [pool1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 16, 16, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
+            output_name, batch_sizes=[1,4])
 
     def test_conv2d_bn(self):
         graph = tf.Graph()
         with graph.as_default():
-            x_image = tf.placeholder(tf.float32, shape=[1, 16, 16, 3])
+            x_image = tf.placeholder(tf.float32, shape=[None, 16, 16, 3])
             conv1 = tf.layers.conv2d(
                 inputs=x_image,
                 filters=4,
@@ -440,7 +453,8 @@ class TFSingleLayerTest(TFNetworkTest):
                 bias_initializer=tf.random_uniform_initializer)
             bn1 = tf.layers.batch_normalization(inputs=conv1, axis=-1)
         output_name = [bn1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 16, 16, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
+            output_name, batch_sizes=[1,4])
 
     def test_conv2d_spatial_bn(self):
         graph = tf.Graph()
@@ -448,9 +462,9 @@ class TFSingleLayerTest(TFNetworkTest):
             x_image = tf.placeholder(tf.float32, shape=[None, 16, 16, 3])
             bn1 = tf.layers.batch_normalization(inputs=x_image, axis=2)
         output_name = [bn1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 16, 16, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
+            output_name, batch_sizes=[1,4])
 
-    @unittest.skip('DepthwiseConv2dNative not implemented')
     def test_separable_conv2d(self):
         graph = tf.Graph()
         with graph.as_default():
@@ -458,7 +472,8 @@ class TFSingleLayerTest(TFNetworkTest):
             conv1 = tf.layers.separable_conv2d(
                 inputs=x_image, filters=4, kernel_size=[3, 3], padding='valid', depth_multiplier=2)
         output_name = [conv1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 8, 8, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 8, 8, 3]},
+                output_name, batch_sizes=[1,4])
 
     def test_conv1d(self):
         graph = tf.Graph()
@@ -467,8 +482,8 @@ class TFSingleLayerTest(TFNetworkTest):
             conv1 = tf.layers.conv1d(
                 inputs=x_image, filters=2, kernel_size=3, padding='valid', use_bias=True)
         output_name = [conv1.op.name]
-        self._test_tf_model(
-            graph, {x_image.op.name: [1, 8, 3]}, output_name, data_mode='linear', delta=.05)
+        self._test_tf_model(graph, {x_image.op.name: [None, 8, 3]}, output_name,
+                data_mode='linear', delta=.05, batch_sizes=[1,4])
 
     def test_conv1d_dense(self):
         graph = tf.Graph()
@@ -483,26 +498,32 @@ class TFSingleLayerTest(TFNetworkTest):
             conv1_flat = tf.reshape(conv1, [-1, 8 * 2])
             y = tf.layers.dense(inputs=conv1_flat, units=6, activation=tf.nn.relu)
         output_name = [y.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 8, 3]}, output_name)
-        self._test_tf_model(graph, {x_image.op.name: [10, 8, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 8, 3]}, output_name,
+                batch_sizes=[1,4])
 
     def test_conv1d_ave_pooling(self):
         graph = tf.Graph()
         with graph.as_default():
             x_image = tf.placeholder(tf.float32, shape=[None, 8, 3])
-            conv1 = tf.layers.conv1d(inputs=x_image, filters=2, kernel_size=5, padding='same')
-            pool1 = tf.layers.average_pooling1d(inputs=conv1, pool_size=2, strides=2)
+            conv1 = tf.layers.conv1d(inputs=x_image, filters=2, kernel_size=5,
+                    padding='same')
+            pool1 = tf.layers.average_pooling1d(inputs=conv1, pool_size=2,
+                    strides=2)
         output_name = [pool1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 8, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 8, 3]}, output_name,
+                batch_sizes=[1,4])
 
     def test_conv1d_max_pooling(self):
         graph = tf.Graph()
         with graph.as_default():
             x_image = tf.placeholder(tf.float32, shape=[None, 8, 3])
-            conv1 = tf.layers.conv1d(inputs=x_image, filters=2, kernel_size=3, padding='same')
-            pool1 = tf.layers.max_pooling1d(inputs=conv1, pool_size=2, strides=1)
+            conv1 = tf.layers.conv1d(inputs=x_image, filters=2, kernel_size=3,
+                    padding='same')
+            pool1 = tf.layers.max_pooling1d(inputs=conv1, pool_size=2,
+                    strides=1)
         output_name = [pool1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 8, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [1, 8, 3]}, output_name,
+                batch_sizes=[1,4])
 
     def test_conv2d_resize_bilinear(self):
         graph = tf.Graph()
@@ -516,7 +537,8 @@ class TFSingleLayerTest(TFNetworkTest):
                 activation=tf.nn.relu)
             bl1 = tf.image.resize_bilinear(images=conv1, size=[32, 32])
         output_name = [bl1.op.name]
-        self._test_tf_model(graph, {x_image.op.name: [1, 16, 16, 3]}, output_name)
+        self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
+                output_name, batch_sizes=[1,4])
 
     def test_concat_constants(self):
         graph = tf.Graph()
@@ -1179,8 +1201,8 @@ class TFSingleLayerTest(TFNetworkTest):
 
             y = tf.matmul(x, W) + b
 
-        self._test_tf_model(graph, {x.op.name: [1, 20]}, [y.op.name])
-        self._test_tf_model(graph, {x.op.name: [8, 20]}, [y.op.name])
+        self._test_tf_model(graph, {x.op.name: [None, 20]}, [y.op.name],
+            batch_sizes=[1,8])
 
     def test_where(self):
         shape = [3, 4, 5]
