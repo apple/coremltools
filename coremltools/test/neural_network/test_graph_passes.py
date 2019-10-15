@@ -1,10 +1,10 @@
 import numpy as np
 import unittest
 import coremltools.models.datatypes as datatypes
-from coremltools.models import MLModel
 from coremltools.models import neural_network as neural_network
+from coremltools.models import MLModel
 from coremltools.converters.nnssa.coreml.graph_pass.mlmodel_passes import \
-        remove_disconnected_constants, transform_conv_crop_bn_to_conv_bn_crop
+        remove_disconnected_constants, transform_conv_crop
 
 
 class MLModelPassesTest(unittest.TestCase):
@@ -27,7 +27,7 @@ class MLModelPassesTest(unittest.TestCase):
         input_features = [('data', datatypes.Array(1, 10, 10))]
         output_features = [('out', None)]
         builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
-        W = np.ones((2, 1, 2, 2), dtype=np.float32)
+        W = np.ones((1, 2, 2, 2), dtype=np.float32)
         builder.add_convolution(name='conv',
                                 kernel_channels=1,
                                 output_channels=2,
@@ -38,7 +38,7 @@ class MLModelPassesTest(unittest.TestCase):
                                 b=None, has_bias=False,
                                 input_name='data', output_name='conv_out')
         builder.add_crop(name='crop',
-                        left=1, right=0, top=1, bottom=0, offset=0,
+                        left=1, right=1, top=1, bottom=1, offset=0,
                         input_names=['conv_out'],
                         output_name='crop_out')
         builder.add_batchnorm(name='bn',
@@ -61,13 +61,66 @@ class MLModelPassesTest(unittest.TestCase):
         before_pass_out = mlmodel.predict(data_dict)['out']
 
         # transform the pattern
-        transform_conv_crop_bn_to_conv_bn_crop(builder.spec)
-
+        transform_conv_crop(builder.spec)
         # Conv -> BN -> Crop
         np.testing.assert_equal('batchnorm', spec.layers[1].WhichOneof('layer'))
         np.testing.assert_equal('crop', spec.layers[2].WhichOneof('layer'))
 
         # Predict
+        mlmodel = MLModel(builder.spec)
+        after_pass_out = mlmodel.predict(data_dict)['out']
+        np.testing.assert_equal(before_pass_out, after_pass_out)
+
+    def test_conv_crop_bn_relu_to_conv_bn_relu_crop(self):
+        input_features = [('data', datatypes.Array(1, 10, 10))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        W = np.ones((1, 2, 2, 2), dtype=np.float32)
+        builder.add_convolution(name='conv',
+                                kernel_channels=1,
+                                output_channels=2,
+                                height=2, width=2,
+                                stride_height=1, stride_width=1,
+                                border_mode='valid', groups=1,
+                                W=W,
+                                b=None, has_bias=False,
+                                input_name='data', output_name='conv_out')
+        builder.add_crop(name='crop',
+                        left=1, right=1, top=1, bottom=1, offset=0,
+                        input_names=['conv_out'],
+                        output_name='crop_out')
+        builder.add_batchnorm(name='bn',
+                              channels=2,
+                              gamma=np.ones(2,).astype(np.float32),
+                              beta=np.ones(2,).astype(np.float32),
+                              mean=np.ones(2,).astype(np.float32),
+                              variance=np.ones(2,).astype(np.float32),
+                              input_name='crop_out',
+                              output_name='bn_out')
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name='bn_out',
+                               output_name='out')
+        # Conv -> Crop -> BN -> ReLU
+        spec = builder.spec.neuralNetwork
+        np.testing.assert_equal('crop', spec.layers[1].WhichOneof('layer'))
+        np.testing.assert_equal('batchnorm', spec.layers[2].WhichOneof('layer'))
+        np.testing.assert_equal('activation', spec.layers[3].WhichOneof('layer'))
+
+        # Predict
+        mlmodel = MLModel(builder.spec)
+        data = np.random.rand(1, 10, 10)
+        data_dict = {'data': data}
+        before_pass_out = mlmodel.predict(data_dict)['out']
+
+        # transform the pattern
+        transform_conv_crop(builder.spec)
+        # Conv -> BN -> ReLU -> Crop
+        np.testing.assert_equal('batchnorm', spec.layers[1].WhichOneof('layer'))
+        np.testing.assert_equal('activation', spec.layers[2].WhichOneof('layer'))
+        np.testing.assert_equal('crop', spec.layers[3].WhichOneof('layer'))
+
+         # Predict
         mlmodel = MLModel(builder.spec)
         after_pass_out = mlmodel.predict(data_dict)['out']
         np.testing.assert_equal(before_pass_out, after_pass_out)
