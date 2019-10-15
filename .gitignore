@@ -15,4 +15,6 @@ cmake_install.cmake
 /dist/
 .DS_Store
 *.xcodeproj/
+.vscode/
 mlmodel_test_runner
+.cache/

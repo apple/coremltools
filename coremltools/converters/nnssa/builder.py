@@ -274,8 +274,7 @@ class GraphBuilder(object):
             >>> ssa = builder.get_ssa()
 
             # Convert built graph to backend
-            >>> converter = apple_nitro.NitroConverter()
-            >>> nnSSA = converter(ssa, convert_from="NitroSSA")
+            >>> nnSSA = coremltools.convert(ssa, convert_from="NitroSSA")
 
             # Obtain a program that can be ran
             >>> program = nnSSA.compile()
@@ -1225,18 +1224,16 @@ class GraphBuilder(object):
             # 
             # print(i)
 
-            >>> converter = apple_nitro.NitroConverter()
-
             # We should try to "append" the prefix if we are building from graph level.
             # No two nodes should have same name in a NitroSSA, but it's impossible to
             # check if you "bottom-top" build from GraphBuilder.
-            >>> sb = apple_nitro.SSABuilder()
+            >>> sb = coremltools.SSABuilder()
             # The graph builder for the main graph
-            >>> gb = apple_nitro.GraphBuilder(prefix="main_")
+            >>> gb = coremltools.GraphBuilder(prefix="main_")
             # The graph builder for the body function
-            >>> body_builder = apple_nitro.GraphBuilder(prefix="body_")
+            >>> body_builder = coremltools.GraphBuilder(prefix="body_")
             # The graph builder for the condition function
-            >>> cond_builder = apple_nitro.GraphBuilder(prefix="cond_")
+            >>> cond_builder = coremltools.GraphBuilder(prefix="cond_")
 
             # Let's build the main graph first.
             >>> i = gb.add_const(np.int32(0), name="i")
