@@ -33,7 +33,7 @@ mlmodel = coremltools.models.MLModel(spec)
 spec = coremltools.models.utils.load_spec('path/to/the/model.mlmodel')
 ```
 
-## Visualizing Neural Network CoreML models
+## Visualizing Neural Network Core ML models
 
 ```python
 import coremltools
@@ -185,6 +185,28 @@ model.save('conv_prelu.mlmodel')
 output_dict = model.predict({'data': np.ones((3, 10, 10))}, useCPUOnly=False)
 print(output_dict['output'].shape)
 print(output_dict['output'].flatten()[:3])
+```
+
+## Print out layer attributes for debugging
+
+Sometimes we want to print out weights of a particular layer for debugging purposes.
+Following is an example showing how we can utilize the `protobuf` APIs to access any
+attributes include weight parameters. This code snippet uses the model we created in
+the previous example.
+
+```python
+import coremltools
+
+model = coremltools.models.MLModel('conv_prelu.mlmodel')
+
+spec = model.get_spec()
+print(spec)
+
+layer = spec.neuralNetwork.layers[0]
+weight_params = layer.convolution.weights
+
+print('Weights of {} layer: {}.'.format(layer.WhichOneof('layer'), layer.name))
+print(weight_params)
 ```
 
 ## Quantizing a neural network mlmodel
