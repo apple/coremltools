@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
+import imp
 import os
 from setuptools import setup
 
-from coremltools import __version__
+# Get the coremltools version string
+coremltools_dir = os.path.join(os.path.dirname(__file__), 'coremltools')
+version_module = imp.load_source('coremltools.version',
+    os.path.join(coremltools_dir, 'version.py'))
+__version__ = version_module.__version__
 
 README = os.path.join(os.getcwd(), "README.rst")
 
