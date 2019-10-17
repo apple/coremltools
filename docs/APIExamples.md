@@ -196,6 +196,7 @@ the previous example.
 
 ```python
 import coremltools
+import numpy as np
 
 model = coremltools.models.MLModel('conv_prelu.mlmodel')
 
@@ -206,7 +207,7 @@ layer = spec.neuralNetwork.layers[0]
 weight_params = layer.convolution.weights
 
 print('Weights of {} layer: {}.'.format(layer.WhichOneof('layer'), layer.name))
-print(weight_params)
+print(np.reshape(np.asarray(weight_params.floatValue), (1, 1, 3, 3)))
 ```
 
 ## Quantizing a neural network mlmodel
