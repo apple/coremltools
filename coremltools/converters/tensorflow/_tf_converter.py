@@ -51,6 +51,7 @@ def convert(filename,
         # path to the model file must end with either .pb or .h5 format
         if not (filename.endswith('.pb') or filename.endswith('.h5')):
             raise ValueError(invalid_filename_message)
+
         if filename.endswith('.h5'):
             filename = _graph_def_from_saved_model_or_keras_model(filename)
 

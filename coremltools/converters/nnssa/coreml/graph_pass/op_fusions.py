@@ -9,11 +9,11 @@ from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
     delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
 
-
 ELEMENTWISE_OPS = {
     'Maximum',
     'Minimum',
     'Add',
+    'AddV2',
     'Sub',
     'BiasAdd',
     'Mul',
@@ -35,7 +35,7 @@ ELEMENTWISE_OPS = {
 # Native SSA nodes with data_format attributes of NHWC / NCHW
 NATIVE_NHWC_OPS = {
     'Conv2D', 'Conv2DBackpropInput', 'DepthwiseConv2dNative',
-    'Pooling', 'MaxPool', 'AvgPool', 'DepthToSpace', 'SpaceToDepth',
+    'Pooling', 'MaxPool', 'AvgPool', 'DepthToSpace', 'SpaceToDepth', 'FusedBatchNormV3'
 }
 
 REDUCTION_OPS = {
@@ -80,8 +80,10 @@ def _is_NHWC(graph, node):
         return True
 
     if node.op in REDUCTION_OPS:
-        if not any([graph[inp].attr.get('data_format' '') ==
+        if not any([graph[inp].attr.get('data_format', '') ==
                     'NHWC_format_inserted' for inp in node.inputs]):
+            return False
+        if not node.attr.get('keep_dims', True):
             return False
         # adjust axis / dims / reduction_indices values
         for inp in node.inputs:
@@ -101,7 +103,7 @@ def _is_NHWC(graph, node):
         # node is also declared to be "NHWC_format_inserted"
 
         NHWC_parent = any([graph[inp].attr.get('data_format',
-            None) == 'NHWC_format_inserted' for inp in node.inputs])
+                                               None) == 'NHWC_format_inserted' for inp in node.inputs])
 
         if NHWC_parent:
             for inp in node.inputs:
@@ -233,6 +235,9 @@ def transform_nhwc_to_nchw(nnssa):
                 if len(orig_out_shapes) == 1 and len(orig_out_shapes[0]) == 4:
                     s = orig_out_shapes[0]
                     node.attr['_output_shapes'] = [[s[0], s[3], s[1], s[2]]]
+                if node.op == 'FusedBatchNormV3':
+                    s = orig_out_shapes[0]
+                    node.attr['_output_shapes'][0] = [s[0], s[3], s[1], s[2]]
 
             if node.op in ELEMENTWISE_OPS:
                 for inp in node.inputs:
@@ -299,7 +304,7 @@ def fuse_bias_add(nnssa):
                 parent_node = f.graph[current_node.inputs[0]]
                 second_p_node = f.graph[current_node.inputs[1]]
                 if (parent_node.op == 'MatMul' or parent_node.op == 'Conv2D' and len(parent_node.outputs) == 1) and \
-                    (second_p_node.value is not None and len(second_p_node.outputs) == 1 and second_p_node.outputs[0] == k):
+                        (second_p_node.value is not None and len(second_p_node.outputs) == 1 and second_p_node.outputs[0] == k):
 
                     parent_node.attr['bias'] = second_p_node.value.val
                     disconnect_edge(f.graph, second_p_node.name, k)  # disconnect the const
@@ -367,6 +372,7 @@ def _search_nodes_by_type(gf, node_names, op_type):
 def _match_layernorm_pattern(gf, entry_node):
     """ Return the nodes that form the subgraph of a LayerNormalization layer
     """
+
     def _axes_in_range(axes, rank):
         return all([x in range(-rank, rank) for x in axes])
 
@@ -377,12 +383,12 @@ def _match_layernorm_pattern(gf, entry_node):
         mul_3 = _search_nodes_by_type(gf, entry_node.outputs, 'Mul')
 
         if not (mean_1.op == 'Mean' and sqdiff_2.op == 'SquaredDifference' and
-            mul_3.op == 'Mul'):
+                mul_3.op == 'Mul'):
             return None
         const_4 = gf[mean_1.inputs[1]]
         mean_1_rank = len(mean_1.datatype.get_shape())
         if not (const_4.op == 'Const' and len(const_4.value.val) == 1 and
-            _axes_in_range(const_4.value.val, mean_1_rank)):
+                _axes_in_range(const_4.value.val, mean_1_rank)):
             return None
         axes = const_4.value.val
         mean_5 = gf[sqdiff_2.outputs[0]]
@@ -391,23 +397,23 @@ def _match_layernorm_pattern(gf, entry_node):
         const_6 = gf[mean_5.inputs[1]]
         mean_5_rank = len(mean_5.datatype.get_shape())
         if not (const_6.op == 'Const' and len(const_6.value.val) == 1 and
-            axes == const_6.value.val):
+                axes == const_6.value.val):
             return None
 
         axes = sorted([x if x > 0 else mean_1_rank - x for x in
-            const_4.value.val])
-        ref_axes = list(range(mean_1_rank-len(axes), mean_1_rank))
-        if not all([x == y for (x,y) in zip(axes, ref_axes)]):
+                       const_4.value.val])
+        ref_axes = list(range(mean_1_rank - len(axes), mean_1_rank))
+        if not all([x == y for (x, y) in zip(axes, ref_axes)]):
             return None
         params['axes'] = axes
 
         add_7 = gf[mean_5.outputs[0]]
-        const_8 = gf[add_7.inputs[1]] # epsilon
+        const_8 = gf[add_7.inputs[1]]  # epsilon
         params['epsilon'] = const_8.value.val
         rsqrt_9 = gf[add_7.outputs[0]]
         mul_10 = gf[rsqrt_9.outputs[0]]
         if not (add_7.op == 'Add' and const_8.op == 'Const' and
-            rsqrt_9.op == 'Rsqrt' and mul_10.op == 'Mul'):
+                rsqrt_9.op == 'Rsqrt' and mul_10.op == 'Mul'):
             return None
         const_11 = gf[mul_10.inputs[1]]
         params['gamma'] = const_11.value.val
@@ -428,8 +434,8 @@ def _match_layernorm_pattern(gf, entry_node):
             return None
 
         layernorm_nodes = [mean_1, sqdiff_2, mul_3, const_4, mean_5, const_6,
-            add_7, const_8, rsqrt_9, mul_10, const_11, mul_12, sub_13, const_14,
-            add_15]
+                           add_7, const_8, rsqrt_9, mul_10, const_11, mul_12, sub_13, const_14,
+                           add_15]
 
         return (layernorm_nodes, params)
     except Exception as e:
@@ -498,10 +504,10 @@ def _match_gelu_pattern(gf, entry_node):
         mul_5 = gf[pow_1.outputs[0]]
         const_6 = gf[mul_5.inputs[0]]
         if not (const_6.op == 'Const' and \
-            abs(const_6.value.val - 0.0447) < 1e-3):
+                abs(const_6.value.val - 0.0447) < 1e-3):
             return None
         if not (gf[add_2.inputs[0]] == entry_node and \
-            gf[add_2.inputs[1]] == mul_5):
+                gf[add_2.inputs[1]] == mul_5):
             return None
         mul_7 = gf[add_2.outputs[0]]
         const_8 = gf[mul_7.inputs[0]]
@@ -511,19 +517,19 @@ def _match_gelu_pattern(gf, entry_node):
         add_10 = gf[tanh_9.outputs[0]]
         const_11 = gf[add_10.inputs[0]]
         if not (tanh_9.op == 'Tanh' and add_10.op == 'Add' and \
-            const_11.op == 'Const' and int(round(const_11.value.val)) == 1):
+                const_11.op == 'Const' and int(round(const_11.value.val)) == 1):
             return None
         mul_12 = gf[add_10.outputs[0]]
         const_13 = gf[mul_12.inputs[0]]
         if not (mul_12.op == 'Mul' and const_13.op == 'Const' and \
-            abs(const_13.value.val - 0.5) < 1e-3):
+                abs(const_13.value.val - 0.5) < 1e-3):
             return None
         if not (gf[mul_3.inputs[0]] == entry_node and \
-            gf[mul_3.inputs[1]] == mul_12):
+                gf[mul_3.inputs[1]] == mul_12):
             return None
 
         gelu_nodes = [pow_1, add_2, mul_3, const_4, mul_5, const_6, mul_7,
-            const_8, tanh_9, add_10, const_11, mul_12, const_13]
+                      const_8, tanh_9, add_10, const_11, mul_12, const_13]
 
         return gelu_nodes
 
