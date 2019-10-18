@@ -43,7 +43,11 @@ namespace CoreML {
     // - Linked Model
     static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS13 = 4;
 
-    static const int32_t MLMODEL_SPECIFICATION_VERSION_NEWEST = MLMODEL_SPECIFICATION_VERSION_IOS13;
+    // version 5:
+    // - New NN layers part of the proto message "NeuralNetworkLayer"
+    static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS14 = 5;
+
+    static const int32_t MLMODEL_SPECIFICATION_VERSION_NEWEST = MLMODEL_SPECIFICATION_VERSION_IOS14;
 
 }
 

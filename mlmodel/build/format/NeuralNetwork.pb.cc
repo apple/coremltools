@@ -225,6 +225,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::NonMaximumSuppressionLayerParams* nonmaximumsuppression_;
   const ::CoreML::Specification::OneHotLayerParams* onehot_;
   const ::CoreML::Specification::CumSumLayerParams* cumsum_;
+  const ::CoreML::Specification::ClampedReLU* clampedrelu_;
 } _NeuralNetworkLayer_default_instance_;
 class BranchLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BranchLayerParams> {
 } _BranchLayerParams_default_instance_;
@@ -580,6 +581,8 @@ class LayerNormalizationLayerParamsDefaultTypeInternal : public ::google::protob
 } _LayerNormalizationLayerParams_default_instance_;
 class NonMaximumSuppressionLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NonMaximumSuppressionLayerParams> {
 } _NonMaximumSuppressionLayerParams_default_instance_;
+class ClampedReLUDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ClampedReLU> {
+} _ClampedReLU_default_instance_;
 class NeuralNetworkClassifierDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NeuralNetworkClassifier> {
   public:
   const ::CoreML::Specification::StringVector* stringclasslabels_;
@@ -625,6 +628,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
     TableStruct::schema[] = {
+  { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
@@ -1013,6 +1017,7 @@ void TableStruct::Shutdown() {
   _SlidingWindowsLayerParams_default_instance_.Shutdown();
   _LayerNormalizationLayerParams_default_instance_.Shutdown();
   _NonMaximumSuppressionLayerParams_default_instance_.Shutdown();
+  _ClampedReLU_default_instance_.Shutdown();
   _NeuralNetworkClassifier_default_instance_.Shutdown();
   _OneHotLayerParams_default_instance_.Shutdown();
   _CumSumLayerParams_default_instance_.Shutdown();
@@ -1219,6 +1224,7 @@ void TableStruct::InitDefaultsImpl() {
   _SlidingWindowsLayerParams_default_instance_.DefaultConstruct();
   _LayerNormalizationLayerParams_default_instance_.DefaultConstruct();
   _NonMaximumSuppressionLayerParams_default_instance_.DefaultConstruct();
+  _ClampedReLU_default_instance_.DefaultConstruct();
   _NeuralNetworkClassifier_default_instance_.DefaultConstruct();
   _OneHotLayerParams_default_instance_.DefaultConstruct();
   _CumSumLayerParams_default_instance_.DefaultConstruct();
@@ -7545,6 +7551,7 @@ const int NeuralNetworkLayer::kLayerNormalizationFieldNumber;
 const int NeuralNetworkLayer::kNonMaximumSuppressionFieldNumber;
 const int NeuralNetworkLayer::kOneHotFieldNumber;
 const int NeuralNetworkLayer::kCumSumFieldNumber;
+const int NeuralNetworkLayer::kClampedReLUFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NeuralNetworkLayer::NeuralNetworkLayer()
@@ -8177,6 +8184,10 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
     }
     case kCumSum: {
       mutable_cumsum()->::CoreML::Specification::CumSumLayerParams::MergeFrom(from.cumsum());
+      break;
+    }
+    case kClampedReLU: {
+      mutable_clampedrelu()->::CoreML::Specification::ClampedReLU::MergeFrom(from.clampedrelu());
       break;
     }
     case LAYER_NOT_SET: {
@@ -8832,6 +8843,10 @@ void NeuralNetworkLayer::clear_layer() {
     }
     case kCumSum: {
       delete layer_.cumsum_;
+      break;
+    }
+    case kClampedReLU: {
+      delete layer_.clampedrelu_;
       break;
     }
     case LAYER_NOT_SET: {
@@ -10775,6 +10790,18 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+      case 1460: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(11682u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_clampedrelu()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -11759,6 +11786,12 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
   if (has_cumsum()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1455, *layer_.cumsum_, output);
+  }
+
+  // .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+  if (has_clampedrelu()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1460, *layer_.clampedrelu_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NeuralNetworkLayer)
@@ -12883,6 +12916,13 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.cumsum_);
       break;
     }
+    // .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+    case kClampedReLU: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.clampedrelu_);
+      break;
+    }
     case LAYER_NOT_SET: {
       break;
     }
@@ -13524,6 +13564,10 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
     }
     case kCumSum: {
       mutable_cumsum()->::CoreML::Specification::CumSumLayerParams::MergeFrom(from.cumsum());
+      break;
+    }
+    case kClampedReLU: {
+      mutable_clampedrelu()->::CoreML::Specification::ClampedReLU::MergeFrom(from.clampedrelu());
       break;
     }
     case LAYER_NOT_SET: {
@@ -21125,6 +21169,54 @@ void NeuralNetworkLayer::set_allocated_cumsum(::CoreML::Specification::CumSumLay
     layer_.cumsum_ = cumsum;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.cumSum)
+}
+
+// .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+bool NeuralNetworkLayer::has_clampedrelu() const {
+  return layer_case() == kClampedReLU;
+}
+void NeuralNetworkLayer::set_has_clampedrelu() {
+  _oneof_case_[0] = kClampedReLU;
+}
+void NeuralNetworkLayer::clear_clampedrelu() {
+  if (has_clampedrelu()) {
+    delete layer_.clampedrelu_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::ClampedReLU& NeuralNetworkLayer::clampedrelu() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
+  return has_clampedrelu()
+      ? *layer_.clampedrelu_
+      : ::CoreML::Specification::ClampedReLU::default_instance();
+}
+::CoreML::Specification::ClampedReLU* NeuralNetworkLayer::mutable_clampedrelu() {
+  if (!has_clampedrelu()) {
+    clear_layer();
+    set_has_clampedrelu();
+    layer_.clampedrelu_ = new ::CoreML::Specification::ClampedReLU;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
+  return layer_.clampedrelu_;
+}
+::CoreML::Specification::ClampedReLU* NeuralNetworkLayer::release_clampedrelu() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
+  if (has_clampedrelu()) {
+    clear_has_layer();
+    ::CoreML::Specification::ClampedReLU* temp = layer_.clampedrelu_;
+    layer_.clampedrelu_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_clampedrelu(::CoreML::Specification::ClampedReLU* clampedrelu) {
+  clear_layer();
+  if (clampedrelu) {
+    set_has_clampedrelu();
+    layer_.clampedrelu_ = clampedrelu;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
 }
 
 bool NeuralNetworkLayer::has_layer() const {
@@ -66433,6 +66525,247 @@ void NonMaximumSuppressionLayerParams::set_perclasssuppression(bool value) {
   
   perclasssuppression_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.NonMaximumSuppressionLayerParams.perClassSuppression)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ClampedReLU::kAlphaFieldNumber;
+const int ClampedReLU::kBetaFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+ClampedReLU::ClampedReLU()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.ClampedReLU)
+}
+ClampedReLU::ClampedReLU(const ClampedReLU& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::memcpy(&alpha_, &from.alpha_,
+    reinterpret_cast<char*>(&beta_) -
+    reinterpret_cast<char*>(&alpha_) + sizeof(beta_));
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.ClampedReLU)
+}
+
+void ClampedReLU::SharedCtor() {
+  ::memset(&alpha_, 0, reinterpret_cast<char*>(&beta_) -
+    reinterpret_cast<char*>(&alpha_) + sizeof(beta_));
+  _cached_size_ = 0;
+}
+
+ClampedReLU::~ClampedReLU() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.ClampedReLU)
+  SharedDtor();
+}
+
+void ClampedReLU::SharedDtor() {
+}
+
+void ClampedReLU::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const ClampedReLU& ClampedReLU::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+ClampedReLU* ClampedReLU::New(::google::protobuf::Arena* arena) const {
+  ClampedReLU* n = new ClampedReLU;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void ClampedReLU::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.ClampedReLU)
+  ::memset(&alpha_, 0, reinterpret_cast<char*>(&beta_) -
+    reinterpret_cast<char*>(&alpha_) + sizeof(beta_));
+}
+
+bool ClampedReLU::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.ClampedReLU)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // float alpha = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(13u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &alpha_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // float beta = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(21u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, &beta_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.ClampedReLU)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.ClampedReLU)
+  return false;
+#undef DO_
+}
+
+void ClampedReLU::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.ClampedReLU)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // float alpha = 1;
+  if (this->alpha() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(1, this->alpha(), output);
+  }
+
+  // float beta = 2;
+  if (this->beta() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->beta(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.ClampedReLU)
+}
+
+size_t ClampedReLU::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.ClampedReLU)
+  size_t total_size = 0;
+
+  // float alpha = 1;
+  if (this->alpha() != 0) {
+    total_size += 1 + 4;
+  }
+
+  // float beta = 2;
+  if (this->beta() != 0) {
+    total_size += 1 + 4;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void ClampedReLU::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const ClampedReLU*>(&from));
+}
+
+void ClampedReLU::MergeFrom(const ClampedReLU& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.ClampedReLU)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.alpha() != 0) {
+    set_alpha(from.alpha());
+  }
+  if (from.beta() != 0) {
+    set_beta(from.beta());
+  }
+}
+
+void ClampedReLU::CopyFrom(const ClampedReLU& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.ClampedReLU)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ClampedReLU::IsInitialized() const {
+  return true;
+}
+
+void ClampedReLU::Swap(ClampedReLU* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void ClampedReLU::InternalSwap(ClampedReLU* other) {
+  std::swap(alpha_, other->alpha_);
+  std::swap(beta_, other->beta_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string ClampedReLU::GetTypeName() const {
+  return "CoreML.Specification.ClampedReLU";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// ClampedReLU
+
+// float alpha = 1;
+void ClampedReLU::clear_alpha() {
+  alpha_ = 0;
+}
+float ClampedReLU::alpha() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLU.alpha)
+  return alpha_;
+}
+void ClampedReLU::set_alpha(float value) {
+  
+  alpha_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLU.alpha)
+}
+
+// float beta = 2;
+void ClampedReLU::clear_beta() {
+  beta_ = 0;
+}
+float ClampedReLU::beta() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLU.beta)
+  return beta_;
+}
+void ClampedReLU::set_beta(float value) {
+  
+  beta_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLU.beta)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

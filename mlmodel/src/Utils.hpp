@@ -95,6 +95,7 @@ namespace CoreML {
     bool hasIOS11_2Features(const Specification::Model& model);
     bool hasIOS12Features(const Specification::Model& model);
     bool hasIOS13Features(const Specification::Model& model);
+    bool hasIOS14Features(const Specification::Model& model);
 
     typedef std::pair<std::string,std::string> StringPair;
     // Returns a vector of pairs of strings, one pair per custom layer instance
@@ -121,6 +122,7 @@ namespace CoreML {
     bool hasIOS12NewNeuralNetworkLayers(const Specification::Model& model);
     bool isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& layer);
     bool hasIOS13NeuralNetworkFeatures(const Specification::Model& model);
+    bool hasIOS14NeuralNetworkFeatures(const Specification::Model& model);
 
     bool hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc);
 

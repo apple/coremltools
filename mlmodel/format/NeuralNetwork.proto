@@ -693,6 +693,7 @@ message NeuralNetworkLayer {
         // version >= 5 (iOS >= 14, macOS >= 10.16)
         OneHotLayerParams oneHot = 1450;
         CumSumLayerParams cumSum = 1455;
+        ClampedReLU clampedReLU = 1460;
 
     }
 
@@ -5677,6 +5678,30 @@ message NonMaximumSuppressionLayerParams {
     bool perClassSuppression = 4;
 }
 
+/**
+ * A layer that performs element-wise clamped ReLU operation.
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ * This function has the following formula:
+ *
+ * .. math::
+ *     f(x) = \begin{cases}
+ *               \text{min}(\text{beta},x) \;\; \text{if} \;\; x \geq 0\\
+ *               \text{min}(\text{beta} ,\text{alpha}\cdot x) \;\; \text{if} \;\; x<0
+ *            \end{cases}
+ *
+ * Output shape is same as the input.
+ *
+ * Available (iOS >= 14, macOS >= 10.16, watchOS >= 7)
+ */
+message ClampedReLU {
+
+    float alpha = 1;
+    float beta = 2;
+
+}
+
 /// Neural Network Specializations
 /// ------------------------------
 
@@ -5739,6 +5764,8 @@ message NeuralNetworkClassifier {
  *  say input values = [2, -1], and "onValue" = 5, and "offValue" = -1, then output will be:
  * [-1, -1, 5, -1
  *  -1, -1, -1, -1]
+ *
+ * Available (iOS >= 14, macOS >= 10.16, watchOS >= 7)
  */
 
 message OneHotLayerParams {
@@ -5774,6 +5801,9 @@ message OneHotLayerParams {
  *
  * if "excludeFinalSum" = True and "reverse" = True:
  * output values : [13, 7, 0]
+ *
+ *
+ * Available (iOS >= 14, macOS >= 10.16, watchOS >= 7)
  */
 
 

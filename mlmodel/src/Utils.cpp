@@ -123,6 +123,10 @@ void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
     }
 
+    if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS14 && !hasIOS14Features(*pModel)) {
+        pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
+    }
+
     if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS13 && !hasIOS13Features(*pModel)) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS12);
     }
@@ -431,6 +435,43 @@ bool CoreML::hasIOS13Features(const Specification::Model& model) {
     return false;
 }
 
+bool CoreML::hasIOS14Features(const Specification::Model& model) {
+    // New IOS14 features:
+    // - new layers in Neural Network
+
+    bool result = false;
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                result = result || hasIOS14Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                result = result ||hasIOS14Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                result = result || hasIOS14Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        default:
+            return hasIOS14NeuralNetworkFeatures(model);
+    }
+    return false;
+}
+
+
 bool CoreML::hasCustomModel(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kCustomModel);
 }
@@ -615,8 +656,7 @@ bool CoreML::hasIOS13NeuralNetworkFeatures(const Specification::Model& model) {
      1. any new layer type, which was not in iOS 12.
      2. if the value of enums "NeuralNetworkMultiArrayShapeMapping" or "NeuralNetworkImageShapeMapping" is non 0
      */
-    
-    // - if the value of enums "NeuralNetworkMultiArrayShapeMapping" or "NeuralNetworkImageShapeMapping" is non 0
+
     switch (model.Type_case()) {
         case Specification::Model::TypeCase::kNeuralNetwork:
             if (model.neuralnetwork().arrayinputshapemapping() != Specification::NeuralNetworkMultiArrayShapeMapping::RANK5_ARRAY_MAPPING) {
@@ -657,3 +697,24 @@ bool CoreML::hasIOS13NeuralNetworkFeatures(const Specification::Model& model) {
     return false;
 }
 
+bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
+
+    // Return True if the model has the new Neural network features added in
+    // ios 14
+
+    auto layers = getNNSpec(model);
+    if (layers) {
+        for (int i=0; i<layers->size(); i++){
+            const Specification::NeuralNetworkLayer& layer = (*layers)[i];
+            switch (layer.layer_case()) {
+                case Specification::NeuralNetworkLayer::kCumSum:
+                case Specification::NeuralNetworkLayer::kOneHot:
+                case Specification::NeuralNetworkLayer::kClampedReLU:
+                    return true;
+                default:
+                    continue;
+            }
+        }
+    }
+    return false;
+}

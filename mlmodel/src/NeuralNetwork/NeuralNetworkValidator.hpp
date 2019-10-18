@@ -178,6 +178,8 @@ namespace CoreML {
         Result validateNMSLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateOneHotLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateCumSumLayer(const Specification::NeuralNetworkLayer& layer);
+        Result validateClampedReluLayer(const Specification::NeuralNetworkLayer& layer);
+
         
         Result validateFailUnknownType(const Specification::NeuralNetworkLayer& layer);
     };

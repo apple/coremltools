@@ -10,6 +10,7 @@ Neural network builder class to construct Core ML models.
 from ... import SPECIFICATION_VERSION
 from ... import _MINIMUM_NDARRAY_SPEC_VERSION
 from ... import _MINIMUM_UPDATABLE_SPEC_VERSION
+from ... import SPECIFICATION_VERSION_IOS_14
 from ...proto import Model_pb2 as _Model_pb2
 from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
@@ -6904,6 +6905,9 @@ class NeuralNetworkBuilder(object):
             Constant value at all other locations, default: 0.0.
         """
 
+        if not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14:
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer_params = spec_layer.oneHot
         spec_layer_params.axis = axis
@@ -6936,9 +6940,48 @@ class NeuralNetworkBuilder(object):
             whether to perform exclusive or inclusive cumulative summation, default: False.
         """
 
+        if not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14:
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer_params = spec_layer.cumSum
         spec_layer_params.axis = axis
         spec_layer_params.reverse = reverse
         spec_layer_params.excludeFinalSum = exclusive
+        return spec_layer
+
+    def add_clamped_relu(self, name, input_name, output_name, alpha=0.0, beta=6.0):
+        """
+        Add a clamped relu layer to the model.
+        Clamped relu formula is f(x) = min((x >= 0 ? x : alpha * x), beta)
+        Refer to the **ClampedReluLayerParams** message in specification (NeuralNetwork.proto) for more details.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        alpha: float, optional
+             slope of the output when input is negative, default: 0.0.
+        beta: float, optional
+            Upper bound on the output value, default: 6.0.
+
+        See Also
+        --------
+        add_clip
+        """
+
+        if not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14:
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+
+        spec_layer = self._add_generic_layer(name, [input_name], [output_name])
+        spec_layer.clampedReLU.MergeFromString(b'')
+        spec_params = spec_layer.clampedReLU
+
+        spec_params.alpha = float(alpha)
+        spec_params.beta = float(beta)
+
         return spec_layer

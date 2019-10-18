@@ -2032,19 +2032,11 @@ class SSAConverter(object):
         assert len(node.inputs) == 1
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         builder = self._get_builder()
-        layer = builder.add_activation(
-            name=node.name + '_relu',
-            input_name=input_names[0],
-            output_name=node.name + '_relu',
-            non_linearity='RELU',
-        )
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-        layer = builder.add_clip(
+        layer = builder.add_clamped_relu(
             name=node.name,
-            input_name=node.name + '_relu',
+            input_name=input_names[0],
             output_name=node.name,
-            max_value=6.0
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 

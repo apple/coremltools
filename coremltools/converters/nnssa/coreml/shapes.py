@@ -540,6 +540,7 @@ _LAYER_REGISTRY = {
     'batchnorm': _identity,
     'clip': _identity,
     'lrn': _identity,
+    'clampedReLU': _identity,
 }
 
 

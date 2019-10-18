@@ -178,6 +178,7 @@ Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetw
             return validateLoopContinueBreakLayer(layer);
         case CoreML::Specification::NeuralNetworkLayer::kErf:
         case CoreML::Specification::NeuralNetworkLayer::kGelu:
+        case CoreML::Specification::NeuralNetworkLayer::kClampedReLU:
             return validateActivationLayers(layer);
         case CoreML::Specification::NeuralNetworkLayer::kRankPreservingReshape:
             return validateRankPreservingReshapeLayer(layer);

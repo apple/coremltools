@@ -46,6 +46,9 @@ _MINIMUM_NEAREST_NEIGHBORS_SPEC_VERSION = 4
 _MINIMUM_LINKED_MODELS_SPEC_VERSION = 4
 _MINIMUM_UPDATABLE_SPEC_VERSION = 4
 
+# New versions for iOS 14.0
+SPECIFICATION_VERSION_IOS_14 = 5
+
 # expose sub packages as directories
 from . import converters
 from . import proto

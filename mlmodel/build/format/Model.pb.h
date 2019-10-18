@@ -214,6 +214,9 @@ extern CategoricalMappingDefaultTypeInternal _CategoricalMapping_default_instanc
 class CeilLayerParams;
 class CeilLayerParamsDefaultTypeInternal;
 extern CeilLayerParamsDefaultTypeInternal _CeilLayerParams_default_instance_;
+class ClampedReLU;
+class ClampedReLUDefaultTypeInternal;
+extern ClampedReLUDefaultTypeInternal _ClampedReLU_default_instance_;
 class ClipLayerParams;
 class ClipLayerParamsDefaultTypeInternal;
 extern ClipLayerParamsDefaultTypeInternal _ClipLayerParams_default_instance_;
