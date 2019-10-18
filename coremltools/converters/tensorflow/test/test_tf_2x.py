@@ -20,12 +20,12 @@ class DummyTest(unittest.TestCase):
 @unittest.skipIf(version.parse(_tf_version).release[0] < 2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.input_shape = (1, 28, 28)
         self.saved_model_dir = tempfile.mkdtemp()
         _, self.model_file = tempfile.mkstemp(suffix='.h5', prefix=self.saved_model_dir)
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         if os.path.exists(self.saved_model_dir):
             shutil.rmtree(self.saved_model_dir)
 
@@ -73,7 +73,8 @@ class TestKerasFashionMnist(unittest.TestCase):
             keras_model=keras_model,
             model_path=self.model_file,
             inputs={input_name: self.input_shape},
-            outputs=['Identity'])
+            outputs=['Identity']
+        )
 
     def test_sequential_builder_saved_model_format(self):
         keras_model = self._build_model_sequential()
@@ -84,7 +85,8 @@ class TestKerasFashionMnist(unittest.TestCase):
             keras_model=keras_model,
             model_path=self.saved_model_dir,
             inputs={input_name: self.input_shape},
-            outputs=['Identity'])
+            outputs=['Identity']
+        )
 
     def test_functional_builder(self):
         keras_model = self._build_model_functional()
@@ -95,17 +97,18 @@ class TestKerasFashionMnist(unittest.TestCase):
             keras_model=keras_model,
             model_path=self.model_file,
             inputs={input_name: self.input_shape},
-            outputs=['Identity'])
+            outputs=['Identity']
+        )
 
 
 @unittest.skipIf(version.parse(_tf_version).release[0] < 2, 'missing TensorFlow 2+.')
 class TestModelFormats(unittest.TestCase):
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.saved_model_dir = tempfile.mkdtemp()
         _, self.model_file = tempfile.mkstemp(suffix='.h5', prefix=self.saved_model_dir)
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         if os.path.exists(self.saved_model_dir):
             shutil.rmtree(self.saved_model_dir)
 
@@ -137,20 +140,79 @@ class TestModelFormats(unittest.TestCase):
             [concrete_func],
             inputs={'x': (1, 1)},
             outputs=['Identity'],
-            target_ios='13')
+            target_ios='13'
+        )
 
         assert isinstance(model, coremltools.models.MLModel)
+
+    def test_control_flow(self):
+        @tf.function(input_signature=[tf.TensorSpec([], tf.float32)])
+        def control_flow(x):
+            if x <= 0:
+                return 0.
+            else:
+                return x * 3.
+
+        to_save = tf.Module()
+        to_save.control_flow = control_flow
+
+        saved_model_dir = tempfile.mkdtemp()
+        tf.saved_model.save(to_save, saved_model_dir)
+        tf_model = tf.saved_model.load(saved_model_dir)
+        concrete_func = tf_model.signatures[tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+
+        model = coremltools.converters.tensorflow.convert(
+            [concrete_func],
+            inputs={'x': (1,)},
+            outputs=['Identity'],
+            target_ios='13'
+        )
+
+        assert isinstance(model, coremltools.models.MLModel)
+        input_data = generate_data(shape=[20])
+        for data in input_data:
+            tf_prediction = to_save.control_flow(data).numpy().flatten()
+            cm_prediction = model.predict({'x': np.array([data])})['Identity'].flatten()
+            np.testing.assert_array_almost_equal(tf_prediction, cm_prediction, decimal=4)
+
+    def test_subclassed_keras_model(self):
+        class MyModel(tf.keras.Model):
+            def __init__(self):
+                super(MyModel, self).__init__()
+                self.dense1 = tf.keras.layers.Dense(4)
+                self.dense2 = tf.keras.layers.Dense(5)
+
+            @tf.function
+            def call(self, input_data):
+                return self.dense2(self.dense1(input_data))
+
+        keras_model = MyModel()
+        inputs = generate_data(shape=(4, 4))
+
+        # subclassed model can only be saved as SavedModel format
+        keras_model._set_inputs(inputs)
+        keras_model.save(self.saved_model_dir, save_format='tf')
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        # convert and validate
+        model = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            inputs={input_name: (4, 4)},
+            outputs=['Identity'],
+            target_ios='13'
+        )
+        assert isinstance(model, coremltools.models.MLModel)
+        self._test_prediction(keras_model=keras_model, core_ml_model=model, inputs=inputs)
 
 
 @unittest.skipIf(False, 'skipping slow full model conversion tests.')
 @unittest.skipIf(version.parse(_tf_version).release[0] < 2, 'missing TensorFlow 2+.')
 class TestKerasApplications(unittest.TestCase):
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.saved_model_dir = tempfile.mkdtemp()
         _, self.model_file = tempfile.mkstemp(suffix='.h5', prefix=self.saved_model_dir)
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         if os.path.exists(self.saved_model_dir):
             shutil.rmtree(self.saved_model_dir)
 
@@ -203,6 +265,7 @@ class TestKerasApplications(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    np.random.seed(1984)
     unittest.main()
     # suite = unittest.TestSuite()
     # suite.addTest(TestKerasApplications('test_vgg16_keras_model'))

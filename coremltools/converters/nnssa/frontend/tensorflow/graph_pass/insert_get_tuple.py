@@ -53,7 +53,7 @@ def insert_get_tuple(gddict):
         return inserted_op
 
     exclusions = [
-        'Switch', 'Enter', 'Exit', 'Merge', 'LoopCond', 'NextIteration', 'TensorArrayV3', 'Const'
+        'Switch', 'Enter', 'Exit', 'Merge', 'LoopCond', 'NextIteration', 'TensorArrayV3', 'Const', 'FusedBatchNormV3'
     ]
     inclusions = ['Split', 'SplitV', 'LSTMBlockCell']
     gto_make_op_cache = {}
