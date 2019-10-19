@@ -41,14 +41,15 @@ namespace CoreML {
 
                 if(it == typeTable.end()) {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                                  ("Pipeline: Input '" + arg.name() + "' of model '" + model.description().GetTypeName()
-                                   + "' not present in pipeline input or previous model."));
+                                  ("Pipeline: the input '" + arg.name() + "' of model '" + model.description().GetTypeName()
+                                   + "' does not present in pipeline input or previous model."));
                 }
 
                 if(!CoreML::Specification::isEquivalent(arg, *(it->second))) {
                     return Result(ResultType::TYPE_MISMATCH,
-                                  ("Pipeline: Input '" + arg.name() + "' of model '" + model.description().GetTypeName()
-                                   + "' does not match the type previously specified by the pipeline input or the output of a previous model."));
+                                  ("Pipeline: the input '" + arg.name() + "' of model '" + model.description().GetTypeName()
+                                   + "' does not match the type previously specified by the pipeline input or the output of a previous model."
+                                   + " For the second case, make sure the input and previous model's output has the matching name and shapes."));
                 }
             }
 
