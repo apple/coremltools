@@ -395,7 +395,8 @@ _LAYER_REGISTERY = {
     'simpleRecurrent': _simple_recurrent,
     'gru': _gru,
     'uniDirectionalLSTM': _uni_directional_lstm,
-    'biDirectionalLSTM': _bi_directional_lstm
+    'biDirectionalLSTM': _bi_directional_lstm,
+    'clip': _identity
 } 
 
 
@@ -441,12 +442,10 @@ def infer_shapes(nn_spec, input_spec, input_shape_dict = None):
                     raise ValueError('Input %s : Invalid Colorspace' %(input_name))
             elif inp.type.WhichOneof('Type') == 'multiArrayType':
                 array_shape = inp.type.multiArrayType.shape
-                if len(array_shape) == 1:
-                    C = array_shape[0]
-                elif len(array_shape) == 3:
-                    C, H, W = map(int, array_shape)
+                if len(array_shape) < 3:
+                    C = array_shape[-1]
                 else:
-                    raise ValueError("Input %s : Multi array must be of length 1 or 3" %(input_name))              
+                    C, H, W = map(int, array_shape[-3:])
             else:    
                 raise ValueError("Input %s : Input type must be image or multi-array" %(input_name))  
             shape_dict[input_name] = (1, 1, C, H, W)
