@@ -40,7 +40,7 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
 
     placeholder_shape = kwargs.get("inputs", {})
 
-    if len(placeholder_shape) > 0:
+    if placeholder_shape and len(placeholder_shape) > 0:
         graph = ssa.functions['main'].graph
         required_plhd_nodes = [node for node in graph if 
             graph[node].op == 'Placeholder']
