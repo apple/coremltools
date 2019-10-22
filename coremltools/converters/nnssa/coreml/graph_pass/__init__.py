@@ -6,7 +6,7 @@ from __future__ import absolute_import as _
 from .op_removals import remove_no_ops_and_shift_control_dependencies
 from .op_removals import constant_weight_link_removal
 from .op_removals import remove_single_isolated_node
-from .op_removals import remove_identity
+from .op_removals import remove_identity, remove_oneway_split
 
 from .op_fusions import fuse_bias_add, transform_nhwc_to_nchw, \
     onehot_matmul_to_embedding, fuse_layer_norm, fuse_gelu, \
