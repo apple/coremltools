@@ -2077,7 +2077,7 @@ class TypeInferenceVisitor(object):
                 begin = self._shape_as_ints(begin)
                 end = self._shape_as_ints(end)
                 for i in begin_mask:
-                    begin[i] = 0
+                    begin[i] = None
                 for i in end_mask:
                     end[i] = None
                 for i in shrink_axes:
@@ -2106,13 +2106,13 @@ class TypeInferenceVisitor(object):
                         else:
                             retshape.append(make_symbol(node.name + '_' + str(i)))
                     else:
-                        if begin[i] and begin[i] < 0:
+                        if begin[i] is not None and begin[i] < 0:
                             try:
                                 begin[i] += input_shape[i]
                             except:
                                 pass
                         if end[i] is None:
-                            end[i] = input_shape[i]
+                            end[i] = None # used to be input_shape[i]
                         elif end[i] < 0:
                             try:
                                 end[i] += input_shape[i]

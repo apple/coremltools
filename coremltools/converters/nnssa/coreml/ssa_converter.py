@@ -118,6 +118,7 @@ def ssa_convert(ssa,
         fuse_conv_mul_add_into_batchnorm,
         spatial_reduce_to_global_pool,
         fuse_pad_into_conv,
+        remove_oneway_split,
     ]
 
     for p in passes:
@@ -1902,7 +1903,10 @@ class SSAConverter(object):
         top, bottom = paddings[1][0], paddings[1][1]
 
         if node.attr.get('mode', '').lower() == 'symmetric':
-            raise NotImplementedError('symmetric mode is not supported.')
+            print('[SSAConverter]Warning: Symmetric MirrorPad is not supported'
+                  'but can be approximated with non-symmetric padding in some'
+                  'cases. Conversion will continue, but expect some loss'
+                  'of model accuracy.')
         builder = self._get_builder()
 
         layer = builder.add_padding(
@@ -2134,33 +2138,39 @@ class SSAConverter(object):
             raise ValueError('[SSAConverter] ResizeNearestNeighbor has invalid'
                              'input shape {}'.format(input_shape))
 
-        if (target_size[0] % input_shape[2] > 0 or
-                target_size[1] % input_shape[3] > 0):
-            raise ValueError('[SSAConverter] Unsupported fractional'
-                             'nearest-neighbor upsampling')
+        if target_size[0] < input_shape[2] and target_size[1] < input_shape[3]:
+            self._convert_resize_bilinear(node)
 
-        scaling_factor_h = int(target_size[0] / input_shape[2])
-        scaling_factor_w = int(target_size[1] / input_shape[3])
+        elif target_size[0] > input_shape[2] and target_size[1] > input_shape[3]:
+            if (target_size[0] % input_shape[2] > 0 or
+                    target_size[1] % input_shape[3] > 0):
+                raise ValueError('[SSAConverter] Unsupported fractional'
+                                 'nearest-neighbor upsampling')
 
-        if scaling_factor_h <= 0 or scaling_factor_w <= 0:
-            raise ValueError('[SSAConverter] Invalid scaling factor.')
+            scaling_factor_h = int(target_size[0] / input_shape[2])
+            scaling_factor_w = int(target_size[1] / input_shape[3])
 
-        if node.attr.get('align_corners', False) is True:
-            raise ValueError('[SSAConverter] CoreML does not support '
-                             'ResizeNearestNeighbor with align_core.')
+            if scaling_factor_h <= 0 or scaling_factor_w <= 0:
+                raise ValueError('[SSAConverter] Invalid scaling factor.')
 
-        builder = self._get_builder()
-        layer = builder.add_upsample(
-            name=node.name,
-            scaling_factor_h=scaling_factor_h,
-            scaling_factor_w=scaling_factor_w,
-            input_name=input_names[0],
-            output_name=node.name,
-            mode='NN')
+            if node.attr.get('align_corners', False) is True:
+                raise ValueError('[SSAConverter] CoreML does not support '
+                                 'ResizeNearestNeighbor with align_core.')
 
-        output_shape = self._get_tensor_shape_from_type(node.datatype)
-        shapes.propagate_single_layer(layer, self.tensor_shapes,
-                                      output_shapes=[output_shape])
+            builder = self._get_builder()
+            layer = builder.add_upsample(
+                name=node.name,
+                scaling_factor_h=scaling_factor_h,
+                scaling_factor_w=scaling_factor_w,
+                input_name=input_names[0],
+                output_name=node.name,
+                mode='NN')
+
+            output_shape = self._get_tensor_shape_from_type(node.datatype)
+            shapes.propagate_single_layer(layer, self.tensor_shapes,
+                                          output_shapes=[output_shape])
+        else:
+            raise NotImplementedError("[SSAConverter] Unsupported resizing option.")
 
     def _convert_layer_normalization(self, node):
         assert len(node.inputs) == 1
@@ -2319,28 +2329,12 @@ class SSAConverter(object):
 
         builder = self._get_builder()
 
-        layer = builder.add_transpose(
-            name=node.name + '_transpose1',
-            input_name=input_names[0],
-            output_name=node.name + '_transpose1',
-            axes=[0, 3, 1, 2]
-        )
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
         layer = builder.add_reorganize_data(
-            name=node.name + '_reorganize',
-            input_name=node.name + '_transpose1',
-            output_name=node.name + '_reorganize',
+            name=node.name,
+            input_name=input_names[0],
+            output_name=node.name,
             mode=mode,
             block_size=block_size
-        )
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
-
-        layer = builder.add_transpose(
-            name=node.name,
-            input_name=node.name + '_reorganize',
-            output_name=node.name,
-            axes=[0, 2, 3, 1]
         )
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 

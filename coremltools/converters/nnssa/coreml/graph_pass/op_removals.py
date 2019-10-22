@@ -135,3 +135,43 @@ def remove_identity(nnssa):
     delete_count = _remove_internal_identity_nodes(nnssa)
     delete_count += _remove_output_identity_nodes(nnssa)
     print('%d identity nodes deleted' % delete_count)
+
+
+def remove_oneway_split(nnssa):
+    """ Remove split op with 1 output that splits the input into itself.
+    """
+    for fn_key in list(nnssa.functions.keys()):
+        f = nnssa.functions[fn_key]
+        keys = list(f.graph.keys())
+        for k in keys:
+            if k not in f.graph:
+                continue
+            node = f.graph[k]
+            if not (node.op == 'Split' and node.attr['num_split'] == 1 and
+                len(node.datatype.T) == 1 and len(node.inputs) == 2):
+                continue
+
+            if f.graph[node.inputs[0]].op == 'Const':
+                axis_name, parent_name = node.inputs
+            elif f.graph[node.inputs[1]].op == 'Const':
+                parent_name, axis_name = node.inputs
+            else:
+                continue
+
+            if len(node.outputs) == 1 and f.graph[node.outputs[0]].op == 'get_tuple':
+                get_tuple_name = node.outputs[0]
+            else:
+                continue
+
+            parent_node = f.graph[parent_name]
+            get_tuple_node = f.graph[get_tuple_name]
+            for out_name in get_tuple_node.outputs:
+                out_node = f.graph[out_name]
+                out_node.inputs = [parent_name if x == get_tuple_name else x \
+                    for x in out_node.inputs]
+                out_node.control_inputs = [parent_name if x == get_tuple_name \
+                    else x for x in out_node.control_inputs]
+            parent_node.outputs = get_tuple_node.outputs[:]
+            parent_node.control_outputs = get_tuple_node.control_outputs[:]
+
+            del f.graph[axis_name], f.graph[k], f.graph[get_tuple_name]
