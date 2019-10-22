@@ -35,7 +35,7 @@ ELEMENTWISE_OPS = {
 # Native SSA nodes with data_format attributes of NHWC / NCHW
 NATIVE_NHWC_OPS = {
     'Conv2D', 'Conv2DBackpropInput', 'DepthwiseConv2dNative',
-    'Pooling', 'MaxPool', 'AvgPool'
+    'Pooling', 'MaxPool', 'AvgPool', 'DepthToSpace', 'SpaceToDepth',
 }
 
 REDUCTION_OPS = {
