@@ -138,7 +138,8 @@ def remove_identity(nnssa):
 
 
 def remove_oneway_split(nnssa):
-
+    """ Remove split op with 1 output that splits the input into itself.
+    """
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         keys = list(f.graph.keys())
