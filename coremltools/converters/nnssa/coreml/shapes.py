@@ -26,16 +26,20 @@ def _slice_static(layer_spec, input_shapes):
     output_shape = [-1] * rank
     begin_indices = params.beginIds
     end_indices = params.endIds
+    begin_masks = params.beginMasks
+    end_masks = params.endMasks
+
     for i in range(rank):
         begin_indices[i] = begin_indices[i] if begin_indices[i] >= 0 else input_shape[i] + begin_indices[i]
         end_indices[i] = end_indices[i] if end_indices[i] >= 0 else input_shape[i] + end_indices[i]
     for idx, dim in enumerate(input_shape):
         if dim > 0:  # known
-            begin = 0 if params.beginMasks[idx] else begin_indices[idx]
-            end = dim if params.endMasks[idx] else end_indices[idx]
-            output_shape[idx] = (end - begin) // params.strides[idx]
-            if (end - begin) % params.strides[idx] != 0:
-                output_shape[idx] += 1
+            begin = None if params.beginMasks[idx] else begin_indices[idx]
+            end = None if params.endMasks[idx] else end_indices[idx]
+            thisslice = slice(begin, end, params.strides[idx])
+            thisslicelen = len(list(range(input_shape[idx]))[thisslice])
+            output_shape[idx] = thisslicelen
+
     return [output_shape]
 
 
