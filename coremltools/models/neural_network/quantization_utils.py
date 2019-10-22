@@ -617,7 +617,7 @@ def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
             input_channels = layer.innerProduct.inputChannels
             _quantize_wp_field(layer.innerProduct.weights, nbits, qm,
                 shape=(output_channels, input_channels), **kwargs)
-            has_bias = layer.convolution.hasBias
+            has_bias = layer.innerProduct.hasBias
             if has_bias and selector.do_quantize(layer, weight_param='bias'):
                 _quantize_wp_field(layer.innerProduct.bias, nbits, qm,
                     shape=(output_channels,), **kwargs)
