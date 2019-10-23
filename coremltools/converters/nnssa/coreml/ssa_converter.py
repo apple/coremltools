@@ -13,8 +13,6 @@ from ..commons import builtins
 from ..commons.basic_graph_ops import topsort, check_connections
 
 from .graph_pass import *
-from tensorflow import __version__ as tf_version
-from packaging import version
 
 try:
     import shapes
@@ -453,7 +451,6 @@ class SSAConverter(object):
             'BatchNorm': self._convert_batchnorm,
             'LRN': self._convert_lrn,
             'ClipByValue': self._convert_clip,
-            'FusedBatchNormV3': self._convert_batchnorm
         }
 
         # converter state variables
@@ -1978,7 +1975,7 @@ class SSAConverter(object):
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_batchnorm(self, node):
-        assert len(node.inputs) == 1 or len(node.inputs) == 5
+        assert len(node.inputs) == 1
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         if 'gamma' not in node.attr or 'beta' not in node.attr:
             raise ValueError('BatchNorm node must have attributes \'gamma\' and \'beta\'')
@@ -2312,13 +2309,9 @@ class SSAConverter(object):
         ifbranch = NeuralNetworkBuilder(nn_spec=layer.branch.ifBranch,
                                         disable_rank5_shape_mapping=True)
 
-        if_branch_input, else_branch_input = input_names[1], input_names[2]
-        if version.parse(tf_version).release[0] >= 2:
-            if_branch_input, else_branch_input = input_names[2], input_names[1]
-
         ifbranch.add_activation(name=node.name + "_if_",
                                 non_linearity='LINEAR',
-                                input_name=if_branch_input,
+                                input_name=input_names[1],
                                 output_name=node.name,
                                 params=(1.0, 0.0))
 
@@ -2327,7 +2320,7 @@ class SSAConverter(object):
 
         elsebranch.add_activation(name=node.name + "_else_",
                                   non_linearity='LINEAR',
-                                  input_name=else_branch_input,
+                                  input_name=input_names[2],
                                   output_name=node.name,
                                   params=(1.0, 0.0))
 
