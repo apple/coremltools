@@ -20,6 +20,12 @@ enum MLScatterMode: int {
     MLScatterModeSCATTER_MIN = 6,
 };
 
+enum MLReductionType: int {
+    MLReductionTypeMEAN = 0,
+    MLReductionTypeSUM = 1,
+    MLReductionTypeSUM_NON_ZERO_WEIGHTS = 2,
+};
+
 enum MLNeuralNetworkPreprocessingpreprocessor: int {
     MLNeuralNetworkPreprocessingpreprocessor_scaler = 10,
     MLNeuralNetworkPreprocessingpreprocessor_meanImage = 11,
@@ -784,6 +790,9 @@ static const char * MLNeuralNetworkClassifierClassLabels_Name(MLNeuralNetworkCla
 enum MLLossLayerLossLayerType: int {
     MLLossLayerLossLayerType_categoricalCrossEntropyLossLayer = 10,
     MLLossLayerLossLayerType_meanSquaredErrorLossLayer = 11,
+    MLLossLayerLossLayerType_sigmoidCrossEntropyLossLayer = 12,
+    MLLossLayerLossLayerType_meanAbsoluteErrorLossLayer = 13,
+    MLLossLayerLossLayerType_huberLossLayer = 14,
     MLLossLayerLossLayerType_NOT_SET = 0,
 };
 
@@ -794,6 +803,12 @@ static const char * MLLossLayerLossLayerType_Name(MLLossLayerLossLayerType x) {
             return "MLLossLayerLossLayerType_categoricalCrossEntropyLossLayer";
         case MLLossLayerLossLayerType_meanSquaredErrorLossLayer:
             return "MLLossLayerLossLayerType_meanSquaredErrorLossLayer";
+        case MLLossLayerLossLayerType_sigmoidCrossEntropyLossLayer:
+            return "MLLossLayerLossLayerType_sigmoidCrossEntropyLossLayer";
+        case MLLossLayerLossLayerType_meanAbsoluteErrorLossLayer:
+            return "MLLossLayerLossLayerType_meanAbsoluteErrorLossLayer";
+        case MLLossLayerLossLayerType_huberLossLayer:
+            return "MLLossLayerLossLayerType_huberLossLayer";
         case MLLossLayerLossLayerType_NOT_SET:
             return "INVALID";
     }

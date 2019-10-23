@@ -59,6 +59,42 @@ static Result validateLossLayer(const Specification::LossLayer *lossLayer, const
             
             break;
         }
+            
+        case CoreML::Specification::LossLayer::kSigmoidCrossEntropyLossLayer:
+        {
+            std::string lossInputName = lossLayer->sigmoidcrossentropylosslayer().input();
+
+            // validate loss input.
+            std::string lossLayerName = lossLayer->name();
+            const auto *lossNode = graph->getNodeFromName(lossLayerName);
+            if (lossNode == NULL) {
+                err = "Failed to look up node for '" + lossLayerName + "'.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+            
+            bool lossInputValidated = false;
+            const auto &parents = lossNode->parents;
+            for (const auto *node : parents) {
+                if (node->sigmoidActivation) {
+                    lossInputValidated = true;
+                    break;
+                }
+            }
+
+            if (!lossInputValidated) {
+                err = "For the sigmoid cross entropy loss layer named '" + lossLayer->name() + "', input is not generated from a sigmoid output.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+
+            // validate loss target
+            std::string targetName = lossLayer->sigmoidcrossentropylosslayer().target();
+            if (graph->blobNameToProducingNode.find(targetName) != graph->blobNameToProducingNode.end()) {
+                err = "For the sigmoid entropy loss layer named '" + lossLayer->name() + "', target is generated within the graph.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+            
+            break;
+        }
         case CoreML::Specification::LossLayer::kMeanSquaredErrorLossLayer:
         {
             std::string inputName = lossLayer->meansquarederrorlosslayer().input();
@@ -75,8 +111,40 @@ static Result validateLossLayer(const Specification::LossLayer *lossLayer, const
             
             break;
         }
+        case CoreML::Specification::LossLayer::kMeanAbsoluteErrorLossLayer:
+        {
+            std::string inputName = lossLayer->meanabsoluteerrorlosslayer().input();
+            if (graph->blobNameToProducingNode.find(inputName) == graph->blobNameToProducingNode.end()) {
+                err = "For the MAE loss layer named '" + lossLayer->name() + "', input is not generated within the graph.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+
+            std::string targetName = lossLayer->meanabsoluteerrorlosslayer().target();
+            if (graph->blobNameToProducingNode.find(targetName) != graph->blobNameToProducingNode.end()) {
+                err = "For the MAE loss layer named '" + lossLayer->name() + "', target is generated within the graph.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+
+            break;
+        }
+        case CoreML::Specification::LossLayer::kHuberLossLayer:
+        {
+            std::string inputName = lossLayer->huberlosslayer().input();
+            if (graph->blobNameToProducingNode.find(inputName) == graph->blobNameToProducingNode.end()) {
+                err = "For the Huber loss layer named '" + lossLayer->name() + "', input is not generated within the graph.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+
+            std::string targetName = lossLayer->huberlosslayer().target();
+            if (graph->blobNameToProducingNode.find(targetName) != graph->blobNameToProducingNode.end()) {
+                err = "For the Huber loss layer named '" + lossLayer->name() + "', target is generated within the graph.";
+                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
+            }
+
+            break;
+        }
         default:
-            err = "Loss function is not recognized in the loss layer named '" + lossLayer->name() + "', only cross entropy loss and MSE are supported.";
+            err = "Loss function is not supported in the loss layer named '" + lossLayer->name() + "'.";
             return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
     }
     
@@ -125,10 +193,40 @@ template<typename T> Result validateTrainingInputs(const Specification::ModelDes
 
     std::string target;
     const Specification::NetworkUpdateParameters& updateParams = nn.updateparams();
-    if (updateParams.losslayers(0).has_categoricalcrossentropylosslayer()) {
-        target = updateParams.losslayers(0).categoricalcrossentropylosslayer().target();
-    } else if (updateParams.losslayers(0).has_meansquarederrorlosslayer()) {
-        target = updateParams.losslayers(0).meansquarederrorlosslayer().target();
+
+    for (int i = 0; i < updateParams.losslayers_size(); i++) {
+        const Specification::LossLayer &lossLayer = updateParams.losslayers(i);
+
+        switch (lossLayer.LossLayerType_case()) {
+
+            case Specification::LossLayer::kCategoricalCrossEntropyLossLayer:
+            {
+                target = updateParams.losslayers(0).categoricalcrossentropylosslayer().target();
+                break;
+            }
+            case Specification::LossLayer::kSigmoidCrossEntropyLossLayer:
+            {
+                target = updateParams.losslayers(0).sigmoidcrossentropylosslayer().target();
+                break;
+            }
+            case Specification::LossLayer::kMeanSquaredErrorLossLayer:
+            {
+                target = updateParams.losslayers(0).meansquarederrorlosslayer().target();
+                break;
+            }
+            case Specification::LossLayer::kMeanAbsoluteErrorLossLayer:
+            {
+                target = updateParams.losslayers(0).meanabsoluteerrorlosslayer().target();
+                break;
+            }
+            case Specification::LossLayer::kHuberLossLayer:
+            {
+                target = updateParams.losslayers(0).huberlosslayer().target();
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     bool isClassifier = true;

@@ -5862,18 +5862,33 @@ message NetworkUpdateParameters {
     Int64Parameter seed = 20;
 }
 
-/**
- * Loss layer - categorical cross entropy and mean squared error are the only supported loss functions currently
- */
+message LossWeightParams {
+    
+    repeated float weights = 1;
+}
+
 message LossLayer {
 
     string name = 1;
+    LossWeightParams weight = 2;
+
     oneof LossLayerType {
 
         CategoricalCrossEntropyLossLayer categoricalCrossEntropyLossLayer = 10;
         MeanSquaredErrorLossLayer meanSquaredErrorLossLayer = 11;
+        SigmoidCrossEntropyLossLayer sigmoidCrossEntropyLossLayer = 12;
+        MeanAbsoluteErrorLossLayer meanAbsoluteErrorLossLayer = 13;
+        HuberLossLayer huberLossLayer = 14;
 
     }
+
+}
+
+enum ReductionType {
+    
+    MEAN = 0;
+    SUM = 1;
+    SUM_NON_ZERO_WEIGHTS = 2;
 
 }
 
@@ -5885,6 +5900,8 @@ message LossLayer {
  *
  * The target is a single value representing the true category or class label. If the target is the predictedFeatureName of a neural network classifier it will be inverse mapped to the corresponding categorical index for you.
  *
+ * The label smoothing parameter is an optional float value. The default value is 0.0f.
+ *
  * math:
  * Loss_{CCE}(input, target) = -\sum_{i=1}^{N} (target == i) log( input[i] ) = - log (input[target])
  */
@@ -5892,6 +5909,17 @@ message CategoricalCrossEntropyLossLayer {
 
     string input = 1;
     string target = 2;
+    DoubleParameter labelSmoothing = 3;
+    ReductionType reductionType = 4;
+
+}
+
+message SigmoidCrossEntropyLossLayer{
+
+    string input = 1;
+    string target = 2;
+    DoubleParameter labelSmoothing = 3;
+    ReductionType reductionType = 4;
 
 }
 
@@ -5903,6 +5931,24 @@ message MeanSquaredErrorLossLayer {
 
     string input = 1;
     string target = 2;
+    ReductionType reductionType = 3;
+
+}
+
+message MeanAbsoluteErrorLossLayer {
+
+    string input = 1;
+    string target = 2;
+    ReductionType reductionType = 3;
+
+}
+
+message HuberLossLayer {
+
+    string input = 1;
+    string target = 2;
+    DoubleParameter delta = 3;
+    ReductionType reductionType = 4;
 
 }
 

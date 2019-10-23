@@ -45,6 +45,7 @@ struct LayerNode {
     std::vector<std::string> outputNames;
     bool isUpdatable;
     bool isBackPropagable;
+    bool sigmoidActivation;
     
     LayerNode () {}
     
@@ -59,6 +60,15 @@ struct LayerNode {
             case CoreML::Specification::LossLayer::kMeanSquaredErrorLossLayer:
                 inputNames.push_back(lossLayer->meansquarederrorlosslayer().input());
                 break;
+            case CoreML::Specification::LossLayer::kSigmoidCrossEntropyLossLayer:
+                inputNames.push_back(lossLayer->sigmoidcrossentropylosslayer().input());
+                break;
+            case CoreML::Specification::LossLayer::kMeanAbsoluteErrorLossLayer:
+                inputNames.push_back(lossLayer->meanabsoluteerrorlosslayer().input());
+                break;
+            case CoreML::Specification::LossLayer::kHuberLossLayer:
+                inputNames.push_back(lossLayer->huberlosslayer().input());
+                break;
             default:
                 break;
         }
@@ -67,6 +77,7 @@ struct LayerNode {
         layerType = Specification::NeuralNetworkLayer::LAYER_NOT_SET;
         isUpdatable = false;
         isBackPropagable = false;
+        sigmoidActivation = false;
     }
     
     LayerNode(const Specification::NeuralNetworkLayer *layer)
@@ -86,6 +97,10 @@ struct LayerNode {
         name = layer->name();
         isUpdatable = layer->isupdatable();
         isBackPropagable = isLayerSupportedForBackprop(layer);
+        sigmoidActivation = false;
+        if (layer->layer_case() == Specification::NeuralNetworkLayer::kActivation && layer->activation().NonlinearityType_case() == Specification::ActivationParams::kSigmoid) {
+            sigmoidActivation = true;
+        }
     }
 };
 
