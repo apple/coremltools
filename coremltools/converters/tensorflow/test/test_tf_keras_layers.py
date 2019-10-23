@@ -8,9 +8,7 @@ import shutil
 import tensorflow as tf
 from tensorflow.keras import backend as _keras
 from tensorflow.keras import layers
-
-from packaging import version
-
+from coremltools._deps import HAS_TF_2
 from test_utils import generate_data, tf_transpose
 
 
@@ -31,7 +29,7 @@ class TensorFlowKerasTests(unittest.TestCase):
         return graph.get_operation_by_name(name).outputs[0].name
 
     def _test_model(self, model, data_mode='random_zero_mean', decimal=4, use_cpu_only=False, has_variables=True, verbose=False):
-        if version.parse(tf.__version__).release[0] < 2:
+        if not HAS_TF_2:
             self._test_keras_model_tf1(model, data_mode, decimal, use_cpu_only, has_variables, verbose)
         else:
             self._test_keras_model_tf2(model, data_mode, decimal, use_cpu_only, has_variables, verbose)

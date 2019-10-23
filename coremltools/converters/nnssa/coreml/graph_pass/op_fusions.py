@@ -35,7 +35,7 @@ ELEMENTWISE_OPS = {
 # Native SSA nodes with data_format attributes of NHWC / NCHW
 NATIVE_NHWC_OPS = {
     'Conv2D', 'Conv2DBackpropInput', 'DepthwiseConv2dNative',
-    'Pooling', 'MaxPool', 'AvgPool', 'DepthToSpace', 'SpaceToDepth', 'FusedBatchNormV3'
+    'Pooling', 'MaxPool', 'AvgPool', 'DepthToSpace', 'SpaceToDepth',
 }
 
 REDUCTION_OPS = {
@@ -235,9 +235,6 @@ def transform_nhwc_to_nchw(nnssa):
                 if len(orig_out_shapes) == 1 and len(orig_out_shapes[0]) == 4:
                     s = orig_out_shapes[0]
                     node.attr['_output_shapes'] = [[s[0], s[3], s[1], s[2]]]
-                if node.op == 'FusedBatchNormV3':
-                    s = orig_out_shapes[0]
-                    node.attr['_output_shapes'][0] = [s[0], s[3], s[1], s[2]]
 
             if node.op in ELEMENTWISE_OPS:
                 for inp in node.inputs:
@@ -584,22 +581,22 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
     A graph pass that match and fuses following op patterns into one BatchNorm op.
 
     Pattern 1:
-                [Const]   [Const]
-                   |         |
-                   V         V
-    [Conv2D] --> [Mul] --> [Add] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
+             [Const]   [Const]
+                |         |
+                V         V
+    [...] --> [Mul] --> [Add] --> [...] to [...] --> [BatchNorm] --> [...]
 
     Pattern 2:
-                [Const]   [Const]   [Const]
-                   |         |         |
-                   V         V         V
-    [Conv2D] --> [Sub] --> [Mul] --> [Add] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
+             [Const]   [Const]   [Const]
+                |         |         |
+                V         V         V
+    [...] --> [Sub] --> [Mul] --> [Add] --> [...] to [...] --> [BatchNorm] --> [...]
 
     Pattern 3:
-                [Const]   [Const]       [Const]     [Const]
-                   |         |            |            |
-                   V         V            V            V
-    [Conv2D] --> [Sub] --> [RealDiv] --> [Mul] --> [BiasAdd] --> [...] to [Conv2D] --> [BatchNorm] --> [...]
+             [Const]   [Const]       [Const]     [Const]
+                |         |            |            |
+                V         V            V            V
+    [...] --> [Sub] --> [RealDiv] --> [Mul] --> [BiasAdd] --> [...] to [...] --> [BatchNorm] --> [...]
     """
 
     def _match_batch_norm_pattern(graph, entry_node, pattern_ops):
@@ -618,6 +615,8 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
             if not _check_single_out_vector_constant_node(const_node):
                 return None
             nodes_to_merge.extend([const_node, node])
+            if len(node.outputs) == 0:  # do not fuse the output layer
+                return None
             node = graph[node.outputs[0]]
         if len(nodes_to_merge) != len(pattern_ops) * 2:
             return None
@@ -675,8 +674,6 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
             if k not in graph:
                 continue
             current_node = graph[k]
-            if current_node.op not in ['Conv2D', 'DepthwiseConv2dNative']:
-                continue
 
             # return nodes order: : [Const, Mul, Const, Add]
             nodes1 = _match_batch_norm_pattern(graph, current_node, ['Mul', 'Add'])
