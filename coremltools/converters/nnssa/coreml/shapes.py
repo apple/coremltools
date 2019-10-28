@@ -330,6 +330,7 @@ def _reduce_general(params, input_shapes):
 def _reduce_logsumexp(layer_spec, input_shapes):
     return _reduce_general(layer_spec.reduceLogSumExp, input_shapes)
 
+
 def _reduce_prod(layer_spec, input_shapes):
     return _reduce_general(layer_spec.reduceProd, input_shapes)
 
@@ -593,8 +594,8 @@ def is_a_shape_of(x, y):
     """
     if y is None:
         return True
-    x = (1,) if len(x) == 0 else x # Scalar should be interpreted as an 1-element array
-    y = (1,) if len(y) == 0 else y # Scalar should be interpreted as an 1-element array
+    x = (1,) if len(x) == 0 else x  # Scalar should be interpreted as an 1-element array
+    y = (1,) if len(y) == 0 else y  # Scalar should be interpreted as an 1-element array
     if len(x) != len(y):
         return False
     return all([(a[0] == a[1] or a[1] == -1) for a in zip(x, y)])

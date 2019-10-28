@@ -366,6 +366,7 @@ class SSAConverter(object):
             'Maximum': self._convert_binary_broadcastable,
             'Minimum': self._convert_binary_broadcastable,
             'Add': self._convert_binary_broadcastable,
+            'AddV2': self._convert_binary_broadcastable,
             'Sub': self._convert_binary_broadcastable,
             'Mul': self._convert_binary_broadcastable,
             'RealDiv': self._convert_binary_broadcastable,
@@ -556,7 +557,7 @@ class SSAConverter(object):
                 raise NotImplementedError(
                     '[SSAConverter] Conversion for op %s not implemented, terminating...' % op_type)
 
-            print('[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\'{}{}'.format(
+            print('[SSAConverter] [{}/{}] Converting op type: \'{}\', name: \'{}\'{}{}'.format(
                 idx + 1, len(instruction_order), op_type, node_name, conversion_message,
                 ((', output_shape: ' + str(node.datatype.get_shape()) + '.') if builtins.is_tensor(node.datatype) else '.')))
 
@@ -597,7 +598,7 @@ class SSAConverter(object):
 
     def _get_input_tensors(self, node, inspect_shapes=True):
         """ Get the input nodes, their names and types for a node.
-        There are two cases:
+        There are three cases:
         (1) (Tuple case) input is a tuple. In this case, expand that tuple input into a list of input tensors
         (2) (Regular case) input is a node name. In this case just copy it.
         (3) (Indexed tuple case) input is one element in a tuple. In this case it should be stored in op_tensor_map
@@ -646,7 +647,7 @@ class SSAConverter(object):
 
     def __compare_propagated_and_inferred_shape(self, name, type_):
 
-        propagated_shape = self.tensor_shapes[name]
+        propagated_shape = tuple(self.tensor_shapes[name])
         if _is_scalar(type_):
             inferred_shape = (1,)
         elif builtins.is_tensor(type_):
@@ -657,11 +658,10 @@ class SSAConverter(object):
                 assert ashape.get_shape() == element_shape
             inferred_shape = [-1] + list(element_shape)
         else:
-            raise ValueError('[SSAConverter] Failed to infer shape'
-                             ' for tensor %s' % name)
+            raise ValueError('[SSAConverter] Failed to infer shape for tensor %s' % name)
 
-        mismatch = '[SSAConverter] Shape mismatch between inferred {} and propagated {} for tensor {}'.format(
-            inferred_shape, propagated_shape, name)
+        mismatch = '[SSAConverter] Shape mismatch for {}: inferred {} vs. propagated {}.'.format(
+            name, inferred_shape, propagated_shape)
 
         if len(propagated_shape) != len(inferred_shape):
             raise ValueError(mismatch)
@@ -679,9 +679,12 @@ class SSAConverter(object):
     def _convert_const(self, node):
         """ Convert a constant node.
         """
-        val = np.array(node.value.val)
+        node_value = node.value
+        if node_value is None:
+            node_value = node.attr.get('value')
+        val = np.array(node_value.val)
         if len(val.shape) == 0:
-            val = np.array([node.value.val])
+            val = np.array([node_value.val])
         builder = self._get_builder()
         layer = builder.add_load_constant_nd(
             name=node.name, output_name=node.name, constant_value=val, shape=val.shape)
@@ -1979,13 +1982,13 @@ class SSAConverter(object):
         if 'gamma' not in node.attr or 'beta' not in node.attr:
             raise ValueError('BatchNorm node must have attributes \'gamma\' and \'beta\'')
         gamma = node.attr.get('gamma')
-        C = len(gamma)
+        num_channels = len(gamma)
         beta = node.attr.get('beta')
-        mean = node.attr.get('mean', np.zeros((C,)))
-        variance = node.attr.get('variance', np.ones((C,)))
+        mean = node.attr.get('mean', np.zeros((num_channels,)))
+        variance = node.attr.get('variance', np.ones((num_channels,)))
         layer = self._get_builder().add_batchnorm(
             name=node.name,
-            channels=C,
+            channels=num_channels,
             gamma=gamma,
             beta=beta,
             mean=mean,
@@ -2233,8 +2236,7 @@ class SSAConverter(object):
         logical_ops = {'logicaland': 'AND', 'logicalor': 'OR'}
         math_ops = {'sub': 'subtract', 'mul': 'multiply', 'realdiv': 'divide',
                     'floordiv': 'floor_div', 'maximum': 'max', 'minimum': 'min',
-                    'biasadd': 'add',
-                    'pow': 'pow'}
+                    'biasadd': 'add', 'pow': 'pow', 'addv2': 'add'}
         if op in compare_greater_ops:
             layer = builder.add_greater_than(
                 name=node.name,

@@ -4,8 +4,11 @@ from ....commons.basic_graph_ops import replace_node, delete_node
 from ..parsed_tf_node import ParsedTFNode
 
 
+fused_batch_norm_ops = {'FusedBatchNorm', 'FusedBatchNormV3'}
+
+
 def expand_fusedbatchnorm_cell(graph, node):
-    assert (node.op == 'FusedBatchNorm')
+    assert (node.op in fused_batch_norm_ops)
     assert (len(node.inputs) == 5)
     """
     Inputs:
@@ -48,6 +51,6 @@ def expand_fusedbatchnorm_cell(graph, node):
 def fusedbatchnorm_rewrite(nnssa):
     for i in list(nnssa.functions):
         graph = nnssa.functions[i].graph
-        blockcells = [k for k, v in graph.items() if v.op == 'FusedBatchNorm']
+        blockcells = [k for k, v in graph.items() if v.op in fused_batch_norm_ops]
         for b in blockcells:
             expand_fusedbatchnorm_cell(graph, graph[b])

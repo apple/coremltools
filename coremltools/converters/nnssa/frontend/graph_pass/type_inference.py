@@ -489,6 +489,9 @@ class TypeInferenceVisitor(object):
     def visit_Add(self, node):
         return self._visit_broadcast(node)
 
+    def visit_AddV2(self, node):
+        return self._visit_broadcast(node)
+
     def visit_Maximum(self, node):
         return self._visit_broadcast(node)
 
@@ -684,7 +687,7 @@ class TypeInferenceVisitor(object):
         if not (value[0] == value[1] == 1):
             raise ValueError('{} along N and C other than 1 not implemented'.format(name))
         return value[2:]
-    
+
     def _conv2d_pad(self, algorithm, custom_pad, filter_hw):
         # pad = [t+b, l+r]
         if algorithm == 'VALID':
@@ -866,7 +869,7 @@ class TypeInferenceVisitor(object):
         """
         Inputs:
             0 (str): The name of a tensor or scalar.
-            1 (str): The name of an int indicating the dimension index to expand. Must be in 
+            1 (str): The name of an int indicating the dimension index to expand. Must be in
                      range [-rank(input) - 1, rank(input)] and able to be determined at compile
                      time.
         """

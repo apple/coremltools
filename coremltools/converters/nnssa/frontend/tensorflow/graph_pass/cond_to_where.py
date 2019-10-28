@@ -6,6 +6,7 @@ from ....commons.basic_graph_ops import delete_node, disconnect_edge
 from .visitors import FindAllUpstreamTerminals
 
 import logging
+from coremltools._deps import HAS_TF_2
 
 
 def compute_max_rank(graph):
@@ -75,8 +76,9 @@ class CondToWhere(object):
 
         # build the final select
         g[merge].op = 'iff'
-        # swap true branch with false branch to get the right semantics for IFF
-        g[merge].inputs[0], g[merge].inputs[1] = g[merge].inputs[1], g[merge].inputs[0]
+        if not HAS_TF_2:
+            # swap true branch with false branch to get the right semantics for IFF
+            g[merge].inputs[0], g[merge].inputs[1] = g[merge].inputs[1], g[merge].inputs[0]
 
         g[merge].inputs = [condition_input] + g[merge].inputs
         g[condition_input].outputs.append(merge)
