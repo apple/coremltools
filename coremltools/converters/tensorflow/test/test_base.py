@@ -317,6 +317,8 @@ class TFNetworkTest(unittest.TestCase):
         idx = 0
         for node_name in output_node_names:
             num_outputs = len(graph.get_operation_by_name(node_name).outputs)
+            if graph.get_operation_by_name(node_name).type == 'Merge':
+                num_outputs = 1
             for out_id in range(num_outputs):
                 tf_out = result[idx]
                 if len(tf_out.shape) == 0:

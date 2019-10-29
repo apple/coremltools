@@ -5,6 +5,7 @@ from __future__ import absolute_import as _
 from ..parsed_tf_node import ParsedTFNode
 from ....commons.basic_graph_ops import delete_node, disconnect_edge
 from .functionalize_loops import *
+from coremltools._deps import HAS_TF_2
 
 
 def compute_max_rank(graph):
@@ -75,9 +76,9 @@ class CondToWhere(object):
 
         # build the final select
         g[self.merge].op = 'iff'
-        # swap true branch with false branch to get the right semantics for IFF
-        g[self.merge].inputs[0], g[self.merge].inputs[1] = g[self.merge].inputs[1], g[
-            self.merge].inputs[0]
+        if not HAS_TF_2:
+            # swap true branch with false branch to get the right semantics for IFF
+            g[self.merge].inputs[0], g[self.merge].inputs[1] = g[self.merge].inputs[1], g[self.merge].inputs[0]
 
         g[self.merge].inputs = [condition_input] + g[self.merge].inputs
         g[condition_input].outputs.append(self.merge)
