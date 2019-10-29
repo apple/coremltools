@@ -46,11 +46,10 @@ def ssa_convert(ssa,
                 predicted_feature_name=None,
                 predicted_probabilities_output='',
                 add_custom_layers=False,
-                custom_conversion_functions={},
-                custom_shape_functions={}, 
-                optional_inputs = []
+                custom_conversion_functions=None,
+                custom_shape_functions=None,
+                optional_inputs=None
                 ):
-
     """
     Convert NNSSA into Core ML spec.
     ssa : NetworkEnsemble
@@ -90,6 +89,13 @@ def ssa_convert(ssa,
         Specify custom function to compute `output` shape given `input` shape for given custom operator
         This is required for new converter path, which maintains and propagates shapes while converting operators.
     """
+    if not custom_conversion_functions:
+        custom_conversion_functions = dict()
+    if not custom_shape_functions:
+        custom_shape_functions = dict()
+    if not optional_inputs:
+        optional_inputs = list()
+
     if outputs is not None:
         ssa.extract_subgraph(outputs, name=top_func)
 
@@ -138,14 +144,14 @@ def ssa_convert(ssa,
                              add_custom_layers=add_custom_layers,
                              custom_conversion_functions=custom_conversion_functions,
                              custom_shape_functions=custom_shape_functions,
-                             optional_inputs = optional_inputs)
+                             optional_inputs=optional_inputs)
 
     converter.convert()
 
     builder = converter._get_builder(func=top_func)
     # Add image input identifier
     if image_input_names is not None and isinstance(
-        image_input_names, _string_types):
+            image_input_names, _string_types):
         image_input_names = [image_input_names]
 
     # Add classifier classes (if applicable)
@@ -155,15 +161,15 @@ def ssa_convert(ssa,
             import os
             if not os.path.isfile(classes_in):
                 raise ValueError("Path to class labels (%s) does not exist." % \
-                    classes_in)
+                                 classes_in)
                 with open(classes_in, 'r') as f:
                     classes = f.read()
                 classes = classes.splitlines()
-            elif type(classes_in) is list: # list[int or str]
+            elif type(classes_in) is list:  # list[int or str]
                 classes = classes_in
             else:
-                raise ValueError('Class labels must be a list of integers / strings,'\
-                    ' or a file path')
+                raise ValueError('Class labels must be a list of integers / strings,' \
+                                 ' or a file path')
 
             if predicted_feature_name is not None:
                 builder.set_class_labels(
@@ -185,7 +191,6 @@ def ssa_convert(ssa,
 
     mlmodel_spec = converter.get_spec()
 
-
     # Required if an output node produces multiple outputs
     # Generate new output features
     modified_output_features_list = []
@@ -201,7 +206,6 @@ def ssa_convert(ssa,
         else:
             modified_output_features_list.append(output_feature)
 
-
     # delete the existing output feature
     mlmodel_spec.description.ClearField('output')
 
@@ -213,7 +217,6 @@ def ssa_convert(ssa,
     for p in mlmodel_passes:
         p(mlmodel_spec)
 
-    
     if DEBUG:
         coremltools.models.utils.save_spec(mlmodel_spec, '/tmp/model_from_spec.mlmodel')
 
@@ -222,15 +225,15 @@ def ssa_convert(ssa,
 
 class SSAConverter(object):
     def __init__(self,
-                 net_ensemble, # type: NetworkEnsemble
-                 top_func='main', # type: str
-                 inputs=None, # type: Dict[str, tuple]
-                 outputs=None, # type: List[str]
-                 neural_network_type=None, # type: str
+                 net_ensemble,  # type: NetworkEnsemble
+                 top_func='main',  # type: str
+                 inputs=None,  # type: Dict[str, tuple]
+                 outputs=None,  # type: List[str]
+                 neural_network_type=None,  # type: str
                  add_custom_layers=False,  # type: bool
                  custom_conversion_functions={},  # type: Dict[Text, Any]
-                 custom_shape_functions={}, # type: Dict[Text, Any]
-                 optional_inputs = [] # type: List[str]
+                 custom_shape_functions={},  # type: Dict[Text, Any]
+                 optional_inputs=[]  # type: List[str]
                  ):
         self.net_ensemble = net_ensemble
         self.top_func = top_func  # string indicating the top level function
@@ -363,6 +366,7 @@ class SSAConverter(object):
             'Maximum': self._convert_binary_broadcastable,
             'Minimum': self._convert_binary_broadcastable,
             'Add': self._convert_binary_broadcastable,
+            'AddV2': self._convert_binary_broadcastable,
             'Sub': self._convert_binary_broadcastable,
             'Mul': self._convert_binary_broadcastable,
             'RealDiv': self._convert_binary_broadcastable,
@@ -522,7 +526,7 @@ class SSAConverter(object):
         for name, var in self.net_ensemble.variables.items():
             layer = builder.add_copy(
                 name=name + '_copy',
-                input_name=name+'__invar__',
+                input_name=name + '__invar__',
                 output_name=name)
             shapes.propagate_single_layer(layer, self.tensor_shapes)
 
@@ -551,9 +555,9 @@ class SSAConverter(object):
                 raise NotImplementedError(
                     '[SSAConverter] Conversion for op %s not implemented, terminating...' % op_type)
 
-            print('[SSAConverter] [{}/{}] Converting op type \'{}\', of name \'{}\' {}'.format(
+            print('[SSAConverter] [{}/{}] Converting op type: \'{}\', name: \'{}\'{}{}'.format(
                 idx + 1, len(instruction_order), op_type, node_name, conversion_message,
-                (('(output shape: ' + str(node.datatype.get_shape()) + ')') if builtins.is_tensor(node.datatype) else '')))
+                ((', output_shape: ' + str(node.datatype.get_shape()) + '.') if builtins.is_tensor(node.datatype) else '.')))
 
             # If custom conversion method is provided, use it
             # Otherwise, invoke internal conversion method
@@ -568,9 +572,8 @@ class SSAConverter(object):
             layer = builder.add_copy(
                 name=name + '_copy_r',
                 input_name=name,
-                output_name=name+'__outvar__')
+                output_name=name + '__outvar__')
             shapes.propagate_single_layer(layer, self.tensor_shapes)
-
 
     def _get_builder(self, func=None):
         if func is None:
@@ -593,7 +596,7 @@ class SSAConverter(object):
 
     def _get_input_tensors(self, node, inspect_shapes=True):
         """ Get the input nodes, their names and types for a node.
-        There are two cases:
+        There are three cases:
         (1) (Tuple case) input is a tuple. In this case, expand that tuple input into a list of input tensors
         (2) (Regular case) input is a node name. In this case just copy it.
         (3) (Indexed tuple case) input is one element in a tuple. In this case it should be stored in op_tensor_map
@@ -642,7 +645,7 @@ class SSAConverter(object):
 
     def __compare_propagated_and_inferred_shape(self, name, type_):
 
-        propagated_shape = self.tensor_shapes[name]
+        propagated_shape = tuple(self.tensor_shapes[name])
         if _is_scalar(type_):
             inferred_shape = (1,)
         elif builtins.is_tensor(type_):
@@ -653,11 +656,10 @@ class SSAConverter(object):
                 assert ashape.get_shape() == element_shape
             inferred_shape = [-1] + list(element_shape)
         else:
-            raise ValueError('[SSAConverter] Failed to infer shape'
-                             ' for tensor %s' % name)
+            raise ValueError('[SSAConverter] Failed to infer shape for tensor %s' % name)
 
-        mismatch = '[SSAConverter] Shape mismatch between inferred {} and propagated {} for tensor {}'.format(
-            inferred_shape, propagated_shape, name)
+        mismatch = '[SSAConverter] Shape mismatch for {}: inferred {} vs. propagated {}.'.format(
+            name, inferred_shape, propagated_shape)
 
         if len(propagated_shape) != len(inferred_shape):
             raise ValueError(mismatch)
@@ -675,9 +677,12 @@ class SSAConverter(object):
     def _convert_const(self, node):
         """ Convert a constant node.
         """
-        val = np.array(node.value.val)
+        node_value = node.value
+        if node_value is None:
+            node_value = node.attr.get('value')
+        val = np.array(node_value.val)
         if len(val.shape) == 0:
-            val = np.array([node.value.val])
+            val = np.array([node_value.val])
         builder = self._get_builder()
         layer = builder.add_load_constant_nd(
             name=node.name, output_name=node.name, constant_value=val, shape=val.shape)
@@ -804,14 +809,14 @@ class SSAConverter(object):
 
         if has_squeeze:
             input_shape = self._get_tensor_shape_from_type(input_types[0])
-            input_rank  = len(input_shape)
+            input_rank = len(input_shape)
             squeeze_all = (input_rank == len(axes))
             layer = builder.add_squeeze(
                 name=node.name,
                 input_name=slice_output_name,
                 output_name=node.name,
-                axes= axes if not squeeze_all else None,
-                squeeze_all = squeeze_all)
+                axes=axes if not squeeze_all else None,
+                squeeze_all=squeeze_all)
             shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_range(self, node):
@@ -1515,7 +1520,7 @@ class SSAConverter(object):
         if node.op == 'DepthwiseConv2dNative':
             depth_multiplier = weight.shape[3]
             weight = np.reshape(weight,
-                (kernel_height, kernel_width, 1, kernel_channels * depth_multiplier))
+                                (kernel_height, kernel_width, 1, kernel_channels * depth_multiplier))
             output_channels = kernel_channels * depth_multiplier
             groups = kernel_channels
             kernel_channels = 1
@@ -1975,13 +1980,13 @@ class SSAConverter(object):
         if 'gamma' not in node.attr or 'beta' not in node.attr:
             raise ValueError('BatchNorm node must have attributes \'gamma\' and \'beta\'')
         gamma = node.attr.get('gamma')
-        C = len(gamma)
+        num_channels = len(gamma)
         beta = node.attr.get('beta')
-        mean = node.attr.get('mean', np.zeros((C,)))
-        variance = node.attr.get('variance', np.ones((C,)))
+        mean = node.attr.get('mean', np.zeros((num_channels,)))
+        variance = node.attr.get('variance', np.ones((num_channels,)))
         layer = self._get_builder().add_batchnorm(
             name=node.name,
-            channels=C,
+            channels=num_channels,
             gamma=gamma,
             beta=beta,
             mean=mean,
@@ -2237,8 +2242,7 @@ class SSAConverter(object):
         logical_ops = {'logicaland': 'AND', 'logicalor': 'OR'}
         math_ops = {'sub': 'subtract', 'mul': 'multiply', 'realdiv': 'divide',
                     'floordiv': 'floor_div', 'maximum': 'max', 'minimum': 'min',
-                    'biasadd': 'add',
-                    'pow': 'pow'}
+                    'biasadd': 'add', 'pow': 'pow', 'addv2': 'add'}
         if op in compare_greater_ops:
             layer = builder.add_greater_than(
                 name=node.name,
@@ -2508,7 +2512,7 @@ class SSAConverter(object):
         min_value = input_nodes[1].value.val
         max_value = input_nodes[2].value.val
 
-        layer = self._get_builder().add_clip(name = node.name,
+        layer = self._get_builder().add_clip(name=node.name,
                                              input_name=input_names[0],
                                              output_name=node.name,
                                              min_value=min_value,
