@@ -12,8 +12,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	  nodeDimensionsIncludeLabels: true
 	};
 
-	var nodeInfo = getGraphNodesAndEdges();
-	nodeInfo.then(function(nodesArray) {
+	var nodeInfo = getModelData();
+	nodeInfo.then(function(modelData) {
+		setTitle(modelData['title']);
+
+		var nodesArray = modelData['cy_data'];
 		var cy = window.cy = cytoscape({
 			container: document.getElementById('cy'),
 		    elements: nodesArray,
@@ -568,7 +571,13 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-function getGraphNodesAndEdges() {
+function setTitle(name) {
+	var title = document.getElementById('title');
+	title.innerText = name;
+}
+
+
+function getModelData() {
 	var graphPromise  = $.ajax({
 		url: 'model.json',
 		type: 'GET',
