@@ -73,4 +73,3 @@ Additional information regarding APIs, installation and dependencies and more ca
 * [coremltools](https://github.com/apple/coremltools)
 * [onnx-coreml](https://github.com/onnx/onnx-coreml)
 * [tf-coreml](https://github.com/tf-coreml/tf-coreml)
-
