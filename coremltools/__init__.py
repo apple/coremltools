@@ -22,7 +22,7 @@ format. In particular, it can be used to:
 For more information: http://developer.apple.com/documentation/coreml
 """
 
-__version__ = '3.0'
+__version__ = '3.1'
 
 # This is the basic Core ML specification format understood by iOS 11.0
 SPECIFICATION_VERSION = 1
