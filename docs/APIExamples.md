@@ -1,7 +1,8 @@
+docs/APIExamples.md
 # API Code snippets
 
 ## Converting between MLModel and Spec
- 
+
 ```python
 import coremltools
 
@@ -58,7 +59,7 @@ print(nn.preprocessing)
 ## Changing MLMultiArray input/output datatypes
 
 [Here](https://github.com/apple/coremltools/blob/d07421460f9f0ad1a2e9cf8b5248670358a24a1a/mlmodel/format/FeatureTypes.proto#L106 ) is the list of supported datatypes.
-For instance, change the datatype from 'double' to 'float32': 
+For instance, change the datatype from 'double' to 'float32':
 
 ```python
 import coremltools
@@ -96,7 +97,7 @@ import PIL.Image
 
 model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
 
-Height = 20  # use the correct input image height 
+Height = 20  # use the correct input image height
 Width = 60  # use the correct input image width
 
 
@@ -110,7 +111,7 @@ def load_image(path, resize_to=None):
     return img_np, img
 
 
-# load the image and resize using PIL utilities 
+# load the image and resize using PIL utilities
 _, img = load_image('/path/to/image.jpg', resize_to=(Width, Height))
 out_dict = model.predict({'image': img})
 

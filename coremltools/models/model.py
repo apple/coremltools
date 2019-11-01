@@ -372,7 +372,6 @@ class MLModel(object):
 
         Returns
         -------
-
         None
 
         Examples
