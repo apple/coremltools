@@ -2,30 +2,68 @@ Core ML Community Tools
 =======================
 
 Core ML community tools contains all supporting tools for Core ML model
-conversion and validation. This includes scikit-learn, LIBSVM, Caffe,
-Keras and XGBoost.
+conversion, editing and validation. This includes deep learning frameworks like 
+Tensorflow, Keras, Caffe as well as classical machine learning frameworks like 
+LIBSVB, scikit-learn, and XGBoost.
 
-coremltools 3.0
----------------
-[Release notes](https://github.com/apple/coremltools/releases/)
-
-
-👍👎 Please take this quick poll and let us know how you liked this release, [here](https://github.com/apple/coremltools/blob/master/release-feedback.md)!
+To get the latest version of coremltools 
 
 ```shell
-# Install using pip
-pip install coremltools==3.0
+pip install --upgrade coremltools
 ```
 
-API
----
-- [Example Code Snippets](docs/APIExamples.md)
-- [coremltools Documentation](https://apple.github.io/coremltools)
-- [Core ML Specification Documentation](https://apple.github.io/coremltools/coremlspecification/)
-- [IPython Notebooks](https://github.com/apple/coremltools/tree/master/examples)
+For the latest changes please see the [release notes](https://github.com/apple/coremltools/releases/)
 
-Installation
-------------
+# Table of contents
+
+* [Neural network conversion guide](#Neural-network-conversion-guide)
+* [Core ML specification](#Core-ML-specification) 
+* [coremltools user guide and examples](#coremltools-user-guide-and-examples)
+* [Installation from Source](#Installation)
+
+
+## Neural network conversion guide
+
+There are several `converters` available to translate neural networks trained in various frameworks into the Core ML model format.
+Following formats can be converted to the Core ML `.mlmodel` format through the coremltools python package (this repo):
+
+- Caffe V1 (`.prototxt`, `.caffemodel` format)
+- Keras API (2.2+) (`.h5` format)
+- Tensorflow 1 (1.13+) (`.pb` frozen graph def format)
+- Tensorflow 2 (`.h5` and `savedModel` formats)
+
+In addition, there are two more neural network converters build on top of `coremltools`:
+- [onnx-coreml](https://github.com/onnx/onnx-coreml): to convert `.onnx` model format. Several frameworks such as PyTorch, MXNet, CaffeV2 etc
+provide native export to the ONNX format. 
+- [tfcoreml](https://github.com/tf-coreml/tf-coreml): to convert Tensorflow models. For producing Core ML models targeting iOS 13 or later, 
+tfcoreml defers to the tensorflow converter implemented inside coremltools. 
+For iOS 12 or earlier, the code path is different and lives entirely in the tfcoreml repo/python package.  
+ 
+To get an overview on how to use the converters and features such as post-training quantization using coremltools, 
+please see the [neural network guide](docs/NeuralNetworkGuide.md).  
+
+
+## Core ML specification 
+
+- Core ML specifiction is fully described in a set of protobuf files. 
+They are all located in the folder `mlmodel/format/`
+- For an overview of the Core ML framework API, see [here](https://developer.apple.com/documentation/coreml).
+- To find the list of model types supported by Core ML, see [this](https://github.com/aseemw/coremltools/blob/f95f9b230f6a1bd8b0d9ee298b78d7786e3e7cfd/mlmodel/format/Model.proto#L229) 
+portion of the `model.proto` file.
+- To find the list of neural network layer types supported see [this](https://github.com/aseemw/coremltools/blob/f95f9b230f6a1bd8b0d9ee298b78d7786e3e7cfd/mlmodel/format/NeuralNetwork.proto#L472) 
+portion of the `NeuralNetwork.proto` file.
+- Auto-generated documentation for all the protobuf files can be found at this [link](https://apple.github.io/coremltools/coremlspecification/)
+
+
+## coremltools user guide and examples
+
+- [API documentation](https://apple.github.io/coremltools)
+- [Updatable models](examples/updatable_models)
+- [Neural network inference examples](examples/neural_network_inference)
+- [Neural network guide](docs/NeuralNetworkGuide.md)
+- [Miscellaneous How-to code snippets](docs/APIExamples.md)
+
+## Installation
 
 We recommend using virtualenv to use, install, or build coremltools. Be
 sure to install virtualenv using your system pip.
@@ -60,8 +98,7 @@ source pythonenv/bin/activate
 The package [documentation](https://apple.github.io/coremltools) contains
 more details on how to use coremltools.
 
-Dependencies
-------------
+### Dependencies
 
 *coremltools* has the following dependencies:
 
@@ -77,8 +114,8 @@ you are converting models of these formats:
 - LIBSVM
 
 
-Building from source
---------------------
+### Building from source
+
 To build the project, you need [CMake](https://cmake.org) to configure the project
 
 ```shell
@@ -104,16 +141,16 @@ after which you can use make to build the project
 make
 ```
 
-Building Installable Wheel
----------------------------
+### Building Installable Wheel
+
 To make a wheel/egg that you can distribute, you can do the following
 
 ```shell
 make dist
 ```
 
-Running Unit Tests
--------------------
+### Running Unit Tests
+
 In order to run unit tests, you need `pytest`, `pandas`, and `h5py`.
 
 ```shell
@@ -183,8 +220,8 @@ If you want to run, all tests, you can use:
 pytest
 ```
 
-Building Documentation
-----------------------
+### Building Documentation
+
 First install all external dependencies.
 
 ```shell
@@ -201,11 +238,3 @@ cd docs
 make html
 open _build/html/index.html
 ```
-
-External Tools
---------------
-In addition to the conversion tools in this package, TensorFlow, ONNX, and MXNet have their own conversion tools:
-
-- [TensorFlow](https://pypi.python.org/pypi/tfcoreml)
-- [MXNet](https://github.com/apache/incubator-mxnet/tree/master/tools/coreml)
-- [ONNX](https://github.com/onnx/onnx-coreml)
