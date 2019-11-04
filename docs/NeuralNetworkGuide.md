@@ -1,47 +1,45 @@
 # Neural Network Guide
 
 This document describes how to get neural network models into the Core ML format, either via automatic conversion or by building them
-from scratch programatically. We also discuss various utilities available to edit the `mlmodel` such as quantization, making the input shape 
-flexible, changing the input/output names, types, inspecting mlmodels, printing a text description of the model etc. 
- 
+from scratch pragmatically. We also discuss various utilities available to edit the `mlmodel` such as quantization, making the input shape
+flexible, changing the input/output names, types, inspecting mlmodels, printing a text description of the model etc.
 
-What are the layers supported by Core ML? For the latest list along with all the parameterizations, check out the 
-[neuralnetwork.proto](https://github.com/apple/coremltools/blob/master/mlmodel/format/NeuralNetwork.proto) file, which is a [protobuf](https://developers.google.com/protocol-buffers/docs/pythontutorial) 
-description of a neural network model. 
-Since its a big file, its easier to naviagte either by starting from the [top level proto message](https://github.com/apple/coremltools/blob/875abd9707dbe65eb92a31dbb54a68d6581e68ad/mlmodel/format/NeuralNetwork.proto#L130)
+What are the layers supported by Core ML? For the latest list along with all the parameterizations, check out the
+[neuralnetwork.proto](https://github.com/apple/coremltools/blob/master/mlmodel/format/NeuralNetwork.proto) file, which is a [protobuf](https://developers.google.com/protocol-buffers/docs/pythontutorial)
+description of a neural network model.
+Since its a big file, its easier to navigate either by starting from the [top level proto message](https://github.com/apple/coremltools/blob/875abd9707dbe65eb92a31dbb54a68d6581e68ad/mlmodel/format/NeuralNetwork.proto#L130)
 or by directly looking at the [layer types](https://github.com/apple/coremltools/blob/875abd9707dbe65eb92a31dbb54a68d6581e68ad/mlmodel/format/NeuralNetwork.proto#L472).
 An auto-generated documentation, built from the comments in the proto file, can be found [here](https://apple.github.io/coremltools/coremlspecification/sections/NeuralNetwork.html).
 
-# Table of contents
+# Table of Contents
 
 * [Keras.io converter](#Kerasio-converter)
-* [Tensorflow converter](#Tensorflow-converter)
-* [ONNX converter (Pytorch conversion)](#ONNX-converter)
+* [TensorFlow converter](#TensorFlow-converter)
+* [ONNX converter (PyTorch conversion)](#ONNX-converter)
 * [Building an mlmodel using the Builder API](#Building-an-mlmodel-using-the-Builder-API)
 * [Model quantization](#Model-quantization)
-* [Model prediction](#Model-prediction)
+* [Model prediction](#Model-predictions)
 * [Model inspection and editing](#Model-inspection-and-editing)
-    * [Printing description](#Printing-description)
-    * [Flexible input/output shapes](#Flexible-inputoutput-shapes)
-    * [Modifying input/output names and types](#Modifying-inputoutput-names-and-types)
-    * [Inspecting model for debugging](#Inspecting-model-for-debugging)
-    * [Miscellaneous Examples](#Miscellaneous-examples)
+  * [Printing description](#Printing-description)
+  * [Flexible input/output shapes](#Flexible-inputoutput-shapes)
+  * [Modifying input/output names and types](#Modifying-inputoutput-names-and-types)
+  * [Inspecting model for debugging](#Inspecting-model-for-debugging)
+  * [Miscellaneous Examples](#Miscellaneous-examples)
 
+## Keras.io Converter
 
-## Keras.io converter
+Models created via the [Keras.io API](https://keras.io) and saved in the `.h5` format can be converted to Core ML.
 
-Models created via the [keras.io API](https://keras.io) and saved in the `.h5` format can be converted to Core ML. 
-
-The coremltools keras converter supports Keras versions 2.2+.  
-(Versions below 2.2, up to 1.2.2 are supported, however they are no longer 
-maintained, i.e. no bug fixes will be made for versions below 2.2)  
+The coremltools Keras converter supports Keras versions 2.2+.
+(Versions below 2.2, up to 1.2.2 are supported, however they are no longer
+maintained, i.e. no bug fixes will be made for versions below 2.2)
 
 ```python
 # convert by providing path to a .h5 file
 mlmodel = coremltools.converters.keras.convert('keras_model.h5')
 mlmodel.save('coreml_model.mlmodel')
 
-# convert by providing a keras model object
+# convert by providing a Keras model object
 from keras.models import load_model
 keras_model = load_model("keras_model.h5")
 mlmodel = coremltools.converters.keras.convert(keras_model)
@@ -51,151 +49,148 @@ The convert function can take several additional arguments, such as:
 
 * `input_names`, `output_names`: to provide custom names for inputs and outputs
 * `image_input_names`: to get an mlmodel such that its input is of type image
-* `is_bgr`, `red_bias`, `green_bias`, `blue_bias`, `image_scale`: to provide parameters for image pre-processing  
-when the input is of type image (i.e. if `image_input_names` is being used).
-* `class_labels`, `predicted_feature_name`: to prodcue an mlmodel of type neural network classifier
+* `is_bgr`, `red_bias`, `green_bias`, `blue_bias`, `image_scale`: to provide parameters for image pre-processing
+  when the input is of type image (i.e. if `image_input_names` is being used).
+* `class_labels`, `predicted_feature_name`: to produce an mlmodel of type neural network classifier
 * `model_precision`: to produce a quantized model. Equivalently, the mlmodel can be quantized post conversion as well, see the section
-on [Model quantization](#Model-quantization)
+  on [Model quantization](#Model-quantization)
 * `respect_trainable`: to produce an updatable mlmodel. See examples [here](https://github.com/apple/coremltools/tree/master/examples/updatable_models)
-* `add_custom_layers`, `custom_conversion_functions`: to add a custom layer in the generated mlmodel. 
-This is useful when keras has a layer (native or lambda) that Core ML does not support. 
-For a description of CoreML custom layers see this nice [overview](http://machinethink.net/blog/coreml-custom-layers/).
-
+* `add_custom_layers`, `custom_conversion_functions`: to add a custom layer in the generated mlmodel.
+  This is useful when Keras has a layer (native or lambda) that Core ML does not support.
+  For a description of CoreML custom layers see this nice [overview](http://machinethink.net/blog/coreml-custom-layers/).
 
 For a complete list of arguments that can be passed to the convert method, see [here](https://apple.github.io/coremltools/generated/coremltools.converters.keras.convert.html)
 or at the [function signature in code](https://github.com/apple/coremltools/blob/875abd9707dbe65eb92a31dbb54a68d6581e68ad/coremltools/converters/keras/_keras_converter.py#L344)
- 
-#### Known issues / troubleshooting 
 
-* What if the converter errors out due to an unsupported layer, or an unsupported parameter in a layer?  
-The coremltools keras converter targets the Core ML specification version 3, the one released during the macOS 10.14, iOS 12 release cycle. 
-Majority of the native layers of the `keras.io` API can be mapped to the iOS 12 Core ML layers.
-However if a conversion error due to an unsupported layer comes up, the recommended route is one of the following:
-    - if you are using TF 2.0, then use the newer `tf.keras` API and convert to Core ML via the [Tensorflow converter](#Tensorflow-converter)
-    - if you are using TF 1.x, then save the keras model as a frozen graph def file in `.pb` format, instead of `.h5` and then use the [Tensorflow converter](#Tensorflow-converter). To see examples of how this can be done, 
+#### Known Issues / Troubleshooting
+
+* What if the converter errors out due to an unsupported layer, or an unsupported parameter in a layer?
+  The coremltools Keras converter targets the Core ML specification version 3, the one released during the macOS 10.14, iOS 12 release cycle.
+  Majority of the native layers of the `keras.io` API can be mapped to the iOS 12 Core ML layers.
+  However if a conversion error due to an unsupported layer comes up, the recommended route is one of the following:
+
+  - if you are using TensorFlow 2.x, then use the newer `tf.keras` API and convert to Core ML via the [TensorF
+low converter](#TensorF
+low-converter)
+  - if you are using TensorFlow 1.x, then save the Keras model as a frozen graph def file in `.pb` format, instead of `.h5` and then use the [TensorF
+low converter](#TensorF
+low-converter). To see examples of how this can be done,
     please see this [script](https://github.com/tf-coreml/tf-coreml/blob/d37b4d28ec355a9f07298547bf989b4309d0597e/tests/test_tf_keras_layers.py)
 
-* conversion of models defined via the `tf.keras` API is not supported by the coremltools keras converter. 
-However, when `tf.keras` is used in TF 2.0 and the model exported to `.h5` format, it can be converterd via the [Tensorflow converter](#Tensorflow-converter) described below
-     
-* models with keras lambda layers: use `custom_conversion_functions`, so that keras lambda layers can be mapped to Core ML custom layers 
- 
+* conversion of models defined via the `tf.keras` API is not supported by the coremltools keras converter.
+  However, when `tf.keras` is used in TensorFlow 2.x and the model exported to `.h5` format, it can be converted via the [TensorF
+low converter](#TensorF
+low-converter) described below
+
+* models with Keras lambda layers: use `custom_conversion_functions`, so that Keras lambda layers can be mapped to Core ML custom layers
+
 Another alternative that can be useful to consider in all of the cases above
- is to first convert the [keras model to the `.onnx` format](https://github.com/onnx/keras-onnx) and then use the [ONNX converter](#ONNX-converter) described below.
- The ONNX coreml converter is updated to target all Core ML specification versions from 1 to 4 (iOS 11 to iOS 13). 
+ is to first convert the [Keras model to the `.onnx` format](https://github.com/onnx/keras-onnx) and then use the [ONNX converter](#ONNX-converter) described below.
+ The ONNX converter is updated to target all Core ML specification versions from 1 to 4 (iOS 11 to iOS 13).
 
+## TensorFlow Converter
 
-## Tensorflow converter
-
-Tensorflow models can be converted to Core ML by using the `tfcoreml` converter 
-([link](https://github.com/tf-coreml/tf-coreml) to the github repo), which
-depends on the coremltools package. 
+TensorFlow models can be converted to Core ML by using the `tfcoreml` converter
+([link](https://github.com/tf-coreml/tf-coreml) to the GitHub repo), which
+depends on the coremltools package.
 
 ```bash
-# latest version is 1.1
-pip install tfcoreml==1.1
-# or
-pip install -U tfcoreml
+pip install --upgrade tfcoreml
 ```
 
-#### Conversion from TF 1.13+
+#### Conversion from TensorFlow 1.13+
 
-To convert models trained/saved via Tensorflow 1, first export them into the frozen graph def format, which is a protobuf file 
-format with `.pb` as the extension. Frozen `.pb` files can be obtained by using Tensorflow's 
-`tensorflow.python.tools.freeze_graph` utility.   
-[This](https://github.com/tf-coreml/tf-coreml/blob/master/examples/linear_mnist_example.ipynb) 
-jupyter notebook shows how to freeze a graph to produce a `.pb` file. 
+To convert models trained/saved via TensorFlow 1, first export them into the frozen graph def format, which is a protobuf file
+format with `.pb` as the extension. Frozen `.pb` files can be obtained by using TensorFlow's
+`tensorflow.python.tools.freeze_graph` utility.
+[This](https://github.com/tf-coreml/tf-coreml/blob/master/examples/linear_mnist_example.ipynb)
+Jupyter notebook shows how to freeze a graph to produce a `.pb` file.
 
 ```python
 import tfcoreml
 
 tfcoreml.convert(tf_model_path='my_model.pb',
-          mlmodel_path='my_model.mlmodel',
-          output_feature_names=['softmax:0'], # name of the output tensor (appended by ":0")
-          input_name_shape_dict={'input:0': [1, 227, 227, 3]},# map from input tensor name (placeholder op in the graph) to shape
-          minimum_ios_deployment_target='12')
-          
-# if the above invocation fails with an error, then update the 
-# ios target to invoke the newer converter path:
- 
+                 mlmodel_path='my_model.mlmodel',
+                 output_feature_names=['softmax:0'],  # name of the output tensor (appended by ":0")
+                 input_name_shape_dict={'input:0': [1, 227, 227, 3]},  # map from input tensor name (placeholder op in the graph) to shape
+                 minimum_ios_deployment_target='12')
+
+# if the above invocation fails with an error, then update the
+# minimum_ios_deployment_target to invoke the newer converter path:
+
 tfcoreml.convert(tf_model_path='my_model.pb',
-          mlmodel_path='my_model.mlmodel',
-          output_feature_names=['softmax'], # name of the output op
-          input_name_shape_dict={'input': [1, 227, 227, 3]},# map from the placeholder op in the graph to shape (can have -1s)
-          minimum_ios_deployment_target='13')
+                 mlmodel_path='my_model.mlmodel',
+                 output_feature_names=['softmax'],  # name of the output op
+                 input_name_shape_dict={'input': [1, 227, 227, 3]},  # map from the placeholder op in the graph to shape (can have -1s)
+                 minimum_ios_deployment_target='13')
 ```
 
 The argument `minimum_ios_deployment_target` controls the set of Core ML layers that are used by the converter.
 When its value is set to `'12'`, only the set of layers that were shipped in Core ML during the iOS 12, macOS 14 release cycle are used.
-It is recommneded to first use this setting, since if successful, it produces a Core ML model that can be deployed to iOS 12 and higher.
-In case, it results in an error due to an unsupported op or paramater, then the target should be set to `'13'`, so that the
+It is recommended to first use this setting, since if successful, it produces a Core ML model that can be deployed to iOS 12 and higher.
+In case, it results in an error due to an unsupported op or parameter, then the target should be set to `'13'`, so that the
 converter can utilize all the layers (including control flow, recurrent layers etc) that were shipped in Core ML in iOS 13.
 
-There are several jupyter notebook examples for conversion hosted in the `tfcoreml` repo [here](https://github.com/tf-coreml/tf-coreml/tree/master/examples). 
+There are several Jupyter notebook examples for conversion hosted in the `tfcoreml` repo [here](https://github.com/tf-coreml/tf-coreml/tree/master/examples).
 
-#### Conversion from TF 2 / tf.keras
+#### Conversion from TensorFlow 2 / tf.keras
 
-There are 3 ways in which an inference graph can be exported in Tensorflow 2:
+There are 3 ways in which an inference graph can be exported in TensorFlow 2:
 
-1. Use only the `tf.keras` API and export to the `.h5` format or to a `SavedModel` directory
-2. Use TF's lower level API (maybe along with `tf.keras`) and export to a `SavedModel` directory
-3. Use TF's lower level API and export a `concrete` function
+1. Use the `tf.keras` APIs (Sequential, Functional, or Subclassing) and export to the `.h5` HDF5 file or `SavedModel` directory format.
+2. Use TensorFlow's low-level APIs (along with `tf.keras`) and export to a `SavedModel` directory format.
+3. Use TensorFlow's low-level APIs and export as `concrete functions` format.
 
-For all 3 cases `tfcoreml`'s `convert` function can be used.   
+For all 3 cases `tfcoreml`'s `convert()` function can be used to convert your model into Core ML model format. The argument `minimum_ios_deployment_target` must be set to `'13'`.
 
-The argument `minimum_ios_deployment_target` must be set to `'13'`.   
-
+* Converting a `tf.keras` HDF5 model:
 
 ```python
+from tensorflow.keras.applications import ResNet50
 import tfcoreml
-
-
-def _convert(tf_model_path=None):
-# assuming input, output nodes are named "input", "output" respectively
-# and that input shape is (1,227,227,3)
-    tfcoreml.convert(tf_model_path=tf_model_path,
-                    mlmodel_path='my_model.mlmodel',
-                    output_feature_names= ['output'], 
-                    input_name_shape_dict= {'input': [1,227,227,3]},
-                    minimum_ios_deployment_target='13')
-
-# converting .h5, obtained from tf.keras
-_convert(tf_model_path='my_tf_keras_model.h5')
-                   
-# converting from savedModel
-_convert(tf_model_path='/path/to/saved_model_directory/')
-
-# converting a concrete function
-_convert(tf_model_path=[concrete_func])
+keras_model = ResNet50(weights=None, input_shape=(224, 224, 3))
+keras_model.save('./model.h5')
+model = tfcoreml.convert('./model.h5',
+                         input_name_shape_dict={'input_1': (1, 224, 224, 3)},
+                         output_feature_names=['Identity'],
+                         minimum_ios_deployment_target='13')
+model.save('./model.mlmodel')
 ```
-For a few examples, on how to save to `.h5` or `savedModel` or `concrete function`, 
-see this [test file](https://github.com/apple/coremltools/blob/master/coremltools/converters/tensorflow/test/test_tf_2x.py).
 
+* Converting a SavedModel:
 
+```python
+from tensorflow.keras.applications import MobileNet
+import tfcoreml
+keras_model = MobileNet(weights=None, input_shape=(224, 224, 3))
+keras_model.save('./savedmodel', save_format='tf')
+# tf.saved_model.save(keras_model, './savedmodel')
+model = tfcoreml.convert('./savedmodel',
+                         mlmodel_path='./model.mlmodel',
+                         input_name_shape_dict={'input_1': (1, 224, 224, 3)},
+                         output_feature_names=['Identity'],
+                         minimum_ios_deployment_target='13')
+```
 
+See notebooks in [https://github.com/tf-coreml/tf-coreml/tree/master/examples](https://github.com/tf-coreml/tf-coreml/tree/master/examples) or [unit test cases](https://github.com/apple/coremltools/blob/master/coremltools/converters/tensorflow/test/test_tf_2x.py) for more examples, on how to save to `.h5` or `SavedModel` or `concrete functions`.
 
+Note:
 
----
+When the value of `minimum_ios_deployment_target` is set to `'13'`, `tfcoreml` directly calls coremltools to convert the TensorFlow models, as can be seen [here](https://github.com/tf-coreml/tf-coreml/blob/674c30572867cd9d00dc930c0ee625f5b27de757/tfcoreml/_tf_coreml_converter.py#L672).
+The conversion code for `minimum_ios_deployment_target` less than or equal to `'12'` is entirely present in the `tfcoreml` GitHub repo, whereas for `minimum_ios_deployment_target` is equal to `'13'` (or greater than in the future) the code is entirely present in the coremltools GitHub repo.
 
-Note: 
-When the value of `minimum_ios_deployment_target` is set to `'13'`, `tfcoreml` directly calls coremltools to convert the TF models, 
-as can be seen [here](https://github.com/tf-coreml/tf-coreml/blob/674c30572867cd9d00dc930c0ee625f5b27de757/tfcoreml/_tf_coreml_converter.py#L672).
-The conversion code for target ios less than equal to `'12'` is entirely present in the `tfcoreml` github repo, whereas for target 
-ios `'13'` (and higher, in future) the code is entirely present in the coremltools github repo.  
-
-#### Known issues 
+#### Known Issues / Troubleshooting
 
 - Although majority of Core ML 3 (iOS 13, macOs 15) layers have been updated in the converter, there might be a few missing layers, or cases not handled.
-Please file a Github issue if you encounter a bug while using the argument `minimum_ios_deployment_target='13'`
-- `tf.keras` conversion is only supported when TF 2.0 is used
-- TF 2.0 model conversion is not supported with Python 2
-- Currently there are issues while exporting `tf.keras` graphs, that contain recurrent layers, to `.h5` format 
-- conversion from a list of `concrete functions` is not supported yet
+  Please [file a GitHub issue](https://github.com/apple/coremltools/issues/new/choose) if you encounter a bug while using the argument `minimum_ios_deployment_target='13'`.
+- The `tf.keras` conversion is only supported when TensorFlow 2.x is used.
+- TensorFlow 2.x model conversion is not supported with Python 2.
+- Currently there are issues while exporting `tf.keras` graphs, that contain recurrent layers, to `.h5` format
 
-## ONNX converter
+## ONNX Converter
 
-Pytorch and MXNet models can be first exported to the ONNX format and then converted to Core ML via the  
-`onnx-coreml`(https://github.com/onnx/onnx-coreml) converter. 
+PyTorch and MXNet models can be first exported to the ONNX format and then converted to Core ML via the
+`onnx-coreml`(https://github.com/onnx/onnx-coreml) converter.
 
 ```python
 from onnx_coreml import convert
@@ -203,41 +198,38 @@ ml_model = convert(model='my_model.onnx', target_ios='13')
 ml_model.save('my_model.mlmodel')
 ```
 
-Here is a short [guide](https://github.com/onnx/onnx-coreml/tree/master/examples) hosted on the onnx-coreml github repo.
-Additional converter arguments are explained [here](https://github.com/onnx/onnx-coreml#parameters)  
+Here is a short [guide](https://github.com/onnx/onnx-coreml/tree/master/examples) hosted on the onnx-coreml GitHub repo.
+Additional converter arguments are explained [here](https://github.com/onnx/onnx-coreml#parameters)
 
-
-
-#### Known issues 
+#### Known Issues / Troubleshooting
 
 - If the onnx opset version is greater than 9 and there are issues during conversion, please try exporting to onnx
-opset version 9 and then converting to Core ML
+  opset version 9 and then converting to Core ML
 - onnx models with weight quantization and control flow layers (loop, branch) will give a conversion error since
-support for those has not been added yet to the converter
+  support for those has not been added yet to the converter
 
-## Building an mlmodel using the Builder API
+## Building an mlmodel Using the Builder API
 
 [Code snippet](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#building-an-mlmodel-from-scratch-using-neural-network-builder)
 
-
-## Model quantization
+## Model Quantization
 
 `coremltools` provides utilities for performing post-training quantization for the weight parameters,
-to reduce the size of the `.mlmodel` file. By default the converters produce mlmodels that have weights 
+to reduce the size of the `.mlmodel` file. By default the converters produce mlmodel that have weights
 in FP32 precision. These can be quantized to either FP16 or to 8 bits, 7 bits, up to all the way to 1 bit.
 The lower the number of bits, more the chances of degrading the model accuracy. The loss in accuracy varies with
-the model. 
+the model.
 
-[Here](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#quantizing-a-neural-network-mlmodel) 
+[Here](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#quantizing-a-neural-network-mlmodel)
 is a code snippet on using the quantization utilities.
-  
-## Model prediction
 
-Neural network models can take as inputs two dataypes: either multi-arrays or image types.
-When using coremltools to call predict on a model, in the case of multi-arrays, a numpy array must be fed. 
-In the case of an image, a PIL image python object should be used. 
+## Model Predictions
 
-Multi-array prediction: 
+Neural network models can take as inputs two datatypes: either multi-arrays or image types.
+When using coremltools to call predict on a model, in the case of multi-arrays, a numpy array must be fed.
+In the case of an image, a PIL image python object should be used.
+
+Multi-array prediction:
 
 ```python
 import coremltools
@@ -263,7 +255,7 @@ import PIL.Image
 
 model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
 
-Height = 20  # use the correct input image height 
+Height = 20  # use the correct input image height
 Width = 60  # use the correct input image width
 
 
@@ -277,7 +269,7 @@ def load_image(path, resize_to=None):
     return img_np, img
 
 
-# load the image and resize using PIL utilities 
+# load the image and resize using PIL utilities
 _, img = load_image('/path/to/image.jpg', resize_to=(Width, Height))
 out_dict = model.predict({'image': img})
 
@@ -289,16 +281,16 @@ pil_img = PIL.Image.fromarray(data)
 out_dict = model.predict({'image': pil_img})
 ```
 
-## Model inspection and editing
+## Model Inspection and Editing
 
-[Code snippet](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#converting-between-mlmodel-and-spec) 
+[Code snippet](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#converting-between-mlmodel-and-spec)
 for loading mlmodel and converting it to spec and vice versa.
 
-[Netron](https://github.com/lutzroeder/netron) is a nice tool to visualize Core ML neural network models. 
+[Netron](https://github.com/lutzroeder/netron) is a nice tool to visualize Core ML neural network models.
 
-### Printing description
+### Printing Description
 
-To print a text description of the model: 
+To print a text description of the model:
 
 ```python
 import coremltools
@@ -341,27 +333,25 @@ print(nn_spec.preprocessing)
 ### Flexible input/output shapes
 
 There are several [utilities](https://apple.github.io/coremltools/generated/coremltools.models.neural_network.flexible_shape_utils.html#module-coremltools.models.neural_network.flexible_shape_utils)
- to mark inputs with `flexible` shapes. 
+ to mark inputs with `flexible` shapes.
 
-### Modifying input/output names and types
+### Modifying Input/Output Names and Types
 
 ```python
-import coremltools   
+import coremltools
 
 model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
-spec = model.get_spec()   
+spec = model.get_spec()
 
 # lets say the name of the input feature is "input" that we want to rename to "input_tensor"
 
-coremltools.utils.rename_feature(spec, current_name='input', new_name='input_tensor')  
-model = coremltools.models.MLModel(spec) 
+coremltools.utils.rename_feature(spec, current_name='input', new_name='input_tensor')
+model = coremltools.models.MLModel(spec)
 model.save('path/to/the/saved/model.mlmodel')
 ```
 
-
-
 [Here](https://github.com/apple/coremltools/blob/d07421460f9f0ad1a2e9cf8b5248670358a24a1a/mlmodel/format/FeatureTypes.proto#L106 ) is the list of supported datatypes.
-For instance, change the datatype from 'double' to 'float32': 
+For instance, change the datatype from 'double' to 'float32':
 
 ```python
 import coremltools
@@ -388,12 +378,12 @@ model = coremltools.models.MLModel(spec)
 model.save('path/to/the/saved/model.mlmodel')
 ```
 
-### Inspecting model for debugging
+### Inspecting Model for Debugging
 
 Sometimes we want to print out weights of a particular layer for debugging purposes.
 Following is an example showing how we can utilize the `protobuf` APIs to access any
 attributes including the weight parameters. This code snippet uses the model we created in
-the [this](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#building-an-mlmodel-from-scratch-using-neural-network-builder) 
+the [this](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#building-an-mlmodel-from-scratch-using-neural-network-builder)
 example.
 
 ```python
@@ -412,10 +402,9 @@ print('Weights of {} layer: {}.'.format(layer.WhichOneof('layer'), layer.name))
 print(np.reshape(np.asarray(weight_params.floatValue), (1, 1, 3, 3)))
 ```
 
-### Miscellaneous examples
+### Miscellaneous Examples
 
-- [control flow Core ML model via the builder library](../examples/neural_network_inference/Image_preprocessing_per_channel_scale.ipynb)
-- [per channel scale pre-processing](../examples/neural_network_inference/Neural_network_control_flow_power_iteration.ipynb)
-- [image type as output, for a style transfer network](https://github.com/tf-coreml/tf-coreml/blob/master/examples/style_transfer_example.ipynb)
-- [setting image pre-processing correctly](https://github.com/tf-coreml/tf-coreml/blob/master/examples/inception_v1_preprocessing_steps.ipynb)
-
+- [Control flow Core ML model via the builder library](../examples/neural_network_inference/Image_preprocessing_per_channel_scale.ipynb)
+- [Per channel scale pre-processing](../examples/neural_network_inference/Neural_network_control_flow_power_iteration.ipynb)
+- [Image type as output, for a style transfer network](https://github.com/tf-coreml/tf-coreml/blob/master/examples/style_transfer_example.ipynb)
+- [Setting image pre-processing correctly](https://github.com/tf-coreml/tf-coreml/blob/master/examples/inception_v1_preprocessing_steps.ipynb)
