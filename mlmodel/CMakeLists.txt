@@ -88,6 +88,7 @@ add_library(mlmodel
     ${CMAKE_CURRENT_BINARY_DIR}/format/Normalizer.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/OneHotEncoder.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/Parameters.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/format/Program.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/SVM.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/Scaler.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/SoundAnalysisPreprocessing.pb.cc
@@ -120,6 +121,7 @@ add_library(mlmodel
     src/NormalizerValidator.cpp
     src/OneHotEncoderValidator.cpp
     src/PipelineValidator.cpp
+    src/ProgramValidator.cpp
     src/ScalarValidator.cpp
     src/SVMValidator.cpp
     src/TreeEnsembleValidator.cpp
@@ -188,6 +190,7 @@ set(proto_files
     Normalizer
     OneHotEncoder
     Parameters
+    Program
     SVM
     Scaler
     SoundAnalysisPreprocessing

@@ -47,6 +47,7 @@ class ModelDefaultTypeInternal : public ::google::protobuf::internal::Explicitly
   const ::CoreML::Specification::KNearestNeighborsClassifier* knearestneighborsclassifier_;
   const ::CoreML::Specification::NeuralNetwork* neuralnetwork_;
   const ::CoreML::Specification::ItemSimilarityRecommender* itemsimilarityrecommender_;
+  const ::CoreML::Specification::V5::Program* program_;
   const ::CoreML::Specification::CustomModel* custommodel_;
   const ::CoreML::Specification::LinkedModel* linkedmodel_;
   const ::CoreML::Specification::OneHotEncoder* onehotencoder_;
@@ -123,6 +124,7 @@ void TableStruct::InitDefaultsImpl() {
   ::CoreML::Specification::protobuf_Identity_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Imputer_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_NeuralNetwork_2eproto::InitDefaults();
+  ::CoreML::Specification::V5::protobuf_Program_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Normalizer_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_OneHotEncoder_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Scaler_2eproto::InitDefaults();
@@ -179,6 +181,7 @@ void AddDescriptorsImpl() {
   ::CoreML::Specification::protobuf_Identity_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Imputer_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_NeuralNetwork_2eproto::AddDescriptors();
+  ::CoreML::Specification::V5::protobuf_Program_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Normalizer_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_OneHotEncoder_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Scaler_2eproto::AddDescriptors();
@@ -2724,6 +2727,7 @@ const int Model::kNeuralNetworkClassifierFieldNumber;
 const int Model::kKNearestNeighborsClassifierFieldNumber;
 const int Model::kNeuralNetworkFieldNumber;
 const int Model::kItemSimilarityRecommenderFieldNumber;
+const int Model::kProgramFieldNumber;
 const int Model::kCustomModelFieldNumber;
 const int Model::kLinkedModelFieldNumber;
 const int Model::kOneHotEncoderFieldNumber;
@@ -2825,6 +2829,10 @@ Model::Model(const Model& from)
     }
     case kItemSimilarityRecommender: {
       mutable_itemsimilarityrecommender()->::CoreML::Specification::ItemSimilarityRecommender::MergeFrom(from.itemsimilarityrecommender());
+      break;
+    }
+    case kProgram: {
+      mutable_program()->::CoreML::Specification::V5::Program::MergeFrom(from.program());
       break;
     }
     case kCustomModel: {
@@ -3006,6 +3014,10 @@ void Model::clear_Type() {
     }
     case kItemSimilarityRecommender: {
       delete Type_.itemsimilarityrecommender_;
+      break;
+    }
+    case kProgram: {
+      delete Type_.program_;
       break;
     }
     case kCustomModel: {
@@ -3323,6 +3335,18 @@ bool Model::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(4010u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_itemsimilarityrecommender()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.V5.Program program = 502;
+      case 502: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(4018u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_program()));
         } else {
           goto handle_unusual;
         }
@@ -3678,6 +3702,12 @@ void Model::SerializeWithCachedSizes(
       501, *Type_.itemsimilarityrecommender_, output);
   }
 
+  // .CoreML.Specification.V5.Program program = 502;
+  if (has_program()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      502, *Type_.program_, output);
+  }
+
   // .CoreML.Specification.CustomModel customModel = 555;
   if (has_custommodel()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
@@ -3918,6 +3948,13 @@ size_t Model::ByteSizeLong() const {
           *Type_.itemsimilarityrecommender_);
       break;
     }
+    // .CoreML.Specification.V5.Program program = 502;
+    case kProgram: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.program_);
+      break;
+    }
     // .CoreML.Specification.CustomModel customModel = 555;
     case kCustomModel: {
       total_size += 2 +
@@ -4135,6 +4172,10 @@ void Model::MergeFrom(const Model& from) {
     }
     case kItemSimilarityRecommender: {
       mutable_itemsimilarityrecommender()->::CoreML::Specification::ItemSimilarityRecommender::MergeFrom(from.itemsimilarityrecommender());
+      break;
+    }
+    case kProgram: {
+      mutable_program()->::CoreML::Specification::V5::Program::MergeFrom(from.program());
       break;
     }
     case kCustomModel: {
@@ -5031,6 +5072,54 @@ void Model::set_allocated_itemsimilarityrecommender(::CoreML::Specification::Ite
     Type_.itemsimilarityrecommender_ = itemsimilarityrecommender;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.itemSimilarityRecommender)
+}
+
+// .CoreML.Specification.V5.Program program = 502;
+bool Model::has_program() const {
+  return Type_case() == kProgram;
+}
+void Model::set_has_program() {
+  _oneof_case_[0] = kProgram;
+}
+void Model::clear_program() {
+  if (has_program()) {
+    delete Type_.program_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::V5::Program& Model::program() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.program)
+  return has_program()
+      ? *Type_.program_
+      : ::CoreML::Specification::V5::Program::default_instance();
+}
+::CoreML::Specification::V5::Program* Model::mutable_program() {
+  if (!has_program()) {
+    clear_Type();
+    set_has_program();
+    Type_.program_ = new ::CoreML::Specification::V5::Program;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.program)
+  return Type_.program_;
+}
+::CoreML::Specification::V5::Program* Model::release_program() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.program)
+  if (has_program()) {
+    clear_has_Type();
+    ::CoreML::Specification::V5::Program* temp = Type_.program_;
+    Type_.program_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_program(::CoreML::Specification::V5::Program* program) {
+  clear_Type();
+  if (program) {
+    set_has_program();
+    Type_.program_ = program;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.program)
 }
 
 // .CoreML.Specification.CustomModel customModel = 555;

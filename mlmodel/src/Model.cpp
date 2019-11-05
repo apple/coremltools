@@ -92,6 +92,7 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(neuralNetworkClassifier);
                 VALIDATE_MODEL_TYPE(neuralNetworkRegressor);
                 VALIDATE_MODEL_TYPE(neuralNetwork);
+                VALIDATE_MODEL_TYPE(program);
                 VALIDATE_MODEL_TYPE(oneHotEncoder);
                 VALIDATE_MODEL_TYPE(arrayFeatureExtractor);
                 VALIDATE_MODEL_TYPE(featureVectorizer);

@@ -77,6 +77,7 @@ import public "NearestNeighbors.proto";
 import public "Identity.proto";
 import public "Imputer.proto";
 import public "NeuralNetwork.proto";
+import public "Program.proto";
 import public "Normalizer.proto";
 import public "OneHotEncoder.proto";
 import public "Scaler.proto";
@@ -249,6 +250,7 @@ message Model {
         // generic models start at 500
         NeuralNetwork neuralNetwork = 500;
         ItemSimilarityRecommender itemSimilarityRecommender = 501;
+        V5.Program program = 502;
 
         // Custom and linked models
         CustomModel customModel = 555;

@@ -16,6 +16,7 @@ enum MLModelType: int {
     MLModelType_kNearestNeighborsClassifier = 404,
     MLModelType_neuralNetwork = 500,
     MLModelType_itemSimilarityRecommender = 501,
+    MLModelType_program = 502,
     MLModelType_customModel = 555,
     MLModelType_linkedModel = 556,
     MLModelType_oneHotEncoder = 600,
@@ -70,6 +71,8 @@ static const char * MLModelType_Name(MLModelType x) {
             return "MLModelType_neuralNetwork";
         case MLModelType_itemSimilarityRecommender:
             return "MLModelType_itemSimilarityRecommender";
+        case MLModelType_program:
+            return "MLModelType_program";
         case MLModelType_customModel:
             return "MLModelType_customModel";
         case MLModelType_linkedModel:

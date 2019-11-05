@@ -48,6 +48,7 @@
 #include "Identity.pb.h"  // IWYU pragma: export
 #include "Imputer.pb.h"  // IWYU pragma: export
 #include "NeuralNetwork.pb.h"  // IWYU pragma: export
+#include "Program.pb.h"  // IWYU pragma: export
 #include "Normalizer.pb.h"  // IWYU pragma: export
 #include "OneHotEncoder.pb.h"  // IWYU pragma: export
 #include "Scaler.pb.h"  // IWYU pragma: export
@@ -969,6 +970,65 @@ class WordTagger;
 class WordTaggerDefaultTypeInternal;
 extern WordTaggerDefaultTypeInternal _WordTagger_default_instance_;
 }  // namespace CoreMLModels
+namespace V5 {
+class Block;
+class BlockDefaultTypeInternal;
+extern BlockDefaultTypeInternal _Block_default_instance_;
+class Block_InputsEntry;
+class Block_InputsEntryDefaultTypeInternal;
+extern Block_InputsEntryDefaultTypeInternal _Block_InputsEntry_default_instance_;
+class Dimension;
+class DimensionDefaultTypeInternal;
+extern DimensionDefaultTypeInternal _Dimension_default_instance_;
+class Function;
+class FunctionDefaultTypeInternal;
+extern FunctionDefaultTypeInternal _Function_default_instance_;
+class ListType;
+class ListTypeDefaultTypeInternal;
+extern ListTypeDefaultTypeInternal _ListType_default_instance_;
+class NamedValueType;
+class NamedValueTypeDefaultTypeInternal;
+extern NamedValueTypeDefaultTypeInternal _NamedValueType_default_instance_;
+class Operator;
+class OperatorDefaultTypeInternal;
+extern OperatorDefaultTypeInternal _Operator_default_instance_;
+class Operator_AttributesEntry;
+class Operator_AttributesEntryDefaultTypeInternal;
+extern Operator_AttributesEntryDefaultTypeInternal _Operator_AttributesEntry_default_instance_;
+class Operator_InputsEntry;
+class Operator_InputsEntryDefaultTypeInternal;
+extern Operator_InputsEntryDefaultTypeInternal _Operator_InputsEntry_default_instance_;
+class Program;
+class ProgramDefaultTypeInternal;
+extern ProgramDefaultTypeInternal _Program_default_instance_;
+class Program_ParametersEntry;
+class Program_ParametersEntryDefaultTypeInternal;
+extern Program_ParametersEntryDefaultTypeInternal _Program_ParametersEntry_default_instance_;
+class TensorType;
+class TensorTypeDefaultTypeInternal;
+extern TensorTypeDefaultTypeInternal _TensorType_default_instance_;
+class TensorValue;
+class TensorValueDefaultTypeInternal;
+extern TensorValueDefaultTypeInternal _TensorValue_default_instance_;
+class TupleType;
+class TupleTypeDefaultTypeInternal;
+extern TupleTypeDefaultTypeInternal _TupleType_default_instance_;
+class TupleValue;
+class TupleValueDefaultTypeInternal;
+extern TupleValueDefaultTypeInternal _TupleValue_default_instance_;
+class Value;
+class ValueDefaultTypeInternal;
+extern ValueDefaultTypeInternal _Value_default_instance_;
+class ValueType;
+class ValueTypeDefaultTypeInternal;
+extern ValueTypeDefaultTypeInternal _ValueType_default_instance_;
+class Value_FileValue;
+class Value_FileValueDefaultTypeInternal;
+extern Value_FileValueDefaultTypeInternal _Value_FileValue_default_instance_;
+class Value_ImmediateValue;
+class Value_ImmediateValueDefaultTypeInternal;
+extern Value_ImmediateValueDefaultTypeInternal _Value_ImmediateValue_default_instance_;
+}  // namespace V5
 }  // namespace Specification
 }  // namespace CoreML
 
@@ -1709,6 +1769,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     kKNearestNeighborsClassifier = 404,
     kNeuralNetwork = 500,
     kItemSimilarityRecommender = 501,
+    kProgram = 502,
     kCustomModel = 555,
     kLinkedModel = 556,
     kOneHotEncoder = 600,
@@ -1934,6 +1995,15 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::ItemSimilarityRecommender* release_itemsimilarityrecommender();
   void set_allocated_itemsimilarityrecommender(::CoreML::Specification::ItemSimilarityRecommender* itemsimilarityrecommender);
 
+  // .CoreML.Specification.V5.Program program = 502;
+  bool has_program() const;
+  void clear_program();
+  static const int kProgramFieldNumber = 502;
+  const ::CoreML::Specification::V5::Program& program() const;
+  ::CoreML::Specification::V5::Program* mutable_program();
+  ::CoreML::Specification::V5::Program* release_program();
+  void set_allocated_program(::CoreML::Specification::V5::Program* program);
+
   // .CoreML.Specification.CustomModel customModel = 555;
   bool has_custommodel() const;
   void clear_custommodel();
@@ -2114,6 +2184,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   void set_has_knearestneighborsclassifier();
   void set_has_neuralnetwork();
   void set_has_itemsimilarityrecommender();
+  void set_has_program();
   void set_has_custommodel();
   void set_has_linkedmodel();
   void set_has_onehotencoder();
@@ -2158,6 +2229,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     ::CoreML::Specification::KNearestNeighborsClassifier* knearestneighborsclassifier_;
     ::CoreML::Specification::NeuralNetwork* neuralnetwork_;
     ::CoreML::Specification::ItemSimilarityRecommender* itemsimilarityrecommender_;
+    ::CoreML::Specification::V5::Program* program_;
     ::CoreML::Specification::CustomModel* custommodel_;
     ::CoreML::Specification::LinkedModel* linkedmodel_;
     ::CoreML::Specification::OneHotEncoder* onehotencoder_;
@@ -3788,6 +3860,54 @@ inline void Model::set_allocated_itemsimilarityrecommender(::CoreML::Specificati
     Type_.itemsimilarityrecommender_ = itemsimilarityrecommender;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.itemSimilarityRecommender)
+}
+
+// .CoreML.Specification.V5.Program program = 502;
+inline bool Model::has_program() const {
+  return Type_case() == kProgram;
+}
+inline void Model::set_has_program() {
+  _oneof_case_[0] = kProgram;
+}
+inline void Model::clear_program() {
+  if (has_program()) {
+    delete Type_.program_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::V5::Program& Model::program() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.program)
+  return has_program()
+      ? *Type_.program_
+      : ::CoreML::Specification::V5::Program::default_instance();
+}
+inline ::CoreML::Specification::V5::Program* Model::mutable_program() {
+  if (!has_program()) {
+    clear_Type();
+    set_has_program();
+    Type_.program_ = new ::CoreML::Specification::V5::Program;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.program)
+  return Type_.program_;
+}
+inline ::CoreML::Specification::V5::Program* Model::release_program() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.program)
+  if (has_program()) {
+    clear_has_Type();
+    ::CoreML::Specification::V5::Program* temp = Type_.program_;
+    Type_.program_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_program(::CoreML::Specification::V5::Program* program) {
+  clear_Type();
+  if (program) {
+    set_has_program();
+    Type_.program_ = program;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.program)
 }
 
 // .CoreML.Specification.CustomModel customModel = 555;
