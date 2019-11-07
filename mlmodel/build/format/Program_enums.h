@@ -65,8 +65,8 @@ static const char * MLDimensiondimension_Name(MLDimensiondimension x) {
 }
 
 enum MLValuevalue: int {
-    MLValuevalue_immediateValue = 4,
-    MLValuevalue_fileValue = 5,
+    MLValuevalue_immediateValue = 3,
+    MLValuevalue_fileValue = 4,
     MLValuevalue_NOT_SET = 0,
 };
 

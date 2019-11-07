@@ -17,6 +17,8 @@
 namespace CoreML {
 namespace Specification {
 namespace V5 {
+class Program_FunctionsEntryDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Program::Program_FunctionsEntry> {
+} _Program_FunctionsEntry_default_instance_;
 class Program_ParametersEntryDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Program::Program_ParametersEntry> {
 } _Program_ParametersEntry_default_instance_;
 class ProgramDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Program> {
@@ -27,12 +29,12 @@ class Block_InputsEntryDefaultTypeInternal : public ::google::protobuf::internal
 } _Block_InputsEntry_default_instance_;
 class BlockDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Block> {
 } _Block_default_instance_;
-class Operator_InputsEntryDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Operator::Operator_InputsEntry> {
-} _Operator_InputsEntry_default_instance_;
-class Operator_AttributesEntryDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Operator::Operator_AttributesEntry> {
-} _Operator_AttributesEntry_default_instance_;
-class OperatorDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Operator> {
-} _Operator_default_instance_;
+class Operation_InputsEntryDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Operation::Operation_InputsEntry> {
+} _Operation_InputsEntry_default_instance_;
+class Operation_AttributesEntryDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Operation::Operation_AttributesEntry> {
+} _Operation_AttributesEntry_default_instance_;
+class OperationDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Operation> {
+} _Operation_default_instance_;
 class NamedValueTypeDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NamedValueType> {
 } _NamedValueType_default_instance_;
 class ValueTypeDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ValueType> {
@@ -106,6 +108,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
 };
 
 
@@ -113,7 +116,7 @@ void TableStruct::Shutdown() {
   _Program_default_instance_.Shutdown();
   _Function_default_instance_.Shutdown();
   _Block_default_instance_.Shutdown();
-  _Operator_default_instance_.Shutdown();
+  _Operation_default_instance_.Shutdown();
   _NamedValueType_default_instance_.Shutdown();
   _ValueType_default_instance_.Shutdown();
   _TensorType_default_instance_.Shutdown();
@@ -131,14 +134,15 @@ void TableStruct::InitDefaultsImpl() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::internal::InitProtobufDefaults();
+  _Program_FunctionsEntry_default_instance_.DefaultConstruct();
   _Program_ParametersEntry_default_instance_.DefaultConstruct();
   _Program_default_instance_.DefaultConstruct();
   _Function_default_instance_.DefaultConstruct();
   _Block_InputsEntry_default_instance_.DefaultConstruct();
   _Block_default_instance_.DefaultConstruct();
-  _Operator_InputsEntry_default_instance_.DefaultConstruct();
-  _Operator_AttributesEntry_default_instance_.DefaultConstruct();
-  _Operator_default_instance_.DefaultConstruct();
+  _Operation_InputsEntry_default_instance_.DefaultConstruct();
+  _Operation_AttributesEntry_default_instance_.DefaultConstruct();
+  _Operation_default_instance_.DefaultConstruct();
   _NamedValueType_default_instance_.DefaultConstruct();
   _ValueType_default_instance_.DefaultConstruct();
   _TensorType_default_instance_.DefaultConstruct();
@@ -150,16 +154,18 @@ void TableStruct::InitDefaultsImpl() {
   _Value_default_instance_.DefaultConstruct();
   _TensorValue_default_instance_.DefaultConstruct();
   _TupleValue_default_instance_.DefaultConstruct();
+  _Program_FunctionsEntry_default_instance_.get_mutable()->set_default_instance(_Program_FunctionsEntry_default_instance_.get_mutable());
+  _Program_FunctionsEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
   _Program_ParametersEntry_default_instance_.get_mutable()->set_default_instance(_Program_ParametersEntry_default_instance_.get_mutable());
   _Program_ParametersEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
   _Function_default_instance_.get_mutable()->block_ = const_cast< ::CoreML::Specification::V5::Block*>(
       ::CoreML::Specification::V5::Block::internal_default_instance());
   _Block_InputsEntry_default_instance_.get_mutable()->set_default_instance(_Block_InputsEntry_default_instance_.get_mutable());
   _Block_InputsEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
-  _Operator_InputsEntry_default_instance_.get_mutable()->set_default_instance(_Operator_InputsEntry_default_instance_.get_mutable());
-  _Operator_InputsEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
-  _Operator_AttributesEntry_default_instance_.get_mutable()->set_default_instance(_Operator_AttributesEntry_default_instance_.get_mutable());
-  _Operator_AttributesEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
+  _Operation_InputsEntry_default_instance_.get_mutable()->set_default_instance(_Operation_InputsEntry_default_instance_.get_mutable());
+  _Operation_InputsEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
+  _Operation_AttributesEntry_default_instance_.get_mutable()->set_default_instance(_Operation_AttributesEntry_default_instance_.get_mutable());
+  _Operation_AttributesEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
   _NamedValueType_default_instance_.get_mutable()->type_ = const_cast< ::CoreML::Specification::V5::ValueType*>(
       ::CoreML::Specification::V5::ValueType::internal_default_instance());
   _ListType_default_instance_.get_mutable()->type_ = const_cast< ::CoreML::Specification::V5::ValueType*>(
@@ -229,6 +235,11 @@ bool ScalarType_IsValid(int value) {
 
 // ===================================================================
 
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Program::kVersionFieldNumber;
 const int Program::kFunctionsFieldNumber;
@@ -247,9 +258,9 @@ Program::Program()
 Program::Program(const Program& from)
   : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
-      functions_(from.functions_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
+  functions_.MergeFrom(from.functions_);
   parameters_.MergeFrom(from.parameters_);
   docstring_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.docstring().size() > 0) {
@@ -324,12 +335,23 @@ bool Program::MergePartialFromCodedStream(
         break;
       }
 
-      // repeated .CoreML.Specification.V5.Function functions = 2;
+      // map<string, .CoreML.Specification.V5.Function> functions = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(18u)) {
+          Program_FunctionsEntry::Parser< ::google::protobuf::internal::MapFieldLite<
+              Program_FunctionsEntry,
+              ::std::string, ::CoreML::Specification::V5::Function,
+              ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+              ::google::protobuf::internal::WireFormatLite::TYPE_MESSAGE,
+              0 >,
+            ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function > > parser(&functions_);
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_functions()));
+              input, &parser));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            parser.key().data(), parser.key().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.V5.Program.FunctionsEntry.key"));
         } else {
           goto handle_unusual;
         }
@@ -407,10 +429,53 @@ void Program::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->version(), output);
   }
 
-  // repeated .CoreML.Specification.V5.Function functions = 2;
-  for (unsigned int i = 0, n = this->functions_size(); i < n; i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      2, this->functions(i), output);
+  // map<string, .CoreML.Specification.V5.Function> functions = 2;
+  if (!this->functions().empty()) {
+    typedef ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >::const_pointer
+        ConstPtr;
+    typedef ConstPtr SortItem;
+    typedef ::google::protobuf::internal::CompareByDerefFirst<SortItem> Less;
+    struct Utf8Check {
+      static void Check(ConstPtr p) {
+        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+          p->first.data(), p->first.length(),
+          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+          "CoreML.Specification.V5.Program.FunctionsEntry.key");
+      }
+    };
+
+    if (output->IsSerializationDeterministic() &&
+        this->functions().size() > 1) {
+      ::google::protobuf::scoped_array<SortItem> items(
+          new SortItem[this->functions().size()]);
+      typedef ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >::size_type size_type;
+      size_type n = 0;
+      for (::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >::const_iterator
+          it = this->functions().begin();
+          it != this->functions().end(); ++it, ++n) {
+        items[n] = SortItem(&*it);
+      }
+      ::std::sort(&items[0], &items[n], Less());
+      ::google::protobuf::scoped_ptr<Program_FunctionsEntry> entry;
+      for (size_type i = 0; i < n; i++) {
+        entry.reset(functions_.NewEntryWrapper(
+            items[i]->first, items[i]->second));
+        ::google::protobuf::internal::WireFormatLite::WriteMessage(
+            2, *entry, output);
+        Utf8Check::Check(items[i]);
+      }
+    } else {
+      ::google::protobuf::scoped_ptr<Program_FunctionsEntry> entry;
+      for (::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >::const_iterator
+          it = this->functions().begin();
+          it != this->functions().end(); ++it) {
+        entry.reset(functions_.NewEntryWrapper(
+            it->first, it->second));
+        ::google::protobuf::internal::WireFormatLite::WriteMessage(
+            2, *entry, output);
+        Utf8Check::Check(&*it);
+      }
+    }
   }
 
   // map<string, .CoreML.Specification.V5.Value> parameters = 3;
@@ -479,14 +544,17 @@ size_t Program::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.V5.Program)
   size_t total_size = 0;
 
-  // repeated .CoreML.Specification.V5.Function functions = 2;
+  // map<string, .CoreML.Specification.V5.Function> functions = 2;
+  total_size += 1 *
+      ::google::protobuf::internal::FromIntSize(this->functions_size());
   {
-    unsigned int count = this->functions_size();
-    total_size += 1UL * count;
-    for (unsigned int i = 0; i < count; i++) {
-      total_size +=
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->functions(i));
+    ::google::protobuf::scoped_ptr<Program_FunctionsEntry> entry;
+    for (::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >::const_iterator
+        it = this->functions().begin();
+        it != this->functions().end(); ++it) {
+      entry.reset(functions_.NewEntryWrapper(it->first, it->second));
+      total_size += ::google::protobuf::internal::WireFormatLite::
+          MessageSizeNoVirtual(*entry);
     }
   }
 
@@ -564,7 +632,7 @@ void Program::Swap(Program* other) {
   InternalSwap(other);
 }
 void Program::InternalSwap(Program* other) {
-  functions_.InternalSwap(&other->functions_);
+  functions_.Swap(&other->functions_);
   parameters_.Swap(&other->parameters_);
   docstring_.Swap(&other->docstring_);
   std::swap(version_, other->version_);
@@ -592,34 +660,22 @@ void Program::set_version(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Program.version)
 }
 
-// repeated .CoreML.Specification.V5.Function functions = 2;
+// map<string, .CoreML.Specification.V5.Function> functions = 2;
 int Program::functions_size() const {
   return functions_.size();
 }
 void Program::clear_functions() {
   functions_.Clear();
 }
-const ::CoreML::Specification::V5::Function& Program::functions(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Program.functions)
-  return functions_.Get(index);
-}
-::CoreML::Specification::V5::Function* Program::mutable_functions(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Program.functions)
-  return functions_.Mutable(index);
-}
-::CoreML::Specification::V5::Function* Program::add_functions() {
-  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Program.functions)
-  return functions_.Add();
-}
-::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Function >*
-Program::mutable_functions() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Program.functions)
-  return &functions_;
-}
-const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Function >&
+ const ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >&
 Program::functions() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Program.functions)
-  return functions_;
+  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Program.functions)
+  return functions_.GetMap();
+}
+ ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >*
+Program::mutable_functions() {
+  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Program.functions)
+  return functions_.MutableMap();
 }
 
 // map<string, .CoreML.Specification.V5.Value> parameters = 3;
@@ -698,7 +754,6 @@ void Program::set_allocated_docstring(::std::string* docstring) {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int Function::kNameFieldNumber;
 const int Function::kInputsFieldNumber;
 const int Function::kOutputsFieldNumber;
 const int Function::kBlockFieldNumber;
@@ -719,10 +774,6 @@ Function::Function(const Function& from)
       outputs_(from.outputs_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.name().size() > 0) {
-    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
-  }
   if (from.has_block()) {
     block_ = new ::CoreML::Specification::V5::Block(*from.block_);
   } else {
@@ -732,7 +783,6 @@ Function::Function(const Function& from)
 }
 
 void Function::SharedCtor() {
-  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   block_ = NULL;
   _cached_size_ = 0;
 }
@@ -743,7 +793,6 @@ Function::~Function() {
 }
 
 void Function::SharedDtor() {
-  name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) {
     delete block_;
   }
@@ -771,7 +820,6 @@ void Function::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.V5.Function)
   inputs_.Clear();
   outputs_.Clear();
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (GetArenaNoVirtual() == NULL && block_ != NULL) {
     delete block_;
   }
@@ -788,26 +836,10 @@ bool Function::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // string name = 1;
+      // repeated .CoreML.Specification.V5.NamedValueType inputs = 1;
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(10u)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_name()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->name().data(), this->name().length(),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "CoreML.Specification.V5.Function.name"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // repeated .CoreML.Specification.V5.NamedValueType inputs = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                 input, add_inputs()));
         } else {
@@ -816,10 +848,10 @@ bool Function::MergePartialFromCodedStream(
         break;
       }
 
-      // repeated .CoreML.Specification.V5.ValueType outputs = 3;
-      case 3: {
+      // repeated .CoreML.Specification.V5.ValueType outputs = 2;
+      case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u)) {
+            static_cast< ::google::protobuf::uint8>(18u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                 input, add_outputs()));
         } else {
@@ -828,10 +860,10 @@ bool Function::MergePartialFromCodedStream(
         break;
       }
 
-      // .CoreML.Specification.V5.Block block = 4;
-      case 4: {
+      // .CoreML.Specification.V5.Block block = 3;
+      case 3: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u)) {
+            static_cast< ::google::protobuf::uint8>(26u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_block()));
         } else {
@@ -867,32 +899,22 @@ void Function::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // string name = 1;
-  if (this->name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "CoreML.Specification.V5.Function.name");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->name(), output);
-  }
-
-  // repeated .CoreML.Specification.V5.NamedValueType inputs = 2;
+  // repeated .CoreML.Specification.V5.NamedValueType inputs = 1;
   for (unsigned int i = 0, n = this->inputs_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      2, this->inputs(i), output);
+      1, this->inputs(i), output);
   }
 
-  // repeated .CoreML.Specification.V5.ValueType outputs = 3;
+  // repeated .CoreML.Specification.V5.ValueType outputs = 2;
   for (unsigned int i = 0, n = this->outputs_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      3, this->outputs(i), output);
+      2, this->outputs(i), output);
   }
 
-  // .CoreML.Specification.V5.Block block = 4;
+  // .CoreML.Specification.V5.Block block = 3;
   if (this->has_block()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      4, *this->block_, output);
+      3, *this->block_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.V5.Function)
@@ -902,7 +924,7 @@ size_t Function::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.V5.Function)
   size_t total_size = 0;
 
-  // repeated .CoreML.Specification.V5.NamedValueType inputs = 2;
+  // repeated .CoreML.Specification.V5.NamedValueType inputs = 1;
   {
     unsigned int count = this->inputs_size();
     total_size += 1UL * count;
@@ -913,7 +935,7 @@ size_t Function::ByteSizeLong() const {
     }
   }
 
-  // repeated .CoreML.Specification.V5.ValueType outputs = 3;
+  // repeated .CoreML.Specification.V5.ValueType outputs = 2;
   {
     unsigned int count = this->outputs_size();
     total_size += 1UL * count;
@@ -924,14 +946,7 @@ size_t Function::ByteSizeLong() const {
     }
   }
 
-  // string name = 1;
-  if (this->name().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->name());
-  }
-
-  // .CoreML.Specification.V5.Block block = 4;
+  // .CoreML.Specification.V5.Block block = 3;
   if (this->has_block()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
@@ -959,10 +974,6 @@ void Function::MergeFrom(const Function& from) {
 
   inputs_.MergeFrom(from.inputs_);
   outputs_.MergeFrom(from.outputs_);
-  if (from.name().size() > 0) {
-
-    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
-  }
   if (from.has_block()) {
     mutable_block()->::CoreML::Specification::V5::Block::MergeFrom(from.block());
   }
@@ -986,7 +997,6 @@ void Function::Swap(Function* other) {
 void Function::InternalSwap(Function* other) {
   inputs_.InternalSwap(&other->inputs_);
   outputs_.InternalSwap(&other->outputs_);
-  name_.Swap(&other->name_);
   std::swap(block_, other->block_);
   std::swap(_cached_size_, other->_cached_size_);
 }
@@ -998,60 +1008,7 @@ void Function::InternalSwap(Function* other) {
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // Function
 
-// string name = 1;
-void Function::clear_name() {
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-const ::std::string& Function::name() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Function.name)
-  return name_.GetNoArena();
-}
-void Function::set_name(const ::std::string& value) {
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Function.name)
-}
-#if LANG_CXX11
-void Function::set_name(::std::string&& value) {
-  
-  name_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Function.name)
-}
-#endif
-void Function::set_name(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Function.name)
-}
-void Function::set_name(const char* value, size_t size) {
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Function.name)
-}
-::std::string* Function::mutable_name() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Function.name)
-  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* Function::release_name() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Function.name)
-  
-  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void Function::set_allocated_name(::std::string* name) {
-  if (name != NULL) {
-    
-  } else {
-    
-  }
-  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Function.name)
-}
-
-// repeated .CoreML.Specification.V5.NamedValueType inputs = 2;
+// repeated .CoreML.Specification.V5.NamedValueType inputs = 1;
 int Function::inputs_size() const {
   return inputs_.size();
 }
@@ -1081,7 +1038,7 @@ Function::inputs() const {
   return inputs_;
 }
 
-// repeated .CoreML.Specification.V5.ValueType outputs = 3;
+// repeated .CoreML.Specification.V5.ValueType outputs = 2;
 int Function::outputs_size() const {
   return outputs_.size();
 }
@@ -1111,7 +1068,7 @@ Function::outputs() const {
   return outputs_;
 }
 
-// .CoreML.Specification.V5.Block block = 4;
+// .CoreML.Specification.V5.Block block = 3;
 bool Function::has_block() const {
   return this != internal_default_instance() && block_ != NULL;
 }
@@ -1162,7 +1119,7 @@ void Function::set_allocated_block(::CoreML::Specification::V5::Block* block) {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Block::kInputsFieldNumber;
 const int Block::kOutputsFieldNumber;
-const int Block::kOperatorsFieldNumber;
+const int Block::kOperationsFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Block::Block()
@@ -1177,7 +1134,7 @@ Block::Block(const Block& from)
   : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       outputs_(from.outputs_),
-      operators_(from.operators_),
+      operations_(from.operations_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   inputs_.MergeFrom(from.inputs_);
@@ -1218,7 +1175,7 @@ void Block::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.V5.Block)
   inputs_.Clear();
   outputs_.Clear();
-  operators_.Clear();
+  operations_.Clear();
 }
 
 bool Block::MergePartialFromCodedStream(
@@ -1275,12 +1232,12 @@ bool Block::MergePartialFromCodedStream(
         break;
       }
 
-      // repeated .CoreML.Specification.V5.Operator operators = 3;
+      // repeated .CoreML.Specification.V5.Operation operations = 3;
       case 3: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(26u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_operators()));
+                input, add_operations()));
         } else {
           goto handle_unusual;
         }
@@ -1377,10 +1334,10 @@ void Block::SerializeWithCachedSizes(
       2, this->outputs(i), output);
   }
 
-  // repeated .CoreML.Specification.V5.Operator operators = 3;
-  for (unsigned int i = 0, n = this->operators_size(); i < n; i++) {
+  // repeated .CoreML.Specification.V5.Operation operations = 3;
+  for (unsigned int i = 0, n = this->operations_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      3, this->operators(i), output);
+      3, this->operations(i), output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.V5.Block)
@@ -1412,14 +1369,14 @@ size_t Block::ByteSizeLong() const {
       this->outputs(i));
   }
 
-  // repeated .CoreML.Specification.V5.Operator operators = 3;
+  // repeated .CoreML.Specification.V5.Operation operations = 3;
   {
-    unsigned int count = this->operators_size();
+    unsigned int count = this->operations_size();
     total_size += 1UL * count;
     for (unsigned int i = 0; i < count; i++) {
       total_size +=
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->operators(i));
+          this->operations(i));
     }
   }
 
@@ -1444,7 +1401,7 @@ void Block::MergeFrom(const Block& from) {
 
   inputs_.MergeFrom(from.inputs_);
   outputs_.MergeFrom(from.outputs_);
-  operators_.MergeFrom(from.operators_);
+  operations_.MergeFrom(from.operations_);
 }
 
 void Block::CopyFrom(const Block& from) {
@@ -1465,7 +1422,7 @@ void Block::Swap(Block* other) {
 void Block::InternalSwap(Block* other) {
   inputs_.Swap(&other->inputs_);
   outputs_.InternalSwap(&other->outputs_);
-  operators_.InternalSwap(&other->operators_);
+  operations_.InternalSwap(&other->operations_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -1563,34 +1520,34 @@ Block::mutable_outputs() {
   return &outputs_;
 }
 
-// repeated .CoreML.Specification.V5.Operator operators = 3;
-int Block::operators_size() const {
-  return operators_.size();
+// repeated .CoreML.Specification.V5.Operation operations = 3;
+int Block::operations_size() const {
+  return operations_.size();
 }
-void Block::clear_operators() {
-  operators_.Clear();
+void Block::clear_operations() {
+  operations_.Clear();
 }
-const ::CoreML::Specification::V5::Operator& Block::operators(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Block.operators)
-  return operators_.Get(index);
+const ::CoreML::Specification::V5::Operation& Block::operations(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Block.operations)
+  return operations_.Get(index);
 }
-::CoreML::Specification::V5::Operator* Block::mutable_operators(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Block.operators)
-  return operators_.Mutable(index);
+::CoreML::Specification::V5::Operation* Block::mutable_operations(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Block.operations)
+  return operations_.Mutable(index);
 }
-::CoreML::Specification::V5::Operator* Block::add_operators() {
-  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Block.operators)
-  return operators_.Add();
+::CoreML::Specification::V5::Operation* Block::add_operations() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Block.operations)
+  return operations_.Add();
 }
-::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operator >*
-Block::mutable_operators() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Block.operators)
-  return &operators_;
+::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operation >*
+Block::mutable_operations() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Block.operations)
+  return &operations_;
 }
-const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operator >&
-Block::operators() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Block.operators)
-  return operators_;
+const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operation >&
+Block::operations() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Block.operations)
+  return operations_;
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -1608,23 +1565,23 @@ Block::operators() const {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int Operator::kOpTypeFieldNumber;
-const int Operator::kNameFieldNumber;
-const int Operator::kInputsFieldNumber;
-const int Operator::kOutputsFieldNumber;
-const int Operator::kBlocksFieldNumber;
-const int Operator::kAttributesFieldNumber;
+const int Operation::kNameFieldNumber;
+const int Operation::kTypeFieldNumber;
+const int Operation::kInputsFieldNumber;
+const int Operation::kOutputsFieldNumber;
+const int Operation::kBlocksFieldNumber;
+const int Operation::kAttributesFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
-Operator::Operator()
+Operation::Operation()
   : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_Program_2eproto::InitDefaults();
   }
   SharedCtor();
-  // @@protoc_insertion_point(constructor:CoreML.Specification.V5.Operator)
+  // @@protoc_insertion_point(constructor:CoreML.Specification.V5.Operation)
 }
-Operator::Operator(const Operator& from)
+Operation::Operation(const Operation& from)
   : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       outputs_(from.outputs_),
@@ -1633,97 +1590,97 @@ Operator::Operator(const Operator& from)
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   inputs_.MergeFrom(from.inputs_);
   attributes_.MergeFrom(from.attributes_);
-  optype_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.optype().size() > 0) {
-    optype_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.optype_);
-  }
   name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.name().size() > 0) {
     name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
   }
-  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.V5.Operator)
+  type_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.type().size() > 0) {
+    type_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.type_);
+  }
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.V5.Operation)
 }
 
-void Operator::SharedCtor() {
-  optype_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+void Operation::SharedCtor() {
   name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  type_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   _cached_size_ = 0;
 }
 
-Operator::~Operator() {
-  // @@protoc_insertion_point(destructor:CoreML.Specification.V5.Operator)
+Operation::~Operation() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.V5.Operation)
   SharedDtor();
 }
 
-void Operator::SharedDtor() {
-  optype_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+void Operation::SharedDtor() {
   name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  type_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
-void Operator::SetCachedSize(int size) const {
+void Operation::SetCachedSize(int size) const {
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const Operator& Operator::default_instance() {
+const Operation& Operation::default_instance() {
   protobuf_Program_2eproto::InitDefaults();
   return *internal_default_instance();
 }
 
-Operator* Operator::New(::google::protobuf::Arena* arena) const {
-  Operator* n = new Operator;
+Operation* Operation::New(::google::protobuf::Arena* arena) const {
+  Operation* n = new Operation;
   if (arena != NULL) {
     arena->Own(n);
   }
   return n;
 }
 
-void Operator::Clear() {
-// @@protoc_insertion_point(message_clear_start:CoreML.Specification.V5.Operator)
+void Operation::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.V5.Operation)
   inputs_.Clear();
   outputs_.Clear();
   blocks_.Clear();
   attributes_.Clear();
-  optype_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 
-bool Operator::MergePartialFromCodedStream(
+bool Operation::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:CoreML.Specification.V5.Operator)
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.V5.Operation)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // string opType = 1;
+      // string name = 1;
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(10u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_optype()));
+                input, this->mutable_name()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->optype().data(), this->optype().length(),
+            this->name().data(), this->name().length(),
             ::google::protobuf::internal::WireFormatLite::PARSE,
-            "CoreML.Specification.V5.Operator.opType"));
+            "CoreML.Specification.V5.Operation.name"));
         } else {
           goto handle_unusual;
         }
         break;
       }
 
-      // string name = 2;
+      // string type = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(18u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_name()));
+                input, this->mutable_type()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->name().data(), this->name().length(),
+            this->type().data(), this->type().length(),
             ::google::protobuf::internal::WireFormatLite::PARSE,
-            "CoreML.Specification.V5.Operator.name"));
+            "CoreML.Specification.V5.Operation.type"));
         } else {
           goto handle_unusual;
         }
@@ -1734,8 +1691,8 @@ bool Operator::MergePartialFromCodedStream(
       case 3: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(26u)) {
-          Operator_InputsEntry::Parser< ::google::protobuf::internal::MapFieldLite<
-              Operator_InputsEntry,
+          Operation_InputsEntry::Parser< ::google::protobuf::internal::MapFieldLite<
+              Operation_InputsEntry,
               ::std::string, ::std::string,
               ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
               ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
@@ -1746,11 +1703,11 @@ bool Operator::MergePartialFromCodedStream(
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
             parser.key().data(), parser.key().length(),
             ::google::protobuf::internal::WireFormatLite::PARSE,
-            "CoreML.Specification.V5.Operator.InputsEntry.key"));
+            "CoreML.Specification.V5.Operation.InputsEntry.key"));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
             parser.value().data(), parser.value().length(),
             ::google::protobuf::internal::WireFormatLite::PARSE,
-            "CoreML.Specification.V5.Operator.InputsEntry.value"));
+            "CoreML.Specification.V5.Operation.InputsEntry.value"));
         } else {
           goto handle_unusual;
         }
@@ -1785,8 +1742,8 @@ bool Operator::MergePartialFromCodedStream(
       case 6: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(50u)) {
-          Operator_AttributesEntry::Parser< ::google::protobuf::internal::MapFieldLite<
-              Operator_AttributesEntry,
+          Operation_AttributesEntry::Parser< ::google::protobuf::internal::MapFieldLite<
+              Operation_AttributesEntry,
               ::std::string, ::CoreML::Specification::V5::Value,
               ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
               ::google::protobuf::internal::WireFormatLite::TYPE_MESSAGE,
@@ -1797,7 +1754,7 @@ bool Operator::MergePartialFromCodedStream(
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
             parser.key().data(), parser.key().length(),
             ::google::protobuf::internal::WireFormatLite::PARSE,
-            "CoreML.Specification.V5.Operator.AttributesEntry.key"));
+            "CoreML.Specification.V5.Operation.AttributesEntry.key"));
         } else {
           goto handle_unusual;
         }
@@ -1817,38 +1774,38 @@ bool Operator::MergePartialFromCodedStream(
     }
   }
 success:
-  // @@protoc_insertion_point(parse_success:CoreML.Specification.V5.Operator)
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.V5.Operation)
   return true;
 failure:
-  // @@protoc_insertion_point(parse_failure:CoreML.Specification.V5.Operator)
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.V5.Operation)
   return false;
 #undef DO_
 }
 
-void Operator::SerializeWithCachedSizes(
+void Operation::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:CoreML.Specification.V5.Operator)
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.V5.Operation)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // string opType = 1;
-  if (this->optype().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->optype().data(), this->optype().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "CoreML.Specification.V5.Operator.opType");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->optype(), output);
-  }
-
-  // string name = 2;
+  // string name = 1;
   if (this->name().size() > 0) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->name().data(), this->name().length(),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "CoreML.Specification.V5.Operator.name");
+      "CoreML.Specification.V5.Operation.name");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->name(), output);
+      1, this->name(), output);
+  }
+
+  // string type = 2;
+  if (this->type().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->type().data(), this->type().length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.V5.Operation.type");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      2, this->type(), output);
   }
 
   // map<string, string> inputs = 3;
@@ -1862,11 +1819,11 @@ void Operator::SerializeWithCachedSizes(
         ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
           p->first.data(), p->first.length(),
           ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-          "CoreML.Specification.V5.Operator.InputsEntry.key");
+          "CoreML.Specification.V5.Operation.InputsEntry.key");
         ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
           p->second.data(), p->second.length(),
           ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-          "CoreML.Specification.V5.Operator.InputsEntry.value");
+          "CoreML.Specification.V5.Operation.InputsEntry.value");
       }
     };
 
@@ -1882,7 +1839,7 @@ void Operator::SerializeWithCachedSizes(
         items[n] = SortItem(&*it);
       }
       ::std::sort(&items[0], &items[n], Less());
-      ::google::protobuf::scoped_ptr<Operator_InputsEntry> entry;
+      ::google::protobuf::scoped_ptr<Operation_InputsEntry> entry;
       for (size_type i = 0; i < n; i++) {
         entry.reset(inputs_.NewEntryWrapper(
             items[i]->first, items[i]->second));
@@ -1891,7 +1848,7 @@ void Operator::SerializeWithCachedSizes(
         Utf8Check::Check(items[i]);
       }
     } else {
-      ::google::protobuf::scoped_ptr<Operator_InputsEntry> entry;
+      ::google::protobuf::scoped_ptr<Operation_InputsEntry> entry;
       for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
           it = this->inputs().begin();
           it != this->inputs().end(); ++it) {
@@ -1927,7 +1884,7 @@ void Operator::SerializeWithCachedSizes(
         ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
           p->first.data(), p->first.length(),
           ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-          "CoreML.Specification.V5.Operator.AttributesEntry.key");
+          "CoreML.Specification.V5.Operation.AttributesEntry.key");
       }
     };
 
@@ -1943,7 +1900,7 @@ void Operator::SerializeWithCachedSizes(
         items[n] = SortItem(&*it);
       }
       ::std::sort(&items[0], &items[n], Less());
-      ::google::protobuf::scoped_ptr<Operator_AttributesEntry> entry;
+      ::google::protobuf::scoped_ptr<Operation_AttributesEntry> entry;
       for (size_type i = 0; i < n; i++) {
         entry.reset(attributes_.NewEntryWrapper(
             items[i]->first, items[i]->second));
@@ -1952,7 +1909,7 @@ void Operator::SerializeWithCachedSizes(
         Utf8Check::Check(items[i]);
       }
     } else {
-      ::google::protobuf::scoped_ptr<Operator_AttributesEntry> entry;
+      ::google::protobuf::scoped_ptr<Operation_AttributesEntry> entry;
       for (::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Value >::const_iterator
           it = this->attributes().begin();
           it != this->attributes().end(); ++it) {
@@ -1965,18 +1922,18 @@ void Operator::SerializeWithCachedSizes(
     }
   }
 
-  // @@protoc_insertion_point(serialize_end:CoreML.Specification.V5.Operator)
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.V5.Operation)
 }
 
-size_t Operator::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.V5.Operator)
+size_t Operation::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.V5.Operation)
   size_t total_size = 0;
 
   // map<string, string> inputs = 3;
   total_size += 1 *
       ::google::protobuf::internal::FromIntSize(this->inputs_size());
   {
-    ::google::protobuf::scoped_ptr<Operator_InputsEntry> entry;
+    ::google::protobuf::scoped_ptr<Operation_InputsEntry> entry;
     for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
         it = this->inputs().begin();
         it != this->inputs().end(); ++it) {
@@ -2012,7 +1969,7 @@ size_t Operator::ByteSizeLong() const {
   total_size += 1 *
       ::google::protobuf::internal::FromIntSize(this->attributes_size());
   {
-    ::google::protobuf::scoped_ptr<Operator_AttributesEntry> entry;
+    ::google::protobuf::scoped_ptr<Operation_AttributesEntry> entry;
     for (::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Value >::const_iterator
         it = this->attributes().begin();
         it != this->attributes().end(); ++it) {
@@ -2022,18 +1979,18 @@ size_t Operator::ByteSizeLong() const {
     }
   }
 
-  // string opType = 1;
-  if (this->optype().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->optype());
-  }
-
-  // string name = 2;
+  // string name = 1;
   if (this->name().size() > 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::StringSize(
         this->name());
+  }
+
+  // string type = 2;
+  if (this->type().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->type());
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -2043,13 +2000,13 @@ size_t Operator::ByteSizeLong() const {
   return total_size;
 }
 
-void Operator::CheckTypeAndMergeFrom(
+void Operation::CheckTypeAndMergeFrom(
     const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const Operator*>(&from));
+  MergeFrom(*::google::protobuf::down_cast<const Operation*>(&from));
 }
 
-void Operator::MergeFrom(const Operator& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.V5.Operator)
+void Operation::MergeFrom(const Operation& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.V5.Operation)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::google::protobuf::uint32 cached_has_bits = 0;
@@ -2059,247 +2016,247 @@ void Operator::MergeFrom(const Operator& from) {
   outputs_.MergeFrom(from.outputs_);
   blocks_.MergeFrom(from.blocks_);
   attributes_.MergeFrom(from.attributes_);
-  if (from.optype().size() > 0) {
-
-    optype_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.optype_);
-  }
   if (from.name().size() > 0) {
 
     name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
   }
+  if (from.type().size() > 0) {
+
+    type_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.type_);
+  }
 }
 
-void Operator::CopyFrom(const Operator& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.V5.Operator)
+void Operation::CopyFrom(const Operation& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.V5.Operation)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool Operator::IsInitialized() const {
+bool Operation::IsInitialized() const {
   return true;
 }
 
-void Operator::Swap(Operator* other) {
+void Operation::Swap(Operation* other) {
   if (other == this) return;
   InternalSwap(other);
 }
-void Operator::InternalSwap(Operator* other) {
+void Operation::InternalSwap(Operation* other) {
   inputs_.Swap(&other->inputs_);
   outputs_.InternalSwap(&other->outputs_);
   blocks_.InternalSwap(&other->blocks_);
   attributes_.Swap(&other->attributes_);
-  optype_.Swap(&other->optype_);
   name_.Swap(&other->name_);
+  type_.Swap(&other->type_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::std::string Operator::GetTypeName() const {
-  return "CoreML.Specification.V5.Operator";
+::std::string Operation::GetTypeName() const {
+  return "CoreML.Specification.V5.Operation";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
-// Operator
+// Operation
 
-// string opType = 1;
-void Operator::clear_optype() {
-  optype_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-const ::std::string& Operator::optype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operator.opType)
-  return optype_.GetNoArena();
-}
-void Operator::set_optype(const ::std::string& value) {
-  
-  optype_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Operator.opType)
-}
-#if LANG_CXX11
-void Operator::set_optype(::std::string&& value) {
-  
-  optype_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Operator.opType)
-}
-#endif
-void Operator::set_optype(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  optype_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Operator.opType)
-}
-void Operator::set_optype(const char* value, size_t size) {
-  
-  optype_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Operator.opType)
-}
-::std::string* Operator::mutable_optype() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operator.opType)
-  return optype_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* Operator::release_optype() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Operator.opType)
-  
-  return optype_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void Operator::set_allocated_optype(::std::string* optype) {
-  if (optype != NULL) {
-    
-  } else {
-    
-  }
-  optype_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), optype);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Operator.opType)
-}
-
-// string name = 2;
-void Operator::clear_name() {
+// string name = 1;
+void Operation::clear_name() {
   name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-const ::std::string& Operator::name() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operator.name)
+const ::std::string& Operation::name() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operation.name)
   return name_.GetNoArena();
 }
-void Operator::set_name(const ::std::string& value) {
+void Operation::set_name(const ::std::string& value) {
   
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Operation.name)
 }
 #if LANG_CXX11
-void Operator::set_name(::std::string&& value) {
+void Operation::set_name(::std::string&& value) {
   
   name_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Operation.name)
 }
 #endif
-void Operator::set_name(const char* value) {
+void Operation::set_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Operation.name)
 }
-void Operator::set_name(const char* value, size_t size) {
+void Operation::set_name(const char* value, size_t size) {
   
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Operation.name)
 }
-::std::string* Operator::mutable_name() {
+::std::string* Operation::mutable_name() {
   
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operation.name)
   return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-::std::string* Operator::release_name() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Operator.name)
+::std::string* Operation::release_name() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Operation.name)
   
   return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-void Operator::set_allocated_name(::std::string* name) {
+void Operation::set_allocated_name(::std::string* name) {
   if (name != NULL) {
     
   } else {
     
   }
   name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Operation.name)
+}
+
+// string type = 2;
+void Operation::clear_type() {
+  type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& Operation::type() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operation.type)
+  return type_.GetNoArena();
+}
+void Operation::set_type(const ::std::string& value) {
+  
+  type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Operation.type)
+}
+#if LANG_CXX11
+void Operation::set_type(::std::string&& value) {
+  
+  type_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Operation.type)
+}
+#endif
+void Operation::set_type(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Operation.type)
+}
+void Operation::set_type(const char* value, size_t size) {
+  
+  type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Operation.type)
+}
+::std::string* Operation::mutable_type() {
+  
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operation.type)
+  return type_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* Operation::release_type() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Operation.type)
+  
+  return type_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void Operation::set_allocated_type(::std::string* type) {
+  if (type != NULL) {
+    
+  } else {
+    
+  }
+  type_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), type);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Operation.type)
 }
 
 // map<string, string> inputs = 3;
-int Operator::inputs_size() const {
+int Operation::inputs_size() const {
   return inputs_.size();
 }
-void Operator::clear_inputs() {
+void Operation::clear_inputs() {
   inputs_.Clear();
 }
  const ::google::protobuf::Map< ::std::string, ::std::string >&
-Operator::inputs() const {
-  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Operator.inputs)
+Operation::inputs() const {
+  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Operation.inputs)
   return inputs_.GetMap();
 }
  ::google::protobuf::Map< ::std::string, ::std::string >*
-Operator::mutable_inputs() {
-  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Operator.inputs)
+Operation::mutable_inputs() {
+  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Operation.inputs)
   return inputs_.MutableMap();
 }
 
 // repeated .CoreML.Specification.V5.NamedValueType outputs = 4;
-int Operator::outputs_size() const {
+int Operation::outputs_size() const {
   return outputs_.size();
 }
-void Operator::clear_outputs() {
+void Operation::clear_outputs() {
   outputs_.Clear();
 }
-const ::CoreML::Specification::V5::NamedValueType& Operator::outputs(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operator.outputs)
+const ::CoreML::Specification::V5::NamedValueType& Operation::outputs(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operation.outputs)
   return outputs_.Get(index);
 }
-::CoreML::Specification::V5::NamedValueType* Operator::mutable_outputs(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operator.outputs)
+::CoreML::Specification::V5::NamedValueType* Operation::mutable_outputs(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operation.outputs)
   return outputs_.Mutable(index);
 }
-::CoreML::Specification::V5::NamedValueType* Operator::add_outputs() {
-  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Operator.outputs)
+::CoreML::Specification::V5::NamedValueType* Operation::add_outputs() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Operation.outputs)
   return outputs_.Add();
 }
 ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::NamedValueType >*
-Operator::mutable_outputs() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Operator.outputs)
+Operation::mutable_outputs() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Operation.outputs)
   return &outputs_;
 }
 const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::NamedValueType >&
-Operator::outputs() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Operator.outputs)
+Operation::outputs() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Operation.outputs)
   return outputs_;
 }
 
 // repeated .CoreML.Specification.V5.Block blocks = 5;
-int Operator::blocks_size() const {
+int Operation::blocks_size() const {
   return blocks_.size();
 }
-void Operator::clear_blocks() {
+void Operation::clear_blocks() {
   blocks_.Clear();
 }
-const ::CoreML::Specification::V5::Block& Operator::blocks(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operator.blocks)
+const ::CoreML::Specification::V5::Block& Operation::blocks(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operation.blocks)
   return blocks_.Get(index);
 }
-::CoreML::Specification::V5::Block* Operator::mutable_blocks(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operator.blocks)
+::CoreML::Specification::V5::Block* Operation::mutable_blocks(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operation.blocks)
   return blocks_.Mutable(index);
 }
-::CoreML::Specification::V5::Block* Operator::add_blocks() {
-  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Operator.blocks)
+::CoreML::Specification::V5::Block* Operation::add_blocks() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Operation.blocks)
   return blocks_.Add();
 }
 ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Block >*
-Operator::mutable_blocks() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Operator.blocks)
+Operation::mutable_blocks() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Operation.blocks)
   return &blocks_;
 }
 const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Block >&
-Operator::blocks() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Operator.blocks)
+Operation::blocks() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Operation.blocks)
   return blocks_;
 }
 
 // map<string, .CoreML.Specification.V5.Value> attributes = 6;
-int Operator::attributes_size() const {
+int Operation::attributes_size() const {
   return attributes_.size();
 }
-void Operator::clear_attributes() {
+void Operation::clear_attributes() {
   attributes_.Clear();
 }
  const ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Value >&
-Operator::attributes() const {
-  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Operator.attributes)
+Operation::attributes() const {
+  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Operation.attributes)
   return attributes_.GetMap();
 }
  ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Value >*
-Operator::mutable_attributes() {
-  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Operator.attributes)
+Operation::mutable_attributes() {
+  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Operation.attributes)
   return attributes_.MutableMap();
 }
 
@@ -5433,7 +5390,6 @@ void Value_FileValue::set_length(::google::protobuf::uint64 value) {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int Value::kNameFieldNumber;
 const int Value::kDocStringFieldNumber;
 const int Value::kTypeFieldNumber;
 const int Value::kImmediateValueFieldNumber;
@@ -5453,10 +5409,6 @@ Value::Value(const Value& from)
       _internal_metadata_(NULL),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.name().size() > 0) {
-    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
-  }
   docstring_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.docstring().size() > 0) {
     docstring_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.docstring_);
@@ -5484,7 +5436,6 @@ Value::Value(const Value& from)
 }
 
 void Value::SharedCtor() {
-  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   docstring_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   type_ = NULL;
   clear_has_value();
@@ -5497,7 +5448,6 @@ Value::~Value() {
 }
 
 void Value::SharedDtor() {
-  name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   docstring_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) {
     delete type_;
@@ -5546,7 +5496,6 @@ void Value::clear_value() {
 
 void Value::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.V5.Value)
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   docstring_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (GetArenaNoVirtual() == NULL && type_ != NULL) {
     delete type_;
@@ -5565,26 +5514,10 @@ bool Value::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // string name = 1;
+      // string docString = 1;
       case 1: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(10u)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_name()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->name().data(), this->name().length(),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "CoreML.Specification.V5.Value.name"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // string docString = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_docstring()));
           DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
@@ -5597,10 +5530,10 @@ bool Value::MergePartialFromCodedStream(
         break;
       }
 
-      // .CoreML.Specification.V5.ValueType type = 3;
-      case 3: {
+      // .CoreML.Specification.V5.ValueType type = 2;
+      case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u)) {
+            static_cast< ::google::protobuf::uint8>(18u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_type()));
         } else {
@@ -5609,10 +5542,10 @@ bool Value::MergePartialFromCodedStream(
         break;
       }
 
-      // .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 4;
-      case 4: {
+      // .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 3;
+      case 3: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u)) {
+            static_cast< ::google::protobuf::uint8>(26u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_immediatevalue()));
         } else {
@@ -5621,10 +5554,10 @@ bool Value::MergePartialFromCodedStream(
         break;
       }
 
-      // .CoreML.Specification.V5.Value.FileValue fileValue = 5;
-      case 5: {
+      // .CoreML.Specification.V5.Value.FileValue fileValue = 4;
+      case 4: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u)) {
+            static_cast< ::google::protobuf::uint8>(34u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_filevalue()));
         } else {
@@ -5660,42 +5593,32 @@ void Value::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // string name = 1;
-  if (this->name().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->name().data(), this->name().length(),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "CoreML.Specification.V5.Value.name");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      1, this->name(), output);
-  }
-
-  // string docString = 2;
+  // string docString = 1;
   if (this->docstring().size() > 0) {
     ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
       this->docstring().data(), this->docstring().length(),
       ::google::protobuf::internal::WireFormatLite::SERIALIZE,
       "CoreML.Specification.V5.Value.docString");
     ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->docstring(), output);
+      1, this->docstring(), output);
   }
 
-  // .CoreML.Specification.V5.ValueType type = 3;
+  // .CoreML.Specification.V5.ValueType type = 2;
   if (this->has_type()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      3, *this->type_, output);
+      2, *this->type_, output);
   }
 
-  // .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 4;
+  // .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 3;
   if (has_immediatevalue()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      4, *value_.immediatevalue_, output);
+      3, *value_.immediatevalue_, output);
   }
 
-  // .CoreML.Specification.V5.Value.FileValue fileValue = 5;
+  // .CoreML.Specification.V5.Value.FileValue fileValue = 4;
   if (has_filevalue()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      5, *value_.filevalue_, output);
+      4, *value_.filevalue_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.V5.Value)
@@ -5705,21 +5628,14 @@ size_t Value::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.V5.Value)
   size_t total_size = 0;
 
-  // string name = 1;
-  if (this->name().size() > 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->name());
-  }
-
-  // string docString = 2;
+  // string docString = 1;
   if (this->docstring().size() > 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::StringSize(
         this->docstring());
   }
 
-  // .CoreML.Specification.V5.ValueType type = 3;
+  // .CoreML.Specification.V5.ValueType type = 2;
   if (this->has_type()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
@@ -5727,14 +5643,14 @@ size_t Value::ByteSizeLong() const {
   }
 
   switch (value_case()) {
-    // .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 4;
+    // .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 3;
     case kImmediateValue: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           *value_.immediatevalue_);
       break;
     }
-    // .CoreML.Specification.V5.Value.FileValue fileValue = 5;
+    // .CoreML.Specification.V5.Value.FileValue fileValue = 4;
     case kFileValue: {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
@@ -5764,10 +5680,6 @@ void Value::MergeFrom(const Value& from) {
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  if (from.name().size() > 0) {
-
-    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
-  }
   if (from.docstring().size() > 0) {
 
     docstring_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.docstring_);
@@ -5806,7 +5718,6 @@ void Value::Swap(Value* other) {
   InternalSwap(other);
 }
 void Value::InternalSwap(Value* other) {
-  name_.Swap(&other->name_);
   docstring_.Swap(&other->docstring_);
   std::swap(type_, other->type_);
   std::swap(value_, other->value_);
@@ -5821,60 +5732,7 @@ void Value::InternalSwap(Value* other) {
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // Value
 
-// string name = 1;
-void Value::clear_name() {
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-const ::std::string& Value::name() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Value.name)
-  return name_.GetNoArena();
-}
-void Value::set_name(const ::std::string& value) {
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Value.name)
-}
-#if LANG_CXX11
-void Value::set_name(::std::string&& value) {
-  
-  name_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Value.name)
-}
-#endif
-void Value::set_name(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Value.name)
-}
-void Value::set_name(const char* value, size_t size) {
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Value.name)
-}
-::std::string* Value::mutable_name() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Value.name)
-  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-::std::string* Value::release_name() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Value.name)
-  
-  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-void Value::set_allocated_name(::std::string* name) {
-  if (name != NULL) {
-    
-  } else {
-    
-  }
-  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Value.name)
-}
-
-// string docString = 2;
+// string docString = 1;
 void Value::clear_docstring() {
   docstring_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
@@ -5927,7 +5785,7 @@ void Value::set_allocated_docstring(::std::string* docstring) {
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Value.docString)
 }
 
-// .CoreML.Specification.V5.ValueType type = 3;
+// .CoreML.Specification.V5.ValueType type = 2;
 bool Value::has_type() const {
   return this != internal_default_instance() && type_ != NULL;
 }
@@ -5966,7 +5824,7 @@ void Value::set_allocated_type(::CoreML::Specification::V5::ValueType* type) {
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Value.type)
 }
 
-// .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 4;
+// .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 3;
 bool Value::has_immediatevalue() const {
   return value_case() == kImmediateValue;
 }
@@ -6014,7 +5872,7 @@ void Value::set_allocated_immediatevalue(::CoreML::Specification::V5::Value_Imme
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Value.immediateValue)
 }
 
-// .CoreML.Specification.V5.Value.FileValue fileValue = 5;
+// .CoreML.Specification.V5.Value.FileValue fileValue = 4;
 bool Value::has_filevalue() const {
   return value_case() == kFileValue;
 }

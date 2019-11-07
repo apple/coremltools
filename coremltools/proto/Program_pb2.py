@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='Program.proto',
   package='CoreML.Specification.V5',
   syntax='proto3',
-  serialized_pb=_b('\n\rProgram.proto\x12\x17\x43oreML.Specification.V5\"\xfc\x01\n\x07Program\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12\x34\n\tfunctions\x18\x02 \x03(\x0b\x32!.CoreML.Specification.V5.Function\x12\x44\n\nparameters\x18\x03 \x03(\x0b\x32\x30.CoreML.Specification.V5.Program.ParametersEntry\x12\x11\n\tdocString\x18\x04 \x01(\t\x1aQ\n\x0fParametersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x05value\x18\x02 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Value:\x02\x38\x01\"\xb5\x01\n\x08\x46unction\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x37\n\x06inputs\x18\x02 \x03(\x0b\x32\'.CoreML.Specification.V5.NamedValueType\x12\x33\n\x07outputs\x18\x03 \x03(\x0b\x32\".CoreML.Specification.V5.ValueType\x12-\n\x05\x62lock\x18\x04 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Block\"\xb9\x01\n\x05\x42lock\x12:\n\x06inputs\x18\x01 \x03(\x0b\x32*.CoreML.Specification.V5.Block.InputsEntry\x12\x0f\n\x07outputs\x18\x02 \x03(\t\x12\x34\n\toperators\x18\x03 \x03(\x0b\x32!.CoreML.Specification.V5.Operator\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x9a\x03\n\x08Operator\x12\x0e\n\x06opType\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12=\n\x06inputs\x18\x03 \x03(\x0b\x32-.CoreML.Specification.V5.Operator.InputsEntry\x12\x38\n\x07outputs\x18\x04 \x03(\x0b\x32\'.CoreML.Specification.V5.NamedValueType\x12.\n\x06\x62locks\x18\x05 \x03(\x0b\x32\x1e.CoreML.Specification.V5.Block\x12\x45\n\nattributes\x18\x06 \x03(\x0b\x32\x31.CoreML.Specification.V5.Operator.AttributesEntry\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1aQ\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x05value\x18\x02 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Value:\x02\x38\x01\"P\n\x0eNamedValueType\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x30\n\x04type\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\"\xf9\x01\n\tValueType\x12\x39\n\nscalarType\x18\x01 \x01(\x0e\x32#.CoreML.Specification.V5.ScalarTypeH\x00\x12\x39\n\ntensorType\x18\x02 \x01(\x0b\x32#.CoreML.Specification.V5.TensorTypeH\x00\x12\x35\n\x08listType\x18\x03 \x01(\x0b\x32!.CoreML.Specification.V5.ListTypeH\x00\x12\x37\n\ttupleType\x18\x04 \x01(\x0b\x32\".CoreML.Specification.V5.TupleTypeH\x00\x42\x06\n\x04type\"\x8a\x01\n\nTensorType\x12\x37\n\nscalarType\x18\x01 \x01(\x0e\x32#.CoreML.Specification.V5.ScalarType\x12\x0c\n\x04rank\x18\x02 \x01(\x03\x12\x35\n\tdimension\x18\x03 \x03(\x0b\x32\".CoreML.Specification.V5.Dimension\"p\n\x08ListType\x12\x30\n\x04type\x18\x01 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\x12\x32\n\x06length\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.Dimension\"?\n\tTupleType\x12\x32\n\x06values\x18\x01 \x03(\x0b\x32\".CoreML.Specification.V5.ValueType\":\n\tDimension\x12\x10\n\x06symbol\x18\x01 \x01(\tH\x00\x12\x0e\n\x04size\x18\x02 \x01(\x03H\x00\x42\x0b\n\tdimension\"\xe8\x03\n\x05Value\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tdocString\x18\x02 \x01(\t\x12\x30\n\x04type\x18\x03 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\x12G\n\x0eimmediateValue\x18\x04 \x01(\x0b\x32-.CoreML.Specification.V5.Value.ImmediateValueH\x00\x12=\n\tfileValue\x18\x05 \x01(\x0b\x32(.CoreML.Specification.V5.Value.FileValueH\x00\x1a\xbb\x01\n\x0eImmediateValue\x12\x0b\n\x01\x66\x18\x01 \x01(\x02H\x00\x12\x0b\n\x01i\x18\x02 \x01(\x03H\x00\x12\x0b\n\x01\x62\x18\x03 \x01(\x08H\x00\x12\x0b\n\x01s\x18\x04 \x01(\x0cH\x00\x12\x36\n\x06tensor\x18\x05 \x01(\x0b\x32$.CoreML.Specification.V5.TensorValueH\x00\x12\x34\n\x05tuple\x18\x06 \x01(\x0b\x32#.CoreML.Specification.V5.TupleValueH\x00\x42\x07\n\x05value\x1a=\n\tFileValue\x12\x10\n\x08\x66ileName\x18\x01 \x01(\t\x12\x0e\n\x06offset\x18\x02 \x01(\x04\x12\x0e\n\x06length\x18\x03 \x01(\x04\x42\x07\n\x05value\"\x90\x01\n\x0bTensorValue\x12\x37\n\ntensorType\x18\x01 \x01(\x0b\x32#.CoreML.Specification.V5.TensorType\x12\x12\n\x06\x66loats\x18\x02 \x03(\x02\x42\x02\x10\x01\x12\x10\n\x04ints\x18\x03 \x03(\x03\x42\x02\x10\x01\x12\x11\n\x05\x62ools\x18\x04 \x03(\x08\x42\x02\x10\x01\x12\x0f\n\x07strings\x18\x05 \x03(\x0c\";\n\nTupleValue\x12-\n\x05value\x18\x01 \x03(\x0b\x32\x1e.CoreML.Specification.V5.Value*\xd3\x01\n\nScalarType\x12\x0b\n\x07\x44YNAMIC\x10\x00\x12\x08\n\x04\x42OOL\x10\x01\x12\n\n\x06STRING\x10\x02\x12\x0b\n\x07\x46LOAT16\x10\n\x12\x0b\n\x07\x46LOAT32\x10\x0b\x12\x0b\n\x07\x46LOAT64\x10\x0c\x12\x0c\n\x08\x42\x46LOAT16\x10\r\x12\x08\n\x04INT4\x10\x14\x12\x08\n\x04INT8\x10\x15\x12\t\n\x05INT16\x10\x16\x12\t\n\x05INT32\x10\x17\x12\t\n\x05INT64\x10\x18\x12\t\n\x05UINT4\x10\x1e\x12\t\n\x05UINT8\x10\x1f\x12\n\n\x06UINT16\x10 \x12\n\n\x06UINT32\x10!\x12\n\n\x06UINT64\x10\"B\x02H\x03\x62\x06proto3')
+  serialized_pb=_b('\n\rProgram.proto\x12\x17\x43oreML.Specification.V5\"\xdf\x02\n\x07Program\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12\x42\n\tfunctions\x18\x02 \x03(\x0b\x32/.CoreML.Specification.V5.Program.FunctionsEntry\x12\x44\n\nparameters\x18\x03 \x03(\x0b\x32\x30.CoreML.Specification.V5.Program.ParametersEntry\x12\x11\n\tdocString\x18\x04 \x01(\t\x1aS\n\x0e\x46unctionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32!.CoreML.Specification.V5.Function:\x02\x38\x01\x1aQ\n\x0fParametersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x05value\x18\x02 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Value:\x02\x38\x01\"\xa7\x01\n\x08\x46unction\x12\x37\n\x06inputs\x18\x01 \x03(\x0b\x32\'.CoreML.Specification.V5.NamedValueType\x12\x33\n\x07outputs\x18\x02 \x03(\x0b\x32\".CoreML.Specification.V5.ValueType\x12-\n\x05\x62lock\x18\x03 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Block\"\xbb\x01\n\x05\x42lock\x12:\n\x06inputs\x18\x01 \x03(\x0b\x32*.CoreML.Specification.V5.Block.InputsEntry\x12\x0f\n\x07outputs\x18\x02 \x03(\t\x12\x36\n\noperations\x18\x03 \x03(\x0b\x32\".CoreML.Specification.V5.Operation\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x9b\x03\n\tOperation\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12>\n\x06inputs\x18\x03 \x03(\x0b\x32..CoreML.Specification.V5.Operation.InputsEntry\x12\x38\n\x07outputs\x18\x04 \x03(\x0b\x32\'.CoreML.Specification.V5.NamedValueType\x12.\n\x06\x62locks\x18\x05 \x03(\x0b\x32\x1e.CoreML.Specification.V5.Block\x12\x46\n\nattributes\x18\x06 \x03(\x0b\x32\x32.CoreML.Specification.V5.Operation.AttributesEntry\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1aQ\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x05value\x18\x02 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Value:\x02\x38\x01\"P\n\x0eNamedValueType\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x30\n\x04type\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\"\xf9\x01\n\tValueType\x12\x39\n\nscalarType\x18\x01 \x01(\x0e\x32#.CoreML.Specification.V5.ScalarTypeH\x00\x12\x39\n\ntensorType\x18\x02 \x01(\x0b\x32#.CoreML.Specification.V5.TensorTypeH\x00\x12\x35\n\x08listType\x18\x03 \x01(\x0b\x32!.CoreML.Specification.V5.ListTypeH\x00\x12\x37\n\ttupleType\x18\x04 \x01(\x0b\x32\".CoreML.Specification.V5.TupleTypeH\x00\x42\x06\n\x04type\"\x8a\x01\n\nTensorType\x12\x37\n\nscalarType\x18\x01 \x01(\x0e\x32#.CoreML.Specification.V5.ScalarType\x12\x0c\n\x04rank\x18\x02 \x01(\x03\x12\x35\n\tdimension\x18\x03 \x03(\x0b\x32\".CoreML.Specification.V5.Dimension\"p\n\x08ListType\x12\x30\n\x04type\x18\x01 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\x12\x32\n\x06length\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.Dimension\"?\n\tTupleType\x12\x32\n\x06values\x18\x01 \x03(\x0b\x32\".CoreML.Specification.V5.ValueType\":\n\tDimension\x12\x10\n\x06symbol\x18\x01 \x01(\tH\x00\x12\x0e\n\x04size\x18\x02 \x01(\x03H\x00\x42\x0b\n\tdimension\"\xda\x03\n\x05Value\x12\x11\n\tdocString\x18\x01 \x01(\t\x12\x30\n\x04type\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\x12G\n\x0eimmediateValue\x18\x03 \x01(\x0b\x32-.CoreML.Specification.V5.Value.ImmediateValueH\x00\x12=\n\tfileValue\x18\x04 \x01(\x0b\x32(.CoreML.Specification.V5.Value.FileValueH\x00\x1a\xbb\x01\n\x0eImmediateValue\x12\x0b\n\x01\x66\x18\x01 \x01(\x02H\x00\x12\x0b\n\x01i\x18\x02 \x01(\x03H\x00\x12\x0b\n\x01\x62\x18\x03 \x01(\x08H\x00\x12\x0b\n\x01s\x18\x04 \x01(\x0cH\x00\x12\x36\n\x06tensor\x18\x05 \x01(\x0b\x32$.CoreML.Specification.V5.TensorValueH\x00\x12\x34\n\x05tuple\x18\x06 \x01(\x0b\x32#.CoreML.Specification.V5.TupleValueH\x00\x42\x07\n\x05value\x1a=\n\tFileValue\x12\x10\n\x08\x66ileName\x18\x01 \x01(\t\x12\x0e\n\x06offset\x18\x02 \x01(\x04\x12\x0e\n\x06length\x18\x03 \x01(\x04\x42\x07\n\x05value\"\x90\x01\n\x0bTensorValue\x12\x37\n\ntensorType\x18\x01 \x01(\x0b\x32#.CoreML.Specification.V5.TensorType\x12\x12\n\x06\x66loats\x18\x02 \x03(\x02\x42\x02\x10\x01\x12\x10\n\x04ints\x18\x03 \x03(\x03\x42\x02\x10\x01\x12\x11\n\x05\x62ools\x18\x04 \x03(\x08\x42\x02\x10\x01\x12\x0f\n\x07strings\x18\x05 \x03(\x0c\";\n\nTupleValue\x12-\n\x05value\x18\x01 \x03(\x0b\x32\x1e.CoreML.Specification.V5.Value*\xd3\x01\n\nScalarType\x12\x0b\n\x07\x44YNAMIC\x10\x00\x12\x08\n\x04\x42OOL\x10\x01\x12\n\n\x06STRING\x10\x02\x12\x0b\n\x07\x46LOAT16\x10\n\x12\x0b\n\x07\x46LOAT32\x10\x0b\x12\x0b\n\x07\x46LOAT64\x10\x0c\x12\x0c\n\x08\x42\x46LOAT16\x10\r\x12\x08\n\x04INT4\x10\x14\x12\x08\n\x04INT8\x10\x15\x12\t\n\x05INT16\x10\x16\x12\t\n\x05INT32\x10\x17\x12\t\n\x05INT64\x10\x18\x12\t\n\x05UINT4\x10\x1e\x12\t\n\x05UINT8\x10\x1f\x12\n\n\x06UINT16\x10 \x12\n\n\x06UINT32\x10!\x12\n\n\x06UINT64\x10\"B\x02H\x03\x62\x06proto3')
 )
 
 _SCALARTYPE = _descriptor.EnumDescriptor(
@@ -100,8 +100,8 @@ _SCALARTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=2496,
-  serialized_end=2707,
+  serialized_start=2570,
+  serialized_end=2781,
 )
 _sym_db.RegisterEnumDescriptor(_SCALARTYPE)
 
@@ -125,6 +125,43 @@ UINT32 = 33
 UINT64 = 34
 
 
+
+_PROGRAM_FUNCTIONSENTRY = _descriptor.Descriptor(
+  name='FunctionsEntry',
+  full_name='CoreML.Specification.V5.Program.FunctionsEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='CoreML.Specification.V5.Program.FunctionsEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='CoreML.Specification.V5.Program.FunctionsEntry.value', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001')),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=228,
+  serialized_end=311,
+)
 
 _PROGRAM_PARAMETERSENTRY = _descriptor.Descriptor(
   name='ParametersEntry',
@@ -159,8 +196,8 @@ _PROGRAM_PARAMETERSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=214,
-  serialized_end=295,
+  serialized_start=313,
+  serialized_end=394,
 )
 
 _PROGRAM = _descriptor.Descriptor(
@@ -201,7 +238,7 @@ _PROGRAM = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[_PROGRAM_PARAMETERSENTRY, ],
+  nested_types=[_PROGRAM_FUNCTIONSENTRY, _PROGRAM_PARAMETERSENTRY, ],
   enum_types=[
   ],
   options=None,
@@ -211,7 +248,7 @@ _PROGRAM = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=43,
-  serialized_end=295,
+  serialized_end=394,
 )
 
 
@@ -223,29 +260,22 @@ _FUNCTION = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='name', full_name='CoreML.Specification.V5.Function.name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='inputs', full_name='CoreML.Specification.V5.Function.inputs', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='inputs', full_name='CoreML.Specification.V5.Function.inputs', index=1,
+      name='outputs', full_name='CoreML.Specification.V5.Function.outputs', index=1,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='outputs', full_name='CoreML.Specification.V5.Function.outputs', index=2,
-      number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='block', full_name='CoreML.Specification.V5.Function.block', index=3,
-      number=4, type=11, cpp_type=10, label=1,
+      name='block', full_name='CoreML.Specification.V5.Function.block', index=2,
+      number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -262,8 +292,8 @@ _FUNCTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=298,
-  serialized_end=479,
+  serialized_start=397,
+  serialized_end=564,
 )
 
 
@@ -300,8 +330,8 @@ _BLOCK_INPUTSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=622,
-  serialized_end=667,
+  serialized_start=709,
+  serialized_end=754,
 )
 
 _BLOCK = _descriptor.Descriptor(
@@ -326,7 +356,7 @@ _BLOCK = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='operators', full_name='CoreML.Specification.V5.Block.operators', index=2,
+      name='operations', full_name='CoreML.Specification.V5.Block.operations', index=2,
       number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -344,27 +374,27 @@ _BLOCK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=482,
-  serialized_end=667,
+  serialized_start=567,
+  serialized_end=754,
 )
 
 
-_OPERATOR_INPUTSENTRY = _descriptor.Descriptor(
+_OPERATION_INPUTSENTRY = _descriptor.Descriptor(
   name='InputsEntry',
-  full_name='CoreML.Specification.V5.Operator.InputsEntry',
+  full_name='CoreML.Specification.V5.Operation.InputsEntry',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='key', full_name='CoreML.Specification.V5.Operator.InputsEntry.key', index=0,
+      name='key', full_name='CoreML.Specification.V5.Operation.InputsEntry.key', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='value', full_name='CoreML.Specification.V5.Operator.InputsEntry.value', index=1,
+      name='value', full_name='CoreML.Specification.V5.Operation.InputsEntry.value', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -382,26 +412,26 @@ _OPERATOR_INPUTSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=622,
-  serialized_end=667,
+  serialized_start=709,
+  serialized_end=754,
 )
 
-_OPERATOR_ATTRIBUTESENTRY = _descriptor.Descriptor(
+_OPERATION_ATTRIBUTESENTRY = _descriptor.Descriptor(
   name='AttributesEntry',
-  full_name='CoreML.Specification.V5.Operator.AttributesEntry',
+  full_name='CoreML.Specification.V5.Operation.AttributesEntry',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='key', full_name='CoreML.Specification.V5.Operator.AttributesEntry.key', index=0,
+      name='key', full_name='CoreML.Specification.V5.Operation.AttributesEntry.key', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='value', full_name='CoreML.Specification.V5.Operator.AttributesEntry.value', index=1,
+      name='value', full_name='CoreML.Specification.V5.Operation.AttributesEntry.value', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -419,54 +449,54 @@ _OPERATOR_ATTRIBUTESENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=999,
-  serialized_end=1080,
+  serialized_start=1087,
+  serialized_end=1168,
 )
 
-_OPERATOR = _descriptor.Descriptor(
-  name='Operator',
-  full_name='CoreML.Specification.V5.Operator',
+_OPERATION = _descriptor.Descriptor(
+  name='Operation',
+  full_name='CoreML.Specification.V5.Operation',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='opType', full_name='CoreML.Specification.V5.Operator.opType', index=0,
+      name='name', full_name='CoreML.Specification.V5.Operation.name', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='name', full_name='CoreML.Specification.V5.Operator.name', index=1,
+      name='type', full_name='CoreML.Specification.V5.Operation.type', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='inputs', full_name='CoreML.Specification.V5.Operator.inputs', index=2,
+      name='inputs', full_name='CoreML.Specification.V5.Operation.inputs', index=2,
       number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='outputs', full_name='CoreML.Specification.V5.Operator.outputs', index=3,
+      name='outputs', full_name='CoreML.Specification.V5.Operation.outputs', index=3,
       number=4, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='blocks', full_name='CoreML.Specification.V5.Operator.blocks', index=4,
+      name='blocks', full_name='CoreML.Specification.V5.Operation.blocks', index=4,
       number=5, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='attributes', full_name='CoreML.Specification.V5.Operator.attributes', index=5,
+      name='attributes', full_name='CoreML.Specification.V5.Operation.attributes', index=5,
       number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -475,7 +505,7 @@ _OPERATOR = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[_OPERATOR_INPUTSENTRY, _OPERATOR_ATTRIBUTESENTRY, ],
+  nested_types=[_OPERATION_INPUTSENTRY, _OPERATION_ATTRIBUTESENTRY, ],
   enum_types=[
   ],
   options=None,
@@ -484,8 +514,8 @@ _OPERATOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=670,
-  serialized_end=1080,
+  serialized_start=757,
+  serialized_end=1168,
 )
 
 
@@ -522,8 +552,8 @@ _NAMEDVALUETYPE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1082,
-  serialized_end=1162,
+  serialized_start=1170,
+  serialized_end=1250,
 )
 
 
@@ -577,8 +607,8 @@ _VALUETYPE = _descriptor.Descriptor(
       name='type', full_name='CoreML.Specification.V5.ValueType.type',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1165,
-  serialized_end=1414,
+  serialized_start=1253,
+  serialized_end=1502,
 )
 
 
@@ -622,8 +652,8 @@ _TENSORTYPE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1417,
-  serialized_end=1555,
+  serialized_start=1505,
+  serialized_end=1643,
 )
 
 
@@ -660,8 +690,8 @@ _LISTTYPE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1557,
-  serialized_end=1669,
+  serialized_start=1645,
+  serialized_end=1757,
 )
 
 
@@ -691,8 +721,8 @@ _TUPLETYPE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1671,
-  serialized_end=1734,
+  serialized_start=1759,
+  serialized_end=1822,
 )
 
 
@@ -732,8 +762,8 @@ _DIMENSION = _descriptor.Descriptor(
       name='dimension', full_name='CoreML.Specification.V5.Dimension.dimension',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1736,
-  serialized_end=1794,
+  serialized_start=1824,
+  serialized_end=1882,
 )
 
 
@@ -801,8 +831,8 @@ _VALUE_IMMEDIATEVALUE = _descriptor.Descriptor(
       name='value', full_name='CoreML.Specification.V5.Value.ImmediateValue.value',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=2026,
-  serialized_end=2213,
+  serialized_start=2100,
+  serialized_end=2287,
 )
 
 _VALUE_FILEVALUE = _descriptor.Descriptor(
@@ -845,8 +875,8 @@ _VALUE_FILEVALUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2215,
-  serialized_end=2276,
+  serialized_start=2289,
+  serialized_end=2350,
 )
 
 _VALUE = _descriptor.Descriptor(
@@ -857,36 +887,29 @@ _VALUE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='name', full_name='CoreML.Specification.V5.Value.name', index=0,
+      name='docString', full_name='CoreML.Specification.V5.Value.docString', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='docString', full_name='CoreML.Specification.V5.Value.docString', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='type', full_name='CoreML.Specification.V5.Value.type', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='type', full_name='CoreML.Specification.V5.Value.type', index=2,
+      name='immediateValue', full_name='CoreML.Specification.V5.Value.immediateValue', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='immediateValue', full_name='CoreML.Specification.V5.Value.immediateValue', index=3,
+      name='fileValue', full_name='CoreML.Specification.V5.Value.fileValue', index=3,
       number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='fileValue', full_name='CoreML.Specification.V5.Value.fileValue', index=4,
-      number=5, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -906,8 +929,8 @@ _VALUE = _descriptor.Descriptor(
       name='value', full_name='CoreML.Specification.V5.Value.value',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1797,
-  serialized_end=2285,
+  serialized_start=1885,
+  serialized_end=2359,
 )
 
 
@@ -965,8 +988,8 @@ _TENSORVALUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2288,
-  serialized_end=2432,
+  serialized_start=2362,
+  serialized_end=2506,
 )
 
 
@@ -996,27 +1019,29 @@ _TUPLEVALUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2434,
-  serialized_end=2493,
+  serialized_start=2508,
+  serialized_end=2567,
 )
 
+_PROGRAM_FUNCTIONSENTRY.fields_by_name['value'].message_type = _FUNCTION
+_PROGRAM_FUNCTIONSENTRY.containing_type = _PROGRAM
 _PROGRAM_PARAMETERSENTRY.fields_by_name['value'].message_type = _VALUE
 _PROGRAM_PARAMETERSENTRY.containing_type = _PROGRAM
-_PROGRAM.fields_by_name['functions'].message_type = _FUNCTION
+_PROGRAM.fields_by_name['functions'].message_type = _PROGRAM_FUNCTIONSENTRY
 _PROGRAM.fields_by_name['parameters'].message_type = _PROGRAM_PARAMETERSENTRY
 _FUNCTION.fields_by_name['inputs'].message_type = _NAMEDVALUETYPE
 _FUNCTION.fields_by_name['outputs'].message_type = _VALUETYPE
 _FUNCTION.fields_by_name['block'].message_type = _BLOCK
 _BLOCK_INPUTSENTRY.containing_type = _BLOCK
 _BLOCK.fields_by_name['inputs'].message_type = _BLOCK_INPUTSENTRY
-_BLOCK.fields_by_name['operators'].message_type = _OPERATOR
-_OPERATOR_INPUTSENTRY.containing_type = _OPERATOR
-_OPERATOR_ATTRIBUTESENTRY.fields_by_name['value'].message_type = _VALUE
-_OPERATOR_ATTRIBUTESENTRY.containing_type = _OPERATOR
-_OPERATOR.fields_by_name['inputs'].message_type = _OPERATOR_INPUTSENTRY
-_OPERATOR.fields_by_name['outputs'].message_type = _NAMEDVALUETYPE
-_OPERATOR.fields_by_name['blocks'].message_type = _BLOCK
-_OPERATOR.fields_by_name['attributes'].message_type = _OPERATOR_ATTRIBUTESENTRY
+_BLOCK.fields_by_name['operations'].message_type = _OPERATION
+_OPERATION_INPUTSENTRY.containing_type = _OPERATION
+_OPERATION_ATTRIBUTESENTRY.fields_by_name['value'].message_type = _VALUE
+_OPERATION_ATTRIBUTESENTRY.containing_type = _OPERATION
+_OPERATION.fields_by_name['inputs'].message_type = _OPERATION_INPUTSENTRY
+_OPERATION.fields_by_name['outputs'].message_type = _NAMEDVALUETYPE
+_OPERATION.fields_by_name['blocks'].message_type = _BLOCK
+_OPERATION.fields_by_name['attributes'].message_type = _OPERATION_ATTRIBUTESENTRY
 _NAMEDVALUETYPE.fields_by_name['type'].message_type = _VALUETYPE
 _VALUETYPE.fields_by_name['scalarType'].enum_type = _SCALARTYPE
 _VALUETYPE.fields_by_name['tensorType'].message_type = _TENSORTYPE
@@ -1081,7 +1106,7 @@ _TUPLEVALUE.fields_by_name['value'].message_type = _VALUE
 DESCRIPTOR.message_types_by_name['Program'] = _PROGRAM
 DESCRIPTOR.message_types_by_name['Function'] = _FUNCTION
 DESCRIPTOR.message_types_by_name['Block'] = _BLOCK
-DESCRIPTOR.message_types_by_name['Operator'] = _OPERATOR
+DESCRIPTOR.message_types_by_name['Operation'] = _OPERATION
 DESCRIPTOR.message_types_by_name['NamedValueType'] = _NAMEDVALUETYPE
 DESCRIPTOR.message_types_by_name['ValueType'] = _VALUETYPE
 DESCRIPTOR.message_types_by_name['TensorType'] = _TENSORTYPE
@@ -1096,6 +1121,13 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Program = _reflection.GeneratedProtocolMessageType('Program', (_message.Message,), dict(
 
+  FunctionsEntry = _reflection.GeneratedProtocolMessageType('FunctionsEntry', (_message.Message,), dict(
+    DESCRIPTOR = _PROGRAM_FUNCTIONSENTRY,
+    __module__ = 'Program_pb2'
+    # @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Program.FunctionsEntry)
+    ))
+  ,
+
   ParametersEntry = _reflection.GeneratedProtocolMessageType('ParametersEntry', (_message.Message,), dict(
     DESCRIPTOR = _PROGRAM_PARAMETERSENTRY,
     __module__ = 'Program_pb2'
@@ -1107,6 +1139,7 @@ Program = _reflection.GeneratedProtocolMessageType('Program', (_message.Message,
   # @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Program)
   ))
 _sym_db.RegisterMessage(Program)
+_sym_db.RegisterMessage(Program.FunctionsEntry)
 _sym_db.RegisterMessage(Program.ParametersEntry)
 
 Function = _reflection.GeneratedProtocolMessageType('Function', (_message.Message,), dict(
@@ -1131,28 +1164,28 @@ Block = _reflection.GeneratedProtocolMessageType('Block', (_message.Message,), d
 _sym_db.RegisterMessage(Block)
 _sym_db.RegisterMessage(Block.InputsEntry)
 
-Operator = _reflection.GeneratedProtocolMessageType('Operator', (_message.Message,), dict(
+Operation = _reflection.GeneratedProtocolMessageType('Operation', (_message.Message,), dict(
 
   InputsEntry = _reflection.GeneratedProtocolMessageType('InputsEntry', (_message.Message,), dict(
-    DESCRIPTOR = _OPERATOR_INPUTSENTRY,
+    DESCRIPTOR = _OPERATION_INPUTSENTRY,
     __module__ = 'Program_pb2'
-    # @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Operator.InputsEntry)
+    # @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Operation.InputsEntry)
     ))
   ,
 
   AttributesEntry = _reflection.GeneratedProtocolMessageType('AttributesEntry', (_message.Message,), dict(
-    DESCRIPTOR = _OPERATOR_ATTRIBUTESENTRY,
+    DESCRIPTOR = _OPERATION_ATTRIBUTESENTRY,
     __module__ = 'Program_pb2'
-    # @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Operator.AttributesEntry)
+    # @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Operation.AttributesEntry)
     ))
   ,
-  DESCRIPTOR = _OPERATOR,
+  DESCRIPTOR = _OPERATION,
   __module__ = 'Program_pb2'
-  # @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Operator)
+  # @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Operation)
   ))
-_sym_db.RegisterMessage(Operator)
-_sym_db.RegisterMessage(Operator.InputsEntry)
-_sym_db.RegisterMessage(Operator.AttributesEntry)
+_sym_db.RegisterMessage(Operation)
+_sym_db.RegisterMessage(Operation.InputsEntry)
+_sym_db.RegisterMessage(Operation.AttributesEntry)
 
 NamedValueType = _reflection.GeneratedProtocolMessageType('NamedValueType', (_message.Message,), dict(
   DESCRIPTOR = _NAMEDVALUETYPE,
@@ -1236,14 +1269,16 @@ _sym_db.RegisterMessage(TupleValue)
 
 DESCRIPTOR.has_options = True
 DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), _b('H\003'))
+_PROGRAM_FUNCTIONSENTRY.has_options = True
+_PROGRAM_FUNCTIONSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _PROGRAM_PARAMETERSENTRY.has_options = True
 _PROGRAM_PARAMETERSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _BLOCK_INPUTSENTRY.has_options = True
 _BLOCK_INPUTSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
-_OPERATOR_INPUTSENTRY.has_options = True
-_OPERATOR_INPUTSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
-_OPERATOR_ATTRIBUTESENTRY.has_options = True
-_OPERATOR_ATTRIBUTESENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
+_OPERATION_INPUTSENTRY.has_options = True
+_OPERATION_INPUTSENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
+_OPERATION_ATTRIBUTESENTRY.has_options = True
+_OPERATION_ATTRIBUTESENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _TENSORVALUE.fields_by_name['floats'].has_options = True
 _TENSORVALUE.fields_by_name['floats']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))
 _TENSORVALUE.fields_by_name['ints'].has_options = True

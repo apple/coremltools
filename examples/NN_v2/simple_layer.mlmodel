@@ -1,0 +1,51 @@
+J
+
+input0	*
+@ €R
+output0	*
+
+ €¢¢
+coremltoolsVersion3.0²ßè
+mainß
+
+input0
+@
+
+º
+
+input0input0output0S
+dense1/weight	loadParam
+inputdense1/weight"
+dense1/weight@
+I
+dense1/bias	loadParam
+inputdense1/bias"
+dense1/bias
+
+=
+softmax_axisconstant"
+softmax_axis2
+valh
+dense1dense
+weightdense1/weight
+biasdense1/bias
+inputinput0"
+
+dense1_out
+
+T
+softmaxsoftmax
+input
+dense1_out
+axissoftmax_axis"
+output0
+
+5
+dense1/bias&
+
+"
+./simple_layer.wt€
+9
+dense1/weight(@
+"
+./simple_layer.wt€

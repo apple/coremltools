@@ -61,7 +61,8 @@ package CoreML.Specification.V5;
 message Program {
     int64 version = 1;
 
-    repeated Function functions = 2;
+    // Must be unique within the containing Module
+    map<string, Function> functions = 2;
 
     // parameters are generally externally stored (see Value).
     // Key: string formatted input name, Value: Value of the parameter
@@ -72,18 +73,16 @@ message Program {
 
 // A Module-level function.
 message Function {
-    // Must be unique within the containing Module
-    string name = 1;
 
     // Function inputs are unordered (name, ValueType) pairs.
-    repeated NamedValueType inputs = 2;
+    repeated NamedValueType inputs = 1;
 
     // output types should be consistent with block.outputs (whose ValueType is
     // defined in the associated Op's outputs
-    repeated ValueType outputs = 3;
+    repeated ValueType outputs = 2;
 
     // Output of function is the output of the block.
-    Block block = 4;
+    Block block = 3;
 }
 
 // A basic block with a single entry and exit in SSA form.
@@ -95,29 +94,29 @@ message Block {
     // and 'input_01' is being passed to current Block
     map<string, string> inputs = 1;
 
-    // ValueType of outputs[i] is Operator[j].outputs[k].type where 
-    // i, j and k are indices of block output, block operator and
-    // jth operator's output respectively.
+    // ValueType of outputs[i] is Operation[j].outputs[k].type where 
+    // i, j and k are indices of block output, block Operation and
+    // jth operation's output respectively.
     // this is due to
-    // 1. An operator can have more than one output
-    // 2. Any one of operator's output could be potentially block's output
+    // 1. An operation can have more than one output
+    // 2. Any one of operation's output could be potentially block's output
     repeated string outputs = 2;
 
-    repeated Operator operators = 3;
+    repeated Operation operations = 3;
 }
 
 // A single operation/node/layer.
-message Operator {
-    // Examples: "convolution", "cropResize". opType defines the
-    // expected inputs and output.
-    string opType = 1;
+message Operation {
+    string name = 1;
 
-    string name = 2;
+    // Examples: "convolution", "cropResize". Operation type defines the
+    // expected inputs and output.
+    string type = 2;
 
     // Named inputs-
     // Key: parameter name, Value: input name
     // e.g. {'stride' : 'input_01'}
-    // and 'input_01' will be mapped to 'stride' for current operator
+    // and 'input_01' will be mapped to 'stride' for current operation
     map<string, string> inputs = 3;
 
     // Output is positional.
@@ -247,9 +246,8 @@ message Dimension {
 
 // See Variable vs Value primer above.
 message Value {
-    string name = 1;
-    string docString = 2; // optional human-readable texts.
-    ValueType type = 3;
+    string docString = 1; // optional human-readable texts.
+    ValueType type = 2;
 
     // An immediate value stored within the proto
     message ImmediateValue {
@@ -275,8 +273,8 @@ message Value {
     }
 
     oneof value {
-        ImmediateValue immediateValue = 4;
-        FileValue fileValue = 5;
+        ImmediateValue immediateValue = 3;
+        FileValue fileValue = 4;
     }
 }
 

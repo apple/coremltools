@@ -1,10 +1,18 @@
 import numpy as np
-import Program_pb2 as pm
+import coremltools.proto.Program_pb2 as pm
 
 def np_type_to_scalar_type(np_type):
     if np_type == np.int32:
         return pm.ScalarType.INT32
     raise NotImplementedError()
+
+def create_scalartype(scalar_type):
+    """
+    Return pm.ValueType with ScalarType set
+    """
+    v_type = pm.ValueType()
+    v_type.scalarType = scalar_type
+    return v_type
 
 def create_valuetype_tensor(shape, scalar_type):
     """
@@ -48,6 +56,9 @@ def create_scalar_value(py_scalar):
     return val
 
 def create_tuple_value(py_tuple):
+    """
+    Return type of Tuple
+    """
     tp_val = pm.TupleValue()
     for t in py_tuple:
         item_val = tp_val.value.add()
@@ -64,3 +75,10 @@ def create_tuple_value(py_tuple):
             raise NotImplementedError()
     return tp_val
 
+def create_load_from_file_value(file_name, offset, size, dim, scalar_type):
+    """
+    Create a Value Type to store File Value
+    """
+    val = pm.Value(fileValue=pm.Value.FileValue(fileName=file_name, offset=offset, length=size),
+                   type=create_valuetype_tensor(dim, scalar_type))
+    return val

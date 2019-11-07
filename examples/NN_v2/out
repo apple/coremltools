@@ -1,0 +1,183 @@
+version: 1
+functions {
+  key: "main"
+  value {
+    inputs {
+      name: "input0"
+      type {
+        tensorType {
+          scalarType: FLOAT32
+          rank: 1
+          dimension {
+            size: 64
+          }
+        }
+      }
+    }
+    outputs {
+      tensorType {
+        scalarType: FLOAT32
+        rank: 1
+        dimension {
+          size: 10
+        }
+      }
+    }
+    block {
+      inputs {
+        key: "input0"
+        value: "input0"
+      }
+      outputs: "output0"
+      operator {
+        name: "dense1/weight"
+        opType: "loadParam"
+        outputs {
+          name: "dense1/weight"
+          type {
+            tensorType {
+              scalarType: FLOAT32
+              rank: 2
+              dimension {
+                size: 64
+              }
+              dimension {
+                size: 10
+              }
+            }
+          }
+        }
+        attributes {
+          key: "val"
+          value {
+            type {
+              tensorType {
+                scalarType: FLOAT32
+                rank: 2
+                dimension {
+                  size: 64
+                }
+                dimension {
+                  size: 10
+                }
+              }
+            }
+            fileValue {
+              fileName: "./simple_layer.wt"
+              length: 640
+            }
+          }
+        }
+      }
+      operator {
+        name: "dense1/bias"
+        opType: "loadParam"
+        outputs {
+          name: "dense1/bias"
+          type {
+            tensorType {
+              scalarType: FLOAT32
+              rank: 1
+              dimension {
+                size: 10
+              }
+            }
+          }
+        }
+        attributes {
+          key: "val"
+          value {
+            type {
+              tensorType {
+                scalarType: FLOAT32
+                rank: 1
+                dimension {
+                  size: 10
+                }
+              }
+            }
+            fileValue {
+              fileName: "./simple_layer.wt"
+              offset: 640
+              length: 10
+            }
+          }
+        }
+      }
+      operator {
+        name: "softmax_axis"
+        opType: "constant"
+        outputs {
+          name: "softmax_axis"
+          type {
+            scalarType: INT32
+          }
+        }
+        attributes {
+          key: "val"
+          value {
+            type {
+              scalarType: INT32
+            }
+            immediateValue {
+              i: 1
+            }
+          }
+        }
+      }
+      operator {
+        name: "dense1"
+        opType: "dense"
+        inputs {
+          key: "bias"
+          value: "dense1/bias"
+        }
+        inputs {
+          key: "input"
+          value: "input0"
+        }
+        inputs {
+          key: "weight"
+          value: "dense1/weight"
+        }
+        outputs {
+          name: "dense1_out"
+          type {
+            tensorType {
+              scalarType: FLOAT32
+              rank: 1
+              dimension {
+                size: 10
+              }
+            }
+          }
+        }
+      }
+      operator {
+        name: "softmax"
+        opType: "softmax"
+        inputs {
+          key: "axis"
+          value: "softmax_axis"
+        }
+        inputs {
+          key: "input"
+          value: "dense1_out"
+        }
+        outputs {
+          name: "output0"
+          type {
+            tensorType {
+              scalarType: FLOAT32
+              rank: 1
+              dimension {
+                size: 10
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

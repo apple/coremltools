@@ -53,18 +53,21 @@ extern ListTypeDefaultTypeInternal _ListType_default_instance_;
 class NamedValueType;
 class NamedValueTypeDefaultTypeInternal;
 extern NamedValueTypeDefaultTypeInternal _NamedValueType_default_instance_;
-class Operator;
-class OperatorDefaultTypeInternal;
-extern OperatorDefaultTypeInternal _Operator_default_instance_;
-class Operator_AttributesEntry;
-class Operator_AttributesEntryDefaultTypeInternal;
-extern Operator_AttributesEntryDefaultTypeInternal _Operator_AttributesEntry_default_instance_;
-class Operator_InputsEntry;
-class Operator_InputsEntryDefaultTypeInternal;
-extern Operator_InputsEntryDefaultTypeInternal _Operator_InputsEntry_default_instance_;
+class Operation;
+class OperationDefaultTypeInternal;
+extern OperationDefaultTypeInternal _Operation_default_instance_;
+class Operation_AttributesEntry;
+class Operation_AttributesEntryDefaultTypeInternal;
+extern Operation_AttributesEntryDefaultTypeInternal _Operation_AttributesEntry_default_instance_;
+class Operation_InputsEntry;
+class Operation_InputsEntryDefaultTypeInternal;
+extern Operation_InputsEntryDefaultTypeInternal _Operation_InputsEntry_default_instance_;
 class Program;
 class ProgramDefaultTypeInternal;
 extern ProgramDefaultTypeInternal _Program_default_instance_;
+class Program_FunctionsEntry;
+class Program_FunctionsEntryDefaultTypeInternal;
+extern Program_FunctionsEntryDefaultTypeInternal _Program_FunctionsEntry_default_instance_;
 class Program_ParametersEntry;
 class Program_ParametersEntryDefaultTypeInternal;
 extern Program_ParametersEntryDefaultTypeInternal _Program_ParametersEntry_default_instance_;
@@ -145,6 +148,9 @@ const int ScalarType_ARRAYSIZE = ScalarType_MAX + 1;
 
 // -------------------------------------------------------------------
 
+
+// -------------------------------------------------------------------
+
 class Program : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.V5.Program) */ {
  public:
   Program();
@@ -164,7 +170,7 @@ class Program : public ::google::protobuf::MessageLite /* @@protoc_insertion_poi
                &_Program_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    1;
+    2;
 
   void Swap(Program* other);
 
@@ -208,17 +214,14 @@ class Program : public ::google::protobuf::MessageLite /* @@protoc_insertion_poi
 
   // accessors -------------------------------------------------------
 
-  // repeated .CoreML.Specification.V5.Function functions = 2;
+  // map<string, .CoreML.Specification.V5.Function> functions = 2;
   int functions_size() const;
   void clear_functions();
   static const int kFunctionsFieldNumber = 2;
-  const ::CoreML::Specification::V5::Function& functions(int index) const;
-  ::CoreML::Specification::V5::Function* mutable_functions(int index);
-  ::CoreML::Specification::V5::Function* add_functions();
-  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Function >*
-      mutable_functions();
-  const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Function >&
+  const ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >&
       functions() const;
+  ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >*
+      mutable_functions();
 
   // map<string, .CoreML.Specification.V5.Value> parameters = 3;
   int parameters_size() const;
@@ -253,7 +256,20 @@ class Program : public ::google::protobuf::MessageLite /* @@protoc_insertion_poi
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Function > functions_;
+  public:
+  typedef ::google::protobuf::internal::MapEntryLite<
+      ::std::string, ::CoreML::Specification::V5::Function,
+      ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+      ::google::protobuf::internal::WireFormatLite::TYPE_MESSAGE,
+      0 >
+      Program_FunctionsEntry;
+  ::google::protobuf::internal::MapFieldLite<
+      Program_FunctionsEntry,
+      ::std::string, ::CoreML::Specification::V5::Function,
+      ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+      ::google::protobuf::internal::WireFormatLite::TYPE_MESSAGE,
+      0 > functions_;
+  private:
   public:
   typedef ::google::protobuf::internal::MapEntryLite<
       ::std::string, ::CoreML::Specification::V5::Value,
@@ -294,7 +310,7 @@ class Function : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
                &_Function_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    2;
+    3;
 
   void Swap(Function* other);
 
@@ -337,10 +353,10 @@ class Function : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
 
   // accessors -------------------------------------------------------
 
-  // repeated .CoreML.Specification.V5.NamedValueType inputs = 2;
+  // repeated .CoreML.Specification.V5.NamedValueType inputs = 1;
   int inputs_size() const;
   void clear_inputs();
-  static const int kInputsFieldNumber = 2;
+  static const int kInputsFieldNumber = 1;
   const ::CoreML::Specification::V5::NamedValueType& inputs(int index) const;
   ::CoreML::Specification::V5::NamedValueType* mutable_inputs(int index);
   ::CoreML::Specification::V5::NamedValueType* add_inputs();
@@ -349,10 +365,10 @@ class Function : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
   const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::NamedValueType >&
       inputs() const;
 
-  // repeated .CoreML.Specification.V5.ValueType outputs = 3;
+  // repeated .CoreML.Specification.V5.ValueType outputs = 2;
   int outputs_size() const;
   void clear_outputs();
-  static const int kOutputsFieldNumber = 3;
+  static const int kOutputsFieldNumber = 2;
   const ::CoreML::Specification::V5::ValueType& outputs(int index) const;
   ::CoreML::Specification::V5::ValueType* mutable_outputs(int index);
   ::CoreML::Specification::V5::ValueType* add_outputs();
@@ -361,24 +377,10 @@ class Function : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
   const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::ValueType >&
       outputs() const;
 
-  // string name = 1;
-  void clear_name();
-  static const int kNameFieldNumber = 1;
-  const ::std::string& name() const;
-  void set_name(const ::std::string& value);
-  #if LANG_CXX11
-  void set_name(::std::string&& value);
-  #endif
-  void set_name(const char* value);
-  void set_name(const char* value, size_t size);
-  ::std::string* mutable_name();
-  ::std::string* release_name();
-  void set_allocated_name(::std::string* name);
-
-  // .CoreML.Specification.V5.Block block = 4;
+  // .CoreML.Specification.V5.Block block = 3;
   bool has_block() const;
   void clear_block();
-  static const int kBlockFieldNumber = 4;
+  static const int kBlockFieldNumber = 3;
   const ::CoreML::Specification::V5::Block& block() const;
   ::CoreML::Specification::V5::Block* mutable_block();
   ::CoreML::Specification::V5::Block* release_block();
@@ -390,7 +392,6 @@ class Function : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::NamedValueType > inputs_;
   ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::ValueType > outputs_;
-  ::google::protobuf::internal::ArenaStringPtr name_;
   ::CoreML::Specification::V5::Block* block_;
   mutable int _cached_size_;
   friend struct protobuf_Program_2eproto::TableStruct;
@@ -419,7 +420,7 @@ class Block : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
                &_Block_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    4;
+    5;
 
   void Swap(Block* other);
 
@@ -494,17 +495,17 @@ class Block : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   const ::google::protobuf::RepeatedPtrField< ::std::string>& outputs() const;
   ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_outputs();
 
-  // repeated .CoreML.Specification.V5.Operator operators = 3;
-  int operators_size() const;
-  void clear_operators();
-  static const int kOperatorsFieldNumber = 3;
-  const ::CoreML::Specification::V5::Operator& operators(int index) const;
-  ::CoreML::Specification::V5::Operator* mutable_operators(int index);
-  ::CoreML::Specification::V5::Operator* add_operators();
-  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operator >*
-      mutable_operators();
-  const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operator >&
-      operators() const;
+  // repeated .CoreML.Specification.V5.Operation operations = 3;
+  int operations_size() const;
+  void clear_operations();
+  static const int kOperationsFieldNumber = 3;
+  const ::CoreML::Specification::V5::Operation& operations(int index) const;
+  ::CoreML::Specification::V5::Operation* mutable_operations(int index);
+  ::CoreML::Specification::V5::Operation* add_operations();
+  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operation >*
+      mutable_operations();
+  const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operation >&
+      operations() const;
 
   // @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Block)
  private:
@@ -525,7 +526,7 @@ class Block : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
       0 > inputs_;
   private:
   ::google::protobuf::RepeatedPtrField< ::std::string> outputs_;
-  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operator > operators_;
+  ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operation > operations_;
   mutable int _cached_size_;
   friend struct protobuf_Program_2eproto::TableStruct;
 };
@@ -537,38 +538,38 @@ class Block : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
 
 // -------------------------------------------------------------------
 
-class Operator : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.V5.Operator) */ {
+class Operation : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.V5.Operation) */ {
  public:
-  Operator();
-  virtual ~Operator();
+  Operation();
+  virtual ~Operation();
 
-  Operator(const Operator& from);
+  Operation(const Operation& from);
 
-  inline Operator& operator=(const Operator& from) {
+  inline Operation& operator=(const Operation& from) {
     CopyFrom(from);
     return *this;
   }
 
-  static const Operator& default_instance();
+  static const Operation& default_instance();
 
-  static inline const Operator* internal_default_instance() {
-    return reinterpret_cast<const Operator*>(
-               &_Operator_default_instance_);
+  static inline const Operation* internal_default_instance() {
+    return reinterpret_cast<const Operation*>(
+               &_Operation_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    7;
+    8;
 
-  void Swap(Operator* other);
+  void Swap(Operation* other);
 
   // implements Message ----------------------------------------------
 
-  inline Operator* New() const PROTOBUF_FINAL { return New(NULL); }
+  inline Operation* New() const PROTOBUF_FINAL { return New(NULL); }
 
-  Operator* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  Operation* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
   void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
     PROTOBUF_FINAL;
-  void CopyFrom(const Operator& from);
-  void MergeFrom(const Operator& from);
+  void CopyFrom(const Operation& from);
+  void MergeFrom(const Operation& from);
   void Clear() PROTOBUF_FINAL;
   bool IsInitialized() const PROTOBUF_FINAL;
 
@@ -583,7 +584,7 @@ class Operator : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(Operator* other);
+  void InternalSwap(Operation* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -642,23 +643,9 @@ class Operator : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
   ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Value >*
       mutable_attributes();
 
-  // string opType = 1;
-  void clear_optype();
-  static const int kOpTypeFieldNumber = 1;
-  const ::std::string& optype() const;
-  void set_optype(const ::std::string& value);
-  #if LANG_CXX11
-  void set_optype(::std::string&& value);
-  #endif
-  void set_optype(const char* value);
-  void set_optype(const char* value, size_t size);
-  ::std::string* mutable_optype();
-  ::std::string* release_optype();
-  void set_allocated_optype(::std::string* optype);
-
-  // string name = 2;
+  // string name = 1;
   void clear_name();
-  static const int kNameFieldNumber = 2;
+  static const int kNameFieldNumber = 1;
   const ::std::string& name() const;
   void set_name(const ::std::string& value);
   #if LANG_CXX11
@@ -670,7 +657,21 @@ class Operator : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
   ::std::string* release_name();
   void set_allocated_name(::std::string* name);
 
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Operator)
+  // string type = 2;
+  void clear_type();
+  static const int kTypeFieldNumber = 2;
+  const ::std::string& type() const;
+  void set_type(const ::std::string& value);
+  #if LANG_CXX11
+  void set_type(::std::string&& value);
+  #endif
+  void set_type(const char* value);
+  void set_type(const char* value, size_t size);
+  ::std::string* mutable_type();
+  ::std::string* release_type();
+  void set_allocated_type(::std::string* type);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Operation)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
@@ -680,9 +681,9 @@ class Operator : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
       ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
       ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
       0 >
-      Operator_InputsEntry;
+      Operation_InputsEntry;
   ::google::protobuf::internal::MapFieldLite<
-      Operator_InputsEntry,
+      Operation_InputsEntry,
       ::std::string, ::std::string,
       ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
       ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
@@ -696,16 +697,16 @@ class Operator : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
       ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
       ::google::protobuf::internal::WireFormatLite::TYPE_MESSAGE,
       0 >
-      Operator_AttributesEntry;
+      Operation_AttributesEntry;
   ::google::protobuf::internal::MapFieldLite<
-      Operator_AttributesEntry,
+      Operation_AttributesEntry,
       ::std::string, ::CoreML::Specification::V5::Value,
       ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
       ::google::protobuf::internal::WireFormatLite::TYPE_MESSAGE,
       0 > attributes_;
   private:
-  ::google::protobuf::internal::ArenaStringPtr optype_;
   ::google::protobuf::internal::ArenaStringPtr name_;
+  ::google::protobuf::internal::ArenaStringPtr type_;
   mutable int _cached_size_;
   friend struct protobuf_Program_2eproto::TableStruct;
 };
@@ -730,7 +731,7 @@ class NamedValueType : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_NamedValueType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    8;
+    9;
 
   void Swap(NamedValueType* other);
 
@@ -834,7 +835,7 @@ class ValueType : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_ValueType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    9;
+    10;
 
   void Swap(ValueType* other);
 
@@ -959,7 +960,7 @@ class TensorType : public ::google::protobuf::MessageLite /* @@protoc_insertion_
                &_TensorType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    10;
+    11;
 
   void Swap(TensorType* other);
 
@@ -1057,7 +1058,7 @@ class ListType : public ::google::protobuf::MessageLite /* @@protoc_insertion_po
                &_ListType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    11;
+    12;
 
   void Swap(ListType* other);
 
@@ -1148,7 +1149,7 @@ class TupleType : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_TupleType_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    12;
+    13;
 
   void Swap(TupleType* other);
 
@@ -1238,7 +1239,7 @@ class Dimension : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_Dimension_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    13;
+    14;
 
   void Swap(Dimension* other);
 
@@ -1359,7 +1360,7 @@ class Value_ImmediateValue : public ::google::protobuf::MessageLite /* @@protoc_
                &_Value_ImmediateValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    14;
+    15;
 
   void Swap(Value_ImmediateValue* other);
 
@@ -1514,7 +1515,7 @@ class Value_FileValue : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_Value_FileValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    15;
+    16;
 
   void Swap(Value_FileValue* other);
 
@@ -1610,8 +1611,8 @@ class Value : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   static const Value& default_instance();
 
   enum ValueCase {
-    kImmediateValue = 4,
-    kFileValue = 5,
+    kImmediateValue = 3,
+    kFileValue = 4,
     VALUE_NOT_SET = 0,
   };
 
@@ -1620,7 +1621,7 @@ class Value : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
                &_Value_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    16;
+    17;
 
   void Swap(Value* other);
 
@@ -1666,23 +1667,9 @@ class Value : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
 
   // accessors -------------------------------------------------------
 
-  // string name = 1;
-  void clear_name();
-  static const int kNameFieldNumber = 1;
-  const ::std::string& name() const;
-  void set_name(const ::std::string& value);
-  #if LANG_CXX11
-  void set_name(::std::string&& value);
-  #endif
-  void set_name(const char* value);
-  void set_name(const char* value, size_t size);
-  ::std::string* mutable_name();
-  ::std::string* release_name();
-  void set_allocated_name(::std::string* name);
-
-  // string docString = 2;
+  // string docString = 1;
   void clear_docstring();
-  static const int kDocStringFieldNumber = 2;
+  static const int kDocStringFieldNumber = 1;
   const ::std::string& docstring() const;
   void set_docstring(const ::std::string& value);
   #if LANG_CXX11
@@ -1694,28 +1681,28 @@ class Value : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::std::string* release_docstring();
   void set_allocated_docstring(::std::string* docstring);
 
-  // .CoreML.Specification.V5.ValueType type = 3;
+  // .CoreML.Specification.V5.ValueType type = 2;
   bool has_type() const;
   void clear_type();
-  static const int kTypeFieldNumber = 3;
+  static const int kTypeFieldNumber = 2;
   const ::CoreML::Specification::V5::ValueType& type() const;
   ::CoreML::Specification::V5::ValueType* mutable_type();
   ::CoreML::Specification::V5::ValueType* release_type();
   void set_allocated_type(::CoreML::Specification::V5::ValueType* type);
 
-  // .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 4;
+  // .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 3;
   bool has_immediatevalue() const;
   void clear_immediatevalue();
-  static const int kImmediateValueFieldNumber = 4;
+  static const int kImmediateValueFieldNumber = 3;
   const ::CoreML::Specification::V5::Value_ImmediateValue& immediatevalue() const;
   ::CoreML::Specification::V5::Value_ImmediateValue* mutable_immediatevalue();
   ::CoreML::Specification::V5::Value_ImmediateValue* release_immediatevalue();
   void set_allocated_immediatevalue(::CoreML::Specification::V5::Value_ImmediateValue* immediatevalue);
 
-  // .CoreML.Specification.V5.Value.FileValue fileValue = 5;
+  // .CoreML.Specification.V5.Value.FileValue fileValue = 4;
   bool has_filevalue() const;
   void clear_filevalue();
-  static const int kFileValueFieldNumber = 5;
+  static const int kFileValueFieldNumber = 4;
   const ::CoreML::Specification::V5::Value_FileValue& filevalue() const;
   ::CoreML::Specification::V5::Value_FileValue* mutable_filevalue();
   ::CoreML::Specification::V5::Value_FileValue* release_filevalue();
@@ -1732,7 +1719,6 @@ class Value : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   inline void clear_has_value();
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::ArenaStringPtr name_;
   ::google::protobuf::internal::ArenaStringPtr docstring_;
   ::CoreML::Specification::V5::ValueType* type_;
   union ValueUnion {
@@ -1766,7 +1752,7 @@ class TensorValue : public ::google::protobuf::MessageLite /* @@protoc_insertion
                &_TensorValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    17;
+    18;
 
   void Swap(TensorValue* other);
 
@@ -1912,7 +1898,7 @@ class TupleValue : public ::google::protobuf::MessageLite /* @@protoc_insertion_
                &_TupleValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    18;
+    19;
 
   void Swap(TupleValue* other);
 
@@ -1983,6 +1969,8 @@ class TupleValue : public ::google::protobuf::MessageLite /* @@protoc_insertion_
 #if !PROTOBUF_INLINE_NOT_IN_HEADERS
 // -------------------------------------------------------------------
 
+// -------------------------------------------------------------------
+
 // Program
 
 // int64 version = 1;
@@ -1999,34 +1987,22 @@ inline void Program::set_version(::google::protobuf::int64 value) {
   // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Program.version)
 }
 
-// repeated .CoreML.Specification.V5.Function functions = 2;
+// map<string, .CoreML.Specification.V5.Function> functions = 2;
 inline int Program::functions_size() const {
   return functions_.size();
 }
 inline void Program::clear_functions() {
   functions_.Clear();
 }
-inline const ::CoreML::Specification::V5::Function& Program::functions(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Program.functions)
-  return functions_.Get(index);
-}
-inline ::CoreML::Specification::V5::Function* Program::mutable_functions(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Program.functions)
-  return functions_.Mutable(index);
-}
-inline ::CoreML::Specification::V5::Function* Program::add_functions() {
-  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Program.functions)
-  return functions_.Add();
-}
-inline ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Function >*
-Program::mutable_functions() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Program.functions)
-  return &functions_;
-}
-inline const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Function >&
+inline const ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >&
 Program::functions() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Program.functions)
-  return functions_;
+  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Program.functions)
+  return functions_.GetMap();
+}
+inline ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Function >*
+Program::mutable_functions() {
+  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Program.functions)
+  return functions_.MutableMap();
 }
 
 // map<string, .CoreML.Specification.V5.Value> parameters = 3;
@@ -2104,60 +2080,7 @@ inline void Program::set_allocated_docstring(::std::string* docstring) {
 
 // Function
 
-// string name = 1;
-inline void Function::clear_name() {
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& Function::name() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Function.name)
-  return name_.GetNoArena();
-}
-inline void Function::set_name(const ::std::string& value) {
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Function.name)
-}
-#if LANG_CXX11
-inline void Function::set_name(::std::string&& value) {
-  
-  name_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Function.name)
-}
-#endif
-inline void Function::set_name(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Function.name)
-}
-inline void Function::set_name(const char* value, size_t size) {
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Function.name)
-}
-inline ::std::string* Function::mutable_name() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Function.name)
-  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* Function::release_name() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Function.name)
-  
-  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void Function::set_allocated_name(::std::string* name) {
-  if (name != NULL) {
-    
-  } else {
-    
-  }
-  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Function.name)
-}
-
-// repeated .CoreML.Specification.V5.NamedValueType inputs = 2;
+// repeated .CoreML.Specification.V5.NamedValueType inputs = 1;
 inline int Function::inputs_size() const {
   return inputs_.size();
 }
@@ -2187,7 +2110,7 @@ Function::inputs() const {
   return inputs_;
 }
 
-// repeated .CoreML.Specification.V5.ValueType outputs = 3;
+// repeated .CoreML.Specification.V5.ValueType outputs = 2;
 inline int Function::outputs_size() const {
   return outputs_.size();
 }
@@ -2217,7 +2140,7 @@ Function::outputs() const {
   return outputs_;
 }
 
-// .CoreML.Specification.V5.Block block = 4;
+// .CoreML.Specification.V5.Block block = 3;
 inline bool Function::has_block() const {
   return this != internal_default_instance() && block_ != NULL;
 }
@@ -2349,34 +2272,34 @@ Block::mutable_outputs() {
   return &outputs_;
 }
 
-// repeated .CoreML.Specification.V5.Operator operators = 3;
-inline int Block::operators_size() const {
-  return operators_.size();
+// repeated .CoreML.Specification.V5.Operation operations = 3;
+inline int Block::operations_size() const {
+  return operations_.size();
 }
-inline void Block::clear_operators() {
-  operators_.Clear();
+inline void Block::clear_operations() {
+  operations_.Clear();
 }
-inline const ::CoreML::Specification::V5::Operator& Block::operators(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Block.operators)
-  return operators_.Get(index);
+inline const ::CoreML::Specification::V5::Operation& Block::operations(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Block.operations)
+  return operations_.Get(index);
 }
-inline ::CoreML::Specification::V5::Operator* Block::mutable_operators(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Block.operators)
-  return operators_.Mutable(index);
+inline ::CoreML::Specification::V5::Operation* Block::mutable_operations(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Block.operations)
+  return operations_.Mutable(index);
 }
-inline ::CoreML::Specification::V5::Operator* Block::add_operators() {
-  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Block.operators)
-  return operators_.Add();
+inline ::CoreML::Specification::V5::Operation* Block::add_operations() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Block.operations)
+  return operations_.Add();
 }
-inline ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operator >*
-Block::mutable_operators() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Block.operators)
-  return &operators_;
+inline ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operation >*
+Block::mutable_operations() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Block.operations)
+  return &operations_;
 }
-inline const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operator >&
-Block::operators() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Block.operators)
-  return operators_;
+inline const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Operation >&
+Block::operations() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Block.operations)
+  return operations_;
 }
 
 // -------------------------------------------------------------------
@@ -2385,207 +2308,207 @@ Block::operators() const {
 
 // -------------------------------------------------------------------
 
-// Operator
+// Operation
 
-// string opType = 1;
-inline void Operator::clear_optype() {
-  optype_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& Operator::optype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operator.opType)
-  return optype_.GetNoArena();
-}
-inline void Operator::set_optype(const ::std::string& value) {
-  
-  optype_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Operator.opType)
-}
-#if LANG_CXX11
-inline void Operator::set_optype(::std::string&& value) {
-  
-  optype_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Operator.opType)
-}
-#endif
-inline void Operator::set_optype(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  optype_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Operator.opType)
-}
-inline void Operator::set_optype(const char* value, size_t size) {
-  
-  optype_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Operator.opType)
-}
-inline ::std::string* Operator::mutable_optype() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operator.opType)
-  return optype_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* Operator::release_optype() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Operator.opType)
-  
-  return optype_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void Operator::set_allocated_optype(::std::string* optype) {
-  if (optype != NULL) {
-    
-  } else {
-    
-  }
-  optype_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), optype);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Operator.opType)
-}
-
-// string name = 2;
-inline void Operator::clear_name() {
+// string name = 1;
+inline void Operation::clear_name() {
   name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& Operator::name() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operator.name)
+inline const ::std::string& Operation::name() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operation.name)
   return name_.GetNoArena();
 }
-inline void Operator::set_name(const ::std::string& value) {
+inline void Operation::set_name(const ::std::string& value) {
   
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Operation.name)
 }
 #if LANG_CXX11
-inline void Operator::set_name(::std::string&& value) {
+inline void Operation::set_name(::std::string&& value) {
   
   name_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Operation.name)
 }
 #endif
-inline void Operator::set_name(const char* value) {
+inline void Operation::set_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Operation.name)
 }
-inline void Operator::set_name(const char* value, size_t size) {
+inline void Operation::set_name(const char* value, size_t size) {
   
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Operation.name)
 }
-inline ::std::string* Operator::mutable_name() {
+inline ::std::string* Operation::mutable_name() {
   
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operation.name)
   return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* Operator::release_name() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Operator.name)
+inline ::std::string* Operation::release_name() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Operation.name)
   
   return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void Operator::set_allocated_name(::std::string* name) {
+inline void Operation::set_allocated_name(::std::string* name) {
   if (name != NULL) {
     
   } else {
     
   }
   name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Operator.name)
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Operation.name)
+}
+
+// string type = 2;
+inline void Operation::clear_type() {
+  type_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& Operation::type() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operation.type)
+  return type_.GetNoArena();
+}
+inline void Operation::set_type(const ::std::string& value) {
+  
+  type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Operation.type)
+}
+#if LANG_CXX11
+inline void Operation::set_type(::std::string&& value) {
+  
+  type_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Operation.type)
+}
+#endif
+inline void Operation::set_type(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Operation.type)
+}
+inline void Operation::set_type(const char* value, size_t size) {
+  
+  type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Operation.type)
+}
+inline ::std::string* Operation::mutable_type() {
+  
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operation.type)
+  return type_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* Operation::release_type() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Operation.type)
+  
+  return type_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void Operation::set_allocated_type(::std::string* type) {
+  if (type != NULL) {
+    
+  } else {
+    
+  }
+  type_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), type);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Operation.type)
 }
 
 // map<string, string> inputs = 3;
-inline int Operator::inputs_size() const {
+inline int Operation::inputs_size() const {
   return inputs_.size();
 }
-inline void Operator::clear_inputs() {
+inline void Operation::clear_inputs() {
   inputs_.Clear();
 }
 inline const ::google::protobuf::Map< ::std::string, ::std::string >&
-Operator::inputs() const {
-  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Operator.inputs)
+Operation::inputs() const {
+  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Operation.inputs)
   return inputs_.GetMap();
 }
 inline ::google::protobuf::Map< ::std::string, ::std::string >*
-Operator::mutable_inputs() {
-  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Operator.inputs)
+Operation::mutable_inputs() {
+  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Operation.inputs)
   return inputs_.MutableMap();
 }
 
 // repeated .CoreML.Specification.V5.NamedValueType outputs = 4;
-inline int Operator::outputs_size() const {
+inline int Operation::outputs_size() const {
   return outputs_.size();
 }
-inline void Operator::clear_outputs() {
+inline void Operation::clear_outputs() {
   outputs_.Clear();
 }
-inline const ::CoreML::Specification::V5::NamedValueType& Operator::outputs(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operator.outputs)
+inline const ::CoreML::Specification::V5::NamedValueType& Operation::outputs(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operation.outputs)
   return outputs_.Get(index);
 }
-inline ::CoreML::Specification::V5::NamedValueType* Operator::mutable_outputs(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operator.outputs)
+inline ::CoreML::Specification::V5::NamedValueType* Operation::mutable_outputs(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operation.outputs)
   return outputs_.Mutable(index);
 }
-inline ::CoreML::Specification::V5::NamedValueType* Operator::add_outputs() {
-  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Operator.outputs)
+inline ::CoreML::Specification::V5::NamedValueType* Operation::add_outputs() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Operation.outputs)
   return outputs_.Add();
 }
 inline ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::NamedValueType >*
-Operator::mutable_outputs() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Operator.outputs)
+Operation::mutable_outputs() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Operation.outputs)
   return &outputs_;
 }
 inline const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::NamedValueType >&
-Operator::outputs() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Operator.outputs)
+Operation::outputs() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Operation.outputs)
   return outputs_;
 }
 
 // repeated .CoreML.Specification.V5.Block blocks = 5;
-inline int Operator::blocks_size() const {
+inline int Operation::blocks_size() const {
   return blocks_.size();
 }
-inline void Operator::clear_blocks() {
+inline void Operation::clear_blocks() {
   blocks_.Clear();
 }
-inline const ::CoreML::Specification::V5::Block& Operator::blocks(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operator.blocks)
+inline const ::CoreML::Specification::V5::Block& Operation::blocks(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Operation.blocks)
   return blocks_.Get(index);
 }
-inline ::CoreML::Specification::V5::Block* Operator::mutable_blocks(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operator.blocks)
+inline ::CoreML::Specification::V5::Block* Operation::mutable_blocks(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Operation.blocks)
   return blocks_.Mutable(index);
 }
-inline ::CoreML::Specification::V5::Block* Operator::add_blocks() {
-  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Operator.blocks)
+inline ::CoreML::Specification::V5::Block* Operation::add_blocks() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.V5.Operation.blocks)
   return blocks_.Add();
 }
 inline ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Block >*
-Operator::mutable_blocks() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Operator.blocks)
+Operation::mutable_blocks() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.V5.Operation.blocks)
   return &blocks_;
 }
 inline const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::V5::Block >&
-Operator::blocks() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Operator.blocks)
+Operation::blocks() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.V5.Operation.blocks)
   return blocks_;
 }
 
 // map<string, .CoreML.Specification.V5.Value> attributes = 6;
-inline int Operator::attributes_size() const {
+inline int Operation::attributes_size() const {
   return attributes_.size();
 }
-inline void Operator::clear_attributes() {
+inline void Operation::clear_attributes() {
   attributes_.Clear();
 }
 inline const ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Value >&
-Operator::attributes() const {
-  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Operator.attributes)
+Operation::attributes() const {
+  // @@protoc_insertion_point(field_map:CoreML.Specification.V5.Operation.attributes)
   return attributes_.GetMap();
 }
 inline ::google::protobuf::Map< ::std::string, ::CoreML::Specification::V5::Value >*
-Operator::mutable_attributes() {
-  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Operator.attributes)
+Operation::mutable_attributes() {
+  // @@protoc_insertion_point(field_mutable_map:CoreML.Specification.V5.Operation.attributes)
   return attributes_.MutableMap();
 }
 
@@ -3566,60 +3489,7 @@ inline void Value_FileValue::set_length(::google::protobuf::uint64 value) {
 
 // Value
 
-// string name = 1;
-inline void Value::clear_name() {
-  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& Value::name() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Value.name)
-  return name_.GetNoArena();
-}
-inline void Value::set_name(const ::std::string& value) {
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Value.name)
-}
-#if LANG_CXX11
-inline void Value::set_name(::std::string&& value) {
-  
-  name_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.V5.Value.name)
-}
-#endif
-inline void Value::set_name(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.V5.Value.name)
-}
-inline void Value::set_name(const char* value, size_t size) {
-  
-  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.V5.Value.name)
-}
-inline ::std::string* Value::mutable_name() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.Value.name)
-  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* Value::release_name() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.Value.name)
-  
-  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void Value::set_allocated_name(::std::string* name) {
-  if (name != NULL) {
-    
-  } else {
-    
-  }
-  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Value.name)
-}
-
-// string docString = 2;
+// string docString = 1;
 inline void Value::clear_docstring() {
   docstring_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
@@ -3672,7 +3542,7 @@ inline void Value::set_allocated_docstring(::std::string* docstring) {
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Value.docString)
 }
 
-// .CoreML.Specification.V5.ValueType type = 3;
+// .CoreML.Specification.V5.ValueType type = 2;
 inline bool Value::has_type() const {
   return this != internal_default_instance() && type_ != NULL;
 }
@@ -3711,7 +3581,7 @@ inline void Value::set_allocated_type(::CoreML::Specification::V5::ValueType* ty
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Value.type)
 }
 
-// .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 4;
+// .CoreML.Specification.V5.Value.ImmediateValue immediateValue = 3;
 inline bool Value::has_immediatevalue() const {
   return value_case() == kImmediateValue;
 }
@@ -3759,7 +3629,7 @@ inline void Value::set_allocated_immediatevalue(::CoreML::Specification::V5::Val
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.Value.immediateValue)
 }
 
-// .CoreML.Specification.V5.Value.FileValue fileValue = 5;
+// .CoreML.Specification.V5.Value.FileValue fileValue = 4;
 inline bool Value::has_filevalue() const {
   return value_case() == kFileValue;
 }
@@ -4053,6 +3923,8 @@ TupleValue::value() const {
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
