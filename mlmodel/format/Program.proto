@@ -269,7 +269,6 @@ message Value {
 
         // byte offset in a binary file.
         uint64 offset = 2;
-        uint64 length = 3;
     }
 
     oneof value {
@@ -279,12 +278,6 @@ message Value {
 }
 
 message TensorValue {
-    // tensorType MUST NOT contain any symbolic shape.
-    TensorType tensorType = 1;
-
-    // Depending on tensorType.scalarType, exactly ONE of the followings is
-    // used.
-    //
     // Comment: This is basically manual oneof since oneof in
     // Protobuf doesn't allow repeated field.
     repeated float floats = 2 [packed = true];

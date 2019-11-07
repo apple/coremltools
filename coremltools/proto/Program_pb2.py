@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='Program.proto',
   package='CoreML.Specification.V5',
   syntax='proto3',
-  serialized_pb=_b('\n\rProgram.proto\x12\x17\x43oreML.Specification.V5\"\xdf\x02\n\x07Program\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12\x42\n\tfunctions\x18\x02 \x03(\x0b\x32/.CoreML.Specification.V5.Program.FunctionsEntry\x12\x44\n\nparameters\x18\x03 \x03(\x0b\x32\x30.CoreML.Specification.V5.Program.ParametersEntry\x12\x11\n\tdocString\x18\x04 \x01(\t\x1aS\n\x0e\x46unctionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32!.CoreML.Specification.V5.Function:\x02\x38\x01\x1aQ\n\x0fParametersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x05value\x18\x02 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Value:\x02\x38\x01\"\xa7\x01\n\x08\x46unction\x12\x37\n\x06inputs\x18\x01 \x03(\x0b\x32\'.CoreML.Specification.V5.NamedValueType\x12\x33\n\x07outputs\x18\x02 \x03(\x0b\x32\".CoreML.Specification.V5.ValueType\x12-\n\x05\x62lock\x18\x03 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Block\"\xbb\x01\n\x05\x42lock\x12:\n\x06inputs\x18\x01 \x03(\x0b\x32*.CoreML.Specification.V5.Block.InputsEntry\x12\x0f\n\x07outputs\x18\x02 \x03(\t\x12\x36\n\noperations\x18\x03 \x03(\x0b\x32\".CoreML.Specification.V5.Operation\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x9b\x03\n\tOperation\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12>\n\x06inputs\x18\x03 \x03(\x0b\x32..CoreML.Specification.V5.Operation.InputsEntry\x12\x38\n\x07outputs\x18\x04 \x03(\x0b\x32\'.CoreML.Specification.V5.NamedValueType\x12.\n\x06\x62locks\x18\x05 \x03(\x0b\x32\x1e.CoreML.Specification.V5.Block\x12\x46\n\nattributes\x18\x06 \x03(\x0b\x32\x32.CoreML.Specification.V5.Operation.AttributesEntry\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1aQ\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x05value\x18\x02 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Value:\x02\x38\x01\"P\n\x0eNamedValueType\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x30\n\x04type\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\"\xf9\x01\n\tValueType\x12\x39\n\nscalarType\x18\x01 \x01(\x0e\x32#.CoreML.Specification.V5.ScalarTypeH\x00\x12\x39\n\ntensorType\x18\x02 \x01(\x0b\x32#.CoreML.Specification.V5.TensorTypeH\x00\x12\x35\n\x08listType\x18\x03 \x01(\x0b\x32!.CoreML.Specification.V5.ListTypeH\x00\x12\x37\n\ttupleType\x18\x04 \x01(\x0b\x32\".CoreML.Specification.V5.TupleTypeH\x00\x42\x06\n\x04type\"\x8a\x01\n\nTensorType\x12\x37\n\nscalarType\x18\x01 \x01(\x0e\x32#.CoreML.Specification.V5.ScalarType\x12\x0c\n\x04rank\x18\x02 \x01(\x03\x12\x35\n\tdimension\x18\x03 \x03(\x0b\x32\".CoreML.Specification.V5.Dimension\"p\n\x08ListType\x12\x30\n\x04type\x18\x01 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\x12\x32\n\x06length\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.Dimension\"?\n\tTupleType\x12\x32\n\x06values\x18\x01 \x03(\x0b\x32\".CoreML.Specification.V5.ValueType\":\n\tDimension\x12\x10\n\x06symbol\x18\x01 \x01(\tH\x00\x12\x0e\n\x04size\x18\x02 \x01(\x03H\x00\x42\x0b\n\tdimension\"\xda\x03\n\x05Value\x12\x11\n\tdocString\x18\x01 \x01(\t\x12\x30\n\x04type\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\x12G\n\x0eimmediateValue\x18\x03 \x01(\x0b\x32-.CoreML.Specification.V5.Value.ImmediateValueH\x00\x12=\n\tfileValue\x18\x04 \x01(\x0b\x32(.CoreML.Specification.V5.Value.FileValueH\x00\x1a\xbb\x01\n\x0eImmediateValue\x12\x0b\n\x01\x66\x18\x01 \x01(\x02H\x00\x12\x0b\n\x01i\x18\x02 \x01(\x03H\x00\x12\x0b\n\x01\x62\x18\x03 \x01(\x08H\x00\x12\x0b\n\x01s\x18\x04 \x01(\x0cH\x00\x12\x36\n\x06tensor\x18\x05 \x01(\x0b\x32$.CoreML.Specification.V5.TensorValueH\x00\x12\x34\n\x05tuple\x18\x06 \x01(\x0b\x32#.CoreML.Specification.V5.TupleValueH\x00\x42\x07\n\x05value\x1a=\n\tFileValue\x12\x10\n\x08\x66ileName\x18\x01 \x01(\t\x12\x0e\n\x06offset\x18\x02 \x01(\x04\x12\x0e\n\x06length\x18\x03 \x01(\x04\x42\x07\n\x05value\"\x90\x01\n\x0bTensorValue\x12\x37\n\ntensorType\x18\x01 \x01(\x0b\x32#.CoreML.Specification.V5.TensorType\x12\x12\n\x06\x66loats\x18\x02 \x03(\x02\x42\x02\x10\x01\x12\x10\n\x04ints\x18\x03 \x03(\x03\x42\x02\x10\x01\x12\x11\n\x05\x62ools\x18\x04 \x03(\x08\x42\x02\x10\x01\x12\x0f\n\x07strings\x18\x05 \x03(\x0c\";\n\nTupleValue\x12-\n\x05value\x18\x01 \x03(\x0b\x32\x1e.CoreML.Specification.V5.Value*\xd3\x01\n\nScalarType\x12\x0b\n\x07\x44YNAMIC\x10\x00\x12\x08\n\x04\x42OOL\x10\x01\x12\n\n\x06STRING\x10\x02\x12\x0b\n\x07\x46LOAT16\x10\n\x12\x0b\n\x07\x46LOAT32\x10\x0b\x12\x0b\n\x07\x46LOAT64\x10\x0c\x12\x0c\n\x08\x42\x46LOAT16\x10\r\x12\x08\n\x04INT4\x10\x14\x12\x08\n\x04INT8\x10\x15\x12\t\n\x05INT16\x10\x16\x12\t\n\x05INT32\x10\x17\x12\t\n\x05INT64\x10\x18\x12\t\n\x05UINT4\x10\x1e\x12\t\n\x05UINT8\x10\x1f\x12\n\n\x06UINT16\x10 \x12\n\n\x06UINT32\x10!\x12\n\n\x06UINT64\x10\"B\x02H\x03\x62\x06proto3')
+  serialized_pb=_b('\n\rProgram.proto\x12\x17\x43oreML.Specification.V5\"\xdf\x02\n\x07Program\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12\x42\n\tfunctions\x18\x02 \x03(\x0b\x32/.CoreML.Specification.V5.Program.FunctionsEntry\x12\x44\n\nparameters\x18\x03 \x03(\x0b\x32\x30.CoreML.Specification.V5.Program.ParametersEntry\x12\x11\n\tdocString\x18\x04 \x01(\t\x1aS\n\x0e\x46unctionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32!.CoreML.Specification.V5.Function:\x02\x38\x01\x1aQ\n\x0fParametersEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x05value\x18\x02 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Value:\x02\x38\x01\"\xa7\x01\n\x08\x46unction\x12\x37\n\x06inputs\x18\x01 \x03(\x0b\x32\'.CoreML.Specification.V5.NamedValueType\x12\x33\n\x07outputs\x18\x02 \x03(\x0b\x32\".CoreML.Specification.V5.ValueType\x12-\n\x05\x62lock\x18\x03 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Block\"\xbb\x01\n\x05\x42lock\x12:\n\x06inputs\x18\x01 \x03(\x0b\x32*.CoreML.Specification.V5.Block.InputsEntry\x12\x0f\n\x07outputs\x18\x02 \x03(\t\x12\x36\n\noperations\x18\x03 \x03(\x0b\x32\".CoreML.Specification.V5.Operation\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x9b\x03\n\tOperation\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12>\n\x06inputs\x18\x03 \x03(\x0b\x32..CoreML.Specification.V5.Operation.InputsEntry\x12\x38\n\x07outputs\x18\x04 \x03(\x0b\x32\'.CoreML.Specification.V5.NamedValueType\x12.\n\x06\x62locks\x18\x05 \x03(\x0b\x32\x1e.CoreML.Specification.V5.Block\x12\x46\n\nattributes\x18\x06 \x03(\x0b\x32\x32.CoreML.Specification.V5.Operation.AttributesEntry\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1aQ\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x05value\x18\x02 \x01(\x0b\x32\x1e.CoreML.Specification.V5.Value:\x02\x38\x01\"P\n\x0eNamedValueType\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x30\n\x04type\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\"\xf9\x01\n\tValueType\x12\x39\n\nscalarType\x18\x01 \x01(\x0e\x32#.CoreML.Specification.V5.ScalarTypeH\x00\x12\x39\n\ntensorType\x18\x02 \x01(\x0b\x32#.CoreML.Specification.V5.TensorTypeH\x00\x12\x35\n\x08listType\x18\x03 \x01(\x0b\x32!.CoreML.Specification.V5.ListTypeH\x00\x12\x37\n\ttupleType\x18\x04 \x01(\x0b\x32\".CoreML.Specification.V5.TupleTypeH\x00\x42\x06\n\x04type\"\x8a\x01\n\nTensorType\x12\x37\n\nscalarType\x18\x01 \x01(\x0e\x32#.CoreML.Specification.V5.ScalarType\x12\x0c\n\x04rank\x18\x02 \x01(\x03\x12\x35\n\tdimension\x18\x03 \x03(\x0b\x32\".CoreML.Specification.V5.Dimension\"p\n\x08ListType\x12\x30\n\x04type\x18\x01 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\x12\x32\n\x06length\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.Dimension\"?\n\tTupleType\x12\x32\n\x06values\x18\x01 \x03(\x0b\x32\".CoreML.Specification.V5.ValueType\":\n\tDimension\x12\x10\n\x06symbol\x18\x01 \x01(\tH\x00\x12\x0e\n\x04size\x18\x02 \x01(\x03H\x00\x42\x0b\n\tdimension\"\xca\x03\n\x05Value\x12\x11\n\tdocString\x18\x01 \x01(\t\x12\x30\n\x04type\x18\x02 \x01(\x0b\x32\".CoreML.Specification.V5.ValueType\x12G\n\x0eimmediateValue\x18\x03 \x01(\x0b\x32-.CoreML.Specification.V5.Value.ImmediateValueH\x00\x12=\n\tfileValue\x18\x04 \x01(\x0b\x32(.CoreML.Specification.V5.Value.FileValueH\x00\x1a\xbb\x01\n\x0eImmediateValue\x12\x0b\n\x01\x66\x18\x01 \x01(\x02H\x00\x12\x0b\n\x01i\x18\x02 \x01(\x03H\x00\x12\x0b\n\x01\x62\x18\x03 \x01(\x08H\x00\x12\x0b\n\x01s\x18\x04 \x01(\x0cH\x00\x12\x36\n\x06tensor\x18\x05 \x01(\x0b\x32$.CoreML.Specification.V5.TensorValueH\x00\x12\x34\n\x05tuple\x18\x06 \x01(\x0b\x32#.CoreML.Specification.V5.TupleValueH\x00\x42\x07\n\x05value\x1a-\n\tFileValue\x12\x10\n\x08\x66ileName\x18\x01 \x01(\t\x12\x0e\n\x06offset\x18\x02 \x01(\x04\x42\x07\n\x05value\"W\n\x0bTensorValue\x12\x12\n\x06\x66loats\x18\x02 \x03(\x02\x42\x02\x10\x01\x12\x10\n\x04ints\x18\x03 \x03(\x03\x42\x02\x10\x01\x12\x11\n\x05\x62ools\x18\x04 \x03(\x08\x42\x02\x10\x01\x12\x0f\n\x07strings\x18\x05 \x03(\x0c\";\n\nTupleValue\x12-\n\x05value\x18\x01 \x03(\x0b\x32\x1e.CoreML.Specification.V5.Value*\xd3\x01\n\nScalarType\x12\x0b\n\x07\x44YNAMIC\x10\x00\x12\x08\n\x04\x42OOL\x10\x01\x12\n\n\x06STRING\x10\x02\x12\x0b\n\x07\x46LOAT16\x10\n\x12\x0b\n\x07\x46LOAT32\x10\x0b\x12\x0b\n\x07\x46LOAT64\x10\x0c\x12\x0c\n\x08\x42\x46LOAT16\x10\r\x12\x08\n\x04INT4\x10\x14\x12\x08\n\x04INT8\x10\x15\x12\t\n\x05INT16\x10\x16\x12\t\n\x05INT32\x10\x17\x12\t\n\x05INT64\x10\x18\x12\t\n\x05UINT4\x10\x1e\x12\t\n\x05UINT8\x10\x1f\x12\n\n\x06UINT16\x10 \x12\n\n\x06UINT32\x10!\x12\n\n\x06UINT64\x10\"B\x02H\x03\x62\x06proto3')
 )
 
 _SCALARTYPE = _descriptor.EnumDescriptor(
@@ -100,8 +100,8 @@ _SCALARTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=2570,
-  serialized_end=2781,
+  serialized_start=2496,
+  serialized_end=2707,
 )
 _sym_db.RegisterEnumDescriptor(_SCALARTYPE)
 
@@ -856,13 +856,6 @@ _VALUE_FILEVALUE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
-    _descriptor.FieldDescriptor(
-      name='length', full_name='CoreML.Specification.V5.Value.FileValue.length', index=2,
-      number=3, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
   ],
   extensions=[
   ],
@@ -876,7 +869,7 @@ _VALUE_FILEVALUE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=2289,
-  serialized_end=2350,
+  serialized_end=2334,
 )
 
 _VALUE = _descriptor.Descriptor(
@@ -930,7 +923,7 @@ _VALUE = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=1885,
-  serialized_end=2359,
+  serialized_end=2343,
 )
 
 
@@ -942,35 +935,28 @@ _TENSORVALUE = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='tensorType', full_name='CoreML.Specification.V5.TensorValue.tensorType', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='floats', full_name='CoreML.Specification.V5.TensorValue.floats', index=1,
+      name='floats', full_name='CoreML.Specification.V5.TensorValue.floats', index=0,
       number=2, type=2, cpp_type=6, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))),
     _descriptor.FieldDescriptor(
-      name='ints', full_name='CoreML.Specification.V5.TensorValue.ints', index=2,
+      name='ints', full_name='CoreML.Specification.V5.TensorValue.ints', index=1,
       number=3, type=3, cpp_type=2, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))),
     _descriptor.FieldDescriptor(
-      name='bools', full_name='CoreML.Specification.V5.TensorValue.bools', index=3,
+      name='bools', full_name='CoreML.Specification.V5.TensorValue.bools', index=2,
       number=4, type=8, cpp_type=7, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))),
     _descriptor.FieldDescriptor(
-      name='strings', full_name='CoreML.Specification.V5.TensorValue.strings', index=4,
+      name='strings', full_name='CoreML.Specification.V5.TensorValue.strings', index=3,
       number=5, type=12, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -988,8 +974,8 @@ _TENSORVALUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2362,
-  serialized_end=2506,
+  serialized_start=2345,
+  serialized_end=2432,
 )
 
 
@@ -1019,8 +1005,8 @@ _TUPLEVALUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2508,
-  serialized_end=2567,
+  serialized_start=2434,
+  serialized_end=2493,
 )
 
 _PROGRAM_FUNCTIONSENTRY.fields_by_name['value'].message_type = _FUNCTION
@@ -1101,7 +1087,6 @@ _VALUE.fields_by_name['immediateValue'].containing_oneof = _VALUE.oneofs_by_name
 _VALUE.oneofs_by_name['value'].fields.append(
   _VALUE.fields_by_name['fileValue'])
 _VALUE.fields_by_name['fileValue'].containing_oneof = _VALUE.oneofs_by_name['value']
-_TENSORVALUE.fields_by_name['tensorType'].message_type = _TENSORTYPE
 _TUPLEVALUE.fields_by_name['value'].message_type = _VALUE
 DESCRIPTOR.message_types_by_name['Program'] = _PROGRAM
 DESCRIPTOR.message_types_by_name['Function'] = _FUNCTION

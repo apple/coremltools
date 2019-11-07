@@ -4,6 +4,8 @@ import coremltools.proto.Program_pb2 as pm
 def np_type_to_scalar_type(np_type):
     if np_type == np.int32:
         return pm.ScalarType.INT32
+    elif np_type == np.float32:
+        return pm.ScalarType.FLOAT32
     raise NotImplementedError()
 
 def create_scalartype(scalar_type):
@@ -39,11 +41,13 @@ def create_tensor_value(np_tensor):
     Return TensorValue.
     """
     scalar_t = np_type_to_scalar_type(np_tensor.dtype)
-    t_val = pm.TensorValue()
-    t_type = update_tensortype(t_val.tensorType, np_tensor.shape, scalar_t)
+    t_type = create_valuetype_tensor(np_tensor.shape, scalar_t)
+    # update_tensortype(t_type, np_tensor.shape, scalar_t)
+    val = pm.Value(type=t_type)
+    t_val = val.immediateValue.tensor
     for x in np.nditer(np_tensor):
         t_val.ints.append(x)
-    return t_val
+    return val
 
 def create_scalar_value(py_scalar):
     """
@@ -69,16 +73,16 @@ def create_tuple_value(py_tuple):
             item_type = v.type
         elif isinstance(t, np.ndarray):
             v = create_tensor_value(t)
-            item_val.immediateValue.tensor.CopyFrom(v)
-            item_type.tensorType.CopyFrom(v.tensorType)
+            item_val.immediateValue.tensor.CopyFrom(v.immediateValue.tensor)
+            item_type.tensorType.CopyFrom(v.type.tensorType)
         else:
             raise NotImplementedError()
     return tp_val
 
-def create_load_from_file_value(file_name, offset, size, dim, scalar_type):
+def create_load_from_file_value(file_name, offset, dim, scalar_type):
     """
     Create a Value Type to store File Value
     """
-    val = pm.Value(fileValue=pm.Value.FileValue(fileName=file_name, offset=offset, length=size),
+    val = pm.Value(fileValue=pm.Value.FileValue(fileName=file_name, offset=offset),
                    type=create_valuetype_tensor(dim, scalar_type))
     return val

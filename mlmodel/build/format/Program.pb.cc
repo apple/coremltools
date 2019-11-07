@@ -174,8 +174,6 @@ void TableStruct::InitDefaultsImpl() {
       ::CoreML::Specification::V5::Dimension::internal_default_instance());
   _Value_default_instance_.get_mutable()->type_ = const_cast< ::CoreML::Specification::V5::ValueType*>(
       ::CoreML::Specification::V5::ValueType::internal_default_instance());
-  _TensorValue_default_instance_.get_mutable()->tensortype_ = const_cast< ::CoreML::Specification::V5::TensorType*>(
-      ::CoreML::Specification::V5::TensorType::internal_default_instance());
 }
 
 void InitDefaults() {
@@ -5048,7 +5046,6 @@ Value_ImmediateValue::ValueCase Value_ImmediateValue::value_case() const {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int Value_FileValue::kFileNameFieldNumber;
 const int Value_FileValue::kOffsetFieldNumber;
-const int Value_FileValue::kLengthFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Value_FileValue::Value_FileValue()
@@ -5068,16 +5065,13 @@ Value_FileValue::Value_FileValue(const Value_FileValue& from)
   if (from.filename().size() > 0) {
     filename_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.filename_);
   }
-  ::memcpy(&offset_, &from.offset_,
-    reinterpret_cast<char*>(&length_) -
-    reinterpret_cast<char*>(&offset_) + sizeof(length_));
+  offset_ = from.offset_;
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.V5.Value.FileValue)
 }
 
 void Value_FileValue::SharedCtor() {
   filename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&offset_, 0, reinterpret_cast<char*>(&length_) -
-    reinterpret_cast<char*>(&offset_) + sizeof(length_));
+  offset_ = GOOGLE_ULONGLONG(0);
   _cached_size_ = 0;
 }
 
@@ -5111,8 +5105,7 @@ Value_FileValue* Value_FileValue::New(::google::protobuf::Arena* arena) const {
 void Value_FileValue::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.V5.Value.FileValue)
   filename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  ::memset(&offset_, 0, reinterpret_cast<char*>(&length_) -
-    reinterpret_cast<char*>(&offset_) + sizeof(length_));
+  offset_ = GOOGLE_ULONGLONG(0);
 }
 
 bool Value_FileValue::MergePartialFromCodedStream(
@@ -5149,20 +5142,6 @@ bool Value_FileValue::MergePartialFromCodedStream(
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
                  input, &offset_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
-      // uint64 length = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 input, &length_)));
         } else {
           goto handle_unusual;
         }
@@ -5211,11 +5190,6 @@ void Value_FileValue::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(2, this->offset(), output);
   }
 
-  // uint64 length = 3;
-  if (this->length() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(3, this->length(), output);
-  }
-
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.V5.Value.FileValue)
 }
 
@@ -5235,13 +5209,6 @@ size_t Value_FileValue::ByteSizeLong() const {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::UInt64Size(
         this->offset());
-  }
-
-  // uint64 length = 3;
-  if (this->length() != 0) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt64Size(
-        this->length());
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -5270,9 +5237,6 @@ void Value_FileValue::MergeFrom(const Value_FileValue& from) {
   if (from.offset() != 0) {
     set_offset(from.offset());
   }
-  if (from.length() != 0) {
-    set_length(from.length());
-  }
 }
 
 void Value_FileValue::CopyFrom(const Value_FileValue& from) {
@@ -5293,7 +5257,6 @@ void Value_FileValue::Swap(Value_FileValue* other) {
 void Value_FileValue::InternalSwap(Value_FileValue* other) {
   filename_.Swap(&other->filename_);
   std::swap(offset_, other->offset_);
-  std::swap(length_, other->length_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -5369,20 +5332,6 @@ void Value_FileValue::set_offset(::google::protobuf::uint64 value) {
   
   offset_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Value.FileValue.offset)
-}
-
-// uint64 length = 3;
-void Value_FileValue::clear_length() {
-  length_ = GOOGLE_ULONGLONG(0);
-}
-::google::protobuf::uint64 Value_FileValue::length() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Value.FileValue.length)
-  return length_;
-}
-void Value_FileValue::set_length(::google::protobuf::uint64 value) {
-  
-  length_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Value.FileValue.length)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -5934,7 +5883,6 @@ Value::ValueCase Value::value_case() const {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int TensorValue::kTensorTypeFieldNumber;
 const int TensorValue::kFloatsFieldNumber;
 const int TensorValue::kIntsFieldNumber;
 const int TensorValue::kBoolsFieldNumber;
@@ -5958,16 +5906,10 @@ TensorValue::TensorValue(const TensorValue& from)
       strings_(from.strings_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  if (from.has_tensortype()) {
-    tensortype_ = new ::CoreML::Specification::V5::TensorType(*from.tensortype_);
-  } else {
-    tensortype_ = NULL;
-  }
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.V5.TensorValue)
 }
 
 void TensorValue::SharedCtor() {
-  tensortype_ = NULL;
   _cached_size_ = 0;
 }
 
@@ -5977,9 +5919,6 @@ TensorValue::~TensorValue() {
 }
 
 void TensorValue::SharedDtor() {
-  if (this != internal_default_instance()) {
-    delete tensortype_;
-  }
 }
 
 void TensorValue::SetCachedSize(int size) const {
@@ -6006,10 +5945,6 @@ void TensorValue::Clear() {
   ints_.Clear();
   bools_.Clear();
   strings_.Clear();
-  if (GetArenaNoVirtual() == NULL && tensortype_ != NULL) {
-    delete tensortype_;
-  }
-  tensortype_ = NULL;
 }
 
 bool TensorValue::MergePartialFromCodedStream(
@@ -6022,18 +5957,6 @@ bool TensorValue::MergePartialFromCodedStream(
     tag = p.first;
     if (!p.second) goto handle_unusual;
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // .CoreML.Specification.V5.TensorType tensorType = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(10u)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_tensortype()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
       // repeated float floats = 2 [packed = true];
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
@@ -6127,12 +6050,6 @@ void TensorValue::SerializeWithCachedSizes(
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // .CoreML.Specification.V5.TensorType tensorType = 1;
-  if (this->has_tensortype()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      1, *this->tensortype_, output);
-  }
-
   // repeated float floats = 2 [packed = true];
   if (this->floats_size() > 0) {
     ::google::protobuf::internal::WireFormatLite::WriteTag(2, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
@@ -6225,13 +6142,6 @@ size_t TensorValue::ByteSizeLong() const {
       this->strings(i));
   }
 
-  // .CoreML.Specification.V5.TensorType tensorType = 1;
-  if (this->has_tensortype()) {
-    total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-        *this->tensortype_);
-  }
-
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -6255,9 +6165,6 @@ void TensorValue::MergeFrom(const TensorValue& from) {
   ints_.MergeFrom(from.ints_);
   bools_.MergeFrom(from.bools_);
   strings_.MergeFrom(from.strings_);
-  if (from.has_tensortype()) {
-    mutable_tensortype()->::CoreML::Specification::V5::TensorType::MergeFrom(from.tensortype());
-  }
 }
 
 void TensorValue::CopyFrom(const TensorValue& from) {
@@ -6280,7 +6187,6 @@ void TensorValue::InternalSwap(TensorValue* other) {
   ints_.InternalSwap(&other->ints_);
   bools_.InternalSwap(&other->bools_);
   strings_.InternalSwap(&other->strings_);
-  std::swap(tensortype_, other->tensortype_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -6290,45 +6196,6 @@ void TensorValue::InternalSwap(TensorValue* other) {
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // TensorValue
-
-// .CoreML.Specification.V5.TensorType tensorType = 1;
-bool TensorValue::has_tensortype() const {
-  return this != internal_default_instance() && tensortype_ != NULL;
-}
-void TensorValue::clear_tensortype() {
-  if (GetArenaNoVirtual() == NULL && tensortype_ != NULL) delete tensortype_;
-  tensortype_ = NULL;
-}
-const ::CoreML::Specification::V5::TensorType& TensorValue::tensortype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.TensorValue.tensorType)
-  return tensortype_ != NULL ? *tensortype_
-                         : *::CoreML::Specification::V5::TensorType::internal_default_instance();
-}
-::CoreML::Specification::V5::TensorType* TensorValue::mutable_tensortype() {
-  
-  if (tensortype_ == NULL) {
-    tensortype_ = new ::CoreML::Specification::V5::TensorType;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.TensorValue.tensorType)
-  return tensortype_;
-}
-::CoreML::Specification::V5::TensorType* TensorValue::release_tensortype() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.TensorValue.tensorType)
-  
-  ::CoreML::Specification::V5::TensorType* temp = tensortype_;
-  tensortype_ = NULL;
-  return temp;
-}
-void TensorValue::set_allocated_tensortype(::CoreML::Specification::V5::TensorType* tensortype) {
-  delete tensortype_;
-  tensortype_ = tensortype;
-  if (tensortype) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.TensorValue.tensorType)
-}
 
 // repeated float floats = 2 [packed = true];
 int TensorValue::floats_size() const {

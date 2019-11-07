@@ -3,6 +3,7 @@ import coremltools.proto.Program_pb2 as pm
 import coremltools.proto.Model_pb2 as ml
 import coremltools.proto.FeatureTypes_pb2 as ft
 from coremltools.models.utils import save_spec
+from coremltools.models.program.builder import NeuralNetBuffer as NetBuffer
 
 import google.protobuf.json_format as json_format
 from helper import *
@@ -13,8 +14,13 @@ We create a simple two layer model (Dense + Softmax)
 """
 # Define parameters
 parameters = {}
-parameters['dense1/weight'] = create_load_from_file_value(file_name='./simple_layer.wt', offset=0, size=64*10, dim=[64, 10], scalar_type=pm.FLOAT32)
-parameters['dense1/bias'] = create_load_from_file_value(file_name='./simple_layer.wt', offset=2560, size=10, dim=[10], scalar_type=pm.FLOAT32)
+import numpy as np
+dense1_wt = np.random.rand(640,)
+dense1_bias = np.zeros(10,).astype(np.float32)
+
+nn_buffer = NetBuffer('./simple_layer.wt')
+parameters['dense1/weight'] = create_load_from_file_value(file_name='./simple_layer.wt', offset=nn_buffer.add_buffer(dense1_wt), dim=[64, 10], scalar_type=pm.FLOAT32)
+parameters['dense1/bias'] = create_load_from_file_value(file_name='./simple_layer.wt', offset=nn_buffer.add_buffer(dense1_bias), dim=[10], scalar_type=pm.FLOAT32)
 
 # Constant op
 softmax_axis = pm.Operation(name='softmax_axis', type='constant',

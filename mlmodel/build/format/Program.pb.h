@@ -1578,19 +1578,12 @@ class Value_FileValue : public ::google::protobuf::MessageLite /* @@protoc_inser
   ::google::protobuf::uint64 offset() const;
   void set_offset(::google::protobuf::uint64 value);
 
-  // uint64 length = 3;
-  void clear_length();
-  static const int kLengthFieldNumber = 3;
-  ::google::protobuf::uint64 length() const;
-  void set_length(::google::protobuf::uint64 value);
-
   // @@protoc_insertion_point(class_scope:CoreML.Specification.V5.Value.FileValue)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr filename_;
   ::google::protobuf::uint64 offset_;
-  ::google::protobuf::uint64 length_;
   mutable int _cached_size_;
   friend struct protobuf_Program_2eproto::TableStruct;
 };
@@ -1853,15 +1846,6 @@ class TensorValue : public ::google::protobuf::MessageLite /* @@protoc_insertion
   const ::google::protobuf::RepeatedPtrField< ::std::string>& strings() const;
   ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_strings();
 
-  // .CoreML.Specification.V5.TensorType tensorType = 1;
-  bool has_tensortype() const;
-  void clear_tensortype();
-  static const int kTensorTypeFieldNumber = 1;
-  const ::CoreML::Specification::V5::TensorType& tensortype() const;
-  ::CoreML::Specification::V5::TensorType* mutable_tensortype();
-  ::CoreML::Specification::V5::TensorType* release_tensortype();
-  void set_allocated_tensortype(::CoreML::Specification::V5::TensorType* tensortype);
-
   // @@protoc_insertion_point(class_scope:CoreML.Specification.V5.TensorValue)
  private:
 
@@ -1873,7 +1857,6 @@ class TensorValue : public ::google::protobuf::MessageLite /* @@protoc_insertion
   ::google::protobuf::RepeatedField< bool > bools_;
   mutable int _bools_cached_byte_size_;
   ::google::protobuf::RepeatedPtrField< ::std::string> strings_;
-  ::CoreML::Specification::V5::TensorType* tensortype_;
   mutable int _cached_size_;
   friend struct protobuf_Program_2eproto::TableStruct;
 };
@@ -3471,20 +3454,6 @@ inline void Value_FileValue::set_offset(::google::protobuf::uint64 value) {
   // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Value.FileValue.offset)
 }
 
-// uint64 length = 3;
-inline void Value_FileValue::clear_length() {
-  length_ = GOOGLE_ULONGLONG(0);
-}
-inline ::google::protobuf::uint64 Value_FileValue::length() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.Value.FileValue.length)
-  return length_;
-}
-inline void Value_FileValue::set_length(::google::protobuf::uint64 value) {
-  
-  length_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.V5.Value.FileValue.length)
-}
-
 // -------------------------------------------------------------------
 
 // Value
@@ -3689,45 +3658,6 @@ inline Value::ValueCase Value::value_case() const {
 // -------------------------------------------------------------------
 
 // TensorValue
-
-// .CoreML.Specification.V5.TensorType tensorType = 1;
-inline bool TensorValue::has_tensortype() const {
-  return this != internal_default_instance() && tensortype_ != NULL;
-}
-inline void TensorValue::clear_tensortype() {
-  if (GetArenaNoVirtual() == NULL && tensortype_ != NULL) delete tensortype_;
-  tensortype_ = NULL;
-}
-inline const ::CoreML::Specification::V5::TensorType& TensorValue::tensortype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.V5.TensorValue.tensorType)
-  return tensortype_ != NULL ? *tensortype_
-                         : *::CoreML::Specification::V5::TensorType::internal_default_instance();
-}
-inline ::CoreML::Specification::V5::TensorType* TensorValue::mutable_tensortype() {
-  
-  if (tensortype_ == NULL) {
-    tensortype_ = new ::CoreML::Specification::V5::TensorType;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.V5.TensorValue.tensorType)
-  return tensortype_;
-}
-inline ::CoreML::Specification::V5::TensorType* TensorValue::release_tensortype() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.V5.TensorValue.tensorType)
-  
-  ::CoreML::Specification::V5::TensorType* temp = tensortype_;
-  tensortype_ = NULL;
-  return temp;
-}
-inline void TensorValue::set_allocated_tensortype(::CoreML::Specification::V5::TensorType* tensortype) {
-  delete tensortype_;
-  tensortype_ = tensortype;
-  if (tensortype) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.V5.TensorValue.tensorType)
-}
 
 // repeated float floats = 2 [packed = true];
 inline int TensorValue::floats_size() const {

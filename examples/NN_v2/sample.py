@@ -4,11 +4,11 @@
 import sys
 sys.path.insert(0, '../../coremltools/proto')
 import Program_pb2 as pm
+from coremltools.models.program.builder import NeuralNetBuffer as NetBuffer
 
 import google.protobuf.json_format as json_format
 from helper import *
 
-pad_type = create_valuetype_tensor([2, 2, 3, 3], pm.ScalarType.INT32)
 pad_vals = create_tensor_value(np.array([2, 2, 3, 3], dtype=np.int32))
 
 in_channels = 2
@@ -17,19 +17,18 @@ H = 3
 W = 3
 param_type = create_valuetype_tensor([in_channels, out_channels, H, W], pm.ScalarType.FLOAT32)
 tp_value = create_tuple_value((3, np.arange(5).astype(np.int32)))
+nn_buffer = NetBuffer('./sample.wt')
 
 messages = [
     # Inputs
     pm.Operation(name="load_conv_weight", type="load_param",
                  # load_params will use use BufferLocator to get the param
                  attributes={"val" : pm.Value(type=param_type,
-                             fileValue=pm.Value.FileValue(fileName="/path/weight.bin", offset=19847,
-                             length=4*2*3*3*3))}),
+                             fileValue=pm.Value.FileValue(fileName="/path/weight.bin", offset=nn_buffer.add_buffer(np.arange(5).astype(np.float32))))}),
     pm.Operation(name='input', type='TODO'), # type=...
 
     pm.Operation(name='conv2d/filters.1', type='const',
-                 attributes={"pad":pm.Value(type=pad_type,
-                             immediateValue=pm.Value.ImmediateValue(tensor=pad_vals))}),
+                 attributes={"pad":pad_vals}),
     pm.Operation(name='conv2d.1', type='conv2d',
                  inputs={'input':'input', 'filters':'conv2d/filters.1'}),
 

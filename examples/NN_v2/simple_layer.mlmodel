@@ -5,7 +5,7 @@
 output0	*
 
  €¢¢
-coremltoolsVersion3.0²ßè
+coremltoolsVersion3.1²Úè
 mainß
 
 input0
@@ -26,10 +26,10 @@
 softmax_axisconstant"
 softmax_axis2
 valh
-dense1dense
+dense1dense
+inputinput0
 weightdense1/weight
-biasdense1/bias
-inputinput0"
+biasdense1/bias"
 
 dense1_out
 
@@ -40,12 +40,11 @@ dense1_out
 axissoftmax_axis"
 output0
 
-5
-dense1/bias&
+6
+dense1/weight%@
+"
+./simple_layer.wt3
+dense1/bias$
 
-"
-./simple_layer.wt€
-9
-dense1/weight(@
 "
-./simple_layer.wt€
+./simple_layer.wt

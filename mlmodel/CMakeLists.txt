@@ -103,6 +103,7 @@ add_library(mlmodel
     src/Model.cpp
     src/Result.cpp
     src/Utils.cpp
+    src/NeuralNetworkBuffer.cpp
 
     src/ArrayFeatureExtractorValidator.cpp
     src/BayesianProbitRegressionValidator.cpp

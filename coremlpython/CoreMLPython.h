@@ -7,6 +7,7 @@
 
 #import <CoreML/CoreML.h>
 #import "NeuralNetwork/NeuralNetworkShapes.hpp"
+#import "NeuralNetworkBuffer.hpp"
 
 namespace py = pybind11;
 
@@ -41,6 +42,19 @@ namespace CoreML {
             void print() const;
         };
 
+        // TODO:
+        // Create template class and create instance with respect
+        // to datatypes
+        class NeuralNetworkBufferInformation {
+            private:
+                std::unique_ptr<NNBuffer::NeuralNetworkBuffer> nnBuffer;
 
+            public:
+                NeuralNetworkBufferInformation(const std::string &bufferFilePath);
+                ~NeuralNetworkBufferInformation();
+
+                u_int64_t addBuffer(const std::vector<float> &);
+                std::vector<float> getBuffer(const u_int64_t &offset);
+        };
     }
 }
