@@ -16,13 +16,15 @@ For the latest changes please see the [release notes](https://github.com/apple/c
 
 # Table of Contents
 
-* [Neural network conversion guide](#Neural-network-conversion-guide)
+* [Neural network conversion](#Neural-network-conversion)
 * [Core ML specification](#Core-ML-specification)
 * [coremltools user guide and examples](#coremltools-user-guide-and-examples)
 * [Installation from Source](#Installation)
 
 
-## Neural Network Conversion Guide
+## Neural Network Conversion
+
+[Link](docs/NeuralNetworkGuide.md) to the detailed NN conversion guide.
 
 There are several `converters` available to translate neural networks trained in various frameworks into the Core ML model format.
 Following formats can be converted to the Core ML `.mlmodel` format through the coremltools python package (this repo):
