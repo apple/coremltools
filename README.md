@@ -18,7 +18,7 @@ For the latest changes please see the [release notes](https://github.com/apple/c
 
 * [Neural network conversion](#Neural-network-conversion)
 * [Core ML specification](#Core-ML-specification)
-* [coremltools user guide and examples](#coremltools-user-guide-and-examples)
+* [coremltools user guide and examples](#user-guide-and-examples)
 * [Installation from Source](#Installation)
 
 
