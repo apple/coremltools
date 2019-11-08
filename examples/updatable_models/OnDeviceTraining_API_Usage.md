@@ -44,6 +44,7 @@ func createTrainingBatchProvider() throws -> MLBatchProvider {
             trainingSamples.append(trainingSample)
         }
     }
+
     // return training samples as a MLBatchProvider
     return MLArrayBatchProvider(array: trainingSamples)
 }

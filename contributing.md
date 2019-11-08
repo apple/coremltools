@@ -2,29 +2,17 @@
 Contribution Guidelines
 =======================
 
-How to be a Contributor
----
-
-To contribute to Core ML via onnx-coreml repository, a Contributor License Agreement (CLA) must be signed. This can be found [here](https://cla-assistant.io/onnx/onnx-coreml) or will be attached as a comment when your first pull request is created.
-
 **Core ML Open Source Community**
 
-The Core ML open source community welcomes all contributions and ideas to grow the product. This could be provided in a couple of ways:
+The Core ML open source community welcomes all contributions and ideas to grow the product. This can occur within this repo as well as [onnx-coreml](https://github.com/onnx/onnx-coreml) or [tf-coreml](https://github.com/tf-coreml/tf-coreml).
 
-* Discovering and logging a **bug**, submitting an idea for a **feature request** (or **enhancement** to an existing feature) or asking a **question** through the use of the templates based on the repo the item belongs to:
-    * Submit a [coremltools issue](https://github.com/apple/coremltools/issues/new/choose)
-    * Submit an [onnx-coreml issue](https://github.com/onnx/onnx-coreml/issues/new/choose)
-    * Submit a [tf-coreml issue](https://github.com/tf-coreml/tf-coreml/issues/new/choose)
+ This could be provided in a couple of ways:
 
-* Submit a **pull request** for additional functionality that you have completed
-    * Create a new PR within [coremltools](https://github.com/apple/coremltools/pulls)
-    * Create a new PR within [onnx-coreml](https://github.com/onnx/onnx-coreml/pulls)
-    * Create a new PR within [tf-coreml](https://github.com/tf-coreml/tf-coreml/pulls)
-    
-* Resolve an existing **issue** found in any of the repositories
-    * View open issues within [coremltools](https://github.com/apple/coremltools/issues)
-    * View open issues within [onnx-coreml](https://github.com/onnx/onnx-coreml/issues)
-    * View open issues within [tf-coreml](https://github.com/tf-coreml/tf-coreml/issues)
+ * Discovering and logging a **bug**, submitting an idea for a **feature request** (or **enhancement** to an existing feature) or asking a **question** through the use of the templates: [coremltools issue](https://github.com/apple/coremltools/issues/new/choose)
+
+ * Submit a **pull request** for additional functionality that you have completed: [coremltools PR](https://github.com/apple/coremltools/pulls)
+
+ * Resolve an existing **issue** found in any of the repositories: [coremltools open issues](https://github.com/apple/coremltools/issues)
 
 Expectations of the Community
 ---
@@ -75,7 +63,7 @@ Other → this may vary depending on the repository
 
 ### Lifecycle of Pull Requests
 
-Any pull request submitted to the repositories will be reviewed by a member of the community and upon approval by a Core ML team member can be merged to the master branch. If you are new to GitHub, please find more information regarding creating pull requests here (https://help.github.com/en/articles/creating-a-pull-request).
+Any pull request submitted to the repositories will be reviewed by a member of the community and upon approval by a Core ML team member can be merged to the master branch. If you are new to GitHub, please find more information regarding creating pull requests [here](https://help.github.com/en/articles/creating-a-pull-request).
 
 Developing in Core ML
 ---
@@ -85,4 +73,3 @@ Additional information regarding APIs, installation and dependencies and more ca
 * [coremltools](https://github.com/apple/coremltools)
 * [onnx-coreml](https://github.com/onnx/onnx-coreml)
 * [tf-coreml](https://github.com/tf-coreml/tf-coreml)
-

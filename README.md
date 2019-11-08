@@ -5,21 +5,24 @@ Core ML community tools contains all supporting tools for Core ML model
 conversion and validation. This includes scikit-learn, LIBSVM, Caffe,
 Keras and XGBoost.
 
-coremltools 3.0
+coremltools 3.1
 ---------------
-[Release notes](https://github.com/apple/coremltools/releases/tag/v3.0)
+
+[Release notes](https://github.com/apple/coremltools/releases/)
+
+👍👎 Please take this quick poll and let us know how you liked this release, [here](https://github.com/apple/coremltools/blob/master/release-feedback.md)!
 
 ```shell
-# Install using pip
-pip install coremltools==3.0
+pip install -U coremltools
 ```
 
 API
 ---
+
 - [Example Code Snippets](docs/APIExamples.md)
 - [coremltools Documentation](https://apple.github.io/coremltools)
 - [Core ML Specification Documentation](https://apple.github.io/coremltools/coremlspecification/)
-- [IPython Notebooks](https://github.com/apple/coremltools/tree/master/examples)
+- [Jupyter Notebooks Examples](https://github.com/apple/coremltools/tree/master/examples)
 
 Installation
 ------------
@@ -31,7 +34,7 @@ sure to install virtualenv using your system pip.
 pip install virtualenv
 ```
 
-The method for installing *coremltools* follows the
+The method for installing `coremltools` follows the
 [standard python package installation steps](https://packaging.python.org/installing/).
 To create a Python virtual environment called `pythonenv` follow these steps:
 
@@ -45,6 +48,7 @@ virtualenv pythonenv
 ```
 
 To activate your new virtual environment and install `coremltools` in this environment, follow these steps:
+
 ```
 # Active your virtual environment
 source pythonenv/bin/activate
@@ -73,9 +77,9 @@ you are converting models of these formats:
 - scikit-learn (0.17+)
 - LIBSVM
 
-
 Building from source
 --------------------
+
 To build the project, you need [CMake](https://cmake.org) to configure the project
 
 ```shell
@@ -95,6 +99,7 @@ cmake \
   -DPYTHON_LIBRARY=/Library/Frameworks/Python.framework/Versions/3.7/lib/ \
   ../
 ```
+
 after which you can use make to build the project
 
 ```shell
@@ -103,6 +108,7 @@ make
 
 Building Installable Wheel
 ---------------------------
+
 To make a wheel/egg that you can distribute, you can do the following
 
 ```shell
@@ -111,6 +117,7 @@ make dist
 
 Running Unit Tests
 -------------------
+
 In order to run unit tests, you need `pytest`, `pandas`, and `h5py`.
 
 ```shell
@@ -173,6 +180,7 @@ Finally, to run the most important unit tests, you can use:
 ```shell
 pytest -rs
 ```
+
 some tests are marked as slow because they test a lot of combinations.
 If you want to run, all tests, you can use:
 
@@ -182,6 +190,7 @@ pytest
 
 Building Documentation
 ----------------------
+
 First install all external dependencies.
 
 ```shell
@@ -201,8 +210,9 @@ open _build/html/index.html
 
 External Tools
 --------------
+
 In addition to the conversion tools in this package, TensorFlow, ONNX, and MXNet have their own conversion tools:
 
 - [TensorFlow](https://pypi.python.org/pypi/tfcoreml)
 - [MXNet](https://github.com/apache/incubator-mxnet/tree/master/tools/coreml)
-- [ONNX](https://github.com/onnx/onnx-coreml
+- [ONNX](https://github.com/onnx/onnx-coreml)

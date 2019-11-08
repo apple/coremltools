@@ -1,7 +1,7 @@
 # API Code snippets
 
 ## Converting between MLModel and Spec
- 
+
 ```python
 import coremltools
 
@@ -33,7 +33,7 @@ mlmodel = coremltools.models.MLModel(spec)
 spec = coremltools.models.utils.load_spec('path/to/the/model.mlmodel')
 ```
 
-## Visualizing Neural Network CoreML models
+## Visualizing Neural Network Core ML models
 
 ```python
 import coremltools
@@ -52,7 +52,7 @@ print_network_spec(spec)
 
 Another useful tool for visualizing CoreML models and models from other frameworks: [Netron](https://github.com/lutzroeder/netron)
 
-## Printing the pre-processing parameters 
+## Printing the pre-processing parameters
 
 This is useful for image based neural network models
 
@@ -77,7 +77,7 @@ print(nn.preprocessing)
 ## Changing MLMultiArray input/output datatypes
 
 [Here](https://github.com/apple/coremltools/blob/d07421460f9f0ad1a2e9cf8b5248670358a24a1a/mlmodel/format/FeatureTypes.proto#L106 ) is the list of supported datatypes.
-For instance, change the datatype from 'double' to 'float32': 
+For instance, change the datatype from 'double' to 'float32':
 
 ```python
 import coremltools
@@ -115,7 +115,7 @@ import PIL.Image
 
 model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
 
-Height = 20  # use the correct input image height 
+Height = 20  # use the correct input image height
 Width = 60  # use the correct input image width
 
 
@@ -129,7 +129,7 @@ def load_image(path, resize_to=None):
     return img_np, img
 
 
-# load the image and resize using PIL utilities 
+# load the image and resize using PIL utilities
 _, img = load_image('/path/to/image.jpg', resize_to=(Width, Height))
 out_dict = model.predict({'image': img})
 
@@ -143,8 +143,8 @@ out_dict = model.predict({'image': pil_img})
 
 ## Building an mlmodel from scratch using Neural Network Builder
 
-We can use the neural network builder class to construct a CoreML model. Lets look at an example of 
-making a tiny 2 layer model with a convolution layer (with random weights) and an activation. 
+We can use the neural network builder class to construct a CoreML model. Lets look at an example of
+making a tiny 2 layer model with a convolution layer (with random weights) and an activation.
 
 ```python
 import coremltools
@@ -185,6 +185,29 @@ model.save('conv_prelu.mlmodel')
 output_dict = model.predict({'data': np.ones((3, 10, 10))}, useCPUOnly=False)
 print(output_dict['output'].shape)
 print(output_dict['output'].flatten()[:3])
+```
+
+## Print out layer attributes for debugging
+
+Sometimes we want to print out weights of a particular layer for debugging purposes.
+Following is an example showing how we can utilize the `protobuf` APIs to access any
+attributes include weight parameters. This code snippet uses the model we created in
+the previous example.
+
+```python
+import coremltools
+import numpy as np
+
+model = coremltools.models.MLModel('conv_prelu.mlmodel')
+
+spec = model.get_spec()
+print(spec)
+
+layer = spec.neuralNetwork.layers[0]
+weight_params = layer.convolution.weights
+
+print('Weights of {} layer: {}.'.format(layer.WhichOneof('layer'), layer.name))
+print(np.reshape(np.asarray(weight_params.floatValue), (1, 1, 3, 3)))
 ```
 
 ## Quantizing a neural network mlmodel
@@ -233,4 +256,3 @@ class MyLayerSelector(QuantizedLayerSelector):
 selector = MyLayerSelector()
 quantized_model = quantize_weights(
     mlmodel, 8, quantization_mode='linear', selector=selector)
-```

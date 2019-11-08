@@ -357,7 +357,7 @@ class MLModel(object):
             else:
                 raise Exception('Unable to load CoreML.framework. Cannot make predictions.')
 
-    def visualize_spec(self, port=None, input_shape_dict=None):
+    def visualize_spec(self, port=None, input_shape_dict=None, title='CoreML Graph Visualization'):
         """
         Visualize the model.
 
@@ -371,9 +371,11 @@ class MLModel(object):
             are 1 i.e. (1, 1, C, H, W). If either is not 1, then provide
             full input shape
 
+        title: str
+            Title for the visualized model
+
         Returns
         -------
-
         None
 
         Examples
@@ -483,6 +485,10 @@ class MLModel(object):
         web_dir = _os.path.join(_os.path.dirname(coremltools.__file__),
                                 'graph_visualization')
         with open('{}/model.json'.format(web_dir), 'w') as file:
-            _json.dump(cy_data, file)
+            model_data = {
+                'title': title,
+                'cy_data': cy_data,
+            }
+            _json.dump(model_data, file)
 
         _start_server(port, web_dir)
