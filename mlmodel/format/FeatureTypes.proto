@@ -164,6 +164,13 @@ enum ArrayDataType {
         ShapeRange shapeRange = 31;
 
     }
+
+    oneof defaultOptionalValue {
+        int32 intDefaultValue = 41;
+        float floatDefaultValue = 51;
+        double doubleDefaultValue = 61;
+    }
+
 }
 
 /**

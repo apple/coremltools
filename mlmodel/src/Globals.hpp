@@ -45,6 +45,7 @@ namespace CoreML {
 
     // version 5:
     // - New NN layers part of the proto message "NeuralNetworkLayer"
+    // - Non-Zero default values for optional inputs in case of Neural Networks
     static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS14 = 5;
 
     static const int32_t MLMODEL_SPECIFICATION_VERSION_NEWEST = MLMODEL_SPECIFICATION_VERSION_IOS14;

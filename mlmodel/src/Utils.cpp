@@ -435,9 +435,37 @@ bool CoreML::hasIOS13Features(const Specification::Model& model) {
     return false;
 }
 
+bool CoreML::hasNonZeroOptionalValues(const Specification::Model& model) {
+    for (const auto& input: model.description().input()) {
+        if (input.type().isoptional()){
+            switch (input.type().multiarraytype().defaultOptionalValue_case()) {
+                case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
+                    if (input.type().multiarraytype().doubledefaultvalue() != 0.0){
+                        return true;
+                    }
+                    break;
+                case CoreML::Specification::ArrayFeatureType::kFloatDefaultValue:
+                    if (input.type().multiarraytype().floatdefaultvalue() != 0.0){
+                        return true;
+                    }
+                    break;
+                case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
+                    if (input.type().multiarraytype().intdefaultvalue() != 0){
+                        return true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    return false;
+}
+
 bool CoreML::hasIOS14Features(const Specification::Model& model) {
     // New IOS14 features:
     // - new layers in Neural Network
+    // - Non-zero values for optional inputs
 
     bool result = false;
     switch (model.Type_case()) {
@@ -701,6 +729,10 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
 
     // Return True if the model has the new Neural network features added in
     // ios 14
+
+    if (hasNonZeroOptionalValues(model)) {
+        return true;
+    }
 
     auto layers = getNNSpec(model);
     if (layers) {

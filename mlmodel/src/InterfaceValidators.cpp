@@ -163,6 +163,33 @@ namespace CoreML {
                                       "Description of multiarray feature '" + desc.name() + "' has an invalid or unspecified dataType. "
                                       "It must be specified as DOUBLE, FLOAT32 or INT32");
                 }
+
+                switch (type.multiarraytype().defaultOptionalValue_case()) {
+                    case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
+                        if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE){
+                            return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
+                                          " between dataType and the type of default optional value.");
+                        }
+                        break;
+                    case CoreML::Specification::ArrayFeatureType::kFloatDefaultValue:
+                        if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_FLOAT32){
+                            return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
+                                          " between dataType and the type of default optional value.");
+                        }
+                        break;
+                    case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
+                        if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_INT32){
+                            return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
+                                          " between dataType and the type of default optional value.");
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                
                 break;
 
             }
@@ -412,7 +439,47 @@ namespace CoreML {
     inline Result validateOptionalTree(const Specification::ModelDescription& interface) {
         return validateOptionalOutputs(interface);
     }
-    
+
+    inline Result validateDefaultOptionalValues(const Specification::Model& format) {
+        // just need to check that only neural networks use default optional values.
+        const Specification::ModelDescription& description = format.description();
+        for (const auto& input : description.input()) {
+            if (input.type().isoptional()) {
+                switch (input.type().multiarraytype().defaultOptionalValue_case()) {
+                    case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
+                        if (format.Type_case() != Specification::Model::kNeuralNetwork &&
+                            format.Type_case() != Specification::Model::kNeuralNetworkRegressor &&
+                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier){
+                            return Result(ResultType::INVALID_MODEL_PARAMETERS,
+                                          "Default optional values are only allowed for neural networks.");
+                        }
+                        break;
+                    case CoreML::Specification::ArrayFeatureType::kFloatDefaultValue:
+                        if (format.Type_case() != Specification::Model::kNeuralNetwork &&
+                            format.Type_case() != Specification::Model::kNeuralNetworkRegressor &&
+                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier){
+                            return Result(ResultType::INVALID_MODEL_PARAMETERS,
+                                          "Default optional values are only allowed for neural networks.");
+                        }
+                        break;
+                    case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
+                        if (format.Type_case() != Specification::Model::kNeuralNetwork &&
+                            format.Type_case() != Specification::Model::kNeuralNetworkRegressor &&
+                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier){
+                            return Result(ResultType::INVALID_MODEL_PARAMETERS,
+                                          "Default optional values are only allowed for neural networks.");
+                        }
+                        break;
+                    default:
+                        break;
+                }
+
+            }
+        }
+
+        return Result();
+    }
+
     inline Result validateOptionalNN(const Specification::ModelDescription& description) {
         // just need to check that not all inputs are optional
         bool hasNotOptional = false;
@@ -430,6 +497,12 @@ namespace CoreML {
 
     Result validateOptional(const Specification::Model& format) {
         Result r;
+        r = validateDefaultOptionalValues(format);
+
+        if (!r.good()){
+            return r;
+        }
+
         switch (format.Type_case()) {
             case Specification::Model::kImputer:
                 // Imputed values can be handled by replacing a particular value, so
