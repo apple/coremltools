@@ -286,7 +286,7 @@ class TFSimpleNetworkTest(TFNetworkTest):
 
 
 if __name__ == '__main__':
-    # unittest.main()
-    suite = unittest.TestSuite()
-    suite.addTest(TFSimpleNetworkTest("test_simple_branch"))
-    unittest.TextTestRunner().run(suite)
+    unittest.main()
+    # suite = unittest.TestSuite()
+    # suite.addTest(TFSimpleNetworkTest("test_simple_branch"))
+    # unittest.TextTestRunner().run(suite)
