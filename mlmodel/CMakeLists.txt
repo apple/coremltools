@@ -4,6 +4,7 @@ project(mlmodel)
 include_directories(
   ..
   ../deps/protobuf/src
+  src
 )
 
 set(CMAKE_CXX_FLAGS " \
@@ -138,6 +139,17 @@ add_library(mlmodel
     src/TreeEnsembleCommon.cpp
     src/SoundAnalysisPreprocessingValidator.cpp
     src/LinkedModelValidator.cpp
+
+    src/ILIL/IRScope.cpp
+    src/ILIL/IRValue.cpp
+    src/ILIL/IRValueType.cpp
+    src/ILIL/Program/ProgramIRBlock.cpp
+    src/ILIL/Program/ProgramIRFunction.cpp
+    src/ILIL/Program/ProgramIROperation.cpp
+    src/ILIL/Program/ProgramIROperatorTypeConverter.cpp
+    src/ILIL/Program/ProgramIRProgram.cpp
+    src/ILIL/Program/ProgramIRValue.cpp
+    src/ILIL/Program/ProgramIRValueType.cpp
 
     src/transforms/LinearModel.cpp
     src/transforms/Pipeline.cpp
