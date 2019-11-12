@@ -140,6 +140,8 @@ add_library(mlmodel
     src/SoundAnalysisPreprocessingValidator.cpp
     src/LinkedModelValidator.cpp
 
+    src/ILIL/IROperation.cpp
+    src/ILIL/IROperatorDescription.cpp
     src/ILIL/IRScope.cpp
     src/ILIL/IRValue.cpp
     src/ILIL/IRValueType.cpp

@@ -55,11 +55,14 @@ IROperatorType ProgramIROperatorTypeConverter::GetType(const std::string &name) 
 
 /*static*/ ProgramIROperatorTypeConverter::NameToTypeMap ProgramIROperatorTypeConverter::MakeNameToTypeMap()
 {
-    return ProgramIROperatorTypeConverter::NameToTypeMap {
+    ProgramIROperatorTypeConverter::NameToTypeMap map{
         { "Activation", IROperatorType::Activation },
         { "Const", IROperatorType::Const },
         { "Convolution", IROperatorType::Convolution },
         { "InnerProduct", IROperatorType::InnerProduct },
         { "Pooling", IROperatorType::Pooling },
     };
+
+    assert(map.size() == static_cast<size_t>(IROperatorType::COUNT));
+    return map;
 }

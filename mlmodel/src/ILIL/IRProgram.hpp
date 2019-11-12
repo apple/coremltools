@@ -21,6 +21,9 @@ public:
 
     virtual ~IRProgram() = default;
 
+    /** Get a specific function. */
+    virtual const IRFunction& GetFunction(const std::string& name) const = 0;
+
     /** Get all declared functions. */
     virtual const IRFunctionMap& GetFunctions() const = 0;
 

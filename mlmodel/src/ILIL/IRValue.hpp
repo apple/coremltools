@@ -20,6 +20,9 @@ public:
 
     virtual ~IRValue();
 
+    /** Copy this value to the given buffer. */
+    virtual void CopyTo(void* dest, uint64_t destSize) const = 0;
+
     /** Get this value's type. */
     const IRValueType& GetType() const;
 
@@ -67,6 +70,8 @@ public:
                            T value);
 
     T GetValue() const;
+
+    void CopyTo(void* dest, uint64_t destSize) const override;
     bool AsBool() const override;
     float AsFloat32() const override;
     int64_t AsInt64() const override;
@@ -90,6 +95,8 @@ public:
     IRImmediateTensorValue(ConstIRTensorValueTypePtr type,
                            std::vector<T>&& values);
 
+    void CopyTo(void* dest, uint64_t destSize) const override;
+
 private:
     std::vector<T> m_values;
 };
@@ -107,6 +114,9 @@ public:
                           ConstIRValueVec&& values);
 
     const ConstIRValueVec& GetValues() const;
+
+    void CopyTo(void* dest, uint64_t destSize) const override;
+
 private:
     ConstIRValueVec m_values;
 };
@@ -124,6 +134,7 @@ public:
     /** Get the offset of the start of the data within the file. */
     uint64_t GetOffset() const;
 
+    void CopyTo(void* dest, uint64_t destSize) const override;
 private:
     std::string m_path;
     uint64_t m_offset;

@@ -26,10 +26,10 @@ public:
     using ProtoValueTypeVec = protobuf::RepeatedPtrField<V5::ValueType>;
     using ValueTypeMap = std::unordered_map<std::string, std::unique_ptr<IRValueType>>;
 
-    ProgramIRFunctionImpl(const FunctionSpec& function)
+    ProgramIRFunctionImpl(const FunctionSpec& function, ConstIRScopePtr parentScope)
         : m_inputs(ParseInputs(function.inputs()))
         , m_outputs(ParseOutputs(function.outputs()))
-        , m_scope(ParseScope(function))
+        , m_scope(ParseScope(function, parentScope))
         , m_block(ProgramIRBlock::Parse(function.block(), m_scope))
     { }
 
@@ -65,9 +65,9 @@ private:
         return outputs;
     }
 
-    static std::unique_ptr<const IRScope> ParseScope(const FunctionSpec& function)
+    static std::unique_ptr<const IRScope> ParseScope(const FunctionSpec& function, ConstIRScopePtr parentScope)
     {
-        auto scope = std::make_unique<IRScope>(/*parent=*/ nullptr);
+        auto scope = std::make_unique<IRScope>(parentScope);
 
         for (const auto& input : function.inputs()) {
             const auto& name = input.name();
@@ -80,7 +80,8 @@ private:
 
     ValueTypeMap m_inputs;
     ConstIRValueTypePtrVec m_outputs;
-    std::shared_ptr<const IRScope> m_scope;
+    ConstIRScopePtr m_parentScope;
+    ConstIRScopePtr m_scope;
     std::unique_ptr<ProgramIRBlock> m_block;
 };
 }
@@ -89,7 +90,7 @@ ProgramIRFunction::~ProgramIRFunction() = default;
 ProgramIRFunction::ProgramIRFunction() = default;
 
 /*static*/ std::unique_ptr<ProgramIRFunction>
-ProgramIRFunction::Parse(const FunctionSpec& function)
+ProgramIRFunction::Parse(const FunctionSpec& function, ConstIRScopePtr parentScope)
 {
-    return std::make_unique<ProgramIRFunctionImpl>(function);
+    return std::make_unique<ProgramIRFunctionImpl>(function, parentScope);
 }

@@ -20,6 +20,8 @@ enum class IROperatorType {
     Convolution,
     InnerProduct,
     Pooling,
+
+    COUNT
 };
 
 }

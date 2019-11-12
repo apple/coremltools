@@ -14,11 +14,36 @@
 namespace CoreML {
 namespace ILIL {
 
+class IRValue;
+
 /** The length of a dimension in a list, tensor, or tuple. */
 class IRDimension {
 public:
     virtual ~IRDimension();
     virtual bool operator==(const IRDimension& other) const = 0;
+
+    /**
+     Attempt to cast this instance to a more specific IRDimension.
+     @throws std::bad_cast on failure.
+     */
+    template<typename DimensionT>
+    const DimensionT* As() const {
+        auto as = TryAs<DimensionT>();
+        if (as) {
+            return as;
+        }
+        throw std::bad_cast();
+    }
+
+    /**
+     Attempt to cast this instance to a more specific IRDimension.
+     @returns A pointer to DimensionT or nullptr on failure.
+     */
+    template<typename DimensionT>
+    const DimensionT* TryAs() const {
+        return dynamic_cast<const DimensionT*>(this);
+    }
+
 protected:
     IRDimension();
 };
@@ -29,15 +54,15 @@ protected:
 class IRConstantDimension : public IRDimension {
 public:
     ~IRConstantDimension();
-    IRConstantDimension(int64_t size);
+    IRConstantDimension(uint64_t size);
 
     /** Get the length of this dimension. */
-    int64_t GetSize() const;
+    uint64_t GetSize() const;
 
     bool operator==(const IRDimension& other) const override;
 
 private:
-    int64_t m_size;
+    uint64_t m_size;
 };
 
 //-----------------------------------------------------------------
@@ -62,6 +87,38 @@ private:
 class IRValueType {
 public:
     virtual ~IRValueType();
+
+    /**
+     How many individual elements are held in a value of this type?
+
+     Throws std::range_error if the type contains symbolic lengths/dimensions.
+     */
+    virtual uint64_t GetNumElements() const = 0;
+
+    /**
+     Attempt to cast this instance to a more specific IRValueType.
+     @throws std::bad_cast on failure.
+     */
+    template<typename ValueTypeT>
+    const ValueTypeT* As() const {
+        auto as = TryAs<ValueTypeT>();
+        if (as) {
+            return as;
+        }
+        throw std::bad_cast();
+    }
+
+    /**
+     Attempt to cast this instance to a more specific IRValueType.
+     @returns A pointer to ValueTypeT or nullptr on failure.
+     */
+    template<typename ValueTypeT>
+    const ValueTypeT* TryAs() const {
+        return dynamic_cast<const ValueTypeT*>(this);
+    }
+
+    /** Read a value from the named file. */
+    virtual std::unique_ptr<const IRValue> ReadValue(const std::string& filePath, uint64_t offset) const = 0;
 
     virtual bool operator==(const IRValueType& other) const = 0;
     bool operator!=(const IRValueType& other) const;
@@ -110,6 +167,8 @@ public:
 
     IRScalarValueTypeEnum GetType() const;
 
+    uint64_t GetNumElements() const override;
+    std::unique_ptr<const IRValue> ReadValue(const std::string& filePath, uint64_t offset) const override;
     bool operator==(const IRValueType& other) const override;
 
 private:
@@ -132,6 +191,8 @@ public:
     /** Get the shape of this tensor type. */
     const Shape& GetShape() const;
 
+    uint64_t GetNumElements() const override;
+        std::unique_ptr<const IRValue> ReadValue(const std::string& filePath, uint64_t offset) const override;
     bool operator==(const IRValueType& other) const override;
 
 private:
@@ -154,6 +215,8 @@ public:
     /** Get the length of lists of this type. */
     const IRDimension& GetLength() const;
 
+    uint64_t GetNumElements() const override;
+    std::unique_ptr<const IRValue> ReadValue(const std::string& filePath, uint64_t offset) const override;
     bool operator==(const IRValueType& other) const override;
 
 private:
@@ -174,6 +237,8 @@ public:
     /** Get the types of types in this tuple type. */
     const ValueTypePtrVec& GetTypes() const;
 
+    uint64_t GetNumElements() const override;
+    std::unique_ptr<const IRValue> ReadValue(const std::string& filePath, uint64_t offset) const override;
     bool operator==(const IRValueType& other) const override;
 
 private:

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ILIL/IROperatorType.hpp"
+#include "ILIL/IROperatorDescription.hpp"
 #include "ILIL/IRScope.hpp"
 
 #include <string>
@@ -28,7 +28,7 @@ public:
     using IRBlockPtrVec = std::vector<IRBlockPtr>;
     using StringVec = std::vector<std::string>;
 
-    virtual ~IROperation() = default;
+    virtual ~IROperation();
 
     /** Get an attribute value. */
     virtual const IRValue& GetAttribute(const std::string& name) const = 0;
@@ -36,11 +36,23 @@ public:
     /** Get this operation's nested blocks. */
     virtual const IRBlockPtrVec& GetBlocks() const = 0;
 
+    /** Get a description of the operator being invoked. */
+    const IROperatorDescription& GetDescription() const;
+
     /** Get the name of the argument specified for the given parameter. */
     virtual const std::string& GetInput(const std::string& param) const = 0;
 
+    /** Get the names of all specified arguments. */
+    virtual const StringVec& GetInputNames() const = 0;
+
     /** Get the name of this invocation. */
     virtual const std::string& GetName() const = 0;
+
+    /** How many inputs does this operation have? */
+    virtual uint64_t GetNumInputs() const = 0;
+
+    /** How many outputs does this operation have? */
+    virtual uint64_t GetNumOutputs() const = 0;
 
     /** Get the names of all outputs. */
     virtual const StringVec& GetOutputNames() const = 0;
@@ -50,6 +62,11 @@ public:
 
     /** Get the type of operator being invoked. */
     virtual IROperatorType GetType() const = 0;
+
+    /**
+     Convenience method to get the indicated compile-time constant from our scope.
+     */
+    IRScope::ConstIRValuePtr GetValue(const std::string& name) const;
 };
 
 }

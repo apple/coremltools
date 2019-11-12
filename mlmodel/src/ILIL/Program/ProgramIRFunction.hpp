@@ -25,13 +25,14 @@ namespace Program {
 
 class ProgramIRFunction : public ILIL::IRFunction {
 public:
+    using ConstIRScopePtr = std::shared_ptr<const IRScope>;
     using FunctionSpec = ::CoreML::Specification::V5::Function;
 
     ~ProgramIRFunction();
 
-    /** Create a new instance from the specified function in the given model. */
+    /** Create a new instance from the specified function. */
     static std::unique_ptr<ProgramIRFunction>
-    Parse(const FunctionSpec& function);
+    Parse(const FunctionSpec& function, ConstIRScopePtr parentScope);
 
 protected:
     ProgramIRFunction();

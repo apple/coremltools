@@ -22,18 +22,20 @@ using namespace ::google;
 class ProgramIRProgramImpl : public ProgramIRProgram {
 public:
     using ConstIRValuePtr = std::shared_ptr<const IRValue>;
-    using IRScopePtr = std::unique_ptr<IRScope>;
+    using ConstIRScopePtr = std::shared_ptr<const IRScope>;
     using ParameterMap = std::unordered_map<std::string, ConstIRValuePtr>;
     using ProtoAttributesMap = protobuf::Map<std::string, V5::Value>;
     using ProtoFunctionMap = protobuf::Map<std::string, V5::Function>;
 
 
     ProgramIRProgramImpl(const ProgramSpec& program)
-        : m_functions(ParseFunctions(program.functions()))
-        , m_parameters(ParseParameters(program.parameters()))
-        , m_scope()
-    {
-        PopulateScope();
+        : m_parameters(ParseParameters(program.parameters()))
+        , m_scope(ParseScope(m_parameters))
+        , m_functions(ParseFunctions(program.functions(), m_scope))
+    {  }
+
+    const IRFunction& GetFunction(const std::string& name) const override {
+        return *m_functions.at(name);
     }
 
     const IRFunctionMap& GetFunctions() const override {
@@ -49,10 +51,10 @@ public:
     }
 
 private:
-    static IRFunctionMap ParseFunctions(const ProtoFunctionMap& specFunctions) {
+    static IRFunctionMap ParseFunctions(const ProtoFunctionMap& specFunctions, ConstIRScopePtr thisScope) {
         IRFunctionMap functions;
         for (const auto& nameAndSpecFunc : specFunctions) {
-            functions[nameAndSpecFunc.first] = ProgramIRFunction::Parse(nameAndSpecFunc.second);
+            functions[nameAndSpecFunc.first] = ProgramIRFunction::Parse(nameAndSpecFunc.second, thisScope);
         }
         return functions;
     }
@@ -66,17 +68,19 @@ private:
     }
 
     /** Create entries in our scope for program-level parameters. */
-    void PopulateScope()
+    static ConstIRScopePtr ParseScope(const ParameterMap& parameters)
     {
-        for (const auto& nameAndValue : m_parameters) {
-            m_scope->SetType(nameAndValue.first, nameAndValue.second->GetTypePtr());
-            m_scope->SetValue(nameAndValue.first, nameAndValue.second);
+        auto scope = std::make_unique<IRScope>(/*parentScope=*/ nullptr);
+        for (const auto& nameAndValue : parameters) {
+            scope->SetType(nameAndValue.first, nameAndValue.second->GetTypePtr());
+            scope->SetValue(nameAndValue.first, nameAndValue.second);
         }
+        return scope;
     }
 
-    IRFunctionMap m_functions;
     ParameterMap m_parameters;
-    IRScopePtr m_scope;
+    ConstIRScopePtr m_scope;
+    IRFunctionMap m_functions;
 };
 }
 

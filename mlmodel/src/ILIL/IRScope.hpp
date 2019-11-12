@@ -52,8 +52,22 @@ public:
      */
     ConstIRValueTypePtr GetType(const std::string& name) const;
 
-    /** Associate the given type with the specified value name. */
-    void SetType(const std::string& name, ConstIRValueTypePtr type);
+    /**
+     Get the type of the given value.
+     If not found in this instance, the search will continue
+     through parent scopes.
+     @return A pointer to a type or nullptr if it cannot be found.
+     */
+    ConstIRValueTypePtr TryGetType(const std::string& name) const;
+
+    /**
+     Associate the given type with the specified name. Optionally replace
+     any existing type with the same name.
+     @return true if no type was previously associated with the given name.
+     @throw std::runtime_error if allowReplace = false and a type was already
+        associated with the given name.
+     */
+    bool SetType(const std::string& name, ConstIRValueTypePtr type, bool allowReplace = false);
 
     /**
      Get a value.
@@ -63,8 +77,22 @@ public:
      */
     ConstIRValuePtr GetValue(const std::string& name) const;
 
-    /** Associate the given value with the specified value name. */
-    void SetValue(const std::string& name, ConstIRValuePtr value);
+    /**
+     Get a value.
+     If not found in this instance, the search will continue
+     through parent scopes.
+     @return A pointer to a value or nullptr if it cannot be found.
+     */
+    ConstIRValuePtr TryGetValue(const std::string& name) const;
+
+    /**
+     Associate the given value with the specified name. Optionally replaces
+     any existing value with the same name.
+     @return true if no value was previously associated with the given name.
+     @throw std::runtime_error if allowReplace = false and a value was already
+        associated with the given name.
+     */
+    bool SetValue(const std::string& name, ConstIRValuePtr value, bool allowReplace = false);
 
 private:
     std::shared_ptr<const IRScope> m_parent;

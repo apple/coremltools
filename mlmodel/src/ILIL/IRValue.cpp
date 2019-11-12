@@ -116,12 +116,23 @@ std::string IRImmediateScalarValue<std::string>::AsString() const
 }
 
 template<typename T>
+void IRImmediateScalarValue<T>::CopyTo(void* dest, uint64_t destSize) const
+{
+    if (sizeof(T) > destSize) {
+        throw std::runtime_error("Insufficient output buffer size.");
+    }
+    memcpy(dest, &m_value, sizeof(T));
+}
+
+template<typename T>
 T IRImmediateScalarValue<T>::GetValue() const
 {
     return m_value;
 }
 
 template class ::CoreML::ILIL::IRImmediateScalarValue<float>;
+template class ::CoreML::ILIL::IRImmediateScalarValue<double>;
+template class ::CoreML::ILIL::IRImmediateScalarValue<int32_t>;
 template class ::CoreML::ILIL::IRImmediateScalarValue<int64_t>;
 template class ::CoreML::ILIL::IRImmediateScalarValue<bool>;
 template class ::CoreML::ILIL::IRImmediateScalarValue<std::string>;
@@ -139,12 +150,31 @@ IRImmediateTensorValue<T>::IRImmediateTensorValue(ConstIRTensorValueTypePtr type
 { }
 
 template<typename T>
+void IRImmediateTensorValue<T>::CopyTo(void* dest, uint64_t destSize) const
+{
+    uint64_t dataSize = GetType().GetNumElements() * sizeof(T);
+    if (dataSize > destSize) {
+        throw std::runtime_error("Insufficient output buffer size.");
+    }
+    memcpy(dest, m_values.data(), dataSize);
+}
+
+template<>
+void IRImmediateTensorValue<bool>::CopyTo(void* /*dest*/, uint64_t /*destSize*/) const
+{
+    // std::vector<bool> is a bitfield so it doesn't have a data() member
+    throw std::runtime_error("Copying boolean tensors is not supported.");
+}
+
+template<typename T>
 const std::vector<T>& IRImmediateTensorValue<T>::GetValues() const
 {
     return m_values;
 }
 
 template class ::CoreML::ILIL::IRImmediateTensorValue<float>;
+template class ::CoreML::ILIL::IRImmediateTensorValue<double>;
+template class ::CoreML::ILIL::IRImmediateTensorValue<int32_t>;
 template class ::CoreML::ILIL::IRImmediateTensorValue<int64_t>;
 template class ::CoreML::ILIL::IRImmediateTensorValue<bool>;
 template class ::CoreML::ILIL::IRImmediateTensorValue<std::string>;
@@ -159,6 +189,11 @@ IRImmediateTupleValue::IRImmediateTupleValue(ConstIRTupleValueTypePtr type,
     , m_values(std::move(values))
 { }
 
+void IRImmediateTupleValue::CopyTo(void* /*dest*/, uint64_t /*destSize*/) const
+{
+    throw std::runtime_error("Copying tuples is not supported.");
+}
+
 //-----------------------------------------------------------------
 
 IRFileValue::~IRFileValue() = default;
@@ -168,6 +203,12 @@ IRFileValue::IRFileValue(ConstIRValueTypePtr type, const std::string& path, uint
     , m_path(path)
     , m_offset(offset)
 { }
+
+void IRFileValue::CopyTo(void* dest, uint64_t destSize) const
+{
+    auto value = GetType().ReadValue(GetPath(), GetOffset());
+    value->CopyTo(dest, destSize);
+}
 
 const std::string& IRFileValue::GetPath() const
 {

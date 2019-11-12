@@ -16,7 +16,7 @@ static std::unique_ptr<IRDimension> ParseDimension(const V5::Dimension& specDim)
 {
     switch (specDim.dimension_case()) {
         case V5::Dimension::kSize:
-            return std::make_unique<IRConstantDimension>(specDim.size());
+            return std::make_unique<IRConstantDimension>(static_cast<uint64_t>(specDim.size()));
         case V5::Dimension::kSymbol:
             return std::make_unique<IRSymbolicDimension>(specDim.symbol());
         case V5::Dimension::DIMENSION_NOT_SET:

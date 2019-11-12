@@ -37,6 +37,7 @@ public:
         , m_name(operation.name())
         , m_type(ProgramIROperatorTypeConverter::Instance().GetType(operation.type()))
         , m_attributes(ParseAttributes(operation.attributes()))
+        , m_inputNames(ParseInputNames(operation.inputs()))
         , m_inputsMap(ParseInputMap(operation.inputs()))
         , m_outputNames(ParseOutputNames(operation.outputs()))
         , m_blocks(ParseBlocks(operation.blocks(), scope))
@@ -54,8 +55,20 @@ public:
         return m_inputsMap.at(param);
     }
 
+    const StringVec& GetInputNames() const override {
+        return m_inputNames;
+    }
+
     const std::string& GetName() const override {
         return m_name;
+    }
+
+    uint64_t GetNumInputs() const override {
+        return static_cast<uint64_t>(m_inputsMap.size());
+    }
+
+    uint64_t GetNumOutputs() const override {
+        return static_cast<uint64_t>(m_outputNames.size());
     }
 
     const StringVec& GetOutputNames() const override {
@@ -98,6 +111,16 @@ private:
         return inputs;
     }
 
+    static StringVec ParseInputNames(const ProtoInputsMap& specInputs)
+    {
+        StringVec inputNames;
+        inputNames.reserve(specInputs.size());
+        for (const auto& paramAndArg : specInputs) {
+            inputNames.push_back(paramAndArg.second);
+        }
+        return inputNames;
+    }
+
     static StringVec ParseOutputNames(const ProtoNamedValueTypeVec& specOutputs) {
         StringVec outputNames;
         outputNames.reserve(static_cast<size_t>(specOutputs.size()));
@@ -111,7 +134,7 @@ private:
     std::string m_name;
     IROperatorType m_type;
     AttributesMap m_attributes;
-    StringVec m_inputArgs;
+    StringVec m_inputNames;
     InputsMap m_inputsMap;
     StringVec m_outputNames;
     IRBlockPtrVec m_blocks;
