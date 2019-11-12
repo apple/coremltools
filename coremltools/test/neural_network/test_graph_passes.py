@@ -4,7 +4,7 @@ import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
 from coremltools.models import MLModel
 from coremltools.converters.nnssa.coreml.graph_pass.mlmodel_passes import \
-        remove_disconnected_constants, transform_conv_crop
+        remove_disconnected_layers, transform_conv_crop
 
 
 class MLModelPassesTest(unittest.TestCase):
@@ -20,7 +20,25 @@ class MLModelPassesTest(unittest.TestCase):
         builder.add_load_constant_nd('const3', 'c3', constant_value=np.ones((5,)), shape=(5,))
         spec = builder.spec
         np.testing.assert_equal(5, len(spec.neuralNetwork.layers))
-        remove_disconnected_constants(spec)
+        remove_disconnected_layers(spec)
+        np.testing.assert_equal(2, len(spec.neuralNetwork.layers))
+
+    def test_dead_layer_remove(self):
+        input_features = [('data', datatypes.Array(*(3, 4)))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_activation('relu1', 'RELU', 'data', 'relu1')
+        builder.add_load_constant_nd('const1', 'c1', constant_value=np.ones((5,)), shape=(5,))
+        builder.add_load_constant_nd('const2', 'c2', constant_value=np.ones((5,)), shape=(5,))
+        builder.add_split_nd('splitnd1', 'const2', ['s1', 's2', 's3'], axis=0, num_splits=3)
+        builder.add_squeeze('squeeze', 's1', 'squeeze_out')
+        builder.add_activation('relu4', 'RELU', 's2', 'relu4')
+        builder.add_activation('relu5', 'RELU', 'relu4', 'relu5')
+        builder.add_load_constant_nd('const3', 'c3', constant_value=np.ones((5,)), shape=(5,))
+        builder.add_activation('relu2', 'RELU', 'relu1', 'out')
+        spec = builder.spec
+        np.testing.assert_equal(9, len(spec.neuralNetwork.layers))
+        remove_disconnected_layers(spec)
         np.testing.assert_equal(2, len(spec.neuralNetwork.layers))
 
     def test_conv_crop_bn_to_conv_bn_crop(self):
