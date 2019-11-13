@@ -88,13 +88,16 @@ def ssa_convert(ssa,
     custom_shape_functions : dict of str -> functions or empty dict
         Specify custom function to compute `output` shape given `input` shape for given custom operator
         This is required for new converter path, which maintains and propagates shapes while converting operators.
+    optional_inputs: Dict of str -> float
+        Specify the name of inputs which are optional and their default fill value to be used in case those inputs are
+        not provided.
     """
     if not custom_conversion_functions:
         custom_conversion_functions = dict()
     if not custom_shape_functions:
         custom_shape_functions = dict()
     if not optional_inputs:
-        optional_inputs = list()
+        optional_inputs = dict()
 
     if outputs is not None:
         ssa.extract_subgraph(outputs, name=top_func)
@@ -233,7 +236,7 @@ class SSAConverter(object):
                  add_custom_layers=False,  # type: bool
                  custom_conversion_functions={},  # type: Dict[Text, Any]
                  custom_shape_functions={},  # type: Dict[Text, Any]
-                 optional_inputs=[]  # type: List[str]
+                 optional_inputs={}  # type: Dict[str, float]
                  ):
         self.net_ensemble = net_ensemble
         self.top_func = top_func  # string indicating the top level function
@@ -330,6 +333,7 @@ class SSAConverter(object):
 
             if is_input_optional[idx]:
                 self.spec.description.input[idx].type.isOptional = True
+                self.spec.description.input[idx].type.multiArrayType.doubleDefaultValue = optional_inputs[top_input_names[idx]]
 
         self.CONVERT_FUNCTION_MAP = {
             'Placeholder': self._convert_input,

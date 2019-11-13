@@ -108,15 +108,21 @@ def _remove_output_identity_nodes(nnssa):
                     delete_count += 1
                     parent_name = f.graph[k].inputs[0]
                     f.graph[parent_name].control_outputs = f.graph[k].control_outputs
+
+                    if any([ an_output != k for an_output in f.graph[parent_name].outputs]):
+                        continue
+
                     del f.graph[k]
                     f.graph[k] = copy.deepcopy(f.graph[parent_name])
                     del f.graph[parent_name]
                     f.graph[k].name = k
                     f.graph[k].outputs = []
+
                     for p in f.graph[k].inputs:
                         for idx, out in enumerate(f.graph[p].outputs):
                             if out == parent_name:
                                 f.graph[p].outputs[idx] = k
+
                     for p in f.graph[k].control_inputs:
                         for idx, out in enumerate(f.graph[p].control_outputs):
                             if out == parent_name:

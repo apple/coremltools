@@ -463,7 +463,7 @@ class TypeInferenceVisitor(object):
         rettype = parent_type.T[node.attr["index"]]
         if parent_val is not None:
             node.attr['symbolic_value'] = rettype()
-            node.attr['symbolic_value'].val = parent_val.val[node.attr['index']]
+            node.attr['symbolic_value'].val = parent_val[node.attr['index']].val
 
         return rettype
 
@@ -480,7 +480,7 @@ class TypeInferenceVisitor(object):
     def visit_Print(self, node):
         # this is just identity
         node.op = 'Identity'
-        return self._visit_unary(node)
+        return self.visit(node.inputs[0])
 
     def visit_Log(self, node):
         ret = self._visit_unary(node)
@@ -623,7 +623,7 @@ class TypeInferenceVisitor(object):
             it_shape = it.get_shape()
             for i in range(rank):
                 if i != concat_axis and retshape[i] != it_shape[i]:
-                    if is_symbolic_or_unknown(retshape[i]) and is_symbolic_or_unknown(it_shape[i]):
+                    if is_symbolic_or_unknown(retshape[i]) or is_symbolic_or_unknown(it_shape[i]):
                         continue
                     raise ValueError('Dimension mismatch in {} op {}'.format(node.op, node.name))
 
@@ -815,9 +815,9 @@ class TypeInferenceVisitor(object):
     # https://www.tensorflow.org/api_docs/python/tf/nn/convolution
     def _get_window_reduced_size(self, algorithm, input_size, window_size, stride):
         if algorithm == 'VALID':
-            return int(math.ceil((input_size - (window_size - 1)) / stride))
+            return sm.ceiling((input_size - (window_size - 1)) / stride)
         if algorithm == 'SAME':
-            return int(math.ceil(input_size / stride))
+            return sm.ceiling((input_size / stride))
         raise ValueError(
             'Invalid padding algorithm "{}"; expected "SAME" or "VALID"'.format(algorithm))
 
@@ -850,7 +850,7 @@ class TypeInferenceVisitor(object):
         filtshape[height_idx] = self._get_window_reduced_size(
             padding, inshape[height_idx], window_height, strides[0])
         filtshape[height_idx + 1] = self._get_window_reduced_size(
-            padding, inshape[height_idx + 1], window_height, strides[1])
+            padding, inshape[height_idx + 1], window_width, strides[1])
         return builtins.tensor(input_type.get_primitive(), tuple(filtshape))
 
     def visit_MaxPool(self, node):
@@ -931,18 +931,20 @@ class TypeInferenceVisitor(object):
         typeb = self.visit(node.inputs[1])
 
         shape_value = self._get_symbolic_value(node.inputs[0])
-        if shape_value is None:
-            raise AssertionError(
-                'Shape must be literal or symbolic value in {} op {}'.format(node.op, node.name))
+        if shape_value is not None:
+            shape_value = shape_value.val.flatten()
+            shape = tuple([int(s) if not is_symbolic(s) else s for s in shape_value])
+            rettype = builtins.tensor(typeb, shape)
 
-        shape_value = shape_value.val.flatten()
-        shape = tuple([int(s) if not is_symbolic(s) else s for s in shape_value])
-        rettype = builtins.tensor(typeb, shape)
-
-        fill_value = self._get_symbolic_value(node.inputs[1])
-        if fill_value is not None and not any_symbolic_or_unknown(shape):
-            value = np.ones(shape, dtype=builtins.utils.nptype_from_builtin(typeb)) * fill_value.val
-            self._set_symbolic_value(node, rettype, value)
+            fill_value = self._get_symbolic_value(node.inputs[1])
+            if fill_value is not None and not any_symbolic_or_unknown(shape):
+                value = np.ones(shape, dtype=builtins.utils.nptype_from_builtin(typeb)) * fill_value.val
+                self._set_symbolic_value(node, rettype, value)
+        else:
+            # shape unknown.
+            # we should be able to derive a rank
+            shape = tuple(make_symbol(node.name + str(i)) for i in range(typea.get_shape()[0]))
+            rettype = builtins.tensor(typeb, shape)
         return rettype
 
     def visit_RandomUniform(self, node):
@@ -1327,7 +1329,7 @@ class TypeInferenceVisitor(object):
         for dt in input_types:
             if builtins.is_tensor(dt):
                 dt_shape = dt.get_shape()
-                if len(dt_shape) != 1 or dt_shape[0] != 1:
+                if dt_shape and (len(dt_shape) != 1 or dt_shape[0] != 1):
                     raise ValueError(
                         'Invalid input tensor input with more than value in {} node {}'.format(
                             node.op, node.name))
@@ -1362,7 +1364,7 @@ class TypeInferenceVisitor(object):
 
         # Figure out the node type
         shape = (limit - start) / delta
-        shape = shape if is_symbolic(shape) else math.ceil(shape)
+        shape = shape if is_symbolic(shape) else int(math.ceil(shape))
         rettype = builtins.tensor(datatype, [shape])
 
         # Evaluate the symbolic value

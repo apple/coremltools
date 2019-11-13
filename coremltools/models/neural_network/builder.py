@@ -6905,7 +6905,7 @@ class NeuralNetworkBuilder(object):
             Constant value at all other locations, default: 0.0.
         """
 
-        if not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14:
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
             self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
@@ -6940,7 +6940,7 @@ class NeuralNetworkBuilder(object):
             whether to perform exclusive or inclusive cumulative summation, default: False.
         """
 
-        if not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14:
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
             self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
@@ -6974,7 +6974,7 @@ class NeuralNetworkBuilder(object):
         add_clip
         """
 
-        if not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14:
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
             self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
 
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])

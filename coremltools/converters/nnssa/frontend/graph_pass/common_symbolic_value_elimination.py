@@ -37,27 +37,29 @@ def common_symbolic_value_elimination_impl(gdict):
         if nodeval is None:
             continue
 
-        val_list = nodeval.val if isinstance(nodeval.val, list) else [nodeval.val]
-        if any([isscalar(v) and v == -1 for v in val_list]):
-            continue
-        if any([(not isscalar(v)) and -1 in v for v in val_list]):
-            continue
-        if any([isinstance(v, np.ndarray) and np.issctype(v.dtype) and v.size > 100
-                for v in val_list]):
-            continue
+        nodeval_list = nodeval if isinstance(nodeval, list) else [nodeval]
 
-        hashable_val, any_symbolic = make_hashable(nodeval.val)
-        if any_symbolic:
-            if hashable_val in values:
-                # rewrite graph
-                othernodes = values[hashable_val]
-                for othernode in othernodes:
-                    if len(roots[othernode].intersection(roots[n.name])) > 0:
-                        outputs = list(n.outputs)
-                        for outnode in outputs:
-                            replace_source(gdict, n.name, outnode, othernode)
-            else:
-                values[hashable_val] = values.get(hashable_val, []) + [k]
+        for anodeval in nodeval_list:
+            val = anodeval.val
+            if isscalar(val) and val == -1:
+                continue
+            if (not isscalar(val)) and -1 in val:
+                continue
+            if isinstance(val, np.ndarray) and np.issctype(val.dtype) and val.size > 100:
+                continue
+
+            hashable_val, any_symbolic = make_hashable(val)
+            if any_symbolic:
+                if hashable_val in values:
+                    # rewrite graph
+                    othernodes = values[hashable_val]
+                    for othernode in othernodes:
+                        if len(roots[othernode].intersection(roots[n.name])) > 0:
+                            outputs = list(n.outputs)
+                            for outnode in outputs:
+                                replace_source(gdict, n.name, outnode, othernode)
+                else:
+                    values[hashable_val] = values.get(hashable_val, []) + [k]
 
 
 def common_symbolic_value_elimination_impl2(gdict):
