@@ -20,7 +20,7 @@ using SpecValueType = ::CoreML::Specification::V5::ValueType;
 
 namespace ProgramIRValueType {
 
-std::unique_ptr<IRValueType> Parse(const SpecValueType& type);
+std::shared_ptr<const IRValueType> Parse(const SpecValueType& type);
 
 }
 }

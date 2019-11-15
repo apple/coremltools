@@ -20,7 +20,7 @@ using SpecValue = ::CoreML::Specification::V5::Value;
 
 namespace ProgramIRValue {
 
-std::unique_ptr<IRValue> Parse(const SpecValue& value);
+std::shared_ptr<const IRValue> Parse(const SpecValue& value);
 
 }
 }

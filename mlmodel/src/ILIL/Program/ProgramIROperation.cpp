@@ -23,7 +23,7 @@ using namespace ::google;
 
 class ProgramIROperationImpl : public ProgramIROperation {
 public:
-    using AttributesMap = std::unordered_map<std::string, std::unique_ptr<IRValue>>;
+    using AttributesMap = std::unordered_map<std::string, std::shared_ptr<const IRValue>>;
     using ProtoAttributesMap = protobuf::Map<std::string, SpecValue>;
 
     using InputsMap = std::unordered_map<std::string, std::string>;
@@ -44,7 +44,11 @@ public:
     { }
 
     const IRValue& GetAttribute(const std::string& name) const override {
-        return *m_attributes.at(name);
+        auto nameAndValue = m_attributes.find(name);
+        if (nameAndValue == m_attributes.cend()) {
+            throw std::out_of_range("Attribute does not exist.");
+        }
+        return *nameAndValue->second;
     }
 
     const IRBlockPtrVec& GetBlocks() const override {
@@ -118,6 +122,7 @@ private:
         for (const auto& paramAndArg : specInputs) {
             inputNames.push_back(paramAndArg.second);
         }
+        std::sort(inputNames.begin(), inputNames.end());
         return inputNames;
     }
 
@@ -127,6 +132,7 @@ private:
         for (const auto& output : specOutputs) {
             outputNames.push_back(output.name());
         }
+        std::sort(outputNames.begin(), outputNames.end());
         return outputNames;
     }
 

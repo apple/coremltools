@@ -50,7 +50,12 @@ ProgramIROperatorTypeConverter::ProgramIROperatorTypeConverter()
 
 IROperatorType ProgramIROperatorTypeConverter::GetType(const std::string &name) const
 {
-    return m_nameToType.at(name);
+    auto opType = m_nameToType.find(name);
+    if (opType == m_nameToType.cend()) {
+        throw std::out_of_range("Unknown operator '" + name + "'");
+    }
+
+    return opType->second;
 }
 
 /*static*/ ProgramIROperatorTypeConverter::NameToTypeMap ProgramIROperatorTypeConverter::MakeNameToTypeMap()

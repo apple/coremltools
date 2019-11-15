@@ -7,6 +7,7 @@
 //
 
 #include "ILIL/IRValue.hpp"
+#include "ILIL/IRValueType.hpp"
 
 using namespace ::CoreML::ILIL;
 
@@ -46,77 +47,117 @@ std::string IRValue::AsString() const
 }
 
 //-----------------------------------------------------------------
+#pragma mark - IRScalarValue
 
-IRImmediateValue::~IRImmediateValue() = default;
+template<typename T>
+IRScalarValue<T>::~IRScalarValue() = default;
 
-IRImmediateValue::IRImmediateValue(ConstIRValueTypePtr type)
+template<typename T>
+IRScalarValue<T>::IRScalarValue(ConstIRScalarValueTypePtr type, T value)
     : IRValue(std::move(type))
-{ }
-
-//-----------------------------------------------------------------
-
-template<typename T>
-IRImmediateScalarValue<T>::~IRImmediateScalarValue() = default;
-
-template<typename T>
-IRImmediateScalarValue<T>::IRImmediateScalarValue(ConstIRScalarValueTypePtr type,
-                                                  T value)
-    : IRImmediateValue(std::move(type))
     , m_value(value)
 { }
 
+template<>
+/*static*/ std::unique_ptr<IRScalarValue<float>>
+IRScalarValue<float>::Make(float value)
+{
+    return std::unique_ptr<IRScalarValue<float>>
+        (new IRScalarValue<float>(IRScalarValueType::Float32(), value));
+}
+
+template<>
+/*static*/ std::unique_ptr<IRScalarValue<double>>
+IRScalarValue<double>::Make(double value)
+{
+    return std::unique_ptr<IRScalarValue<double>>
+        (new IRScalarValue<double>(IRScalarValueType::Float64(), value));
+}
+
+template<>
+/*static*/ std::unique_ptr<IRScalarValue<int32_t>>
+IRScalarValue<int32_t>::Make(int32_t value)
+{
+    return std::unique_ptr<IRScalarValue<int32_t>>
+        (new IRScalarValue<int32_t>(IRScalarValueType::Int32(), value));
+}
+
+template<>
+/*static*/ std::unique_ptr<IRScalarValue<int64_t>>
+IRScalarValue<int64_t>::Make(int64_t value)
+{
+    return std::unique_ptr<IRScalarValue<int64_t>>
+        (new IRScalarValue<int64_t>(IRScalarValueType::Int64(), value));
+}
+
+template<>
+/*static*/ std::unique_ptr<IRScalarValue<bool>>
+IRScalarValue<bool>::Make(bool value)
+{
+    return std::unique_ptr<IRScalarValue<bool>>
+        (new IRScalarValue<bool>(IRScalarValueType::Bool(), value));
+}
+
+template<>
+/*static*/ std::unique_ptr<IRScalarValue<std::string>>
+IRScalarValue<std::string>::Make(std::string value)
+{
+    return std::unique_ptr<IRScalarValue<std::string>>
+        (new IRScalarValue<std::string>(IRScalarValueType::String(), value));
+}
+
 // General-case implementations of scalar convenience getters: fail
 template<typename T>
-bool IRImmediateScalarValue<T>::AsBool() const
+bool IRScalarValue<T>::AsBool() const
 {
-    return IRImmediateValue::AsBool();
+    return IRValue::AsBool();
 }
 
 template<typename T>
-float IRImmediateScalarValue<T>::AsFloat32() const
+float IRScalarValue<T>::AsFloat32() const
 {
-    return IRImmediateValue::AsFloat32();
+    return IRValue::AsFloat32();
 }
 
 template<typename T>
-int64_t IRImmediateScalarValue<T>::AsInt64() const
+int64_t IRScalarValue<T>::AsInt64() const
 {
-    return IRImmediateValue::AsInt64();
+    return IRValue::AsInt64();
 }
 
 template<typename T>
-std::string IRImmediateScalarValue<T>::AsString() const
+std::string IRScalarValue<T>::AsString() const
 {
-    return IRImmediateValue::AsString();
+    return IRValue::AsString();
 }
 
 // Specializations to actually fetch values
 template<>
-bool IRImmediateScalarValue<bool>::AsBool() const
+bool IRScalarValue<bool>::AsBool() const
 {
     return GetValue();
 }
 
 template<>
-float IRImmediateScalarValue<float>::AsFloat32() const
+float IRScalarValue<float>::AsFloat32() const
 {
     return GetValue();
 }
 
 template<>
-int64_t IRImmediateScalarValue<int64_t>::AsInt64() const
+int64_t IRScalarValue<int64_t>::AsInt64() const
 {
     return GetValue();
 }
 
 template<>
-std::string IRImmediateScalarValue<std::string>::AsString() const
+std::string IRScalarValue<std::string>::AsString() const
 {
     return GetValue();
 }
 
 template<typename T>
-void IRImmediateScalarValue<T>::CopyTo(void* dest, uint64_t destSize) const
+void IRScalarValue<T>::CopyTo(void* dest, uint64_t destSize) const
 {
     if (sizeof(T) > destSize) {
         throw std::runtime_error("Insufficient output buffer size.");
@@ -125,32 +166,32 @@ void IRImmediateScalarValue<T>::CopyTo(void* dest, uint64_t destSize) const
 }
 
 template<typename T>
-T IRImmediateScalarValue<T>::GetValue() const
+T IRScalarValue<T>::GetValue() const
 {
     return m_value;
 }
 
-template class ::CoreML::ILIL::IRImmediateScalarValue<float>;
-template class ::CoreML::ILIL::IRImmediateScalarValue<double>;
-template class ::CoreML::ILIL::IRImmediateScalarValue<int32_t>;
-template class ::CoreML::ILIL::IRImmediateScalarValue<int64_t>;
-template class ::CoreML::ILIL::IRImmediateScalarValue<bool>;
-template class ::CoreML::ILIL::IRImmediateScalarValue<std::string>;
+template class ::CoreML::ILIL::IRScalarValue<float>;
+template class ::CoreML::ILIL::IRScalarValue<double>;
+template class ::CoreML::ILIL::IRScalarValue<int32_t>;
+template class ::CoreML::ILIL::IRScalarValue<int64_t>;
+template class ::CoreML::ILIL::IRScalarValue<bool>;
+template class ::CoreML::ILIL::IRScalarValue<std::string>;
 
 //-----------------------------------------------------------------
+#pragma mark - IRTensorValue
 
 template<typename T>
-IRImmediateTensorValue<T>::~IRImmediateTensorValue() = default;
+IRTensorValue<T>::~IRTensorValue() = default;
 
 template<typename T>
-IRImmediateTensorValue<T>::IRImmediateTensorValue(ConstIRTensorValueTypePtr type,
-                                                  std::vector<T>&& values)
-    : IRImmediateValue(type)
+IRTensorValue<T>::IRTensorValue(ConstIRTensorValueTypePtr type, std::vector<T>&& values)
+    : IRValue(type)
     , m_values(std::move(values))
 { }
 
 template<typename T>
-void IRImmediateTensorValue<T>::CopyTo(void* dest, uint64_t destSize) const
+void IRTensorValue<T>::CopyTo(void* dest, uint64_t destSize) const
 {
     uint64_t dataSize = GetType().GetNumElements() * sizeof(T);
     if (dataSize > destSize) {
@@ -160,41 +201,54 @@ void IRImmediateTensorValue<T>::CopyTo(void* dest, uint64_t destSize) const
 }
 
 template<>
-void IRImmediateTensorValue<bool>::CopyTo(void* /*dest*/, uint64_t /*destSize*/) const
+void IRTensorValue<bool>::CopyTo(void* /*dest*/, uint64_t /*destSize*/) const
 {
     // std::vector<bool> is a bitfield so it doesn't have a data() member
     throw std::runtime_error("Copying boolean tensors is not supported.");
 }
 
+template<>
+void IRTensorValue<std::string>::CopyTo(void* /*dest*/, uint64_t /*destSize*/) const
+{
+    // We have not yet designed a portable in-memory string format.
+    throw std::runtime_error("Copying string tensors is not supported.");
+}
+
 template<typename T>
-const std::vector<T>& IRImmediateTensorValue<T>::GetValues() const
+const std::vector<T>& IRTensorValue<T>::GetValues() const
 {
     return m_values;
 }
 
-template class ::CoreML::ILIL::IRImmediateTensorValue<float>;
-template class ::CoreML::ILIL::IRImmediateTensorValue<double>;
-template class ::CoreML::ILIL::IRImmediateTensorValue<int32_t>;
-template class ::CoreML::ILIL::IRImmediateTensorValue<int64_t>;
-template class ::CoreML::ILIL::IRImmediateTensorValue<bool>;
-template class ::CoreML::ILIL::IRImmediateTensorValue<std::string>;
+template class ::CoreML::ILIL::IRTensorValue<float>;
+template class ::CoreML::ILIL::IRTensorValue<double>;
+template class ::CoreML::ILIL::IRTensorValue<int32_t>;
+template class ::CoreML::ILIL::IRTensorValue<int64_t>;
+template class ::CoreML::ILIL::IRTensorValue<bool>;
+template class ::CoreML::ILIL::IRTensorValue<std::string>;
 
 //-----------------------------------------------------------------
+#pragma mark - IRTupleValue
 
-IRImmediateTupleValue::~IRImmediateTupleValue() = default;
+IRTupleValue::~IRTupleValue() = default;
 
-IRImmediateTupleValue::IRImmediateTupleValue(ConstIRTupleValueTypePtr type,
-                                             ConstIRValueVec&& values)
-    : IRImmediateValue(std::move(type))
+IRTupleValue::IRTupleValue(ConstIRTupleValueTypePtr type, ConstIRValueVec&& values)
+    : IRValue(std::move(type))
     , m_values(std::move(values))
 { }
 
-void IRImmediateTupleValue::CopyTo(void* /*dest*/, uint64_t /*destSize*/) const
+void IRTupleValue::CopyTo(void* /*dest*/, uint64_t /*destSize*/) const
 {
     throw std::runtime_error("Copying tuples is not supported.");
 }
 
+const IRTupleValue::ConstIRValueVec& IRTupleValue::GetValues() const
+{
+    return m_values;
+}
+
 //-----------------------------------------------------------------
+#pragma mark - IRFileValue
 
 IRFileValue::~IRFileValue() = default;
 

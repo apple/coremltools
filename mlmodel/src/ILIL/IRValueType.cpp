@@ -9,12 +9,18 @@
 #include "ILIL/IRValueType.hpp"
 
 #include "ILIL/IRValue.hpp"
+#include "ILIL/IRValueTypeTraits.hpp"
 #include "NeuralNetworkBuffer.hpp"
 
 using namespace ::CoreML::ILIL;
 
 IRDimension::~IRDimension() = default;
 IRDimension::IRDimension() = default;
+
+bool IRDimension::operator!=(const IRDimension& other) const
+{
+    return !(*this == other);
+}
 
 //-----------------------------------------------------------------
 
@@ -23,6 +29,11 @@ IRConstantDimension::~IRConstantDimension() = default;
 IRConstantDimension::IRConstantDimension(uint64_t size)
     : m_size(size)
 { }
+
+/*static*/ std::unique_ptr<IRConstantDimension> IRConstantDimension::Make(uint64_t size)
+{
+    return std::make_unique<IRConstantDimension>(size);
+}
 
 uint64_t IRConstantDimension::GetSize() const
 {
@@ -42,6 +53,11 @@ IRSymbolicDimension::~IRSymbolicDimension() = default;
 IRSymbolicDimension::IRSymbolicDimension(const std::string& name)
     : m_name(name)
 { }
+
+std::unique_ptr<IRSymbolicDimension> IRSymbolicDimension::Make(const std::string& name)
+{
+    return std::make_unique<IRSymbolicDimension>(name);
+}
 
 const std::string& IRSymbolicDimension::GetName() const
 {
@@ -72,6 +88,24 @@ IRScalarValueType::IRScalarValueType(IRScalarValueTypeEnum type)
     : m_type(type)
 { }
 
+template<typename ScalarT>
+std::unique_ptr<const IRScalarValue<ScalarT>> IRScalarValueType::Make(ScalarT value) const
+{
+    if (GetType() != CppTypeTraits<ScalarT>::IRTypeEnum) {
+        throw std::runtime_error("Cannot initialize scalar value from value with wrong type.");
+    }
+
+    return std::unique_ptr<IRScalarValue<ScalarT>>
+        (new IRScalarValue<ScalarT>(std::dynamic_pointer_cast<const IRScalarValueType>(shared_from_this()), value));
+}
+
+template std::unique_ptr<const IRScalarValue<float>> IRScalarValueType::Make(float value) const;
+template std::unique_ptr<const IRScalarValue<double>> IRScalarValueType::Make(double value) const;
+template std::unique_ptr<const IRScalarValue<int32_t>> IRScalarValueType::Make(int32_t value) const;
+template std::unique_ptr<const IRScalarValue<int64_t>> IRScalarValueType::Make(int64_t value) const;
+template std::unique_ptr<const IRScalarValue<bool>> IRScalarValueType::Make(bool value) const;
+template std::unique_ptr<const IRScalarValue<std::string>> IRScalarValueType::Make(std::string value) const;
+
 uint64_t IRScalarValueType::GetNumElements() const
 {
     return 1;
@@ -83,27 +117,28 @@ IRScalarValueTypeEnum IRScalarValueType::GetType() const
 }
 
 template<typename ScalarT>
-static std::unique_ptr<const IRValue> ReadScalarValue(const std::string& filePath, uint64_t offset, std::shared_ptr<const IRScalarValueType> type)
+static std::unique_ptr<const IRValue> ReadScalarValue(const std::string& filePath, uint64_t offset, const IRScalarValueType& type)
 {
     std::vector<ScalarT> value;
     NNBuffer::NeuralNetworkBuffer nnBuffer(filePath);
     nnBuffer.getBuffer(offset, value);
-    return std::make_unique<IRImmediateScalarValue<ScalarT>>(type, value.at(0));
+    auto retval = IRScalarValue<ScalarT>::Make(value.at(0));
+    assert(retval->GetType() == type);
+    return retval;
 }
 
 std::unique_ptr<const IRValue> IRScalarValueType::ReadValue(const std::string& filePath, uint64_t offset) const
 {
-    auto thisTypeAsSharedPtr = std::make_shared<IRScalarValueType>(*this);
     switch (GetType()) {
         case IRScalarValueTypeEnum::Float32:
-            return ReadScalarValue<float>(filePath, offset, thisTypeAsSharedPtr);
+            return ReadScalarValue<float>(filePath, offset, *this);
         case IRScalarValueTypeEnum::Float64:
-            return ReadScalarValue<double>(filePath, offset, thisTypeAsSharedPtr);
+            return ReadScalarValue<double>(filePath, offset, *this);
 
         case IRScalarValueTypeEnum::Int32:
-            return ReadScalarValue<int32_t>(filePath, offset, thisTypeAsSharedPtr);
+            return ReadScalarValue<int32_t>(filePath, offset, *this);
         case IRScalarValueTypeEnum::Int64:
-            return ReadScalarValue<int64_t>(filePath, offset, thisTypeAsSharedPtr);
+            return ReadScalarValue<int64_t>(filePath, offset, *this);
 
         case IRScalarValueTypeEnum::Dynamic:
         case IRScalarValueTypeEnum::Bool:
@@ -128,6 +163,91 @@ bool IRScalarValueType::operator==(const IRValueType& other) const
     return (otherScalarType && otherScalarType->m_type == m_type);
 }
 
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Dynamic()
+{
+    return std::unique_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Dynamic));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Bool()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Bool));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::String()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::String));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Float16()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Float16));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Float32()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Float32));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Float64()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Float64));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::BFloat16()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::BFloat16));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Int4()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Int4));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Int8()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Int8));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Int16()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Int16));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Int32()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Int32));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Int64()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Int64));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::UInt4()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::UInt4));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::UInt8()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::UInt8));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::UInt16()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::UInt16));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::UInt32()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::UInt32));
+}
+
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::UInt64()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::UInt64));
+}
+
 //-----------------------------------------------------------------
 
 IRTensorValueType::~IRTensorValueType() = default;
@@ -136,6 +256,34 @@ IRTensorValueType::IRTensorValueType(std::shared_ptr<const IRScalarValueType> sc
     : m_scalarType(std::move(scalarType))
     , m_shape(std::move(shape))
 { }
+
+/*static*/ std::shared_ptr<const IRTensorValueType>
+IRTensorValueType::Make(std::shared_ptr<const IRScalarValueType> scalarType, Shape&& shape)
+{
+    return std::shared_ptr<const IRTensorValueType>(new IRTensorValueType(std::move(scalarType), std::move(shape)));
+}
+
+template<typename ScalarT>
+std::unique_ptr<const IRTensorValue<ScalarT>> IRTensorValueType::Make(std::vector<ScalarT>&& values) const
+{
+    if (GetNumElements() != values.size()) {
+        throw std::range_error("Wrong number of elements specified for immediate tensor value.");
+    }
+
+    if (GetScalarType().GetType() != CppTypeTraits<ScalarT>::IRTypeEnum) {
+        throw std::runtime_error("Cannot initialize tensor value from values with wrong type.");
+    }
+    
+    return std::unique_ptr<IRTensorValue<ScalarT>>
+        (new IRTensorValue<ScalarT>(std::dynamic_pointer_cast<const IRTensorValueType>(shared_from_this()), std::move(values)));
+}
+
+template std::unique_ptr<const IRTensorValue<float>> IRTensorValueType::Make(std::vector<float>&& values) const;
+template std::unique_ptr<const IRTensorValue<double>> IRTensorValueType::Make(std::vector<double>&& values) const;
+template std::unique_ptr<const IRTensorValue<int32_t>> IRTensorValueType::Make(std::vector<int32_t>&& values) const;
+template std::unique_ptr<const IRTensorValue<int64_t>> IRTensorValueType::Make(std::vector<int64_t>&& values) const;
+template std::unique_ptr<const IRTensorValue<bool>> IRTensorValueType::Make(std::vector<bool>&& values) const;
+template std::unique_ptr<const IRTensorValue<std::string>> IRTensorValueType::Make(std::vector<std::string>&& values) const;
 
 uint64_t IRTensorValueType::GetNumElements() const
 {
@@ -163,27 +311,26 @@ const IRTensorValueType::Shape& IRTensorValueType::GetShape() const
 }
 
 template<typename ScalarT>
-static std::unique_ptr<const IRValue> ReadTensorValue(const std::string& filePath, uint64_t offset, std::shared_ptr<const IRTensorValueType> type)
+static std::unique_ptr<const IRValue> ReadTensorValue(const std::string& filePath, uint64_t offset, const IRTensorValueType& tensorType)
 {
     std::vector<ScalarT> values;
     NNBuffer::NeuralNetworkBuffer nnBuffer(filePath);
     nnBuffer.getBuffer(offset, values);
-    return std::make_unique<IRImmediateTensorValue<ScalarT>>(type, std::move(values));
+    return tensorType.Make(std::move(values));
 }
 
 std::unique_ptr<const IRValue> IRTensorValueType::ReadValue(const std::string& filePath, uint64_t offset) const
 {
-    auto thisTypeAsSharedPtr = std::make_shared<IRTensorValueType>(*this);
     switch (GetScalarType().GetType()) {
         case IRScalarValueTypeEnum::Float32:
-            return ReadTensorValue<float>(filePath, offset, thisTypeAsSharedPtr);
+            return ReadTensorValue<float>(filePath, offset, *this->As<IRTensorValueType>());
         case IRScalarValueTypeEnum::Float64:
-            return ReadTensorValue<double>(filePath, offset, thisTypeAsSharedPtr);
+            return ReadTensorValue<double>(filePath, offset, *this->As<IRTensorValueType>());
 
         case IRScalarValueTypeEnum::Int32:
-            return ReadTensorValue<int32_t>(filePath, offset, thisTypeAsSharedPtr);
+            return ReadTensorValue<int32_t>(filePath, offset, *this->As<IRTensorValueType>());
         case IRScalarValueTypeEnum::Int64:
-            return ReadTensorValue<int64_t>(filePath, offset, thisTypeAsSharedPtr);
+            return ReadTensorValue<int64_t>(filePath, offset, *this->As<IRTensorValueType>());
 
         case IRScalarValueTypeEnum::Dynamic:
         case IRScalarValueTypeEnum::Bool:
@@ -205,8 +352,21 @@ std::unique_ptr<const IRValue> IRTensorValueType::ReadValue(const std::string& f
 bool IRTensorValueType::operator==(const IRValueType& other) const
 {
     if (const auto* otherTensorType = other.TryAs<IRTensorValueType>()) {
-        return (GetScalarType() == otherTensorType->GetScalarType() &&
-                GetShape() == otherTensorType->GetShape());
+        if (GetScalarType() != otherTensorType->GetScalarType()) {
+            return false;
+        }
+
+        if (GetShape().size() != otherTensorType->GetShape().size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < GetShape().size(); ++i) {
+            if (*GetShape()[i] != *otherTensorType->GetShape()[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
     return false;
 }
@@ -220,6 +380,13 @@ IRListValueType::IRListValueType(std::shared_ptr<const IRValueType> elementType,
     : m_elementType(std::move(elementType))
     , m_length(std::move(length))
 { }
+
+/** Convenience factory method. */
+/*static*/ std::shared_ptr<const IRListValueType> IRListValueType::Make(std::shared_ptr<const IRValueType> elementType,
+                                                                        std::shared_ptr<const IRDimension> length)
+{
+    return std::shared_ptr<IRListValueType>(new IRListValueType(std::move(elementType), std::move(length)));
+}
 
 const IRValueType& IRListValueType::GetElementType() const
 {
@@ -263,9 +430,30 @@ IRTupleValueType::IRTupleValueType(ValueTypePtrVec&& types)
     : m_types(std::move(types))
 { }
 
+/*static*/ std::shared_ptr<const IRTupleValueType> IRTupleValueType::Make(ValueTypePtrVec&& types)
+{
+    return std::shared_ptr<IRTupleValueType>(new IRTupleValueType(std::move(types)));
+}
+
+std::unique_ptr<const IRTupleValue> IRTupleValueType::Make(ConstIRValueVec&& values) const
+{
+    if (GetTypes().size() != values.size()) {
+        throw std::runtime_error("Unexpected immediate tuple value type.");
+    }
+
+    for (size_t i = 0; i < GetTypes().size(); ++i) {
+        if (*GetTypes()[i] != values[i]->GetType()) {
+            throw std::runtime_error("Unexpected immediate tuple value type.");
+        }
+    }
+
+    return std::unique_ptr<IRTupleValue>
+        (new IRTupleValue(std::dynamic_pointer_cast<const IRTupleValueType>(shared_from_this()), std::move(values)));
+}
+
 uint64_t IRTupleValueType::GetNumElements() const
 {
-    return static_cast<uint64_t>(m_types.size());
+    throw std::range_error("Cannot determine number of elements in a tuple.");
 }
 
 const IRTupleValueType::ValueTypePtrVec& IRTupleValueType::GetTypes() const
@@ -281,7 +469,16 @@ std::unique_ptr<const IRValue> IRTupleValueType::ReadValue(const std::string& /*
 bool IRTupleValueType::operator==(const IRValueType& other) const
 {
     if (const auto* otherTupleType = other.TryAs<IRTupleValueType>()) {
-        return GetTypes() == otherTupleType->GetTypes();
+        if (GetTypes().size() != otherTupleType->GetTypes().size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < GetTypes().size(); ++i) {
+            if (*GetTypes()[i] != *otherTupleType->GetTypes()[i]) {
+                return false;
+            }
+        }
+        return true;
     }
     return false;
 }
@@ -295,6 +492,12 @@ IRNamedValueType::IRNamedValueType(const std::string& name,
     : m_name(name)
     , m_type(std::move(type))
 { }
+
+/*static*/ std::shared_ptr<const IRNamedValueType>
+IRNamedValueType::Make(const std::string& name, std::shared_ptr<const IRValueType> type)
+{
+    return std::unique_ptr<const IRNamedValueType>(new IRNamedValueType(name, std::move(type)));
+}
 
 const std::string& IRNamedValueType::GetName() const
 {

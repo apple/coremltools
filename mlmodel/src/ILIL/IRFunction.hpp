@@ -16,7 +16,7 @@ namespace ILIL {
 /** A function in an IRProgram. */
 class IRFunction {
 public:
-    using ConstIRValueTypePtr = std::unique_ptr<const IRValueType>;
+    using ConstIRValueTypePtr = std::shared_ptr<const IRValueType>;
     using ConstIRValueTypePtrVec = std::vector<ConstIRValueTypePtr>;
 
     virtual ~IRFunction() = default;

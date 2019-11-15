@@ -14,43 +14,33 @@ using namespace ::CoreML::ILIL;
 using namespace ::CoreML::ILIL::Program;
 using namespace ::CoreML::Specification;
 
-static std::unique_ptr<IRValue> ParseFileValue(const V5::Value_FileValue& value, std::unique_ptr<IRValueType> type)
+static std::shared_ptr<const IRValue> ParseFileValue(const V5::Value_FileValue& value, std::shared_ptr<const IRValueType> type)
 {
     return std::make_unique<IRFileValue>(std::move(type), value.filename(), value.offset());
 }
 
 template<typename ScalarT>
-static std::unique_ptr<IRImmediateValue> ParseScalarValue(std::shared_ptr<IRValueType> type, ScalarT value)
+static std::unique_ptr<const IRValue> ParseScalarValue(const IRScalarValueType& scalarType, ScalarT value)
 {
-    auto scalarType = std::dynamic_pointer_cast<IRScalarValueType>(type);
-    if (!scalarType) {
-        throw std::runtime_error("Cannot parse scalar value with associated non-scalar type.");
-    }
-
-    return std::make_unique<IRImmediateScalarValue<ScalarT>>(std::move(scalarType), value);
+    return scalarType.Make(value);
 }
 
-static std::unique_ptr<IRImmediateValue> ParseTensorValue(const V5::TensorValue& value, std::shared_ptr<IRValueType> type)
+static std::unique_ptr<const IRValue> ParseTensorValue(const V5::TensorValue& value, const IRTensorValueType& tensorType)
 {
-    auto tensorType = std::dynamic_pointer_cast<const IRTensorValueType>(type);
-    if (!tensorType) {
-        throw std::runtime_error("Cannot parse tensor value with associated non-tensor type.");
-    }
-
-    switch (tensorType->GetScalarType().GetType()) {
+    switch (tensorType.GetScalarType().GetType()) {
         case IRScalarValueTypeEnum::Dynamic:
             throw std::runtime_error("Dynamic is not a supported immediate type.");
 
         case IRScalarValueTypeEnum::Bool:
         {
             std::vector<bool> bools(value.bools().cbegin(), value.bools().cend());
-            return std::make_unique<IRImmediateTensorValue<bool>>(std::move(tensorType), std::move(bools));
+            return tensorType.Make(std::move(bools));
         }
 
         case IRScalarValueTypeEnum::String:
         {
             std::vector<std::string> strings(value.strings().cbegin(), value.strings().cend());
-            return std::make_unique<IRImmediateTensorValue<std::string>>(std::move(tensorType), std::move(strings));
+            return tensorType.Make(std::move(strings));
         }
 
         case IRScalarValueTypeEnum::Float16:
@@ -58,7 +48,7 @@ static std::unique_ptr<IRImmediateValue> ParseTensorValue(const V5::TensorValue&
         case IRScalarValueTypeEnum::Float32:
         {
             std::vector<float> floats(value.floats().cbegin(), value.floats().cend());
-            return std::make_unique<IRImmediateTensorValue<float>>(std::move(tensorType), std::move(floats));
+            return tensorType.Make(std::move(floats));
         }
         case IRScalarValueTypeEnum::Float64:
             throw std::runtime_error("Float64 is not a supported immediate type.");
@@ -76,7 +66,7 @@ static std::unique_ptr<IRImmediateValue> ParseTensorValue(const V5::TensorValue&
         case IRScalarValueTypeEnum::Int64:
         {
             std::vector<int64_t> ints(value.ints().cbegin(), value.ints().cend());
-            return std::make_unique<IRImmediateTensorValue<int64_t>>(std::move(tensorType), std::move(ints));
+            return tensorType.Make(std::move(ints));
         }
 
         case IRScalarValueTypeEnum::UInt4:
@@ -92,55 +82,46 @@ static std::unique_ptr<IRImmediateValue> ParseTensorValue(const V5::TensorValue&
     }
 }
 
-static std::unique_ptr<IRImmediateValue> ParseTupleValue(const V5::TupleValue& value, std::shared_ptr<IRValueType> type)
+static std::shared_ptr<const IRValue> ParseTupleValue(const V5::TupleValue& value, const IRTupleValueType& tupleType)
 {
-    auto tupleType = std::dynamic_pointer_cast<const IRTupleValueType>(type);
-    if (!tupleType) {
-        throw std::runtime_error("Cannot parse tuple value with associated non-tuple type.");
-    }
-
-    const auto& memberTypes = tupleType->GetTypes();
-    IRImmediateTupleValue::ConstIRValueVec values;
+    const auto& memberTypes = tupleType.GetTypes();
+    IRTupleValue::ConstIRValueVec values;
     values.reserve(memberTypes.size());
     for (int i = 0; i < value.value_size(); ++i) {
         values.push_back(ProgramIRValue::Parse(value.value(i)));
-
-        if (values[static_cast<size_t>(i)]->GetType() != *memberTypes[static_cast<size_t>(i)]) {
-            throw std::runtime_error("Found unexpected immediate type while initializing tuple.");
-        }
     }
 
-    return std::make_unique<IRImmediateTupleValue>(std::move(tupleType), std::move(values));
+    return tupleType.Make(std::move(values));
 }
 
-static std::unique_ptr<IRImmediateValue> ParseImmediateValue(const V5::Value_ImmediateValue& value, std::unique_ptr<IRValueType> type)
+static std::shared_ptr<const IRValue> ParseImmediateValue(const V5::Value_ImmediateValue& value, const IRValueType& type)
 {
     switch (value.value_case()) {
         case V5::Value_ImmediateValue::kB:
-            return ParseScalarValue<bool>(std::move(type), value.b());
+            return ParseScalarValue<bool>(*type.As<IRScalarValueType>(), value.b());
         case V5::Value_ImmediateValue::kF:
-            return ParseScalarValue<float>(std::move(type), value.f());
+            return ParseScalarValue<float>(*type.As<IRScalarValueType>(), value.f());
         case V5::Value_ImmediateValue::kI:
-            return ParseScalarValue<int64_t>(std::move(type), value.i());
+            return ParseScalarValue<int64_t>(*type.As<IRScalarValueType>(), value.i());
         case V5::Value_ImmediateValue::kS:
-            return ParseScalarValue<std::string>(std::move(type), value.s());
+            return ParseScalarValue<std::string>(*type.As<IRScalarValueType>(), value.s());
         case V5::Value_ImmediateValue::kTensor:
-            return ParseTensorValue(value.tensor(), std::move(type));
+            return ParseTensorValue(value.tensor(), *type.As<IRTensorValueType>());
         case V5::Value_ImmediateValue::kTuple:
-            return ParseTupleValue(value.tuple(), std::move(type));
+            return ParseTupleValue(value.tuple(), *type.As<IRTupleValueType>());
         case V5::Value_ImmediateValue::VALUE_NOT_SET:
             throw std::runtime_error("Cannot parse invalid immediate value.");
     }
 }
 
-std::unique_ptr<IRValue> ProgramIRValue::Parse(const SpecValue& value)
+std::shared_ptr<const IRValue> ProgramIRValue::Parse(const SpecValue& value)
 {
     auto type = ProgramIRValueType::Parse(value.type());
     switch (value.value_case()) {
         case SpecValue::kFileValue:
             return ParseFileValue(value.filevalue(), std::move(type));
         case SpecValue::kImmediateValue:
-            return ParseImmediateValue(value.immediatevalue(), std::move(type));
+            return ParseImmediateValue(value.immediatevalue(), *type);
         case SpecValue::VALUE_NOT_SET:
             throw std::runtime_error("Cannot parse invalid value");
     }

@@ -96,7 +96,7 @@ private:
             auto argType = parentScope.GetType(paramAndArg.second);
             m_scope->SetType(paramAndArg.first, std::move(argType));
 
-            auto argValue = parentScope.GetValue(paramAndArg.second);
+            auto argValue = parentScope.TryGetValue(paramAndArg.second);
             if (argValue) {
                 m_scope->SetValue(paramAndArg.first, std::move(argValue));
             }

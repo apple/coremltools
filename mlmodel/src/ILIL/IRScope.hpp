@@ -48,7 +48,8 @@ public:
      Get the type of the given value.
      If not found in this instance, the search will continue
      through parent scopes.
-     @return a type pointer or nullptr if the type is not found.
+     @return a type pointer if the type is found.
+     @throw std::runtime_error if the type is not found.
      */
     ConstIRValueTypePtr GetType(const std::string& name) const;
 
@@ -73,7 +74,8 @@ public:
      Get a value.
      If not found in this instance, the search will continue
      through parent scopes.
-     @return a value pointer or nullptr if the value is not found.
+     @return a value pointer if the value is found.
+     @throw std::runtime_error if the value is not found.
      */
     ConstIRValuePtr GetValue(const std::string& name) const;
 

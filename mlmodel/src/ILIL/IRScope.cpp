@@ -33,7 +33,7 @@ IRScope::ConstIRValueTypePtr IRScope::TryGetType(const std::string& name) const
         return localType->second;
     }
 
-    return m_parent ? m_parent->GetType(name) : nullptr;
+    return m_parent ? m_parent->TryGetType(name) : nullptr;
 }
 
 bool IRScope::SetType(const std::string& name, ConstIRValueTypePtr type, bool allowReplace)
@@ -65,7 +65,7 @@ IRScope::ConstIRValuePtr IRScope::TryGetValue(const std::string& name) const
         return localValue->second;
     }
 
-    return m_parent ? m_parent->GetValue(name) : nullptr;
+    return m_parent ? m_parent->TryGetValue(name) : nullptr;
 }
 
 bool IRScope::SetValue(const std::string& name, ConstIRValuePtr value, bool allowReplace)

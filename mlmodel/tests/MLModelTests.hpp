@@ -209,7 +209,7 @@ MLMODEL_TEST(testEpsOutOfAllowedRange)
 MLMODEL_TEST(testEpochsOutOfAllowedRange)
 MLMODEL_TEST(testEpochsOutOfAllowedSet)
 
-// Ttraining input validation test
+// Training input validation test
 // All are non-classifier unless otherwise described. All include model inputs unless specified "Only"
 MLMODEL_TEST(testInvalid_NoTrainingInputs)
 MLMODEL_TEST(testInvalid_OnlyModelInputs)
@@ -233,4 +233,31 @@ MLMODEL_TEST(testValid_Classifier_PredictedFeatureNameAndTarget)
 MLMODEL_TEST(testInvalid_Classifier_PredictedFeatureNameWrongType)
 MLMODEL_TEST(testValid_WithMSE)
 MLMODEL_TEST(testValid_Pipeline)
+
+// ILIL Tests
+MLMODEL_TEST(testIRDimension)
+MLMODEL_TEST(testIRScalarValueType)
+MLMODEL_TEST(testIRTensorValueType)
+MLMODEL_TEST(testIRListValueType)
+MLMODEL_TEST(testIRTupleValueType)
+MLMODEL_TEST(testIRNamedValueType)
+
+MLMODEL_TEST(testIRImmediateScalarValue)
+MLMODEL_TEST(testIRImmediateTensorValue)
+MLMODEL_TEST(testIRImmediateTupleValue)
+
+MLMODEL_TEST(testIRScopeGetSetType)
+MLMODEL_TEST(testIRScopeGetSetValue)
+MLMODEL_TEST(testIRScopeNestedTypeSearch)
+MLMODEL_TEST(testIRScopeNestedValueSearch)
+
+MLMODEL_TEST(testParseProgramIRBlock)
+MLMODEL_TEST(testParseProgramIRFunction)
+MLMODEL_TEST(testParseProgramIROperation)
+MLMODEL_TEST(testParseProgramIRProgram)
+MLMODEL_TEST(testParseProgramIRScalarValue)
+MLMODEL_TEST(testParseProgramIRTensorValue)
+MLMODEL_TEST(testParseProgramIRTupleValue)
+MLMODEL_TEST(testParseProgramIRValueType)
+
 #undef MLMODEL_TEST

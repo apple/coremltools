@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.10.2)
 project(mlmodel)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 include_directories(
   ..
@@ -7,59 +11,59 @@ include_directories(
   src
 )
 
-set(CMAKE_CXX_FLAGS " \
-    ${CMAKE_CXX_FLAGS} \
-    --std=c++14 \
-    -DGOOGLE_PROTOBUF_NO_STATIC_INITIALIZER \
-")
+add_definitions(-DGOOGLE_PROTOBUF_NO_STATIC_INITIALIZER)
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS " \
       ${CMAKE_CXX_FLAGS} \
       -Wglobal-constructors \
   ")
 endif()
-set(CMAKE_EXE_LINKER_FLAGS " \
-    ${CMAKE_EXE_LINKER_FLAGS} \
-    --std=c++14 \
-")
 
 add_library(mlmodel_test
     STATIC
 
-    tests/LinearModelTests.cpp
-    tests/TreeEnsembleTests.cpp
-    tests/OneHotEncoderTests.cpp
+    tests/BayesianProbitRegressionValidatorTests.cpp
     tests/InterfaceTests.cpp
-    tests/UtilsTests.cpp
+    tests/KNNValidatorTests.cpp
+    tests/LinearModelTests.cpp
+    tests/ModelContainerTests.cpp
+    tests/ModelCreationUtils.cpp
     tests/NNShaperTest.cpp
     tests/NNShapeTests.cpp
     tests/NNValidatorTests.cpp
-    tests/ModelContainerTests.cpp
-    tests/SaveLoadTests.cpp
-    tests/BayesianProbitRegressionValidatorTests.cpp
-    tests/NNShapeTests.cpp
-    tests/NNShaperTest.cpp
-    tests/KNNValidatorTests.cpp
-    tests/UpdatableModelValidatorTests.cpp
     tests/ParameterTests.cpp
-    tests/ModelCreationUtils.cpp
+    tests/OneHotEncoderTests.cpp
+    tests/SaveLoadTests.cpp
     tests/SoundAnalysisPreprocessingValidatorTests.cpp
+    tests/TreeEnsembleTests.cpp
+    tests/UpdatableModelValidatorTests.cpp
+    tests/UtilsTests.cpp
+
+    tests/ILIL/IRScopeTests.cpp
+    tests/ILIL/IRValueTests.cpp
+    tests/ILIL/IRValueTypeTests.cpp
+    tests/ILIL/ProgramIRTests.cpp
 )
 
 set_property(TARGET mlmodel_test
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
+target_include_directories(mlmodel_test
+    PRIVATE tests
+)
+
 target_link_libraries(mlmodel_test
-  mlmodel
+    mlmodel
 )
 
 add_executable(mlmodel_test_runner
-  test_runner.cpp
+    test_runner.cpp
 )
 
 target_link_libraries(mlmodel_test_runner
-  mlmodel_test
+    mlmodel_test
 )
 
 add_library(mlmodel

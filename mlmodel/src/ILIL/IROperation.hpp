@@ -30,7 +30,10 @@ public:
 
     virtual ~IROperation();
 
-    /** Get an attribute value. */
+    /**
+     Get an attribute value.
+     @throws std::out_of_range if an attribute by the given name does not exist.
+     */
     virtual const IRValue& GetAttribute(const std::string& name) const = 0;
 
     /** Get this operation's nested blocks. */
@@ -39,7 +42,10 @@ public:
     /** Get a description of the operator being invoked. */
     const IROperatorDescription& GetDescription() const;
 
-    /** Get the name of the argument specified for the given parameter. */
+    /**
+     Get the name of the argument specified for the given parameter.
+     @throws std::out_of_range if the requested input does not exist.
+     */
     virtual const std::string& GetInput(const std::string& param) const = 0;
 
     /** Get the names of all specified arguments. */

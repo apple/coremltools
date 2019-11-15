@@ -9,10 +9,14 @@
 
 #pragma once
 
-#include "ILIL/IRValueType.hpp"
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace CoreML {
 namespace ILIL {
+
+class IRValueType;
 
 class IRValue {
 public:
@@ -35,7 +39,7 @@ public:
     /** Convenience method to get this value as a float. Throws std::bad_cast if not applicable. */
     virtual float AsFloat32() const;
 
-    /** Convenience method to get this value as an int. Throws std::bad_cast if not applicable. */
+    /** Convenience method to get this value as an int64. Throws std::bad_cast if not applicable. */
     virtual int64_t AsInt64() const;
 
     /** Convenience method to get this value as a string. Throws std::bad_cast if not applicable. */
@@ -50,24 +54,13 @@ private:
 
 //-----------------------------------------------------------------
 
-class IRImmediateValue : public IRValue {
-public:
-    virtual ~IRImmediateValue();
-
-protected:
-    IRImmediateValue(std::shared_ptr<const IRValueType> type);
-};
-
-//-----------------------------------------------------------------
-
 template<typename T>
-class IRImmediateScalarValue : public IRImmediateValue {
+class IRScalarValue : public IRValue {
 public:
-    using ConstIRScalarValueTypePtr = std::shared_ptr<const IRScalarValueType>;
+    using ConstIRScalarValueTypePtr = std::shared_ptr<const class IRScalarValueType>;
 
-    ~IRImmediateScalarValue();
-    IRImmediateScalarValue(ConstIRScalarValueTypePtr type,
-                           T value);
+    ~IRScalarValue();
+    static std::unique_ptr<IRScalarValue<T>> Make(T value);
 
     T GetValue() const;
 
@@ -78,47 +71,54 @@ public:
     std::string AsString() const override;
 
 private:
+    IRScalarValue(ConstIRScalarValueTypePtr type, T value);
+
     T m_value;
+
+    friend class IRScalarValueType;
 };
 
 //-----------------------------------------------------------------
 
 template<typename T>
-class IRImmediateTensorValue : public IRImmediateValue {
+class IRTensorValue : public IRValue {
 public:
-    using ConstIRTensorValueTypePtr = std::shared_ptr<const IRTensorValueType>;
+    using ConstIRTensorValueTypePtr = std::shared_ptr<const class IRTensorValueType>;
+    using ValueVec = std::vector<T>;
 
-    ~IRImmediateTensorValue();
+    ~IRTensorValue();
 
     const std::vector<T>& GetValues() const;
-
-    IRImmediateTensorValue(ConstIRTensorValueTypePtr type,
-                           std::vector<T>&& values);
 
     void CopyTo(void* dest, uint64_t destSize) const override;
 
 private:
-    std::vector<T> m_values;
+    IRTensorValue(ConstIRTensorValueTypePtr type, ValueVec&& values);
+
+    ValueVec m_values;
+
+    friend class IRTensorValueType;
 };
 
 //-----------------------------------------------------------------
 
-class IRImmediateTupleValue : public IRImmediateValue {
+class IRTupleValue : public IRValue {
 public:
-    using ConstIRTupleValueTypePtr = std::shared_ptr<const IRTupleValueType>;
+    using ConstIRTupleValueTypePtr = std::shared_ptr<const class IRTupleValueType>;
     using ConstIRValueVec = std::vector<std::shared_ptr<const IRValue>>;
 
-    ~IRImmediateTupleValue();
-
-    IRImmediateTupleValue(ConstIRTupleValueTypePtr type,
-                          ConstIRValueVec&& values);
+    ~IRTupleValue();
 
     const ConstIRValueVec& GetValues() const;
 
     void CopyTo(void* dest, uint64_t destSize) const override;
 
 private:
+    IRTupleValue(ConstIRTupleValueTypePtr type, ConstIRValueVec&& values);
+
     ConstIRValueVec m_values;
+
+    friend class IRTupleValueType;
 };
 
 //-----------------------------------------------------------------

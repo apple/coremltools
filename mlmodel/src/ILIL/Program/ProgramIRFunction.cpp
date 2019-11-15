@@ -24,7 +24,7 @@ class ProgramIRFunctionImpl : public ProgramIRFunction {
 public:
     using ProtoNamedValueTypeVec = protobuf::RepeatedPtrField<V5::NamedValueType>;
     using ProtoValueTypeVec = protobuf::RepeatedPtrField<V5::ValueType>;
-    using ValueTypeMap = std::unordered_map<std::string, std::unique_ptr<IRValueType>>;
+    using ValueTypeMap = std::unordered_map<std::string, std::shared_ptr<const IRValueType>>;
 
     ProgramIRFunctionImpl(const FunctionSpec& function, ConstIRScopePtr parentScope)
         : m_inputs(ParseInputs(function.inputs()))
