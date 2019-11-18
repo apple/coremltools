@@ -456,7 +456,8 @@ class SSAConverter(object):
             'make_tuple': self._convert_make_tuple,
             'return': self._convert_return,
             'set_global': self._convert_set_global,
-            'while': self._convert_while
+            'while': self._convert_while,
+            'ZerosLike': self._convert_zeros_like
         }
 
         # converter state variables
@@ -2569,3 +2570,17 @@ class SSAConverter(object):
                                                    exclusive=node.attr["exclusive"])
 
         self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
+
+    def _convert_zeros_like(self, node):
+        """ Convert a ZerosLike node.
+        """
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        input_shape = self.tensor_shapes[input_names[0]]
+
+        val = np.zeros(input_shape)
+        if len(val.shape) == 0:
+            val = np.array([0])
+        builder = self._get_builder()
+        layer = builder.add_load_constant_nd(
+            name=node.name, output_name=node.name, constant_value=val, shape=val.shape)
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
