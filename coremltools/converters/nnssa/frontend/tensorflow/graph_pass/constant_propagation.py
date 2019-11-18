@@ -53,20 +53,32 @@ def constant_propagation(nnssa):
             else:
                 constant_node_num_outputs[node] = 1
             new_graph.node.extend([new_node])
-    result = {}
     constant_nodes = list(constant_nodes)
     try:
         if len(constant_nodes) > 0:
             with tf.Graph().as_default() as graph:
                 tf.import_graph_def(new_graph, name="")
                 with tf.compat.v1.Session(graph=graph) as sess:
-                    query_list = []
+                    query_list = list()
                     for c in constant_nodes:
                         for j in range(constant_node_num_outputs[c]):
                             query_list.append(c + ':' + str(j))
+                    control_flow_ops = list()
+                    for query in list(query_list):
+                        op_name = query.lower()
+                        if 'switch' in op_name or 'cond' in op_name:
+                            control_flow_ops.append(query)
+                            query_list.remove(query)
                     result_list = sess.run(query_list)
                     result = {query_list[i]: result_list[i] for i in range(len(query_list))}
-                    print(query_list)
+                    # propagate switch one by one
+                    for op in control_flow_ops:
+                        try:
+                            res = sess.run([op])
+                            result.update({op: res[0]})
+                        except:
+                            print('[Constant Propagation] Skip "dead" tensor: {}'.format(op))
+                            result.update({op: None})
             for f in nnssa.functions.values():
                 for k, v in f.graph.items():
                     if k in constant_node_num_outputs:
@@ -88,7 +100,7 @@ def constant_propagation(nnssa):
                                 v.datatype = builtins.tuple(tuple([val[1] for val in npval]))
                             except:
                                 print(values)
-    except:
-        print("Constant Propagation pass failed")
+    except Exception as e:
+        raise RuntimeError("Constant propagation failed: {}".format(e))
 
     delete_unnecessary_constant_nodes(nnssa)
