@@ -541,6 +541,30 @@ class TFSingleLayerTest(TFNetworkBatchTest):
         self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
                             output_name, batch_sizes=[1, 4])
 
+    def test_depthwise_conv2d(self):
+        options = dict(
+            depthwise_multiplier=[1, 2],
+            strides=[[1, 1, 1, 1], [1, 2, 2, 1]],
+            padding=['VALID', 'SAME'],
+        )
+        product = itertools.product(*options.values())
+        for prod in product:
+            params = dict(zip(options.keys(), prod))
+            graph = tf.Graph()
+            with graph.as_default():
+                x_image = tf.placeholder(tf.float32, shape=[None, 16, 16, 3])
+                kernels = tf.Variable(
+                    tf.truncated_normal([3, 3, 3, params['depthwise_multiplier']],
+                                        stddev=0.3))
+                conv1 = tf.nn.depthwise_conv2d(
+                    input=x_image,
+                    filter=kernels,
+                    strides=params['strides'],
+                    padding=params['padding'])
+            output_name = [conv1.op.name]
+            self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
+                                output_name, batch_sizes=[1, 4])
+
     def test_concat_constants(self):
         graph = tf.Graph()
         x, y = np.meshgrid(np.linspace(0., 1., 256), np.linspace(0., 1., 256))
@@ -1373,7 +1397,7 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             out = tf.nn.lrn(a)
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
-    def test_branch(self):
+    def test_cond(self):
         graph = tf.Graph()
         with graph.as_default():
             x = tf.constant(-2., dtype=tf.float32)
@@ -1385,6 +1409,16 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             def f2(): return tf.multiply(data, 3.)
 
             out = tf.cond(tf.less_equal(x, y), f1, f2)
+        self._test_tf_model_constant(graph, {data.op.name: [1]}, [out.op.name])
+
+    def test_cond_with_lambda(self):
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.constant(-2., dtype=tf.float32)
+            b = tf.constant(23., dtype=tf.float32)
+            data = tf.placeholder(tf.float32, shape=[1])
+            c = tf.multiply(a, b)
+            out = tf.cond(a < b, lambda: tf.add(a, c), lambda: tf.square(data))
         self._test_tf_model_constant(graph, {data.op.name: [1]}, [out.op.name])
 
     def test_zeros_like_static(self):
