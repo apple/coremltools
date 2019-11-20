@@ -1490,7 +1490,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         data = np.random.rand(1, 1, 2)
         model = keras.models.Sequential()
         model.add(keras.layers.SimpleRNN(5, input_shape=(1, 2), batch_input_shape=[1, 1, 2], stateful=True))
-        model.get_layer(index=1).reset_states()
+        model.get_layer(index=0).reset_states()
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         if is_macos() and macos_version() >= (10, 13):
             keras_output_1 = model.predict(data)
@@ -1515,7 +1515,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
 
         model = keras.models.Sequential()
         model.add(keras.layers.LSTM(5, input_shape=(1, 2), batch_input_shape=[1, 1, 2], stateful=True))
-        model.get_layer(index=1).reset_states()
+        model.get_layer(index=0).reset_states()
 
         if is_macos() and macos_version() >= (10, 13):
             coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
@@ -1528,7 +1528,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
             np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
 
         hidden_state = (np.random.rand(1, 5), np.random.rand(1, 5))
-        model.get_layer(index=1).reset_states(hidden_state)
+        model.get_layer(index=0).reset_states(hidden_state)
 
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()

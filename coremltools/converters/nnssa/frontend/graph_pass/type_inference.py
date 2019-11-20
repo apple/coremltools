@@ -1817,7 +1817,7 @@ class TypeInferenceVisitor(object):
         self.whole_ssa.global_resource[node.name] = node
         node.attr['tensorarray_source'] = node.name
 
-        return builtins.list(node.attr['element_shape'])
+        return builtins.list(node.attr['element_shape']) if node.attr['element_shape'] else None
 
     def visit_TensorArrayGatherV3(self, node):
         # input is resource, indices, flow
@@ -1840,9 +1840,10 @@ class TypeInferenceVisitor(object):
         tanode = self.find_tensor_array_source_node(node)
 
         ta_type = self.visit(node.inputs[1])
+
         if tanode is not None:
             ta_type = tanode.datatype
-        return ta_type.T[0]
+        return ta_type.T[0] if ta_type else None
 
     def visit_TensorArrayScatterV3(self, node):
         # input is resource, indices, values , flow

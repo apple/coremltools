@@ -40,7 +40,7 @@ class ParsedTFNode(ParsedNode):
             self.datatype = self.attr['value'].__class__
         elif '_output_shapes' in self.attr:
             output_shapes = self.attr['_output_shapes']
-            if len(output_shapes[0]) > 0:
+            if output_shapes[0] is not None and len(output_shapes[0]) > 0:
                 if 'dtype' in self.attr:
                     rettype = builtins.tensor(self.attr['dtype'], tuple(output_shapes[0]))
                 elif 'T' in self.attr:
