@@ -35,7 +35,7 @@ def parse_type(t):
 
 def parse_shape(t):
     if t.unknown_rank:
-        return []
+        return None
     ret = [d.size for d in t.dim]
     return ret
 
@@ -43,6 +43,7 @@ def parse_shape(t):
 def parse_tensor(t):
     typ = parse_type(t.dtype)
     shape = parse_shape(t.tensor_shape)
+
     if not t.tensor_shape.unknown_rank and len(shape) == 0:
         retobj = typ()
     else:

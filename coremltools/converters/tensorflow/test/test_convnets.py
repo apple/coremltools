@@ -1387,6 +1387,22 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             out = tf.cond(tf.less_equal(x, y), f1, f2)
         self._test_tf_model_constant(graph, {data.op.name: [1]}, [out.op.name])
 
+    def test_zeros_like_static(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.add(tf.zeros_like(a), a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_zeros_like_dynamic(self):
+        shape = [3,]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.int32, shape=shape)
+            c = tf.fill(dims=a, value=0.2)
+            out = tf.zeros_like(c)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
 if __name__ == '__main__':
     # unittest.main()

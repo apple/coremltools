@@ -2575,12 +2575,18 @@ class SSAConverter(object):
         """ Convert a ZerosLike node.
         """
         input_nodes, input_names, input_types = self._get_input_tensors(node)
-        input_shape = self.tensor_shapes[input_names[0]]
 
-        val = np.zeros(input_shape)
-        if len(val.shape) == 0:
-            val = np.array([0])
+        shape = input_types[0].get_shape()
         builder = self._get_builder()
-        layer = builder.add_load_constant_nd(
-            name=node.name, output_name=node.name, constant_value=val, shape=val.shape)
+        if -1 not in shape:
+            # We can use fill static or load constant as shape is known
+            val = np.zeros(shape)
+            if len(shape) == 0:
+                val = np.array([0])
+            layer = builder.add_load_constant_nd(
+                name=node.name, output_name=node.name, constant_value=val, shape=val.shape)
+        else:
+            # Insert dynamic zeros like
+            layer = builder.add_fill_like(
+                name=node.name, input_name=input_names[0], output_name=node.name, value=0.0)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
