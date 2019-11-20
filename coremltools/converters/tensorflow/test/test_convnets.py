@@ -1188,6 +1188,71 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             out = tf.strided_slice(a, begin=[-1, 5], end=[1, -6], strides=[1, 1], end_mask=1, ellipsis_mask=2)
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
+    def test_slice_issue_304(self):
+        shape = [1, 80, 20, 3]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, :-1, :, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, :-1, :, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, :-1, :-1, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, :, :-1, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, 1:, :-1, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, :-1, 1:, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, :, 1:, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, 1:, :, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+        tf.reset_default_graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            aux = a[:, 1:, 1:, :]
+            out = tf.multiply(aux, 1, 'aux')
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
     def test_crop_resize(self):
         graph = tf.Graph()
         with graph.as_default():
@@ -1323,7 +1388,7 @@ class TFSingleLayerTest(TFNetworkBatchTest):
 
 
 if __name__ == '__main__':
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest('test_mirror_pad'))
-    # unittest.TextTestRunner().run(suite)
+    # unittest.main()
+    suite = unittest.TestSuite()
+    suite.addTest(TFSingleLayerTest('test_slice_issue_304'))
+    unittest.TextTestRunner().run(suite)
