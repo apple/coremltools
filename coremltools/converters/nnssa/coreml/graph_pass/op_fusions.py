@@ -5,6 +5,7 @@ from __future__ import absolute_import as _
 
 import numpy as np
 from ...commons import builtins
+from ...commons.symbolic import * 
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
     delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
@@ -243,10 +244,15 @@ def transform_nhwc_to_nchw(nnssa):
             # Insert NHWC -> NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
-                if graph[inp_node_name].op == 'Const':
+                symbolic_value = graph[inp_node_name].attr['symbolic_value']
+                if (graph[inp_node_name].op == 'Const' or
+                    len(graph[inp_node_name].datatype.get_shape()) != 4 or
+                    ( symbolic_value and not any_symbolic_or_unknown(symbolic_value))):
                     # Const weights and parameters
                     continue
+            
                 if inp_node_format != 'NHWC_format_inserted':
+                    assert len(graph[inp_node_name].datatype.get_shape()) == 4
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
 
             # Insert NCHW -> NHWC transpose

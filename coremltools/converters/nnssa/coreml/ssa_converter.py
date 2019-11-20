@@ -1316,8 +1316,22 @@ class SSAConverter(object):
         split = node.attr['split']
         split = [size for size in split if size != 0]
         num_splits = len(split)
+
         has_equal_splits = all([size == split[0] for size in split])
         input_nodes, input_names, input_types = self._get_input_tensors(node)
+
+        if num_splits == 1:
+            if node.name in [feature.name for feature in self.get_spec().description.output]:
+                layer = self._get_builder().add_activation(
+                        name=node.name,
+                        non_linearity='LINEAR',
+                        input_name=input_names[-1],
+                        output_name=node.name,
+                        params=(1.0, 0.0))
+                shapes.propagate_single_layer(layer, self.tensor_shapes)
+            else:
+                self.op_tensor_map[node.name] = [input_names[-1]]
+            return
 
         # Split output is a tuple. We need to split them into a list of tensors
         output_names = [(node.name + '_' + str(i)) for i in range(num_splits)]
@@ -1350,13 +1364,18 @@ class SSAConverter(object):
 
     def _convert_identity(self, node):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
-        layer = self._get_builder().add_activation(
-            name=node.name,
-            non_linearity='LINEAR',
-            input_name=input_names[0],
-            output_name=node.name,
-            params=(1.0, 0.0))
-        shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+        if node.name in [feature.name for feature in self.get_spec().description.output]:
+            layer = self._get_builder().add_activation(
+                name=node.name,
+                non_linearity='LINEAR',
+                input_name=input_names[0],
+                output_name=node.name,
+                params=(1.0, 0.0))
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+        else:
+            self.op_tensor_map[node.name] = [input_names[-1]]
+
 
     def _convert_tensorarray_size(self, node):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
@@ -2457,11 +2476,9 @@ class SSAConverter(object):
         border_mode = node.attr.get('padding').lower()
         stride_height = strides[1]
         stride_width = strides[2]
-        input_shape = self.tensor_shapes[input_name]
-        output_shape = self.tensor_shapes[input_names[0]]
 
-        kernel_channels = input_shape[1]
-        output_channels = output_shape[-1]
+        kernel_channels = input_types[-1].get_shape()[1]
+        output_channels = node.datatype.get_shape()[1]
 
         self._get_builder().add_convolution(
             name=node.name,
