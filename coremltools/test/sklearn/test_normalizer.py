@@ -7,13 +7,17 @@ import numpy as _np
 import random
 import unittest
 
-from coremltools.models.utils import evaluate_transformer, macos_version
+from coremltools.models.utils import evaluate_transformer,\
+    macos_version, is_macos
 
 from coremltools._deps import HAS_SKLEARN
 if HAS_SKLEARN:
     from sklearn.preprocessing import Normalizer
     from coremltools.converters import sklearn as converter
 
+
+@unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                     'Only supported on macOS 10.13+')
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class NormalizerScikitTest(unittest.TestCase):
     """
@@ -26,16 +30,15 @@ class NormalizerScikitTest(unittest.TestCase):
 
         for param in ('l1', 'l2', 'max'):
 
-            cur_model= Normalizer(norm=param)
+            cur_model = Normalizer(norm=param)
 
             output = cur_model.fit_transform(X)
 
             spec = converter.convert(cur_model, ["a", 'b', 'c'], 'out')
 
-            if macos_version() >= (10, 13):
-                metrics = evaluate_transformer(spec, 
-                        [dict(zip(["a", "b", "c"], row)) for row in X], 
-                        [{"out" : row} for row in output]) 
+            evaluate_transformer(spec,
+                                 [dict(zip(["a", "b", "c"], row)) for row in X],
+                                 [{"out": row} for row in output])
 
     def test_boston(self):
         from sklearn.datasets import load_boston
@@ -45,10 +48,10 @@ class NormalizerScikitTest(unittest.TestCase):
 
         spec = converter.convert(scikit_model, scikit_data.feature_names, 'out')
 
-        if macos_version() >= (10, 13):
-            input_data = [dict(zip(scikit_data.feature_names, row)) 
-                    for row in scikit_data.data]
+        input_data = [dict(zip(scikit_data.feature_names, row))
+                for row in scikit_data.data]
 
-            output_data = [{"out" : row} for row in scikit_model.transform(scikit_data.data)]
+        output_data = [
+            {"out": row} for row in scikit_model.transform(scikit_data.data)]
 
-            evaluate_transformer(spec, input_data, output_data)
+        evaluate_transformer(spec, input_data, output_data)

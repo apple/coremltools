@@ -7,7 +7,8 @@ import os
 import pandas as pd
 import unittest
 from coremltools._deps import HAS_SKLEARN
-from coremltools.models.utils import evaluate_regressor, macos_version
+from coremltools.models.utils import evaluate_regressor,\
+    macos_version, is_macos
 
 if HAS_SKLEARN:
     from sklearn.linear_model import LinearRegression
@@ -82,7 +83,8 @@ class LinearRegressionScikitTest(unittest.TestCase):
             model = OneHotEncoder()
             spec = convert(model, 'data', 'out')
 
-
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_linear_regression_evaluation(self):
         """
         Check that the evaluation results are the same in scikit learn and coremltools
@@ -95,13 +97,13 @@ class LinearRegressionScikitTest(unittest.TestCase):
             cur_model.fit(self.scikit_data['data'], self.scikit_data['target'])
             spec = convert(cur_model, input_names, 'target')
 
-            if macos_version() >= (10, 13):
-                df['prediction'] = cur_model.predict(self.scikit_data.data)
+            df['prediction'] = cur_model.predict(self.scikit_data.data)
 
-                metrics = evaluate_regressor(spec, df)
-                self.assertAlmostEquals(metrics['max_error'], 0)
+            metrics = evaluate_regressor(spec, df)
+            self.assertAlmostEquals(metrics['max_error'], 0)
 
-
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_linear_svr_evaluation(self):
         """
         Check that the evaluation results are the same in scikit learn and coremltools
@@ -123,8 +125,7 @@ class LinearRegressionScikitTest(unittest.TestCase):
             cur_model.fit(self.scikit_data['data'], self.scikit_data['target'])
             spec = convert(cur_model, input_names, 'target')
 
-            if macos_version() >= (10, 13):
-                df['prediction'] = cur_model.predict(self.scikit_data.data)
+            df['prediction'] = cur_model.predict(self.scikit_data.data)
 
-                metrics = evaluate_regressor(spec, df)
-                self.assertAlmostEquals(metrics['max_error'], 0)
+            metrics = evaluate_regressor(spec, df)
+            self.assertAlmostEquals(metrics['max_error'], 0)

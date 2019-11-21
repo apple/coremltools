@@ -5,7 +5,7 @@
 
 import os
 import shutil
-from subprocess import Popen, PIPE
+from coremltools.models.utils import is_macos
 
 import unittest
 
@@ -14,6 +14,7 @@ from coremltools.models.nearest_neighbors import KNearestNeighborsClassifierBuil
 from coremltools._deps import HAS_SKLEARN
 if HAS_SKLEARN:
     from sklearn.datasets import load_iris
+
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class NearestNeighborsBuilderTest(unittest.TestCase):
@@ -314,32 +315,34 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             builder_string_labels.add_samples(some_X, invalid_string_y)
 
-    def test_builder_with_validation(self):
-        builder = KNearestNeighborsClassifierBuilder(input_name='input',
-                                                     output_name='output',
-                                                     number_of_dimensions=10,
-                                                     default_class_label='defaultLabel',
-                                                     k=3,
-                                                     weighting_scheme='inverse_distance',
-                                                     index_type='kd_tree',
-                                                     leaf_size=50)
+    @unittest.skipUnless(is_macos(), 'Only supported on MacOS platform.')
+    def test_can_init_and_save_model_from_builder_with_updated_spec(self):
+        builder = KNearestNeighborsClassifierBuilder(
+            input_name='input',
+            output_name='output',
+            number_of_dimensions=10,
+            default_class_label='defaultLabel',
+            k=3,
+            weighting_scheme='inverse_distance',
+            index_type='kd_tree',
+            leaf_size=50)
         builder.author = 'CoreML Team'
         builder.license = 'MIT'
         builder.description = 'test_builder_with_validation'
 
         # Save the updated spec
         coreml_model = MLModel(builder.spec)
+        self.assertIsNotNone(coreml_model)
         coreml_model_path = '/tmp/__test_builder_with_validation.mlmodel'
-        coreml_model.save(coreml_model_path)
-        self.assertTrue(os.path.isfile(coreml_model_path))
 
         try:
-            stdout, stderr, return_code = self._compile_mlmodel(coreml_model_path)
-            self.assertEqual(return_code, 0)
+            coreml_model.save(coreml_model_path)
+            self.assertTrue(os.path.isfile(coreml_model_path))
         finally:
             self._delete_mlmodel_and_mlmodelc(coreml_model_path)
 
-    def test_builder_with_compilation_default_parameters(self):
+    @unittest.skipUnless(is_macos(), 'Only supported on MacOS platform.')
+    def test_can_init_and_save_model_from_builder_default_parameters(self):
         builder = KNearestNeighborsClassifierBuilder(input_name='input',
                                                      output_name='output',
                                                      number_of_dimensions=4,
@@ -347,13 +350,12 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
 
         # Save the updated spec
         coreml_model = MLModel(builder.spec)
+        self.assertIsNotNone(coreml_model)
         coreml_model_path = '/tmp/__test_builder_with_validation.mlmodel'
-        coreml_model.save(coreml_model_path)
-        self.assertTrue(os.path.isfile(coreml_model_path))
 
         try:
-            stdout, stderr, return_code = self._compile_mlmodel(coreml_model_path)
-            self.assertEqual(return_code, 0)
+            coreml_model.save(coreml_model_path)
+            self.assertTrue(os.path.isfile(coreml_model_path))
         finally:
             self._delete_mlmodel_and_mlmodelc(coreml_model_path)
 
@@ -371,28 +373,6 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         elif spec.kNearestNeighborsClassifier.HasField("stringClassLabels"):
             for index, label in enumerate(spec.kNearestNeighborsClassifier.stringClassLabels.vector):
                 self.assertEqual(label, expected_y[index])
-
-    @staticmethod
-    def _compile_mlmodel(path_to_mlmodel):
-        """Compile the .mlmodel at the specified path."""
-        cmd = ['/usr/local/bin/coremlcompiler',
-               'compile',
-               path_to_mlmodel,
-               os.path.dirname(path_to_mlmodel)]
-
-        print(' '.join(cmd))
-        proc = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = proc.communicate()
-        return_code = proc.returncode
-
-        if stdout:
-            print('{}'.format(stdout.decode('ascii')))
-
-        if return_code or stderr:
-            print('Compilation failed with return code: {}'.format(return_code))
-            print('{}'.format(stderr.decode('ascii')))
-
-        return stdout, stderr, return_code
 
     @staticmethod
     def _delete_mlmodel_and_mlmodelc(path_to_mlmodel):

@@ -8,7 +8,8 @@ import unittest
 import numpy as np
 
 from coremltools._deps import HAS_SKLEARN
-from coremltools.models.utils import evaluate_transformer, macos_version
+from coremltools.models.utils import evaluate_transformer,\
+    macos_version, is_macos
 
 
 if HAS_SKLEARN:
@@ -41,70 +42,87 @@ class OneHotEncoderScikitTest(unittest.TestCase):
         self.scikit_data_multiple_cols = np.asarray(scikit_data_multiple_cols, dtype = 'd')
         self.scikit_model = scikit_model
 
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_conversion_one_column(self):
         # Fit a single OHE
         scikit_model = OneHotEncoder()
         scikit_model.fit(self.scikit_data)
         spec = sklearn.convert(scikit_model, 'single_feature', 'out').get_spec()
 
-        if macos_version() >= (10, 13):
-            test_data = [{'single_feature' : row} for row in self.scikit_data]
-            scikit_output = [{'out' : row} for row in scikit_model.transform(self.scikit_data).toarray()]
-            metrics = evaluate_transformer(spec, test_data, scikit_output)
+        test_data = [{'single_feature': row} for row in self.scikit_data]
+        scikit_output = [
+            {'out': row} for row in scikit_model.transform(
+                self.scikit_data).toarray()]
+        metrics = evaluate_transformer(spec, test_data, scikit_output)
 
-            self.assertIsNotNone(spec)
-            self.assertIsNotNone(spec.description)
-            self.assertEquals(metrics['num_errors'], 0)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.description)
+        self.assertEquals(metrics['num_errors'], 0)
 
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_conversion_many_columns(self):
         scikit_model = OneHotEncoder()
         scikit_model.fit(self.scikit_data_multiple_cols)
         spec = sklearn.convert(scikit_model, ['feature_1', 'feature_2'], 'out').get_spec()
 
-        if macos_version() >= (10, 13):
-            test_data = [{'feature_1': row[0], 'feature_2': row[1]} for row in self.scikit_data_multiple_cols]
-            scikit_output = [{'out': row} for row in scikit_model.transform(self.scikit_data_multiple_cols).toarray()]
-            metrics = evaluate_transformer(spec, test_data, scikit_output)
+        test_data = [
+            {'feature_1': row[0],
+             'feature_2': row[1]} for row in self.scikit_data_multiple_cols]
+        scikit_output = [
+            {'out': row} for row in scikit_model.transform(
+                self.scikit_data_multiple_cols).toarray()]
+        metrics = evaluate_transformer(spec, test_data, scikit_output)
 
-            self.assertIsNotNone(spec)
-            self.assertIsNotNone(spec.description)
-            self.assertEquals(metrics['num_errors'], 0)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.description)
+        self.assertEquals(metrics['num_errors'], 0)
 
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_conversion_one_column_of_several(self):
         scikit_model = OneHotEncoder(categorical_features = [0])
         scikit_model.fit(copy(self.scikit_data_multiple_cols))
         spec = sklearn.convert(scikit_model, ['feature_1', 'feature_2'], 'out').get_spec()
 
-        if macos_version() >= (10, 13):
-            test_data = [{'feature_1': row[0], 'feature_2': row[1]} for row in self.scikit_data_multiple_cols]
-            scikit_output = [{'out': row} for row in scikit_model.transform(self.scikit_data_multiple_cols).toarray()]
-            metrics = evaluate_transformer(spec, test_data, scikit_output)
+        test_data = [
+            {'feature_1': row[0],
+             'feature_2': row[1]} for row in self.scikit_data_multiple_cols]
+        scikit_output = [{'out': row} for row in scikit_model.transform(
+            self.scikit_data_multiple_cols).toarray()]
+        metrics = evaluate_transformer(spec, test_data, scikit_output)
 
-            self.assertIsNotNone(spec)
-            self.assertIsNotNone(spec.description)
-            self.assertEquals(metrics['num_errors'], 0)
+        self.assertIsNotNone(spec)
+        self.assertIsNotNone(spec.description)
+        self.assertEquals(metrics['num_errors'], 0)
 
-    def test_boston_OHE(self): 
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
+    def test_boston_OHE(self):
         data = load_boston()
 
-        for categorical_features in [ [3], [8], [3, 8], [8,3] ]:
+        for categorical_features in [[3], [8], [3, 8], [8, 3]]:
 
-            model = OneHotEncoder(categorical_features = categorical_features, sparse=False)
+            model = OneHotEncoder(
+                categorical_features = categorical_features, sparse=False)
             model.fit(data.data, data.target)
 
             # Convert the model
             spec = sklearn.convert(model, data.feature_names, 'out').get_spec()
 
-            input_data = [dict(zip(data.feature_names, row)) for row in data.data]
-            output_data = [{"out" : row} for row in model.transform(data.data)]
+            input_data = [dict(zip(data.feature_names, row))
+                          for row in data.data]
+            output_data = [{"out": row} for row in model.transform(data.data)]
 
-            if macos_version() >= (10, 13):
-                result = evaluate_transformer(spec, input_data, output_data)
+            result = evaluate_transformer(spec, input_data, output_data)
 
-                assert result["num_errors"] == 0
+            assert result["num_errors"] == 0
 
     # This test still isn't working
-    def test_boston_OHE_pipeline(self): 
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
+    def test_boston_OHE_pipeline(self):
         data = load_boston()
             
         for categorical_features in [ [3], [8], [3, 8], [8,3] ]:
@@ -112,7 +130,9 @@ class OneHotEncoderScikitTest(unittest.TestCase):
             # Put it in a pipeline so that we can test whether the output dimension
             # handling is correct. 
 
-            model = Pipeline([("OHE", OneHotEncoder(categorical_features = categorical_features)),
+            model = Pipeline(
+                [("OHE", OneHotEncoder(
+                    categorical_features=categorical_features)),
                  ("Normalizer", Normalizer())])
 
             model.fit(data.data.copy(), data.target)
@@ -120,14 +140,15 @@ class OneHotEncoderScikitTest(unittest.TestCase):
             # Convert the model
             spec = sklearn.convert(model, data.feature_names, 'out').get_spec()
 
-            if macos_version() >= (10, 13):
-                input_data = [dict(zip(data.feature_names, row)) for row in data.data]
-                output_data = [{"out" : row} for row in model.transform(data.data.copy())]
+            input_data = [dict(zip(data.feature_names, row)) for row in data.data]
+            output_data = [{"out" : row} for row in model.transform(data.data.copy())]
 
-                result = evaluate_transformer(spec, input_data, output_data)
+            result = evaluate_transformer(spec, input_data, output_data)
 
-                assert result["num_errors"] == 0
-   
+            assert result["num_errors"] == 0
+
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_random_sparse_data(self): 
 
         n_columns = 8
@@ -139,60 +160,66 @@ class OneHotEncoderScikitTest(unittest.TestCase):
 
         for dt in ['int32', 'float32', 'float64']:
 
-            _X = np.array( [[categories[j,rn.randint(n_categories)] 
+            _X = np.array( [[categories[j, rn.randint(n_categories)]
                              for j in range(n_columns)] 
                             for i in range(100)], dtype=dt)
 
             # Test this data on a bunch of possible inputs. 
             for sparse in (True, False): 
-                for categorical_features in ['all', [3], [4], range(2,8), range(0,4), range(0,8)]:
+                for categorical_features in ['all', [3], [4], range(2, 8),
+                                             range(0, 4), range(0, 8)]:
                     X = _X.copy()
 
                     # This appears to be the only type now working.
                     assert X.dtype == np.dtype(dt)
 
-                    model = OneHotEncoder(categorical_features = categorical_features, sparse=sparse)
+                    model = OneHotEncoder(
+                        categorical_features=categorical_features,
+                        sparse=sparse)
                     model.fit(X)
 
                     # Convert the model
-                    spec = sklearn.convert(model, [('data', Array(n_columns))], 'out')
+                    spec = sklearn.convert(
+                        model, [('data', Array(n_columns))], 'out')
 
-                    if macos_version() >= (10, 13):
-                        X_out = model.transform(X)
-                        if sparse:
-                            X_out = X_out.todense()
+                    X_out = model.transform(X)
+                    if sparse:
+                        X_out = X_out.todense()
 
-                        input_data = [{'data' : row} for row in X]
-                        output_data = [{"out" : row} for row in X_out]
+                    input_data = [{'data' : row} for row in X]
+                    output_data = [{"out" : row} for row in X_out]
 
-                        result = evaluate_transformer(spec, input_data, output_data)
+                    result = evaluate_transformer(spec, input_data, output_data)
 
-                        assert result["num_errors"] == 0
+                    assert result["num_errors"] == 0
 
             # Test normal data inside a pipeline
             for sparse in (True, False): 
-                for categorical_features in [ 'all', [3], [4], range(2,8), range(0,4), range(0,8)]:
+                for categorical_features in ['all', [3], [4], range(2, 8),
+                                             range(0, 4), range(0, 8)]:
                     X = _X.copy()
 
-                    model = Pipeline([("OHE", OneHotEncoder(categorical_features = categorical_features, sparse=sparse)),
-                                      ("Normalizer", Normalizer())])
+                    model = Pipeline(
+                        [("OHE", OneHotEncoder(
+                            categorical_features=categorical_features,
+                            sparse=sparse)), ("Normalizer", Normalizer())])
 
                     model.fit(X)
 
                     # Convert the model
-                    spec = sklearn.convert(model, [('data', Array(n_columns))], 'out').get_spec()
-                    
-                    if macos_version() >= (10, 13):
-                        X_out = model.transform(X)
-                        if sparse:
-                            X_out = X_out.todense()
+                    spec = sklearn.convert(
+                        model, [('data', Array(n_columns))], 'out').get_spec()
 
-                        input_data = [{'data' : row} for row in X]
-                        output_data = [{"out" : row} for row in X_out]
+                    X_out = model.transform(X)
+                    if sparse:
+                        X_out = X_out.todense()
 
-                        result = evaluate_transformer(spec, input_data, output_data)
+                    input_data = [{'data' : row} for row in X]
+                    output_data = [{"out" : row} for row in X_out]
 
-                        assert result["num_errors"] == 0
+                    result = evaluate_transformer(spec, input_data, output_data)
+
+                    assert result["num_errors"] == 0
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model

@@ -10,15 +10,15 @@ import unittest
 import uuid
 
 import numpy as np
-import tensorflow as tf
 import pytest
+import tensorflow as tf
 
 import coremltools
 import coremltools.models.datatypes as datatypes
 from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION
 from coremltools.models import neural_network as neural_network
-from coremltools.models.utils import macos_version
 from coremltools.models.neural_network import flexible_shape_utils
+from coremltools.models.utils import macos_version, is_macos
 
 np.random.seed(10)
 
@@ -123,33 +123,34 @@ class CorrectnessTest(unittest.TestCase):
             model = coremltools.utils.convert_neural_network_weights_to_fp16(
                 model)
 
-        prediction = model.predict(input, useCPUOnly=useCPUOnly)
-        for output_name in expected:
-            if self.__class__.__name__ == "SimpleTest":
-                assert (self._compare_shapes(expected[output_name],
-                                             prediction[output_name]))
-            else:
-                if output_name in output_name_shape_dict:
-                    output_shape = output_name_shape_dict[output_name]
+        try:
+            prediction = model.predict(input, useCPUOnly=useCPUOnly)
+            for output_name in expected:
+                if self.__class__.__name__ == "SimpleTest":
+                    assert (self._compare_shapes(expected[output_name],
+                                                 prediction[output_name]))
                 else:
-                    output_shape = []
+                    if output_name in output_name_shape_dict:
+                        output_shape = output_name_shape_dict[output_name]
+                    else:
+                        output_shape = []
 
-                if len(output_shape) == 0 and len(expected[output_name].shape) == 0:
-                    output_shape = (1,)
-                assert (self._compare_nd_shapes(expected[output_name],
-                                                prediction[output_name],
-                                                output_shape))
+                    if len(output_shape) == 0 and len(expected[output_name].shape) == 0:
+                        output_shape = (1,)
+                    assert (self._compare_nd_shapes(expected[output_name],
+                                                    prediction[output_name],
+                                                    output_shape))
 
-            if not validate_shapes_only:
-                assert (self._compare_predictions(expected[output_name],
-                                                  prediction[output_name]))
+                if not validate_shapes_only:
+                    assert (self._compare_predictions(expected[output_name],
+                                                      prediction[output_name]))
+        finally:
+            # Remove the temporary directory if we created one
+            if model_dir and os.path.exists(model_dir):
+                shutil.rmtree(model_dir)
 
-        # Remove the temporary directory if we created one
-        if model_dir and os.path.exists(model_dir):
-            shutil.rmtree(model_dir)
 
-
-@unittest.skipIf(macos_version() < MIN_MACOS_VERSION_REQUIRED,
+@unittest.skipIf(not is_macos() or macos_version() < MIN_MACOS_VERSION_REQUIRED,
                  'macOS 10.13+ is required. Skipping tests.')
 class SimpleTest(CorrectnessTest):
 
@@ -654,7 +655,7 @@ class SimpleTest(CorrectnessTest):
         self._test_model(builder.spec, input, expected, useCPUOnly=True)
 
 
-@unittest.skipIf(macos_version() < LAYERS_10_15_MACOS_VERSION,
+@unittest.skipIf(not is_macos() or macos_version() < LAYERS_10_15_MACOS_VERSION,
                  'macOS 10.15+ required. Skipping tests.')
 class NewLayersSimpleTest(CorrectnessTest):
 
@@ -676,15 +677,19 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(spec, {'data': x}, expected, useCPUOnly=True)
 
     def test_shape_flexibility_enumeration(self, rank=4):
-        default_shape = tuple(np.random.randint(1,15,size=rank))
+        default_shape = tuple(np.random.randint(1, 15, size=rank))
         input_features = [('data', datatypes.Array(*default_shape))]
-        builder = neural_network.NeuralNetworkBuilder(input_features,
-                                                      [('output', None)], disable_rank5_shape_mapping=True)
+        builder = neural_network.NeuralNetworkBuilder(
+            input_features=input_features,
+            output_features=[('output', None)],
+            disable_rank5_shape_mapping=True)
         builder.add_sin(name='sin', input_name='data', output_name='output')
         spec = builder.spec
 
-        shapes = [tuple(np.random.randint(1,15,size=rank)), tuple(np.random.randint(1,15,size=rank))]
-        flexible_shape_utils.add_multiarray_ndshape_enumeration(spec, feature_name='data', enumerated_shapes=shapes)
+        shapes = [tuple(np.random.randint(1, 15, size=rank)),
+                  tuple(np.random.randint(1, 15, size=rank))]
+        flexible_shape_utils.add_multiarray_ndshape_enumeration(
+            spec, feature_name='data', enumerated_shapes=shapes)
 
         shapes.append(default_shape)
         for s in shapes:
@@ -2189,10 +2194,6 @@ class NewLayersSimpleTest(CorrectnessTest):
                         reference = get_reference(data, pads, value)
 
                         ctr += 1
-                        # print('-' * 80)
-                        # print('{} test: constant pad nd: input shape: {}, output shape: {}, pads = {}, n_inputs = {}'.
-                        #       format(ctr, shape, reference.shape, pads.flatten(), n_inputs))
-                        # print('-' * 80)
 
                         input_features = [('data', datatypes.Array(*shape))]
                         output_features = [('output', None)]
@@ -2263,10 +2264,6 @@ class NewLayersSimpleTest(CorrectnessTest):
                         pads[:, 1] = tmp
 
                     ctr += 1
-                    # print('-' * 80)
-                    # print('{} test: constant pad nd: input shape: {}, output shape: {}, pads = {}, n_inputs = {}'.
-                    #       format(ctr, shape, reference.shape, pads.flatten(), n_inputs))
-                    # print('-' * 80)
 
                     input_features = [('data', datatypes.Array(*shape))]
                     output_features = [('output', None)]
@@ -2439,12 +2436,6 @@ class NewLayersSimpleTest(CorrectnessTest):
                                         iou_threshold = np.percentile(iou_matrix, iou_thresh) + .01
 
                                     number_of_test += 1
-                                    # print('-' * 90)
-                                    # print(
-                                    #     '{} Testing NMS: iou percentile thresh and value : {}, {:.3f}, '
-                                    #     'score thresh percentile and value: {}, {:.3f}, B={}, C={}, N={}, M={}, per_class_suppression={} '.
-                                    #     format(number_of_test, iou_thresh, iou_threshold, score_thresh, score_threshold, B,C,N,M,per_class_suppression))
-                                    # print('-' * 90)
 
                                     tf_boxes, tf_scores, tf_ids, tf_num_boxes = _nms_TF(boxes, scores, iou_threshold,
                                                                                         score_threshold,
@@ -4281,7 +4272,7 @@ def get_coreml_predictions_slice(X, params):
         # prepare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         coreml_input = {'data': X}
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             coreml_preds = coreml_model.predict(coreml_input)['output']
         else:
             coreml_preds = None
@@ -4339,7 +4330,7 @@ def get_coreml_predictions_reduce(X, params):
         # prepare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         coreml_input = {'data': X}
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             coreml_preds = coreml_model.predict(coreml_input)['output']
         else:
             coreml_preds = None
@@ -4431,7 +4422,7 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_numerical, [])
 
 
-@unittest.skipIf(macos_version() < LAYERS_10_15_MACOS_VERSION,
+@unittest.skipIf(not is_macos() or macos_version() < LAYERS_10_15_MACOS_VERSION,
                  'macOS 10.15+ required. Skipping tests.')
 class CoreML3NetworkStressTest(CorrectnessTest):
     def test_dyn_weight_conv2d_stress(self):

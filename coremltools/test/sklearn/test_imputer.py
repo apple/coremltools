@@ -7,7 +7,8 @@ import unittest
 from coremltools._deps import HAS_SKLEARN
 import numpy.random as rn
 import numpy as np
-from coremltools.models.utils import evaluate_transformer, macos_version
+from coremltools.models.utils import evaluate_transformer,\
+    macos_version, is_macos
 
 
 if HAS_SKLEARN:
@@ -15,6 +16,8 @@ if HAS_SKLEARN:
     from coremltools.converters import sklearn as converter
 
 
+@unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                     'Only supported on macOS 10.13+')
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class NumericalImputerTestCase(unittest.TestCase):
     """
@@ -38,7 +41,7 @@ class NumericalImputerTestCase(unittest.TestCase):
                 X = np.array(scikit_data.data).copy()
 
                 for i, j in missing_value_indices:
-                    X[i,j] = missing_value
+                    X[i, j] = missing_value
 
                 model = Imputer(missing_values = missing_value, strategy = strategy)
                 model = model.fit(X)
@@ -47,12 +50,11 @@ class NumericalImputerTestCase(unittest.TestCase):
 
                 spec = converter.convert(model, scikit_data.feature_names, 'out')
 
-                if macos_version() >= (10, 13):
-                    input_data = [dict(zip(scikit_data.feature_names, row)) 
-                                    for row in X]
+                input_data = [dict(zip(scikit_data.feature_names, row))
+                              for row in X]
 
-                    output_data = [{"out" : row} for row in tr_X]
+                output_data = [{"out" : row} for row in tr_X]
 
-                    result = evaluate_transformer(spec, input_data, output_data)
+                result = evaluate_transformer(spec, input_data, output_data)
 
-                    assert result["num_errors"] == 0
+                assert result["num_errors"] == 0

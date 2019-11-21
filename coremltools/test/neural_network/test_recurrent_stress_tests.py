@@ -1,18 +1,20 @@
-import unittest
-import numpy as np
 import itertools
-from coremltools._deps import HAS_KERAS2_TF, HAS_KERAS_TF
-from coremltools.models.utils import macos_version
-import pytest
+import unittest
 from copy import copy
+
+import numpy as np
+import pytest
+
+from coremltools._deps import HAS_KERAS2_TF, HAS_KERAS_TF
+from coremltools.models.utils import macos_version, is_macos
 
 np.random.seed(1377)
 
 if HAS_KERAS2_TF or HAS_KERAS_TF:
     import keras
-    from keras.models import Sequential, Model
+    from keras.models import Sequential
     from keras.layers import LSTM, GRU, SimpleRNN, RepeatVector
-    from keras.layers.wrappers import Bidirectional, TimeDistributed
+    from keras.layers.wrappers import Bidirectional
     import keras.backend as K
     from coremltools.converters import keras as keras_converter
 
@@ -408,7 +410,7 @@ def simple_model_eval(params, model):
             input_data.reshape((params[0]['input_dims'][0], params[0]['input_dims'][1]))).flatten()
     if len(params[0]['input_dims']) == 3:
         input_data = np.transpose(input_data, [1, 0, 2])
-    if macos_version() >= (10, 13):
+    if is_macos() and macos_version() >= (10, 13):
         coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
         if K.tensorflow_backend._SESSION:
             import tensorflow as tf
@@ -583,7 +585,7 @@ class RNNLayer(RecurrentLayerTest):
         params = list(itertools.product(self.base_layer_params, self.rnn_layer_params))
         np.random.shuffle(params)
         params = [param for param in params if valid_params(dict(zip(self.params_dict.keys(), param[0])))]
-        for base_params, rnn_params in params:
+        for base_params, rnn_params in params[:limit]:
             base_params = dict(zip(self.params_dict.keys(), base_params))
             rnn_params = dict(zip(self.simple_rnn_params_dict.keys(), rnn_params))
             model = Sequential()
@@ -623,7 +625,7 @@ class RNNLayer(RecurrentLayerTest):
                 K.tensorflow_backend._SESSION.close()
                 K.tensorflow_backend._SESSION = None
             input_data = np.transpose(input_data, [1, 0, 2])
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
                 try:
                     self.assertEquals(coreml_preds.shape, keras_preds.shape)
@@ -757,7 +759,7 @@ class LSTMLayer(RecurrentLayerTest):
             else:
                 keras_preds = model.predict(input_data)  # (Batch, Seq, h)
 
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 input_data = np.transpose(input_data, [1, 0, 2])
                 input_dict = {}
                 input_dict['data'] = input_data
@@ -787,10 +789,10 @@ class LSTMLayer(RecurrentLayerTest):
                     shape_err_models.append(param)
                     i += 1
                     continue
+                max_denominator = np.maximum(np.maximum(np.abs(coreml_preds.flatten()), np.abs(keras_preds.flatten())), 1.0)
+                relative_error = coreml_preds.flatten() / max_denominator - keras_preds.flatten() / max_denominator
+                max_relative_error = np.amax(relative_error)
                 try:
-                    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds.flatten()), np.abs(keras_preds.flatten())), 1.0)
-                    relative_error = coreml_preds.flatten() / max_denominator - keras_preds.flatten() / max_denominator
-                    max_relative_error = np.amax(relative_error)
                     self.assertLessEqual(max_relative_error, 0.01)
                 except AssertionError:
                     snr, psnr, signal_energy = _compute_SNR(keras_preds, coreml_preds)
@@ -864,7 +866,7 @@ class LSTMLayer(RecurrentLayerTest):
 
             keras_preds = model.predict(input_data)  # (Batch, Seq, h)
 
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 input_data = np.transpose(input_data, [1, 0, 2])
                 input_dict = {}
                 input_dict['data'] = input_data
@@ -1008,7 +1010,7 @@ class LSTMLayer(RecurrentLayerTest):
             else:
                 keras_preds = model.predict(input_data).flatten()
 
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
 
@@ -1025,10 +1027,10 @@ class LSTMLayer(RecurrentLayerTest):
                         "Shape error:\n base_params: {}\n\n lstm_params: {}\n\n keras_preds.shape: {}\n\n coreml_preds.shape: {}".format(
                             base_params, lstm_params, keras_preds.shape, coreml_preds.shape))
                     shape_err_models.append(base_params)
-                    i += 1
                     continue
+
+                max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
                 try:
-                    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
                     relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
                     for i in range(len(relative_error)):
                         self.assertLessEqual(relative_error[i], 0.01)
@@ -1043,7 +1045,6 @@ class LSTMLayer(RecurrentLayerTest):
                             coreml_preds))
                     numerical_failiure += 1
                     numerical_err_models.append(base_params)
-            i += 1
 
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
@@ -1072,16 +1073,19 @@ class LSTMLayer(RecurrentLayerTest):
 
     @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
+    @pytest.mark.slow
     def test_keras2_bilstm_layer(self):
         self._test_bilstm_layer()
 
     @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
+    @pytest.mark.slow
     def test_keras2_bilstm_layer_batched(self):
         self._test_bilstm_layer(batched=True)
 
     @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
+    @pytest.mark.slow
     def test_keras2_lstm_layer_batched(self):
         self._test_batched_lstm_layer()
 
@@ -1150,7 +1154,7 @@ class GRULayer(RecurrentLayerTest):
             else:
                 keras_preds = model.predict(input_data).flatten()
 
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
                 if K.tensorflow_backend._SESSION:
@@ -1167,8 +1171,9 @@ class GRULayer(RecurrentLayerTest):
                     shape_err_models.append(base_params)
                     i += 1
                     continue
+
+                max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
                 try:
-                    max_denominator = np.maximum(np.maximum(np.abs(coreml_preds), np.abs(keras_preds)), 1.0)
                     relative_error = coreml_preds / max_denominator - keras_preds / max_denominator
                     for i in range(len(relative_error)):
                         self.assertLessEqual(relative_error[i], 0.01)
@@ -1281,7 +1286,7 @@ class LSTMStacked(unittest.TestCase):
             mlkitmodel = get_mlkit_model_from_path(model)
             input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                         base_params['input_dims'][2])
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 keras_preds = model.predict(input_data).flatten()
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
@@ -1462,7 +1467,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.get_layer(index=1).reset_states()
 
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             keras_output_1 = model.predict(data)
             coreml_full_output_1 = coreml_model.predict({'data': data})
             coreml_output_1 = coreml_full_output_1['output']
@@ -1474,7 +1479,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.get_layer(index=1).reset_states(hidden_state)
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             keras_output_2 = model.predict(data)
             coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
             coreml_output_2 = coreml_full_output_2['output']
@@ -1487,7 +1492,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.add(keras.layers.SimpleRNN(5, input_shape=(1, 2), batch_input_shape=[1, 1, 2], stateful=True))
         model.get_layer(index=0).reset_states()
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             keras_output_1 = model.predict(data)
             coreml_full_output_1 = coreml_model.predict({'data': data})
             coreml_output_1 = coreml_full_output_1['output']
@@ -1498,7 +1503,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.get_layer(index=1).reset_states(hidden_state)
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             keras_output_2 = model.predict(data)
             coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
             coreml_output_2 = coreml_full_output_2['output']
@@ -1512,7 +1517,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.add(keras.layers.LSTM(5, input_shape=(1, 2), batch_input_shape=[1, 1, 2], stateful=True))
         model.get_layer(index=0).reset_states()
 
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
 
             keras_output_1 = model.predict(data)
@@ -1528,7 +1533,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
 
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             keras_output_2 = model.predict(data)
             coreml_full_output_2 = coreml_model.predict(
                 {'data': data, spec.description.input[1].name: hidden_state[0][0],

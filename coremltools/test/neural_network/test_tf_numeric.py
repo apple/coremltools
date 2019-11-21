@@ -4,7 +4,7 @@ import numpy as np
 import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
 from coremltools.models import MLModel
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import is_macos, macos_version
 import tensorflow as tf
 import itertools
 
@@ -52,11 +52,13 @@ class CorrectnessTest(unittest.TestCase):
             self.assertEquals(len(coreml_out), len(ref_out))
             self._compare_predictions_numerical(ref_out, coreml_out, snr_thresh=snr_thresh, psnr_thresh=psnr_thresh)
 
+
+@unittest.skipUnless(is_macos(), 'Only supported for MacOS platform.')
 class StressTest(CorrectnessTest):
 
     def runTest(self):
         pass
-    
+
     def test_data_reorganize(self, cpu_only=False):
 
         def get_coreml_model_reorganize(X, params):
@@ -223,6 +225,8 @@ class StressTest(CorrectnessTest):
     def test_depthwise_conv_cpu_only(self, cpu_only=False):
         self.test_depthwise_conv(cpu_only=True)
 
+    @unittest.skipUnless(
+        macos_version() >= (10, 14), 'Only supported on MacOS 10.14+')
     def test_resize_bilinear(self, cpu_only=False):
 
         def get_coreml_model_resize_bilinear(X, params):
@@ -289,9 +293,13 @@ class StressTest(CorrectnessTest):
 
         self.assertEqual(failed_tests_compile, [])
 
+    @unittest.skipUnless(
+        macos_version() >= (10, 14), 'Only supported on MacOS 10.14+')
     def test_resize_bilinear_cpu_only(self):
         self.test_resize_bilinear(cpu_only=True)
 
+    @unittest.skipUnless(
+        macos_version() >= (10, 14), 'Only supported on MacOS 10.14+')
     def test_crop_resize(self, cpu_only=False):
 
         def get_coreml_model_crop_resize(params):
@@ -389,6 +397,8 @@ class StressTest(CorrectnessTest):
 
         self.assertEqual(failed_tests_compile, [])
 
+    @unittest.skipUnless(
+        macos_version() >= (10, 14), 'Only supported on MacOS 10.14+')
     def test_crop_resize_cpu_only(self):
         self.test_crop_resize(cpu_only=True)
 

@@ -10,7 +10,8 @@ import unittest
 
 from coremltools._deps import HAS_SKLEARN
 from coremltools.converters.sklearn import convert
-from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities, macos_version
+from coremltools.models.utils import evaluate_classifier,\
+    evaluate_classifier_with_probabilities, macos_version, is_macos
 
 if HAS_SKLEARN:
     from sklearn.linear_model import LogisticRegression
@@ -63,7 +64,7 @@ class GlmCassifierTest(unittest.TestCase):
             spec = convert(cur_model, input_features=column_names,
                            output_feature_names='target')
 
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 probability_lists = cur_model.predict_proba(x)
                 df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
 
@@ -97,7 +98,7 @@ class GlmCassifierTest(unittest.TestCase):
             spec = convert(cur_model, input_features=column_names,
                            output_feature_names='target')
 
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 df['prediction'] = cur_model.predict(x)
 
                 cur_eval_metics = evaluate_classifier(spec, df, verbose=False)
