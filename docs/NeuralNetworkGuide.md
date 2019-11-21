@@ -1,7 +1,7 @@
 # Neural Network Guide
 
 This document describes how to get neural network models into the Core ML format, either via automatic conversion or by building them
-from scratch pragmatically. We also discuss various utilities available to edit the `mlmodel` such as quantization, making the input shape
+from scratch programmatically. We also discuss various utilities available to edit the `mlmodel` such as quantization, making the input shape
 flexible, changing the input/output names, types, inspecting mlmodels, printing a text description of the model etc.
 
 What are the layers supported by Core ML? For the latest list along with all the parameterizations, check out the
