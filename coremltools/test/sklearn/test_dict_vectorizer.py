@@ -9,7 +9,7 @@ from copy import copy
 import numpy as np
 from coremltools.models.utils import evaluate_transformer
 from coremltools.models.utils import evaluate_classifier
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import macos_version, is_macos
 
 if HAS_SKLEARN:
     from coremltools.converters import sklearn
@@ -31,7 +31,7 @@ class DictVectorizerScikitTest(unittest.TestCase):
                 input_features = "features", 
                 output_feature_names = "output")
 
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             ret = evaluate_transformer(
                     m, [{"features" : row} for row in data], 
                     [{"output" : x_r} for x_r in X], True)
@@ -84,7 +84,7 @@ class DictVectorizerScikitTest(unittest.TestCase):
 
         model = coremltools.converters.sklearn.convert(pl, input_features = "features", output_feature_names = "target")
 
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             x = pd.DataFrame( {"features" : x_train_dict, 
                                "prediction" : pl.predict(x_train_dict)})
 

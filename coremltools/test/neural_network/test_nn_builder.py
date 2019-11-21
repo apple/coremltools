@@ -1,16 +1,22 @@
 import unittest
+
 import numpy as np
-import os, shutil
-import tempfile
+
 import coremltools
 from coremltools.models import datatypes, MLModel
 from coremltools.models.neural_network import NeuralNetworkBuilder
-from coremltools.models.utils import macos_version
 from coremltools.models.neural_network.quantization_utils import \
     _convert_array_to_nbit_quantized_bytes, quantize_weights
-import pytest
+from coremltools.models.utils import macos_version, is_macos
 
-@unittest.skipIf(macos_version() < (10, 15), 'Only supported on macOS 10.15+')
+
+MIN_MACOS_VERSION_REQUIRED = (10, 13)
+LAYERS_10_14_MACOS_VERSION = (10, 14)
+LAYERS_10_15_MACOS_VERSION = (10, 15)
+
+
+@unittest.skipIf(not is_macos() or macos_version() < LAYERS_10_15_MACOS_VERSION,
+                 'Only supported on macOS 10.15+')
 class ControlFlowCorrectnessTest(unittest.TestCase):
 
     @classmethod
@@ -75,42 +81,10 @@ class ControlFlowCorrectnessTest(unittest.TestCase):
         self._test_model(mlmodel, input_dict, output_ref)
 
 
-@unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
-class BasicNumericCorrectnessTest(unittest.TestCase):
-
-    def _build_nn_with_one_ip_layer(self):
-        input_features = [('data', datatypes.Array(3))]
-        output_features = [('out', None)]
-        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
-        w = np.random.uniform(-0.5, 0.5, (3, 3))
-        builder.add_inner_product(name='ip1',
-                                  W=w,
-                                  b=None,
-                                  input_channels=3,
-                                  output_channels=3,
-                                  has_bias=False,
-                                  input_name='input',
-                                  output_name='hidden')
-        return builder
-
-    def test_undefined_shape_single_output(self):
-        W = np.ones((3,3))
-        input_features = [('data', datatypes.Array(3))]
-        output_features = [('probs', None)]
-        builder = NeuralNetworkBuilder(input_features, output_features)
-        builder.add_inner_product(name = 'ip1',
-                                  W = W,
-                                  b = None,
-                                  input_channels = 3,
-                                  output_channels = 3,
-                                  has_bias = False,
-                                  input_name = 'data',
-                                  output_name = 'probs')
-        mlmodel = MLModel(builder.spec)
-        data = np.ones((3,))
-        data_dict = {'data': data}
-        probs = mlmodel.predict(data_dict)['probs']
-        self.assertTrue(np.allclose(probs, np.ones(3) * 3))
+@unittest.skipUnless(
+    is_macos() and macos_version() >= LAYERS_10_14_MACOS_VERSION,
+    'Only supported on macOS 10.14+')
+class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
 
     def build_quant_conv_layer(self, W = None,
                           quantization_type = 'linear',
@@ -230,6 +204,12 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         expected_out = np.array([-19, 37])
         self.assertTrue(np.allclose(probs.flatten(), expected_out.flatten()))
 
+
+@unittest.skipUnless(
+    is_macos() and macos_version() >= LAYERS_10_15_MACOS_VERSION,
+    'Only supported on macOS 10.15+')
+class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
+
     def test_linear_quant_batchedmatmul_5bit(self):
         W = np.zeros((2, 3), dtype=np.uint8)
         W[0, :] = [31, 20, 11]
@@ -291,6 +271,42 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten(),
                 atol=0.1))
 
+    def test_lut_quant_embedding_nd_2bit(self):
+        embed_size = 2
+        vocab_size = 3
+        W = np.zeros((embed_size, vocab_size), dtype=np.uint8)
+        W[:, 0] = [1, 0]
+        W[:, 1] = [0, 1]
+        W[:, 2] = [3, 2]
+        bias = np.array([1.0, 2.0])
+        quant_lut = np.array([34.0, 12.0, -6.0, 6.0])
+
+        input_features = [('data', datatypes.Array(4, 1))]
+        output_features = [('out', None)]
+        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_embedding_nd(name='embedding_nd',
+                                 input_name='data',
+                                 output_name='out',
+                                 vocab_size=vocab_size, embedding_size=embed_size,
+                                 W=_convert_array_to_nbit_quantized_bytes(W.flatten(), 2).tobytes(),
+                                 b=bias,
+                                 is_quantized_weight=True,
+                                 quantization_type='lut',
+                                 nbits=2,
+                                 quant_lut=quant_lut)
+
+        mlmodel = MLModel(builder.spec)
+        data = np.reshape(np.array([2.0, 2.0, 1.0, 0.0]), (4, 1))
+        data_dict = {'data': data}
+        out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
+        expected_out = np.zeros((4, embed_size), dtype=np.float32)
+        expected_out[0, :] = [quant_lut[W[0, 2]], quant_lut[W[1, 2]]] + bias
+        expected_out[1, :] = [quant_lut[W[0, 2]], quant_lut[W[1, 2]]] + bias
+        expected_out[2, :] = [quant_lut[W[0, 1]], quant_lut[W[1, 1]]] + bias
+        expected_out[3, :] = [quant_lut[W[0, 0]], quant_lut[W[1, 0]]] + bias
+        self.assertTrue(out.shape == expected_out.shape)
+        self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
+
     def test_linear_quant_embedding_7bit(self):
         embed_size = 2
         vocab_size = 3
@@ -332,41 +348,45 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         expected_out[3, :] = W_unquantized[:, 0].flatten()
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
 
-    def test_lut_quant_embedding_nd_2bit(self):
-        embed_size = 2
-        vocab_size = 3
-        W = np.zeros((embed_size, vocab_size), dtype=np.uint8)
-        W[:, 0] = [1, 0]
-        W[:, 1] = [0, 1]
-        W[:, 2] = [3, 2]
-        bias = np.array([1.0, 2.0])
-        quant_lut = np.array([34.0, 12.0, -6.0, 6.0])
 
-        input_features = [('data', datatypes.Array(4, 1))]
+@unittest.skipIf(not is_macos() or macos_version() < (10, 13),
+                 'Only supported on macOS 10.13+')
+class BasicNumericCorrectnessTest(unittest.TestCase):
+
+    def _build_nn_with_one_ip_layer(self):
+        input_features = [('data', datatypes.Array(3))]
         output_features = [('out', None)]
-        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
-        builder.add_embedding_nd(name='embedding_nd',
-                                 input_name='data',
-                                 output_name='out',
-                                 vocab_size=vocab_size, embedding_size=embed_size,
-                                 W=_convert_array_to_nbit_quantized_bytes(W.flatten(), 2).tobytes(),
-                                 b=bias,
-                                 is_quantized_weight=True,
-                                 quantization_type='lut',
-                                 nbits=2,
-                                 quant_lut=quant_lut)
+        builder = NeuralNetworkBuilder(
+            input_features, output_features, disable_rank5_shape_mapping=True)
+        w = np.random.uniform(-0.5, 0.5, (3, 3))
+        builder.add_inner_product(name='ip1',
+                                  W=w,
+                                  b=None,
+                                  input_channels=3,
+                                  output_channels=3,
+                                  has_bias=False,
+                                  input_name='input',
+                                  output_name='hidden')
+        return builder
 
+    def test_undefined_shape_single_output(self):
+        W = np.ones((3,3))
+        input_features = [('data', datatypes.Array(3))]
+        output_features = [('probs', None)]
+        builder = NeuralNetworkBuilder(input_features, output_features)
+        builder.add_inner_product(name = 'ip1',
+                                  W = W,
+                                  b = None,
+                                  input_channels = 3,
+                                  output_channels = 3,
+                                  has_bias = False,
+                                  input_name = 'data',
+                                  output_name = 'probs')
         mlmodel = MLModel(builder.spec)
-        data = np.reshape(np.array([2.0, 2.0, 1.0, 0.0]), (4, 1))
+        data = np.ones((3,))
         data_dict = {'data': data}
-        out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
-        expected_out = np.zeros((4, embed_size), dtype=np.float32)
-        expected_out[0, :] = [quant_lut[W[0, 2]], quant_lut[W[1, 2]]] + bias
-        expected_out[1, :] = [quant_lut[W[0, 2]], quant_lut[W[1, 2]]] + bias
-        expected_out[2, :] = [quant_lut[W[0, 1]], quant_lut[W[1, 1]]] + bias
-        expected_out[3, :] = [quant_lut[W[0, 0]], quant_lut[W[1, 0]]] + bias
-        self.assertTrue(out.shape == expected_out.shape)
-        self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
+        probs = mlmodel.predict(data_dict)['probs']
+        self.assertTrue(np.allclose(probs, np.ones(3) * 3))
 
     def test_set_input(self):
         builder = self._build_nn_with_one_ip_layer()
@@ -395,5 +415,3 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         # fails since output_names and output_dims do not have same size
         with self.assertRaises(ValueError):
             builder.set_output(output_names=['out_1', 'out_2'], output_dims=[(3,)])
-
-

@@ -3,16 +3,20 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import coremltools
-import unittest
 import tempfile
-from coremltools.proto import Model_pb2
-from coremltools.models.utils import rename_feature, save_spec, macos_version
-from coremltools.models import MLModel
-from coremltools.models import NeuralNetworkShaper
-from coremltools.models.neural_network.flexible_shape_utils import can_allow_multiple_input_shapes, get_allowed_shape_ranges, update_multiarray_shape_range, _get_input_names, NeuralNetworkMultiArrayShapeRange, _CONSTRAINED_KEYS
-import numpy as np
+import unittest
 
+import coremltools
+from coremltools.models import NeuralNetworkShaper
+from coremltools.models.neural_network.flexible_shape_utils import \
+    can_allow_multiple_input_shapes, get_allowed_shape_ranges, \
+    update_multiarray_shape_range, _get_input_names, \
+    NeuralNetworkMultiArrayShapeRange, _CONSTRAINED_KEYS
+from coremltools.models.utils import is_macos
+from coremltools.proto import Model_pb2
+
+
+@unittest.skipUnless(is_macos(), 'Only supported on MacOS platform.')
 class ShaperTest(unittest.TestCase):
 
     @classmethod
@@ -70,7 +74,6 @@ class ShaperTest(unittest.TestCase):
                         else:
                             layer.convolution.weights.floatValue.append(0.0)
 
-
             else:  # not the last layer
                 layer.output.append('conv' + str(i))
                 layer.name = 'conv' + str(i)
@@ -105,7 +108,6 @@ class ShaperTest(unittest.TestCase):
 
         shaper = NeuralNetworkShaper(filename)
         self.assertIsNotNone(shaper)
-
 
     def test_get_shape(self):
 

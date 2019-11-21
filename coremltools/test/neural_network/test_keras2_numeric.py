@@ -1,12 +1,15 @@
 import itertools
-import unittest
-import numpy as np
-import os, shutil
+import os
+import shutil
 import tempfile
+import unittest
+
+import numpy as np
 import pytest
+
 from coremltools._deps import HAS_KERAS2_TF
 from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import macos_version, is_macos
 
 if HAS_KERAS2_TF:
     import keras.backend
@@ -15,12 +18,12 @@ if HAS_KERAS2_TF:
     from keras.layers import MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, GlobalMaxPooling2D
     from keras.layers import MaxPooling1D, AveragePooling1D, GlobalAveragePooling1D, GlobalMaxPooling1D 
     from keras.layers import Embedding, Input, Permute, Reshape, RepeatVector, Dropout
-    from keras.layers import Add, Multiply, Concatenate, Dot, Maximum, Average
+    from keras.layers import Add, Concatenate
     from keras.layers import add, multiply, concatenate, dot, maximum, average
     from keras.layers import ZeroPadding2D, UpSampling2D, Cropping2D
     from keras.layers import ZeroPadding1D, UpSampling1D, Cropping1D
     from keras.layers import SimpleRNN, LSTM, GRU
-    from keras.layers.core import SpatialDropout1D, SpatialDropout2D
+    from keras.layers.core import SpatialDropout2D
     from keras.layers.wrappers import Bidirectional, TimeDistributed
     from distutils.version import StrictVersion as _StrictVersion
     if keras.__version__ >= _StrictVersion('2.2.1'):
@@ -30,7 +33,6 @@ if HAS_KERAS2_TF:
         from keras_applications.mobilenet import relu6
     else:
         from keras.applications.mobilenet import DepthwiseConv2D, relu6
-    from coremltools.converters import keras as kerasConverter
 
 
 def _keras_transpose(x, is_sequence=False):
@@ -160,8 +162,10 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
 
         coreml_model = _get_coreml_model(model, input_names, output_names, input_name_shape_dict,
                                          model_precision=model_precision)
-        
-        if macos_version() >= (10, 13):
+        try:
+            if not (is_macos() and macos_version() >= (10, 13)):
+                return
+
             # Assuming coreml model output names are in the same order as
             # Keras output list, put predictions into a list, sorted by output
             # name
@@ -171,7 +175,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
             # Get Keras predictions
             keras_preds = model.predict(input_data)
             k_preds = keras_preds if type(keras_preds) is list else [keras_preds]
-            
+
             # Compare each output blob
             for idx, k_pred in enumerate(k_preds):
                 if transpose_keras_result:
@@ -185,10 +189,10 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
                     max_den = max(1.0, kp[i], cp[i])
                     self.assertAlmostEqual(kp[i]/max_den, cp[i]/max_den,
                         delta=delta)
-
-        # Cleanup files - models on disk no longer useful
-        if use_tmp_folder and os.path.exists(model_dir):
-            shutil.rmtree(model_dir)
+        finally:
+            # Cleanup files - models on disk no longer useful
+            if use_tmp_folder and os.path.exists(model_dir):
+                shutil.rmtree(model_dir)
         
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
@@ -329,6 +333,8 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Test the keras model
         self._test_model(model, model_precision=model_precision)
 
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 14),
+                         'Only supported on MacOS 10.14+')
     def test_tiny_conv_random_input_shape_dict(self, model_precision=_MLMODEL_FULL_PRECISION):
         np.random.seed(1988)
         H, W, C = 10, 20, 5
@@ -2295,7 +2301,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         # Get the model
         coreml_model = _get_coreml_model(model, input_names, ['output'],
                                          model_precision=model_precision)
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             # get prediction
             coreml_preds = coreml_model.predict(coreml_input)['output'].flatten()
 
