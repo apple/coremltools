@@ -2,7 +2,7 @@
 # # Use of this source code is governed by a BSD-3-clause license that can be # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools.models.utils import rename_feature, macos_version
+from coremltools.models.utils import rename_feature, macos_version, is_macos
 from coremltools.models import MLModel
 from coremltools._deps import HAS_SKLEARN
 import pandas as pd
@@ -52,6 +52,6 @@ class PipeLineRenameTests(unittest.TestCase):
         renamed_model = MLModel(scikit_spec)
         
         # Check the predictions
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             self.assertEquals(model.predict({'input': sample_data}),
                               renamed_model.predict({'renamed_input': sample_data}))

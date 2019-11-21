@@ -4,16 +4,18 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import unittest
-import numpy as np
-import os, shutil
+import os
+import shutil
 import tempfile
+import unittest
+
+import numpy as np
 import pytest
+
 from coremltools._deps import HAS_KERAS_TF
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import macos_version, is_macos
 
 if HAS_KERAS_TF:
-    import keras.backend
     from keras.models import Sequential, Model
     from keras.layers import Dense, Activation, Convolution2D, AtrousConvolution2D, LSTM, \
         ZeroPadding2D, Deconvolution2D, Permute, Convolution1D, AtrousConvolution1D, \
@@ -22,8 +24,6 @@ if HAS_KERAS_TF:
         Cropping1D, Cropping2D, Reshape, AveragePooling1D, MaxPooling1D, RepeatVector, ELU, \
         SimpleRNN, BatchNormalization, Embedding, ZeroPadding1D, UpSampling1D
     from keras.layers.wrappers import Bidirectional, TimeDistributed
-    from keras.optimizers import SGD
-    from coremltools.converters import keras as kerasConverter
 
 
 def _keras_transpose(x, is_sequence=False):
@@ -149,7 +149,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         coreml_model = _get_coreml_model(model, model_path, input_names, 
                 output_names)
         
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             # Assuming coreml model output names are in the same order as Keras 
             # Output list, put predictions into a list, sorted by output name
             coreml_preds = coreml_model.predict(coreml_input)
@@ -2077,7 +2077,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
 
         # Get the model
         coreml_model = _get_coreml_model(model, model_path, input_names, ['output'])
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             # get prediction
             coreml_preds = coreml_model.predict(coreml_input)['output'].flatten()
 

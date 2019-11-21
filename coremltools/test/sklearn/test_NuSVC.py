@@ -10,7 +10,8 @@ import pandas as pd
 import random
 import pytest
 
-from coremltools.models.utils import evaluate_classifier, evaluate_classifier_with_probabilities, macos_version
+from coremltools.models.utils import evaluate_classifier,\
+    evaluate_classifier_with_probabilities, macos_version, is_macos
 from coremltools._deps import HAS_LIBSVM, HAS_SKLEARN
 
 if HAS_LIBSVM:
@@ -23,6 +24,7 @@ if HAS_SKLEARN:
     from sklearn.svm import NuSVC
     from sklearn.preprocessing import OneHotEncoder
     from coremltools.converters import sklearn as scikit_converter
+
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class NuSvcScikitTest(unittest.TestCase):
@@ -66,7 +68,7 @@ class NuSvcScikitTest(unittest.TestCase):
 
                 spec = scikit_converter.convert(cur_model, column_names, 'target')
 
-                if macos_version() >= (10, 13):
+                if is_macos() and macos_version() >= (10, 13):
                     if use_probability_estimates:
                         probability_lists = cur_model.predict_proba(x)
                         df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
@@ -194,7 +196,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
 
         spec = libsvm.convert(model, self.column_names, 'target', 'probabilities')
 
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False)
             self.assertEquals(metrics['num_key_mismatch'], 0)
             self.assertLess(metrics['max_probability_error'], 0.00001)
