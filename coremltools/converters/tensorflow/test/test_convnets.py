@@ -653,6 +653,26 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             out = tf.math.subtract(a, b)
         self._test_tf_model_constant(graph, {a.op.name: shape, b.op.name: shape}, [out.op.name])
 
+    def test_sub_v1(self):
+        graph = tf.Graph()
+        input_shape = [32, 3, 64, 64]
+        with graph.as_default():
+            x = tf.constant(0.2342, shape=[])
+            y = tf.placeholder(tf.float32, shape=input_shape)
+            output = tf.math.subtract(x, y)
+        output_name = [output.op.name]
+        self._test_tf_model_constant(graph, {y.op.name: input_shape}, output_name)
+
+    def test_sub_v2(self):
+        graph = tf.Graph()
+        input_shape = [32, 3, 64, 64]
+        with graph.as_default():
+            x = tf.constant(0.2342, shape=[])
+            y = tf.placeholder(tf.float32, shape=input_shape)
+            output = tf.math.subtract(y, x)
+        output_name = [output.op.name]
+        self._test_tf_model_constant(graph, {y.op.name: input_shape}, output_name)
+
     def test_mul(self):
         shape = [3, 4, 5]
         graph = tf.Graph()
@@ -688,6 +708,24 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             b = tf.placeholder(tf.float32, shape=shape)
             out = tf.divide(a, b)
         self._test_tf_model_constant(graph, {a.op.name: shape, b.op.name: shape}, [out.op.name])
+
+    def test_real_div_constant(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            b = tf.constant(5.0, shape=[])
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.divide(a, b)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_real_div_constant_v1(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            b = tf.constant(5.0, shape=[1])
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.divide(a, b)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     def test_bias_add(self):
         # shape = [3, 4, 5]
@@ -1487,8 +1525,9 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             out = tf.zeros_like(c)
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
+
 if __name__ == '__main__':
-    # unittest.main()
-    suite = unittest.TestSuite()
-    suite.addTest(TFSingleLayerTest('test_slice_issue_304'))
-    unittest.TextTestRunner().run(suite)
+    unittest.main()
+    # suite = unittest.TestSuite()
+    # suite.addTest(TFSingleLayerTest('test_slice_issue_304'))
+    # unittest.TextTestRunner().run(suite)
