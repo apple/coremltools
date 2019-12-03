@@ -10,7 +10,7 @@ from .op_removals import remove_identity, remove_oneway_split
 
 from .op_fusions import fuse_bias_add, transform_nhwc_to_nchw, \
     onehot_matmul_to_embedding, fuse_layer_norm, fuse_gelu, \
-    fuse_conv_mul_add_into_batchnorm, fuse_pad_into_conv, \
-    spatial_reduce_to_global_pool
+    fuse_batch_norm, fuse_pad_into_conv, \
+    spatial_reduce_to_global_pool, fuse_batch_to_space_or_space_to_batch
 
 from .mlmodel_passes import remove_disconnected_layers
