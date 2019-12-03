@@ -9,7 +9,8 @@ import os
 import pandas as pd
 import numpy as np
 from coremltools._deps import HAS_SKLEARN, SKLEARN_VERSION
-from coremltools.models.utils import evaluate_classifier, macos_version
+from coremltools.models.utils import evaluate_classifier, \
+    macos_version, is_macos
 from distutils.version import StrictVersion
 import pytest
 
@@ -30,7 +31,7 @@ class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
             df['prediction'] = scikit_model.predict(self.X)
@@ -38,6 +39,7 @@ class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase
             # Evaluate it
             metrics = evaluate_classifier(spec, df, verbose = False)
             self._check_metrics(metrics, scikit_params)
+
 
 @unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class RandomForestBinaryClassifierBostonHousingScikitNumericTest(

@@ -13,7 +13,7 @@ import numpy as np
 from coremltools._deps import HAS_SKLEARN
 from coremltools.models.utils import evaluate_transformer
 from coremltools.models.utils import evaluate_regressor
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import macos_version, is_macos
 from coremltools.converters.sklearn import convert
 
 if HAS_SKLEARN:
@@ -40,7 +40,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = convert(pl, data.feature_names, 'out')
 
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             input_data = [dict(zip(data.feature_names, row)) for row in data.data]
             output_data = [{"out" : row} for row in pl.transform(data.data)]
 
@@ -60,7 +60,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = convert(pl, data.feature_names, 'target')
 
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(data.data, columns=data.feature_names)
             df['prediction'] = pl.predict(data.data)

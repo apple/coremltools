@@ -1,13 +1,16 @@
-import unittest
+import json
 import os
-from subprocess import Popen
+import shutil
 import subprocess
 import tarfile
-import shutil
-import json
+import unittest
+from subprocess import Popen
+
 import numpy as np
+
 from coremltools.converters import caffe as caffe_converter
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import macos_version, is_macos
+
 nets_path = os.getenv('CAFFE_MODELS_PATH', '')
 nets_path = nets_path + '/' if nets_path else ''
 import coremltools
@@ -151,7 +154,7 @@ class CaffeLayers(unittest.TestCase):
                 layer_type,
                 input_layer
             )
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 if conversion_result is False:
                     failed_tests_conversion.append(net_name)
                     continue

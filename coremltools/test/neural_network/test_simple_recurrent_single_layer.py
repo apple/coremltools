@@ -11,7 +11,7 @@ import tempfile
 import itertools
 import coremltools
 from coremltools._deps import HAS_KERAS_TF, HAS_KERAS2_TF
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import macos_version, is_macos
 import pytest
 
 if HAS_KERAS_TF or HAS_KERAS2_TF:
@@ -123,7 +123,7 @@ class SimpleRNNLayer(RecurrentLayerTest):
             coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
             model.save_weights(keras_model_path)
             mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 keras_preds = model.predict(input_data).flatten()
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
@@ -236,7 +236,7 @@ class LSTMLayer(RecurrentLayerTest):
             coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
             model.save_weights(keras_model_path)
             mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 keras_preds = model.predict(input_data).flatten()
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
@@ -351,7 +351,7 @@ class GRULayer(RecurrentLayerTest):
             coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
             model.save_weights(keras_model_path)
             mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-            if macos_version() >= (10, 13):
+            if is_macos() and macos_version() >= (10, 13):
                 keras_preds = model.predict(input_data).flatten()
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()

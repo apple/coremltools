@@ -8,7 +8,8 @@ import unittest
 import tempfile
 import numpy as np
 from coremltools.proto import Model_pb2
-from coremltools.models.utils import rename_feature, save_spec, macos_version, convert_neural_network_spec_weights_to_fp16
+from coremltools.models.utils import rename_feature, save_spec, macos_version,\
+    convert_neural_network_spec_weights_to_fp16, is_macos
 from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
 
@@ -83,24 +84,29 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(model.input_description['feature_1'], 'This is feature 1')
         self.assertEqual(model.output_description['output'], 'This is output')
 
-    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_predict_api(self):
         model = MLModel(self.spec)
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
         self.assertEqual(preds['output'], 3.1)
 
-    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_rename_input(self):
-        rename_feature(self.spec, 'feature_1', 'renamed_feature', rename_inputs=True)
+        rename_feature(
+            self.spec, 'feature_1', 'renamed_feature', rename_inputs=True)
         model = MLModel(self.spec)
         preds = model.predict({'renamed_feature': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
         self.assertEqual(preds['output'], 3.1)
         # reset the spec for next run
-        rename_feature(self.spec, 'renamed_feature', 'feature_1', rename_inputs=True)
+        rename_feature(
+            self.spec, 'renamed_feature', 'feature_1', rename_inputs=True)
 
-    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_rename_input_bad(self):
         rename_feature(self.spec, 'blah', 'bad_name', rename_inputs=True)
         model = MLModel(self.spec)
@@ -108,24 +114,32 @@ class MLModelTest(unittest.TestCase):
         self.assertIsNotNone(preds)
         self.assertEqual(preds['output'], 3.1)
 
-    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_rename_output(self):
-        rename_feature(self.spec, 'output', 'renamed_output', rename_inputs=False, rename_outputs=True)
+        rename_feature(
+            self.spec, 'output', 'renamed_output',
+            rename_inputs=False, rename_outputs=True)
         model = MLModel(self.spec)
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
         self.assertEqual(preds['renamed_output'], 3.1)
-        rename_feature(self.spec, 'renamed_output', 'output', rename_inputs=False, rename_outputs=True)
+        rename_feature(self.spec, 'renamed_output', 'output',
+                       rename_inputs=False, rename_outputs=True)
 
-    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_rename_output_bad(self):
-        rename_feature(self.spec, 'blah', 'bad_name', rename_inputs=False, rename_outputs=True)
+        rename_feature(
+            self.spec, 'blah', 'bad_name',
+            rename_inputs=False, rename_outputs=True)
         model = MLModel(self.spec)
         preds = model.predict({'feature_1': 1.0, 'feature_2': 1.0})
         self.assertIsNotNone(preds)
         self.assertEqual(preds['output'], 3.1)
 
-    @unittest.skipIf(macos_version() < (10, 13), 'Only supported on macOS 10.13+')
+    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+                         'Only supported on macOS 10.13+')
     def test_future_version(self):
         self.spec.specificationVersion = 10000
         filename = tempfile.mktemp(suffix='.mlmodel')
@@ -142,7 +156,8 @@ class MLModelTest(unittest.TestCase):
                 raise
         self.spec.specificationVersion = 1
 
-    @unittest.skipIf(macos_version() >= (10, 13), 'Only supported on macOS 10.13-')
+    @unittest.skipUnless(is_macos() and macos_version() < (10, 13),
+                         'Only supported on macOS 10.13-')
     def test_MLModel_warning(self):
         self.spec.specificationVersion = 3
         import warnings

@@ -1,13 +1,13 @@
 import unittest
-import pytest
-import numpy as np
-import coremltools
-from coremltools.models import MLModel
-from coremltools._deps import HAS_KERAS_TF
-from coremltools.proto import Model_pb2
-from coremltools.models import MLModel
-from coremltools.models.utils import get_custom_layer_names, replace_custom_layer_name, macos_version
 
+import numpy as np
+import pytest
+
+import coremltools
+from coremltools._deps import HAS_KERAS_TF
+from coremltools.models.utils import get_custom_layer_names, \
+    replace_custom_layer_name, macos_version, is_macos
+from coremltools.proto import Model_pb2
 
 if HAS_KERAS_TF:
     from keras.models import Sequential
@@ -41,7 +41,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
         predicted_feature_name = 'pf'
         coremlmodel = keras_converter.convert(model, input_names, output_names, class_labels=class_labels, predicted_feature_name=predicted_feature_name, predicted_probabilities_output=output_names[0])
     
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             inputs = np.random.rand(input_dim)
             outputs = coremlmodel.predict({'input': inputs})
             # this checks that the dictionary got the right name and type
@@ -67,7 +67,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
         predicted_feature_name = 'pf'
         coremlmodel = keras_converter.convert(model, input_names, output_names, class_labels=class_labels, predicted_feature_name=predicted_feature_name)
         
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             inputs = np.random.rand(input_dim)
             outputs = coremlmodel.predict({'input': inputs})
             # this checks that the dictionary got the right name and type
@@ -119,7 +119,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
         
         coreml2 = keras_converter.convert(model2, input_names, ['output2'])
         
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             # generate input data
             inputs = np.random.rand(input_dim)
 

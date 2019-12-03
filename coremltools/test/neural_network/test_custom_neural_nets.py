@@ -1,12 +1,14 @@
-import unittest
-import numpy as np
 import os
 import shutil
 import tempfile
+import unittest
+
+import numpy as np
+
+import coremltools
 import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
-from coremltools.models.utils import macos_version
-import coremltools
+from coremltools.models.utils import macos_version, is_macos
 
 
 class SimpleTest(unittest.TestCase):
@@ -53,7 +55,7 @@ class SimpleTest(unittest.TestCase):
         X = np.random.randint(low=0,high=10,size=15)
         X = np.reshape(X, (15,1,1,1,1)).astype(np.float32)
         coreml_input = {'data': X}
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             coreml_preds = coreml_model.predict(coreml_input)['output']
             self.assertEquals(len(coreml_preds.flatten()), 2)
 

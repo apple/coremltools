@@ -1,14 +1,17 @@
 from __future__ import division
 from __future__ import print_function
-from coremltools._deps import HAS_CAFFE2
-import unittest
-import numpy as np
-import coremltools.models.datatypes as datatypes
-from coremltools.models import neural_network as neural_network
-from coremltools.models import MLModel
-from coremltools.models.utils import macos_version
-import itertools
+
 import copy
+import itertools
+import unittest
+
+import numpy as np
+
+import coremltools.models.datatypes as datatypes
+from coremltools._deps import HAS_CAFFE2
+from coremltools.models import MLModel
+from coremltools.models import neural_network as neural_network
+from coremltools.models.utils import macos_version, is_macos
 
 if HAS_CAFFE2:
     from caffe2.python import workspace, model_helper
@@ -38,7 +41,7 @@ class CorrectnessTest(unittest.TestCase):
             return True
 
     def _test_model(self, input_dict, ref_output_dict, coreml_model):
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             coreml_out_dict = coreml_model.predict(input_dict, useCPUOnly=True)
             for out_ in list(ref_output_dict.keys()):
                 ref_out = ref_output_dict[out_]

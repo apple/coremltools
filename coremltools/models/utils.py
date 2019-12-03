@@ -11,6 +11,7 @@ import numpy as _np
 import os as _os
 import six as _six
 import warnings
+import sys
 
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
 
@@ -739,18 +740,22 @@ def replace_custom_layer_name(spec, oldname, newname):
             layer.custom.className = newname
 
 
+def is_macos():
+    """Returns True if current platform is MacOS, False otherwise."""
+    return sys.platform == 'darwin'
+
+
 def macos_version():
     """
     Returns macOS version as a tuple of integers, making it easy to do proper
     version comparisons. On non-Macs, it returns an empty tuple.
     """
-    import sys
-    if sys.platform == 'darwin':
+    if is_macos():
         import platform
         ver_str = platform.mac_ver()[0]
         return tuple([int(v) for v in ver_str.split('.')])
-    else:
-        return ()
+
+    return ()
 
 
 def _get_feature(spec, feature_name):
