@@ -1,26 +1,27 @@
 from __future__ import print_function
-import unittest
-import tarfile
-import shutil
+
 import json
 import os
-import tempfile
-from subprocess import Popen
+import shutil
 import subprocess
-import numpy as np
-from coremltools.converters import caffe as caffe_converter
-from coremltools.models.utils import macos_version
-import coremltools
+import tarfile
+import tempfile
+import unittest
+from subprocess import Popen
+
 import PIL.Image
+import numpy as np
 import pytest
 
+import coremltools
 from coremltools._deps import HAS_KERAS2_TF
+from coremltools.converters import caffe as caffe_converter
+from coremltools.models.utils import macos_version, is_macos
 
 if HAS_KERAS2_TF:
     import keras
     from keras.models import Sequential, Model
     from keras.layers import Activation, GlobalMaxPooling2D, Input
-    from coremltools.converters import keras as kerasConverter
 
 try:
     nets_path = os.environ["CAFFE_MODELS_PATH"]
@@ -129,7 +130,7 @@ class ManyImages(unittest.TestCase):
 
         #load and evaluate mlmodel
         mlmodel = coremltools.models.MLModel(path_mlmodel)
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             coreml_out = mlmodel.predict(coreml_input_dict)['output']
 
             caffe_preds = output_data.flatten()
@@ -178,7 +179,7 @@ class ManyImages(unittest.TestCase):
         if load_result is False:
             failed_tests_load.append('image bias preprocessing: load failure')
         
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             #load Caffe's input and output
             with open('{}nets/{}/{}_bias/input.json'.format(nets_path, FOLDER_NAME, str(n))) as data_file:
                 input_data_dict = json.load(data_file)
@@ -275,7 +276,7 @@ class ManyImagesKeras(unittest.TestCase):
         #coreml_model.save(model_path)    
         #coreml_model = coremltools.models.MLModel(model_path)
         
-        if macos_version() >= (10, 13):
+        if is_macos() and macos_version() >= (10, 13):
             coreml_input_dict = dict()
             coreml_input_dict["data"] = PIL.Image.fromarray(data.astype(np.uint8))
             coreml_preds = coreml_model.predict(coreml_input_dict)['output'].flatten()
@@ -348,7 +349,7 @@ class ManyImagesKeras(unittest.TestCase):
         #coreml_model.save(model_path)
         #coreml_model = coremltools.models.MLModel(model_path)
 
-        if macos_version() >= (10, 13):
+        if is_macos()and macos_version() >= (10, 13):
             coreml_input_dict = dict()
             coreml_input_dict["data1"] = PIL.Image.fromarray(data1.astype(np.uint8))
             coreml_input_dict["data2"] = PIL.Image.fromarray(data2.astype(np.uint8))

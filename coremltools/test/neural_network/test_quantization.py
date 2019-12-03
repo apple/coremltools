@@ -18,7 +18,8 @@ from coremltools.models import (
 )
 
 
-@unittest.skipIf(coremltools.utils.macos_version() < (10, 14),
+@unittest.skipIf(not coremltools.utils.is_macos() or
+                 coremltools.utils.macos_version() < (10, 14),
                  'Missing macOS 10.14+. Skipping tests.')
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
@@ -410,7 +411,8 @@ class LUTCustomQuantizationNumericalCorrectnessTests(
 
 from coremltools.converters import keras as keras_converter
 
-@unittest.skipIf(coremltools.utils.macos_version() < (10, 14),
+@unittest.skipIf(not coremltools.utils.is_macos() or
+                 coremltools.utils.macos_version() < (10, 14),
                  'Missing macOS 10.14+. Skipping tests.')
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
