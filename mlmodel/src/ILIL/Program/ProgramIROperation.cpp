@@ -59,6 +59,11 @@ public:
         return m_inputsMap.at(param);
     }
 
+    const std::string* TryGetInput(const std::string& param) const override {
+        auto paramAndArgIter = m_inputsMap.find(param);
+        return paramAndArgIter == m_inputsMap.cend() ? nullptr : &paramAndArgIter->second;
+    }
+
     const StringVec& GetInputNames() const override {
         return m_inputNames;
     }

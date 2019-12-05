@@ -27,7 +27,7 @@ namespace NNBuffer {
 
         public:
             // Must be constructed with file path to store parameters
-            NeuralNetworkBuffer(const std::string &bufferFilePath);
+            NeuralNetworkBuffer(const std::string &bufferFilePath, bool readOnly = false);
             ~NeuralNetworkBuffer();
 
             // Stores given buffer and returns offset in buffer file

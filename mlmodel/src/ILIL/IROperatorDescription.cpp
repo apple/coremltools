@@ -40,10 +40,13 @@ static std::unique_ptr<OpDescriptionMap> MakeOpDescriptionMap()
 {
     std::unique_ptr<OpDescriptionMap> map(new OpDescriptionMap{
         { IROperatorType::Activation, IROperatorDescription(2, 4, 1) },
+        { IROperatorType::Add, IROperatorDescription(2, 2, 1) },
         { IROperatorType::Const, IROperatorDescription(0, 0, 1) },
         { IROperatorType::Convolution, IROperatorDescription(1, 2, 1) },
         { IROperatorType::InnerProduct, IROperatorDescription(5, 6, 1) },
-        { IROperatorType::Pooling, IROperatorDescription(1, std::numeric_limits<uint64_t>::max(), 1) }
+        { IROperatorType::MatMul, IROperatorDescription(2, 4, 1) },
+        { IROperatorType::Pooling, IROperatorDescription(1, std::numeric_limits<uint64_t>::max(), 1) },
+        { IROperatorType::Softmax, IROperatorDescription(1, 2, 1) }
     });
 
     assert(map->size() == static_cast<size_t>(IROperatorType::COUNT));

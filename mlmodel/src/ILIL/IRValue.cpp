@@ -173,8 +173,14 @@ T IRScalarValue<T>::GetValue() const
 
 template class ::CoreML::ILIL::IRScalarValue<float>;
 template class ::CoreML::ILIL::IRScalarValue<double>;
+template class ::CoreML::ILIL::IRScalarValue<int8_t>;
+template class ::CoreML::ILIL::IRScalarValue<int16_t>;
 template class ::CoreML::ILIL::IRScalarValue<int32_t>;
 template class ::CoreML::ILIL::IRScalarValue<int64_t>;
+template class ::CoreML::ILIL::IRScalarValue<uint8_t>;
+template class ::CoreML::ILIL::IRScalarValue<uint16_t>;
+template class ::CoreML::ILIL::IRScalarValue<uint32_t>;
+template class ::CoreML::ILIL::IRScalarValue<uint64_t>;
 template class ::CoreML::ILIL::IRScalarValue<bool>;
 template class ::CoreML::ILIL::IRScalarValue<std::string>;
 

@@ -142,7 +142,7 @@ int testParseProgramIRBlock()
     auto block = MakeBlock({ { "x", "a" }, { "y", "b" } }, // inputs
                            { "z" }, // outputs
                            { // ops
-        MakeOp("z", "Activation",
+        MakeOp("z", "activation",
                { { "activation", "a" }, { "data", "b" } }, // inputs
                { { "z", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
                {})
@@ -193,7 +193,7 @@ int testParseProgramIRFunction()
 
 int testParseProgramIROperation()
 {
-    auto op = MakeOp("anOp", "Const",
+    auto op = MakeOp("anOp", "const",
                      { { "param1", "arg1" }, { "param2", "arg2" } },
                      { { "output1", MakeScalarValueType(V5::ScalarType::BOOL) },
                        { "output2", MakeScalarValueType(V5::ScalarType::DYNAMIC) } },
@@ -234,6 +234,8 @@ int testParseProgramIRProgram()
 
     auto irProgram = ProgramIRProgram::Parse(program);
 
+    ML_ASSERT_EQ(1, irProgram->GetParameterNames().size());
+    ML_ASSERT_EQ("aBool", irProgram->GetParameterNames()[0]);
     ML_ASSERT_EQ(*IRScalarValueType::Bool(), *irProgram->GetScope().GetType("aBool"));
     ML_ASSERT_EQ(true, irProgram->GetScope().GetValue("aBool")->AsBool());
     ML_ASSERT_EQ(true, irProgram->GetParameterValue("aBool").AsBool());

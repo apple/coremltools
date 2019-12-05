@@ -28,23 +28,9 @@ namespace CoreML {
 
         std::set<std::string> outputBlobNames;
 
-        // TOOD: Write a NN Program validator
+        // TODO: Write a NN Program validator (rdar://57232966)
         Result r = Result();
 
-        if (r.good()) {
-            // Make sure that all of the model interface's outputs are actually produced by some blob
-            for (const auto& output : format.description().output()) {
-                
-                const std::string& name = output.name();
-                
-                std::string err;
-                if (outputBlobNames.count(name) == 0) {
-                    err = "Interface specifies output '" + name + "' which is not produced by any layer in the neural network.";
-                    return Result(ResultType::INVALID_MODEL_INTERFACE, err);
-                }
-                outputBlobNames.erase(name);
-            }
-        }
         return r;
     }
 };

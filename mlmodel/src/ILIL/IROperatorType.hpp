@@ -16,10 +16,13 @@ namespace ILIL {
  */
 enum class IROperatorType {
     Activation,
+    Add,
     Const,
     Convolution,
     InnerProduct,
+    MatMul,
     Pooling,
+    Softmax,
 
     COUNT
 };

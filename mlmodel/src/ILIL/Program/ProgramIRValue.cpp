@@ -19,9 +19,66 @@ static std::shared_ptr<const IRValue> ParseFileValue(const V5::Value_FileValue& 
     return std::make_unique<IRFileValue>(std::move(type), value.filename(), value.offset());
 }
 
-template<typename ScalarT>
-static std::unique_ptr<const IRValue> ParseScalarValue(const IRScalarValueType& scalarType, ScalarT value)
+static std::unique_ptr<const IRValue> ParseScalarValue(const IRScalarValueType& scalarType, bool value)
 {
+    if (scalarType.GetType() != IRScalarValueTypeEnum::Bool) {
+        throw std::runtime_error("Cannot create non-boolean scalar value from boolean constant.");
+    }
+    return scalarType.Make(value);
+}
+
+static std::unique_ptr<const IRValue> ParseScalarValue(const IRScalarValueType& scalarType, float value)
+{
+    switch (scalarType.GetType()) {
+        case IRScalarValueTypeEnum::Float32:
+            return scalarType.Make(static_cast<float>(value));
+        case IRScalarValueTypeEnum::Float64:
+            return scalarType.Make(static_cast<double>(value));
+
+        case IRScalarValueTypeEnum::Float16:
+        case IRScalarValueTypeEnum::BFloat16:
+            throw std::runtime_error("Cannot create scalar value for 16-bit float.");
+
+        default:
+            throw std::runtime_error("Cannot create non-float scalar value from float.");
+    }
+}
+
+static std::unique_ptr<const IRValue> ParseScalarValue(const IRScalarValueType& scalarType, int64_t value)
+{
+    switch (scalarType.GetType()) {
+        case IRScalarValueTypeEnum::Int8:
+            return scalarType.Make(static_cast<int8_t>(value));
+        case IRScalarValueTypeEnum::Int16:
+            return scalarType.Make(static_cast<int16_t>(value));
+        case IRScalarValueTypeEnum::Int32:
+            return scalarType.Make(static_cast<int32_t>(value));
+        case IRScalarValueTypeEnum::Int64:
+            return scalarType.Make(static_cast<int64_t>(value));
+
+        case IRScalarValueTypeEnum::UInt8:
+            return scalarType.Make(static_cast<uint8_t>(value));
+        case IRScalarValueTypeEnum::UInt16:
+            return scalarType.Make(static_cast<uint16_t>(value));
+        case IRScalarValueTypeEnum::UInt32:
+            return scalarType.Make(static_cast<uint32_t>(value));
+        case IRScalarValueTypeEnum::UInt64:
+            return scalarType.Make(static_cast<uint64_t>(value));
+
+        case IRScalarValueTypeEnum::Int4:
+        case IRScalarValueTypeEnum::UInt4:
+            throw std::runtime_error("Cannot create scalar value for 4-bit integer.");
+
+        default:
+            throw std::runtime_error("Cannot create non-integer scalar value from integer.");
+    }
+}
+
+static std::unique_ptr<const IRValue> ParseScalarValue(const IRScalarValueType& scalarType, const std::string& value)
+{
+    if (scalarType.GetType() != IRScalarValueTypeEnum::String) {
+        throw std::runtime_error("Cannot create non-string scalar value from string constant.");
+    }
     return scalarType.Make(value);
 }
 
@@ -98,13 +155,13 @@ static std::shared_ptr<const IRValue> ParseImmediateValue(const V5::Value_Immedi
 {
     switch (value.value_case()) {
         case V5::Value_ImmediateValue::kB:
-            return ParseScalarValue<bool>(*type.As<IRScalarValueType>(), value.b());
+            return ParseScalarValue(*type.As<IRScalarValueType>(), value.b());
         case V5::Value_ImmediateValue::kF:
-            return ParseScalarValue<float>(*type.As<IRScalarValueType>(), value.f());
+            return ParseScalarValue(*type.As<IRScalarValueType>(), value.f());
         case V5::Value_ImmediateValue::kI:
-            return ParseScalarValue<int64_t>(*type.As<IRScalarValueType>(), value.i());
+            return ParseScalarValue(*type.As<IRScalarValueType>(), value.i());
         case V5::Value_ImmediateValue::kS:
-            return ParseScalarValue<std::string>(*type.As<IRScalarValueType>(), value.s());
+            return ParseScalarValue(*type.As<IRScalarValueType>(), value.s());
         case V5::Value_ImmediateValue::kTensor:
             return ParseTensorValue(value.tensor(), *type.As<IRTensorValueType>());
         case V5::Value_ImmediateValue::kTuple:

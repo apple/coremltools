@@ -48,6 +48,13 @@ public:
      */
     virtual const std::string& GetInput(const std::string& param) const = 0;
 
+    /**
+     Get the name of the argument specified for the given parameter.
+     @return A non-owning pointer to the name of the argument for the requested
+             parameter or nullptr if no argument was provided.
+     */
+    virtual const std::string* TryGetInput(const std::string& param) const = 0;
+
     /** Get the names of all specified arguments. */
     virtual const StringVec& GetInputNames() const = 0;
 
@@ -73,6 +80,11 @@ public:
      Convenience method to get the indicated compile-time constant from our scope.
      */
     IRScope::ConstIRValuePtr GetValue(const std::string& name) const;
+
+    /**
+     Convenience method to get the indicated compile-time constant from our scope.
+     */
+    IRScope::ConstIRValuePtr TryGetValue(const std::string& name) const;
 };
 
 }

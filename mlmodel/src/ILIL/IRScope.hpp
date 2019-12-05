@@ -51,7 +51,7 @@ public:
      @return a type pointer if the type is found.
      @throw std::runtime_error if the type is not found.
      */
-    ConstIRValueTypePtr GetType(const std::string& name) const;
+    ConstIRValueTypePtr GetType(const std::string& name, bool includeRoot = true) const;
 
     /**
      Get the type of the given value.
@@ -59,7 +59,7 @@ public:
      through parent scopes.
      @return A pointer to a type or nullptr if it cannot be found.
      */
-    ConstIRValueTypePtr TryGetType(const std::string& name) const;
+    ConstIRValueTypePtr TryGetType(const std::string& name, bool includeRoot = true) const;
 
     /**
      Associate the given type with the specified name. Optionally replace
@@ -77,7 +77,7 @@ public:
      @return a value pointer if the value is found.
      @throw std::runtime_error if the value is not found.
      */
-    ConstIRValuePtr GetValue(const std::string& name) const;
+    ConstIRValuePtr GetValue(const std::string& name, bool includeRoot = true) const;
 
     /**
      Get a value.
@@ -85,7 +85,7 @@ public:
      through parent scopes.
      @return A pointer to a value or nullptr if it cannot be found.
      */
-    ConstIRValuePtr TryGetValue(const std::string& name) const;
+    ConstIRValuePtr TryGetValue(const std::string& name, bool includeRoot = true) const;
 
     /**
      Associate the given value with the specified name. Optionally replaces

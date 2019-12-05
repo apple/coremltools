@@ -16,9 +16,9 @@ IRScope::IRScope(std::shared_ptr<const IRScope> parent)
     : m_parent(std::move(parent))
 { }
 
-IRScope::ConstIRValueTypePtr IRScope::GetType(const std::string& name) const
+IRScope::ConstIRValueTypePtr IRScope::GetType(const std::string& name, bool includeRoot) const
 {
-    auto type = TryGetType(name);
+    auto type = TryGetType(name, includeRoot);
     if (type) {
         return type;
     }
@@ -26,14 +26,14 @@ IRScope::ConstIRValueTypePtr IRScope::GetType(const std::string& name) const
     throw std::runtime_error("Failed to find type of " + name + '.');
 }
 
-IRScope::ConstIRValueTypePtr IRScope::TryGetType(const std::string& name) const
+IRScope::ConstIRValueTypePtr IRScope::TryGetType(const std::string& name, bool includeRoot) const
 {
     auto localType = m_types.find(name);
     if (localType != m_types.cend()) {
-        return localType->second;
+        return (includeRoot || m_parent) ? localType->second : nullptr;
     }
 
-    return m_parent ? m_parent->TryGetType(name) : nullptr;
+    return m_parent ? m_parent->TryGetType(name, includeRoot) : nullptr;
 }
 
 bool IRScope::SetType(const std::string& name, ConstIRValueTypePtr type, bool allowReplace)
@@ -48,9 +48,9 @@ bool IRScope::SetType(const std::string& name, ConstIRValueTypePtr type, bool al
     return !existsBeforeInsert;
 }
 
-IRScope::ConstIRValuePtr IRScope::GetValue(const std::string& name) const
+IRScope::ConstIRValuePtr IRScope::GetValue(const std::string& name, bool includeRoot) const
 {
-    auto value = TryGetValue(name);
+    auto value = TryGetValue(name, includeRoot);
     if (value) {
         return value;
     }
@@ -58,14 +58,14 @@ IRScope::ConstIRValuePtr IRScope::GetValue(const std::string& name) const
     throw std::runtime_error("Failed to find value of " + name + '.');
 }
 
-IRScope::ConstIRValuePtr IRScope::TryGetValue(const std::string& name) const
+IRScope::ConstIRValuePtr IRScope::TryGetValue(const std::string& name, bool includeRoot) const
 {
     auto localValue = m_values.find(name);
     if (localValue != m_values.cend()) {
-        return localValue->second;
+        return (includeRoot || m_parent) ? localValue->second : nullptr;
     }
 
-    return m_parent ? m_parent->TryGetValue(name) : nullptr;
+    return m_parent ? m_parent->TryGetValue(name, includeRoot) : nullptr;
 }
 
 bool IRScope::SetValue(const std::string& name, ConstIRValuePtr value, bool allowReplace)

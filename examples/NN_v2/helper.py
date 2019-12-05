@@ -49,14 +49,14 @@ def create_tensor_value(np_tensor):
         t_val.ints.append(x)
     return val
 
-def create_scalar_value(py_scalar):
+def create_scalar_value(py_scalar, scalar_type):
     """
     Return Value (since there's no ScalarValue)
     """
     val = pm.Value()
     if isinstance(py_scalar, int):
         val.immediateValue.i = py_scalar
-        val.type.scalarType = pm.ScalarType.INT32  # fix this.
+        val.type.scalarType = scalar_type
     return val
 
 def create_tuple_value(py_tuple):

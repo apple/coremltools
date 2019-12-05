@@ -48,7 +48,7 @@ ProgramIROperatorTypeConverter::ProgramIROperatorTypeConverter()
     return *instance;
 }
 
-IROperatorType ProgramIROperatorTypeConverter::GetType(const std::string &name) const
+IROperatorType ProgramIROperatorTypeConverter::GetType(const std::string& name) const
 {
     auto opType = m_nameToType.find(name);
     if (opType == m_nameToType.cend()) {
@@ -61,11 +61,14 @@ IROperatorType ProgramIROperatorTypeConverter::GetType(const std::string &name) 
 /*static*/ ProgramIROperatorTypeConverter::NameToTypeMap ProgramIROperatorTypeConverter::MakeNameToTypeMap()
 {
     ProgramIROperatorTypeConverter::NameToTypeMap map{
-        { "Activation", IROperatorType::Activation },
-        { "Const", IROperatorType::Const },
-        { "Convolution", IROperatorType::Convolution },
-        { "InnerProduct", IROperatorType::InnerProduct },
-        { "Pooling", IROperatorType::Pooling },
+        { "activation", IROperatorType::Activation },
+        { "add", IROperatorType::Add },
+        { "const", IROperatorType::Const },
+        { "convolution", IROperatorType::Convolution },
+        { "inner_product", IROperatorType::InnerProduct },
+        { "matmul", IROperatorType::MatMul },
+        { "pooling", IROperatorType::Pooling },
+        { "softmax", IROperatorType::Softmax }
     };
 
     assert(map.size() == static_cast<size_t>(IROperatorType::COUNT));

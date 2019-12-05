@@ -26,24 +26,44 @@ public:
     using ParameterMap = std::unordered_map<std::string, ConstIRValuePtr>;
     using ProtoAttributesMap = protobuf::Map<std::string, V5::Value>;
     using ProtoFunctionMap = protobuf::Map<std::string, V5::Function>;
-
+    using StringVec = std::vector<std::string>;
 
     ProgramIRProgramImpl(const ProgramSpec& program)
         : m_parameters(ParseParameters(program.parameters()))
+        , m_parameterNames(ParseParameterNames(program.parameters()))
         , m_scope(ParseScope(m_parameters))
         , m_functions(ParseFunctions(program.functions(), m_scope))
     {  }
 
     const IRFunction& GetFunction(const std::string& name) const override {
-        return *m_functions.at(name);
+        auto nameAndFunctionIter = m_functions.find(name);
+        if (nameAndFunctionIter == m_functions.cend()) {
+            throw std::out_of_range("Function '" + name + "' does not exist.");
+        }
+        return *nameAndFunctionIter->second;
     }
 
     const IRFunctionMap& GetFunctions() const override {
         return m_functions;
     }
 
+    const std::vector<std::string>& GetParameterNames() const override {
+        return m_parameterNames;
+    }
+
     const IRValue& GetParameterValue(const std::string& name) const override {
-        return *m_parameters.at(name);
+        auto nameAndParamIter = m_parameters.find(name);
+        if (nameAndParamIter == m_parameters.cend()) {
+            throw std::out_of_range("Parameter '" + name + "' does not exist.");
+        }
+        return *nameAndParamIter->second;
+    }
+
+    ConstIRValuePtr TryGetParameterValue(const std::string& name) const override {
+        auto nameAndParamIter = m_parameters.find(name);
+        return nameAndParamIter == m_parameters.cend()
+            ? nullptr
+            : nameAndParamIter->second;
     }
 
     const IRScope& GetScope() const override {
@@ -57,6 +77,16 @@ private:
             functions[nameAndSpecFunc.first] = ProgramIRFunction::Parse(nameAndSpecFunc.second, thisScope);
         }
         return functions;
+    }
+
+    static StringVec ParseParameterNames(const ProtoAttributesMap& specParameters) {
+        StringVec parameterNames;
+        parameterNames.reserve(specParameters.size());
+        for (const auto& specNameAndValue : specParameters) {
+            parameterNames.push_back(specNameAndValue.first);
+        }
+        std::sort(parameterNames.begin(), parameterNames.end());
+        return parameterNames;
     }
 
     static ParameterMap ParseParameters(const ProtoAttributesMap& specParameters) {
@@ -79,6 +109,7 @@ private:
     }
 
     ParameterMap m_parameters;
+    StringVec m_parameterNames;
     ConstIRScopePtr m_scope;
     IRFunctionMap m_functions;
 };

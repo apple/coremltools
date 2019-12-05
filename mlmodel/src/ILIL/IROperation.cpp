@@ -21,3 +21,8 @@ IRScope::ConstIRValuePtr IROperation::GetValue(const std::string& name) const
 {
     return GetScope().GetValue(name);
 }
+
+IRScope::ConstIRValuePtr IROperation::TryGetValue(const std::string& name) const
+{
+    return GetScope().TryGetValue(name);
+}

@@ -12,7 +12,18 @@
 #include "ILIL/IRValueTypeTraits.hpp"
 #include "NeuralNetworkBuffer.hpp"
 
+#include <sys/stat.h>
+
 using namespace ::CoreML::ILIL;
+
+static void EnsureFileExists(const std::string& filePath)
+{
+    struct stat buffer;
+    if (stat(filePath.c_str(), &buffer) != 0) {
+        auto msg = "Could not open " + filePath;
+        throw std::runtime_error(msg.c_str());
+    }
+}
 
 IRDimension::~IRDimension() = default;
 IRDimension::IRDimension() = default;
@@ -101,8 +112,14 @@ std::unique_ptr<const IRScalarValue<ScalarT>> IRScalarValueType::Make(ScalarT va
 
 template std::unique_ptr<const IRScalarValue<float>> IRScalarValueType::Make(float value) const;
 template std::unique_ptr<const IRScalarValue<double>> IRScalarValueType::Make(double value) const;
+template std::unique_ptr<const IRScalarValue<int8_t>> IRScalarValueType::Make(int8_t value) const;
+template std::unique_ptr<const IRScalarValue<int16_t>> IRScalarValueType::Make(int16_t value) const;
 template std::unique_ptr<const IRScalarValue<int32_t>> IRScalarValueType::Make(int32_t value) const;
 template std::unique_ptr<const IRScalarValue<int64_t>> IRScalarValueType::Make(int64_t value) const;
+template std::unique_ptr<const IRScalarValue<uint8_t>> IRScalarValueType::Make(uint8_t value) const;
+template std::unique_ptr<const IRScalarValue<uint16_t>> IRScalarValueType::Make(uint16_t value) const;
+template std::unique_ptr<const IRScalarValue<uint32_t>> IRScalarValueType::Make(uint32_t value) const;
+template std::unique_ptr<const IRScalarValue<uint64_t>> IRScalarValueType::Make(uint64_t value) const;
 template std::unique_ptr<const IRScalarValue<bool>> IRScalarValueType::Make(bool value) const;
 template std::unique_ptr<const IRScalarValue<std::string>> IRScalarValueType::Make(std::string value) const;
 
@@ -119,8 +136,10 @@ IRScalarValueTypeEnum IRScalarValueType::GetType() const
 template<typename ScalarT>
 static std::unique_ptr<const IRValue> ReadScalarValue(const std::string& filePath, uint64_t offset, const IRScalarValueType& type)
 {
+    EnsureFileExists(filePath);
+
     std::vector<ScalarT> value;
-    NNBuffer::NeuralNetworkBuffer nnBuffer(filePath);
+    NNBuffer::NeuralNetworkBuffer nnBuffer(filePath, /*readOnly=*/ true);
     nnBuffer.getBuffer(offset, value);
     auto retval = IRScalarValue<ScalarT>::Make(value.at(0));
     assert(retval->GetType() == type);
@@ -313,8 +332,10 @@ const IRTensorValueType::Shape& IRTensorValueType::GetShape() const
 template<typename ScalarT>
 static std::unique_ptr<const IRValue> ReadTensorValue(const std::string& filePath, uint64_t offset, const IRTensorValueType& tensorType)
 {
+    EnsureFileExists(filePath);
+
     std::vector<ScalarT> values;
-    NNBuffer::NeuralNetworkBuffer nnBuffer(filePath);
+    NNBuffer::NeuralNetworkBuffer nnBuffer(filePath, /*readOnly=*/ true);
     nnBuffer.getBuffer(offset, values);
     return tensorType.Make(std::move(values));
 }

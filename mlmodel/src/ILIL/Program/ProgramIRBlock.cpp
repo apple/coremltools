@@ -109,7 +109,7 @@ private:
                 m_scope->SetType(output.name(), std::move(outputType));
 
                 for (const auto& attribute : op.attributes()) {
-                    if (attribute.first == "value") {
+                    if (attribute.first == "val") {
                         auto outputValue = ProgramIRValue::Parse(attribute.second);
                         m_scope->SetValue(output.name(), std::move(outputValue));
                     }

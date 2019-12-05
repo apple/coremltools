@@ -22,6 +22,7 @@ int testIRScopeGetSetType()
 
     scope.SetType("anInt", IRScalarValueType::Int32(), /*allowReplace=*/ false);
     ML_ASSERT_EQ(*IRScalarValueType::Int32(), *scope.GetType("anInt"));
+    ML_ASSERT_NULL(scope.TryGetType("anInt", /*includeRoot=*/ false));
 
     scope.SetType("anInt", IRScalarValueType::UInt32(), /*allowReplace=*/ true);
     ML_ASSERT_EQ(*IRScalarValueType::UInt32(), *scope.GetType("anInt"));
@@ -41,6 +42,7 @@ int testIRScopeGetSetValue()
 
     scope.SetValue("anInt", IRScalarValueType::Int64()->Make(int64_t{1030}), /*allowReplace=*/ false);
     ML_ASSERT_EQ(1030, scope.GetValue("anInt")->AsInt64());
+    ML_ASSERT_NULL(scope.TryGetValue("anInt", /*includeRoot=*/ false));
 
     scope.SetValue("anInt", IRScalarValueType::Int64()->Make(int64_t{1031}), /*allowReplace=*/ true);
     ML_ASSERT_EQ(1031, scope.GetValue("anInt")->AsInt64());
@@ -71,6 +73,9 @@ int testIRScopeNestedTypeSearch()
     ML_ASSERT_NULL(scope->TryGetType("undefined"));
     ML_ASSERT_THROWS(scope->GetType("undefined"), std::runtime_error);
 
+    ML_ASSERT_THROWS(scope->GetType("inParent", /*searchRoot=*/ false), std::runtime_error);
+    ML_ASSERT_NULL(scope->TryGetType("inParent", /*searchRoot=*/ false));
+
     return 0;
 }
 
@@ -90,6 +95,9 @@ int testIRScopeNestedValueSearch()
 
     ML_ASSERT_NULL(scope->TryGetType("undefined"));
     ML_ASSERT_THROWS(scope->GetType("undefined"), std::runtime_error);
+
+    ML_ASSERT_THROWS(scope->GetValue("inParent", /*searchRoot=*/ false), std::runtime_error);
+    ML_ASSERT_NULL(scope->TryGetValue("inParent", /*searchRoot=*/ false));
 
     return 0;
 }
