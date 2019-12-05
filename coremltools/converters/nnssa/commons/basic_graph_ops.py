@@ -3,46 +3,103 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
+import six
+
+from coremltools.converters.nnssa.commons.features import Features
 
 def connect_edge(g, source, dest):
-    g[source].outputs.append(dest)
-    g[dest].inputs.append(source)
+    if isinstance(source, six.string_types):
+        source = g[source]
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    source.outputs.append(dest.name)
+    if Features.new_ssa():
+        dest.input = dest.input[:] + [source]
+    else:
+        dest.inputs.append(source.name)
 
 
 def replace_source(g, source, dest, new_source):
-    for idx, d in enumerate(g[dest].inputs):
-        if d == source:
-            g[dest].inputs[idx] = new_source
-            g[new_source].outputs.append(dest)
-
-    g[source].outputs = [i for i in g[source].outputs if i != dest]
+    if isinstance(source, six.string_types):
+        source = g[source]
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    if isinstance(new_source, six.string_types):
+        new_source = g[new_source]
+    dest_inputs = []
+    for inp in dest.inputs:
+        if Features.new_ssa() and inp == source:
+            dest_inputs.append(new_source)
+            g[new_source.name].outputs.append(dest.name)
+        elif not Features.new_ssa() and inp == source.name:
+            dest_inputs.append(new_source.name)
+            g[new_source.name].outputs.append(dest.name)
+        else:
+            dest_inputs.append(inp)
+    dest.inputs = dest_inputs
+    source.outputs = [i for i in g[source.name].outputs if i != dest.name]
 
 
 def replace_control_source(g, source, dest, new_source):
-    for idx, d in enumerate(g[dest].control_inputs):
-        if d == source:
-            g[dest].control_inputs[idx] = new_source
-            g[new_source].control_outputs.append(dest)
-
-    g[source].control_outputs = [i for i in g[source].control_outputs if i != dest]
+    if isinstance(source, six.string_types):
+        source = g[source]
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    if isinstance(new_source, six.string_types):
+        new_source = g[new_source]
+    dest_inputs = []
+    for inp in dest.control_inputs:
+        if inp == source:
+            if Features.new_ssa():
+                dest_inputs.append(new_source)
+            else:
+                dest_inputs.append(new_source.name)
+            g[new_source.name].outputs.append(dest.name)
+        else:
+            dest_inputs.append(inp)
+    dest.control_inputs = dest_inputs
+    source.control_outputs = [i for i in g[source.name].outputs if i != dest.name]
 
 
 def replace_dest(g, source, dest, new_dest):
-    for idx, d in enumerate(g[source].outputs):
-        if d == dest:
-            g[source].outputs[idx] = new_dest
-            g[new_dest].inputs.append(source)
+    if isinstance(source, six.string_types):
+        source = g[source]
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    if isinstance(new_dest, six.string_types):
+        new_dest = g[new_dest]
+    for idx, d in enumerate(source.outputs):
+        if d == dest.name:
+            source.outputs[idx] = new_dest.name
+            if Features.new_ssa():
+                new_dest.inputs = new_dest.inputs[:] + [source]
+            else:
+                new_dest.inputs = new_dest.inputs[:] + [source.name]
 
-    g[dest].inputs = [i for i in g[dest].inputs if i != source]
-
+    if Features.new_ssa():
+        dest.inputs = [i for i in dest.inputs if i != source]
+    else:
+        dest.inputs = [i for i in dest.inputs if i != source.name]
 
 def replace_control_dest(g, source, dest, new_dest):
-    for idx, d in enumerate(g[source].control_outputs):
-        if d == dest:
-            g[source].control_outputs[idx] = new_dest
-            g[new_dest].control_inputs.append(source)
+    if isinstance(source, six.string_types):
+        source = g[source]
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    if isinstance(new_dest, six.string_types):
+        new_dest = g[new_dest]
+    for idx, d in enumerate(source.control_outputs):
+        if d == dest.name:
+            source.outputs[idx] = new_dest.name
+            if Features.new_ssa():
+                new_dest.inputs = new_dest.inputs[:] + [source]
+            else:
+                new_dest.inputs = new_dest.inputs[:] + [source.name]
 
-    g[dest].control_inputs = [i for i in g[dest].control_inputs if i != source]
+    if Features.new_ssa():
+        dest.control_inputs = [i for i in dest.control_inputs if i != source]
+    else:
+        dest.control_inputs = [i for i in dest.control_inputs if i != source.name]
 
 
 def connect_dests(g, source, dests):
@@ -56,41 +113,75 @@ def connect_sources(g, sources, dest):
 
 
 def disconnect_edge(g, source, dest):
-    g[source].outputs = [i for i in g[source].outputs if i != dest]
-    g[dest].inputs = [i for i in g[dest].inputs if i != source]
+    if isinstance(source, six.string_types):
+        source = g[source]
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    source.outputs = [i for i in source.outputs if i != dest.name]
+
+    if Features.new_ssa():
+        dest.inputs = [i for i in dest.inputs if i != source]
+    else:
+        dest.inputs = [i for i in dest.inputs if i != source.name]
 
 
 def disconnect_control_edge(g, source, dest):
-    g[source].control_outputs = [i for i in g[source].control_outputs if i != dest]
-    g[dest].control_inputs = [i for i in g[dest].control_inputs if i != source]
+    if isinstance(source, six.string_types):
+        source = g[source]
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    source.control_outputs = [i for i in source.control_outputs if i != dest.name]
+
+    if Features.new_ssa():
+        dest.control_inputs = [i for i in dest.control_inputs if i != source]
+    else:
+        dest.control_inputs = [i for i in dest.control_inputs if i != source.name]
 
 
 def disconnect_vertex_outs(g, source):
-    source_node = g[source]
-    for out in source_node.outputs:
-        g[out].inputs = [i for i in g[out].inputs if i != source_node.name]
-    source_node.outputs = []
+    if isinstance(source, six.string_types):
+        source = g[source]
+    for out in source.outputs:
+        if Features.new_ssa():
+            g[out].inputs = [i for i in g[out].inputs if i != source]
+        else:
+            g[out].inputs = [i for i in g[out].inputs if i != source.name]
+    source.outputs = []
 
 
 def disconnect_vertex_ins(g, dest):
-    dest_node = g[dest]
-    for innode in dest_node.inputs:
-        g[innode].outputs = [i for i in g[innode].outputs if i != dest_node.name]
-    dest_node.inputs = []
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    for inp in dest.inputs:
+        if isinstance(inp, six.string_types):
+            innode = g[inp]
+        else:
+            innode = inp
+        innode.outputs = [i for i in innode.outputs if i != dest.name]
+    dest.inputs = []
 
 
 def disconnect_vertex_control_ins(g, dest):
-    dest_node = g[dest]
-    for innode in dest_node.control_inputs:
-        g[innode].control_outputs = [i for i in g[innode].control_outputs if i != dest_node.name]
-    dest_node.control_inputs = []
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    for inp in dest.control_inputs:
+        if isinstance(inp, six.string_types):
+            innode = g[inp]
+        else:
+            innode = inp
+        innode.control_outputs = [i for i in innode.control_outputs if i != dest.name]
+    dest.control_inputs = []
 
 
 def disconnect_vertex_control_outs(g, source):
-    source_node = g[source]
-    for out in source_node.control_outputs:
-        g[out].control_inputs = [i for i in g[out].control_inputs if i != source_node.name]
-    source_node.control_outputs = []
+    if isinstance(source, six.string_types):
+        source = g[source]
+    for out in source.control_outputs:
+        if Features.new_ssa():
+            g[out].control_inputs = [i for i in g[out].control_inputs if i != source]
+        else:
+            g[out].control_inputs = [i for i in g[out].control_inputs if i != source.name]
+    source.control_outputs = []
 
 
 def delete_node(g, name):
@@ -143,9 +234,13 @@ def check_connections(gd):
     # check that inputs and outputs line up
     for k, v in gd.items():
         for i in v.inputs:
-            assert (k in gd[i].outputs)
+            if isinstance(i, six.string_types):
+                assert (k in gd[i].outputs)
+            else:
+                assert (k in gd[i.name].outputs)
         for i in v.outputs:
-            assert (k in gd[i].inputs)
+            inputs = [inp if isinstance(inp, six.string_types) else inp.name for inp in gd[i].inputs]
+            assert (k in inputs)
         for i in v.control_inputs:
             assert (k in gd[i].control_outputs)
         for i in v.control_outputs:
@@ -164,8 +259,7 @@ def const_determined_nodes(gd, assume_variable_nodes=None):
 
     def visit(node):
         # make sure node is a ParsedNode
-        from ..nnssa import ParsedNode
-        if not isinstance(node, ParsedNode):
+        if isinstance(node, six.string_types):
             node = gd[node]
         if node.name in vis:
             return
@@ -188,9 +282,13 @@ def const_determined_nodes(gd, assume_variable_nodes=None):
             ret = True
             vis[node.name] = False
             for innode in node.inputs:
-                if innode not in vis:
+                if isinstance(innode, six.string_types):
+                    inname = innode
+                else:
+                    inname = innode.name
+                if inname not in vis:
                     visit(innode)
-                if not vis[innode]:
+                if not vis[inname]:
                     ret = False
                     break
             vis[node.name] = ret
@@ -256,7 +354,5 @@ def simple_topsort(inputs):
         curboundary = nextboundary
         nextboundary = []
     if len(ret) != len(inputs):
-        import pdb
-        pdb.set_trace()
         raise ValueError("Graph is not a DAG!")
     return ret

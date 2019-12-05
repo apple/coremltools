@@ -10,6 +10,7 @@ from ....commons import builtins
 from ....commons.parse import numpy_val_to_builtin_val
 from ....commons.basic_graph_ops import const_determined_nodes, delete_node, disconnect_edge
 
+from coremltools_internal.commons.features import Features
 
 def convert_constant_nodes_to_const_ops(nnssa):
     """
@@ -112,6 +113,8 @@ def constant_propagation(nnssa):
                             result_entry = k + ':0'
                             try:
                                 v.value, v.datatype = numpy_val_to_builtin_val(result[result_entry])
+                                if Features.new_ssa():
+                                    v.value = result[result_entry]
                             except:
                                 logging.error(result_entry)
                                 logging.error(result[result_entry])
@@ -130,4 +133,7 @@ def constant_propagation(nnssa):
         logging.exception("Constant Propagation pass failed: {}".format(e))
 
 
-    delete_unnecessary_constant_nodes(nnssa)
+    if not Features.new_ssa():
+        # We do not delete constant nodes for new ssa since the new philosophy
+        # is to maintain user intent for the very first phase of conversion.
+        delete_unnecessary_constant_nodes(nnssa)

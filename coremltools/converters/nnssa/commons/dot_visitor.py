@@ -4,6 +4,8 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 from . import builtins
 
+from coremltools.converters.nnssa.commons.features import Features
+
 
 class DotVisitor(object):
     """
@@ -25,7 +27,7 @@ class DotVisitor(object):
             self.highlights[i] = color
         return self
 
-    def visit(self, graph, node, nodename_prefix=''):
+    def visit(self, graph, node, nodename_prefix=""):
         if node.name in self.visited_memo:
             return self
 
@@ -66,13 +68,19 @@ class DotVisitor(object):
                 ('violetred' if node.attr.get(self.annotation, False) else 'black'))
 
         for i in node.inputs:
-            input_name = i
+            if Features.new_ssa():
+                input_name = i.name
+            else:
+                input_name = i
             edge = '"' + nodename_prefix + input_name + '"' + " -> " + '"' + nodename_prefix + node.name + '"'
             innode = graph[input_name]
             self.result.append(edge)
 
         for i in node.control_inputs:
-            input_name = i
+            if Features.new_ssa():
+                input_name = i.name
+            else:
+                input_name = i
             edge = '"' + nodename_prefix + input_name + '"' + " -> " + '"' + nodename_prefix + node.name + '"'
             innode = graph[input_name]
             edge = edge + " [style=dotted]"
@@ -81,7 +89,10 @@ class DotVisitor(object):
         self.visited_memo[node.name] = 1
 
         for i in node.inputs:
-            input_name = i
+            if Features.new_ssa():
+                input_name = i.name
+            else:
+                input_name = i
             if input_name[0] == '^':
                 input_name = input_name[1:]
             assert (input_name in graph)

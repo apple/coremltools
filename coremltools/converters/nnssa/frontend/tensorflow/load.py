@@ -8,6 +8,7 @@ from .graphdef_to_ssa import graphdef_to_ssa
 from .graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from ..common_pass import common_pass
 
+from coremltools.converters.nnssa.commons.features import Features
 
 def load(tfgraph, resume_on_errors=False, **kwargs):
     """
@@ -28,6 +29,8 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
         Dictionary containing {name: shape} for each input. When not provided,
         The converter assumes all Placeholder or PlaceholderWithDefault
         as inputs.
+    default_shapes: dict or None
+        Dictionary containing {name: shape} for each nodes.
     outputs: list of str
         A list of names of output TF nodes.
     """
@@ -38,16 +41,22 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
 
     ssa = graphdef_to_ssa(gd)
 
-    placeholder_shape = kwargs.get("inputs", {})
+    if not Features.new_ssa():
+        placeholder_shape = kwargs.get("inputs", {})
 
-    if placeholder_shape and len(placeholder_shape) > 0:
+        if placeholder_shape and len(placeholder_shape) > 0:
+            graph = ssa.functions['main'].graph
+            required_plhd_nodes = [node for node in graph if
+                graph[node].op == 'Placeholder']
+            for name in required_plhd_nodes:
+                if name in placeholder_shape:
+                    graph[name].attr['_output_shapes'] = [placeholder_shape[name]]
+
+    default_shapes = kwargs.get("default_shapes", {})
+    if default_shapes and len(default_shapes) > 0:
         graph = ssa.functions['main'].graph
-        required_plhd_nodes = [node for node in graph if 
-            graph[node].op == 'Placeholder']
-        for name in required_plhd_nodes:
-            if name not in placeholder_shape:
-                raise ValueError('Shape of required input {} is not provided.'.format(name))
-            graph[name].attr['_output_shapes'] = [placeholder_shape[name]]
+        for k, v in default_shapes.items():
+            graph[k].attr['_output_shapes'] = v
 
     passes = [
         delete_asserts, functionalize_loops, constant_propagation, cond_to_where,

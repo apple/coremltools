@@ -63,12 +63,13 @@ class ParsedNode(object):
 class SSAFunction(object):
     __slots__ = ["graph", "inputs", "input_types", "outputs", "output_types"]
 
-    def __init__(self, gdict=None):
+    def __init__(self, gdict=None, inputs=None, outputs=None):
         if gdict is None:
             gdict = {}
         self.graph = gdict
-        self.inputs = []
-        self.outputs = []
+        self.inputs = [] if inputs is None else inputs
+        self.outputs = [] if outputs is None else outputs
+
         self.input_types = []
         self.output_types = []
         check_connections(gdict)
@@ -84,8 +85,10 @@ class SSAFunction(object):
 
         # we use function entry and exit points if available
         # otherwise we find graph entry and exit points
-        enters = [n.name for n in self.graph.values() if 'entry' in n.op]
-        exits = [n.name for n in self.graph.values() if n.op == 'return']
+        # TODO: op name should be fixed here.
+        #       <rdar://problem/57081966> Remove wrappers that are used for old SSA
+        enters = [n.name for n in self.graph.values() if ('entry' in n.op or 'Entry' in n.op)]
+        exits = [n.name for n in self.graph.values() if n.op in ('Return', 'return')]
         if len(enters) > 0 or len(exits) > 0:
             try:
                 assert (len(enters) > 0)
@@ -117,7 +120,8 @@ class SSAFunction(object):
         ret.input_types = self.input_types[:]
         ret.outputs = self.outputs[:]
         ret.output_types = self.output_types[:]
-        ret.graph = {k: copy.copy(v) for k, v in self.graph.items()}
+        ret.graph = {k: copy.deepcopy(v) for k, v in self.graph.items()}
+
         return ret
 
     def copy(self):
@@ -133,9 +137,11 @@ class NetworkEnsemble(object):
         self.global_resource = {}
 
         if isinstance(instance, NetworkEnsemble):
-            self.functions = {k: copy.copy(v) for k, v in instance.functions.items()}
-            self.variables = {k: copy.copy(v) for k, v in instance.variables.items()}
-            self.global_resource = {k: copy.copy(v) for k, v in instance.global_resource.items()}
+            self.functions = instance.functions
+            self.variables = instance.variables
+            self.global_resource = instance.global_resource
+        elif instance is not None:
+            raise ValueError("Instance type {} not compatible with NetworkEnsemble".format(type(instance)))
 
     def rename_function(self, src_func, tgt_func):
         """
@@ -418,6 +424,13 @@ class NetworkEnsemble(object):
         self.functions[f] = ssa
 
     def __copy__(self):
+        ret = self.__class__()
+        ret.functions = self.functions
+        ret.variables = self.variables
+        ret.global_resource = self.global_resource
+        return ret
+
+    def __deepcopy__(self, memo):
         ret = self.__class__()
         ret.functions = {k: copy.copy(v) for k, v in self.functions.items()}
         ret.variables = {k: copy.copy(v) for k, v in self.variables.items()}

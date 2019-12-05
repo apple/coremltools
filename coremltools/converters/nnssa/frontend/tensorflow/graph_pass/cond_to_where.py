@@ -8,6 +8,7 @@ from .visitors import FindAllUpstreamTerminals
 import logging
 from coremltools._deps import HAS_TF_2
 
+from coremltools.converters.nnssa.commons.features import Features
 
 def compute_max_rank(graph):
     #  highly inefficient way to calculate the rank of every node
@@ -24,7 +25,10 @@ def compute_max_rank(graph):
         changes = False
         for v in graph.keys():
             if len(graph[v].inputs) > 0:
-                rank = max(ret[i] for i in graph[v].inputs) + 1
+                if Features.new_ssa():
+                    rank = max(ret[i.name] for i in graph[v].inputs) + 1
+                else:
+                    rank = max(ret[i] for i in graph[v].inputs) + 1
                 if ret[v] != rank:
                     changes = True
                     ret[v] = rank
