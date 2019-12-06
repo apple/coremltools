@@ -56,7 +56,11 @@ public:
     }
 
     const std::string& GetInput(const std::string& param) const override {
-        return m_inputsMap.at(param);
+        auto paramAndArg = m_inputsMap.find(param);
+        if (paramAndArg == m_inputsMap.cend()) {
+            throw std::out_of_range("Parameter binding does not exist.");
+        }
+        return paramAndArg->second;
     }
 
     const std::string* TryGetInput(const std::string& param) const override {

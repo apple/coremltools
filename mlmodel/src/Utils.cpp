@@ -13,8 +13,6 @@ using namespace CoreML;
 // Returning a pointer here because of verification issues with allocating this type on the stack
 google::protobuf::RepeatedPtrField<Specification::NeuralNetworkLayer> const *getNNSpec(const Specification::Model& model)  {
     switch (model.Type_case()) {
-        case Specification::Model::TypeCase::kProgram:
-            throw std::runtime_error("Not yet implemented"); // rdar://problem/57089892
         case Specification::Model::TypeCase::kNeuralNetwork:
             return &(model.neuralnetwork().layers());
         case Specification::Model::TypeCase::kNeuralNetworkRegressor:
