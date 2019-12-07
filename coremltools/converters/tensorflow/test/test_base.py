@@ -341,6 +341,7 @@ class TFNetworkTest(unittest.TestCase):
         # Cleanup files - models on disk no longer useful
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
+        return mlmodel
 
 class TFNetworkBatchTest(TFNetworkTest):
 
