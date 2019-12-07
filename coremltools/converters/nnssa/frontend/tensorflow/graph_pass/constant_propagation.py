@@ -125,8 +125,10 @@ def constant_propagation(nnssa):
                             ]
                             try:
                                 npval = [numpy_val_to_builtin_val(i) for i in values]
-                                v.value = [val[0] for val in npval]
                                 v.datatype = builtins.tuple(tuple([val[1] for val in npval]))
+                                v.value = v.datatype()
+                                for idx, val in enumerate(npval):
+                                    v.value.val[idx] = val[0]
                             except:
                                 logging.error(values)
     except Exception as e:

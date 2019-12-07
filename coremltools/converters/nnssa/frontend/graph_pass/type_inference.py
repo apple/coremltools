@@ -3,6 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
+import copy
 import collections
 import logging
 import math
@@ -17,6 +18,7 @@ if sys.version_info >= (3, 0):
     PY3 = True
 
 from ...commons import builtins
+from ...commons.parse import numpy_val_to_builtin_val
 from ...commons.builtins.utils import promote_types
 from ...commons.symbolic import *  # pylint: disable=wildcard-import
 
@@ -462,8 +464,7 @@ class TypeInferenceVisitor(object):
         parent_val = self.gdict[node.inputs[0]].attr['symbolic_value']
         rettype = parent_type.T[node.attr["index"]]
         if parent_val is not None:
-            node.attr['symbolic_value'] = rettype()
-            node.attr['symbolic_value'].val = parent_val[node.attr['index']].val
+            node.attr['symbolic_value'] = copy.deepcopy(parent_val.val[node.attr['index']])
 
         return rettype
 
@@ -1850,7 +1851,8 @@ class TypeInferenceVisitor(object):
             value = try_get_non_sym_val(self.gdict[node.inputs[value_idx]])
             if value is not None:
                 node.attr["symbolic_value"] = rettype()
-                node.attr["symbolic_value"].val = np.split(value, num_split, axis=split_dim)
+                for idx, val in enumerate(np.split(value, num_split, axis=split_dim)):
+                    node.attr["symbolic_value"].val[idx], _ = numpy_val_to_builtin_val(val)
         return rettype
 
     def visit_SplitV(self, node):

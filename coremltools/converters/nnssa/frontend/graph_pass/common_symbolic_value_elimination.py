@@ -2,6 +2,16 @@ import numpy as np
 from ...commons.symbolic import isscalar, is_symbolic
 from ...commons.basic_graph_ops import topsort, replace_source
 
+def try_hash(val):
+    if isscalar(val) and val == -1:
+        return False
+    elif isinstance(val, np.ndarray) and -1 in val:
+        return False
+    elif isinstance(val, np.ndarray) and np.issctype(val.dtype) and val.size > 100:
+        return False
+    elif hasattr(val, '__iter__'):
+        return all(try_hash(i) for i in val)
+    return True
 
 def make_hashable(v):
     if is_symbolic(v):
@@ -41,11 +51,7 @@ def common_symbolic_value_elimination_impl(gdict):
 
         for anodeval in nodeval_list:
             val = anodeval.val
-            if isscalar(val) and val == -1:
-                continue
-            if (not isscalar(val)) and -1 in val:
-                continue
-            if isinstance(val, np.ndarray) and np.issctype(val.dtype) and val.size > 100:
+            if not try_hash(val):
                 continue
 
             hashable_val, any_symbolic = make_hashable(val)
