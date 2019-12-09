@@ -2232,6 +2232,152 @@ class SSAConverter(object):
         self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(
             node.datatype)
 
+    def _convert_binary(self, node):
+        """
+        Convert binary operator
+            - Attempts to add elementwise operator if possible
+            - Otherwise, inserts broadcastable operator
+        """
+        def _is_elementwise_scalar_check(input_type):
+            """
+            Checks if element is scalar
+                - A scalar
+                - 0-D tensor
+                - 1-D tensor with only one element
+            """
+            if _is_scalar(input_type):
+                return True
+            shape = input_type.get_shape()
+            if builtins.is_tensor(input_type) and len(shape) == 1 and shape[0] == 1:
+                return True
+            return False
+
+        # CoreML elementwise operator has limited brodcastable support
+        # Check if first shape can be broadcasted to second shape
+        def _is_broadcastable_shape(shape_0, shape_1):
+            assert (len(shape_0) > 0 and len(shape_1) > 0)
+            if shape_0[0] != 1 and shape_0[0] != shape_1[0]:
+                return False
+
+            if shape_0[1:] == [1] * (len(shape_0)-1):
+                return True
+            return False
+
+        def _convert_binary_elementwise(node):
+            """
+            Adds binary elementwise operator
+                - Returns True if successful
+                - Otherwise returns False
+            """
+            assert len(node.inputs) == 2
+            input_nodes, input_names, input_types = self._get_input_tensors(node)
+            builder = self._get_builder()
+            elementwise_support = {'add', 'addv2', 'sub', 'mul', 'realdiv'}
+            op = node.op.lower()
+
+            if op not in elementwise_support:
+                return False
+
+            # If any of the input is dynamic, cannot add Elementwise operator
+            for _input in input_types:
+                if -1 in self._get_tensor_shape_from_type(_input):
+                    return False
+
+            alpha = None
+            inputs = []
+            if input_nodes[1].op == 'Const' and _is_elementwise_scalar_check(input_types[1]):
+                # Note alpha is second input is scalar
+                alpha = input_nodes[1].value.val
+                inputs = [input_names[0]]
+            elif input_nodes[0].op == 'Const' and _is_elementwise_scalar_check(input_types[0]):
+                # Note alpha is first input is scalar
+                alpha = input_nodes[0].value.val
+                inputs = [input_names[1]]
+            else:
+                # If both inputs are not scalar, ensure shape is same
+                # If any of the input is not tensor, add broadcastable layer instead
+                if not (builtins.is_tensor(input_types[0]) and builtins.is_tensor(input_types[1])):
+                    return False
+
+                shape_0 = list(input_types[0].get_shape())
+                shape_1 = list(input_types[1].get_shape())
+
+                # Make sure, any of the input is not rank-0
+                if len(shape_0) == 0 or len(shape_1) == 0:
+                    return False
+
+                if _is_broadcastable_shape(shape_0, shape_1) or _is_broadcastable_shape(shape_1, shape_0):
+                    pass
+
+                # NOTE: Special case, one of the input has multiple 1 dims and same shape
+                # e.g. (1, 4, 5) and (4, 5): in this case, we can expand second
+                # input to make equivalent to (1, 4, 5)
+                elif abs(len(shape_0) - len(shape_1)) > 0:
+                    small_index = 1 if len(shape_0) > len(shape_1) else 0
+
+                    # Switch shape and make first shape smaller to infer axis information
+                    if small_index == 1:
+                        shape_0, shape_1 = shape_1, shape_0
+
+                    same_shape_index = len(shape_1) - len(shape_0)
+                    shape_temp = [1] * same_shape_index + shape_0
+                    if shape_temp != shape_1:
+                        return False
+
+                    # Extend one of the input to allow use of elementwise operator
+                    layer = builder.add_expand_dims(name=node.name+'_'+input_names[small_index]+'_'+'_expand_dims',
+                                                    input_name=input_names[small_index],
+                                                    output_name=input_names[small_index]+'_expanded',
+                                                    axes=list(range(same_shape_index)))
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
+                    input_names[small_index] += '_expanded'
+
+                elif shape_0 != shape_1:
+                    return False
+                inputs = input_names
+
+            # Div operation cannot be simulated with more than one input and
+            # without Alpha
+            if op == 'realdiv' and alpha is None:
+                return False
+
+            if op == 'realdiv':
+                # Inverse Alpha to simulate DIV using MUL operator
+                if alpha is None:
+                    raise ValueError("Incorrect configuration!! Alpha not provided for Elementwise Div operator")
+                alpha = 1 / float(alpha)
+            elif op == 'sub':
+                if alpha and inputs[0] == input_names[0]:
+                    alpha = -alpha
+                else:
+                    neg_index = 1
+                    if alpha:
+                        neg_index = 0
+                    layer = builder.add_elementwise(name=node.name+'_'+inputs[neg_index]+'_neg',
+                                                    input_names=[inputs[neg_index]],
+                                                    output_name=inputs[neg_index]+'_neg',
+                                                    mode='MULTIPLY',
+                                                    alpha=-1.0)
+                    inputs[neg_index] += '_neg'
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+            # map certain ops to different but equivalent ops
+            mapping_op = {'ADDV2':'ADD', 'SUB':'ADD', 'REALDIV':'MULTIPLY', 'MUL':'MULTIPLY'}
+            op = op.upper()
+            op = mapping_op.get(op, op)
+            layer = builder.add_elementwise(name=node.name,
+                                            input_names=inputs,
+                                            output_name=node.name,
+                                            mode=op,
+                                            alpha=alpha)
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+            return True
+
+        # Try to add Elementwise operator if possible,
+        # If configuration not supported, insert broadcastable operator instead
+        if not _convert_binary_elementwise(node):
+            self._convert_binary_broadcastable(node)
+
     def _convert_binary_broadcastable(self, node):
         assert len(node.inputs) == 2
         input_nodes, input_names, input_types = self._get_input_tensors(node)
