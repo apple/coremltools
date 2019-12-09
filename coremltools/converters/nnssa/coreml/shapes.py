@@ -101,6 +101,7 @@ def _add(layer_spec, input_shapes):
         r = max(len(input_shapes[0]), len(input_shapes[1]))
         # broadcasting if necessary
         output_shapes = [[1] * (r - len(s)) + s for s in input_shapes]
+        output_shapes = [max(output_shapes[0], output_shapes[1])]
     elif len(input_shapes) == 1:
         output_shapes = input_shapes
     else:
