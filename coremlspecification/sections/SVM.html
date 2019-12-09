@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Support Vector Machines &mdash; mlmodel 3.0.0 documentation</title>
+  <title>Support Vector Machines &mdash; mlmodel 3.1 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -60,7 +61,7 @@
             
             
               <div class="version">
-                3.0.0
+                3.1
               </div>
             
           
@@ -185,9 +186,9 @@
 <h2>LinearKernel<a class="headerlink" href="#linearkernel" title="Permalink to this headline">¶</a></h2>
 <p>A linear kernel.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \boldsymbol{x}^T \boldsymbol{x'}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearKernel</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[K(\boldsymbol{x}, \boldsymbol{x'}) = \boldsymbol{x}^T \boldsymbol{x'}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearKernel</span> <span class="p">{</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -196,10 +197,10 @@
 <h2>RBFKernel<a class="headerlink" href="#rbfkernel" title="Permalink to this headline">¶</a></h2>
 <p>A Gaussian radial basis function (RBF) kernel.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
-     \exp(-\gamma || \boldsymbol{x} - \boldsymbol{x'} ||^2 )</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">RBFKernel</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[K(\boldsymbol{x}, \boldsymbol{x'}) = \
+     \exp(-\gamma || \boldsymbol{x} - \boldsymbol{x'} ||^2 )\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">RBFKernel</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
@@ -209,10 +210,10 @@
 <h2>PolyKernel<a class="headerlink" href="#polykernel" title="Permalink to this headline">¶</a></h2>
 <p>A polynomial kernel.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
-      (\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)^{degree}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PolyKernel</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[K(\boldsymbol{x}, \boldsymbol{x'}) = \
+      (\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)^{degree}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PolyKernel</span> <span class="p">{</span>
     <span class="kt">int32</span> <span class="na">degree</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
@@ -224,10 +225,10 @@
 <h2>SigmoidKernel<a class="headerlink" href="#sigmoidkernel" title="Permalink to this headline">¶</a></h2>
 <p>A sigmoid kernel.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">K(\boldsymbol{x}, \boldsymbol{x'}) = \
-      \tanh(\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SigmoidKernel</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[K(\boldsymbol{x}, \boldsymbol{x'}) = \
+      \tanh(\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SigmoidKernel</span> <span class="p">{</span>
     <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">double</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
@@ -373,7 +374,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc
+        &copy; Copyright 2017 - 2019, Apple Inc
 
     </p>
   </div>

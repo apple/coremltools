@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Neural Networks &mdash; mlmodel 3.0.0 documentation</title>
+  <title>Neural Networks &mdash; mlmodel 3.1 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -60,7 +61,7 @@
             
             
               <div class="version">
-                3.0.0
+                3.1
               </div>
             
           
@@ -497,9 +498,9 @@ The mean image is subtracted from the input named
 <h2>ActivationReLU<a class="headerlink" href="#activationrelu" title="Permalink to this headline">¶</a></h2>
 <p>A rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \text{max}(0, x)</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationReLU</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x) = \text{max}(0, x)\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationReLU</span> <span class="p">{</span>
 
 <span class="p">}</span>
 </pre></div>
@@ -509,12 +510,12 @@ The mean image is subtracted from the input named
 <h2>ActivationLeakyReLU<a class="headerlink" href="#activationleakyrelu" title="Permalink to this headline">¶</a></h2>
 <p>A leaky rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \begin{cases}
+<div class="math notranslate nohighlight">
+\[\begin{split}f(x) = \begin{cases}
         x      &amp; \text{if } x \geq 0 \\
         \alpha x &amp; \text{if } x &lt; 0
-       \end{cases}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationLeakyReLU</span> <span class="p">{</span>
+       \end{cases}\end{split}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationLeakyReLU</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//negative slope value for leakyReLU</span>
 
@@ -526,9 +527,9 @@ The mean image is subtracted from the input named
 <h2>ActivationTanh<a class="headerlink" href="#activationtanh" title="Permalink to this headline">¶</a></h2>
 <p>A hyperbolic tangent activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \dfrac{1 - e^{-2x}}{1 + e^{-2x}}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationTanh</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{1 - e^{-2x}}{1 + e^{-2x}}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationTanh</span> <span class="p">{</span>
 
 <span class="p">}</span>
 </pre></div>
@@ -538,9 +539,9 @@ The mean image is subtracted from the input named
 <h2>ActivationScaledTanh<a class="headerlink" href="#activationscaledtanh" title="Permalink to this headline">¶</a></h2>
 <p>A scaled hyperbolic tangent activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \alpha \tanh(\beta x)</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationScaledTanh</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x) = \alpha \tanh(\beta x)\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationScaledTanh</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -553,9 +554,9 @@ The mean image is subtracted from the input named
 <h2>ActivationSigmoid<a class="headerlink" href="#activationsigmoid" title="Permalink to this headline">¶</a></h2>
 <p>A sigmoid activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \dfrac{1}{1 + e^{-x}}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSigmoid</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{1}{1 + e^{-x}}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSigmoid</span> <span class="p">{</span>
 
 <span class="p">}</span>
 </pre></div>
@@ -565,9 +566,9 @@ The mean image is subtracted from the input named
 <h2>ActivationLinear<a class="headerlink" href="#activationlinear" title="Permalink to this headline">¶</a></h2>
 <p>A linear activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \alpha x + \beta</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationLinear</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x) = \alpha x + \beta\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationLinear</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -580,9 +581,9 @@ The mean image is subtracted from the input named
 <h2>ActivationSigmoidHard<a class="headerlink" href="#activationsigmoidhard" title="Permalink to this headline">¶</a></h2>
 <p>A hard sigmoid activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \text{min}(\text{max}(\alpha x + \beta, 0), 1)</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSigmoidHard</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x) = \text{min}(\text{max}(\alpha x + \beta, 0), 1)\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSigmoidHard</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="kt">float</span> <span class="na">beta</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
@@ -597,12 +598,12 @@ The mean image is subtracted from the input named
 Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 “alpha” parameter can be a vector of length C.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x_i) = \begin{cases}
+<div class="math notranslate nohighlight">
+\[\begin{split}f(x_i) = \begin{cases}
              x_i          &amp; \text{if } x_i \geq 0 \\
              \alpha_i x_i &amp; \text{if } x_i &lt; 0
-         \end{cases} \;,\;i=1,...,C</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationPReLU</span> <span class="p">{</span>
+         \end{cases} \;,\;i=1,...,C\end{split}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationPReLU</span> <span class="p">{</span>
 
     <span class="c1">// parameter of length C or 1.</span>
     <span class="c1">// If length is 1, same value is used for all channels</span>
@@ -616,12 +617,12 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 <h2>ActivationELU<a class="headerlink" href="#activationelu" title="Permalink to this headline">¶</a></h2>
 <p>An exponential linear unit (ELU) activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \begin{cases}
+<div class="math notranslate nohighlight">
+\[\begin{split}f(x) = \begin{cases}
         x              &amp; \text{if } x \geq 0 \\
         \alpha (e^x - 1) &amp; \text{if } x &lt; 0
-       \end{cases}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationELU</span> <span class="p">{</span>
+       \end{cases}\end{split}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationELU</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -633,12 +634,12 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 <h2>ActivationThresholdedReLU<a class="headerlink" href="#activationthresholdedrelu" title="Permalink to this headline">¶</a></h2>
 <p>A thresholded rectified linear unit (ReLU) activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \begin{cases}
+<div class="math notranslate nohighlight">
+\[\begin{split}f(x) = \begin{cases}
         x &amp; \text{if } x \geq \alpha \\
         0 &amp; \text{if } x &lt; \alpha
-       \end{cases}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationThresholdedReLU</span> <span class="p">{</span>
+       \end{cases}\end{split}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationThresholdedReLU</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -650,9 +651,9 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 <h2>ActivationSoftsign<a class="headerlink" href="#activationsoftsign" title="Permalink to this headline">¶</a></h2>
 <p>A softsign activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \dfrac{x}{1 + |x|}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSoftsign</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{x}{1 + |x|}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSoftsign</span> <span class="p">{</span>
 
 <span class="p">}</span>
 </pre></div>
@@ -662,9 +663,9 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 <h2>ActivationSoftplus<a class="headerlink" href="#activationsoftplus" title="Permalink to this headline">¶</a></h2>
 <p>A softplus activation function.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = \text{log}(1 + e^x)</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSoftplus</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x) = \text{log}(1 + e^x)\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationSoftplus</span> <span class="p">{</span>
 
 <span class="p">}</span>
 </pre></div>
@@ -676,9 +677,9 @@ Input must be at least rank 3. Axis = -3 is denoted by “C”, or channels.
 Input must be at least rank 3. axis = -3 is denoted by “C”, or channels.
 “alpha”/”beta” parameter can be a vector of length C.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x_i) = \alpha_i \text{log}(1 + e^{\beta_i x_i}) \;,\;i=1,...,C</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationParametricSoftplus</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[f(x_i) = \alpha_i \text{log}(1 + e^{\beta_i x_i}) \;,\;i=1,...,C\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ActivationParametricSoftplus</span> <span class="p">{</span>
 
     <span class="c1">// If length is 1, same value is used for all channels</span>
     <span class="n">WeightParams</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//parameter of length C or 1</span>
@@ -1698,9 +1699,9 @@ and repeated along the other axes, if present.</p>
 </div>
 <p>Requires 1 input and produces 1 output.</p>
 <p>This operation is described by the following formula:</p>
-<div class="math">
-<p><span class="math">y_i = \gamma_i \dfrac{ (x_i - \mu_i)}{\sqrt{\sigma_i^2 + \epsilon}} + \beta_i \;,\;i=1,....,C</span></p>
-</div><dl class="docutils">
+<div class="math notranslate nohighlight">
+\[y_i = \gamma_i \dfrac{ (x_i - \mu_i)}{\sqrt{\sigma_i^2 + \epsilon}} + \beta_i \;,\;i=1,....,C\]</div>
+<dl class="docutils">
 <dt>Input</dt>
 <dd>A blob with rank greater than equal to 3.
 Example: Rank 4 blob represents [Batch, channels, height, width]
@@ -1962,9 +1963,9 @@ For ranks greater than 3, the leading dimensions, starting from 0 to -4 (inclusi
 <dd>A blob with the same shape as the input.</dd>
 </dl>
 <p>This layer is described by the following formula:</p>
-<div class="math">
-<p><span class="math">x_i \leftarrow  \dfrac{x_i}{\left ( k + \dfrac{\alpha}{C} \sum_j x_j^2 \right )^\beta}</span></p>
-</div><p>where the summation is done over a <code class="docutils literal notranslate"><span class="pre">(localSize,</span> <span class="pre">1,</span> <span class="pre">1)</span></code> neighborhood —
+<div class="math notranslate nohighlight">
+\[x_i \leftarrow  \dfrac{x_i}{\left ( k + \dfrac{\alpha}{C} \sum_j x_j^2 \right )^\beta}\]</div>
+<p>where the summation is done over a <code class="docutils literal notranslate"><span class="pre">(localSize,</span> <span class="pre">1,</span> <span class="pre">1)</span></code> neighborhood —
 that is, over a window “across” channels in 1x1 spatial neighborhoods.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LRNLayerParams</span> <span class="p">{</span>
 
@@ -1994,9 +1995,9 @@ For softmax layer that can operate on any axis, see SoftmaxNDLayer.</p>
 <dd>A blob with the same shape as the input.</dd>
 </dl>
 <p>This layer is described by the following formula:</p>
-<div class="math">
-<p><span class="math">x_i \leftarrow \dfrac{e^{x_i}}{\sum_i{e^{x_i}}}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SoftmaxLayerParams</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[x_i \leftarrow \dfrac{e^{x_i}}{\sum_i{e^{x_i}}}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SoftmaxLayerParams</span> <span class="p">{</span>
 
 <span class="p">}</span>
 </pre></div>
@@ -2043,9 +2044,9 @@ However, only certain set of shapes are broadcastable. For example:
 <dd>A blob with shape equal to the input blob.</dd>
 </dl>
 <p>If only one input is provided, scalar addition is performed:</p>
-<div class="math">
-<p><span class="math">y = x + \alpha</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">AddLayerParams</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[y = x + \alpha\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">AddLayerParams</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -2070,9 +2071,9 @@ However, only certain set of shapes are broadcastable. For example:
 <dd>A blob with shape equal to the first input blob.</dd>
 </dl>
 <p>If only one input is provided, scalar multiplication is performed:</p>
-<div class="math">
-<p><span class="math">y = \alpha x</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">MultiplyLayerParams</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[y = \alpha x\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">MultiplyLayerParams</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -2094,9 +2095,9 @@ However, only certain set of shapes are broadcastable. For example:
 <dd>A blob with the same shape as the input.</dd>
 </dl>
 <p>The input is first modified by shifting and scaling:</p>
-<div class="math">
-<p><span class="math">x \leftarrow \text{scale} \cdot x + \text{shift}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UnaryFunctionLayerParams</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[x \leftarrow \text{scale} \cdot x + \text{shift}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">UnaryFunctionLayerParams</span> <span class="p">{</span>
 
     <span class="kd">enum</span> <span class="n">Operation</span> <span class="p">{</span>
         <span class="na">SQRT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -2336,9 +2337,9 @@ For ranks greater than 3, the leading dimensions, starting from 0 to -4 (inclusi
 <dd>A blob with the same shape as the input.</dd>
 </dl>
 <p>This layer is described by the following formula:</p>
-<div class="math">
-<p><span class="math">x_i \leftarrow \dfrac{x_i}{\sqrt{\sum{x_i^2} + \epsilon}}</span></p>
-</div><div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">L2NormalizeLayerParams</span> <span class="p">{</span>
+<div class="math notranslate nohighlight">
+\[x_i \leftarrow \dfrac{x_i}{\sqrt{\sum{x_i^2} + \epsilon}}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">L2NormalizeLayerParams</span> <span class="p">{</span>
 
     <span class="kt">float</span> <span class="na">epsilon</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -2817,10 +2818,10 @@ Represents a vector of size <code class="docutils literal notranslate"><span cla
 <li>Output Shape: <code class="docutils literal notranslate"><span class="pre">[Seq,</span> <span class="pre">Batch,</span> <span class="pre">outputVectorSize,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> , if <code class="docutils literal notranslate"><span class="pre">sequenceOutput</span> <span class="pre">==</span> <span class="pre">true</span></code></li>
 </ul>
 <p>This layer is described by the following equation:</p>
-<div class="math">
-<p><span class="math">\boldsymbol{y_t} = f(\mathrm{clip}(W \boldsymbol{x_t} + \
-                                   R \boldsymbol{y_{t-1}} + b))</span></p>
-</div><ul class="simple">
+<div class="math notranslate nohighlight">
+\[\boldsymbol{y_t} = f(\mathrm{clip}(W \boldsymbol{x_t} + \
+                                   R \boldsymbol{y_{t-1}} + b))\]</div>
+<ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">W</span></code> is a 2-dimensional weight matrix
 (<code class="docutils literal notranslate"><span class="pre">[outputVectorSize,</span> <span class="pre">inputVectorSize]</span></code>, row-major)</li>
 <li><code class="docutils literal notranslate"><span class="pre">R</span></code> is a 2-dimensional recursion matrix
@@ -2874,34 +2875,34 @@ Represents a vector of size <code class="docutils literal notranslate"><span cla
 <p>This layer is described by the following equations:</p>
 <dl class="docutils">
 <dt>Update Gate</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{z_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{z_t} = \
     f(\mathrm{clip}(W_z \boldsymbol{x_t} + \
-                    R_z \boldsymbol{y_{t-1}} + b_z)</span></p>
-</div></dd>
+                    R_z \boldsymbol{y_{t-1}} + b_z)\]</div>
+</dd>
 <dt>Reset Gate</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{r_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{r_t} = \
     f(\mathrm{clip}(W_r \boldsymbol{x_t} + \
-                    R_r \boldsymbol{y_{t-1}} + b_r))</span></p>
-</div></dd>
+                    R_r \boldsymbol{y_{t-1}} + b_r))\]</div>
+</dd>
 <dt>Cell Memory State</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{c_t} = \
-    \boldsymbol{y_{t-1}} \odot \boldsymbol{r_t}</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{c_t} = \
+    \boldsymbol{y_{t-1}} \odot \boldsymbol{r_t}\]</div>
+</dd>
 <dt>Output Gate</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{o_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{o_t} = \
     g(\mathrm{clip}(W_o \boldsymbol{x_t} + \
-                    R_o \boldsymbol{c_t} + b_o))</span></p>
-</div></dd>
+                    R_o \boldsymbol{c_t} + b_o))\]</div>
+</dd>
 <dt>Output</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{y_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{y_t} = \
     (1 - \boldsymbol{z_t}) \odot \boldsymbol{o_t} + \
-     \boldsymbol{z_t} \odot \boldsymbol{y_{t-1}}</span></p>
-</div></dd>
+     \boldsymbol{z_t} \odot \boldsymbol{y_{t-1}}\]</div>
+</dd>
 </dl>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">W_z</span></code>, <code class="docutils literal notranslate"><span class="pre">W_r</span></code>, <code class="docutils literal notranslate"><span class="pre">W_o</span></code> are 2-dimensional input weight matrices
@@ -2949,43 +2950,43 @@ Represents a vector of size <code class="docutils literal notranslate"><span cla
 <p>This is described by the following equations:</p>
 <dl class="docutils">
 <dt>Input Gate</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{i_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{i_t} = \
     f(\mathrm{clip}(W_i \boldsymbol{x_t} + \
                     R_i \boldsymbol{y_{t-1}} + \
-                    p_i \odot c_{t-1} + b_i))</span></p>
-</div></dd>
+                    p_i \odot c_{t-1} + b_i))\]</div>
+</dd>
 <dt>Forget Gate</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{f_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{f_t} = \
     f(\mathrm{clip}(W_f \boldsymbol{x_t} + \
                     R_f \boldsymbol{y_{t-1}} + \
-                    p_f \odot c_{t-1} + b_f))</span></p>
-</div></dd>
+                    p_f \odot c_{t-1} + b_f))\]</div>
+</dd>
 <dt>Block Input</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{z_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{z_t} = \
     g(\mathrm{clip}(W_z \boldsymbol{x_t} + \
-                    R_z \boldsymbol{y_{t-1}} + b_z))</span></p>
-</div></dd>
+                    R_z \boldsymbol{y_{t-1}} + b_z))\]</div>
+</dd>
 <dt>Cell Memory State</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{c_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{c_t} = \
     \boldsymbol{c_{t-1}} \odot \boldsymbol{f_t} + \
-    \boldsymbol{i_t} \odot \boldsymbol{z_t}</span></p>
-</div></dd>
+    \boldsymbol{i_t} \odot \boldsymbol{z_t}\]</div>
+</dd>
 <dt>Output Gate</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{o_t} = \
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{o_t} = \
     f(\mathrm{clip}(W_o \boldsymbol{x_t} + \
                     R_o \boldsymbol{y_{t-1}} + \
-                    p_o \odot c_t + b_o))</span></p>
-</div></dd>
+                    p_o \odot c_t + b_o))\]</div>
+</dd>
 <dt>Output</dt>
-<dd><div class="first last math">
-<p><span class="math">\boldsymbol{y_t} = \
-    h(\boldsymbol{c_t}) \odot \boldsymbol{o_t}</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[\boldsymbol{y_t} = \
+    h(\boldsymbol{c_t}) \odot \boldsymbol{o_t}\]</div>
+</dd>
 </dl>
 <ul class="simple">
 <li><code class="docutils literal notranslate"><span class="pre">W_i</span></code>, <code class="docutils literal notranslate"><span class="pre">W_f</span></code>, <code class="docutils literal notranslate"><span class="pre">W_z</span></code>, <code class="docutils literal notranslate"><span class="pre">W_o</span></code> are 2-dimensional input weight matrices
@@ -3275,7 +3276,7 @@ All the indices, except for the last two, are broadcasted using conventional rul
 <div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y</span> <span class="o">=</span> <span class="n">ConcatNDLayer</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span><span class="n">x2</span><span class="p">,</span><span class="o">....</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Requires at least 1 input and produces 1 output.</p>
+<p>Requires at least 2 input and produces 1 output.</p>
 <dl class="docutils">
 <dt>Input</dt>
 <dd>A Sequence of N-dimensional tensors. The rank of the input tensors must match and all dimensions except ‘axis’ must be equal.</dd>
@@ -4963,9 +4964,9 @@ Output is always a rank 1 tensor.</p>
 <h2>ErfLayerParams<a class="headerlink" href="#erflayerparams" title="Permalink to this headline">¶</a></h2>
 <p>A layer that computes the Gauss error function,
 which is defined as:</p>
-<div class="math">
-<p><span class="math">f(x) = \dfrac{1}{\sqrt{\pi}}\int_{-x}^{x}{e^{-t^2}dt}</span></p>
-</div><p>Requires 1 input and produces 1 output.
+<div class="math notranslate nohighlight">
+\[f(x) = \dfrac{1}{\sqrt{\pi}}\int_{-x}^{x}{e^{-t^2}dt}\]</div>
+<p>Requires 1 input and produces 1 output.
 Output shape is same as the input.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ErfLayerParams</span> <span class="p">{</span>
 
@@ -5515,37 +5516,37 @@ specifying configurable learning rate, mini batch size, betas, and eps</p>
 <p>The following functions are supported:</p>
 <dl class="docutils">
 <dt><code class="docutils literal notranslate"><span class="pre">SQRT</span></code></dt>
-<dd><div class="first last math">
-<p><span class="math">f(x) = \sqrt{x}</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[f(x) = \sqrt{x}\]</div>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">RSQRT</span></code></dt>
-<dd><div class="first last math">
-<p><span class="math">f(x) = \dfrac{1}{\sqrt{x + \epsilon}}</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[f(x) = \dfrac{1}{\sqrt{x + \epsilon}}\]</div>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">INVERSE</span></code></dt>
-<dd><div class="first last math">
-<p><span class="math">f(x) = \dfrac{1}{x + \epsilon}</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[f(x) = \dfrac{1}{x + \epsilon}\]</div>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">POWER</span></code></dt>
-<dd><div class="first last math">
-<p><span class="math">f(x) = x^\alpha</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[f(x) = x^\alpha\]</div>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">EXP</span></code></dt>
-<dd><div class="first last math">
-<p><span class="math">f(x) = e^x</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[f(x) = e^x\]</div>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">LOG</span></code></dt>
-<dd><div class="first last math">
-<p><span class="math">f(x) = \log x</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[f(x) = \log x\]</div>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">ABS</span></code></dt>
-<dd><div class="first last math">
-<p><span class="math">f(x) = |x|</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[f(x) = |x|\]</div>
+</dd>
 <dt><code class="docutils literal notranslate"><span class="pre">THRESHOLD</span></code></dt>
-<dd><div class="first last math">
-<p><span class="math">f(x) = \text{max}(\alpha, x)</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[f(x) = \text{max}(\alpha, x)\]</div>
+</dd>
 </dl>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">Operation</span> <span class="p">{</span>
     <span class="na">SQRT</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -5594,7 +5595,7 @@ specifying configurable learning rate, mini batch size, betas, and eps</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc
+        &copy; Copyright 2017 - 2019, Apple Inc
 
     </p>
   </div>
