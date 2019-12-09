@@ -79,7 +79,7 @@ def create_tuple_value(py_tuple):
             raise NotImplementedError()
     return tp_val
 
-def create_load_from_file_value(file_name, offset, dim, scalar_type):
+def create_file_value(file_name, offset, dim, scalar_type):
     """
     Create a Value Type to store File Value
     """
