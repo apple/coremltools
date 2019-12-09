@@ -25,6 +25,110 @@ def convert(filename,
             custom_conversion_functions=None,  # type: dict{text, any}
             custom_shape_functions=None,  # type: dict{text, any}
             **kwargs):
+    """
+    Convert TensorFlow model to Core ML format.
+
+    Parameters
+    ----------
+    filename: str
+        Path to the TensorFlow model. Takes in one of the following formats:
+
+        - TensorFlow frozen graph (.pb) model file name
+        - TensorFlow tf.keras HDF5 (.h5) model file name
+        - TensorFlow SavedModel directory path
+        - TensorFlow concrete functions(s)
+
+    inputs: dict(str: list or tuple)
+        Model input name and shape pairs.
+
+    outputs: [str]
+        Model output names.
+
+    image_input_names: [str] | str
+      Input names (a subset of the keys of input_name_shape_dict)
+      that can be treated as images by Core ML. All other inputs
+      are treated as MultiArrays.
+    is_bgr: bool | dict():
+      Applicable only if image_input_names is specified.
+      To specify different values for each image input provide a dictionary with input names as keys and booleans as values.
+    red_bias: float | dict()
+      Bias value to be added to the red channel of the input image, after applying scale.
+      Defaults to 0.0
+      Applicable only if image_input_names is specified.
+      To specify different values for each image input provide a dictionary with input names as keys.
+    blue_bias: float | dict()
+      Bias value to be added to the blue channel of the input image, after applying scale.
+      Defaults to 0.0
+      Applicable only if image_input_names is specified.
+      To specify different values for each image input provide a dictionary with input names as keys.
+    green_bias: float | dict()
+      Bias value to be added to the green channel of the input image, after applying scale.
+      Defaults to 0.0
+      Applicable only if image_input_names is specified.
+      To specify different values for each image input provide a dictionary with input names as keys.
+    gray_bias: float | dict()
+      Bias value to be added to the input image (in grayscale), after applying scale.
+      Defaults to 0.0
+      Applicable only if image_input_names is specified.
+      To specify different values for each image input provide a dictionary with input names as keys.
+    image_scale: float | dict()
+      Value by which input images will be scaled before bias is added and
+      Core ML model makes a prediction. Defaults to 1.0.
+      Applicable only if image_input_names is specified.
+      To specify different values for each image input provide a dictionary with input names as keys.
+    class_labels: list[int or str] | str
+      Class labels (applies to classifiers only) that map the index of the
+      output of a neural network to labels in a classifier.
+      If the provided class_labels is a string, it is assumed to be a
+      file path where classes are parsed as a list of newline separated
+      strings.
+    predicted_feature_name: str
+      Name of the output feature for the class labels exposed in the Core ML
+      model (applies to classifiers only). Defaults to 'classLabel'
+    predicted_probabilities_output: str
+      Name of the neural network output to be interpreted as the predicted
+      probabilities of the resulting classes. Typically the output of a
+      softmax function.
+    add_custom_layers: bool
+      Flag to turn on addition of custom CoreML layers for unsupported TF ops or attributes within
+      a supported op.
+    custom_conversion_functions: dict(): {Text: func(**kwargs)}
+      Argument to provide user-defined functions for converting Tensorflow operations (op, for short).
+      A dictionary with keys corresponding to the names or types of the TF ops and values as handle to user-defined functions.
+      The keys can be either the type of the op or the name of the op. If former, then the function is called whenever the op
+      of that type is encountered during conversion. By using op names, specific ops can be targeted which is
+      useful for handling unsupported configuration in an op.
+      The function receives multiple arguments: TF operation, the CoreML Neural network builder object,
+      dictionary containing the op's inputs that are constants and their values (as numpy arrays).
+      The function can add custom layers or any other combination of CoreML layers to translate the TF op.
+      See "examples/custom_layer_examples.ipynb" jupyter-notebook for examples on using this argument.
+    custom_shape_functions: dict(): {Text: func()}
+      Argument to provide user-defined functions to compute shape for given op.
+      A dictionary with keys corresponding to the type of TF Op and value as handled to user-defined function.
+      Function receives `layer specification` and `input shape` as a input.
+      output of the function must be output shape for give op. (generally List).
+      Custom shape function is required for adding custom layer in Core ML 3.
+
+    Returns
+    -------
+    model: MLModel
+        Returns an MLModel instance representing a Core ML model.
+
+    Examples
+    --------
+    .. code-block:: python
+
+        import coremltools
+        from tensorflow.keras.applications import ResNet50
+
+        model = coremltools.converters.tensorflow.convert(
+            './model.h5',
+             input_name_shape_dict={'input_1': (1, 224, 224, 3)},
+             output_feature_names=['Identity']
+        )
+
+    For more examples, see: https://github.com/apple/coremltools/blob/master/docs/NeuralNetworkGuide.md
+    """
     use_cpu_only = kwargs.get('use_cpu_only')
     use_cpu_only = use_cpu_only if use_cpu_only is not None else False
 
