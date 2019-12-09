@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.tree_ensemble &mdash; coremltools 3.0 documentation</title>
+  <title>coremltools.models.tree_ensemble &mdash; coremltools 3.1 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                3.0
+                3.1
               </div>
             
           
@@ -90,8 +90,9 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.tensorflow.convert.html">coremltools.converters.tensorflow.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
@@ -132,7 +133,7 @@
 
       <div class="wy-nav-content">
         
-        <div class="rst-content">
+        <div class="rst-content style-external-links">
         
           
 
@@ -396,7 +397,7 @@ with multiclass classification.</p>
 <p>The TreeEnsembleClassifier class constructs a Tree Ensemble model incrementally
 using methods to add branch and leaf nodes specifying the behavior of the model.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">())]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span> <span class="o">=</span> <span class="n">TreeEnsembleClassifier</span><span class="p">(</span><span class="n">features</span> <span class="o">=</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> 
 <span class="go">                                output_features = &quot;predicted_class&quot;)</span>
@@ -418,6 +419,22 @@ using methods to add branch and leaf nodes specifying the behavior of the model.
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Put in a softmax transform to translate these into probabilities. </span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">set_post_evaluation_transform</span><span class="p">(</span><span class="s2">&quot;Classification_SoftMax&quot;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">set_default_prediction_value</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># save the model to a .mlmodel file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model_path</span> <span class="o">=</span> <span class="s1">&#39;./tree.mlmodel&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_spec</span><span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># load the .mlmodel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># make predictions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_input</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_input</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="method">
@@ -464,10 +481,19 @@ scores is set to the default value of <cite>“classProbability.”</cite></p>
 <p>The TreeEnsembleRegressor class constructs a Tree Ensemble model incrementally
 using methods to add branch and leaf nodes specifying the behavior of the model.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Required inputs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">datatypes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.tree_ensemble</span> <span class="kn">import</span> <span class="n">TreeEnsembleRegressor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span> <span class="o">=</span> <span class="n">TreeEnsembleClassifier</span><span class="p">(</span><span class="n">features</span> <span class="o">=</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> 
-<span class="go">                                output_features = &quot;predicted_value&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define input features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()))]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define output_features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;predicted_values&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">())]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span> <span class="o">=</span> <span class="n">TreeEnsembleRegressor</span><span class="p">(</span><span class="n">features</span> <span class="o">=</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">output_features</span><span class="p">)</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Split on a[2] &lt;= 3</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_branch_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;BranchOnValueLessThanEqual&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -483,6 +509,22 @@ using methods to add branch and leaf nodes specifying the behavior of the model.
 
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add leaf to the false branch of node 2 that subtracts 1 from the result.</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_leaf_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">set_default_prediction_value</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># save the model to a .mlmodel file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model_path</span> <span class="o">=</span> <span class="s1">&#39;./tree.mlmodel&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_spec</span><span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># load the .mlmodel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># make predictions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_input</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_input</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="method">

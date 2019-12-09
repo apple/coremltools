@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Converters &mdash; coremltools 3.0 documentation</title>
+  <title>Converters &mdash; coremltools 3.1 documentation</title>
   
 
   
@@ -37,7 +37,7 @@
   <link rel="stylesheet" href="static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="coremltools.converters.caffe.convert" href="generated/coremltools.converters.caffe.convert.html" />
+    <link rel="next" title="coremltools.converters.tensorflow.convert" href="generated/coremltools.converters.tensorflow.convert.html" />
     <link rel="prev" title="coremltools" href="index.html" />
     <link href="static/style.css" rel="stylesheet" type="text/css">
 
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                3.0
+                3.1
               </div>
             
           
@@ -90,8 +90,9 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Converters</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.tensorflow.convert.html">coremltools.converters.tensorflow.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated/coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
@@ -132,7 +133,7 @@
 
       <div class="wy-nav-content">
         
-        <div class="rst-content">
+        <div class="rst-content style-external-links">
         
           
 
@@ -178,26 +179,30 @@
   <div class="section" id="converters">
 <h1>Converters<a class="headerlink" href="#converters" title="Permalink to this headline">¶</a></h1>
 <p>Automatically convert models from popular machine learning libraries such as
-Keras, Caffe, scikit-learn, LIBSVM, and XGBoost to the Core ML format.</p>
+TensorFlow, Keras, Caffe, scikit-learn, LIBSVM, and XGBoost to the Core ML
+format.</p>
 <span class="target" id="module-coremltools.converters"></span><table border="1" class="longtable docutils">
 <colgroup>
 <col width="10%" />
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.converters.caffe.convert.html#coremltools.converters.caffe.convert" title="coremltools.converters.caffe.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">caffe.convert</span></code></a></td>
-<td>Convert a Caffe model to Core ML format.</td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.converters.tensorflow.convert.html#coremltools.converters.tensorflow.convert" title="coremltools.converters.tensorflow.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensorflow.convert</span></code></a></td>
+<td>Convert TensorFlow model to Core ML format.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="generated/coremltools.converters.keras.convert.html#coremltools.converters.keras.convert" title="coremltools.converters.keras.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">keras.convert</span></code></a></td>
 <td>Convert a Keras model to Core ML protobuf specification (.mlmodel).</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.converters.libsvm.convert.html#coremltools.converters.libsvm.convert" title="coremltools.converters.libsvm.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">libsvm.convert</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.converters.caffe.convert.html#coremltools.converters.caffe.convert" title="coremltools.converters.caffe.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">caffe.convert</span></code></a></td>
+<td>Convert a Caffe model to Core ML format.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.converters.libsvm.convert.html#coremltools.converters.libsvm.convert" title="coremltools.converters.libsvm.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">libsvm.convert</span></code></a></td>
 <td>Convert a LIBSVM model to Core ML format.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.converters.sklearn.convert.html#coremltools.converters.sklearn.convert" title="coremltools.converters.sklearn.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sklearn.convert</span></code></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.converters.sklearn.convert.html#coremltools.converters.sklearn.convert" title="coremltools.converters.sklearn.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sklearn.convert</span></code></a></td>
 <td>Convert scikit-learn pipeline, classifier, or regressor to Core ML format.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="generated/coremltools.converters.xgboost.convert.html#coremltools.converters.xgboost.convert" title="coremltools.converters.xgboost.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">xgboost.convert</span></code></a></td>
+<tr class="row-even"><td><a class="reference internal" href="generated/coremltools.converters.xgboost.convert.html#coremltools.converters.xgboost.convert" title="coremltools.converters.xgboost.convert"><code class="xref py py-obj docutils literal notranslate"><span class="pre">xgboost.convert</span></code></a></td>
 <td>Convert a trained XGBoost model to Core ML format.</td>
 </tr>
 </tbody>
@@ -212,7 +217,7 @@ Keras, Caffe, scikit-learn, LIBSVM, and XGBoost to the Core ML format.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="generated/coremltools.converters.caffe.convert.html" class="btn btn-neutral float-right" title="coremltools.converters.caffe.convert" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="generated/coremltools.converters.tensorflow.convert.html" class="btn btn-neutral float-right" title="coremltools.converters.tensorflow.convert" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral float-left" title="coremltools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
