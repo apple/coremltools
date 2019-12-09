@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Feature Engineering &mdash; mlmodel 3.0.0 documentation</title>
+  <title>Feature Engineering &mdash; mlmodel 3.1 documentation</title>
   
 
   
@@ -25,6 +25,7 @@
         <script type="text/javascript" src="../_static/underscore.js"></script>
         <script type="text/javascript" src="../_static/doctools.js"></script>
         <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../_static/js/theme.js"></script>
 
@@ -60,7 +61,7 @@
             
             
               <div class="version">
-                3.0.0
+                3.1
               </div>
             
           
@@ -213,9 +214,9 @@ value in <code class="docutils literal notranslate"><span class="pre">imputedDou
 <h2>Scaler<a class="headerlink" href="#scaler" title="Permalink to this headline">¶</a></h2>
 <p>A scaling operation.</p>
 <p>This function has the following formula:</p>
-<div class="math">
-<p><span class="math">f(x) = scaleValue \cdot (x + shiftValue)</span></p>
-</div><p>If the <code class="docutils literal notranslate"><span class="pre">scaleValue</span></code> is not given, the default value 1 is used.
+<div class="math notranslate nohighlight">
+\[f(x) = scaleValue \cdot (x + shiftValue)\]</div>
+<p>If the <code class="docutils literal notranslate"><span class="pre">scaleValue</span></code> is not given, the default value 1 is used.
 If the <code class="docutils literal notranslate"><span class="pre">shiftValue</span></code> is not given, the default value 0 is used.</p>
 <p>If <code class="docutils literal notranslate"><span class="pre">scaleValue</span></code> and <code class="docutils literal notranslate"><span class="pre">shiftValue</span></code> are each a single value
 and the input is an array, then the scale and shift are applied
@@ -251,17 +252,17 @@ error is generated.</p>
 which have the corresponding formulas:</p>
 <dl class="docutils">
 <dt>Max</dt>
-<dd><div class="first last math">
-<p><span class="math">max(x_i)</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[max(x_i)\]</div>
+</dd>
 <dt>L1</dt>
-<dd><div class="first last math">
-<p><span class="math">z = ||x||_1 = \sum_{i=1}^{n} |x_i|</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[z = ||x||_1 = \sum_{i=1}^{n} |x_i|\]</div>
+</dd>
 <dt>L2</dt>
-<dd><div class="first last math">
-<p><span class="math">z = ||x||_2 = \sqrt{\sum_{i=1}^{n} x_i^2}</span></p>
-</div></dd>
+<dd><div class="first last math notranslate nohighlight">
+\[z = ||x||_2 = \sqrt{\sum_{i=1}^{n} x_i^2}\]</div>
+</dd>
 </dl>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
     <span class="na">LMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -457,7 +458,7 @@ Indexes are zero-based.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2017, Apple Inc
+        &copy; Copyright 2017 - 2019, Apple Inc
 
     </p>
   </div>
