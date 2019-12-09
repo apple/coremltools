@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network.builder &mdash; coremltools 3.0 documentation</title>
+  <title>coremltools.models.neural_network.builder &mdash; coremltools 3.1 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                3.0
+                3.1
               </div>
             
           
@@ -90,8 +90,9 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.tensorflow.convert.html">coremltools.converters.tensorflow.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
@@ -132,7 +133,7 @@
 
       <div class="wy-nav-content">
         
-        <div class="rst-content">
+        <div class="rst-content style-external-links">
         
           
 
@@ -199,7 +200,7 @@
 <p>The NeuralNetworkBuilder constructs a Core ML neural network specification
 layer by layer. The layers should be added in such an order that the inputs
 to each layer (referred to as blobs) of each layer has been previously
-defined.  The builder can also set pre-processing steps to handle
+defined. The builder can also set pre-processing steps to handle
 specialized input format (e.g. images), and set class labels for neural
 network classifiers.
 Refer to the protobuf messages in specification (NeuralNetwork.proto) for more details.</p>
@@ -227,7 +228,7 @@ Refer to the protobuf messages in specification (NeuralNetwork.proto) for more d
 <span class="c1"># Build a simple neural network with 1 inner product layer</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span> <span class="o">=</span> <span class="n">NeuralNetworkBuilder</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span><span class="o">.</span><span class="n">add_inner_product</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ip_layer&#39;</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">bias</span><span class="p">,</span> <span class="n">input_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">output_channels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-<span class="o">...</span> <span class="n">has_bias</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">input_name</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">output_name</span><span class="o">=</span><span class="s1">&#39;probs&#39;</span><span class="p">)</span>
+<span class="o">...</span> <span class="n">has_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">input_name</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">output_name</span><span class="o">=</span><span class="s1">&#39;probs&#39;</span><span class="p">)</span>
 
 <span class="c1"># save the spec by the builder</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">save_spec</span><span class="p">(</span><span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;network.mlmodel&#39;</span><span class="p">)</span>
@@ -1316,7 +1317,7 @@ Refer to the <strong>ConstantPaddingLayerParams</strong> message in specificatio
 <dt><strong>name: str</strong></dt>
 <dd><p class="first last">The name of this layer.</p>
 </dd>
-<dt><strong>input_name: list of str</strong></dt>
+<dt><strong>input_names: list of str</strong></dt>
 <dd><p class="first last">The input blob name(s) of this layer.</p>
 </dd>
 <dt><strong>output_name: str</strong></dt>
@@ -1424,7 +1425,7 @@ If it is None, the output shape is calculated automatically using the border_mod
 </dd>
 <dt><strong>dilation_factors: list of int</strong></dt>
 <dd><p class="first last">Dilation factors across height and width directions. Must be a list of two positive integers.
-Defaults to [1,1]</p>
+Defaults to [1, 1]</p>
 </dd>
 <dt><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></dt>
 <dd><p class="first last">values of height (top, bottom) and width (left, right) padding to be used if border_more is “valid”.</p>
@@ -3460,7 +3461,7 @@ Refer to the <strong>PaddingLayerParams</strong> message in specification (Neura
 <dd><p class="first last">The output blob name of this layer.</p>
 </dd>
 <dt><strong>padding_type: str</strong></dt>
-<dd><p class="first last">Type of the padding. Can be one of ‘constant’, ‘reflection’ or ‘replication’</p>
+<dd><p class="first last">Type of the padding. Can be one of ‘constant’, ‘reflection’ or ‘replication’.</p>
 </dd>
 </dl>
 </td>
@@ -3579,8 +3580,8 @@ Parameters height, width, stride_height, stride_width will be ignored.
 <dd><p class="first last">values of height (top, bottom) and width (left, right) padding to be used if padding type is “VALID” or “INCLUDE_LAST_PIXEL”.</p>
 </dd>
 <dt><strong>same_padding_asymmetry_mode: str.</strong></dt>
-<dd><p class="first last">Type of asymmetric padding to be used when  padding_type = ‘SAME’.
-Can be either ‘BOTTOM_RIGHT_HEAVY’ or  ‘TOP_LEFT_HEAVY’.</p>
+<dd><p class="first last">Type of asymmetric padding to be used when padding_type = ‘SAME’.
+Can be either ‘BOTTOM_RIGHT_HEAVY’ or ‘TOP_LEFT_HEAVY’.</p>
 </dd>
 </dl>
 </td>
@@ -4164,7 +4165,7 @@ Allowed values: ‘CHW’, ‘HW’, ‘C’, ‘H’, ‘W’</p>
 <dd><p class="first last">Reduction operation to be applied.
 Allowed values:
 ‘sum’, ‘avg’, ‘prod’, ‘logsum’, ‘sumsquare’, ‘L1’, ‘L2’, ‘max’, ‘min’, ‘argmax’.
-‘argmax’ is only suuported with axis values ‘C’, ‘H’ and ‘W’.</p>
+‘argmax’ is only supported with axis values ‘C’, ‘H’ and ‘W’.</p>
 </dd>
 <dt><strong>epsilon: float</strong></dt>
 <dd><p class="first last">number that is added to the input when ‘logsum’ function is applied.</p>
@@ -6491,7 +6492,7 @@ as output_names.</p>
 
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters">
-<code class="descname">set_pre_processing_parameters</code><span class="sig-paren">(</span><em>self</em>, <em>image_input_names=None</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_pre_processing_parameters</code><span class="sig-paren">(</span><em>self</em>, <em>image_input_names=None</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>image_format='NCHW'</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a pre-processing parameters layer to the neural network object.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -6520,6 +6521,9 @@ provide a dictionary with input names as keys.</p>
 </dd>
 <dt><strong>image_scale: float or dict()</strong></dt>
 <dd><p class="first last">Value by which to scale the images.</p>
+</dd>
+<dt><strong>image_format: str</strong></dt>
+<dd><p class="first last">Image format, either ‘NCHW’ / ‘NHWC’</p>
 </dd>
 </dl>
 </td>

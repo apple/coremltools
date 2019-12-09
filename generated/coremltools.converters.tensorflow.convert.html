@@ -1,0 +1,361 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>coremltools.converters.tensorflow.convert &mdash; coremltools 3.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../static/documentation_options.js"></script>
+        <script type="text/javascript" src="../static/jquery.js"></script>
+        <script type="text/javascript" src="../static/underscore.js"></script>
+        <script type="text/javascript" src="../static/doctools.js"></script>
+        <script type="text/javascript" src="../static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="coremltools.converters.keras.convert" href="coremltools.converters.keras.convert.html" />
+    <link rel="prev" title="Converters" href="../coremltools.converters.html" />
+    <link href="../static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #007AFF" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> coremltools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.converters.tensorflow.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.convert.html">coremltools.converters.keras.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.convert.html">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.models.html">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content style-external-links">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../coremltools.converters.html">Converters</a> &raquo;</li>
+        
+      <li>coremltools.converters.tensorflow.convert</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../sources/generated/coremltools.converters.tensorflow.convert.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="coremltools-converters-tensorflow-convert">
+<h1>coremltools.converters.tensorflow.convert<a class="headerlink" href="#coremltools-converters-tensorflow-convert" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="coremltools.converters.tensorflow.convert">
+<code class="descclassname">coremltools.converters.tensorflow.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>filename</em>, <em>inputs=None</em>, <em>outputs=None</em>, <em>image_input_names=None</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em>, <em>predicted_probabilities_output=''</em>, <em>add_custom_layers=False</em>, <em>custom_conversion_functions=None</em>, <em>custom_shape_functions=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.tensorflow.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert TensorFlow model to Core ML format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>filename: str</strong></dt>
+<dd><p class="first">Path to the TensorFlow model. Takes in one of the following formats:</p>
+<ul class="last simple">
+<li>TensorFlow frozen graph (.pb) model file name</li>
+<li>TensorFlow tf.keras HDF5 (.h5) model file name</li>
+<li>TensorFlow SavedModel directory path</li>
+<li>TensorFlow concrete functions(s)</li>
+</ul>
+</dd>
+<dt><strong>inputs: dict(str: list or tuple)</strong></dt>
+<dd><p class="first last">Model input name and shape pairs.</p>
+</dd>
+<dt><strong>outputs: [str]</strong></dt>
+<dd><p class="first last">Model output names.</p>
+</dd>
+<dt><strong>image_input_names: [str] | str</strong></dt>
+<dd><p class="first last">Input names (a subset of the keys of input_name_shape_dict)
+that can be treated as images by Core ML. All other inputs
+are treated as MultiArrays.</p>
+</dd>
+<dt><strong>is_bgr: bool | dict():</strong></dt>
+<dd><p class="first last">Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>red_bias: float | dict()</strong></dt>
+<dd><p class="first last">Bias value to be added to the red channel of the input image, after applying scale.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>blue_bias: float | dict()</strong></dt>
+<dd><p class="first last">Bias value to be added to the blue channel of the input image, after applying scale.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>green_bias: float | dict()</strong></dt>
+<dd><p class="first last">Bias value to be added to the green channel of the input image, after applying scale.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>gray_bias: float | dict()</strong></dt>
+<dd><p class="first last">Bias value to be added to the input image (in grayscale), after applying scale.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>image_scale: float | dict()</strong></dt>
+<dd><p class="first last">Value by which input images will be scaled before bias is added and
+Core ML model makes a prediction. Defaults to 1.0.
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>class_labels: list[int or str] | str</strong></dt>
+<dd><p class="first last">Class labels (applies to classifiers only) that map the index of the
+output of a neural network to labels in a classifier.
+If the provided class_labels is a string, it is assumed to be a
+file path where classes are parsed as a list of newline separated
+strings.</p>
+</dd>
+<dt><strong>predicted_feature_name: str</strong></dt>
+<dd><p class="first last">Name of the output feature for the class labels exposed in the Core ML
+model (applies to classifiers only). Defaults to ‘classLabel’</p>
+</dd>
+<dt><strong>predicted_probabilities_output: str</strong></dt>
+<dd><p class="first last">Name of the neural network output to be interpreted as the predicted
+probabilities of the resulting classes. Typically the output of a
+softmax function.</p>
+</dd>
+<dt><strong>add_custom_layers: bool</strong></dt>
+<dd><p class="first last">Flag to turn on addition of custom CoreML layers for unsupported TF ops or attributes within
+a supported op.</p>
+</dd>
+<dt><strong>custom_conversion_functions: dict(): {Text: func(**kwargs)}</strong></dt>
+<dd><p class="first last">Argument to provide user-defined functions for converting Tensorflow operations (op, for short).
+A dictionary with keys corresponding to the names or types of the TF ops and values as handle to user-defined functions.
+The keys can be either the type of the op or the name of the op. If former, then the function is called whenever the op
+of that type is encountered during conversion. By using op names, specific ops can be targeted which is
+useful for handling unsupported configuration in an op.
+The function receives multiple arguments: TF operation, the CoreML Neural network builder object,
+dictionary containing the op’s inputs that are constants and their values (as numpy arrays).
+The function can add custom layers or any other combination of CoreML layers to translate the TF op.
+See “examples/custom_layer_examples.ipynb” jupyter-notebook for examples on using this argument.</p>
+</dd>
+<dt><strong>custom_shape_functions: dict(): {Text: func()}</strong></dt>
+<dd><p class="first last">Argument to provide user-defined functions to compute shape for given op.
+A dictionary with keys corresponding to the type of TF Op and value as handled to user-defined function.
+Function receives <cite>layer specification</cite> and <cite>input shape</cite> as a input.
+output of the function must be output shape for give op. (generally List).
+Custom shape function is required for adding custom layer in Core ML 3.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>model:MLModel</dt>
+<dd><p class="first last">Returns an MLModel instance representing a Core ML model.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="kn">from</span> <span class="nn">tensorflow.keras.applications</span> <span class="kn">import</span> <span class="n">ResNet50</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">tensorflow</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="s1">&#39;./model.h5&#39;</span><span class="p">,</span>
+     <span class="n">input_name_shape_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">)},</span>
+     <span class="n">output_feature_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Identity&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>For more examples, see: <a class="reference external" href="https://github.com/apple/coremltools/blob/master/docs/NeuralNetworkGuide.md">https://github.com/apple/coremltools/blob/master/docs/NeuralNetworkGuide.md</a></p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="coremltools.converters.keras.convert.html" class="btn btn-neutral float-right" title="coremltools.converters.keras.convert" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../coremltools.converters.html" class="btn btn-neutral float-left" title="Converters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-2019, Apple Inc
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
