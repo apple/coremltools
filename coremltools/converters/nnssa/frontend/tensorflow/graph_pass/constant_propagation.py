@@ -10,7 +10,7 @@ from ....commons import builtins
 from ....commons.parse import numpy_val_to_builtin_val
 from ....commons.basic_graph_ops import const_determined_nodes, delete_node, disconnect_edge
 
-from coremltools_internal.commons.features import Features
+from coremltools.converters.nnssa.commons.features import Features
 
 def convert_constant_nodes_to_const_ops(nnssa):
     """

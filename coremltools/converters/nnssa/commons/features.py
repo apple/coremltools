@@ -57,3 +57,11 @@ class Features:
 # else:
 #     # legacy path
 #     use_suspenders()
+
+Features.register('tf_new_ssa', 'TEST_TF_NEW_SSA_FLAG')
+Features.register('onnx_new_ssa', 'TEST_ONNX_NEW_SSA_FLAG')
+if Features.tf_new_ssa() or Features.onnx_new_ssa():
+    Features.register('new_ssa', 'TEST_NEW_SSA_FLAG', True)
+else:
+    Features.register('new_ssa', 'TEST_NEW_SSA_FLAG', False)
+
