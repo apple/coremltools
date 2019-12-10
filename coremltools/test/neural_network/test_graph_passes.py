@@ -76,7 +76,7 @@ class MLModelPassesTest(unittest.TestCase):
         mlmodel = MLModel(builder.spec)
         data = np.random.rand(1, 10, 10)
         data_dict = {'data': data}
-        before_pass_out = mlmodel.predict(data_dict)['out']
+        before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
 
         # transform the pattern
         transform_conv_crop(builder.spec)
@@ -86,8 +86,8 @@ class MLModelPassesTest(unittest.TestCase):
 
         # Predict
         mlmodel = MLModel(builder.spec)
-        after_pass_out = mlmodel.predict(data_dict)['out']
-        np.testing.assert_equal(before_pass_out, after_pass_out)
+        after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
+        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
 
     def test_conv_crop_bn_relu_to_conv_bn_relu_crop(self):
         input_features = [('data', datatypes.Array(1, 10, 10))]
@@ -129,7 +129,7 @@ class MLModelPassesTest(unittest.TestCase):
         mlmodel = MLModel(builder.spec)
         data = np.random.rand(1, 10, 10)
         data_dict = {'data': data}
-        before_pass_out = mlmodel.predict(data_dict)['out']
+        before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
 
         # transform the pattern
         transform_conv_crop(builder.spec)
@@ -140,8 +140,8 @@ class MLModelPassesTest(unittest.TestCase):
 
          # Predict
         mlmodel = MLModel(builder.spec)
-        after_pass_out = mlmodel.predict(data_dict)['out']
-        np.testing.assert_equal(before_pass_out, after_pass_out)
+        after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
+        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
 
 if __name__ == '__main__':
     RUN_ALL_TESTS = True
