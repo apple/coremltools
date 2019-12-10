@@ -1528,7 +1528,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
             np.testing.assert_array_almost_equal(coreml_output_1.T, keras_output_1)
 
         hidden_state = (np.random.rand(1, 5), np.random.rand(1, 5))
-        model.get_layer(index=0).reset_states(hidden_state)
+        model.get_layer(index=1).reset_states(hidden_state)
 
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
