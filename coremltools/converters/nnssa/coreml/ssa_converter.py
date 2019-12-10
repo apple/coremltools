@@ -2265,13 +2265,14 @@ class SSAConverter(object):
             if _is_scalar(input_type):
                 return True
             shape = input_type.get_shape()
-            if builtins.is_tensor(input_types) and len(shape) == 1 and shape[0] == 1:
+            if builtins.is_tensor(input_type) and len(shape) == 1 and shape[0] == 1:
                 return True
             return False
 
         # CoreML elementwise operator has limited brodcastable support
         # Check if first shape can be broadcasted to second shape
         def _is_broadcastable_shape(shape_0, shape_1):
+            assert (len(shape_0) > 0 and len(shape_1) > 0)
             if shape_0[0] != 1 and shape_0[0] != shape_1[0]:
                 return False
 
@@ -2311,8 +2312,16 @@ class SSAConverter(object):
                 inputs = [input_names[1]]
             else:
                 # If both inputs are not scalar, ensure shape is same
+                # If any of the input is not tensor, add broadcastable layer instead
+                if not (builtins.is_tensor(input_types[0]) and builtins.is_tensor(input_types[1])):
+                    return False
+
                 shape_0 = list(input_types[0].get_shape())
                 shape_1 = list(input_types[1].get_shape())
+
+                # Make sure, any of the input is not rank-0
+                if len(shape_0) == 0 or len(shape_1) == 0:
+                    return False
 
                 if _is_broadcastable_shape(shape_0, shape_1) or _is_broadcastable_shape(shape_1, shape_0):
                     pass

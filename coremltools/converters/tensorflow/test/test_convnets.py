@@ -587,8 +587,8 @@ class TFSingleLayerTest(TFNetworkBatchTest):
         self._test_tf_model_constant(graph, {x_input.op.name: [1, 10, 10, 6]}, [z.op.name])
 
     def test_add(self):
-        shape_a = [[3, 4, 5], [1, 4 ,5], [1, 1, 4, 5], [4, 5, 1, 1]]
-        shape_b = [[3, 4 ,5], [4, 5], [4, 5], [4, 5]]
+        shape_a = [[3, 4, 5], [1, 4 ,5], [1, 1, 4, 5]]
+        shape_b = [[3, 4 ,5], [4, 5], [4, 5]]
         expand_dims = [None, [0], [0, 1], None]
 
         for i in range(len(shape_a)):
@@ -639,11 +639,11 @@ class TFSingleLayerTest(TFNetworkBatchTest):
     def test_add_broadcastable(self):
         graph = tf.Graph()
         with graph.as_default():
-            x = tf.placeholder(tf.float32, shape=[32])
+            x = tf.placeholder(tf.float32, shape=[3])
             y = tf.placeholder(tf.float32, shape=[32, 18, 3])
             output = tf.add(x, y)
         output_name = [output.op.name]
-        self._test_tf_model_constant(graph, {x.op.name: [1], y.op.name: [32, 18, 3]}, output_name)
+        self._test_tf_model_constant(graph, {x.op.name: [3], y.op.name: [32, 18, 3]}, output_name)
 
     def test_sub(self):
         shape = [3, 4, 5]
