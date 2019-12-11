@@ -346,14 +346,26 @@ The conversion code for `minimum_ios_deployment_target` less than or equal to `'
 PyTorch and MXNet models can be first exported to the ONNX format and then converted to Core ML via the
 `onnx-coreml`(https://github.com/onnx/onnx-coreml) converter.
 
+```shell
+pip install --upgrade onnx-coreml
+```
+
 ```python
 from onnx_coreml import convert
-ml_model = convert(model='my_model.onnx', target_ios='13')
+
+ml_model = convert(model='my_model.onnx', 
+                   minimum_ios_deployment_target='12') # or minimum_ios_deployment_target = '13'
 ml_model.save('my_model.mlmodel')
 ```
 
-See more examples [here](../examples/neural_network_inference/onnx_converter)  
-Additional converter arguments are explained [here](https://github.com/onnx/onnx-coreml#parameters)
+The argument `minimum_ios_deployment_target` controls the set of Core ML layers that are used by the converter.
+When its value is set to `'12'`, only the set of layers that were shipped in Core ML during the iOS 12, macOS 14 release cycle are used.
+It is recommended to first use this setting, since if successful, it produces a Core ML model that can be deployed to iOS 12 and higher.
+In case, it results in an error due to an unsupported op or parameter, then the target should be set to `'13'`, so that the
+converter can utilize all the layers (including control flow, recurrent layers etc) that were shipped in Core ML in iOS 13.
+ 
+Additional converter arguments are explained [here](https://github.com/onnx/onnx-coreml#parameters)  
+See additional examples [here](../examples/neural_network_inference/onnx_converter) 
 
 ### Converting PyTorch model 
 
@@ -403,7 +415,15 @@ Converting PyTorch model to CoreML model is a two step process:
 ```python
       # Step 2 - ONNX to CoreML model
       from onnx_coreml import convert
-      mlmodel = convert(model='./small_model.onnx', target_ios='13')
+      mlmodel = convert(model='./small_model.onnx', minimum_ios_deployment_target='13')
+      
+      # rename inputs/outputs
+      import coremltools
+      spec = mlmodel.get_spec()
+      coremltools.utils.rename_feature(spec, current_name='input.1', new_name='input_tensor')
+      coremltools.utils.rename_feature(spec, current_name='12', new_name='network_output')
+      mlmodel = coremltools.models.MLModel(spec)
+
       # Save converted CoreML model
       mlmodel.save('small_model.mlmodel')
 ```
