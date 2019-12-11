@@ -3,9 +3,13 @@ import unittest
 import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
 from coremltools.models import MLModel
+from coremltools.models.neural_network.printer import print_network_spec
 from coremltools.converters.nnssa.coreml.graph_pass.mlmodel_passes import \
         remove_disconnected_layers, transform_conv_crop
+import copy
 
+DEBUG = False
+np.random.seed(10)
 
 class MLModelPassesTest(unittest.TestCase):
 
@@ -40,6 +44,81 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal(9, len(spec.neuralNetwork.layers))
         remove_disconnected_layers(spec)
         np.testing.assert_equal(2, len(spec.neuralNetwork.layers))
+
+    def test_dead_layer_remove_branch(self):
+        convergence_tolerance = 1e-8
+
+        input_features = [('input', datatypes.Array(*(2,)))]
+        output_features = [('out', None)]
+
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        # add condition to break from the loop, if convergence criterion is met
+        builder.add_less_than('cond', ['input'], 'cond', alpha=convergence_tolerance)
+        branch_layer = builder.add_branch('branch_layer', 'cond')
+        builder_ifbranch = neural_network.NeuralNetworkBuilder(nn_spec=branch_layer.branch.ifBranch)
+        builder_ifbranch.add_activation('relu1', 'RELU', 'input', 'relu1_out')
+        builder_ifbranch.add_activation('relu2_out', 'RELU', 'relu1_out', 'relu2_out')
+        builder_elsebranch = neural_network.NeuralNetworkBuilder(nn_spec=branch_layer.branch.elseBranch)
+        builder_elsebranch.add_activation('linear1', 'LINEAR', 'input', 'linear1_out')
+        builder_elsebranch.add_activation('linear2', 'LINEAR', 'linear1_out', 'relu2_out')
+        builder.add_squeeze('out', 'input', 'out', squeeze_all=True)
+
+        mlmodel = MLModel(builder.spec)
+        data = np.random.rand(2,)
+        data_dict = {'input': data}
+        before_pass_out = mlmodel.predict(data_dict)['out']
+        if DEBUG:
+            print('\n mlmodel description before remove disconnected layers pass: \n')
+            print_network_spec(builder.spec, style='coding')
+        remove_disconnected_layers(builder.spec)
+        if DEBUG:
+            print('\n mlmodel description after remove disconnected layers pass: \n')
+            print_network_spec(builder.spec, style='coding')
+        mlmodel = MLModel(builder.spec)
+        after_pass_out = mlmodel.predict(data_dict)['out']
+
+        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=2)
+        np.testing.assert_equal(len(builder.spec.neuralNetwork.layers), 1)
+
+    def test_dead_layer_partial_branch(self):
+        convergence_tolerance = 1e-8
+
+        input_features = [('input', datatypes.Array(*(2,)))]
+        output_features = [('out', None)]
+
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        # add condition to break from the loop, if convergence criterion is met
+        builder.add_less_than('cond', ['input'], 'cond', alpha=convergence_tolerance)
+        branch_layer = builder.add_branch('branch_layer', 'cond')
+        builder_ifbranch = neural_network.NeuralNetworkBuilder(nn_spec=branch_layer.branch.ifBranch)
+        builder_ifbranch.add_activation('relu1', 'RELU', 'input', 'relu1_out')
+        builder_ifbranch.add_activation('relu2_out', 'RELU', 'relu1_out', 'relu2_out')
+        builder_elsebranch = neural_network.NeuralNetworkBuilder(nn_spec=branch_layer.branch.elseBranch)
+        builder_elsebranch.add_activation('linear1', 'LINEAR', 'input', 'linear1_out')
+        builder_elsebranch.add_activation('linear_red_1', 'LINEAR', 'input', 'linear_red1_out')
+        builder_elsebranch.add_activation('linear_red_2', 'LINEAR', 'linear_red1_out', 'linear_red2_out')
+        builder_elsebranch.add_activation('linear2', 'LINEAR', 'linear1_out', 'relu2_out')
+        builder.add_squeeze('out', 'relu2_out', 'out', squeeze_all=True)
+
+        mlmodel = MLModel(builder.spec)
+        data = np.random.rand(2,)
+        data_dict = {'input': data}
+        before_pass_out = mlmodel.predict(data_dict)['out']
+        if DEBUG:
+            print('\n mlmodel description before remove disconnected layers pass: \n')
+            print_network_spec(builder.spec, style='coding')
+        old_spec = copy.copy(builder.spec)
+        remove_disconnected_layers(builder.spec)
+        if DEBUG:
+            print('\n mlmodel description after remove disconnected layers pass: \n')
+            print_network_spec(builder.spec, style='coding')
+        mlmodel = MLModel(builder.spec)
+        after_pass_out = mlmodel.predict(data_dict)['out']
+
+        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=4)
+        np.testing.assert_equal(len(old_spec.neuralNetwork.layers[1].branch.ifBranch.layers),
+                                len(builder.spec.neuralNetwork.layers[1].branch.ifBranch.layers))
+        np.testing.assert_equal(len(builder.spec.neuralNetwork.layers[1].branch.elseBranch.layers), 2)
 
     def test_conv_crop_bn_to_conv_bn_crop(self):
         input_features = [('data', datatypes.Array(1, 10, 10))]
