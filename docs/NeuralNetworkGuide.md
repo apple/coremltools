@@ -266,16 +266,19 @@ import tfcoreml
 keras_model = ResNet50(weights=None, input_shape=(224, 224, 3))
 keras_model.save('./model.h5')
 
-# print input name, output name, input shape
-print(keras_model.input.name)
+# print input shape
 print(keras_model.input_shape)
-print(keras_model.output.name)
 
+# get input, output node names for the TF graph from the Keras model
+input_name = keras_model.inputs[0].name.split(':')[0]
+keras_output_node_name = keras_model.outputs[0].name.split(':')[0]
+graph_output_node_name = keras_output_node_name.split('/')[-1]
 
 model = tfcoreml.convert('./model.h5',
-                         input_name_shape_dict={'input_1': (1, 224, 224, 3)},
-                         output_feature_names=['Identity'],
+                         input_name_shape_dict={input_name: (1, 224, 224, 3)},
+                         output_feature_names=[graph_output_node_name],
                          minimum_ios_deployment_target='13')
+
 
 model.save('./model.mlmodel')
 ```
@@ -292,14 +295,17 @@ keras_model = tf.keras.Sequential([
 
 keras_model.save('/tmp/keras_model.h5')
 
-# print input name, output name, input shape
-print(keras_model.input.name)
+# print input shape
 print(keras_model.input_shape)
-print(keras_model.output.name)
+
+# get input, output node names for the TF graph from the Keras model
+input_name = keras_model.inputs[0].name.split(':')[0]
+keras_output_node_name = keras_model.outputs[0].name.split(':')[0]
+graph_output_node_name = keras_output_node_name.split('/')[-1]
 
 model = tfcoreml.convert(tf_model_path='/tmp/keras_model.h5',
-                         input_name_shape_dict={'flatten_input': (1, 28, 28)},
-                         output_feature_names=['Identity'],
+                         input_name_shape_dict={input_name: (1, 28, 28)},
+                         output_feature_names=[graph_output_node_name],
                          minimum_ios_deployment_target='13')
 model.save('/tmp/keras_model.mlmodel')
 ```
