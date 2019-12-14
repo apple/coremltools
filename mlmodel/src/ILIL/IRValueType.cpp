@@ -142,7 +142,11 @@ static std::unique_ptr<const IRValue> ReadScalarValue(const std::string& filePat
     NNBuffer::NeuralNetworkBuffer nnBuffer(filePath, /*readOnly=*/ true);
     nnBuffer.getBuffer(offset, value);
     auto retval = IRScalarValue<ScalarT>::Make(value.at(0));
-    assert(retval->GetType() == type);
+
+    if (retval->GetType() != type) {
+        throw std::logic_error("Wrong specialization of ReadScalarValue called for given IRScalarValueType.");
+    }
+
     return retval;
 }
 
