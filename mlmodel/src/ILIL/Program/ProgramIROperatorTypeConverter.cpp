@@ -65,7 +65,7 @@ IROperatorType ProgramIROperatorTypeConverter::GetType(const std::string& name) 
         { "add", IROperatorType::Add },
         { "const", IROperatorType::Const },
         { "convolution", IROperatorType::Convolution },
-        { "inner_product", IROperatorType::InnerProduct },
+        { "linear", IROperatorType::InnerProduct },
         { "matmul", IROperatorType::MatMul },
         { "pooling", IROperatorType::Pooling },
         { "softmax", IROperatorType::Softmax }

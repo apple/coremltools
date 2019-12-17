@@ -36,6 +36,11 @@ float IRValue::AsFloat32() const
     throw std::bad_cast();
 }
 
+int32_t IRValue::AsInt32() const
+{
+    throw std::bad_cast();
+}
+
 int64_t IRValue::AsInt64() const
 {
     throw std::bad_cast();
@@ -120,6 +125,12 @@ float IRScalarValue<T>::AsFloat32() const
 }
 
 template<typename T>
+int32_t IRScalarValue<T>::AsInt32() const
+{
+    return IRValue::AsInt32();
+}
+
+template<typename T>
 int64_t IRScalarValue<T>::AsInt64() const
 {
     return IRValue::AsInt64();
@@ -140,6 +151,12 @@ bool IRScalarValue<bool>::AsBool() const
 
 template<>
 float IRScalarValue<float>::AsFloat32() const
+{
+    return GetValue();
+}
+
+template<>
+int32_t IRScalarValue<int32_t>::AsInt32() const
 {
     return GetValue();
 }

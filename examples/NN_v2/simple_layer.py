@@ -44,8 +44,8 @@ parameters['dense1/bias'] = create_file_value(file_name='./simple_layer.wt', off
 
 # Constant op
 softmax_axis = pm.Operation(name='softmax_axis', type='const',
-                            attributes={'val':create_scalar_value(0, pm.ScalarType.INT64)},
-                            outputs=[pm.NamedValueType(name='softmax_axis', type=create_scalartype(pm.INT64))])
+                            attributes={'val':create_scalar_value(0, pm.ScalarType.INT32)},
+                            outputs=[pm.NamedValueType(name='softmax_axis', type=create_scalartype(pm.INT32))])
 
 # Matmul layer
 dense1 = pm.Operation(name='dense1', type='matmul',
@@ -59,7 +59,7 @@ bias1 = pm.Operation(name='bias1', type='add',
 
 # Softmax layer
 out = pm.Operation(name='softmax', type='softmax',
-                   inputs={'x':'bias_out', 'axis':'softmax_axis'},
+                   inputs={'logit':'bias_out', 'axis':'softmax_axis'},
                    outputs=[pm.NamedValueType(name='output0', type=create_valuetype_tensor([2, 2], pm.FLOAT32))])
 
 # Create a block

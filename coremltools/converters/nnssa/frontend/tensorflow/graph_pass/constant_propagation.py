@@ -134,7 +134,6 @@ def constant_propagation(nnssa):
     except Exception as e:
         logging.exception("Constant Propagation pass failed: {}".format(e))
 
-
     if not Features.new_ssa():
         # We do not delete constant nodes for new ssa since the new philosophy
         # is to maintain user intent for the very first phase of conversion.

@@ -43,7 +43,7 @@ static std::unique_ptr<OpDescriptionMap> MakeOpDescriptionMap()
         { IROperatorType::Add, IROperatorDescription(2, 2, 1) },
         { IROperatorType::Const, IROperatorDescription(0, 0, 1) },
         { IROperatorType::Convolution, IROperatorDescription(1, 2, 1) },
-        { IROperatorType::InnerProduct, IROperatorDescription(5, 6, 1) },
+        { IROperatorType::InnerProduct, IROperatorDescription(2, 3, 1) },
         { IROperatorType::MatMul, IROperatorDescription(2, 4, 1) },
         { IROperatorType::Pooling, IROperatorDescription(1, std::numeric_limits<uint64_t>::max(), 1) },
         { IROperatorType::Softmax, IROperatorDescription(1, 2, 1) }

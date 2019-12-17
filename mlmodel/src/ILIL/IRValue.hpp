@@ -39,6 +39,9 @@ public:
     /** Convenience method to get this value as a float. Throws std::bad_cast if not applicable. */
     virtual float AsFloat32() const;
 
+    /** Convenience method to get this value as an int32. Throws std::bad_cast if not applicable. */
+    virtual int32_t AsInt32() const;
+
     /** Convenience method to get this value as an int64. Throws std::bad_cast if not applicable. */
     virtual int64_t AsInt64() const;
 
@@ -67,6 +70,7 @@ public:
     void CopyTo(void* dest, uint64_t destSize) const override;
     bool AsBool() const override;
     float AsFloat32() const override;
+    int32_t AsInt32() const override;
     int64_t AsInt64() const override;
     std::string AsString() const override;
 
