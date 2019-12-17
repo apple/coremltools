@@ -5,6 +5,7 @@ from __future__ import absolute_import as _
 
 import numpy as np
 from ...commons import builtins
+from ...commons.symbolic import * 
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
     delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
@@ -71,12 +72,13 @@ def _is_NHWC(graph, node):
         return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
                    for inp in node.inputs[:-1])
 
-    if node.op == 'Pad':
+    if node.op == 'Pad'and len(node.datatype.get_shape()) == 4:
         # adjust constant padding values
         parent_node = graph[node.inputs[1]]
-        val = np.array(parent_node.value.val)
-        if len(val) == 4 and builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
-            parent_node.value.val = parent_node.value.val[[0, 3, 1, 2]]
+        if parent_node.value is not None:
+            val = np.array(parent_node.value.val)
+            if len(val) == 4 and builtins.is_tensor(parent_node.datatype) and len(parent_node.outputs) == 1:
+                parent_node.value.val = parent_node.value.val[[0, 3, 1, 2]]
         return True
 
     if node.op in REDUCTION_OPS:
@@ -158,14 +160,6 @@ def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, tran
         tp_node.inputs = [src.name]
         tp_node.outputs = [dst.name]
         tp_node.attr['dim'] = transpose_params
-        if '_output_shapes' in src.attr:
-            input_shape = src.attr['_output_shapes'][0]
-            tp_node.attr['_output_shapes'] = [
-                [input_shape[transpose_params[0]],
-                 input_shape[transpose_params[1]],
-                 input_shape[transpose_params[2]],
-                 input_shape[transpose_params[3]]]
-            ]
         graph[transpose_node_name] = tp_node
 
     # Rename dst's input 'src' to 'transpose_node_name'
@@ -250,10 +244,15 @@ def transform_nhwc_to_nchw(nnssa):
             # Insert NHWC -> NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
-                if graph[inp_node_name].op == 'Const':
+                symbolic_value = graph[inp_node_name].attr['symbolic_value']
+                if (graph[inp_node_name].op == 'Const' or
+                    len(graph[inp_node_name].datatype.get_shape()) != 4 or
+                    ( symbolic_value and not any_symbolic_or_unknown(symbolic_value))):
                     # Const weights and parameters
                     continue
+            
                 if inp_node_format != 'NHWC_format_inserted':
+                    assert len(graph[inp_node_name].datatype.get_shape()) == 4
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
 
             # Insert NCHW -> NHWC transpose
