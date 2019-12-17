@@ -108,6 +108,8 @@ file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__init__.py
      DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__main__.py
      DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
+file(COPY ${CMAKE_SOURCE_DIR}/coremltools/version.py
+    DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 set(copy_dirs _deps _scripts converters graph_visualization models proto)
 foreach(cdir IN ITEMS ${copy_dirs})
   file(COPY ${CMAKE_SOURCE_DIR}/coremltools/${cdir}
