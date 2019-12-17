@@ -58,6 +58,36 @@ def _check_single_out_vector_constant_node(node):
            node.value is not None and len(np.squeeze(node.value.val).shape) == 1
 
 
+def _check_rank_matches(node1, node2):
+    rank1 = len(node1.datatype.get_shape())
+    rank2 = len(node2.datatype.get_shape())
+    return rank1 == rank2
+
+
+def _update_padding_and_crop_values_2d(pad_values, crop_values, params):
+    def _new_pad_crop_1d(p1, p2, c1, c2, k, s, n1):
+        n2 = np.floor((n1 + p1 + p2 - k) / s) + 1
+        if 1 + c1 * s <= p1:
+            p1 -= c1 * s
+            c1 = 0
+        if k + (n2 - c2 - 1) * s > p1 + n1:
+            p2 = k + (n2 - c2 - 1) - (p1 + n1)
+            c2 = 0
+        return p1, p2, c1, c2
+
+    p1, p2, c1, c2 = _new_pad_crop_1d(pad_values[2], pad_values[3],
+                                      crop_values[2], crop_values[3],
+                                      params['kh'], params['sh'], params['Hin'])
+    pad_values[2:] = np.array([p1, p2], dtype=np.int)
+    crop_values[2:] = np.array([c1, c2], dtype=np.int)
+
+    p1, p2, c1, c2 = _new_pad_crop_1d(pad_values[0], pad_values[1],
+                                      crop_values[0], crop_values[1],
+                                      params['kw'], params['sw'], params['Win'])
+    pad_values[:2] = np.array([p1, p2], dtype=np.int)
+    crop_values[:2] = np.array([c1, c2], dtype=np.int)
+
+
 def _is_NHWC(graph, node):
     if node.op == 'ResizeBilinear' or node.op == 'ResizeNearestNeighbor' \
             or node.op == 'MirrorPad':
@@ -136,7 +166,7 @@ def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, tran
     """
 
     if not transpose_params:
-        transpose_params = [0, 3, 1, 2]
+        transpose_params = [0, 3, 1, 2]  # channel_last to channel_first
 
     # First check whether the node already exists in the graph or not.
 
@@ -156,6 +186,8 @@ def _insert_transpose_to_or_from_nchw(graph, src, dst, transpose_node_name, tran
             if len(s) == 4:
                 tp_shape = tuple([s[transpose_params[0]], s[transpose_params[1]], s[transpose_params[2]], s[transpose_params[3]]])
                 tp_node.datatype = builtins.tensor(src.datatype.get_primitive(), tp_shape)
+            else:
+                tp_node.datatype = src.datatype
 
         tp_node.inputs = [src.name]
         tp_node.outputs = [dst.name]
@@ -575,9 +607,9 @@ def fuse_gelu(nnssa):
         _fuse_gelu(f.graph)
 
 
-def fuse_conv_mul_add_into_batchnorm(nnssa):
+def fuse_batch_norm(ssa):
     """
-    A graph pass that match and fuses following op patterns into one BatchNorm op.
+    A graph pass that match and fuses following op patterns into a single BatchNorm op.
 
     Pattern 1:
              [Const]   [Const]
@@ -606,12 +638,14 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
         for i, op in enumerate(pattern_ops):
             if node.op != op:
                 return None
-            if node.op != pattern_ops[-1] and not _check_number_outputs(node, 1):
+            if node.op != pattern_ops[i] and not _check_number_outputs(node, 1):
                 return None
             if not _check_number_inputs(node, 2):
                 return None
             const_node = graph[node.inputs[1]]
             if not _check_single_out_vector_constant_node(const_node):
+                return None
+            if not _check_rank_matches(const_node, node):
                 return None
             nodes_to_merge.extend([const_node, node])
             if len(node.outputs) == 0:  # do not fuse the output layer
@@ -621,7 +655,7 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
             return None
         return nodes_to_merge
 
-    def _merge_into_batchnorm(graph, nodes, pattern_id=1):
+    def _merge_batch_norm(graph, nodes, pattern_id=1):
         expected_num_nodes = 4
         if pattern_id == 2:
             expected_num_nodes = 6
@@ -657,16 +691,34 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
         fused_bn_node.datatype = current_node.datatype
         graph[fused_bn_node.name] = fused_bn_node
 
-        # Delete nodes
+        # combine control i/o
+        control_inputs = list()
+        control_outputs = list()
         bn_node_names = [x.name for x in nodes]
         for name in bn_node_names:
-            delete_node(graph, name)
+            control_inputs += graph[name].control_inputs
+            control_outputs += graph[name].control_outputs
+        fused_bn_node.control_inputs.extend(control_inputs)
+        fused_bn_node.control_outputs.extend(control_outputs)
 
-        # Connect fused node to entry and output nodes
+        # connect fused node to entry and output nodes
         connect_edge(graph, current_node.name, fused_bn_node.name)
         connect_dests(graph, fused_bn_node.name, bn_outputs)
 
-    def _fuse_conv_mul_add_into_batchnorm(graph):
+        # correct output's inputs order
+        for out in bn_outputs:
+            if len(graph[out].inputs) < 2:
+                continue
+            out_inputs = graph[out].inputs
+            a = out_inputs.index(out_node.name)
+            b = out_inputs.index(fused_bn_node.name)
+            out_inputs[a], out_inputs[b] = out_inputs[b], out_inputs[a]
+
+        # delete merged nodes
+        for name in bn_node_names:
+            delete_node(graph, name)
+
+    def _fuse_batch_norm(graph):
         keys = list(graph.keys())
         count = 0
         for k in keys:
@@ -674,31 +726,31 @@ def fuse_conv_mul_add_into_batchnorm(nnssa):
                 continue
             current_node = graph[k]
 
-            # return nodes order: : [Const, Mul, Const, Add]
-            nodes1 = _match_batch_norm_pattern(graph, current_node, ['Mul', 'Add'])
-            # return nodes order: : [Const, Sub, Const, Mul, Const, Add]
-            nodes2 = _match_batch_norm_pattern(graph, current_node, ['Sub', 'Mul', 'Add'])
             # return nodes order: [Const, Sub, Const, RealDiv, Const, Mul, Const, BiasAdd]
             nodes3 = _match_batch_norm_pattern(graph, current_node, ['Sub', 'RealDiv', 'Mul', 'BiasAdd'])
-
-            if nodes1:
-                _merge_into_batchnorm(graph, nodes=nodes1, pattern_id=1)
-                count += len(nodes1)
-
-            if nodes2:
-                _merge_into_batchnorm(graph, nodes=nodes2, pattern_id=2)
-                count += len(nodes2)
+            # return nodes order: : [Const, Sub, Const, Mul, Const, Add]
+            nodes2 = _match_batch_norm_pattern(graph, current_node, ['Sub', 'Mul', 'Add'])
+            # return nodes order: : [Const, Mul, Const, Add]
+            nodes1 = _match_batch_norm_pattern(graph, current_node, ['Mul', 'Add'])
 
             if nodes3:
-                _merge_into_batchnorm(graph, nodes=nodes3, pattern_id=3)
+                _merge_batch_norm(graph, nodes=nodes3, pattern_id=3)
                 count += len(nodes3)
+
+            if nodes2:
+                _merge_batch_norm(graph, nodes=nodes2, pattern_id=2)
+                count += len(nodes2)
+
+            if nodes1:
+                _merge_batch_norm(graph, nodes=nodes1, pattern_id=1)
+                count += len(nodes1)
 
         if count > 0:
             print('[Op Fusion] Fused {} nodes into BatchNorms.'.format(count))
 
-    for fn_key in list(nnssa.functions.keys()):
-        f = nnssa.functions[fn_key]
-        _fuse_conv_mul_add_into_batchnorm(f.graph)
+    for fn_key in list(ssa.functions.keys()):
+        f = ssa.functions[fn_key]
+        _fuse_batch_norm(f.graph)
 
 
 def fuse_pad_into_conv(nnssa):
@@ -806,3 +858,114 @@ def spatial_reduce_to_global_pool(nnssa):
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _spatial_reduce_to_global_pool(f.graph)
+
+
+def fuse_batch_to_space_or_space_to_batch(ssa):
+    """
+    A graph pass to fuse patterns related to space/batch transformations.
+    """
+
+    def _match_batch_to_space_nd(graph, entry_node):
+        nodes = list()
+        prev_node = entry_node
+        while len(nodes) < 2:
+            if len(prev_node.inputs) > 0 and graph[prev_node.inputs[0]].op:
+                prev_node = graph[prev_node.inputs[0]]
+                if prev_node.op == 'Transpose':
+                    continue
+                nodes.append(prev_node.op)
+            else:
+                break
+        if len(nodes) > 1 \
+                and (nodes[0] == 'Conv2d' or nodes[0] == 'DepthwiseConv2dNative') \
+                and nodes[1] == 'SpaceToBatchND':
+            return entry_node
+        return None
+
+    def _match_space_to_batch_nd(graph, entry_node):
+        nodes = list()
+        next_node = entry_node
+        while len(nodes) < 2:
+            if len(next_node.inputs) > 0 and graph[next_node.outputs[0]].op:
+                next_node = graph[next_node.outputs[0]]
+                if next_node.op == 'Transpose':
+                    continue
+                nodes.append(next_node.op)
+            else:
+                break
+        if len(nodes) > 1 \
+                and (nodes[0] == 'Conv2d' or nodes[0] == 'DepthwiseConv2dNative') \
+                and nodes[1] == 'BatchToSpaceND':
+            return entry_node
+        return None
+
+    def _fuse_batch_to_space_or_space_to_batch(graph):
+        keys = list(graph.keys())
+        count = 0
+        nodes = list()
+        for k in keys:
+            if k not in graph:
+                continue
+            current_node = graph[k]
+
+            if current_node.op == 'BatchToSpaceND' and len(current_node.outputs) == 1:
+                node = _match_batch_to_space_nd(graph, current_node)
+                nodes += [node] if node is not None else []
+
+            if current_node.op == 'SpaceToBatchND' and len(current_node.outputs) == 1:
+                node = _match_space_to_batch_nd(graph, current_node)
+                nodes += [node] if node is not None else []
+
+        for n in nodes:
+            previous_node = n.inputs[0]
+            output_node = n.outputs[0]
+            connect_edge(graph, previous_node, output_node)
+            # make sure output's inputs is in correct order
+            out_inputs = graph[output_node].inputs
+            a = out_inputs.index(n.name)
+            b = out_inputs.index(previous_node)
+            out_inputs[a], out_inputs[b] = out_inputs[b], out_inputs[a]
+
+            if n.op == 'SpaceToBatchND':
+                padding_values = [0] * 4
+                dilations = list(graph[n.inputs[1]].value.val)
+                paddings = graph[n.inputs[2]].value.val
+                padding_values[2] = paddings[0, 0]  # top
+                padding_values[3] = paddings[0, 1]  # bottom
+                padding_values[0] = paddings[1, 0]  # left
+                padding_values[1] = paddings[1, 1]  # right
+                graph[output_node].attr.update({'dilations': dilations})
+                needs_padding_before = True if sum(padding_values) != 0 else False
+                if needs_padding_before:
+                    graph[output_node].attr.update({'_paddings_before': padding_values})
+
+            elif n.op == 'BatchToSpaceND':
+                cropping_values = [0] * 4
+                croppings = graph[n.inputs[2]].value.val
+                cropping_values[2] = croppings[0, 0]  # top
+                cropping_values[3] = croppings[0, 1]  # bottom
+                cropping_values[0] = croppings[1, 0]  # left
+                cropping_values[1] = croppings[1, 1]  # right
+                needs_cropping_after = False
+                border_mode = n.attr.get('padding', '').lower()
+                if sum(cropping_values) != 0:
+                    if border_mode != 'valid':
+                        needs_cropping_after = True
+                    else:
+                        raise NotImplementedError('unhandled BatchToSpaceND case.')
+                if needs_cropping_after:
+                    graph[output_node].attr.update({'_cropping_after': cropping_values})
+
+            # adjust type inference
+            shape = list(graph[previous_node].datatype.get_shape())
+            graph[output_node].datatype = builtins.tensor(graph[output_node].datatype.get_primitive(), tuple(shape))
+
+            delete_node(graph, n.name)
+            count += 1
+
+        if count > 0:
+            print('[Op Fusion] Skipped {} BatchToSpaceND / SpaceToBatchND nodes.'.format(count))
+
+    for fn_key in list(ssa.functions.keys()):
+        f = ssa.functions[fn_key]
+        _fuse_batch_to_space_or_space_to_batch(f.graph)

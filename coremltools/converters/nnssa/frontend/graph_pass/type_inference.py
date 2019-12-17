@@ -2653,7 +2653,7 @@ class TypeInferenceVisitor(object):
         return self._visit_unary(node)
 
     def visit_Reciprocal(self, node):
-        return self.visit_unary(node)
+        return self._visit_unary(node)
 
 
 def type_is_unknown(t):
