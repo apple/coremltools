@@ -685,12 +685,12 @@ class NeuralNetworkBuilder(object):
 
     def set_mean_squared_error_loss(self, name, input_feature=None):
         """
-        input_feature: [(str, datatypes.Array)] or None
+        input_feature: (str, datatypes.Array) or None
             The input feature of the loss layer. Each feature is a (name,
             array) tuple, where name is the name of the model's tensor our loss will be attached to,
             and array is a datatypes.Array object describing the shape of that tensor.
             Both the name and the array's shape must be provided in the tuple.
-            >>> feature = [('output_tensor', datatypes.Array((299, 299, 3)))]
+            >>> feature = ('output_tensor', datatypes.Array(299, 299, 3))
         """
         if self.spec is None:
             return
