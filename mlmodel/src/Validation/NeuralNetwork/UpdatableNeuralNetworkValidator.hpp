@@ -4,7 +4,7 @@
 //
 
 #include <stdio.h>
-#include "../Validators.hpp"
+#include "Validation/Validators.hpp"
 #include <queue>
 #include "NeuralNetworkValidatorGraph.hpp"
 

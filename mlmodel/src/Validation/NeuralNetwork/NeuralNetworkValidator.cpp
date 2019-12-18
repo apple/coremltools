@@ -8,7 +8,7 @@
 
 #include "NeuralNetworkValidator.hpp"
 #include "NeuralNetworkValidatorUtils.hpp"
-#include "../ParameterValidator.hpp"
+#include "Validation/ParameterValidator.hpp"
 
 #include <algorithm>
 #include <functional>

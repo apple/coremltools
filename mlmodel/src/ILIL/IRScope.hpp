@@ -71,6 +71,12 @@ public:
     bool SetType(const std::string& name, ConstIRValueTypePtr type, bool allowReplace = false);
 
     /**
+     Get the scope in which we are nested.
+     @return A pointer to our parent or nullptr if this is the root scope.
+     */
+    const IRScope* GetParent() const;
+
+    /**
      Get a value.
      If not found in this instance, the search will continue
      through parent scopes.

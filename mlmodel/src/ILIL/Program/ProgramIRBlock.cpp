@@ -21,7 +21,6 @@ using namespace ::google;
 
 class ProgramIRBlockImpl : public ProgramIRBlock {
 public:
-    using InputMap = std::unordered_map<std::string, std::string>;
     using ScopePtr = std::shared_ptr<IRScope>;
 
     using SpecInputMap = protobuf::Map<std::string, std::string>;
@@ -40,6 +39,10 @@ public:
         return m_inputs.at(parameterName);
     }
 
+    const InputBindingMap& GetInputs() const override {
+        return m_inputs;
+    }
+
     const ConstIROperationPtrVec& GetOperations() const override {
         return m_operations;
     }
@@ -53,8 +56,8 @@ public:
     }
 
 private:
-    static InputMap ParseInputs(const SpecInputMap& specInputs) {
-        InputMap inputs;
+    static InputBindingMap ParseInputs(const SpecInputMap& specInputs) {
+        InputBindingMap inputs;
         inputs.reserve(static_cast<size_t>(specInputs.size()));
         for (const auto& paramAndArg : specInputs) {
             inputs[paramAndArg.first] = paramAndArg.second;
@@ -119,7 +122,7 @@ private:
     }
 
     ScopePtr m_scope;
-    InputMap m_inputs;
+    InputBindingMap m_inputs;
     StringVec m_outputs;
     ConstIROperationPtrVec m_operations;
 };

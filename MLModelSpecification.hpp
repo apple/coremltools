@@ -25,7 +25,7 @@
 #pragma clang diagnostic ignored "-Wweak-vtables"
 
 #include "mlmodel/src/Model.hpp"
-#include "mlmodel/src/Validators.hpp"
+#include "mlmodel/src/Validation/Validators.hpp"
 #include "mlmodel/src/Utils.hpp"
 
 #include "mlmodel/src/transforms/Pipeline.hpp"

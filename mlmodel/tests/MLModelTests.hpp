@@ -260,4 +260,11 @@ MLMODEL_TEST(testParseProgramIRTensorValue)
 MLMODEL_TEST(testParseProgramIRTupleValue)
 MLMODEL_TEST(testParseProgramIRValueType)
 
+// Program validation tests
+MLMODEL_TEST(testValidateProgramBlock)
+MLMODEL_TEST(testValidateProgramFunction)
+MLMODEL_TEST(testValidateProgramMain)
+MLMODEL_TEST(testValidateProgramOp)
+MLMODEL_TEST(testValidateProgramProgram)
+
 #undef MLMODEL_TEST

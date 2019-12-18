@@ -20,6 +20,7 @@ namespace ILIL {
  */
 class IRBlock {
 public:
+    using InputBindingMap = std::unordered_map<std::string, std::string>;
     using ConstIROperationPtr = std::unique_ptr<IROperation>;
     using ConstIROperationPtrVec = std::vector<ConstIROperationPtr>;
     using StringVec = std::vector<std::string>;
@@ -28,6 +29,9 @@ public:
 
     /** What is the name of the variable bound to the specified parameter? */
     virtual const std::string& GetArgumentName(const std::string& parameterName) = 0;
+
+    /** Get the mapping of parameter names to argument names. */
+    virtual const InputBindingMap& GetInputs() const = 0;
 
     /** Get this block's ops. */
     virtual const ConstIROperationPtrVec& GetOperations() const = 0;

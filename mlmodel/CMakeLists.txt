@@ -33,6 +33,8 @@ add_library(mlmodel_test
     tests/NNShapeTests.cpp
     tests/NNValidatorTests.cpp
     tests/ParameterTests.cpp
+    tests/ProgramModelUtils.cpp
+    tests/ProgramValidatorTests.cpp
     tests/OneHotEncoderTests.cpp
     tests/SaveLoadTests.cpp
     tests/SoundAnalysisPreprocessingValidatorTests.cpp
@@ -105,44 +107,13 @@ add_library(mlmodel
 
     src/Comparison.cpp
     src/DataType.cpp
-    src/Model.cpp
-    src/Result.cpp
-    src/Utils.cpp
-    src/NeuralNetworkBuffer.cpp
-
-    src/ArrayFeatureExtractorValidator.cpp
-    src/BayesianProbitRegressionValidator.cpp
-    src/CategoricalMappingValidator.cpp
-    src/CustomModelValidator.cpp
-    src/DictVectorizerValidator.cpp
-    src/FeatureVectorizerValidator.cpp
-    src/GazetteerValidator.cpp
-    src/IdentityValidator.cpp
-    src/ImputerValidator.cpp
-    src/InterfaceValidators.cpp
-    src/LinearModelValidator.cpp
-    src/NeuralNetwork/NeuralNetworkValidator.cpp
-    src/NeuralNetwork/NeuralNetworkLayerValidator.cpp
-    src/NonMaximumSuppressionValidator.cpp
-    src/NormalizerValidator.cpp
-    src/OneHotEncoderValidator.cpp
-    src/PipelineValidator.cpp
-    src/ProgramValidator.cpp
-    src/ScalarValidator.cpp
-    src/SVMValidator.cpp
-    src/TreeEnsembleValidator.cpp
-    src/TextClassifierValidator.cpp
-    src/VisionFeaturePrintValidator.cpp
-    src/WordEmbeddingValidator.cpp
-    src/WordTaggerValidator.cpp
-    src/QuantizationValidationUtils.cpp
-    src/KNearestNeighborsClassifierValidator.cpp
-    src/ParameterValidator.cpp
-    src/ItemSimilarityRecommenderValidator.cpp
     src/ItemSimilarityRecommenderCommon.cpp
+    src/LayerShapeConstraints.cpp
+    src/Model.cpp
+    src/NeuralNetworkBuffer.cpp
+    src/Result.cpp
     src/TreeEnsembleCommon.cpp
-    src/SoundAnalysisPreprocessingValidator.cpp
-    src/LinkedModelValidator.cpp
+    src/Utils.cpp
 
     src/ILIL/IROperation.cpp
     src/ILIL/IROperatorDescription.cpp
@@ -166,10 +137,39 @@ add_library(mlmodel
     src/transforms/OneHotEncoder.cpp
     src/transforms/ItemSimilarityRecommender.cpp
 
-    src/LayerShapeConstraints.cpp
-    src/NeuralNetwork/NeuralNetworkShapes.cpp
-    src/NeuralNetwork/UpdatableNeuralNetworkValidator.cpp
-    src/QuantizationValidationUtils.cpp
+    src/Validation/ArrayFeatureExtractorValidator.cpp
+    src/Validation/BayesianProbitRegressionValidator.cpp
+    src/Validation/CategoricalMappingValidator.cpp
+    src/Validation/CustomModelValidator.cpp
+    src/Validation/DictVectorizerValidator.cpp
+    src/Validation/FeatureVectorizerValidator.cpp
+    src/Validation/GazetteerValidator.cpp
+    src/Validation/IdentityValidator.cpp
+    src/Validation/ImputerValidator.cpp
+    src/Validation/InterfaceValidators.cpp
+    src/Validation/ItemSimilarityRecommenderValidator.cpp
+    src/Validation/KNearestNeighborsClassifierValidator.cpp
+    src/Validation/LinearModelValidator.cpp
+    src/Validation/LinkedModelValidator.cpp
+    src/Validation/NeuralNetwork/NeuralNetworkLayerValidator.cpp
+    src/Validation/NeuralNetwork/NeuralNetworkShapes.cpp
+    src/Validation/NeuralNetwork/NeuralNetworkValidator.cpp
+    src/Validation/NeuralNetwork/UpdatableNeuralNetworkValidator.cpp
+    src/Validation/NonMaximumSuppressionValidator.cpp
+    src/Validation/NormalizerValidator.cpp
+    src/Validation/OneHotEncoderValidator.cpp
+    src/Validation/ParameterValidator.cpp
+    src/Validation/PipelineValidator.cpp
+    src/Validation/ProgramValidator.cpp
+    src/Validation/QuantizationValidationUtils.cpp
+    src/Validation/ScalarValidator.cpp
+    src/Validation/SoundAnalysisPreprocessingValidator.cpp
+    src/Validation/SVMValidator.cpp
+    src/Validation/TextClassifierValidator.cpp
+    src/Validation/TreeEnsembleValidator.cpp
+    src/Validation/VisionFeaturePrintValidator.cpp
+    src/Validation/WordEmbeddingValidator.cpp
+    src/Validation/WordTaggerValidator.cpp
 )
 
 set_property(TARGET mlmodel

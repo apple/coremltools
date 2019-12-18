@@ -7,8 +7,8 @@
   //
 
 #include "ItemSimilarityRecommenderCommon.hpp"
-#include "ValidatorUtils-inl.hpp"
-#include "Validators.hpp"
+#include "Validation/ValidatorUtils-inl.hpp"
+#include "Validation/Validators.hpp"
 #include "Format.hpp"
 
 namespace CoreML { namespace Recommender {

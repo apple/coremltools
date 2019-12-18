@@ -6,8 +6,8 @@
 #pragma clang diagnostic pop
 
 #import <CoreML/CoreML.h>
-#import "NeuralNetwork/NeuralNetworkShapes.hpp"
 #import "NeuralNetworkBuffer.hpp"
+#import "Validation/NeuralNetwork/NeuralNetworkShapes.hpp"
 
 namespace py = pybind11;
 

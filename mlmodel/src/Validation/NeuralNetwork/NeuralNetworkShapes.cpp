@@ -7,7 +7,7 @@
 //
 
 #include "NeuralNetworkShapes.hpp"
-#include "../Utils.hpp"
+#include "Utils.hpp"
 
 using namespace CoreML;
 

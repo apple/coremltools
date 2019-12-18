@@ -8,7 +8,7 @@
 
 #include "MLModelTests.hpp"
 
-#include "Format.hpp"
+#include "ProgramModelUtils.hpp"
 #include "framework/TestUtils.hpp"
 #include "ILIL/Program/ProgramIRBlock.hpp"
 #include "ILIL/Program/ProgramIRFunction.hpp"
@@ -22,117 +22,7 @@
 using namespace ::CoreML::ILIL;
 using namespace ::CoreML::ILIL::Program;
 using namespace ::CoreML::Specification;
-
-using ArgBindings = std::vector<std::pair<std::string, std::string>>;
-using Attributes = std::vector<std::pair<std::string, V5::Value>>;
-using NameAndTypeVec = std::vector<std::pair<std::string, V5::ValueType>>;
-using NameVec = std::vector<std::string>;
-using OpVec = std::vector<V5::Operation>;
-using TypeVec = std::vector<V5::ValueType>;
-
-static V5::ValueType MakeScalarValueType(V5::ScalarType scalarType)
-{
-    V5::ValueType valueType;
-    valueType.set_scalartype(scalarType);
-    return valueType;
-}
-
-static V5::Value MakeBoolValue(bool b)
-{
-    V5::Value value;
-    value.mutable_type()->CopyFrom(MakeScalarValueType(V5::ScalarType::BOOL));
-    value.mutable_immediatevalue()->set_b(b);
-    return value;
-}
-
-static V5::Value MakeFloatValue(float f)
-{
-    V5::Value value;
-    value.mutable_type()->CopyFrom(MakeScalarValueType(V5::ScalarType::FLOAT32));
-    value.mutable_immediatevalue()->set_f(f);
-    return value;
-}
-
-static V5::Dimension MakeDim(int64_t size)
-{
-    V5::Dimension dim;
-    dim.set_size(size);
-    return dim;
-}
-
-static V5::ValueType MakeTensorValueType(V5::ScalarType scalarType, const std::vector<V5::Dimension>& dims)
-{
-    V5::ValueType tensorType;
-    tensorType.mutable_tensortype()->set_scalartype(scalarType);
-    tensorType.mutable_tensortype()->set_rank(static_cast<int64_t>(dims.size()));
-    for (const auto& dim : dims) {
-        tensorType.mutable_tensortype()->mutable_dimension()->Add()->CopyFrom(dim);
-    }
-
-    return tensorType;
-}
-
-static V5::Block MakeBlock(const ArgBindings& bindings, const NameVec& outputs, const OpVec& ops)
-{
-    V5::Block block;
-    for (const auto& paramAndArg : bindings) {
-        (*block.mutable_inputs())[paramAndArg.first] = paramAndArg.second;
-    }
-
-    for (const auto& output : outputs){
-        block.add_outputs()->append(output);
-    }
-
-    for (const auto& op : ops) {
-        block.add_operations()->CopyFrom(op);
-    }
-
-    return block;
-}
-
-static V5::Function MakeFunction(const NameAndTypeVec& params, const TypeVec& outputs, const V5::Block& block)
-{
-    V5::Function function;
-
-    for (const auto& nameAndType : params) {
-        auto input = function.add_inputs();
-        input->set_name(nameAndType.first);
-        input->mutable_type()->CopyFrom(nameAndType.second);
-    }
-
-    for (const auto& output : outputs) {
-        function.add_outputs()->CopyFrom(output);
-    }
-
-    function.mutable_block()->CopyFrom(block);
-
-    return function;
-}
-
-static V5::Operation MakeOp(const std::string& opName, const std::string& opType, const ArgBindings& bindings,
-                            const NameAndTypeVec& outputs, const Attributes& attributes)
-{
-    V5::Operation op;
-    op.set_name(opName);
-    op.set_type(opType);
-
-    for (const auto& paramAndArg : bindings) {
-        (*op.mutable_inputs())[paramAndArg.first] = paramAndArg.second;
-    }
-
-    for (const auto& nameAndType : outputs) {
-        V5::NamedValueType output;
-        output.set_name(nameAndType.first);
-        output.mutable_type()->CopyFrom(nameAndType.second);
-        (*op.mutable_outputs()).Add()->CopyFrom(output);
-    }
-
-    for (const auto& nameAndValue : attributes) {
-        (*op.mutable_attributes())[nameAndValue.first] = nameAndValue.second;
-    }
-
-    return op;
-}
+using namespace ::ProgramModelUtils;
 
 int testParseProgramIRBlock()
 {
@@ -158,6 +48,9 @@ int testParseProgramIRBlock()
 
     ML_ASSERT_EQ("a", irBlock->GetArgumentName("x"))
     ML_ASSERT_EQ("b", irBlock->GetArgumentName("y"))
+    ML_ASSERT_EQ(2, irBlock->GetInputs().size());
+    ML_ASSERT_EQ("a", irBlock->GetInputs().at("x"));
+    ML_ASSERT_EQ("b", irBlock->GetInputs().at("y"));
     ML_ASSERT_EQ(1, irBlock->GetOperations().size());
     ML_ASSERT_EQ(1, irBlock->GetOutputs().size());
     ML_ASSERT_EQ("z", irBlock->GetOutputs()[0]);

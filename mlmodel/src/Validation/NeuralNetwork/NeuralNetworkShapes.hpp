@@ -9,11 +9,11 @@
 #ifndef MLMODEL_NeuralNetworkShapes_hpp
 #define MLMODEL_NeuralNetworkShapes_hpp
 
-#include "../../build/format/NeuralNetwork_enums.h"
-#include "../Validators.hpp"
-#include "../ValidatorUtils-inl.hpp"
-#include "../LayerShapeConstraints.hpp"
-#include "../transforms/NeuralNetwork.hpp"
+#include "../build/format/NeuralNetwork_enums.h"
+#include "Validation/Validators.hpp"
+#include "Validation/ValidatorUtils-inl.hpp"
+#include "LayerShapeConstraints.hpp"
+#include "transforms/NeuralNetwork.hpp"
 #include <iostream>
 #include <functional>
 
@@ -33,7 +33,7 @@ namespace CoreML {
 
         bool isValid() const;
 
-        const ShapeConstraint& shape(const std::string& name) const;        
+        const ShapeConstraint& shape(const std::string& name) const;
 
         void print() const;
 

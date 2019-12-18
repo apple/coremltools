@@ -19,6 +19,7 @@ using namespace CoreML::ILIL;
 int testIRScopeGetSetType()
 {
     IRScope scope(/*parentScope=*/ nullptr);
+    ML_ASSERT_NULL(scope.GetParent());
 
     scope.SetType("anInt", IRScalarValueType::Int32(), /*allowReplace=*/ false);
     ML_ASSERT_EQ(*IRScalarValueType::Int32(), *scope.GetType("anInt"));
@@ -39,6 +40,7 @@ int testIRScopeGetSetType()
 int testIRScopeGetSetValue()
 {
     IRScope scope(/*parentScope=*/ nullptr);
+    ML_ASSERT_NULL(scope.GetParent());
 
     scope.SetValue("anInt", IRScalarValueType::Int64()->Make(int64_t{1030}), /*allowReplace=*/ false);
     ML_ASSERT_EQ(1030, scope.GetValue("anInt")->AsInt64());
@@ -60,6 +62,7 @@ int testIRScopeNestedTypeSearch()
 {
     auto parentScope = std::make_shared<IRScope>(/*parentScope=*/ nullptr);
     auto scope = std::make_shared<IRScope>(parentScope);
+    ML_ASSERT_EQ(parentScope.get(), scope->GetParent());
 
     parentScope->SetType("inParent", IRScalarValueType::Int8());
     parentScope->SetType("inBoth", IRScalarValueType::BFloat16());
@@ -83,6 +86,7 @@ int testIRScopeNestedValueSearch()
 {
     auto parentScope = std::make_shared<IRScope>(/*parentScope=*/ nullptr);
     auto scope = std::make_shared<IRScope>(parentScope);
+    ML_ASSERT_EQ(parentScope.get(), scope->GetParent());
 
     parentScope->SetValue("inParent", IRScalarValueType::Bool()->Make(false));
     parentScope->SetValue("inBoth", IRScalarValueType::String()->Make<std::string>("parent"));

@@ -16,6 +16,11 @@ IRScope::IRScope(std::shared_ptr<const IRScope> parent)
     : m_parent(std::move(parent))
 { }
 
+const IRScope* IRScope::GetParent() const
+{
+    return m_parent.get();
+}
+
 IRScope::ConstIRValueTypePtr IRScope::GetType(const std::string& name, bool includeRoot) const
 {
     auto type = TryGetType(name, includeRoot);

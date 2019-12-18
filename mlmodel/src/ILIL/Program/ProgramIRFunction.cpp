@@ -24,7 +24,6 @@ class ProgramIRFunctionImpl : public ProgramIRFunction {
 public:
     using ProtoNamedValueTypeVec = protobuf::RepeatedPtrField<V5::NamedValueType>;
     using ProtoValueTypeVec = protobuf::RepeatedPtrField<V5::ValueType>;
-    using ValueTypeMap = std::unordered_map<std::string, std::shared_ptr<const IRValueType>>;
 
     ProgramIRFunctionImpl(const FunctionSpec& function, ConstIRScopePtr parentScope)
         : m_inputs(ParseInputs(function.inputs()))
@@ -37,8 +36,17 @@ public:
         return *m_block;
     }
 
+    const ValueTypeMap& GetInputs() const override {
+        return m_inputs;
+    }
+
     const IRValueType& GetInputType(const std::string& paramName) const override {
         return *m_inputs.at(paramName);
+    }
+
+    const IRValueType* TryGetInputType(const std::string& paramName) const override {
+        auto inputType = m_inputs.find(paramName);
+        return inputType == m_inputs.cend() ? nullptr : inputType->second.get();
     }
 
     const ConstIRValueTypePtrVec& GetOutputTypes() const override {

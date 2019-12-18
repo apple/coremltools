@@ -3,7 +3,6 @@
 #import "CoreMLPython.h"
 #import "CoreMLPythonUtils.h"
 #import "Globals.hpp"
-#import "NeuralNetwork/NeuralNetworkShapes.hpp"
 #import "Utils.hpp"
 #import <fstream>
 #import <vector>

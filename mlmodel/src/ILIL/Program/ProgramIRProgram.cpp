@@ -23,7 +23,6 @@ class ProgramIRProgramImpl : public ProgramIRProgram {
 public:
     using ConstIRValuePtr = std::shared_ptr<const IRValue>;
     using ConstIRScopePtr = std::shared_ptr<const IRScope>;
-    using ParameterMap = std::unordered_map<std::string, ConstIRValuePtr>;
     using ProtoAttributesMap = protobuf::Map<std::string, V5::Value>;
     using ProtoFunctionMap = protobuf::Map<std::string, V5::Function>;
     using StringVec = std::vector<std::string>;
@@ -45,6 +44,10 @@ public:
 
     const IRFunctionMap& GetFunctions() const override {
         return m_functions;
+    }
+
+    const ParameterMap GetParameters() const override {
+        return m_parameters;
     }
 
     const std::vector<std::string>& GetParameterNames() const override {

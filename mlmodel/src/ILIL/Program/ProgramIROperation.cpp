@@ -23,13 +23,9 @@ using namespace ::google;
 
 class ProgramIROperationImpl : public ProgramIROperation {
 public:
-    using AttributesMap = std::unordered_map<std::string, std::shared_ptr<const IRValue>>;
     using ProtoAttributesMap = protobuf::Map<std::string, SpecValue>;
-
-    using InputsMap = std::unordered_map<std::string, std::string>;
-    using ProtoInputsMap = protobuf::Map<std::string, std::string>;
-
     using ProtoBlockVec = protobuf::RepeatedPtrField<V5::Block>;
+    using ProtoInputsMap = protobuf::Map<std::string, std::string>;
     using ProtoNamedValueTypeVec = protobuf::RepeatedPtrField<V5::NamedValueType>;
 
     ProgramIROperationImpl(const OperationSpec& operation, ScopePtr scope)
@@ -42,6 +38,10 @@ public:
         , m_outputNames(ParseOutputNames(operation.outputs()))
         , m_blocks(ParseBlocks(operation.blocks(), scope))
     { }
+
+    const AttributesMap& GetAttributes() const override {
+        return m_attributes;
+    }
 
     const IRValue& GetAttribute(const std::string& name) const override {
         auto nameAndValue = m_attributes.find(name);
@@ -70,6 +70,10 @@ public:
 
     const StringVec& GetInputNames() const override {
         return m_inputNames;
+    }
+
+    const InputBindingMap& GetInputs() const override {
+        return m_inputsMap;
     }
 
     const std::string& GetName() const override {
@@ -115,9 +119,9 @@ private:
         return blocks;
     }
 
-    static InputsMap ParseInputMap(const ProtoInputsMap& specInputs)
+    static InputBindingMap ParseInputMap(const ProtoInputsMap& specInputs)
     {
-        InputsMap inputs;
+        InputBindingMap inputs;
         for (const auto& paramAndArg : specInputs) {
             inputs[paramAndArg.first] = paramAndArg.second;
         }
@@ -150,7 +154,7 @@ private:
     IROperatorType m_type;
     AttributesMap m_attributes;
     StringVec m_inputNames;
-    InputsMap m_inputsMap;
+    InputBindingMap m_inputsMap;
     StringVec m_outputNames;
     IRBlockPtrVec m_blocks;
 };

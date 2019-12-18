@@ -11,7 +11,7 @@
 
 #include "Format.hpp"
 #include "Result.hpp"
-#include "../build/format/Model_enums.h"
+#include "../../build/format/Model_enums.h"
 
 #include "ValidatorUtils-inl.hpp"
 

@@ -7,12 +7,11 @@
 //
 
 #include "MLModelTests.hpp"
-#include "../src/Format.hpp"
-#include "../src/Model.hpp"
-#include "../src/NeuralNetwork/NeuralNetworkShapes.hpp"
+#include "Format.hpp"
+#include "Model.hpp"
 #include "ParameterTests.hpp"
 #include "ModelCreationUtils.hpp"
-#include "../src/Utils.hpp"
+#include "Utils.hpp"
 
 #include "framework/TestUtils.hpp"
 

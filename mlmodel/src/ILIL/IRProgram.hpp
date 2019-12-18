@@ -19,6 +19,7 @@ public:
     using ConstIRFunctionPtr = std::shared_ptr<const IRFunction>;
     using ConstIRValuePtr = std::shared_ptr<const IRValue>;
     using IRFunctionMap = std::unordered_map<std::string, ConstIRFunctionPtr>;
+    using ParameterMap = std::unordered_map<std::string, ConstIRValuePtr>;
 
     virtual ~IRProgram() = default;
 
@@ -30,6 +31,9 @@ public:
 
     /** Get all declared functions. */
     virtual const IRFunctionMap& GetFunctions() const = 0;
+
+    /** Get the names and values of all parameters. */
+    virtual const ParameterMap GetParameters() const = 0;
 
     /** Get the names of all parameters. */
     virtual const std::vector<std::string>& GetParameterNames() const = 0;

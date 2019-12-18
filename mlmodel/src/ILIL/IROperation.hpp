@@ -12,6 +12,7 @@
 #include "ILIL/IRScope.hpp"
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace CoreML {
@@ -24,6 +25,8 @@ class IRBlock;
  */
 class IROperation {
 public:
+    using AttributesMap = std::unordered_map<std::string, std::shared_ptr<const IRValue>>;
+    using InputBindingMap = std::unordered_map<std::string, std::string>;
     using IRBlockPtr = std::shared_ptr<IRBlock>;
     using IRBlockPtrVec = std::vector<IRBlockPtr>;
     using StringVec = std::vector<std::string>;
@@ -36,6 +39,9 @@ public:
      */
     virtual const IRValue& GetAttribute(const std::string& name) const = 0;
 
+    /** Get all attributes. */
+    virtual const AttributesMap& GetAttributes() const = 0;
+
     /** Get this operation's nested blocks. */
     virtual const IRBlockPtrVec& GetBlocks() const = 0;
 
@@ -47,6 +53,11 @@ public:
      @throws std::out_of_range if the requested input does not exist.
      */
     virtual const std::string& GetInput(const std::string& param) const = 0;
+
+    /**
+     Get all parameter/argument bindings.
+     */
+    virtual const InputBindingMap& GetInputs() const = 0;
 
     /**
      Get the name of the argument specified for the given parameter.

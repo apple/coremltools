@@ -7,7 +7,7 @@
 //
 
 #include "NeuralNetworkValidator.hpp"
-#include "../Utils.hpp"
+#include "Utils.hpp"
 
 #include <algorithm>
 #include <sstream>

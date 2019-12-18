@@ -9,12 +9,12 @@
 #ifndef NeuralNetworkValidator_h
 #define NeuralNetworkValidator_h
 
-#include "../../build/format/NeuralNetwork_enums.h"
-#include "../Validators.hpp"
-#include "../ValidatorUtils-inl.hpp"
-#include "../transforms/NeuralNetwork.hpp"
+#include "../../../build/format/NeuralNetwork_enums.h"
+#include "Validation/Validators.hpp"
+#include "Validation/ValidatorUtils-inl.hpp"
+#include "transforms/NeuralNetwork.hpp"
 #include "NeuralNetworkShapes.hpp"
-#include "../QuantizationValidationUtils.hpp"
+#include "Validation/QuantizationValidationUtils.hpp"
 #include "UpdatableNeuralNetworkValidator.hpp"
 
 namespace CoreML {

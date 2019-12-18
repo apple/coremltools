@@ -5,7 +5,7 @@
 
 
 #include "UpdatableNeuralNetworkValidator.hpp"
-#include "../ParameterValidator.hpp"
+#include "Validation/ParameterValidator.hpp"
 
 
 using namespace CoreML;
