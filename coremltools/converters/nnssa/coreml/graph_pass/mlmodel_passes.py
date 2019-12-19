@@ -151,24 +151,62 @@ def remove_disconnected_layers(spec):
     Removes layers from model specification if it's output is not
     connected or on path to the network output.
     """
-    def _remove_disconnected_layers_rec(nn_spec):
+
+    def _remove_layers_from_spec(nn_spec, layers_to_delete):
+            nn_layers = nn_spec.layers
+            for _layer in layers_to_delete:
+                nn_layers.remove(_layer)
+
+    def _get_disconnected_layers_rec(nn_spec):
         """
         - Iteraters over layers in bottom-up fashion
-        - Removes layer if not being used (marks and does lazy deletion)
+        - Collect layers if it's output is not being used (marks and does lazy deletion)
         - Recursively iterates over NN Spec if layer is Loop or Branch
         """
+
+        def _decrease_input_degree(layer):
+            """
+            Helper routine to reduce degree input nodes for given layer
+            """
+            for _input in layer.input:
+                out_degree[_input] -= 1
+                if out_degree[_input] == 0:
+                    del out_degree[_input]
+
         nn_layers = nn_spec.layers
         layers_to_delete = []
         for _layer in reversed(nn_layers):
             layer_type = _layer.WhichOneof('layer')
             if layer_type == 'loop':
-                _remove_disconnected_layers_rec(_layer.loop.conditionNetwork)
-                _remove_disconnected_layers_rec(_layer.loop.bodyNetwork)
+                condition_net_layers_to_delete = _get_disconnected_layers_rec(_layer.loop.conditionNetwork)
+                body_net_layers_to_delete = _get_disconnected_layers_rec(_layer.loop.bodyNetwork)
+                _remove_layers_from_spec(_layer.loop.conditionNetwork, condition_net_layers_to_delete)
+                _remove_layers_from_spec(_layer.loop.bodyNetwork, body_net_layers_to_delete)
+
+                # NOTE: Debatable?
+                # If condition network or bodyNetwork is empty, delete loop layer
+                if len(_layer.loop.conditionNetwork.layers) == 0 or len(_layer.loop.bodyNetwork.layers) == 0:
+                    layers_to_delete.append(_layer)
+                    _decrease_input_degree(_layer)
                 continue
 
             if layer_type == 'branch':
-                _remove_disconnected_layers_rec(_layer.branch.ifBranch)
-                _remove_disconnected_layers_rec(_layer.branch.elseBranch)
+                if_layers_to_delete = _get_disconnected_layers_rec(_layer.branch.ifBranch)
+                else_layers_to_delete = _get_disconnected_layers_rec(_layer.branch.elseBranch)
+
+                total_if_layers = len(_layer.branch.ifBranch.layers)
+                total_else_layers = len(_layer.branch.elseBranch.layers)
+
+                if len(if_layers_to_delete) != total_if_layers and len(else_layers_to_delete) != total_else_layers:
+                    # If both branches are non-empty after dead-layer elimination
+                    # remove respective layers
+                    _remove_layers_from_spec(_layer.branch.ifBranch, if_layers_to_delete)
+                    _remove_layers_from_spec(_layer.branch.elseBranch, else_layers_to_delete)
+                elif len(if_layers_to_delete) == total_if_layers and len(else_layers_to_delete) == total_else_layers:
+                    # If both branches are empty after dead-layer elimination
+                    # remove branch layer altogehter
+                    layers_to_delete.append(_layer)
+                    _decrease_input_degree(_layer)
                 continue
 
             output_is_used = False
@@ -182,14 +220,17 @@ def remove_disconnected_layers(spec):
             # Remove the layer and decrement use count for all the inputs
             if not output_is_used:
                 layers_to_delete.append(_layer)
-                for _input in _layer.input:
-                    out_degree[_input] -= 1
-                    if out_degree[_input] == 0:
-                        del out_degree[_input]
+                _decrease_input_degree(_layer)
 
+        return layers_to_delete
+
+    def _remove_disconnected_layers_rec(nn_spec):
+        """
+        Entry point for removing disconnected layers
+        """
+        layers_to_delete = _get_disconnected_layers_rec(nn_spec)
         # delete layers to be removed
-        for _layer in layers_to_delete:
-            nn_layers.remove(_layer)
+        _remove_layers_from_spec(nn_spec, layers_to_delete)
 
     # Get the use count of each layer
     out_degree = _get_blob_out_degree(spec)
