@@ -156,7 +156,11 @@ class TFBasicConversionTest(unittest.TestCase):
             conv_layer_out = my_conv
         return conv_layer_out
 
-    def test_prepare(self):
+    def test_1(self):
+        with open('/tmp/labels.txt', 'w+') as labels_file:
+            for a in range(10):
+                labels_file.write(str(a + 1)+"\n")
+
         image_size = 224
 
         with tf.Graph().as_default():
