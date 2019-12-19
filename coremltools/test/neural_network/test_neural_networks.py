@@ -5,6 +5,7 @@ import pytest
 
 import coremltools
 from coremltools._deps import HAS_KERAS_TF
+from coremltools._deps import HAS_TF
 from coremltools.models.utils import get_custom_layer_names, \
     replace_custom_layer_name, macos_version, is_macos
 from coremltools.proto import Model_pb2
@@ -14,6 +15,12 @@ if HAS_KERAS_TF:
     from keras.layers import Dense, LSTM
     from coremltools.converters import keras as keras_converter
 
+if HAS_TF :
+    import tensorflow as tf
+    from tensorflow.python.platform import gfile
+    from tensorflow.python.tools import freeze_graph
+    import tfcoreml as tf_converter
+    tf.disable_eager_execution()
 
 @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras1
@@ -130,6 +137,94 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
             for i in range(0, num_channels2):
                 self.assertAlmostEquals(fullOutputs['middle_layer_output'][i], partialOutput['output2'][i], 2)
 
+@unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
+class TFBasicConversionTest(unittest.TestCase):
+
+    frozen_graph_file = '/tmp/my_frozen_classifier_graph.pb'
+    converted_coreml_file = '/tmp/my_frozen_classifier_graph.mlmodel'
+
+    def my_conv_2d(self, input, weight_shape, num_filters, strides, name, activation_fn=tf.nn.relu, with_bias_add=True):
+        my_weights = tf.get_variable(name=name+"weights", shape=weight_shape)
+        if with_bias_add:
+            my_bias = tf.get_variable(name=name+"bias", shape=num_filters)
+        my_conv = tf.nn.conv2d(input, my_weights, strides=strides, padding='SAME', name=name)
+        if with_bias_add:
+            my_conv = tf.nn.bias_add(my_conv, my_bias)
+        if (activation_fn != None):
+            conv_layer_out = activation_fn(my_conv)
+        else:
+            conv_layer_out = my_conv
+        return conv_layer_out
+
+    def test_prepare(self):
+        image_size = 224
+
+        with tf.Graph().as_default():
+            batch_size, height, width, channels = 1, image_size, image_size, 3
+            images = tf.random.uniform([batch_size, height, width, channels], maxval=1)
+
+            # Create the model.
+            i_placeholder = tf.placeholder(name='input', dtype=tf.float32, shape=[1, image_size, image_size, 3])
+            net = self.my_conv_2d(i_placeholder, [1, 3, 3, 1], 1, 1, 'first')
+            net = tf.nn.avg_pool2d(net, 224, strides=1, padding='VALID', name='AvgPool_1a')
+            net = self.my_conv_2d(net,[1, 1, 1, 10], 10, 1, 'fc', activation_fn=None, with_bias_add=False)
+            net = tf.squeeze(net, [1, 2], name='SpatialSqueeze')
+            probabilities = tf.nn.softmax(net, name='Softmax')
+
+            saver = tf.train.Saver()
+            init_op = tf.global_variables_initializer()
+
+            checkpoint_file='/tmp/my_classifier_model.ckpt'
+            graph_file = '/tmp/my_classifier_graph.pb'
+
+            with tf.Session() as sess:
+                sess.run(init_op)
+                probabilities = sess.run(probabilities, {i_placeholder: images.eval()})
+                save_path = saver.save(sess, checkpoint_file)
+
+                with gfile.GFile(graph_file, 'wb') as f:
+                    f.write(sess.graph_def.SerializeToString())
+
+                freeze_graph.freeze_graph(graph_file,
+                                          '',
+                                          True,
+                                          checkpoint_file,
+                                          'Softmax',
+                                          '',
+                                          '',
+                                          self.frozen_graph_file,
+                                          False,
+                                          '')
+
+    def test_cassifier_with_label_file(self):
+        tf_converter.convert(self.frozen_graph_file,
+                             mlmodel_path = self.converted_coreml_file,
+                             input_name_shape_dict = {'input' : [1, 224, 224, 3]},
+                             image_input_names = ['input'],
+                             output_feature_names = ['Softmax'],
+                             predicted_feature_name = 'classLabel',
+                             class_labels = '/tmp/labels.txt',
+                             minimum_ios_deployment_target='13')
+
+    def test_cassifier_with_int_label_list(self):
+        tf_converter.convert(self.frozen_graph_file,
+                             mlmodel_path = self.converted_coreml_file,
+                             input_name_shape_dict = {'input' : [1, 224, 224, 3]},
+                             image_input_names = ['input'],
+                             output_feature_names = ['Softmax'],
+                             predicted_feature_name = 'classLabel',
+                             class_labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                             minimum_ios_deployment_target='13')
+
+    def test_cassifier_with_string_label_list(self):
+        tf_converter.convert(self.frozen_graph_file,
+                             mlmodel_path = self.converted_coreml_file,
+                             input_name_shape_dict = {'input' : [1, 224, 224, 3]},
+                             image_input_names = ['input'],
+                             output_feature_names = ['Softmax'],
+                             predicted_feature_name = 'classLabel',
+                             class_labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+                             minimum_ios_deployment_target='13')
 
 class CustomLayerUtilsTest(unittest.TestCase):
 
