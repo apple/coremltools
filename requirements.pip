@@ -1,7 +1,7 @@
 Keras==2.1.6
 Pillow
 h5py
-numpy
+numpy==1.14.5
 olefile==0.44
 pandas
 protobuf
