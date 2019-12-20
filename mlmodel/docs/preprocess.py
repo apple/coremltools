@@ -3,6 +3,7 @@ import re
 from itertools import izip
 import inflection
 
+
 def preprocess():
     "splits _sources/reference.rst into separate files"
 
@@ -27,6 +28,7 @@ def preprocess():
                 f.truncate()
                 f.write(content)
                 f.close()
+
 
 if __name__ == "__main__":
     preprocess()
