@@ -105,17 +105,20 @@ def ssa_convert(ssa,
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
+    # note: ideally order of passes should not matter, however, might be few special cases
+    # fuse_batch_to_space_or_space_to_batch needs to be applied before transform_nhwc_to_nchw
     passes = [
         constant_weight_link_removal,
         fuse_bias_add,
         onehot_matmul_to_embedding,
         fuse_layer_norm,
         fuse_gelu,
+        fuse_batch_to_space_or_space_to_batch,
         transform_nhwc_to_nchw,
         remove_identity,
         remove_no_ops_and_shift_control_dependencies,
         remove_single_isolated_node,
-        fuse_conv_mul_add_into_batchnorm,
+        fuse_batch_norm,
         spatial_reduce_to_global_pool,
         fuse_pad_into_conv,
         remove_oneway_split,
@@ -333,8 +336,8 @@ class SSAConverter(object):
 
         self.CONVERT_FUNCTION_MAP = {
             'Abs': self._convert_unary_common,
-            'Add': self._convert_binary_broadcastable,
-            'AddV2': self._convert_binary_broadcastable,
+            'Add': self._convert_binary,
+            'AddV2': self._convert_binary,
             'All': self._convert_reduction,
             'Any': self._convert_reduction,
             'ArgMax': self._convert_argmax,
@@ -389,7 +392,7 @@ class SSAConverter(object):
             'Min': self._convert_reduction,
             'Minimum': self._convert_binary_broadcastable,
             'MirrorPad': self._convert_mirror_pad,
-            'Mul': self._convert_binary_broadcastable,
+            'Mul': self._convert_binary,
             'Neg': self._convert_unary_neg,
             'NotEqual': self._convert_binary_broadcastable,
             'Pack': self._convert_pack,
@@ -399,7 +402,7 @@ class SSAConverter(object):
             'Pow': self._convert_binary_broadcastable,
             'Prod': self._convert_reduction,
             'Range': self._convert_range,
-            'RealDiv': self._convert_binary_broadcastable,
+            'RealDiv': self._convert_binary,
             'Reciprocal': self._convert_unary_inverse,
             'Relu': self._convert_unary_activation,
             'Relu6': self._convert_unary_activation_relu6,
@@ -428,7 +431,7 @@ class SSAConverter(object):
             'SquaredDifference': self._convert_squared_difference,
             'Squeeze': self._convert_squeeze,
             'StridedSlice': self._convert_slice,
-            'Sub': self._convert_binary_broadcastable,
+            'Sub': self._convert_binary,
             'Sum': self._convert_reduction,
             'Tan': self._convert_unary_trigonometric,
             'Tanh': self._convert_unary_activation,
@@ -1512,12 +1515,7 @@ class SSAConverter(object):
             raise NotImplementedError(
                 '[SSAConverter] Dynamic weights in convolution not implemented')
 
-        dilations = node.attr.get('dilations', [1, 1, 1, 1])
-        # TF uses SpaceToBatch to implement dilated convolutions
-        if any([df != 1 for df in dilations]):
-            raise NotImplementedError(
-                '[SSAConverter] Dilated Convolution not implemented')
-
+        dilations_factors = node.attr.get('dilations', [1, 1, 1, 1])
         assert len(weight.shape) == 4, 'Conv2d: weight parameter not rank 4'
 
         data_format = node.attr.get('data_format', 'NHWC')
@@ -1548,6 +1546,20 @@ class SSAConverter(object):
         pad_h = node.attr.get('pad_h', [0, 0])
         pad_w = node.attr.get('pad_w', [0, 0])
 
+        paddings_before = node.attr.get('_paddings_before', None)
+        if paddings_before:
+            layer = builder.add_padding(
+                name=node.name + '_paddings_before',
+                left=paddings_before[0],
+                right=paddings_before[1],
+                top=paddings_before[2],
+                bottom=paddings_before[3],
+                value=0,
+                input_name=conv_input_name,
+                output_name=node.name + '_paddings_before'
+            )
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+
         builder.add_convolution(
             name=conv_output_name,
             kernel_channels=kernel_channels,
@@ -1563,9 +1575,9 @@ class SSAConverter(object):
             has_bias=(bias is not None),
             is_deconv=False,
             output_shape=None,
-            input_name=conv_input_name,
+            input_name=conv_input_name if not paddings_before else node.name + '_paddings_before',
             output_name=conv_output_name,
-            dilation_factors=[1, 1],
+            dilation_factors=dilations_factors,
             padding_bottom=pad_h[0],
             padding_top=pad_h[1],
             padding_left=pad_w[0],
@@ -2624,7 +2636,6 @@ class SSAConverter(object):
         border_mode = node.attr.get('padding').lower()
         stride_height = strides[1]
         stride_width = strides[2]
-
         kernel_channels = input_types[-1].get_shape()[1]
         output_channels = node.datatype.get_shape()[1]
 
