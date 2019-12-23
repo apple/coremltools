@@ -53,10 +53,10 @@ def save_spec(spec, filename, auto_set_specification_version=False):
     """
     name, ext = _os.path.splitext(filename)
     if not ext:
-        filename = "%s.mlmodel" % filename
+        filename = "{}.mlmodel".format(filename)
     else:
         if ext != '.mlmodel':
-            raise Exception("Extension must be .mlmodel (not %s)" % ext)
+            raise Exception("Extension must be .mlmodel (not {})".format(ext))
 
     # set model coremltools version
     from coremltools import __version__
@@ -289,7 +289,7 @@ def evaluate_regressor(model, data, target="target", verbose=False):
         delta = predicted - other_framework
 
         if verbose:
-            print("%s\t\t\t\t%s\t\t\t%0.4f" % (other_framework, predicted, delta))
+            print("{}\t\t\t\t{}\t\t\t{:0.4f}".format(other_framework, predicted, delta))
 
         max_error = max(abs(delta), max_error)
         error_squared = error_squared + (delta * delta)
@@ -301,7 +301,7 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     }
 
     if verbose:
-        print("results: %s" % ret)
+        print("results: {}".format(ret))
     return ret
 
 
@@ -353,7 +353,7 @@ def evaluate_classifier(model, data, target='target', verbose=False):
             num_errors += 1
 
         if verbose:
-            print("%s\t\t\t\t%s" % (other_framework, predicted))
+            print("{}\t\t\t\t{}".format(other_framework, predicted))
 
     ret = {
         "num_samples": len(data),
@@ -361,7 +361,7 @@ def evaluate_classifier(model, data, target='target', verbose=False):
     }
 
     if verbose:
-        print("results: %s" % ret)
+        print("results: {}".format(ret))
 
     return ret
 
@@ -423,7 +423,7 @@ def evaluate_classifier_with_probabilities(model, data,
     }
 
     if verbose:
-        print("results: %s" % ret)
+        print("results: {}".format(ret))
 
     return ret
 
@@ -639,7 +639,7 @@ def evaluate_transformer(model, input_data, reference_output,
     }
 
     if verbose:
-        print("results: %s" % ret)
+        print("results: {}".format(ret))
     return ret
 
 
