@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Copyright (c) 2017, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
 from setuptools import setup
@@ -65,6 +70,7 @@ setup(name='coremltools',
           'Intended Audience :: End Users/Desktop',
           'Intended Audience :: Developers',
           'Operating System :: MacOS :: MacOS X',
+          'Operating System :: POSIX :: Linux',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
