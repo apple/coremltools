@@ -12,18 +12,25 @@ import numpy as _np
 from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from ..proto import Model_pb2
 
+
 class _DatatypeBase(object):
+
     def __init__(self, type_tag, full_tag, num_elements):
         self.type_tag, self.full_tag = type_tag, full_tag
         self.num_elements = num_elements
+
     def __eq__(self, other):
         return hasattr(other, "full_tag") and self.full_tag == other.full_tag
+
     def __ne__(self, other):
         return not self.__eq__(other)
+
     def __hash__(self):
         return hash(self.full_tag)
+
     def __repr__(self):
         return self.full_tag
+
 
 class Int64(_DatatypeBase):
     """
@@ -32,6 +39,7 @@ class Int64(_DatatypeBase):
     def __init__(self):
         _DatatypeBase.__init__(self, "Int64", "Int64", 1)
 
+
 class Double(_DatatypeBase):
     """
     Double Data Type
@@ -39,12 +47,14 @@ class Double(_DatatypeBase):
     def __init__(self):
         _DatatypeBase.__init__(self, "Double", "Double", 1)
 
+
 class String(_DatatypeBase):
     """
     String Data Type
     """
     def __init__(self):
         _DatatypeBase.__init__(self, "String", "String", 1)
+
 
 class Array(_DatatypeBase):
     """
@@ -68,7 +78,7 @@ class Array(_DatatypeBase):
         """
         assert len(dimensions) >= 1
         assert all(isinstance(d, _integer_types + (_np.int64,)) for d in dimensions),\
-            "Dimensions must be ints, not %s" % (str(dimensions))
+            "Dimensions must be ints, not {}".format(str(dimensions))
         self.dimensions = dimensions
 
         num_elements = 1
@@ -76,8 +86,8 @@ class Array(_DatatypeBase):
             num_elements *= d
 
         _DatatypeBase.__init__(self, "Array",
-                "Array({%s})" % (",".join("%d" % d for d in self.dimensions)),
-                num_elements)
+                                     "Array({})".format(",".join("{}".format(d for d in self.dimensions))),
+                                     num_elements)
 
 
 class Dictionary(_DatatypeBase):
@@ -112,19 +122,18 @@ class Dictionary(_DatatypeBase):
 
         self.key_type = key_type
 
-        _DatatypeBase.__init__(self, "Dictionary",
-                "Dictionary(%s)" % repr(self.key_type), None)
+        _DatatypeBase.__init__(self, "Dictionary", "Dictionary({})".format(repr(self.key_type), None))
 
 
-_simple_type_remap = {int : Int64(),
-                      str : String(),
-                    float : Double(),
-                    Double : Double(),
-                    Int64 : Int64(),
-                    String : String(),
-                    'Double' : Double(),
-                    'Int64' : Int64(),
-                    'String' : String()}
+_simple_type_remap = {int: Int64(),
+                      str: String(),
+                      float: Double(),
+                      Double: Double(),
+                      Int64: Int64(),
+                      String: String(),
+                      'Double': Double(),
+                      'Int64': Int64(),
+                      'String': String()}
 
 
 def _is_valid_datatype(datatype_instance):
@@ -148,6 +157,7 @@ def _is_valid_datatype(datatype_instance):
             return True
 
     return False
+
 
 def _normalize_datatype(datatype_instance):
     """
@@ -177,7 +187,6 @@ def _normalize_datatype(datatype_instance):
             return datatype_instance
 
     raise ValueError("Datatype instance not recognized.")
-
 
 
 def _set_datatype(proto_type_obj, datatype_instance):

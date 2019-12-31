@@ -12,6 +12,7 @@ from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from ._interface_management import set_transform_interface_params
 from ._feature_management import is_valid_feature_list, process_or_validate_features
 
+
 def create_feature_vectorizer(input_features, output_feature_name, 
                               known_size_map = {}):
     """
@@ -63,12 +64,11 @@ def create_feature_vectorizer(input_features, output_feature_name,
 
             if ft.num_elements is not None:
                 if dim != ft.num_elements:
-                    raise ValueError(("In feature %s, override size (%d) not "
-                            "compatible with inherent value size (%d).") 
-                            % (n, dim, ft.num_elements))
+                    raise ValueError("In feature {}, override size {} not compatible with inherent "
+                                     "value size {}.".format(n, dim, ft.num_elements))
         else:
             if ft.num_elements is None:
-                raise ValueError("In feature %s, inherent size unknown so must be manually supplied.")
+                raise ValueError("In feature {}, inherent size unknown so must be manually supplied.".format(n))
             dim = ft.num_elements
 
         num_output_dimensions += dim
@@ -85,8 +85,7 @@ def create_feature_vectorizer(input_features, output_feature_name,
             output_feature_name = output_feature_name[0][0]
 
         else:
-            raise TypeError("Output feature must be specified as a "
-                    "feature name or correct output feature list.")
+            raise TypeError("Output feature must be specified as a feature name or correct output feature list.")
 
     output_features = [(output_feature_name, datatypes.Array(num_output_dimensions))]
     set_transform_interface_params(spec, input_features, output_features)
