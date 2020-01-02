@@ -102,7 +102,7 @@ def _is_NHWC(graph, node):
         return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
                    for inp in node.inputs[:-1])
 
-    if node.op == 'Pad'and len(node.datatype.get_shape()) == 4:
+    if node.op == 'Pad' and len(node.datatype.get_shape()) == 4:
         # adjust constant padding values
         parent_node = graph[node.inputs[1]]
         if parent_node.value is not None:
@@ -122,7 +122,9 @@ def _is_NHWC(graph, node):
             parent_node = graph[inp]
             if parent_node.value is not None:
                 val = np.array(parent_node.value.val)
-                m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1}
+                if isinstance(parent_node.value.val, np.int32):
+                    val = np.array([parent_node.value.val])
+                m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1, -1: 1}
                 reduction_indices = np.array([m_nhwc_to_nchw[x] for x in val], dtype=np.int32)
                 parent_node.value.val = np.reshape(reduction_indices, parent_node.value.val.shape)
                 node.attr['reduction_indices'] = reduction_indices
