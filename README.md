@@ -118,7 +118,7 @@ you are converting models of these formats:
 
 ### Building from Source
 
-To build the project, you need [CMake](https://cmake.org) to configure the project
+To build the project, you need [CMake](https://cmake.org) to configure the project.
 
 ```shell
 mkdir build
@@ -137,7 +137,7 @@ cmake \
   -DPYTHON_LIBRARY=/Library/Frameworks/Python.framework/Versions/3.7/lib/ \
   ../
 ```
-after which you can use make to build the project
+after which you can use make to build the project.
 
 ```shell
 make
@@ -145,7 +145,7 @@ make
 
 ### Building Installable Wheel
 
-To make a wheel/egg that you can distribute, you can do the following
+To make a wheel/egg that you can distribute, you can do the following:
 
 ```shell
 make dist
