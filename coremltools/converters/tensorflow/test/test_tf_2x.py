@@ -7,6 +7,7 @@ import os
 import shutil
 from test_utils import generate_data
 from coremltools._deps import HAS_TF_2
+import pytest
 
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
@@ -255,6 +256,7 @@ class TestKerasApplications(unittest.TestCase):
         np.testing.assert_almost_equal(
             keras_prediction.flatten(), prediction.flatten(), decimal=decimal)
 
+    @pytest.mark.slow
     def test_vgg16_keras_model(self):
         # load the tf.keras model
         keras_model = tf.keras.applications.VGG16(
@@ -268,6 +270,7 @@ class TestKerasApplications(unittest.TestCase):
             inputs={input_name: (1, 32, 32, 3)},
             outputs=['Identity'])
 
+    @pytest.mark.slow
     def test_vgg19_saved_model(self):
         # load the tf.keras model
         keras_model = tf.keras.applications.VGG19(
@@ -281,6 +284,7 @@ class TestKerasApplications(unittest.TestCase):
             inputs={'input_1': (1, 32, 32, 3)},
             outputs=['Identity'])
 
+    @pytest.mark.slow
     def test_densenet121(self):
         keras_model = tf.keras.applications.DenseNet121(
             weights=None, input_shape=(32, 32, 3))
@@ -291,6 +295,7 @@ class TestKerasApplications(unittest.TestCase):
             inputs={'input_1': (1, 32, 32, 3)},
             outputs=['Identity'])
 
+    @pytest.mark.slow
     def test_inception_resnet_v2(self):
         keras_model = tf.keras.applications.InceptionResNetV2(
             weights=None, input_shape=(75, 75, 3))
@@ -301,6 +306,7 @@ class TestKerasApplications(unittest.TestCase):
             inputs={input_name: (1, 75, 75, 3)},
             outputs=['Identity'])
 
+    @pytest.mark.slow
     def test_inception_v3(self):
         keras_model = tf.keras.applications.InceptionV3(
             weights=None, input_shape=(75, 75, 3))
@@ -332,6 +338,7 @@ class TestKerasApplications(unittest.TestCase):
             outputs=['Identity'])
 
     @unittest.skip('shape mismatch')
+    @pytest.mark.slow
     def test_nasnet_mobile(self):
         keras_model = tf.keras.applications.NASNetMobile(
             weights=None, input_shape=(32, 32, 3))
@@ -343,6 +350,7 @@ class TestKerasApplications(unittest.TestCase):
             outputs=['Identity'], decimal=3)
 
     @unittest.skip('shape mismatch')
+    @pytest.mark.slow
     def test_nasnet_large(self):
         keras_model = tf.keras.applications.NASNetLarge(
             weights=None, input_shape=(32, 32, 3))
@@ -353,6 +361,7 @@ class TestKerasApplications(unittest.TestCase):
             inputs={input_name: (1, 32, 32, 3)},
             outputs=['Identity'], decimal=3)
 
+    @pytest.mark.slow
     def test_resnet50(self):
         keras_model = tf.keras.applications.ResNet50(
             weights=None, input_shape=(32, 32, 3))
@@ -363,6 +372,7 @@ class TestKerasApplications(unittest.TestCase):
             inputs={input_name: (1, 32, 32, 3)},
             outputs=['Identity'])
 
+    @pytest.mark.slow
     def test_resnet50_v2(self):
         keras_model = tf.keras.applications.ResNet50V2(
             weights=None, input_shape=(32, 32, 3))
@@ -373,6 +383,7 @@ class TestKerasApplications(unittest.TestCase):
             inputs={input_name: (1, 32, 32, 3)},
             outputs=['Identity'])
 
+    @pytest.mark.slow
     def test_xception(self):
         keras_model = tf.keras.applications.Xception(
             weights=None, input_shape=(71, 71, 3))
@@ -386,7 +397,10 @@ class TestKerasApplications(unittest.TestCase):
 
 if __name__ == '__main__':
     np.random.seed(1984)
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(TestKerasApplications('test_vgg16_keras_model'))
-    # unittest.TextTestRunner().run(suite)
+    RUN_ALL_TESTS = True
+    if RUN_ALL_TESTS:
+        unittest.main()
+    else:
+        suite = unittest.TestSuite()
+        suite.addTest(TestKerasFashionMnist('test_sequential_builder_keras_model_format'))
+        unittest.TextTestRunner().run(suite)
