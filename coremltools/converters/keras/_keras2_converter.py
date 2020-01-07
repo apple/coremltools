@@ -10,6 +10,7 @@ from ...models.neural_network.update_optimizer_utils import AdamParams
 from ...models.neural_network.update_optimizer_utils import SgdParams
 from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from collections import OrderedDict as _OrderedDict
+from ...proto import Model_pb2 as _Model_pb2
 from ...models import datatypes
 from ...models import MLModel as _MLModel
 from ...models.utils import save_spec as _save_spec
@@ -300,7 +301,8 @@ def _convert(model,
              custom_objects=None,
              input_shapes=None,
              output_shapes=None,
-             respect_trainable=False):
+             respect_trainable=False,
+             use_float_arraytype=False):
 
     # Check Keras format
     if _keras.backend.image_data_format() == 'channels_first':
@@ -478,7 +480,8 @@ def _convert(model,
     input_features = list(zip(input_names, input_types))
     output_features = list(zip(output_names, output_types))
 
-    builder = _NeuralNetworkBuilder(input_features, output_features, mode = mode)
+    builder = _NeuralNetworkBuilder(input_features, output_features, mode = mode,
+                                    use_float_arraytype=use_float_arraytype)
 
     for iter, layer in enumerate(graph.layer_list):
         keras_layer = graph.keras_layer_map[layer]
@@ -548,4 +551,21 @@ def _convert(model,
 
     # Return the protobuf spec
     spec = builder.spec
+
+    # If the model has multi-arrays of type double, recommend to the user the utility function
+    # coremltools.models.utils.convert_double_to_float_multiarray_type(spec)
+    has_double_multiarray = False
+    for feature in list(spec.description.input) + list(spec.description.output):
+        if feature.type.HasField('multiArrayType'):
+            if feature.type.multiArrayType.dataType == _Model_pb2.ArrayFeatureType.DOUBLE:
+                has_double_multiarray = True
+                break
+
+    if has_double_multiarray:
+        print("\n\nRecommendation: This model has at least one multiarray input/output of type double.\n"
+              "For large sized arrays, multiarrays of type float32 are more efficient.\n"
+              "In future, float input/output multiarrays will be produced by default by the converter.\n"
+              "Please use, either the flag 'use_float_arraytype' during the call to convert or\n"
+              "the utility 'coremltools.utils.convert_double_to_float_multiarray_type(spec)', post-conversion.\n\n")
+
     return spec

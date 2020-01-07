@@ -361,7 +361,8 @@ def convertToSpec(model,
                   custom_objects=None,
                   input_shapes = None,
                   output_shapes = None,
-                  respect_trainable = False):
+                  respect_trainable = False,
+                  use_float_arraytype = False):
 
     """
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
@@ -485,6 +486,10 @@ def convertToSpec(model,
         If True, then Keras layers that are marked 'trainable' will
         automatically be marked updatable in the Core ML model.
 
+    use_float_arraytype: bool
+        If true, the datatype of input/output multiarrays is set to Float32 instead
+        of double.
+
     Returns
     -------
     model: MLModel
@@ -576,7 +581,8 @@ def convertToSpec(model,
                                           custom_objects=custom_objects,
                                           input_shapes=input_shapes,
                                           output_shapes=output_shapes,
-                                          respect_trainable=respect_trainable)
+                                          respect_trainable=respect_trainable,
+                                          use_float_arraytype=use_float_arraytype)
     else:
         raise RuntimeError(
             'Keras not found or unsupported version or backend found. keras conversion API is disabled.')
@@ -606,7 +612,8 @@ def convert(model,
                   custom_conversion_functions = None,
                   input_shapes = None,
                   output_shapes = None,
-                  respect_trainable = False):
+                  respect_trainable = False,
+                  use_float_arraytype = False):
 
     """
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
@@ -719,6 +726,10 @@ def convert(model,
         If yes, then Keras layers marked 'trainable' will automatically be
         marked updatable in the Core ML model.
 
+    use_float_arraytype: bool
+        If true, the datatype of input/output multiarrays is set to Float32 instead
+        of double.
+
     Returns
     -------
     model: MLModel
@@ -789,6 +800,7 @@ def convert(model,
                          custom_conversion_functions=custom_conversion_functions,
                          input_shapes=input_shapes,
                          output_shapes=output_shapes,
-                         respect_trainable=respect_trainable)
+                         respect_trainable=respect_trainable,
+                         use_float_arraytype=use_float_arraytype)
 
     return _MLModel(spec)

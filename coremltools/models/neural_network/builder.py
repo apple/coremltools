@@ -203,7 +203,8 @@ class NeuralNetworkBuilder(object):
                  spec=None,
                  nn_spec=None,
                  disable_rank5_shape_mapping=False,
-                 training_features=None):
+                 training_features=None,
+                 use_float_arraytype=False):
         """
         Construct a NeuralNetworkBuilder object to build an MLModel specification with
         model interface or a NeuralNetwork protobuf message, either from scratch or an
@@ -255,6 +256,10 @@ class NeuralNetworkBuilder(object):
             If nn_spec is not None and spec is None, the builder will build a NeuralNetwork spec without
             wrapping it within an MLModel. This is useful to create nested NeuralNetworks for models
             with control flow operations.
+
+        use_float_arraytype: bool
+            If true, the datatype of input/output multiarrays is set to Float32 instead
+            of double.
 
         Examples
         --------
@@ -315,8 +320,14 @@ class NeuralNetworkBuilder(object):
         if len(self.spec.description.output) > 0:
             del self.spec.description.output[:]
 
+        if use_float_arraytype:
+            array_datatype = _Model_pb2.ArrayFeatureType.FLOAT32
+        else:
+            array_datatype = _Model_pb2.ArrayFeatureType.DOUBLE
+
         self.spec = set_transform_interface_params(self.spec, input_features,
-                                                   out_features_with_shape, training_features=training_features)
+                                                   out_features_with_shape, training_features=training_features,
+                                                   array_datatype=array_datatype)
 
         for input in input_features:
             self.rank_dict[input[0]] = len(input[1].dimensions)

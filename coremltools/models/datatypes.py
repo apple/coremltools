@@ -180,7 +180,7 @@ def _normalize_datatype(datatype_instance):
 
 
 
-def _set_datatype(proto_type_obj, datatype_instance):
+def _set_datatype(proto_type_obj, datatype_instance, array_datatype=Model_pb2.ArrayFeatureType.DOUBLE):
 
     # Remap so we can still use the python types for the simple cases
     global _simple_type_remap
@@ -199,7 +199,7 @@ def _set_datatype(proto_type_obj, datatype_instance):
 
     elif isinstance(datatype_instance, Array):
         proto_type_obj.multiArrayType.MergeFromString(b'')
-        proto_type_obj.multiArrayType.dataType = Model_pb2.ArrayFeatureType.DOUBLE
+        proto_type_obj.multiArrayType.dataType = array_datatype
 
         for n in datatype_instance.dimensions:
             proto_type_obj.multiArrayType.shape.append(n)

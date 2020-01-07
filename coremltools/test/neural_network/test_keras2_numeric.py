@@ -61,14 +61,14 @@ def _keras_transpose(x, is_sequence=False):
 
 
 def _get_coreml_model(model, input_names=['data'], output_names=['output'], input_name_shape_dict= {},
-                      model_precision=_MLMODEL_FULL_PRECISION):
+                      model_precision=_MLMODEL_FULL_PRECISION, use_float_arraytype=False):
     """
     Get the coreml model from the Keras model.
     """
     # Convert the model
     from coremltools.converters import keras as keras_converter
     model = keras_converter.convert(model, input_names, output_names, input_name_shape_dict = input_name_shape_dict,
-                                    model_precision=model_precision)
+                                    model_precision=model_precision, use_float_arraytype=use_float_arraytype)
     return model
 
 
@@ -2775,6 +2775,25 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
 
         model = Model(inputs, ouputs)
         self._test_model(model)
+
+
+@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
+@pytest.mark.keras2
+class KerasBasicConversionTest(KerasNumericCorrectnessTest):
+    def test_float_arraytype_flag(self):
+        np.random.seed(1988)
+        # Define a model
+        model = Sequential()
+        model.add(Dense(1000, input_shape=(100,)))
+        # Set some random weights
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+        # Convert model
+        from coremltools.converters import keras as keras_converter
+        coreml_model = keras_converter.convert(model, use_float_arraytype=True)
+        spec = coreml_model.get_spec()
+        from coremltools.proto import Model_pb2 as _Model_pb2
+        self.assertEqual(spec.description.input[0].type.multiArrayType.dataType, _Model_pb2.ArrayFeatureType.FLOAT32)
+        self.assertEqual(spec.description.output[0].type.multiArrayType.dataType, _Model_pb2.ArrayFeatureType.FLOAT32)
 
 
 if __name__ == '__main__':

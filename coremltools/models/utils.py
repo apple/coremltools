@@ -12,6 +12,7 @@ import os as _os
 import six as _six
 import warnings
 import sys
+from coremltools.proto import Model_pb2 as _Model_pb2
 
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
 
@@ -778,3 +779,39 @@ def _get_input_names(spec):
     """
     retval = [feature.name for feature in spec.description.input]
     return retval
+
+
+def convert_double_to_float_multiarray_type(spec):
+    """
+    Convert all double multiarrays feature descriptions (input, output, training input)
+    to float multiarrays
+
+    Parameters
+    ----------
+    spec: Model_pb
+        The specification containing the multiarrays types to convert
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        # In-place convert multiarray type of spec
+        >>> spec = mlmodel.get_spec()
+        >>> coremltools.utils.convert_double_to_float_multiarray_type(spec)
+        >>> model = coremltools.models.MLModel(spec)
+    """
+    def _convert_to_float(feature):
+        if feature.type.HasField('multiArrayType'):
+            if feature.type.multiArrayType.dataType == _Model_pb2.ArrayFeatureType.DOUBLE:
+                feature.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.FLOAT32
+
+    for feature in spec.description.input:
+        _convert_to_float(feature)
+
+    for feature in spec.description.output:
+        _convert_to_float(feature)
+
+    for feature in spec.description.trainingInput:
+        _convert_to_float(feature)
+
+
