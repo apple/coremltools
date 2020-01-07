@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <sstream>
 
-using namespace CoreML;
+namespace CoreML {
 
 inline Result validateTensorMessage(const Specification::Tensor& tensor, const Specification::NeuralNetworkLayer& layer) {
     std::string err;
@@ -113,6 +113,48 @@ inline Result validateInputCount(const Specification::NeuralNetworkLayer& layer,
     else {
         return Result();
     }
+}
+
+inline Result validateInputOutputTypes(const ::google::protobuf::RepeatedPtrField<Specification::FeatureDescription>& features,
+                                       ResultReason reason,
+                                       const std::string& featureTypesDesc) {
+    auto checkFeatures = [&](const Specification::FeatureDescription& feature) {
+        switch (feature.type().Type_case()) {
+            case Specification::FeatureType::kImageType:
+            case Specification::FeatureType::kMultiArrayType:
+                return true;
+            default:
+                return false;
+        }
+    };
+
+    if (!std::all_of(features.cbegin(), features.cend(), checkFeatures)) {
+         return Result(ResultType::INVALID_MODEL_INTERFACE, reason,
+                       "Neural Networks require " + featureTypesDesc + " to be images or MLMultiArray.");
+    }
+
+    return Result();
+}
+
+inline Result validateNdMultiArrayInputType(const Specification::ArrayFeatureType& arrayType)
+{
+    auto rank = arrayType.shape().size();
+    if (!(rank > 0)) {
+        return Result(ResultType::INVALID_MODEL_INTERFACE, "Input MLMultiArray to neural networks must have at least 1 dimension.");
+    }
+    switch (arrayType.ShapeFlexibility_case()) {
+        case CoreML::Specification::ArrayFeatureType::kEnumeratedShapes:
+            break;
+        case CoreML::Specification::ArrayFeatureType::kShapeRange:
+            if (arrayType.shaperange().sizeranges_size() != rank) {
+                return Result(ResultType::INVALID_MODEL_INTERFACE, "For MLMultiArray input: Rank of the flexible shape range must match the rank of the default shape.");
+                break;
+            }
+        case CoreML::Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET:
+            break;
+    }
+
+    return Result();
 }
 
 inline Result validateOutputCount(const Specification::NeuralNetworkLayer& layer, int min, int max) {
@@ -326,4 +368,4 @@ inline Result validateRecurrentActivationParams(const Specification::ActivationP
     return Result();
 }
 
-
+}

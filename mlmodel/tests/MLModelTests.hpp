@@ -264,6 +264,7 @@ MLMODEL_TEST(testParseProgramIRValueType)
 MLMODEL_TEST(testValidateProgramBlock)
 MLMODEL_TEST(testValidateProgramFunction)
 MLMODEL_TEST(testValidateProgramMain)
+MLMODEL_TEST(testValidateProgramModel)
 MLMODEL_TEST(testValidateProgramOp)
 MLMODEL_TEST(testValidateProgramProgram)
 

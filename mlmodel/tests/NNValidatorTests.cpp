@@ -9,6 +9,7 @@
 #include "MLModelTests.hpp"
 #include "Format.hpp"
 #include "Model.hpp"
+#include "ResultReason.hpp"
 #include "Validation/NeuralNetwork/NeuralNetworkShapes.hpp"
 
 #include "framework/TestUtils.hpp"
@@ -157,7 +158,7 @@ int testNNValidatorBadOutput2() {
     innerProductParams->set_hasbias(false);
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    ML_ASSERT_BAD(res);
+    ML_ASSERT_BAD_WITH_REASON(res, ResultReason::MODEL_INVALID_OUTPUT_TYPE);
 
     return 0;
 }

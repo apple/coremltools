@@ -12,6 +12,7 @@
 #include "Comparison.hpp"
 #include "Format.hpp"
 #include "Result.hpp"
+#include "ResultType.hpp"
 #include "../../build/format/FeatureTypes_enums.h"
 #include <sstream>
 

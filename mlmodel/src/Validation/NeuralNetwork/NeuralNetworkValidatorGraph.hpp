@@ -5,7 +5,7 @@
 
 #include "Validation/Validators.hpp"
 
-using namespace CoreML;
+namespace CoreML {
 
 static bool isLayerSupportedForBackprop(const Specification::NeuralNetworkLayer* layer) {
     switch (layer->layer_case()) {
@@ -137,5 +137,5 @@ struct NeuralNetworkValidatorGraph {
     }
 };
 
-
+}
 

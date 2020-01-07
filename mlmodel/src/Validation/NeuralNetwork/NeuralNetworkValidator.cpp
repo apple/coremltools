@@ -8,6 +8,7 @@
 
 #include "NeuralNetworkValidator.hpp"
 #include "NeuralNetworkValidatorUtils.hpp"
+#include "ResultReason.hpp"
 #include "Validation/ParameterValidator.hpp"
 
 #include <algorithm>
@@ -528,20 +529,10 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
                         return Result(ResultType::INVALID_MODEL_INTERFACE,
                                       "Neural networks require at least one non-optional input.");
                     }
-    
-    
-    // Check the inputs and output types
-    if (!std::all_of(interface.input().begin(),
-                     interface.input().end(),
-                     [](const Specification::FeatureDescription& input) {
-                         return (input.type().Type_case() == Specification::FeatureType::kImageType
-                                 || input.type().Type_case() == Specification::FeatureType::kMultiArrayType);
-                     })) {
-                         return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                       "Neural Networks require inputs to be images or MLMultiArray.");
-                     }
-    
-    
+
+    // Check the input types
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputTypes(interface.input(), ResultReason::MODEL_INVALID_INPUT_TYPE, "inputs"));
+
     std::map<std::string, int> ioBlobNameToRank; // to collect ranks of input/output blobs from the shapes present in the description
     
     // populate "ioBlobNameToRank"
@@ -620,23 +611,10 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
                 }
                 
             } else { // validate input shape when "ndArrayInterpretation" is True
-                
-                int rank = input.type().multiarraytype().shape().size();
-                if (!(rank > 0)) {
-                    return Result(ResultType::INVALID_MODEL_INTERFACE, "Input MLMultiArray to neural networks must have at least 1 dimension.");
+
+                if (!(r = validateNdMultiArrayInputType(input.type().multiarraytype())).good()) {
+                    return r;
                 }
-                switch (input.type().multiarraytype().ShapeFlexibility_case()) {
-                    case CoreML::Specification::ArrayFeatureType::kEnumeratedShapes:
-                        break;
-                    case CoreML::Specification::ArrayFeatureType::kShapeRange:
-                        if (input.type().multiarraytype().shaperange().sizeranges_size() != rank) {
-                            return Result(ResultType::INVALID_MODEL_INTERFACE, "For MLMultiArray input: Rank of the flexible shape range must match the rank of the default shape.");
-                            break;
-                        }
-                    case CoreML::Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET:
-                        break;
-                }
-                
             } // if else block on spec version to check validity of input shape
         }
     }
@@ -757,16 +735,8 @@ namespace CoreML {
         const auto& interface = format.description();
         
         // This isn't true for classifiers and regressors -- need to template specialize it to make these work
-        if (!std::all_of(interface.output().begin(),
-                         interface.output().end(),
-                         [](const Specification::FeatureDescription& output) {
-                             return output.type().Type_case() == Specification::FeatureType::kMultiArrayType ||
-                             output.type().Type_case() == Specification::FeatureType::kImageType;
-                         })) {
-                             return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                           "Neural Network outputs must be either an image or MLMultiArray.");
-                         }
-        
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputTypes(interface.output(), ResultReason::MODEL_INVALID_OUTPUT_TYPE, "outputs"));
+
         std::set<std::string> outputBlobNames;
         
         Result r = validateNeuralNetworkTopLevel(format.description(), format.neuralnetwork(), outputBlobNames, format.isupdatable());
