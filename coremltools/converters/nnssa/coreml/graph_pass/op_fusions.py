@@ -124,8 +124,8 @@ def _is_NHWC(graph, node):
                 val = np.array(parent_node.value.val)
                 if isinstance(parent_node.value.val, np.int32):
                     val = np.array([parent_node.value.val])
-                m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1, -1: 1}
-                reduction_indices = np.array([m_nhwc_to_nchw[x] for x in val], dtype=np.int32)
+                m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1}
+                reduction_indices = np.array([m_nhwc_to_nchw[x if x >= 0 else 4 + x] for x in val], dtype=np.int32)
                 parent_node.value.val = np.reshape(reduction_indices, parent_node.value.val.shape)
                 node.attr['reduction_indices'] = reduction_indices
         return True
