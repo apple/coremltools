@@ -395,6 +395,69 @@ class TestKerasApplications(unittest.TestCase):
             outputs=['Identity'])
 
 
+@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+class TestCornerCases(unittest.TestCase):
+
+    def setUp(self):
+        self.saved_model_dir = tempfile.mkdtemp()
+        _, self.model_path = tempfile.mkstemp(suffix='.h5', prefix=self.saved_model_dir)
+
+    def tearDown(self):
+        if os.path.exists(self.saved_model_dir):
+            shutil.rmtree(self.saved_model_dir)
+
+    def _test_model(self, keras_model, model_path, inputs, outputs, decimal=4, verbose=False):
+        keras_model.save(model_path)
+
+        # convert and validate
+        model = coremltools.converters.tensorflow.convert(
+            model_path,
+            inputs=inputs,
+            outputs=outputs,
+            target_ios='13'
+        )
+        assert isinstance(model, coremltools.models.MLModel)
+
+        if verbose:
+            print('TensorFlow Keras model saved at {}'.format(model_path))
+            tmp_model_path = self.model_path.rsplit('.')[0] + '.mlmodel'
+            model.save(tmp_model_path)
+            print('Core ML model saved at {}'.format(tmp_model_path))
+
+        # verify numeric correctness of predictions
+        # assume one input one output for now
+        name, shape = list(inputs.items())[0]
+        data = generate_data(shape=shape)
+
+        keras_prediction = keras_model.predict(data)
+        prediction = model.predict({name: data})[outputs[0]]
+
+        if verbose:
+            print('Shape Keras:', keras_prediction.shape, ' vs. Core ML:', prediction.shape)
+            print('Input  :', data.flatten()[:16])
+            print('Keras  :', keras_prediction.flatten()[:16])
+            print('Core ML:', prediction.flatten()[:16])
+
+        np.testing.assert_array_equal(
+            keras_prediction.shape, prediction.shape)
+        np.testing.assert_almost_equal(
+            keras_prediction.flatten(), prediction.flatten(), decimal=decimal)
+
+    def test_conv2d_with_activation(self):
+        inputs = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
+        out = tf.keras.layers.Conv2D(
+            filters=5,
+            kernel_size=1,
+            padding='same',
+            activation='softmax')(inputs)
+        keras_model = tf.keras.Model(inputs, out)
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        self._test_model(keras_model=keras_model,
+                         model_path=self.model_path,
+                         inputs={input_name: (1, 256, 256, 3)},
+                         outputs=['Identity'])
+
+
 if __name__ == '__main__':
     np.random.seed(1984)
     RUN_ALL_TESTS = True

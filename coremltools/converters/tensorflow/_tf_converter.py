@@ -168,39 +168,29 @@ def convert(filename,
         raise ValueError(invalid_filename_message)
 
     # convert from TensorFlow to SSA IR
-    try:
-        from ..nnssa.frontend.tensorflow import load as frontend_load
-        ssa = frontend_load(filename, resume_on_errors=False, inputs=inputs, outputs=outputs, **kwargs)
-    except ImportError as e:
-        raise ImportError('frontend converter not found. {}'.format(e))
-    except Exception as e:
-        raise RuntimeError('failed to convert from TensorFlow to IR. {}'.format(e))
+    from ..nnssa.frontend.tensorflow import load as frontend_load
+    ssa = frontend_load(filename, resume_on_errors=False, inputs=inputs, outputs=outputs, **kwargs)
 
     # convert from SSA IR to Core ML
-    try:
-        from ..nnssa.coreml.ssa_converter import ssa_convert
-        model_spec = ssa_convert(ssa,
-                                 top_func='main',
-                                 inputs=inputs,
-                                 outputs=outputs,
-                                 image_input_names=image_input_names,
-                                 is_bgr=is_bgr,
-                                 red_bias=red_bias,
-                                 green_bias=green_bias,
-                                 blue_bias=blue_bias,
-                                 gray_bias=gray_bias,
-                                 image_scale=image_scale,
-                                 class_labels=class_labels,
-                                 predicted_feature_name=predicted_feature_name,
-                                 predicted_probabilities_output=predicted_probabilities_output,
-                                 add_custom_layers=add_custom_layers,
-                                 custom_conversion_functions=custom_conversion_functions,
-                                 custom_shape_functions=custom_shape_functions,
-                                 optional_inputs=optional_inputs)
-    except ImportError as e:
-        raise ImportError('backend converter not found. {}'.format(e))
-    except Exception as e:
-        raise RuntimeError('failed to convert from IR to Core ML. {}'.format(e))
+    from ..nnssa.coreml.ssa_converter import ssa_convert
+    model_spec = ssa_convert(ssa,
+                             top_func='main',
+                             inputs=inputs,
+                             outputs=outputs,
+                             image_input_names=image_input_names,
+                             is_bgr=is_bgr,
+                             red_bias=red_bias,
+                             green_bias=green_bias,
+                             blue_bias=blue_bias,
+                             gray_bias=gray_bias,
+                             image_scale=image_scale,
+                             class_labels=class_labels,
+                             predicted_feature_name=predicted_feature_name,
+                             predicted_probabilities_output=predicted_probabilities_output,
+                             add_custom_layers=add_custom_layers,
+                             custom_conversion_functions=custom_conversion_functions,
+                             custom_shape_functions=custom_shape_functions,
+                             optional_inputs=optional_inputs)
 
     return MLModel(model_spec, useCPUOnly=use_cpu_only)
 
