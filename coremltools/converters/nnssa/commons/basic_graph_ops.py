@@ -132,7 +132,7 @@ def fill_outputs(gd):
 
 def check_connections(gd):
     """
-    Given a graph, checks that all 
+    Given a graph, checks that all
      - inputs/outputs are symmetric
      - control_inputs/control_outputs are symmetric
      - The graph does not reference vertices outside of the graph
@@ -155,7 +155,7 @@ def check_connections(gd):
 def const_determined_nodes(gd, assume_variable_nodes=[]):
     """
     Given a graph, extract all nodes that only depends on const nodes.
-    
+
     # TODO: extract nodes that depends on the "const part" of placeholders.
     """
     vis = {}

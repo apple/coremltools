@@ -5,7 +5,7 @@ from __future__ import absolute_import as _
 
 import numpy as np
 from ...commons import builtins
-from ...commons.symbolic import * 
+from ...commons.symbolic import *
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
     delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
@@ -267,13 +267,19 @@ def transform_nhwc_to_nchw(nnssa):
             if node.op in ELEMENTWISE_OPS:
                 for inp in node.inputs:
                     parent_node = graph[inp]
-                    if parent_node.value is not None:
-                        # if there is a constant vector input
-                        val = np.array(parent_node.value.val)
-                        if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype):
-                            new_shape = (1, val.shape[0], 1, 1)
-                            parent_node.datatype = builtins.tensor(parent_node.datatype.get_primitive(), new_shape)
-                            parent_node.value.val = np.reshape(parent_node.value.val, new_shape)
+                    if parent_node.value is None:
+                        continue
+
+                    # if there is a constant vector input
+                    val = np.array(parent_node.value.val)
+                    if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype):
+                        new_shape = (1, val.shape[0], 1, 1)
+                        parent_node.datatype = builtins.tensor(
+                            parent_node.datatype.get_primitive(), new_shape
+                        )
+                        parent_node.value.val = np.reshape(
+                            parent_node.value.val, new_shape
+                        )
 
             # Insert NHWC -> NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
@@ -284,7 +290,7 @@ def transform_nhwc_to_nchw(nnssa):
                     ( symbolic_value and not any_symbolic_or_unknown(symbolic_value))):
                     # Const weights and parameters
                     continue
-            
+
                 if inp_node_format != 'NHWC_format_inserted':
                     assert len(graph[inp_node_name].datatype.get_shape()) == 4
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
