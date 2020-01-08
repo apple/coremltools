@@ -247,7 +247,6 @@ def transform_nhwc_to_nchw(nnssa):
                 nhwc_nodes.append(name)
 
         for name in nhwc_nodes:
-
             node = graph[name]
 
             # Adjust type inference
