@@ -700,14 +700,24 @@ def fuse_batch_norm(ssa):
         graph[fused_bn_node.name] = fused_bn_node
 
         # combine control i/o
-        control_inputs = list()
-        control_outputs = list()
+        control_inputs = []
+        control_outputs = []
         bn_node_names = [x.name for x in nodes]
+        print(f"\n\nProcessing Fused Batch Norm: {fused_bn_node.name}")
+
         for name in bn_node_names:
             control_inputs += graph[name].control_inputs
             control_outputs += graph[name].control_outputs
-        fused_bn_node.control_inputs.extend(control_inputs)
-        fused_bn_node.control_outputs.extend(control_outputs)
+
+            # Modify control outputs with name of fused batch norm node.
+            for control_output_name in graph[name].control_outputs:
+                ctrl_node = graph[control_output_name]
+                for i, inpt_name in enumerate(ctrl_node.control_inputs):
+                    if inpt_name == name:
+                        ctrl_node.control_inputs[i] = fused_bn_node.name
+
+        fused_bn_node.control_inputs = control_inputs
+        fused_bn_node.control_outputs = control_outputs
 
         # connect fused node to entry and output nodes
         connect_edge(graph, current_node.name, fused_bn_node.name)

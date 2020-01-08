@@ -82,14 +82,18 @@ def disconnect_vertex_ins(g, dest):
 def disconnect_vertex_control_ins(g, dest):
     dest_node = g[dest]
     for innode in dest_node.control_inputs:
-        g[innode].control_outputs = [i for i in g[innode].control_outputs if i != dest_node.name]
+        g[innode].control_outputs = [
+            i for i in g[innode].control_outputs if i != dest_node.name
+        ]
     dest_node.control_inputs = []
 
 
 def disconnect_vertex_control_outs(g, source):
     source_node = g[source]
     for out in source_node.control_outputs:
-        g[out].control_inputs = [i for i in g[out].control_inputs if i != source_node.name]
+        g[out].control_inputs = [
+            i for i in g[out].control_inputs if i != source_node.name
+        ]
     source_node.control_outputs = []
 
 
