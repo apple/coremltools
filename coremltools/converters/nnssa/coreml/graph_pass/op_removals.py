@@ -100,16 +100,9 @@ def _remove_output_identity_nodes(nnssa):
         f = nnssa.functions[fn_key]
         keys = list(f.graph.keys())
         for k in keys:
-            print(f"\nPossibly removing key: {k}")
             if k not in f.graph:
                 continue
             node = f.graph[k]
-
-            print(f"  {f.graph[k].op}")
-            print(f"  control output:  {f.graph[k].control_outputs}")
-            print(f"  control inputs:  {f.graph[k].control_inputs}")
-            ks = '\n   '.join(list(f.graph.keys()))
-            print(f" Keys in graph:\n   {ks}")
 
             if node.op != 'Identity' or len(node.inputs) != 1:
                 continue
@@ -126,29 +119,22 @@ def _remove_output_identity_nodes(nnssa):
                 continue
 
             delete_count += 1
-            # parent_node.control_outputs = node.control_outputs
-            # for control_input_name in node.control_inputs:
-            #     control_input_node = f.graph[control_input_name]
-            #     for i, name in enumerate(control_input_node.control_outputs):
-            #         if name == k:
-            #             control_input_node.control_outputs[i] = parent_node.name
 
             # Remove Identity node and copy existing parent node
-            print(f" **Replacing node: {node.name} with {parent_name}**")
             parent_node = copy.deepcopy(f.graph[parent_name])
             for control_input_name in node.control_inputs:
                 if control_input_name == parent_node.name:
                     continue
                 if control_input_name in parent_node.control_inputs:
                     continue
-                print(control_input_name)
+
                 parent_node.control_inputs.append(control_input_name)
 
             del f.graph[k]
-            f.graph[k] = copy.deepcopy(parent_node)
             del f.graph[parent_name]
-            f.graph[k].name = k
-            f.graph[k].outputs = []
+            parent_node.name = k
+            parent_node.outputs = []
+            f.graph[k] = parent_node
 
             node = f.graph[k]
             for p in node.inputs:
@@ -160,8 +146,6 @@ def _remove_output_identity_nodes(nnssa):
                 for idx, out in enumerate(f.graph[p].control_outputs):
                     if out == parent_name:
                         f.graph[p].control_outputs[idx] = k
-
-            # f.graph[k] = node
 
     return delete_count
 
