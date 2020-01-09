@@ -267,9 +267,10 @@ class TFNetworkTest(unittest.TestCase):
         frozen_model_file = os.path.join(model_dir, 'tf_frozen.pb')
         coreml_model_file = os.path.join(model_dir, 'coreml_model.mlmodel')
 
+        feed_input_shapes = { k : tuple([i if i > 0 else 10 for i in ashape]) for (k,ashape) in input_shapes.items()}
         feed_dict = {
-            self._get_tf_tensor_name(graph, name): generate_data(input_shapes[name], data_mode)
-            for name in input_shapes
+            self._get_tf_tensor_name(graph, name): generate_data(feed_input_shapes[name], data_mode)
+            for name in feed_input_shapes
         }
 
         with tf.Session(graph=graph) as sess:
@@ -308,7 +309,7 @@ class TFNetworkTest(unittest.TestCase):
         # Transpose input data as CoreML requires
         coreml_inputs = {
             name: tf_transpose(feed_dict[self._get_tf_tensor_name(graph, name)])
-            for name in input_shapes
+            for name in feed_input_shapes
         }
 
         # Run predict in CoreML
