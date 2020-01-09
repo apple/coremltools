@@ -50,9 +50,9 @@ please see the [neural network guide](docs/NeuralNetworkGuide.md).
 - Core ML specification is fully described in a set of protobuf files.
 They are all located in the folder `mlmodel/format/`
 - For an overview of the Core ML framework API, see [here](https://developer.apple.com/documentation/coreml).
-- To find the list of model types supported by Core ML, see [this](https://github.com/aseemw/coremltools/blob/f95f9b230f6a1bd8b0d9ee298b78d7786e3e7cfd/mlmodel/format/Model.proto#L229)
+- To find the list of model types supported by Core ML, see [this](https://github.com/apple/coremltools/blob/1fcac9eb087e20bcc91b41bc938112fa91b4e5a8/mlmodel/format/Model.proto#L229)
 portion of the `model.proto` file.
-- To find the list of neural network layer types supported see [this](https://github.com/aseemw/coremltools/blob/f95f9b230f6a1bd8b0d9ee298b78d7786e3e7cfd/mlmodel/format/NeuralNetwork.proto#L472)
+- To find the list of neural network layer types supported see [this](https://github.com/apple/coremltools/blob/1fcac9eb087e20bcc91b41bc938112fa91b4e5a8/mlmodel/format/NeuralNetwork.proto#L472)
 portion of the `NeuralNetwork.proto` file.
 - Auto-generated documentation for all the protobuf files can be found at this [link](https://apple.github.io/coremltools/coremlspecification/)
 
