@@ -23,6 +23,6 @@ dummy_input = torch.randn(768)
 torch.onnx.export(model, dummy_input, './small_model.onnx')
 
 # Step 2 - ONNX to CoreML model
-mlmodel = convert(model='./small_model.onnx', target_ios='13')
+mlmodel = convert(model='./small_model.onnx', minimum_ios_deployment_target='13')
 # Save converted CoreML model
 mlmodel.save('small_model.mlmodel')
