@@ -5,7 +5,7 @@ from __future__ import absolute_import as _
 
 import numpy as np
 from ...commons import builtins
-from ...commons.symbolic import * 
+from ...commons.symbolic import *
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
     delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
@@ -247,7 +247,6 @@ def transform_nhwc_to_nchw(nnssa):
                 nhwc_nodes.append(name)
 
         for name in nhwc_nodes:
-
             node = graph[name]
 
             # Adjust type inference
@@ -267,13 +266,19 @@ def transform_nhwc_to_nchw(nnssa):
             if node.op in ELEMENTWISE_OPS:
                 for inp in node.inputs:
                     parent_node = graph[inp]
-                    if parent_node.value is not None:
-                        # if there is a constant vector input
-                        val = np.array(parent_node.value.val)
-                        if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype):
-                            new_shape = (1, val.shape[0], 1, 1)
-                            parent_node.datatype = builtins.tensor(parent_node.datatype.get_primitive(), new_shape)
-                            parent_node.value.val = np.reshape(parent_node.value.val, new_shape)
+                    if parent_node.value is None:
+                        continue
+
+                    # if there is a constant vector input
+                    val = np.array(parent_node.value.val)
+                    if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype):
+                        new_shape = (1, val.shape[0], 1, 1)
+                        parent_node.datatype = builtins.tensor(
+                            parent_node.datatype.get_primitive(), new_shape
+                        )
+                        parent_node.value.val = np.reshape(
+                            parent_node.value.val, new_shape
+                        )
 
             # Insert NHWC -> NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
@@ -284,7 +289,7 @@ def transform_nhwc_to_nchw(nnssa):
                     ( symbolic_value and not any_symbolic_or_unknown(symbolic_value))):
                     # Const weights and parameters
                     continue
-            
+
                 if inp_node_format != 'NHWC_format_inserted':
                     assert len(graph[inp_node_name].datatype.get_shape()) == 4
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
@@ -694,14 +699,24 @@ def fuse_batch_norm(ssa):
         graph[fused_bn_node.name] = fused_bn_node
 
         # combine control i/o
-        control_inputs = list()
-        control_outputs = list()
+        control_inputs = []
+        control_outputs = []
         bn_node_names = [x.name for x in nodes]
+        print(f"\n\nProcessing Fused Batch Norm: {fused_bn_node.name}")
+
         for name in bn_node_names:
             control_inputs += graph[name].control_inputs
             control_outputs += graph[name].control_outputs
-        fused_bn_node.control_inputs.extend(control_inputs)
-        fused_bn_node.control_outputs.extend(control_outputs)
+
+            # Modify control outputs with name of fused batch norm node.
+            for control_output_name in graph[name].control_outputs:
+                ctrl_node = graph[control_output_name]
+                for i, inpt_name in enumerate(ctrl_node.control_inputs):
+                    if inpt_name == name:
+                        ctrl_node.control_inputs[i] = fused_bn_node.name
+
+        fused_bn_node.control_inputs = control_inputs
+        fused_bn_node.control_outputs = control_outputs
 
         # connect fused node to entry and output nodes
         connect_edge(graph, current_node.name, fused_bn_node.name)

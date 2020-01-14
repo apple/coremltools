@@ -82,14 +82,18 @@ def disconnect_vertex_ins(g, dest):
 def disconnect_vertex_control_ins(g, dest):
     dest_node = g[dest]
     for innode in dest_node.control_inputs:
-        g[innode].control_outputs = [i for i in g[innode].control_outputs if i != dest_node.name]
+        g[innode].control_outputs = [
+            i for i in g[innode].control_outputs if i != dest_node.name
+        ]
     dest_node.control_inputs = []
 
 
 def disconnect_vertex_control_outs(g, source):
     source_node = g[source]
     for out in source_node.control_outputs:
-        g[out].control_inputs = [i for i in g[out].control_inputs if i != source_node.name]
+        g[out].control_inputs = [
+            i for i in g[out].control_inputs if i != source_node.name
+        ]
     source_node.control_outputs = []
 
 
@@ -132,7 +136,7 @@ def fill_outputs(gd):
 
 def check_connections(gd):
     """
-    Given a graph, checks that all 
+    Given a graph, checks that all
      - inputs/outputs are symmetric
      - control_inputs/control_outputs are symmetric
      - The graph does not reference vertices outside of the graph
@@ -149,13 +153,14 @@ def check_connections(gd):
         for i in v.control_inputs:
             assert (k in gd[i].control_outputs)
         for i in v.control_outputs:
-            assert (k in gd[i].control_inputs)
+            message = f"Node {k} not in {i} control_inputs"
+            assert (k in gd[i].control_inputs), message
 
 
 def const_determined_nodes(gd, assume_variable_nodes=[]):
     """
     Given a graph, extract all nodes that only depends on const nodes.
-    
+
     # TODO: extract nodes that depends on the "const part" of placeholders.
     """
     vis = {}
