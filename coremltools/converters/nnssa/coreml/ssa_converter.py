@@ -159,27 +159,28 @@ def ssa_convert(ssa,
 
     # Add classifier classes (if applicable)
     if is_classifier:
+        classes = []
         classes_in = class_labels
-        if isinstance(classes_in, _string_types):
+        if isinstance(classes_in, _string_types): # string
             import os
             if not os.path.isfile(classes_in):
                 raise ValueError("Path to class labels (%s) does not exist." % \
                                  classes_in)
-                with open(classes_in, 'r') as f:
-                    classes = f.read()
-                classes = classes.splitlines()
-            elif type(classes_in) is list:  # list[int or str]
-                classes = classes_in
-            else:
-                raise ValueError('Class labels must be a list of integers / strings,' \
-                                 ' or a file path')
+            with open(classes_in, 'r') as f:
+                classes = f.read()
+            classes = classes.splitlines()
+        elif type(classes_in) is list:  # list[int or str]
+            classes = classes_in
+        else:
+            raise ValueError('Class labels must be a list of integers / strings,' \
+                             ' or a file path')
 
-            if predicted_feature_name is not None:
-                builder.set_class_labels(
-                    classes, predicted_feature_name=predicted_feature_name,
-                    prediction_blob=predicted_probabilities_output)
-            else:
-                builder.set_class_labels(classes)
+        if predicted_feature_name is not None:
+            builder.set_class_labels(
+                classes, predicted_feature_name=predicted_feature_name,
+                prediction_blob=predicted_probabilities_output)
+        else:
+            builder.set_class_labels(classes)
 
     image_format = ssa.get_image_format()
     # Set pre-processing parameters
