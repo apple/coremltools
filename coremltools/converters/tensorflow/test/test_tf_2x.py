@@ -419,6 +419,12 @@ class TestCornerCases(unittest.TestCase):
         data = generate_data(shape=shape)
 
         keras_prediction = keras_model.predict(data)
+        # If outputs are not supplied, get the output name
+        # from the keras model.
+        if not outputs:
+            output_name = keras_model.outputs[0].name
+            outputs = [output_name.split('/')[1].split(':')[0]]
+
         prediction = model.predict({name: data})[outputs[0]]
 
         if verbose:
@@ -445,6 +451,33 @@ class TestCornerCases(unittest.TestCase):
                          model_path=self.model_path,
                          inputs={input_name: (1, 256, 256, 3)},
                          outputs=['Identity'])
+
+    def test_identity_node_removal(self):
+        inpt = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
+        out = tf.keras.layers.SeparableConv2D(
+            filters=5,
+            kernel_size=(3, 3),
+        )(inpt)
+        out = tf.keras.layers.Conv2D(
+            filters=5,
+            kernel_size=1,
+        )(out)
+        keras_model = tf.keras.Model(inpt, out)
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        self._test_model(keras_model=keras_model,
+                         model_path=self.model_path,
+                         inputs={input_name: (1, 256, 256, 3)},
+                         outputs=None)
+
+    def test_batch_norm_node_removal(self):
+        inpt = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
+        out = tf.keras.layers.BatchNormalization()(inpt)
+        keras_model = tf.keras.Model(inpt, out)
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        self._test_model(keras_model=keras_model,
+                         model_path=self.model_path,
+                         inputs={input_name: (1, 256, 256, 3)},
+                         outputs=None)
 
 
 if __name__ == '__main__':
