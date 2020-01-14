@@ -3318,7 +3318,7 @@ class NeuralNetworkBuilder(object):
                             input_name=input_.name,
                             output_name=input_transpose
                         )
-                        layers = spec.neuralNetwork.layers
+                        layers = self.nn_spec.layers
                         layers.insert(0, layers.pop())
                         for layer_ in layers:
                             for i in range(len(layer_.input)):
