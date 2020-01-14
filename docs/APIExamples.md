@@ -95,6 +95,7 @@ import coremltools
 import numpy as np
 import PIL.Image
 
+# load a model whose input type is "Image" 
 model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
 
 Height = 20  # use the correct input image height
@@ -122,6 +123,45 @@ data = np.zeros(shape, dtype=np.uint8)
 pil_img = PIL.Image.fromarray(data)
 out_dict = model.predict({'image': pil_img})
 ```
+
+Now, let us say the Core ML model has an input type of Multiarray, but it really represents an image. 
+How can a jpeg image be used to call predict on such a model? For this, the loaded image should first
+be converted to a numpy array. Here is one way to do it: 
+
+```python
+
+Height = 20  # use the correct input image height
+Width = 60  # use the correct input image width
+
+
+# assumption: the mlmodel's input is of type MultiArray and of shape (1, 3, Height, Width)
+model_expected_input_shape = (1, 3, Height, Width) # depending on the model description, this could be (3, Height, Width)
+
+# load the model
+model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
+
+def load_image_as_numpy_array(path, resize_to=None):
+    # resize_to: (Width, Height)
+    img = PIL.Image.open(path)
+    if resize_to is not None:
+        img = img.resize(resize_to, PIL.Image.ANTIALIAS)
+    img_np = np.array(img).astype(np.float32) # shape of this numpy array is (Height, Width, 3)
+    return img_np
+
+# load the image and resize using PIL utilities
+img_as_np_array = load_image_as_numpy_array('/path/to/image.jpg', resize_to=(Width, Height)) # shape (Height, Width, 3)
+
+# note that PIL returns an image in the format in which the channel dimension is in the end, 
+# which is different than CoreML's input format, so that needs to be modified
+img_as_np_array = np.transpose(img_as_np_array, (2,0,1)) # shape (3, Height, Width)
+
+# add the batch dimension if the model description has it
+img_as_np_array = np.reshape(img_as_np_array, model_expected_input_shape)
+
+# now call predict
+out_dict = model.predict({'image': img_as_np_array})
+```  
+
 
 ## Building an mlmodel from scratch using Neural Network Builder
 
