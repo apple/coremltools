@@ -2,20 +2,20 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
-from copy import deepcopy as _deepcopy
 import json as _json
+import os
 import os as _os
+import tempfile as _tempfile
+import warnings
+from copy import deepcopy as _deepcopy
+
 from ._graph_visualization import \
     _neural_network_nodes_and_edges, \
     _pipeline_nodes_and_edges, _start_server
-import tempfile as _tempfile
-import warnings
-
-from .utils import save_spec as _save_spec
-from .utils import load_spec as _load_spec
 from .utils import has_custom_layer as _has_custom_layer
+from .utils import load_spec as _load_spec
 from .utils import macos_version as _macos_version
+from .utils import save_spec as _save_spec
 from ..proto import Model_pb2 as _Model_pb2
 
 _MLMODEL_FULL_PRECISION = 'float32'
@@ -217,6 +217,10 @@ class MLModel(object):
             filename = _tempfile.mktemp(suffix='.mlmodel')
             _save_spec(model, filename)
             self.__proxy__, self._spec = _get_proxy_and_spec(filename, useCPUOnly)
+            try:
+                os.remove(filename)
+            except OSError:
+                pass
         else:
             raise TypeError("Expected model to be a .mlmodel file or a Model_pb2 object")
 

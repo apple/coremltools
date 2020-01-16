@@ -8,8 +8,10 @@ import unittest
 import tempfile
 import numpy as np
 from coremltools.proto import Model_pb2
+
 from coremltools.models.utils import rename_feature, save_spec, macos_version,\
-    convert_neural_network_spec_weights_to_fp16, is_macos
+                convert_neural_network_spec_weights_to_fp16, is_macos, \
+                convert_double_to_float_multiarray_type
 from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
 
@@ -244,9 +246,22 @@ class MLModelTest(unittest.TestCase):
         # the specification version should be original
         assert model.get_spec().specificationVersion == 3
 
+    def test_multiarray_type_convert_to_float(self):
+        input_features = [('data', datatypes.Array(2))]
+        output_features = [('out', datatypes.Array(2))]
+        builder = NeuralNetworkBuilder(input_features, output_features)
+        builder.add_ceil('ceil', 'data', 'out')
+        spec = builder.spec
+        self.assertEqual(spec.description.input[0].type.multiArrayType.dataType, Model_pb2.ArrayFeatureType.DOUBLE)
+        self.assertEqual(spec.description.output[0].type.multiArrayType.dataType, Model_pb2.ArrayFeatureType.DOUBLE)
+        convert_double_to_float_multiarray_type(spec)
+        self.assertEqual(spec.description.input[0].type.multiArrayType.dataType, Model_pb2.ArrayFeatureType.FLOAT32)
+        self.assertEqual(spec.description.output[0].type.multiArrayType.dataType, Model_pb2.ArrayFeatureType.FLOAT32)
+
+
 
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()
-    # suite.addTest(MLModelTest('test_downgrade_specification_version'))
+    # suite.addTest(MLModelTest('test_multiarray_type_convert_to_float'))
     # unittest.TextTestRunner().run(suite)

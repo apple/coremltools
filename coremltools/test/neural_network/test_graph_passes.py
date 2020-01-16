@@ -77,7 +77,7 @@ class MLModelPassesTest(unittest.TestCase):
         mlmodel = MLModel(builder.spec)
         after_pass_out = mlmodel.predict(data_dict)['out']
 
-        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=4)
+        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=2)
         np.testing.assert_equal(len(builder.spec.neuralNetwork.layers), 1)
 
     def test_dead_layer_partial_branch(self):
@@ -115,7 +115,7 @@ class MLModelPassesTest(unittest.TestCase):
         mlmodel = MLModel(builder.spec)
         after_pass_out = mlmodel.predict(data_dict)['out']
 
-        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=4)
+        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=2)
         np.testing.assert_equal(len(old_spec.neuralNetwork.layers[1].branch.ifBranch.layers),
                                 len(builder.spec.neuralNetwork.layers[1].branch.ifBranch.layers))
         np.testing.assert_equal(len(builder.spec.neuralNetwork.layers[1].branch.elseBranch.layers), 2)

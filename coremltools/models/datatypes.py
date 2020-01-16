@@ -36,6 +36,7 @@ class Int64(_DatatypeBase):
     """
     Int64 Data Type
     """
+
     def __init__(self):
         _DatatypeBase.__init__(self, "Int64", "Int64", 1)
 
@@ -44,6 +45,7 @@ class Double(_DatatypeBase):
     """
     Double Data Type
     """
+
     def __init__(self):
         _DatatypeBase.__init__(self, "Double", "Double", 1)
 
@@ -52,6 +54,7 @@ class String(_DatatypeBase):
     """
     String Data Type
     """
+
     def __init__(self):
         _DatatypeBase.__init__(self, "String", "String", 1)
 
@@ -60,6 +63,7 @@ class Array(_DatatypeBase):
     """
     Array Data Type
     """
+
     def __init__(self, *dimensions):
         """
         Constructs a Array, given its dimensions
@@ -77,7 +81,7 @@ class Array(_DatatypeBase):
         >>> multi_arr = coremltools.models.datatypes.Array(5, 2, 10)
         """
         assert len(dimensions) >= 1
-        assert all(isinstance(d, _integer_types + (_np.int64,)) for d in dimensions),\
+        assert all(isinstance(d, _integer_types + (_np.int64,)) for d in dimensions), \
             "Dimensions must be ints, not {}".format(str(dimensions))
         self.dimensions = dimensions
 
@@ -86,15 +90,16 @@ class Array(_DatatypeBase):
             num_elements *= d
 
         _DatatypeBase.__init__(self, "Array",
-                                     "Array({})".format(",".join("{}".format(d for d in self.dimensions))),
-                                     num_elements)
+                               "Array({%s})" % (",".join("%d" % d for d in self.dimensions)),
+                               num_elements)
 
 
 class Dictionary(_DatatypeBase):
     """
     Dictionary Data Type
     """
-    def __init__(self, key_type = None):
+
+    def __init__(self, key_type=None):
         """
         Constructs a Dictionary, given its key type
 
@@ -122,7 +127,9 @@ class Dictionary(_DatatypeBase):
 
         self.key_type = key_type
 
-        _DatatypeBase.__init__(self, "Dictionary", "Dictionary({})".format(repr(self.key_type)), None)
+        _DatatypeBase.__init__(self, "Dictionary",
+                               "Dictionary(%s)" % repr(self.key_type),
+                               None)
 
 
 _simple_type_remap = {int: Int64(),
@@ -189,8 +196,7 @@ def _normalize_datatype(datatype_instance):
     raise ValueError("Datatype instance not recognized.")
 
 
-def _set_datatype(proto_type_obj, datatype_instance):
-
+def _set_datatype(proto_type_obj, datatype_instance, array_datatype=Model_pb2.ArrayFeatureType.DOUBLE):
     # Remap so we can still use the python types for the simple cases
     global _simple_type_remap
     if datatype_instance in _simple_type_remap:
@@ -208,7 +214,7 @@ def _set_datatype(proto_type_obj, datatype_instance):
 
     elif isinstance(datatype_instance, Array):
         proto_type_obj.multiArrayType.MergeFromString(b'')
-        proto_type_obj.multiArrayType.dataType = Model_pb2.ArrayFeatureType.DOUBLE
+        proto_type_obj.multiArrayType.dataType = array_datatype
 
         for n in datatype_instance.dimensions:
             proto_type_obj.multiArrayType.shape.append(n)

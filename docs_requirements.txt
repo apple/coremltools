@@ -18,5 +18,5 @@ sphinx-rtd-theme==0.2.4
 sphinxcontrib-websupport==1.0.1
 sphinxtogithub==1.1.0
 typing==3.6.4
-urllib3==1.22
+urllib3==1.25.7
 sympy==1.4
