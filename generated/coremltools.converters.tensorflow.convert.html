@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.converters.tensorflow.convert &mdash; coremltools 3.1 documentation</title>
+  <title>coremltools.converters.tensorflow.convert &mdash; coremltools 3.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                3.1
+                3.2
               </div>
             
           
@@ -211,7 +211,7 @@ are treated as MultiArrays.</p>
 </dd>
 <dt><strong>is_bgr: bool | dict():</strong></dt>
 <dd><p class="first last">Applicable only if image_input_names is specified.
-To specify different values for each image input provide a dictionary with input names as keys.</p>
+To specify different values for each image input provide a dictionary with input names as keys and booleans as values.</p>
 </dd>
 <dt><strong>red_bias: float | dict()</strong></dt>
 <dd><p class="first last">Bias value to be added to the red channel of the input image, after applying scale.
@@ -285,7 +285,7 @@ Custom shape function is required for adding custom layer in Core ML 3.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt>model:MLModel</dt>
+<dt>model: MLModel</dt>
 <dd><p class="first last">Returns an MLModel instance representing a Core ML model.</p>
 </dd>
 </dl>

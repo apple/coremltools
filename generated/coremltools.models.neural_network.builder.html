@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network.builder &mdash; coremltools 3.1 documentation</title>
+  <title>coremltools.models.neural_network.builder &mdash; coremltools 3.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                3.1
+                3.2
               </div>
             
           
@@ -195,7 +195,7 @@
 </table>
 <dl class="class">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder">
-<em class="property">class </em><code class="descclassname">coremltools.models.neural_network.builder.</code><code class="descname">NeuralNetworkBuilder</code><span class="sig-paren">(</span><em>input_features=None</em>, <em>output_features=None</em>, <em>mode=None</em>, <em>spec=None</em>, <em>nn_spec=None</em>, <em>disable_rank5_shape_mapping=False</em>, <em>training_features=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">coremltools.models.neural_network.builder.</code><code class="descname">NeuralNetworkBuilder</code><span class="sig-paren">(</span><em>input_features=None</em>, <em>output_features=None</em>, <em>mode=None</em>, <em>spec=None</em>, <em>nn_spec=None</em>, <em>disable_rank5_shape_mapping=False</em>, <em>training_features=None</em>, <em>use_float_arraytype=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Neural network builder class to construct Core ML models.</p>
 <p>The NeuralNetworkBuilder constructs a Core ML neural network specification
 layer by layer. The layers should be added in such an order that the inputs
@@ -236,7 +236,7 @@ Refer to the protobuf messages in specification (NeuralNetwork.proto) for more d
 </div>
 <dl class="method">
 <dt id="coremltools.models.neural_network.builder.NeuralNetworkBuilder.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>input_features=None</em>, <em>output_features=None</em>, <em>mode=None</em>, <em>spec=None</em>, <em>nn_spec=None</em>, <em>disable_rank5_shape_mapping=False</em>, <em>training_features=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>self</em>, <em>input_features=None</em>, <em>output_features=None</em>, <em>mode=None</em>, <em>spec=None</em>, <em>nn_spec=None</em>, <em>disable_rank5_shape_mapping=False</em>, <em>training_features=None</em>, <em>use_float_arraytype=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a NeuralNetworkBuilder object to build an MLModel specification with
 model interface or a NeuralNetwork protobuf message, either from scratch or an
 existing specification.</p>
@@ -288,6 +288,10 @@ built incrementally.</p>
 If nn_spec is not None and spec is None, the builder will build a NeuralNetwork spec without
 wrapping it within an MLModel. This is useful to create nested NeuralNetworks for models
 with control flow operations.</p>
+</dd>
+<dt><strong>use_float_arraytype: bool</strong></dt>
+<dd><p class="first last">If true, the datatype of input/output multiarrays is set to Float32 instead
+of double.</p>
 </dd>
 </dl>
 </td>
