@@ -153,7 +153,7 @@ def check_connections(gd):
         for i in v.control_inputs:
             assert (k in gd[i].control_outputs)
         for i in v.control_outputs:
-            message = f"Node {k} not in {i} control_inputs"
+            message = "Node " + k + " not in " + i + " control_inputs"
             assert (k in gd[i].control_inputs), message
 
 
