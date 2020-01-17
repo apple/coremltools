@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.converters.keras.convert &mdash; coremltools 3.1 documentation</title>
+  <title>coremltools.converters.keras.convert &mdash; coremltools 3.2 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                3.1
+                3.2
               </div>
             
           
@@ -182,7 +182,7 @@
 <h1>coremltools.converters.keras.convert<a class="headerlink" href="#coremltools-converters-keras-convert" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="coremltools.converters.keras.convert">
-<code class="descclassname">coremltools.converters.keras.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>input_names=None</em>, <em>output_names=None</em>, <em>image_input_names=None</em>, <em>input_name_shape_dict={}</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em>, <em>model_precision='float32'</em>, <em>predicted_probabilities_output=''</em>, <em>add_custom_layers=False</em>, <em>custom_conversion_functions=None</em>, <em>input_shapes=None</em>, <em>output_shapes=None</em>, <em>respect_trainable=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras.convert" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.converters.keras.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>model</em>, <em>input_names=None</em>, <em>output_names=None</em>, <em>image_input_names=None</em>, <em>input_name_shape_dict={}</em>, <em>is_bgr=False</em>, <em>red_bias=0.0</em>, <em>green_bias=0.0</em>, <em>blue_bias=0.0</em>, <em>gray_bias=0.0</em>, <em>image_scale=1.0</em>, <em>class_labels=None</em>, <em>predicted_feature_name=None</em>, <em>model_precision='float32'</em>, <em>predicted_probabilities_output=''</em>, <em>add_custom_layers=False</em>, <em>custom_conversion_functions=None</em>, <em>input_shapes=None</em>, <em>output_shapes=None</em>, <em>respect_trainable=False</em>, <em>use_float_arraytype=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras.convert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a Keras model to Core ML protobuf specification (.mlmodel).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -294,6 +294,10 @@ and list of weights.</p>
 <dt><strong>respect_trainable: bool</strong></dt>
 <dd><p class="first last">If yes, then Keras layers marked ‘trainable’ will automatically be
 marked updatable in the Core ML model.</p>
+</dd>
+<dt><strong>use_float_arraytype: bool</strong></dt>
+<dd><p class="first last">If true, the datatype of input/output multiarrays is set to Float32 instead
+of double.</p>
 </dd>
 </dl>
 </td>

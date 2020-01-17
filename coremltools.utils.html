@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; coremltools 3.1 documentation</title>
+  <title>Utilities &mdash; coremltools 3.2 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                3.1
+                3.2
               </div>
             
           
@@ -179,6 +179,33 @@
 <span id="utilities"></span><h1>Utilities<a class="headerlink" href="#module-coremltools.models.utils" title="Permalink to this headline">¶</a></h1>
 <p>Utilities for the entire package.</p>
 <dl class="function">
+<dt id="coremltools.models.utils.convert_double_to_float_multiarray_type">
+<code class="descclassname">coremltools.models.utils.</code><code class="descname">convert_double_to_float_multiarray_type</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.convert_double_to_float_multiarray_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert all double multiarrays feature descriptions (input, output, training input)
+to float multiarrays</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>spec: Model_pb</strong></dt>
+<dd><p class="first last">The specification containing the multiarrays types to convert</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># In-place convert multiarray type of spec</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">spec</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="coremltools.models.utils.convert_neural_network_weights_to_fp16">
 <code class="descclassname">coremltools.models.utils.</code><code class="descname">convert_neural_network_weights_to_fp16</code><span class="sig-paren">(</span><em>full_precision_model</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.convert_neural_network_weights_to_fp16" title="Permalink to this definition">¶</a></dt>
 <dd><p>Utility function to convert a full precision (float) MLModel to a
@@ -216,7 +243,7 @@ will be converted.</p>
 <dt id="coremltools.models.utils.evaluate_classifier">
 <code class="descclassname">coremltools.models.utils.</code><code class="descname">evaluate_classifier</code><span class="sig-paren">(</span><em>model</em>, <em>data</em>, <em>target='target'</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate a Core ML classifier model and compare against predictions
-from the original framework (for testing correctness of conversion). 
+from the original framework (for testing correctness of conversion).
 Use this evaluation for models that don’t deal with probabilities.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
