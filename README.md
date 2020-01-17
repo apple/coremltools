@@ -74,7 +74,7 @@ sure to install virtualenv using your system pip.
 pip install virtualenv
 ```
 
-The method for installing *coremltools* follows the
+The method for installing `coremltools` follows the
 [standard python package installation steps](https://packaging.python.org/installing/).
 To create a Python virtual environment called `pythonenv` follow these steps:
 
@@ -88,6 +88,7 @@ virtualenv pythonenv
 ```
 
 To activate your new virtual environment and install `coremltools` in this environment, follow these steps:
+
 ```
 # Active your virtual environment
 source pythonenv/bin/activate
@@ -215,6 +216,7 @@ Finally, to run the most important unit tests, you can use:
 ```shell
 pytest -rs
 ```
+
 some tests are marked as slow because they test a lot of combinations.
 If you want to run, all tests, you can use:
 

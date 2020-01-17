@@ -3,9 +3,9 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-
 import copy
-from ...commons.basic_graph_ops import delete_node, disconnect_edge, replace_node, replace_control_dest
+from ...commons.basic_graph_ops import delete_node, disconnect_edge, replace_node, replace_control_dest, connect_edge, connect_dests
+from .op_fusions import _check_number_inputs, _check_number_outputs
 
 
 def remove_no_ops_and_shift_control_dependencies(nnssa):
@@ -174,7 +174,7 @@ def remove_oneway_split(nnssa):
                 continue
             node = f.graph[k]
             if not (node.op == 'Split' and node.attr['num_split'] == 1 and
-                len(node.datatype.T) == 1 and len(node.inputs) == 2):
+                    len(node.datatype.T) == 1 and len(node.inputs) == 2):
                 continue
 
             if f.graph[node.inputs[0]].op == 'Const':
@@ -201,3 +201,133 @@ def remove_oneway_split(nnssa):
             parent_node.control_outputs = get_tuple_node.control_outputs[:]
 
             del f.graph[axis_name], f.graph[k], f.graph[get_tuple_name]
+
+
+def remove_noneffective_transpose(nnssa):
+    """
+    A graph pass to eliminate extra noneffective consecutive transpose ops.
+    """
+
+    def _match(graph, entry_node, pattern_ops):
+        if not _check_number_outputs(entry_node, 1):
+            return None
+        nodes_to_merge = list()
+        node = entry_node
+        for i, op in enumerate(pattern_ops):
+            if node.op.lower() != pattern_ops[i]:
+                return None
+            if not _check_number_outputs(node, 1) and i == 0:
+                return None
+            if not _check_number_inputs(node, 2):
+                return None
+            node_inputs = [graph[n].op.lower() for n in node.inputs]
+            try:
+                const_node = graph[node.inputs[node_inputs.index('const')]]
+            except ValueError:
+                return None
+            nodes_to_merge.extend([node, const_node])
+            # do not fuse the output layer
+            if len(node.outputs) == 0:
+                return None
+            node = graph[node.outputs[0]]
+        return nodes_to_merge
+
+    def _remove_noneffective_transpose(graph):
+        keys = list(graph.keys())
+        count = 0
+        for k in keys:
+            if k not in graph:
+                continue
+            current_node = graph[k]
+            if current_node.op.lower() not in {'transpose'}:
+                continue
+
+            nodes = _match(graph, current_node, ['transpose'])
+            if nodes:
+                assert len(nodes) == 2
+                # remove transpose op that does nothing
+                perm = list(nodes[1].value.val)
+                if perm == sorted(perm):
+                    previous_node_name = current_node.inputs[0]
+                    output_nodes = current_node.outputs[:]
+                    delete_node(graph, nodes[1].name)
+                    delete_node(graph, nodes[0].name)
+                    connect_dests(graph, previous_node_name, output_nodes)
+                    # make sure output's inputs is in correct order
+                    out_inputs = graph[output_nodes[0]].inputs
+                    a = out_inputs.index(graph[output_nodes[0]].inputs[0])
+                    b = out_inputs.index(previous_node_name)
+                    out_inputs[a], out_inputs[b] = out_inputs[b], out_inputs[a]
+                    count += 1
+
+        if count > 0:
+            print('[Op Removal] Deleted {} transpose ops.'.format(count))
+
+    for fn_key in list(nnssa.functions.keys()):
+        f = nnssa.functions[fn_key]
+        _remove_noneffective_transpose(f.graph)
+
+
+def remove_noneffective_reshape(nnssa):
+    """
+    A graph pass to eliminate extra noneffective consecutive reshape ops.
+    """
+
+    def _match(graph, entry_node):
+        # currently only merge two consecutive reshape ops
+        pattern_ops = ['reshape', 'reshape']
+        if not _check_number_outputs(entry_node, 1):
+            return None
+        nodes_to_merge = list()
+        node = entry_node
+        for i, op in enumerate(pattern_ops):
+            if node.op.lower() != pattern_ops[i]:
+                return None
+            if not _check_number_outputs(node, 1) or not _check_number_inputs(node, 2):
+                return None
+            # do not fuse the output layer
+            if len(node.outputs) == 0:
+                return None
+            node_inputs = [graph[n].op.lower() for n in node.inputs]
+            try:
+                const_node = graph[node.inputs[node_inputs.index('const')]]
+            except ValueError:
+                return None
+            if const_node.op.lower() != 'const':
+                return None
+            nodes_to_merge.extend([node, const_node])
+            node = graph[node.outputs[0]]
+        return nodes_to_merge
+
+    def _remove_noneffective_reshape(graph):
+        keys = list(graph.keys())
+        count = 0
+        for k in keys:
+            if k not in graph:
+                continue
+            current_node = graph[k]
+            if current_node.op.lower() not in {'reshape'}:
+                continue
+
+            nodes = _match(graph, current_node)
+            if nodes:
+                assert len(nodes) == 4
+                # squash consecutive reshape into last one
+                previous_node = current_node.inputs[0]
+                output_nodes = current_node.outputs[:]
+                delete_node(graph, nodes[1].name)
+                delete_node(graph, nodes[0].name)
+                connect_dests(graph, previous_node, output_nodes)
+                # make sure output's inputs is in correct order
+                out_inputs = graph[output_nodes[0]].inputs
+                a = out_inputs.index(nodes[3].name)
+                b = out_inputs.index(previous_node)
+                out_inputs[a], out_inputs[b] = out_inputs[b], out_inputs[a]
+                count += 1
+
+        if count > 0:
+            print('[Op Removal] Deleted {} reshape ops.'.format(count))
+
+    for fn_key in list(nnssa.functions.keys()):
+        f = nnssa.functions[fn_key]
+        _remove_noneffective_reshape(f.graph)

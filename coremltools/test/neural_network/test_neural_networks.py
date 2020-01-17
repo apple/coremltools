@@ -22,7 +22,6 @@ if HAS_TF:
     import tensorflow as tf
     from tensorflow.python.platform import gfile
     from tensorflow.python.tools import freeze_graph
-    import tfcoreml as tf_converter
 
     tf.compat.v1.disable_eager_execution()
 
@@ -214,35 +213,35 @@ class TFBasicConversionTest(unittest.TestCase):
                                           False,
                                           '')
 
-    def test_cassifier_with_label_file(self):
-        tf_converter.convert(self.frozen_graph_file,
-                             mlmodel_path=self.converted_coreml_file,
-                             input_name_shape_dict={'input': [1, 224, 224, 3]},
-                             image_input_names=['input'],
-                             output_feature_names=['Softmax'],
-                             predicted_feature_name='classLabel',
-                             class_labels=self.class_label_file,
-                             minimum_ios_deployment_target='13')
+    def test_classifier_with_label_file(self):
+        coremltools.converters.tensorflow.convert(
+            self.frozen_graph_file,
+            mlmodel_path=self.converted_coreml_file,
+            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            image_input_names=['input'],
+            output_feature_names=['Softmax'],
+            predicted_feature_name='classLabel',
+            class_labels=self.class_label_file)
 
-    def test_cassifier_with_int_label_list(self):
-        tf_converter.convert(self.frozen_graph_file,
-                             mlmodel_path=self.converted_coreml_file,
-                             input_name_shape_dict={'input': [1, 224, 224, 3]},
-                             image_input_names=['input'],
-                             output_feature_names=['Softmax'],
-                             predicted_feature_name='classLabel',
-                             class_labels=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-                             minimum_ios_deployment_target='13')
+    def test_classifier_with_int_label_list(self):
+        coremltools.converters.tensorflow.convert(
+            self.frozen_graph_file,
+            mlmodel_path=self.converted_coreml_file,
+            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            image_input_names=['input'],
+            output_feature_names=['Softmax'],
+            predicted_feature_name='classLabel',
+            class_labels=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
-    def test_cassifier_with_string_label_list(self):
-        tf_converter.convert(self.frozen_graph_file,
-                             mlmodel_path=self.converted_coreml_file,
-                             input_name_shape_dict={'input': [1, 224, 224, 3]},
-                             image_input_names=['input'],
-                             output_feature_names=['Softmax'],
-                             predicted_feature_name='classLabel',
-                             class_labels=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
-                             minimum_ios_deployment_target='13')
+    def test_classifier_with_string_label_list(self):
+        coremltools.converters.tensorflow.convert(
+            self.frozen_graph_file,
+            mlmodel_path=self.converted_coreml_file,
+            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            image_input_names=['input'],
+            output_feature_names=['Softmax'],
+            predicted_feature_name='classLabel',
+            class_labels=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
 
 
 class CustomLayerUtilsTest(unittest.TestCase):

@@ -9,6 +9,7 @@ from . import datatypes
 from ._feature_management import process_or_validate_features
 from ._feature_management import is_valid_feature_list
 from . import _feature_management as _fm
+from ..proto import Model_pb2
 
 
 def set_classifier_interface_params(spec, features, class_labels,
@@ -142,7 +143,8 @@ def set_regressor_interface_params(spec, features, output_features, training_fea
     return spec
 
 
-def set_transform_interface_params(spec, input_features, output_features, are_optional=False, training_features=None):
+def set_transform_interface_params(spec, input_features, output_features, are_optional=False, training_features=None,
+                                   array_datatype=Model_pb2.ArrayFeatureType.DOUBLE):
     """ Common utilities to set transform interface params.
     """
     input_features = _fm.process_or_validate_features(input_features)
@@ -152,14 +154,14 @@ def set_transform_interface_params(spec, input_features, output_features, are_op
     for (fname, ftype) in input_features:
         input_ = spec.description.input.add()
         input_.name = fname
-        datatypes._set_datatype(input_.type, ftype)
+        datatypes._set_datatype(input_.type, ftype, array_datatype=array_datatype)
         if are_optional:
             input_.type.isOptional = are_optional
 
     for (fname, ftype) in output_features:
         output_ = spec.description.output.add()
         output_.name = fname
-        datatypes._set_datatype(output_.type, ftype)
+        datatypes._set_datatype(output_.type, ftype, array_datatype=array_datatype)
 
     # Add training features
     if training_features is not None:
