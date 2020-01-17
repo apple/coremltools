@@ -7,6 +7,7 @@ import os
 import shutil
 from test_utils import generate_data
 from coremltools._deps import HAS_TF_2
+import pytest
 
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
@@ -44,15 +45,15 @@ class TestKerasFashionMnist(unittest.TestCase):
         model = coremltools.converters.tensorflow.convert(
             model_path,
             inputs=inputs,
-            outputs=outputs,
-            target_ios='13'
+            outputs=outputs
         )
         assert isinstance(model, coremltools.models.MLModel)
 
         # verify numeric correctness of predictions
         inputs = generate_data(shape=self.input_shape)
         keras_prediction = keras_model.predict(inputs)
-        prediction = model.predict({keras_model.inputs[0].name.split(':')[0]: inputs})['Identity']
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+        prediction = model.predict({keras_model.inputs[0].name.split(':')[0]: inputs})[output_name]
         np.testing.assert_array_equal(keras_prediction.shape, prediction.shape)
         np.testing.assert_almost_equal(keras_prediction.flatten(), prediction.flatten(), decimal=4)
 
@@ -61,11 +62,13 @@ class TestKerasFashionMnist(unittest.TestCase):
         # save model as Keras hdf5 .h5 model file
         keras_model.save(self.model_path)
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+
         self._test_conversion_prediction(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: self.input_shape},
-            outputs=['Identity']
+            outputs=[output_name]
         )
 
     def test_sequential_builder_saved_model_format(self):
@@ -73,11 +76,12 @@ class TestKerasFashionMnist(unittest.TestCase):
         # save model as SavedModel directory
         keras_model.save(self.saved_model_dir, save_format='tf')
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_conversion_prediction(
             keras_model=keras_model,
             model_path=self.saved_model_dir,
             inputs={input_name: self.input_shape},
-            outputs=['Identity']
+            outputs=[output_name]
         )
 
     def test_functional_builder(self):
@@ -85,11 +89,12 @@ class TestKerasFashionMnist(unittest.TestCase):
         # save model as Keras hdf5 .h5 model file
         keras_model.save(self.model_path)
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_conversion_prediction(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: self.input_shape},
-            outputs=['Identity']
+            outputs=[output_name]
         )
 
 
@@ -109,7 +114,8 @@ class TestModelFormats(unittest.TestCase):
         keras_model.predict(inputs)
         keras_prediction = keras_model.predict(inputs)
         input_name = keras_model.inputs[0].name.split(':')[0]
-        prediction = core_ml_model.predict({input_name: inputs})['Identity']
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+        prediction = core_ml_model.predict({input_name: inputs})[output_name]
         np.testing.assert_array_equal(keras_prediction.shape, prediction.shape)
         np.testing.assert_almost_equal(keras_prediction.flatten(), prediction.flatten(), decimal=decimal)
 
@@ -131,8 +137,7 @@ class TestModelFormats(unittest.TestCase):
         model = coremltools.converters.tensorflow.convert(
             [concrete_func],
             inputs={'x': (1, 1)},
-            outputs=['Identity'],
-            target_ios='13'
+            outputs=['Identity']
         )
 
         assert isinstance(model, coremltools.models.MLModel)
@@ -156,8 +161,7 @@ class TestModelFormats(unittest.TestCase):
         model = coremltools.converters.tensorflow.convert(
             [concrete_func],
             inputs={'x': (1,)},
-            outputs=['Identity'],
-            target_ios='13'
+            outputs=['Identity']
         )
 
         assert isinstance(model, coremltools.models.MLModel)
@@ -185,13 +189,12 @@ class TestModelFormats(unittest.TestCase):
         keras_model._set_inputs(inputs)
         keras_model.save(self.saved_model_dir, save_format='tf')
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         # convert and validate
         model = coremltools.converters.tensorflow.convert(
             self.saved_model_dir,
             inputs={input_name: (4, 4)},
-            outputs=['Identity'],
-            target_ios='13'
-        )
+            outputs=[output_name])
         assert isinstance(model, coremltools.models.MLModel)
         self._test_prediction(keras_model=keras_model, core_ml_model=model, inputs=inputs)
 
@@ -224,8 +227,7 @@ class TestKerasApplications(unittest.TestCase):
         model = coremltools.converters.tensorflow.convert(
             model_path,
             inputs=inputs,
-            outputs=outputs,
-            target_ios='13'
+            outputs=outputs
         )
         assert isinstance(model, coremltools.models.MLModel)
 
@@ -255,6 +257,7 @@ class TestKerasApplications(unittest.TestCase):
         np.testing.assert_almost_equal(
             keras_prediction.flatten(), prediction.flatten(), decimal=decimal)
 
+    @pytest.mark.slow
     def test_vgg16_keras_model(self):
         # load the tf.keras model
         keras_model = tf.keras.applications.VGG16(
@@ -262,12 +265,14 @@ class TestKerasApplications(unittest.TestCase):
         # save model as Keras hdf5 .h5 model file
         keras_model.save(self.model_path)
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 32, 32, 3)},
-            outputs=['Identity'])
+            outputs=[output_name])
 
+    @pytest.mark.slow
     def test_vgg19_saved_model(self):
         # load the tf.keras model
         keras_model = tf.keras.applications.VGG19(
@@ -275,113 +280,132 @@ class TestKerasApplications(unittest.TestCase):
         # save model as SavedModel directory
         keras_model.save(self.saved_model_dir, save_format='tf')
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.saved_model_dir,
-            inputs={'input_1': (1, 32, 32, 3)},
-            outputs=['Identity'])
+            inputs={input_name: (1, 32, 32, 3)},
+            outputs=[output_name])
 
+    @pytest.mark.slow
     def test_densenet121(self):
         keras_model = tf.keras.applications.DenseNet121(
             weights=None, input_shape=(32, 32, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
-            inputs={'input_1': (1, 32, 32, 3)},
-            outputs=['Identity'])
+            inputs={input_name: (1, 32, 32, 3)},
+            outputs=[output_name])
 
+    @pytest.mark.slow
     def test_inception_resnet_v2(self):
         keras_model = tf.keras.applications.InceptionResNetV2(
             weights=None, input_shape=(75, 75, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 75, 75, 3)},
-            outputs=['Identity'])
+            outputs=[output_name])
 
+    @pytest.mark.slow
     def test_inception_v3(self):
         keras_model = tf.keras.applications.InceptionV3(
             weights=None, input_shape=(75, 75, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 75, 75, 3)},
-            outputs=['Identity'])
+            outputs=[output_name])
 
     def test_mobilenet(self):
         keras_model = tf.keras.applications.MobileNet(
             weights=None, input_shape=(32, 32, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 32, 32, 3)},
-            outputs=['Identity'])
+            outputs=[output_name])
 
     def test_mobilenet_v2(self):
         keras_model = tf.keras.applications.MobileNetV2(
             weights=None, input_shape=(32, 32, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 32, 32, 3)},
-            outputs=['Identity'])
+            outputs=[output_name])
 
     @unittest.skip('shape mismatch')
+    @pytest.mark.slow
     def test_nasnet_mobile(self):
         keras_model = tf.keras.applications.NASNetMobile(
             weights=None, input_shape=(32, 32, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 32, 32, 3)},
-            outputs=['Identity'], decimal=3)
+            outputs=[output_name], decimal=3)
 
     @unittest.skip('shape mismatch')
+    @pytest.mark.slow
     def test_nasnet_large(self):
         keras_model = tf.keras.applications.NASNetLarge(
             weights=None, input_shape=(32, 32, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 32, 32, 3)},
-            outputs=['Identity'], decimal=3)
+            outputs=[output_name], decimal=3)
 
+    @pytest.mark.slow
     def test_resnet50(self):
         keras_model = tf.keras.applications.ResNet50(
             weights=None, input_shape=(32, 32, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 32, 32, 3)},
-            outputs=['Identity'])
+            outputs=[output_name])
 
+    @pytest.mark.slow
     def test_resnet50_v2(self):
         keras_model = tf.keras.applications.ResNet50V2(
             weights=None, input_shape=(32, 32, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 32, 32, 3)},
-            outputs=['Identity'])
+            outputs=[output_name])
 
+    @pytest.mark.slow
     def test_xception(self):
         keras_model = tf.keras.applications.Xception(
             weights=None, input_shape=(71, 71, 3))
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
             inputs={input_name: (1, 71, 71, 3)},
-            outputs=['Identity'])
+            outputs=[output_name])
 
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
@@ -395,15 +419,14 @@ class TestCornerCases(unittest.TestCase):
         if os.path.exists(self.saved_model_dir):
             shutil.rmtree(self.saved_model_dir)
 
-    def _test_model(self, keras_model, model_path, inputs, outputs, decimal=4, verbose=False):
+    def _test_model(self, keras_model, model_path, inputs, outputs=None, decimal=4, verbose=False):
         keras_model.save(model_path)
 
         # convert and validate
         model = coremltools.converters.tensorflow.convert(
             model_path,
             inputs=inputs,
-            outputs=outputs,
-            target_ios='13'
+            outputs=outputs
         )
         assert isinstance(model, coremltools.models.MLModel)
 
@@ -419,6 +442,7 @@ class TestCornerCases(unittest.TestCase):
         data = generate_data(shape=shape)
 
         keras_prediction = keras_model.predict(data)
+
         # If outputs are not supplied, get the output name
         # from the keras model.
         if not outputs:
@@ -438,22 +462,10 @@ class TestCornerCases(unittest.TestCase):
         np.testing.assert_almost_equal(
             keras_prediction.flatten(), prediction.flatten(), decimal=decimal)
 
-    def test_conv2d_with_activation(self):
-        inputs = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
-        out = tf.keras.layers.Conv2D(
-            filters=5,
-            kernel_size=1,
-            padding='same',
-            activation='softmax')(inputs)
-        keras_model = tf.keras.Model(inputs, out)
-        input_name = keras_model.inputs[0].name.split(':')[0]
-        self._test_model(keras_model=keras_model,
-                         model_path=self.model_path,
-                         inputs={input_name: (1, 256, 256, 3)},
-                         outputs=['Identity'])
+        return model
 
-    def test_identity_node_removal(self):
-        inpt = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
+    def test_output_identity_node_removal(self):
+        inpt = tf.keras.layers.Input(shape=[32, 32, 3], batch_size=1)
         out = tf.keras.layers.SeparableConv2D(
             filters=5,
             kernel_size=(3, 3),
@@ -466,23 +478,112 @@ class TestCornerCases(unittest.TestCase):
         input_name = keras_model.inputs[0].name.split(':')[0]
         self._test_model(keras_model=keras_model,
                          model_path=self.model_path,
-                         inputs={input_name: (1, 256, 256, 3)},
-                         outputs=None)
+                         inputs={input_name: (1, 32, 32, 3)},
+                         decimal=2)
 
-    def test_batch_norm_node_removal(self):
-        inpt = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
-        out = tf.keras.layers.BatchNormalization()(inpt)
-        keras_model = tf.keras.Model(inpt, out)
+    def test_batch_norm_node_fusion(self):
+        x = tf.keras.layers.Input(shape=[32, 32, 3], batch_size=1)
+        conv = tf.keras.layers.Conv2D(filters=3, kernel_size=1)(x)
+        bn = tf.keras.layers.BatchNormalization(axis=-1)(conv)
+        out = tf.keras.layers.Activation('relu')(bn)
+        keras_model = tf.keras.Model(x, out)
         input_name = keras_model.inputs[0].name.split(':')[0]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 inputs={input_name: (1, 32, 32, 3)})
+        num_batch_norm = 0
+        for layer in model.get_spec().neuralNetwork.layers:
+            if layer.WhichOneof('layer') == 'batchnorm':
+                num_batch_norm += 1
+        self.assertEqual(num_batch_norm, 1)
+
+    def test_conv2d_with_activation(self):
+        inputs = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
+        out = tf.keras.layers.Conv2D(
+            filters=5,
+            kernel_size=1,
+            padding='same',
+            activation='softmax')(inputs)
+        keras_model = tf.keras.Model(inputs, out)
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(keras_model=keras_model,
                          model_path=self.model_path,
                          inputs={input_name: (1, 256, 256, 3)},
-                         outputs=None)
+                         outputs=[output_name])
+
+    def test_extra_transposes_1(self):
+        # this model generates an extra transpose layer
+        keras_model = tf.keras.Sequential()
+        keras_model.add(tf.keras.layers.Reshape((75, 6), input_shape=(6 * 75,)))
+        keras_model.add(tf.keras.layers.Dense(100, activation='relu'))
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 inputs={input_name: (1, 6 * 75)},
+                                 outputs=[output_name], verbose=True)
+        num_reshapes = 0
+        num_transposes = 0
+        for layer in model.get_spec().neuralNetwork.layers:
+            if layer.WhichOneof('layer') == 'reshapeStatic':
+                num_reshapes += 1
+            if layer.WhichOneof('layer') == 'transpose':
+                num_transposes += 1
+        self.assertEqual(num_reshapes, 2)
+        self.assertEqual(num_transposes, 0)
+
+    def test_extra_transposes_2(self):
+        keras_model = tf.keras.Sequential()
+        keras_model.add(tf.keras.layers.Reshape((75, 6, 1), input_shape=(6 * 75,)))
+        keras_model.add(tf.keras.layers.Permute((2, 3, 1)))
+        keras_model.add(tf.keras.layers.Permute((2, 3, 1)))
+        # inserting several unnecessary extra transpose layers
+        keras_model.add(tf.keras.layers.Permute((1, 2, 3)))
+        keras_model.add(tf.keras.layers.Permute((1, 2, 3)))
+        keras_model.add(tf.keras.layers.Permute((1, 2, 3)))
+        keras_model.add(tf.keras.layers.Activation(tf.nn.relu))
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 inputs={input_name: (1, 6 * 75)},
+                                 outputs=[output_name], verbose=True)
+        num_transposes = 0
+        for layer in model.get_spec().neuralNetwork.layers:
+            if layer.WhichOneof('layer') == 'transpose':
+                num_transposes += 1
+        self.assertEqual(num_transposes, 2)
+
+    def test_extra_reshapes(self):
+        keras_model = tf.keras.Sequential()
+        # inserting several unnecessary extra reshape layers
+        keras_model.add(tf.keras.layers.Reshape((1, 75, 6, 1), input_shape=(6 * 75,)))
+        keras_model.add(tf.keras.layers.Reshape((75, 6, 1)))
+        keras_model.add(tf.keras.layers.Reshape((75, 1, 6, 1)))
+        keras_model.add(tf.keras.layers.Reshape((75, 6, 1)))
+        keras_model.add(tf.keras.layers.Reshape((75, 1, 6, 1)))
+        keras_model.add(tf.keras.layers.Activation(tf.nn.relu))
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 inputs={input_name: (1, 6 * 75)},
+                                 outputs=[output_name], verbose=True)
+
+        num_reshapes = 0
+        for layer in model.get_spec().neuralNetwork.layers:
+            if layer.WhichOneof('layer') == 'reshapeStatic':
+                num_reshapes += 1
+        self.assertEqual(num_reshapes, 1)
 
 
 if __name__ == '__main__':
     np.random.seed(1984)
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(TestKerasApplications('test_vgg16_keras_model'))
-    # unittest.TextTestRunner().run(suite)
+    RUN_ALL_TESTS = True
+    if RUN_ALL_TESTS:
+        unittest.main()
+    else:
+        suite = unittest.TestSuite()
+        suite.addTest(TestKerasFashionMnist('test_sequential_builder_keras_model_format'))
+        unittest.TextTestRunner().run(suite)

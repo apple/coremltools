@@ -1043,6 +1043,14 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             out = tf.expand_dims(a, axis=-1)
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
+    def test_scalar_input_with_consecutive_expand_dims(self):
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape = ())
+            b = tf.expand_dims(a, axis=-1)
+            out = tf.expand_dims(b, axis=-1)
+        self._test_tf_model_constant(graph, {a.op.name: ()}, [out.op.name])
+
     def test_tile(self):
         shape = [3, 4, 5]
         graph = tf.Graph()
@@ -1125,6 +1133,16 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             shape = tf.constant([4, 4, 4])
             out = tf.scatter_nd(indices, updates, shape)
         self._test_tf_model_constant(graph, {updates.op.name: [2, 4, 4]}, [out.op.name])
+
+    def test_scatter_nd_with_dynamic_shape(self):
+        graph = tf.Graph()
+        with graph.as_default():
+            indices = tf.constant([[0], [2]])
+            updates = tf.placeholder(tf.float32, shape=[2, 4, 4])
+            tensor = tf.placeholder(tf.float32, shape=[None, 4, 4])
+            shape = tf.shape(tensor)
+            out = tf.scatter_nd(indices, updates, shape)
+        self._test_tf_model_constant(graph, {updates.op.name: [2, 4, 4], tensor.op.name: [-1,4,4]}, [out.op.name])
 
     def test_constant_pad(self):
         shape = [1, 2, 2, 5]
@@ -1475,6 +1493,22 @@ class TFSingleLayerTest(TFNetworkBatchTest):
                 out = tf.batch_to_space_nd(a, block_shape=[2, 2], crops=[[1, 2], [1, 1]])
             self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
+    def test_selu(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.nn.selu(a)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_matrix_band_part(self):
+        shape = [3, 4, 5]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            out = tf.linalg.band_part(a, 2, -1)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
     @unittest.skip('numeric')
     def test_lrn(self):
         shape = [1, 4, 4, 5]
@@ -1527,7 +1561,7 @@ class TFSingleLayerTest(TFNetworkBatchTest):
 
 
 if __name__ == '__main__':
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(TFSingleLayerTest('test_slice_issue_304'))
-    # unittest.TextTestRunner().run(suite)
+    # unittest.main()
+    suite = unittest.TestSuite()
+    suite.addTest(TFSingleLayerTest('test_scalar_input_with_consecutive_expand_dims'))
+    unittest.TextTestRunner().run(suite)

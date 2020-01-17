@@ -285,8 +285,8 @@ def transform_nhwc_to_nchw(nnssa):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
                 symbolic_value = graph[inp_node_name].attr['symbolic_value']
                 if (graph[inp_node_name].op == 'Const' or
-                    len(graph[inp_node_name].datatype.get_shape()) != 4 or
-                    ( symbolic_value and not any_symbolic_or_unknown(symbolic_value))):
+                        len(graph[inp_node_name].datatype.get_shape()) != 4 or
+                        (symbolic_value and not any_symbolic_or_unknown(symbolic_value))):
                     # Const weights and parameters
                     continue
 
@@ -649,7 +649,11 @@ def fuse_batch_norm(ssa):
                 return None
             if not _check_number_inputs(node, 2):
                 return None
-            const_node = graph[node.inputs[1]]
+            node_inputs = [graph[n].op.lower() for n in node.inputs]
+            try:
+                const_node = graph[node.inputs[node_inputs.index('const')]]
+            except ValueError:
+                return None
             if not _check_single_out_vector_constant_node(const_node):
                 return None
             if not _check_rank_matches(const_node, node):
@@ -702,7 +706,6 @@ def fuse_batch_norm(ssa):
         control_inputs = []
         control_outputs = []
         bn_node_names = [x.name for x in nodes]
-        print(f"\n\nProcessing Fused Batch Norm: {fused_bn_node.name}")
 
         for name in bn_node_names:
             control_inputs += graph[name].control_inputs
