@@ -26,8 +26,10 @@ For the latest changes please see the [release notes](https://github.com/apple/c
 
 [Link](docs/NeuralNetworkGuide.md) to the detailed NN conversion guide.
 
-There are several `converters` available to translate neural networks trained in various frameworks into the Core ML model format.
-Following formats can be converted to the Core ML `.mlmodel` format through the coremltools python package (this repo):
+There are several `converters` available to translate neural networks trained
+in various frameworks into the Core ML model format.  Following formats can be
+converted to the Core ML `.mlmodel` format through the coremltools python
+package (this repo):
 
 - Caffe V1 (`.prototxt`, `.caffemodel` format)
 - Keras API (2.2+) (`.h5` format)
@@ -41,9 +43,9 @@ provide native export to the ONNX format.
 tfcoreml defers to the TensorFlow converter implemented inside coremltools.
 For iOS 12 or earlier, the code path is different and lives entirely in the [tfcoreml](https://github.com/tf-coreml/tf-coreml) package.  
 
-To get an overview on how to use the converters and features such as post-training quantization using coremltools,
-please see the [neural network guide](docs/NeuralNetworkGuide.md).  
-
+To get an overview on how to use the converters and features such as
+post-training quantization using coremltools, please see the [neural network
+guide](docs/NeuralNetworkGuide.md).  
 
 ## Core ML Specification
 
@@ -87,7 +89,8 @@ cd mlvirtualenv
 virtualenv pythonenv
 ```
 
-To activate your new virtual environment and install `coremltools` in this environment, follow these steps:
+To activate your new virtual environment and install `coremltools` in this
+environment, follow these steps:
 
 ```
 # Active your virtual environment
@@ -115,130 +118,3 @@ you are converting models of these formats:
 - XGBoost (0.7+)
 - scikit-learn (0.17+)
 - LIBSVM
-
-
-### Building from Source
-
-To build the project, you need [CMake](https://cmake.org) to configure the project.
-
-```shell
-mkdir build
-cd build
-cmake ../
-```
-
-When several python virtual environments are installed,
-it may be useful to use the following command instead,
-to point to the correct intended version of python:
-
-```shell
-cmake \
-  -DPYTHON_EXECUTABLE:FILEPATH=/Library/Frameworks/Python.framework/Versions/3.7/bin/python \
-  -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m/ \
-  -DPYTHON_LIBRARY=/Library/Frameworks/Python.framework/Versions/3.7/lib/ \
-  ../
-```
-after which you can use make to build the project.
-
-```shell
-make
-```
-
-### Building Installable Wheel
-
-To make a wheel/egg that you can distribute, you can do the following:
-
-```shell
-make dist
-```
-
-### Running Unit Tests
-
-In order to run unit tests, you need `pytest`, `pandas`, and `h5py`.
-
-```shell
-pip install pytest pandas h5py
-```
-
-To add a new unit test, add it to the `coremltools/test` folder. Make sure you
-name the file with a 'test' as the prefix.
-
-Additionally, running unit-tests would require more packages (like
-LIBSVM)
-
-```shell
-pip install -r test_requirements.pip
-```
-
-To install LIBSVM
-
-```shell
-git clone https://github.com/cjlin1/libsvm.git
-cd libsvm/
-make
-cd python/
-make
-```
-
-To make sure you can run LIBSVM python bindings everywhere, you need the
-following command, replacing `<LIBSVM_PATH>` with the path to the root of
-your repository.
-
-```shell
-export PYTHONPATH=${PYTHONPATH}:<LIBSVM_PATH>/python
-```
-
-To install XGBoost
-
-```shell
-git clone --recursive https://github.com/dmlc/xgboost
-cd xgboost
-git checkout v0.90
-git submodule update
-make config=make/config.mk -j8
-cd python-package; python setup.py develop
-```
-
-To install Keras (Version >= 2.0)
-
-```shell
-pip install keras tensorflow
-```
-
-If you'd like to use the old Keras version, you can:
-
-```shell
-pip install keras==1.2.2 tensorflow
-```
-
-Finally, to run the most important unit tests, you can use:
-
-```shell
-pytest -rs
-```
-
-some tests are marked as slow because they test a lot of combinations.
-If you want to run, all tests, you can use:
-
-```shell
-pytest
-```
-
-### Building Documentation
-
-First install all external dependencies.
-
-```shell
-pip install Sphinx==1.8.5 sphinx-rtd-theme==0.4.3 numpydoc==0.9.1
-pip install -e git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
-```
-
-You also must have the *coremltools* package install, see the *Building* section.
-
-Then from the root of the repository:
-
-```shell
-cd docs
-make html
-open _build/html/index.html
-```
