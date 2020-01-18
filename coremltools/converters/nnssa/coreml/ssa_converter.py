@@ -2141,7 +2141,7 @@ class SSAConverter(object):
         assert len(node.inputs) == 1
         input_nodes, input_names, input_types = self._get_input_tensors(node)
 
-        # Core ML has 3 modes: EXACT, TANH_APPROXIMATION,SIGMOID_APPROXIMATION
+        # Core ML has 3 modes: EXACT, TANH_APPROXIMATION, SIGMOID_APPROXIMATION
         layer = self._get_builder().add_gelu(
             name=node.name,
             input_name=input_names[0],
