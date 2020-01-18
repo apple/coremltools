@@ -2,438 +2,178 @@ stages:
   - build
   - test
 
-# Uses Python 2.7 built from source (already on build image)
-build_wheel_linux_py27:
-  image: docker.apple.com/turi/build-image-centos6-python2.7:1801
+########################################################################
+#
+#                         linux - Build & Test
+#
+########################################################################
+
+.build_linux: &build_linux
   tags:
     - dockerized
   stage: build
   script:
-    - $(which pip) install "numpy==1.14.5" six protobuf
-    - mkdir bld
-    - cd bld
-    - timeout 5m cmake -DCMAKE_BUILD_TYPE=Release ..
-    - timeout 20m make -j8
-    - timeout 20m make dist
+    - bash -e scripts/make_wheel.sh --python=$PYTHON
   artifacts:
     expire_in: 2 weeks
     paths:
-      - bld/dist/
+      - build/dist/
+
+build_wheel_linux_py27:
+  <<: *build_linux
+  image: docker.apple.com/turi/build-image-centos6-python2.7:1801
+  variables:
+    PYTHON: /usr/local/bin/python
 
 # Uses Python 3.5 built from source (already on build image)
 build_wheel_linux_py35:
+  <<: *build_linux
   image: docker.apple.com/turi/build-image-centos6-python3.5:1801
-  tags:
-    - dockerized
-  stage: build
-  script:
-    - /usr/local/bin/pip3 install "numpy==1.14.5"
-    - /usr/local/bin/pip3 install six
-    - /usr/local/bin/pip3 install protobuf
-    - mkdir bld
-    - cd bld
-    - timeout 5m cmake
-      -DCMAKE_BUILD_TYPE=Release
-      -DPYTHON_EXECUTABLE=/usr/local/bin/python3
-      -DPYTHON_INCLUDE_DIR=/usr/local/include/python3.5m
-      -DPYTHON_LIBRARY=/usr/local/lib/libpython3.so
-      ..
-    - timeout 20m make -j8
-    - timeout 20m make dist
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - bld/dist/
+  variables:
+    PYTHON: /usr/local/bin/python3
 
 # Uses Python 3.6 built from source (already on build image)
 build_wheel_linux_py36:
+  <<: *build_linux
   image: docker.apple.com/turi/build-image-centos6-python3.6:1801
-  tags:
-    - dockerized
-  stage: build
-  script:
-    - /usr/local/bin/pip3 install "numpy==1.14.5"
-    - /usr/local/bin/pip3 install six
-    - /usr/local/bin/pip3 install protobuf
-    - mkdir bld
-    - cd bld
-    - timeout 5m cmake
-      -DCMAKE_BUILD_TYPE=Release
-      -DPYTHON_EXECUTABLE=/usr/local/bin/python3
-      -DPYTHON_INCLUDE_DIR=/usr/local/include/python3.6m
-      -DPYTHON_LIBRARY=/usr/local/lib/libpython3.so
-      ..
-    - timeout 20m make -j8
-    - timeout 20m make dist
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - bld/dist/
+  variables:
+    PYTHON: /usr/local/bin/python3
 
-# Uses Python 3.7 built from source (already on build image)
-build_wheel_linux_py37:
-  image: docker.apple.com/sohaib_qureshi/coremltools-build-3.7
-  tags:
-    - dockerized
-  stage: build
-  script:
-    - /usr/bin/pip3 install "numpy==1.14.5"
-    - /usr/bin/pip3 install six
-    - /usr/bin/pip3 install protobuf
-    - mkdir bld
-    - cd bld
-    - cmake
-      -DCMAKE_BUILD_TYPE=Release
-      -DPYTHON_EXECUTABLE=/usr/bin/python3.7
-      -DPYTHON_INCLUDE_DIR=/usr/include/python3.7m/
-      -DPYTHON_LIBRARY=/usr/lib/python3.7/
-      ..
-    - make -j8
-    - make dist
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - bld/dist/
-
-# Uses Python 2.7 from python.org (already on build machine)
-build_wheel_macos_py27:
-  tags:
-    - macos10.15
-  stage: build
-  script:
-    - mkdir bld
-    - cd bld
-    - /Library/Frameworks/Python.framework/Versions/2.7/bin/virtualenv
-      --python=/Library/Frameworks/Python.framework/Versions/2.7/bin/python2 env
-    - source env/bin/activate
-    - pip install "numpy==1.14.5" six protobuf
-    - /usr/local/bin/cmake --version
-    - /usr/local/bin/cmake
-      -DCMAKE_BUILD_TYPE=Release
-      -DPYTHON_EXECUTABLE:FILEPATH=env/bin/python
-      -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
-      -DPYTHON_INCLUDE_DIR=env/include/python2.7
-      -DPYTHON_LIBRARY=env/lib
-      ..
-    - make -j8
-    - make dist
-    - cd build
-    - git clone --recursive https://github.com/dmlc/xgboost
-    - cd xgboost
-    - git checkout v0.82
-    - make config=make/minimum.mk -j8
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - bld/build/xgboost/
-      - bld/dist/
-
-# Uses Python 3.5 from python.org (already on build machine)
-build_wheel_macos_py35:
-  tags:
-    - macos10.15
-  stage: build
-  script:
-    - mkdir bld
-    - cd bld
-    - /Library/Frameworks/Python.framework/Versions/3.5/bin/python3 -m venv env
-    - source env/bin/activate
-    - echo "Get pip major version number:"
-    - pipmajor=$(pip --version | awk '{print $2}' | cut -d. -f1)
-    - if test "${pipmajor}" -le 9 ; then curl https://bootstrap.pypa.io/get-pip.py | python3 ; fi
-    - pip3 install "numpy==1.14.5" six protobuf
-    - /usr/local/bin/cmake --version
-    - /usr/local/bin/cmake
-      -DCMAKE_BUILD_TYPE=Release
-      -DPYTHON_EXECUTABLE:FILEPATH=env/bin/python
-      -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
-      -DPYTHON_LIBRARY=env/lib
-      -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.5/include/python3.5m
-      .. || find /Library/Frameworks -iname Python.h
-    - make -j8
-    - make dist
-    - cd build
-    - git clone --recursive https://github.com/dmlc/xgboost
-    - cd xgboost
-    - git checkout v0.82
-    - make config=make/minimum.mk -j8
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - bld/build/xgboost/
-      - bld/dist/
-
-# Uses Python 3.6 from python.org (already on build machine)
-build_wheel_macos_py36:
-  tags:
-    - macos10.15
-  stage: build
-  script:
-    - mkdir bld
-    - cd bld
-    - /Library/Frameworks/Python.framework/Versions/3.6/bin/python3 -m venv env
-    - source env/bin/activate
-    - echo "Get pip major version number:"
-    - pipmajor=$(pip --version | awk '{print $2}' | cut -d. -f1)
-    - if test "${pipmajor}" -le 9 ; then curl https://bootstrap.pypa.io/get-pip.py | python3 ; fi
-    - pip3 install "numpy==1.14.5" six protobuf
-    - /usr/local/bin/cmake --version
-    - /usr/local/bin/cmake
-      -DCMAKE_BUILD_TYPE=Release
-      -DPYTHON_EXECUTABLE:FILEPATH=env/bin/python
-      -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
-      -DPYTHON_LIBRARY=env/lib
-      -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.6/include/python3.6m
-      .. || find /Library/Frameworks -iname Python.h
-    - make -j8
-    - make dist
-    - cd build
-    - git clone --recursive https://github.com/dmlc/xgboost
-    - cd xgboost
-    - git checkout v0.82
-    - make config=make/minimum.mk -j8
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - bld/build/xgboost/
-      - bld/dist/
-
-# Uses Python 3.7 from python.org (already on build machine)
-build_wheel_macos_py37:
-  tags:
-    - macos10.15
-  stage: build
-  script:
-    - mkdir bld
-    - cd bld
-    - /Library/Frameworks/Python.framework/Versions/3.7/bin/python3 -m venv env
-    - source env/bin/activate
-    - echo "Get pip major version number:"
-    - pipmajor=$(pip --version | awk '{print $2}' | cut -d. -f1)
-    - if test "${pipmajor}" -le 9 ; then curl https://bootstrap.pypa.io/get-pip.py | python3 ; fi
-    - pip3 install --upgrade pip
-    - pip3 install wheel
-    - pip3 install "numpy==1.14.5" six protobuf
-    - /usr/local/bin/cmake --version
-    - /usr/local/bin/cmake
-      -DCMAKE_BUILD_TYPE=Release
-      -DPYTHON_EXECUTABLE:FILEPATH=env/bin/python
-      -DCMAKE_OSX_DEPLOYMENT_TARGET=10.13
-      -DPYTHON_LIBRARY=env/lib
-      -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.7/include/python3.7m
-      .. || find /Library/Frameworks -iname Python.h
-    - make -j8
-    - make dist
-    - cd build
-    - git clone --recursive https://github.com/dmlc/xgboost
-    - cd xgboost
-    - git checkout v0.82
-    - make config=make/minimum.mk -j8
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - bld/build/xgboost/
-      - bld/dist/
-
-# Uses Python 2.7 built from source (already on build image)
-test_wheel_linux_py27:
-  image: docker.apple.com/turi/build-image-centos7-python2.7:1801
+.test_linux: &test_linux
   tags:
     - dockerized
   stage: test
+  script:
+    - bash -e scripts/test_wheel.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} 
+
+test_wheel_linux_py27:
+  <<: *test_linux
+  image: docker.apple.com/turi/build-image-centos7-python2.7:1801
   dependencies:
     - build_wheel_linux_py27
-  script:
-    - pip install --upgrade pip
-    - pip install bld/dist/*
-    - pip install -r test_requirements.pip
-    - pip install xgboost==0.7.post3
-    - pytest -rfXs -m "not slow" coremltools/test
+  variables:
+    WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
+    PYTHON: /usr/local/bin/python
 
-# Uses Python 3.6 built from source (already on build image)
+test_wheel_linux_py35:
+  <<: *test_linux
+  image: docker.apple.com/turi/build-image-centos7-python3.5:1801
+  dependencies:
+    - build_wheel_linux_py35
+  variables:
+    WHEEL_PATH: build/dist/coremltools*cp35-none-manylinux1_x86_64.whl
+    PYTHON: /usr/local/bin/python3    
+
 test_wheel_linux_py36:
+  <<: *test_linux
   image: docker.apple.com/turi/build-image-centos7-python3.6:1801
-  tags:
-    - dockerized
-  stage: test
   dependencies:
     - build_wheel_linux_py36
-  script:
-    - pip3 install --upgrade pip
-    - pip3 install bld/dist/*
-    - pip3 install -r test_requirements.pip
-    - pip3 install xgboost==0.7.post3
-    - pytest -rfXs -m "not slow" coremltools/test
+  variables:
+    WHEEL_PATH: build/dist/coremltools*cp36-none-manylinux1_x86_64.whl
+    PYTHON: /usr/local/bin/python3
 
-# Just a smoke test for 10.13 to ensure backward compatability
-test_wheel_macos_13_py27_system:
-  tags:
-    - macos10.13-system_python
+#########################################################################
+##
+##                         macOS - Build & Test
+##
+#########################################################################
+
+.build_macos: &build_macos
+    tags:
+      - macos10.15
+    stage: build
+    script:
+      - bash -e scripts/make_wheel.sh --python=$PYTHON
+    artifacts:
+      expire_in: 2 weeks
+      paths:
+        - build/dist/
+
+build_wheel_macos_py27:
+  <<: *build_macos
+  variables:
+    PYTHON: /Library/Frameworks/Python.framework/Versions/2.7/bin/python
+
+## Uses Python 3.5 from python.org (already on build machine)
+build_wheel_macos_py35:
+  <<: *build_macos
+  variables:
+    PYTHON: /Library/Frameworks/Python.framework/Versions/3.5/bin/python3
+
+## Uses Python 3.6 from python.org (already on build machine)
+build_wheel_macos_py36:
+  <<: *build_macos
+  variables:
+    PYTHON: /Library/Frameworks/Python.framework/Versions/3.6/bin/python3
+
+## Uses Python 3.7 from python.org (already on build machine)
+build_wheel_macos_py37:
+  <<: *build_macos
+  variables:
+    PYTHON: /Library/Frameworks/Python.framework/Versions/3.7/bin/python3
+
+.test_macos: &test_macos
   stage: test
-  dependencies:
-    - build_wheel_macos_py27
   script:
-    - /usr/local/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip install --upgrade pip
-    - pip install bld/dist/*cp27*10_13*
-    - pip install -r test_requirements.pip
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pytest -rfXs -m "not slow" coremltools/test
+    - bash -e scripts/test_wheel.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
 
-# Uses Python 2.7 from python.org (already on build machine)
 test_wheel_macos_13_py27:
+  <<: *test_macos
   tags:
     - macos10.13
-  stage: test
   dependencies:
     - build_wheel_macos_py27
-  script:
-    - /Library/Frameworks/Python.framework//Versions/2.7/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip install --upgrade pip
-    - pip install bld/dist/*cp27*10_13*
-    - pip install -r test_requirements.pip
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pytest -rfXs -m "not slow" coremltools/test
+  variables:
+    WHEEL_PATH: build/dist/*cp27*10_13*
+    PYTHON: /Library/Frameworks/Python.framework/Versions/2.7/bin/python
 
-# Uses Python 2.7 from python.org (already on build machine)
 test_wheel_macos_14_py27:
+  <<: *test_macos
   tags:
     - macos10.14
-  stage: test
   dependencies:
     - build_wheel_macos_py27
-  script:
-    - /Library/Frameworks/Python.framework//Versions/2.7/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip install --upgrade pip
-    - pip install bld/dist/*cp27*10_14*
-    - pip install -r test_requirements.pip
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pytest -rfXs -m "not slow" coremltools/test
+  variables:
+    WHEEL_PATH: build/dist/*cp27*10_14*
+    PYTHON: /Library/Frameworks/Python.framework/Versions/2.7/bin/python
 
-test_wheel_macos_14_py36:
-  tags:
-    - macos10.14
-  stage: test
-  dependencies:
-    - build_wheel_macos_py36
-  script:
-    - /Library/Frameworks/Python.framework//Versions/3.6/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip3 install --upgrade pip
-    - pip3 install bld/dist/*cp36*10_14*
-    - pip3 install -r test_requirements.pip
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pytest -rfXs -m "not slow" coremltools/test
-
-# Uses system Python 2.7 (already on build machine)
-test_wheel_macos_15_py27_system:
-  tags:
-    - macos10.15-system_python
-  stage: test
-  dependencies:
-    - build_wheel_macos_py27
-  script:
-    - /usr/local/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip install --upgrade pip
-    - pip install bld/dist/*cp27*10_15*
-    - pip install -r test_requirements.pip
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pytest -rfXs -m "not slow" coremltools/test
-
-# Uses python 2.7 from python.org
 test_wheel_macos_15_py27:
+  <<: *test_macos
   tags:
     - macos10.15
-  stage: test
   dependencies:
     - build_wheel_macos_py27
-  script:
-    - /Library/Frameworks/Python.framework//Versions/2.7/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip install --upgrade pip --index https://pypi.apple.com/simple
-    - pip install bld/dist/*cp27*10_15*
-    - pip install -r test_requirements.pip --index https://pypi.apple.com/simple
-    - pip install pytest --upgrade --index https://pypi.apple.com/simple
-    - pip install pytest-xdist --ignore-installed --index https://pypi.apple.com/simple
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pytest -rfXs -m "not slow" coremltools/test
+  variables:
+    WHEEL_PATH: build/dist/*cp27*10_15*
+    PYTHON: /Library/Frameworks/Python.framework/Versions/2.7/bin/python
 
-# Uses Python 3.5 from python.org (already on build machine)
 test_wheel_macos_15_py35:
+  <<: *test_macos
   tags:
     - macos10.15
-  stage: test
   dependencies:
     - build_wheel_macos_py35
-  script:
-    - /Library/Frameworks/Python.framework//Versions/3.5/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip3 install --upgrade pip
-    - pip3 install bld/dist/*cp35*10_15*
-    - pip3 install -r test_requirements.pip
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pytest -rfXs -m "not slow" coremltools/test
+  variables:
+    WHEEL_PATH: build/dist/*cp35*10_15*
+    PYTHON: /Library/Frameworks/Python.framework/Versions/3.5/bin/python3
 
-# Uses Python 3.6 from python.org (already on build machine)
 test_wheel_macos_15_py36:
+  <<: *test_macos
   tags:
     - macos10.15
-  stage: test
   dependencies:
     - build_wheel_macos_py36
-  script:
-    - /Library/Frameworks/Python.framework//Versions/3.6/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip3 install --upgrade pip
-    - pip3 install bld/dist/*cp36*10_15*
-    - pip3 install -r test_requirements.pip
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pytest -rfXs -m "not slow" coremltools/test
+  variables:
+    WHEEL_PATH: build/dist/*cp36*10_15*
+    PYTHON: /Library/Frameworks/Python.framework/Versions/3.6/bin/python3
 
-# Uses Python 3.7 from python.org (already on build machine)
 test_wheel_macos_15_py37:
+  <<: *test_macos
   tags:
     - macos10.15
-  stage: test
   dependencies:
     - build_wheel_macos_py37
-  script:
-    - /Library/Frameworks/Python.framework/Versions/3.7/bin/virtualenv venv
-    - . venv/bin/activate
-    - echo "Found pip at $(which pip)"
-    - pip3 install --upgrade pip
-    - pip3 install bld/dist/*cp37*10_15*
-    - pip3 install -r test_requirements.pip
-    - cd bld/build/xgboost/python-package
-    - python setup.py install
-    - cd ../../../..
-    - pip3 install pytest-xdist --ignore-installed --index https://pypi.apple.com/simple
-    - pytest -rfXs -m "not slow" coremltools/test
+  variables:
+    WHEEL_PATH: build/dist/*cp37*10_15*
+    PYTHON: /Library/Frameworks/Python.framework/Versions/3.7/bin/python3
