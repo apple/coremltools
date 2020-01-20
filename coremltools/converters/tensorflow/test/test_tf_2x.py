@@ -641,6 +641,24 @@ class TestCornerCases(unittest.TestCase):
 
 
 
+    def test_wrong_out_name_error(self):
+
+        @tf.function(input_signature=[tf.TensorSpec(shape=(1,), dtype=tf.float32)])
+        def sin(x):
+            y = tf.sin(x)
+            return y
+
+        conc_func = sin.get_concrete_function()
+        with self.assertRaises(Exception) as cm:
+            coremltools.converters.tensorflow.convert(
+                    [conc_func],
+                    inputs={conc_func.inputs[0].name[:-2]: conc_func.inputs[0].shape},
+                    outputs=['output_not_present'])
+
+        the_exception = str(cm.exception)
+        self.assertTrue("is not an output node in the source graph" in the_exception)
+
+
 if __name__ == '__main__':
     np.random.seed(1984)
     RUN_ALL_TESTS = True
@@ -648,5 +666,5 @@ if __name__ == '__main__':
         unittest.main()
     else:
         suite = unittest.TestSuite()
-        suite.addTest(TestKerasFashionMnist('test_sequential_builder_keras_model_format'))
+        suite.addTest(TestCornerCases('test_wrong_out_name_error'))
         unittest.TextTestRunner().run(suite)
