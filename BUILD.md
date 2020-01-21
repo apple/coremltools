@@ -10,6 +10,15 @@ When several python virtual environments are installed, it may be useful to
 point to the correct intended version of python (see `./configure --help` for
 options)
 
+The configure script creates a virtual environment. You can source the right
+environment variables using
+
+```
+source ./scripts/python_env.sh
+```
+
+Now you can build the package as follows:
+
 ```shell
 cd build
 cmake ../
@@ -19,14 +28,16 @@ after which you can use make to build the project.
 ```shell
 make -j3
 ```
+You can use `make dist` to make a wheel after all of these steps. 
 
 ### Building Installable Wheel
 
-To make a wheel/egg that you can distribute, you can do the following:
+To make a wheel/egg from scratch that you can distribute, you can do the following:
 
 ```shell
-make dist
+./scripts/make_wheel.sh
 ```
+A python wheel is put into the `build/dist` folder.
 
 ### Running Unit Tests
 
