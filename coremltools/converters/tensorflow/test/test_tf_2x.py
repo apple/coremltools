@@ -419,7 +419,15 @@ class TestCornerCases(unittest.TestCase):
         if os.path.exists(self.saved_model_dir):
             shutil.rmtree(self.saved_model_dir)
 
-    def _test_model(self, keras_model, model_path, inputs, outputs=None, decimal=4, verbose=False):
+    def _test_model(
+        self,
+        keras_model,
+        model_path,
+        inputs,
+        outputs=None,
+        decimal=4,
+        verbose=False
+    ):
         keras_model.save(model_path)
 
         # convert and validate
@@ -496,6 +504,27 @@ class TestCornerCases(unittest.TestCase):
             if layer.WhichOneof('layer') == 'batchnorm':
                 num_batch_norm += 1
         self.assertEqual(num_batch_norm, 1)
+
+    def test_conv_bias_fusion(self):
+        x = tf.keras.layers.Input(shape=[32, 32, 3], batch_size=1)
+        conv = tf.keras.layers.Conv2D(filters=3, kernel_size=1)(x)
+        conv = tf.keras.layers.DepthwiseConv2D(kernel_size=1)(conv)
+        keras_model = tf.keras.Model(x, conv)
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 decimal=3,
+                                 inputs={input_name: (1, 32, 32, 3)})
+        add_broadcastables = 0
+        load_constants = 0
+        for layer in model.get_spec().neuralNetwork.layers:
+            if layer.WhichOneof('layer') == 'addBroadcastable':
+                add_broadcastables += 1
+            if layer.WhichOneof('layer') == 'loadConstantND':
+                load_constants += 1
+
+        assert not add_broadcastables
+        assert not load_constants
 
     def test_conv2d_with_activation(self):
         inputs = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
