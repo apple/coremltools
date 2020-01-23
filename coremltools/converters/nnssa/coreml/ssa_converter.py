@@ -316,7 +316,7 @@ class SSAConverter(object):
 
         self.top_builder = NeuralNetworkBuilder(input_features=top_input_features,
                                                 output_features=top_output_features,
-                                                disable_rank5_shape_mapping=True,
+                                                disable_rank5_shape_mapping=False,
                                                 mode=neural_network_type,
                                                 use_float_arraytype=True)
 
@@ -469,6 +469,7 @@ class SSAConverter(object):
         self.func_stack = [self.top_func]
         # Theoretically, there should be a one-to-one mapping between
         # SSA function and nn_spec, which is associated with a NeuralNetworkBuilder
+        print(self.top_builder)
         self.func_builder_map = {self.top_func: self.top_builder}
         # All the shapes of the tensor of CoreML str:shape
         self.tensor_shapes = {

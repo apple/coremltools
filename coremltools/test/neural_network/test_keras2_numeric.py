@@ -26,9 +26,9 @@ if HAS_KERAS2_TF:
     from keras.layers.core import SpatialDropout2D
     from keras.layers.wrappers import Bidirectional, TimeDistributed
     from distutils.version import StrictVersion as _StrictVersion
-    if keras.__version__ >= _StrictVersion('2.2.1'):
+    if keras.__version__.rstrip('-tf') >= _StrictVersion('2.2.1'):
         from keras.layers import DepthwiseConv2D, ReLU
-    elif keras.__version__ >= _StrictVersion('2.2.0'):
+    elif keras.__version__.rstrip('-tf') >= _StrictVersion('2.2.0'):
         from keras.layers import DepthwiseConv2D
         from keras_applications.mobilenet import relu6
     else:
@@ -2152,7 +2152,7 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
     def test_tiny_mobilenet_arch(self, model_precision=_MLMODEL_FULL_PRECISION):
         def ReLU6(x, name):
-            if keras.__version__ >= _StrictVersion('2.2.1'):
+            if keras.__version__.rstrip('-tf') >= _StrictVersion('2.2.1'):
                 return ReLU(6., name=name)(x)
             else:
                 return Activation(relu6, name=name)(x)

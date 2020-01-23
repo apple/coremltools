@@ -4,15 +4,15 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 from . import _utils
 import logging
-import keras as _keras
+from tensorflow.python import keras as _keras
 import numpy as _np
 from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 
 from distutils.version import StrictVersion as _StrictVersion
 
-if _keras.__version__ >= _StrictVersion('2.2.1'):
+if _keras.__version__.rstrip('-tf') >= _StrictVersion('2.2.1'):
     from keras.layers import DepthwiseConv2D
-elif _keras.__version__ >= _StrictVersion('2.2.0'):
+elif _keras.__version__.rstrip('-tf') >= _StrictVersion('2.2.0'):
     from keras.layers import DepthwiseConv2D
     from keras_applications.mobilenet import relu6
 else:
@@ -103,13 +103,13 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
     elif isinstance(keras_layer, _keras.layers.Dot):
         if len(keras_layer.input_shape[0]) == 2:
             if type(keras_layer.axes) is list or type(keras_layer.axes) is tuple:
-                if len(keras_layer.axes) > 1: 
+                if len(keras_layer.axes) > 1:
                     raise ValueError('Only vector dot-product is supported.')
                 else:
                     axis = keras_layer.axes[0]
             else:
                 axis = keras_layer.axes
-            if axis != -1 and axis != 1: 
+            if axis != -1 and axis != 1:
                  raise ValueError('Only vector dot-product is supported.')
 
             if keras_layer.normalize:
@@ -127,7 +127,7 @@ def _get_elementwise_name_from_keras_layer(keras_layer):
                 keras_layer.name)
 
 def _same_elements_per_channel(x):
-    """ Test if a 3D (H,W,C) matrix x has the same element in each (H,W) 
+    """ Test if a 3D (H,W,C) matrix x has the same element in each (H,W)
     matrix for each channel
     """
     eps = 1e-5
@@ -142,7 +142,7 @@ def _check_data_format(keras_layer):
     if hasattr(keras_layer,('data_format')):
         if keras_layer.data_format != 'channels_last':
             raise ValueError("Converter currently supports data_format = "
-                "'channels_last' only.")        
+                "'channels_last' only.")
 
 def convert_dense(builder, layer, input_names, output_names, keras_layer,
                   respect_train):
@@ -171,7 +171,7 @@ def convert_dense(builder, layer, input_names, output_names, keras_layer,
     builder.add_inner_product(name = layer,
             W = W,
             b = Wb,
-            input_channels = input_channels, 
+            input_channels = input_channels,
             output_channels = output_channels,
             has_bias = has_bias,
             input_name = input_name,
@@ -239,20 +239,20 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer,
                 output_name = output_name)
         return
     if non_linearity == 'RELU6':
-        # No direct support of RELU with max-activation value - use negate and 
+        # No direct support of RELU with max-activation value - use negate and
         # clip layers
         relu_output_name = output_name + '_relu'
         builder.add_activation(layer, 'RELU', input_name, relu_output_name)
         # negate it
         neg_output_name = relu_output_name + '_neg'
-        builder.add_activation(layer+'__neg__', 'LINEAR', relu_output_name, 
+        builder.add_activation(layer+'__neg__', 'LINEAR', relu_output_name,
                 neg_output_name,[-1.0, 0])
         # apply threshold
         clip_output_name = relu_output_name + '_clip'
-        builder.add_unary(layer+'__clip__', neg_output_name, clip_output_name, 
+        builder.add_unary(layer+'__clip__', neg_output_name, clip_output_name,
                 'threshold', alpha = -6.0)
         # negate it back
-        builder.add_activation(layer+'_neg2', 'LINEAR', clip_output_name, 
+        builder.add_activation(layer+'_neg2', 'LINEAR', clip_output_name,
                 output_name,[-1.0, 0])
         return
 
@@ -277,7 +277,7 @@ def convert_activation(builder, layer, input_names, output_names, keras_layer,
         shared_axes = list(keras_layer.shared_axes)
         if not (shared_axes == [1,2,3] or shared_axes == [1,2]):
             _utils.raise_error_unsupported_scenario(
-                    "Shared axis not being [1,2,3] or [1,2]", 
+                    "Shared axis not being [1,2,3] or [1,2]",
                     'parametric_relu', layer)
         params = _keras.backend.eval(keras_layer.weights[0])
     elif non_linearity == 'ELU':
@@ -345,21 +345,21 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer,
     respect_train: boolean
         Whether or not to carry over Keras' "trainable" parameter.
     """
-    
+
     _check_data_format(keras_layer)
-    
+
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
 
     has_bias = keras_layer.use_bias
-    is_deconv = isinstance(keras_layer, 
+    is_deconv = isinstance(keras_layer,
             _keras.layers.convolutional.Conv2DTranspose)
 
     # Get the weights from _keras.
     weightList = keras_layer.get_weights()
-    
+
     # Dimensions and weights
-    if is_deconv: 
+    if is_deconv:
         height, width, n_filters, channels = weightList[0].shape
         W = weightList[0].transpose([0,1,3,2])
         try:
@@ -367,7 +367,7 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer,
             output_shape = output_blob_shape[:-1]
         except:
             output_shape = None
-    else: 
+    else:
         height, width, channels, n_filters = weightList[0].shape
         W = weightList[0]
         output_shape = None
@@ -385,7 +385,7 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer,
         dilations = [keras_layer.dilation_rate, keras_layer.dilation_rate]
     if is_deconv and not dilations == [1,1]:
         raise ValueError("Unsupported non-unity dilation for Deconvolution layer")
-        
+
     groups = 1
     kernel_channels = channels
     # depth-wise convolution
@@ -403,7 +403,7 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer,
              width = width,
              stride_height = stride_height,
              stride_width = stride_width,
-             border_mode = keras_layer.padding, 
+             border_mode = keras_layer.padding,
              groups = groups,
              W = W,
              b = b,
@@ -411,7 +411,7 @@ def convert_convolution(builder, layer, input_names, output_names, keras_layer,
              is_deconv = is_deconv,
              output_shape = output_shape,
              input_name = input_name,
-             output_name = output_name, 
+             output_name = output_name,
              dilation_factors = dilations)
 
     if respect_train and keras_layer.trainable:
@@ -459,16 +459,16 @@ def convert_convolution1d(builder, layer, input_names, output_names,
         dilations = [1, keras_layer.dilation_rate[0]]
     else:
         dilations = [1, keras_layer.dilation_rate]
-    
+
     keras_padding = keras_layer.padding
     if keras_padding == 'causal':
         builder.add_padding(name = layer + '__causal_pad__',
                 left = filter_length-1, right=0, top=0, bottom=0, value= 0,
-                input_name = input_name, 
+                input_name = input_name,
                 output_name= input_name + '__causal_pad__')
         input_name = input_name + '__causal_pad__'
         keras_padding = 'valid'
-    
+
     builder.add_convolution(name = layer,
              kernel_channels = input_dim,
              output_channels = n_filters,
@@ -476,7 +476,7 @@ def convert_convolution1d(builder, layer, input_names, output_names,
              width = filter_length,
              stride_height = 1,
              stride_width = stride_width,
-             border_mode = keras_padding, 
+             border_mode = keras_padding,
              groups = 1,
              W = W,
              b = b,
@@ -484,7 +484,7 @@ def convert_convolution1d(builder, layer, input_names, output_names,
              is_deconv = False,
              output_shape = output_shape,
              input_name = input_name,
-             output_name = output_name, 
+             output_name = output_name,
              dilation_factors = dilations)
 
     if respect_train and keras_layer.trainable:
@@ -506,7 +506,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names,
         Whether to honor Keras' "trainable" flag.
     """
     _check_data_format(keras_layer)
-    
+
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
 
@@ -516,7 +516,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names,
     weight_list = keras_layer.get_weights()
     output_blob_shape = list(filter(None, keras_layer.output_shape))
     output_channels = output_blob_shape[-1]
-    
+
     # D: depth mutliplier
     # w[0] is (H,W,Cin,D)
     # w[1] is (1,1,Cin * D, Cout)
@@ -524,7 +524,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names,
     W1 = weight_list[1]
     height, width, input_channels, depth_mult = W0.shape
     b = weight_list[2] if has_bias else None
-    
+
     W0 = _np.reshape(W0, (height, width, 1, input_channels * depth_mult))
 
     stride_height, stride_width = keras_layer.strides
@@ -544,7 +544,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names,
              width = width,
              stride_height = stride_height,
              stride_width = stride_width,
-             border_mode = keras_layer.padding, 
+             border_mode = keras_layer.padding,
              groups = input_channels,
              W = W0,
              b = None,
@@ -552,7 +552,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names,
              is_deconv = False,
              output_shape = None,
              input_name = input_name,
-             output_name = intermediate_name, 
+             output_name = intermediate_name,
              dilation_factors = dilations)
 
     builder.add_convolution(name = layer + '_step_2',
@@ -562,7 +562,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names,
              width = 1,
              stride_height = 1,
              stride_width = 1,
-             border_mode = keras_layer.padding, 
+             border_mode = keras_layer.padding,
              groups = 1,
              W = W1,
              b = b,
@@ -570,7 +570,7 @@ def convert_separable_convolution(builder, layer, input_names, output_names,
              is_deconv = False,
              output_shape = None,
              input_name = intermediate_name,
-             output_name = output_name, 
+             output_name = output_name,
              dilation_factors = [1,1])
 
     if respect_train and keras_layer.trainable:
@@ -580,8 +580,8 @@ def convert_separable_convolution(builder, layer, input_names, output_names,
 def convert_batchnorm(builder, layer, input_names, output_names, keras_layer,
                       respect_train):
     """
-    Convert a Batch Normalization layer. 
-    
+    Convert a Batch Normalization layer.
+
     Parameters
     keras_layer: layer
         A keras layer object.
@@ -610,7 +610,7 @@ def convert_batchnorm(builder, layer, input_names, output_names, keras_layer,
         idx += 1
     mean = keras_layer.get_weights()[idx]
     std = keras_layer.get_weights()[idx+1]
-    
+
     gamma = _np.ones(mean.shape) if gamma is None else gamma
     beta = _np.zeros(mean.shape) if beta is None else beta
 
@@ -814,12 +814,12 @@ def convert_padding(builder, layer, input_names, output_names, keras_layer,
     _check_data_format(keras_layer)
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
-    
+
     is_1d = isinstance(keras_layer, _keras.layers.ZeroPadding1D)
-    
+
     padding = keras_layer.padding
     top = left = bottom = right = 0
-    if is_1d: 
+    if is_1d:
         if type(padding) is int:
             left = right = padding
         elif type(padding) is tuple:
@@ -829,7 +829,7 @@ def convert_padding(builder, layer, input_names, output_names, keras_layer,
                 left, right = padding[0]
             else:
                 raise ValueError("Unrecognized padding option: %s" % (str(padding)))
-        else: 
+        else:
             raise ValueError("Unrecognized padding option: %s" % (str(padding)))
     else:
         if type(padding) is int:
@@ -843,7 +843,7 @@ def convert_padding(builder, layer, input_names, output_names, keras_layer,
                 left, right = padding[1]
             else:
                 raise ValueError("Unrecognized padding option: %s" % (str(padding)))
-        else: 
+        else:
             raise ValueError("Unrecognized padding option: %s" % (str(padding)))
 
     # Now add the layer
@@ -867,7 +867,7 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer,
     respect_train: boolean
         Ignored.
     """
-    
+
     _check_data_format(keras_layer)
     # Get input and output names
     input_name, output_name = (input_names[0], output_names[0])
@@ -875,7 +875,7 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer,
 
     cropping = keras_layer.cropping
     top = left = bottom = right = 0
-    if is_1d: 
+    if is_1d:
         if type(cropping) is int:
             left = right = cropping
         elif type(cropping) is tuple:
@@ -885,7 +885,7 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer,
                 left, right = cropping[0]
             else:
                 raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
-        else: 
+        else:
             raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
     else:
         if type(cropping) is int:
@@ -899,7 +899,7 @@ def convert_cropping(builder, layer, input_names, output_names, keras_layer,
                 left, right = cropping[1]
             else:
                 raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
-        else: 
+        else:
             raise ValueError("Unrecognized cropping option: %s" % (str(cropping)))
 
     # Now add the layer
@@ -938,7 +938,7 @@ def convert_upsample(builder, layer, input_names, output_names, keras_layer,
             fh, fw = 1, keras_layer.size
         else:
             raise ValueError("Unrecognized upsample factor format %s" % (str(keras_layer.size)))
-    else: 
+    else:
         if type(keras_layer.size) is int:
             fh = fw = keras_layer.size
         elif len(keras_layer.size) == 2:
@@ -1138,7 +1138,7 @@ def convert_lstm(builder, layer, input_names, output_names, keras_layer,
         b.append(keras_b[1 * hidden_size:][:hidden_size])
         b.append(keras_b[3 * hidden_size:][:hidden_size])
         b.append(keras_b[2 * hidden_size:][:hidden_size])
-    if len(b) == 0: 
+    if len(b) == 0:
         b = None
 
     # Set activation type
@@ -1199,7 +1199,7 @@ def convert_gru(builder, layer, input_names, output_names, keras_layer,
     W_x.append(keras_W_x[0 * hidden_size:][:hidden_size])
     W_x.append(keras_W_x[1 * hidden_size:][:hidden_size])
     W_x.append(keras_W_x[2 * hidden_size:][:hidden_size])
-    
+
     if keras_layer.use_bias:
         keras_b = keras_layer.get_weights()[2]
         b.append(keras_b[0 * hidden_size:][:hidden_size])
@@ -1252,7 +1252,7 @@ def convert_bidirectional(builder, layer, input_names, output_names,
     lstm_layer = keras_layer.forward_layer
     if (type(lstm_layer) != _keras.layers.recurrent.LSTM):
         raise TypeError('Bidirectional layers only supported with LSTM')
-        
+
     if lstm_layer.go_backwards:
         raise TypeError(' \'go_backwards\' mode not supported with Bidirectional layers')
 
@@ -1306,7 +1306,7 @@ def convert_bidirectional(builder, layer, input_names, output_names,
         b_back.append(keras_b[2 * hidden_size:][:hidden_size])
     if len(b_back) == 0:
         b_back = None
-        
+
     if (b == None and b_back != None) or (b != None and b_back == None):
         raise ValueError('Unsupported Bi-directional LSTM configuration. Bias '
                          'must be enabled/disabled for both directions.')

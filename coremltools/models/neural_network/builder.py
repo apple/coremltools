@@ -302,6 +302,7 @@ class NeuralNetworkBuilder(object):
             self.spec = _Model_pb2.Model()
         self.spec.specificationVersion = SPECIFICATION_VERSION
         if disable_rank5_shape_mapping:
+            print("HI")
             self.spec.specificationVersion = _MINIMUM_NDARRAY_SPEC_VERSION
 
         # When output_features in None, use some dummy sized type
@@ -344,6 +345,7 @@ class NeuralNetworkBuilder(object):
                 nn_spec = self.spec.neuralNetwork
             self.nn_spec = nn_spec
 
+        print(self.nn_spec.arrayInputShapeMapping)
         if disable_rank5_shape_mapping and self.nn_spec:
             self.nn_spec.arrayInputShapeMapping = _NeuralNetwork_pb2.NeuralNetworkMultiArrayShapeMapping.Value(
                 'EXACT_ARRAY_MAPPING')

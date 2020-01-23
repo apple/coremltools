@@ -112,7 +112,7 @@ try:
         sys.stderr = stderr
     import tensorflow
 
-    k_ver = __get_version(keras.__version__)
+    k_ver = __get_version(keras.__version__.rstrip('-tf'))
 
     # keras 1 version too old
     if k_ver < _StrictVersion(KERAS_MIN_VERSION):
@@ -120,12 +120,12 @@ try:
         HAS_KERAS2_TF = False
         _logging.warn(('Keras version %s is not supported. Minimum required version: %s .'
                       'Keras conversion will be disabled.')
-                      % (keras.__version__, KERAS_MIN_VERSION))
+                      % (keras.__version__.rstrip('-tf'), KERAS_MIN_VERSION))
     # keras version too new
     if k_ver > _StrictVersion(KERAS_MAX_VERSION):
         HAS_KERAS_TF = False
         _logging.warn(('Keras version %s detected. Last version known to be fully compatible of Keras is %s .')
-                      % (keras.__version__, KERAS_MAX_VERSION))
+                      % (keras.__version__.rstrip('-tf'), KERAS_MAX_VERSION))
     # Using Keras 2 rather than 1
     if k_ver >= _StrictVersion('2.0.0'):
         HAS_KERAS_TF = False

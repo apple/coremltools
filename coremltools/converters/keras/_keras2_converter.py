@@ -18,18 +18,19 @@ from ...models.utils import save_spec as _save_spec
 from ..._deps import HAS_KERAS2_TF as _HAS_KERAS2_TF
 
 if _HAS_KERAS2_TF:
-    import keras as _keras
+    # import keras as _keras
+    from tensorflow.python import keras as _keras
     from . import _layers2
     from . import _topology2
     _KERAS_LAYER_REGISTRY = {
 
-        _keras.layers.core.Dense: _layers2.convert_dense,
-        _keras.layers.core.Activation: _layers2.convert_activation,
-        _keras.layers.advanced_activations.LeakyReLU: _layers2.convert_activation,
-        _keras.layers.advanced_activations.PReLU: _layers2.convert_activation,
-        _keras.layers.advanced_activations.ELU: _layers2.convert_activation,
-        _keras.layers.advanced_activations.ThresholdedReLU: _layers2.convert_activation,
-        _keras.layers.advanced_activations.Softmax: _layers2.convert_activation,
+        _keras.layers.Dense: _layers2.convert_dense,
+        _keras.layers.Activation: _layers2.convert_activation,
+        _keras.layers.LeakyReLU: _layers2.convert_activation,
+        _keras.layers.PReLU: _layers2.convert_activation,
+        _keras.layers.ELU: _layers2.convert_activation,
+        _keras.layers.ThresholdedReLU: _layers2.convert_activation,
+        _keras.layers.Softmax: _layers2.convert_activation,
 
         _keras.layers.convolutional.Conv2D: _layers2.convert_convolution,
         _keras.layers.convolutional.Conv2DTranspose: _layers2.convert_convolution,
@@ -78,12 +79,13 @@ if _HAS_KERAS2_TF:
     }
     from distutils.version import StrictVersion as _StrictVersion
     ## 2.2 Version check
-    if _keras.__version__ >= _StrictVersion('2.2.0'):
+    keras_version = _keras.__version__.rstrip('-tf')
+    if keras_version >= _StrictVersion('2.2.0'):
          _KERAS_LAYER_REGISTRY[_keras.layers.DepthwiseConv2D] = \
              _layers2.convert_convolution
          _KERAS_LAYER_REGISTRY[_keras.engine.input_layer.InputLayer] = \
              _layers2.default_skip
-         if _keras.__version__ >= _StrictVersion('2.2.1'):
+         if keras_version >= _StrictVersion('2.2.1'):
              _KERAS_LAYER_REGISTRY[_keras.layers.advanced_activations.ReLU] = \
                  _layers2.convert_advanced_relu
     else:
@@ -340,7 +342,7 @@ def _convert(model,
             input_names = [input_names]
     else:
         input_names = ['input' + str(i+1) for i in range(len(inputs))]
-
+    print(input_names)
     if output_names is not None:
         if isinstance(output_names, _string_types):
             output_names = [output_names]
