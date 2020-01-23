@@ -109,11 +109,11 @@ def ssa_convert(ssa,
     # fuse_batch_to_space_or_space_to_batch needs to be applied before transform_nhwc_to_nchw
     passes = [
         constant_weight_link_removal,
-        fuse_bias_add,
         onehot_matmul_to_embedding,
         fuse_layer_norm,
         fuse_gelu,
         fuse_batch_to_space_or_space_to_batch,
+        fuse_bias_add,
         transform_nhwc_to_nchw,
         remove_identity,
         remove_no_ops_and_shift_control_dependencies,
