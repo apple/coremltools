@@ -47,7 +47,7 @@ class TestKerasFashionMnist(unittest.TestCase):
             inputs=inputs,
             outputs=outputs
         )
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
 
         # verify numeric correctness of predictions
         inputs = generate_data(shape=self.input_shape)
@@ -140,7 +140,7 @@ class TestModelFormats(unittest.TestCase):
             outputs=['Identity']
         )
 
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
 
     def test_control_flow(self):
         @tf.function(input_signature=[tf.TensorSpec([], tf.float32)])
@@ -164,7 +164,7 @@ class TestModelFormats(unittest.TestCase):
             outputs=['Identity']
         )
 
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
         input_data = generate_data(shape=[20])
         for data in input_data:
             tf_prediction = to_save.control_flow(data).numpy().flatten()
@@ -195,7 +195,7 @@ class TestModelFormats(unittest.TestCase):
             self.saved_model_dir,
             inputs={input_name: (4, 4)},
             outputs=[output_name])
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
         self._test_prediction(keras_model=keras_model, core_ml_model=model, inputs=inputs)
 
 
@@ -229,7 +229,7 @@ class TestKerasApplications(unittest.TestCase):
             inputs=inputs,
             outputs=outputs
         )
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
 
         if verbose:
             print('TensorFlow Keras model saved at {}'.format(model_path))
@@ -436,7 +436,7 @@ class TestCornerCases(unittest.TestCase):
             inputs=inputs,
             outputs=outputs
         )
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
 
         if verbose:
             print('TensorFlow Keras model saved at {}'.format(model_path))
@@ -523,8 +523,8 @@ class TestCornerCases(unittest.TestCase):
             if layer.WhichOneof('layer') == 'loadConstantND':
                 load_constants += 1
 
-        assert not add_broadcastables
-        assert not load_constants
+        self.assertEqual(add_broadcastables, 0)
+        self.assertEqual(load_constants, 0)
 
     def test_conv2d_with_activation(self):
         inputs = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
