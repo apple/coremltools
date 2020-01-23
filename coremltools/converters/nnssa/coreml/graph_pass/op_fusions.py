@@ -338,9 +338,15 @@ def fuse_bias_add(nnssa):
             if current_node.op == 'BiasAdd' and len(current_node.inputs) == 2:
                 parent_node = f.graph[current_node.inputs[0]]
                 second_p_node = f.graph[current_node.inputs[1]]
-                if (parent_node.op == 'MatMul' or parent_node.op == 'Conv2D' and len(parent_node.outputs) == 1) and \
-                        (second_p_node.value is not None and len(second_p_node.outputs) == 1 and second_p_node.outputs[0] == k):
-
+                ops_to_merge = ['MatMul', 'Conv2D', 'DepthwiseConv2dNative']
+                if (
+                    (parent_node.op in ops_to_merge
+                     and len(parent_node.outputs) == 1)
+                    and
+                    (second_p_node.value is not None
+                     and len(second_p_node.outputs) == 1
+                     and second_p_node.outputs[0] == k)
+                ):
                     parent_node.attr['bias'] = second_p_node.value.val
                     disconnect_edge(f.graph, second_p_node.name, k)  # disconnect the const
                     disconnect_edge(f.graph, parent_node.name, k)  # disconnect the first parent

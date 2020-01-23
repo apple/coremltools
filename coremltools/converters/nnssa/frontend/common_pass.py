@@ -9,9 +9,14 @@ from .graph_pass import *
 
 def common_pass(ssa, resume_on_errors=False, **kwargs):
     passes = [
-        trace_constants, shift_get_global_to_set_global, type_inference_pass,
-        common_symbolic_value_elimination, delete_unnecessary_constant_nodes, remove_identities,
-        delete_unnecessary_constant_nodes, add_identity_outputs
+        trace_constants,
+        shift_get_global_to_set_global,
+        type_inference_pass,
+        common_symbolic_value_elimination,
+        delete_unnecessary_constant_nodes,
+        remove_identities,
+        delete_unnecessary_constant_nodes,
+        add_identity_outputs
     ]
 
     omit_symbolic_pass = kwargs.get("omit_symbolic_pass", False)
