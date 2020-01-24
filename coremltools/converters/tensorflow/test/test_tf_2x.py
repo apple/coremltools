@@ -7,6 +7,7 @@ import os
 import shutil
 from test_utils import generate_data
 from coremltools._deps import HAS_TF_2
+import math
 import pytest
 
 
@@ -426,6 +427,7 @@ class TestCornerCases(unittest.TestCase):
         inputs,
         outputs=None,
         decimal=4,
+        use_cpu_only=False,
         verbose=False
     ):
         keras_model.save(model_path)
@@ -457,7 +459,7 @@ class TestCornerCases(unittest.TestCase):
             output_name = keras_model.outputs[0].name
             outputs = [output_name.split('/')[1].split(':')[0]]
 
-        prediction = model.predict({name: data})[outputs[0]]
+        prediction = model.predict({name: data}, use_cpu_only=use_cpu_only)[outputs[0]]
 
         if verbose:
             print('Shape Keras:', keras_prediction.shape, ' vs. Core ML:', prediction.shape)
@@ -577,7 +579,7 @@ class TestCornerCases(unittest.TestCase):
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
                                  inputs={input_name: (1, 6 * 75)},
-                                 outputs=[output_name], verbose=True)
+                                 outputs=[output_name])
         num_transposes = 0
         for layer in model.get_spec().neuralNetwork.layers:
             if layer.WhichOneof('layer') == 'transpose':
@@ -598,13 +600,75 @@ class TestCornerCases(unittest.TestCase):
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
                                  inputs={input_name: (1, 6 * 75)},
-                                 outputs=[output_name], verbose=True)
+                                 outputs=[output_name])
 
         num_reshapes = 0
         for layer in model.get_spec().neuralNetwork.layers:
             if layer.WhichOneof('layer') == 'reshapeStatic':
                 num_reshapes += 1
         self.assertEqual(num_reshapes, 1)
+
+    def test_gelu_tanh_approx_fusion(self):
+
+        @tf.function(input_signature=[tf.TensorSpec(shape=(6,), dtype=tf.float32)])
+        def gelu_tanh(x):
+            y = 0.5 * (1.0 + tf.tanh((math.sqrt(2 / math.pi) * (x + 0.044715 * tf.pow(x, 3)))))
+            return x * y
+
+        conc_func = gelu_tanh.get_concrete_function()
+        mlmodel = coremltools.converters.tensorflow.convert(
+            [conc_func],
+            inputs={conc_func.inputs[0].name[:-2]: conc_func.inputs[0].shape},
+            outputs=[conc_func.outputs[0].name[:-2]]
+        )
+
+        spec = mlmodel.get_spec()
+        nn_spec = spec.neuralNetwork
+        number_gelu_layers = 0
+        for layer in nn_spec.layers:
+            if layer.WhichOneof('layer') == 'gelu':
+                number_gelu_layers += 1
+        self.assertEqual(number_gelu_layers, 1)
+
+    def disable_test_layer_norm_fusion(self):
+        keras_model = tf.keras.Sequential()
+        keras_model.add(tf.keras.layers.LayerNormalization(axis=-1, input_shape=(3, 4, 5)))
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 inputs={input_name: (3, 4, 5)},
+                                 outputs=[output_name])
+
+    def test_wrong_out_name_error(self):
+
+        @tf.function(input_signature=[tf.TensorSpec(shape=(1,), dtype=tf.float32)])
+        def sin(x):
+            y = tf.sin(x)
+            return y
+
+        conc_func = sin.get_concrete_function()
+        with self.assertRaises(Exception) as cm:
+            coremltools.converters.tensorflow.convert(
+                [conc_func],
+                inputs={conc_func.inputs[0].name[:-2]: conc_func.inputs[0].shape},
+                outputs=['output_not_present'])
+
+        the_exception = str(cm.exception)
+        self.assertTrue("is not an output node in the source graph" in the_exception)
+
+    def test_softplus(self):
+        keras_model = tf.keras.Sequential([
+            tf.keras.layers.Flatten(input_shape=(28, 28)),
+            tf.keras.layers.Dense(128, activation='softplus')
+        ])
+
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 inputs={input_name: (1, 28, 28)},
+                                 outputs=[output_name], decimal=3)
 
 
 if __name__ == '__main__':
@@ -614,5 +678,5 @@ if __name__ == '__main__':
         unittest.main()
     else:
         suite = unittest.TestSuite()
-        suite.addTest(TestKerasFashionMnist('test_sequential_builder_keras_model_format'))
+        suite.addTest(TestCornerCases('test_wrong_out_name_error'))
         unittest.TextTestRunner().run(suite)

@@ -404,9 +404,9 @@ def onehot_matmul_to_embedding(nnssa):
                 print('[Op Fusion] Node %s is removed.' % inp_node.name)
 
 
-def _search_nodes_by_type(gf, node_names, op_type):
+def _search_nodes_by_type(gf, node_names, op_types):
     for name in node_names:
-        if gf[name].op == op_type:
+        if gf[name].op in op_types:
             return gf[name]
 
 
@@ -419,9 +419,9 @@ def _match_layernorm_pattern(gf, entry_node):
 
     try:
         params = {}
-        mean_1 = _search_nodes_by_type(gf, entry_node.outputs, 'Mean')
-        sqdiff_2 = _search_nodes_by_type(gf, entry_node.outputs, 'SquaredDifference')
-        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, 'Mul')
+        mean_1 = _search_nodes_by_type(gf, entry_node.outputs, ['Mean'])
+        sqdiff_2 = _search_nodes_by_type(gf, entry_node.outputs, ['SquaredDifference'])
+        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, ['Mul'])
 
         if not (mean_1.op == 'Mean' and sqdiff_2.op == 'SquaredDifference' and
                 mul_3.op == 'Mul'):
@@ -453,7 +453,7 @@ def _match_layernorm_pattern(gf, entry_node):
         params['epsilon'] = const_8.value.val
         rsqrt_9 = gf[add_7.outputs[0]]
         mul_10 = gf[rsqrt_9.outputs[0]]
-        if not (add_7.op == 'Add' and const_8.op == 'Const' and
+        if not (add_7.op in ['Add','AddV2'] and const_8.op == 'Const' and
                 rsqrt_9.op == 'Rsqrt' and mul_10.op == 'Mul'):
             return None
         const_11 = gf[mul_10.inputs[1]]
@@ -471,7 +471,7 @@ def _match_layernorm_pattern(gf, entry_node):
             return None
         params['beta'] = const_14.value.val
         add_15 = gf[sub_13.outputs[0]]
-        if not (gf[add_15.inputs[0]] == mul_3 and add_15.op == 'Add'):
+        if not (gf[add_15.inputs[0]] == mul_3 and add_15.op in ['Add','AddV2']):
             return None
 
         layernorm_nodes = [mean_1, sqdiff_2, mul_3, const_4, mean_5, const_6,
@@ -494,7 +494,6 @@ def _fuse_layer_norm(graph):
         if layernorm_nodes_params is not None:
             ln_nodes, ln_params = layernorm_nodes_params
             out_node = ln_nodes[-1]
-            ln_outputs = out_node.outputs[:]
 
             # Instantiate a new fused node in the graph
             fused_ln_node = ParsedNode()
@@ -508,7 +507,6 @@ def _fuse_layer_norm(graph):
             # Connect fused node to entry and output nodes
             connect_edge(graph, current_node.name, fused_ln_node.name)
             replace_node(graph, out_node.name, fused_ln_node.name)
-            # connect_dests(graph, fused_ln_node.name, ln_outputs)
 
             # Delete nodes
             ln_node_names = [x.name for x in ln_nodes]
@@ -522,6 +520,20 @@ def _fuse_layer_norm(graph):
 
 
 def fuse_layer_norm(nnssa):
+    """
+    Layernorm op replaces the following sub-graph:
+
+    [...] -----> Mean ---> SquaredDifference ---> Mean ---> Add/AddV2 (epsilon) ---> Rsqrt ---> Mul (gamma) ---->  Mul ----> Sub (beta) ---->  Add/AddV2 -------> [...]
+      |            |             ^                                                                  |               ^                              ^
+      |            |             |                                                                  |               |                              |
+      | --------------------------                                                                  |               |                              |
+      |            |------------------------------------------------------------------------------------------------                               |
+      |                                                                                             |------------------------------> Mul------------
+      |                                                                                                                               ^
+      |                                                                                                                               |
+      | -------------------------------------------------------------------------------------------------------------------------------
+
+    """
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_layer_norm(f.graph)
@@ -533,11 +545,11 @@ def _match_gelu_pattern(gf, entry_node):
     try:
         if not len(entry_node.outputs) == 3:
             return None
-        pow_1 = _search_nodes_by_type(gf, entry_node.outputs, 'Pow')
-        add_2 = _search_nodes_by_type(gf, entry_node.outputs, 'Add')
-        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, 'Mul')
+        pow_1 = _search_nodes_by_type(gf, entry_node.outputs, ['Pow'])
+        add_2 = _search_nodes_by_type(gf, entry_node.outputs, ['Add', 'AddV2'])
+        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, ['Mul'])
 
-        if not (pow_1.op == 'Pow' and add_2.op == 'Add' and mul_3.op == 'Mul'):
+        if not (pow_1.op == 'Pow' and add_2.op in ['Add','AddV2'] and mul_3.op == 'Mul'):
             return None
         const_4 = gf[pow_1.inputs[1]]
         if not (const_4.op == 'Const' and int(round(const_4.value.val)) == 3):
@@ -557,7 +569,7 @@ def _match_gelu_pattern(gf, entry_node):
         tanh_9 = gf[mul_7.outputs[0]]
         add_10 = gf[tanh_9.outputs[0]]
         const_11 = gf[add_10.inputs[0]]
-        if not (tanh_9.op == 'Tanh' and add_10.op == 'Add' and \
+        if not (tanh_9.op == 'Tanh' and add_10.op in ['Add','AddV2'] and \
                 const_11.op == 'Const' and int(round(const_11.value.val)) == 1):
             return None
         mul_12 = gf[add_10.outputs[0]]
@@ -565,8 +577,8 @@ def _match_gelu_pattern(gf, entry_node):
         if not (mul_12.op == 'Mul' and const_13.op == 'Const' and \
                 abs(const_13.value.val - 0.5) < 1e-3):
             return None
-        if not (gf[mul_3.inputs[0]] == entry_node and \
-                gf[mul_3.inputs[1]] == mul_12):
+        if not ([gf[mul_3.inputs[0]], gf[mul_3.inputs[1]]] == [entry_node, mul_12] \
+                or [gf[mul_3.inputs[1]], gf[mul_3.inputs[0]]] == [entry_node, mul_12]):
             return None
 
         gelu_nodes = [pow_1, add_2, mul_3, const_4, mul_5, const_6, mul_7,
@@ -588,7 +600,6 @@ def _fuse_gelu(graph):
         gelu_nodes = _match_gelu_pattern(graph, current_node)
         if gelu_nodes is not None:
             out_node = gelu_nodes[2]
-            gelu_outputs = out_node.outputs[:]
 
             # Instantiate a new fused node in the graph
             fused_gelu_node = ParsedNode()
@@ -599,14 +610,14 @@ def _fuse_gelu(graph):
 
             graph[fused_gelu_node.name] = fused_gelu_node
 
+            # Connect fused node to entry and output nodes
+            connect_edge(graph, current_node.name, fused_gelu_node.name)
+            replace_node(graph, out_node.name, fused_gelu_node.name)
+
             # Delete nodes
             gelu_node_names = [x.name for x in gelu_nodes]
             for name in gelu_node_names:
                 delete_node(graph, name)
-
-            # Connect fused node to entry and output nodes
-            connect_edge(graph, current_node.name, fused_gelu_node.name)
-            connect_dests(graph, fused_gelu_node.name, gelu_outputs)
 
             count += 1
 
@@ -615,6 +626,17 @@ def _fuse_gelu(graph):
 
 
 def fuse_gelu(nnssa):
+    """
+    This is the Gelu pattern:
+    [...] -----> Pow (3) ----> Mul (.0447) -----> Add/AddV2 -----> Mul (sqrt(2/pi)) ---> tanh ----> Add/AddV2 (1) ----> Mul (0.5) -----> Mul ------> [...]
+      |                                            ^                                                                                      ^
+      |                                            |                                                                                      |
+      |------------------------------------------------------------------------------------------------------------------------------------
+
+    y = ( tanh((.0447)x^3 + x ) * (sqrt(2/pi)) + 1 ) * 0.5 * x
+
+    Replace this subgraph with a single "GeLU" op
+    """
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_gelu(f.graph)
