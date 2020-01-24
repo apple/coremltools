@@ -5,32 +5,10 @@ cache:
 
 language: python
 
-matrix:
-  include:
-    - python: 3.7
-      dist: xenial
-      sudo: true
-
-addons:
-  apt:
-    update: true
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-5
-      - g++-5
-      - libstdc++6
-      - python-setuptools
-      - libgif-dev
-      - vim-common
-      - libx11-dev
-
-env:
-  global:
-    - CI=false
-    - OMP_NUM_THREADS=4
-    - CC=gcc-5
-    - CXX=g++-5
+python:
+  - 3.7
+  - 3.6
+  - 2.7
 
 script:
   - free -m
