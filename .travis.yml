@@ -8,6 +8,24 @@ language: python
 python:
   - 2.7
 
+env:
+  global:
+    - CI=false
+    - OMP_NUM_THREADS=4
+    - CC=gcc-5
+    - CXX=g++-5
+
+addons:
+  apt:
+    update: true
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-5
+      - g++-5
+      - libstdc++6
+      - python-setuptools
+
 script:
   - free -m
 
