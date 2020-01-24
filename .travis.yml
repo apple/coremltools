@@ -1,0 +1,47 @@
+dist: trusty
+cache:
+  directories:
+    - $HOME/.ccache
+
+language: python
+
+matrix:
+  include:
+    - python: 3.7
+      dist: xenial
+      sudo: true
+
+addons:
+  apt:
+    update: true
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-5
+      - g++-5
+      - libstdc++6
+      - python-setuptools
+      - libgif-dev
+      - vim-common
+      - libx11-dev
+
+env:
+  global:
+    - CI=false
+    - OMP_NUM_THREADS=4
+    - CC=gcc-5
+    - CXX=g++-5
+
+script:
+  - free -m
+
+  # Set cache size to 2G (defaults to 512M)
+  - ccache -M 2G
+  - ccache -s
+
+  # Make wheel using default python
+  - bash -e scripts/make_wheel.sh
+  - bash -e scripts/test_wheel.sh --wheel-path=build/dist/*.whl 
+
+  # See the changes in ccache
+  - ccache -s
