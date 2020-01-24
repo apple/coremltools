@@ -427,6 +427,7 @@ class TestCornerCases(unittest.TestCase):
         inputs,
         outputs=None,
         decimal=4,
+        use_cpu_only=False,
         verbose=False
     ):
         keras_model.save(model_path)
@@ -458,7 +459,7 @@ class TestCornerCases(unittest.TestCase):
             output_name = keras_model.outputs[0].name
             outputs = [output_name.split('/')[1].split(':')[0]]
 
-        prediction = model.predict({name: data})[outputs[0]]
+        prediction = model.predict({name: data}, use_cpu_only=use_cpu_only)[outputs[0]]
 
         if verbose:
             print('Shape Keras:', keras_prediction.shape, ' vs. Core ML:', prediction.shape)
@@ -578,7 +579,7 @@ class TestCornerCases(unittest.TestCase):
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
                                  inputs={input_name: (1, 6 * 75)},
-                                 outputs=[output_name], verbose=True)
+                                 outputs=[output_name])
         num_transposes = 0
         for layer in model.get_spec().neuralNetwork.layers:
             if layer.WhichOneof('layer') == 'transpose':
@@ -599,7 +600,7 @@ class TestCornerCases(unittest.TestCase):
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
                                  inputs={input_name: (1, 6 * 75)},
-                                 outputs=[output_name], verbose=True)
+                                 outputs=[output_name])
 
         num_reshapes = 0
         for layer in model.get_spec().neuralNetwork.layers:
@@ -620,7 +621,7 @@ class TestCornerCases(unittest.TestCase):
             inputs={conc_func.inputs[0].name[:-2]: conc_func.inputs[0].shape},
             outputs=[conc_func.outputs[0].name[:-2]]
         )
-        
+
         spec = mlmodel.get_spec()
         nn_spec = spec.neuralNetwork
         number_gelu_layers = 0
@@ -631,15 +632,13 @@ class TestCornerCases(unittest.TestCase):
 
     def disable_test_layer_norm_fusion(self):
         keras_model = tf.keras.Sequential()
-        keras_model.add(tf.keras.layers.LayerNormalization(axis=-1, input_shape=(3,4,5)))
+        keras_model.add(tf.keras.layers.LayerNormalization(axis=-1, input_shape=(3, 4, 5)))
         input_name = keras_model.inputs[0].name.split(':')[0]
         output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
-                                 inputs={input_name: (3,4,5)},
-                                 outputs=[output_name], verbose=True)
-
-
+                                 inputs={input_name: (3, 4, 5)},
+                                 outputs=[output_name])
 
     def test_wrong_out_name_error(self):
 
@@ -651,12 +650,25 @@ class TestCornerCases(unittest.TestCase):
         conc_func = sin.get_concrete_function()
         with self.assertRaises(Exception) as cm:
             coremltools.converters.tensorflow.convert(
-                    [conc_func],
-                    inputs={conc_func.inputs[0].name[:-2]: conc_func.inputs[0].shape},
-                    outputs=['output_not_present'])
+                [conc_func],
+                inputs={conc_func.inputs[0].name[:-2]: conc_func.inputs[0].shape},
+                outputs=['output_not_present'])
 
         the_exception = str(cm.exception)
         self.assertTrue("is not an output node in the source graph" in the_exception)
+
+    def test_softplus(self):
+        keras_model = tf.keras.Sequential([
+            tf.keras.layers.Flatten(input_shape=(28, 28)),
+            tf.keras.layers.Dense(128, activation='softplus')
+        ])
+
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 inputs={input_name: (1, 28, 28)},
+                                 outputs=[output_name], decimal=3)
 
 
 if __name__ == '__main__':
