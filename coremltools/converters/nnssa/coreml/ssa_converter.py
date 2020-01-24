@@ -101,7 +101,7 @@ def ssa_convert(ssa,
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
@@ -131,7 +131,7 @@ def ssa_convert(ssa,
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     for f in list(ssa.functions.values()):
@@ -439,6 +439,7 @@ class SSAConverter(object):
             'StridedSlice': self._convert_slice,
             'Sub': self._convert_binary,
             'Sum': self._convert_reduction,
+            'Softplus': self._convert_unary_activation,
             'Tan': self._convert_unary_trigonometric,
             'Tanh': self._convert_unary_activation,
             'TensorArrayGatherV3': self._convert_tensorarray_gather,
