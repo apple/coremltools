@@ -10,7 +10,7 @@
 
 namespace CoreML {
 
-    // Forward declare structs to abstract way storage layouts.
+    // Forward declare structs to abstract away storage layouts.
     namespace Specification {
         class TreeEnsembleParameters;
         class TreeEnsembleParameters_TreeNode;

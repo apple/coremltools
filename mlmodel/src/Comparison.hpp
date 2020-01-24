@@ -97,20 +97,30 @@ namespace CoreML {
                         const TreeEnsembleClassifier& b);
         bool operator==(const NeuralNetworkClassifier& a,
                         const NeuralNetworkClassifier& b);
+        bool operator==(const KNearestNeighborsClassifier& a,
+                        const KNearestNeighborsClassifier& b);
         
         // generic models
         bool operator==(const NeuralNetwork& a,
                         const NeuralNetwork& b);
         bool operator==(const CustomModel& a,
                         const CustomModel& b);
-        
+        bool operator==(const LinkedModel& a,
+                        const LinkedModel& b);
+
         // Apple provided models
         bool operator==(const CoreMLModels::WordTagger& a,
                         const CoreMLModels::WordTagger& b);
         bool operator==(const CoreMLModels::TextClassifier& a,
                         const CoreMLModels::TextClassifier& b);
+        bool operator==(const CoreMLModels::Gazetteer& a,
+                        const CoreMLModels::Gazetteer& b);
+        bool operator==(const CoreMLModels::WordEmbedding& a,
+                        const CoreMLModels::WordEmbedding& b);
         bool operator==(const CoreMLModels::VisionFeaturePrint& a,
                         const CoreMLModels::VisionFeaturePrint& b);
+        bool operator==(const CoreMLModels::SoundAnalysisPreprocessing& a,
+                        const CoreMLModels::SoundAnalysisPreprocessing& b);
         
         // feature engineering
         bool operator==(const OneHotEncoder& a,
@@ -134,6 +144,10 @@ namespace CoreML {
         bool operator==(const ArrayFeatureExtractor& a,
                         const ArrayFeatureExtractor& b);
         
+        // recommenders
+        bool operator==(const ItemSimilarityRecommender& a,
+                        const ItemSimilarityRecommender& b);
+
         // data structures
         
         bool operator==(const Int64Vector& a,

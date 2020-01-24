@@ -53,6 +53,17 @@ namespace CoreML {
         if (!r.good()) {
             return r;
         }
+        
+        if (model.isupdatable()){
+            if (model.specificationversion() < MLMODEL_SPECIFICATION_VERSION_IOS13) {
+                std::string err = "Model specification version for an updatable model must be '" + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS13) + "' or above.";
+                return Result(ResultType::INVALID_COMPATIBILITY_VERSION, err);
+            }
+            r = validateCanModelBeUpdatable(model);
+        }
+        if (!r.good()) {
+            return r;
+        }
 
         return validateOptional(model);
     }
@@ -95,7 +106,13 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(bayesianProbitRegressor);
                 VALIDATE_MODEL_TYPE(wordTagger);
                 VALIDATE_MODEL_TYPE(textClassifier);
+                VALIDATE_MODEL_TYPE(gazetteer);
+                VALIDATE_MODEL_TYPE(wordEmbedding);
                 VALIDATE_MODEL_TYPE(visionFeaturePrint);
+                VALIDATE_MODEL_TYPE(kNearestNeighborsClassifier);
+                VALIDATE_MODEL_TYPE(itemSimilarityRecommender);
+                VALIDATE_MODEL_TYPE(soundAnalysisPreprocessing);
+                VALIDATE_MODEL_TYPE(linkedModel);
             case MLModelType_NOT_SET:
                 return Result(ResultType::INVALID_MODEL_INTERFACE, "Model did not specify a valid model-parameter type.");
         }
@@ -136,6 +153,8 @@ namespace CoreML {
                           "unable to open file for write");
         }
 
+        // Before saving the model, always downgrade the specification version to
+        // the minimal version supporting everything this model needs
         downgradeSpecificationVersion();
 
         // validate on save

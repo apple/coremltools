@@ -11,9 +11,9 @@ from ..proto import Model_pb2 as _Model_pb2
 from . import _feature_management
 from . import model as _model
 
-from ._interface_management import set_regressor_interface_params 
+from ._interface_management import set_regressor_interface_params
 from ._interface_management import set_classifier_interface_params
-from ._interface_management import set_transform_interface_params
+from ._interface_management import set_transform_interface_params, set_training_features
 
 class Pipeline(object):
     """ 
@@ -27,7 +27,7 @@ class Pipeline(object):
 
     """
 
-    def __init__(self, input_features, output_features):
+    def __init__(self, input_features, output_features, training_features=None):
         """
         Create a pipeline of models to be executed sequentially.
 
@@ -53,10 +53,14 @@ class Pipeline(object):
         # Access this to declare it as a pipeline
         spec.pipeline
 
-        spec = set_transform_interface_params(spec, input_features, output_features)
+        spec = set_transform_interface_params(spec, input_features, output_features, training_features)
 
         # Save the spec as a member variable.
         self.spec = spec
+
+    def _validate_updatable_pipeline_on_add_model(self, spec):
+        if spec.isUpdatable:
+            raise ValueError("New sub-models cannot be added after the pipeline has been marked as updatable")
 
     def add_model(self, spec):
         """
@@ -71,12 +75,46 @@ class Pipeline(object):
             A protobuf spec or MLModel instance containing a model.
         """
 
+        self._validate_updatable_pipeline_on_add_model(self.spec)
+
         if isinstance(spec, _model.MLModel):
             spec = spec._spec
 
         pipeline = self.spec.pipeline
         step_spec = pipeline.models.add()
         step_spec.CopyFrom(spec)
+
+    def _validate_sub_models_and_make_updatable(self, pipeline, spec):
+
+        num_models = len(pipeline.models)
+        if num_models < 1:
+            raise ValueError("Pipeline does not seem to have any models. It should be marked as updatable only after adding all sub-models.")
+
+        for model in pipeline.models[:-1]:
+            if model.isUpdatable:
+                raise ValueError("Only the last model can be updatable in an updatable pipeline.")
+
+        last_model = pipeline.models[num_models - 1]
+        if not last_model.isUpdatable:
+            raise ValueError("A pipeline can be made updatable only if the last model is updatable.")
+
+        spec.isUpdatable = True
+
+    def make_updatable(self):
+        self._validate_sub_models_and_make_updatable(self.spec.pipeline, self.spec)
+
+    def set_training_input(self, training_input):
+        """
+        Set the training inputs of the network spec.
+
+        Parameters
+        ----------
+        training_input: [tuple]
+            List of training input names and type of the network.
+        """
+        spec = self.spec
+        set_training_features(spec, training_input)
+
 
 class PipelineRegressor(Pipeline):
     """ 
@@ -86,8 +124,7 @@ class PipelineRegressor(Pipeline):
     a real valued output feature as its 'predicted feature'.
     """
 
-
-    def __init__(self, input_features, output_features):
+    def __init__(self, input_features, output_features, training_features=None):
         """
         Create a set of pipeline models given a set of model specs.  The final 
         output model must be a regression model. 
@@ -113,7 +150,7 @@ class PipelineRegressor(Pipeline):
         
         # Access this to declare it as a pipeline
         spec.pipelineRegressor
-        spec = set_regressor_interface_params(spec, input_features, output_features)
+        spec = set_regressor_interface_params(spec, input_features, output_features, training_features)
 
         # Save as a member variable
         self.spec = spec
@@ -131,12 +168,29 @@ class PipelineRegressor(Pipeline):
             A protobuf spec or MLModel instance containing a model.
         """
 
+        super(PipelineRegressor, self)._validate_updatable_pipeline_on_add_model(self.spec)
+
         if isinstance(spec, _model.MLModel):
             spec = spec._spec
 
         pipeline = self.spec.pipelineRegressor.pipeline
         step_spec = pipeline.models.add()
         step_spec.CopyFrom(spec)
+
+    def make_updatable(self):
+        super(PipelineRegressor, self)._validate_sub_models_and_make_updatable(self.spec.pipelineRegressor.pipeline, self.spec)
+
+    def set_training_input(self, training_input):
+        """
+        Set the training inputs of the network spec.
+
+        Parameters
+        ----------
+        training_input: [tuple]
+            List of training input names and type of the network.
+        """
+        spec = self.spec
+        set_training_features(spec, training_input)
 
 class PipelineClassifier(Pipeline):
     """ 
@@ -146,7 +200,7 @@ class PipelineClassifier(Pipeline):
     a discrete categorical output feature as its 'predicted feature'.
     """
 
-    def __init__(self, input_features, class_labels, output_features=None):
+    def __init__(self, input_features, class_labels, output_features=None, training_features=None):
         """
         Create a set of pipeline models given a set of model specs.  The last 
         model in this list must be a classifier model. 
@@ -179,7 +233,7 @@ class PipelineClassifier(Pipeline):
         spec = _Model_pb2.Model()
         spec.specificationVersion = SPECIFICATION_VERSION
         spec = set_classifier_interface_params(spec, input_features,
-                class_labels, 'pipelineClassifier', output_features)
+                class_labels, 'pipelineClassifier', output_features, training_features)
 
         # Access this to declare it as a pipeline
         spec.pipelineClassifier
@@ -199,8 +253,26 @@ class PipelineClassifier(Pipeline):
         spec: [MLModel, Model_pb2]
             A protobuf spec or MLModel instance containing a model.
         """
+
+        super(PipelineClassifier, self)._validate_updatable_pipeline_on_add_model(self.spec)
+
         if isinstance(spec, _model.MLModel):
             spec = spec._spec
         pipeline = self.spec.pipelineClassifier.pipeline
         step_spec = pipeline.models.add()
         step_spec.CopyFrom(spec)
+
+    def make_updatable(self):
+        super(PipelineClassifier, self)._validate_sub_models_and_make_updatable(self.spec.pipelineClassifier.pipeline, self.spec)
+
+    def set_training_input(self, training_input):
+        """
+        Set the training inputs of the network spec.
+
+        Parameters
+        ----------
+        training_input: [tuple]
+            List of training input names and type of the network.
+        """
+        spec = self.spec
+        set_training_features(spec, training_input)

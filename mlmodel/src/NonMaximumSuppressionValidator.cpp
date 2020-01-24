@@ -230,8 +230,6 @@ namespace CoreML {
         
         size_t confOldShapeDim = confidence_out.type().multiarraytype().shape_size();
         size_t confNewShapeDim = rankOfFlexibleShape(confidence_out.type().multiarraytype());
-        size_t coordsOldShapeDim = coordinates_out.type().multiarraytype().shape_size();
-        size_t coordsNewShapeDim = rankOfFlexibleShape(coordinates_out.type().multiarraytype());
 
         // These three options are all allowed, anything else will fail
         bool confUnspecified = (confOldShapeDim == 0 && confNewShapeDim == 0);
@@ -253,7 +251,7 @@ namespace CoreML {
         }
         
         // For now, require consistent usage of new/old
-        if (confUseOld && !coordsUseOld || confUseNew && !coordsUseNew) {
+        if ((confUseOld && !coordsUseOld) || (confUseNew && !coordsUseNew)) {
             return Result(ResultType::INVALID_MODEL_PARAMETERS,
                           "Confidence and coordinates cannot use a mix of shape (deprecated) and allowedShapes.");
         }

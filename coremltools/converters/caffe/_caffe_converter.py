@@ -3,13 +3,15 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import sys as _sys
+import os
 import six as _six
 from ...models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, _VALID_MLMODEL_PRECISION_TYPES
 
+
 def convert(model, image_input_names=[], is_bgr=False,
             red_bias=0.0, blue_bias=0.0, green_bias=0.0, gray_bias=0.0,
-            image_scale=1.0, class_labels=None, predicted_feature_name=None, model_precision=_MLMODEL_FULL_PRECISION):
+            image_scale=1.0, class_labels=None, predicted_feature_name=None,
+            model_precision=_MLMODEL_FULL_PRECISION):
     """
     Convert a Caffe model to Core ML format.
 
@@ -66,8 +68,7 @@ def convert(model, image_input_names=[], is_bgr=False,
         To specify different values for each image input provide a dictionary with input names as keys.    
 
     gray_bias: float | dict()
-		Bias value to be added to the input image (in grayscale).
-        Defaults to 0.0.
+        Bias value to be added to the input image (in grayscale). Defaults to 0.0.
         Applicable only if image_input_names is specified.
         To specify different values for each image input provide a dictionary with input names as keys.    
 
@@ -190,6 +191,10 @@ def convert(model, image_input_names=[], is_bgr=False,
             green_bias, gray_bias, image_scale, class_labels,
             predicted_feature_name)
     model = MLModel(model_path)
+    try:
+        os.remove(model_path)
+    except OSError:
+        pass
 
     if model_precision == _MLMODEL_HALF_PRECISION and model is not None:
         model = convert_neural_network_weights_to_fp16(model)
