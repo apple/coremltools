@@ -77,14 +77,16 @@ namespace CoreML {
      */
     template<typename T, typename U>
     Result validateClassifierInterface(const T& model,
-                                       const U& modelParameters) {
+                                       const U& modelParameters,
+                                       const bool allowEmptyLabels = false,
+                                       const bool defaultClassLabelIsInt64 = false) {
         
         bool expected_class_is_int64;
         
         // validate class labels
         switch (modelParameters.ClassLabels_case()) {
             case U::kInt64ClassLabels:
-                if (modelParameters.int64classlabels().vector_size() == 0) {
+                if (!allowEmptyLabels && modelParameters.int64classlabels().vector_size() == 0) {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS,
                                   "Classifier declared to have Int64 class labels must provide labels.");
                 }
@@ -99,7 +101,7 @@ namespace CoreML {
                 break;
                 
             case U::kStringClassLabels:
-                if (modelParameters.stringclasslabels().vector_size() == 0) {
+                if (!allowEmptyLabels && modelParameters.stringclasslabels().vector_size() == 0) {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS,
                                   "Classifier declared to have String class labels must provide labels.");
                 }
@@ -114,7 +116,11 @@ namespace CoreML {
                 break;
                 
             case U::CLASSLABELS_NOT_SET:
-                return Result(ResultType::INVALID_MODEL_PARAMETERS, "Classifier models must provide class labels.");
+                if (!allowEmptyLabels) {
+                    return Result(ResultType::INVALID_MODEL_PARAMETERS, "Classifier models must provide class labels.");
+                }
+                expected_class_is_int64 = defaultClassLabelIsInt64;
+                break;
         }
         const Specification::ModelDescription& interface = model.description();
         
@@ -166,6 +172,11 @@ namespace CoreML {
      * Some models have different behavior.
      */
     Result validateOptional(const Specification::Model& format);
+    
+    /*
+     * Validate if the model type can be set to updatable.
+     */
+    Result validateCanModelBeUpdatable(const Specification::Model& format);
 
 }
 #endif /* Validator_h */

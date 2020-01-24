@@ -10,7 +10,7 @@ def _get_translator_function(layer_type):
     if layer_type in _LAYER_REGISTERY:
         return _LAYER_REGISTERY[layer_type]
     else:
-        raise TypeError("Shape computation function missing for layer of type %s." % type(layer_type))
+        raise TypeError("Shape computation function missing for layer of type %s." % layer_type)
 
 
 def _identity(layer, shape_dict):
@@ -229,7 +229,7 @@ def _permute(layer, shape_dict):
     params = layer.permute
     Seq, Batch, Cin, Hin, Win = shape_dict[layer.input[0]]
     
-    axis = map(int, params.axis)
+    axis = list(map(int, params.axis))
     dims = (Seq, Cin, Hin, Win)
     Seq_out = dims[axis[0]]
     Cout = dims[axis[1]]

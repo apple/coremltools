@@ -9,6 +9,7 @@
 #include "Comparison.hpp"
 
 #include <cmath>
+#include "ItemSimilarityRecommenderCommon.hpp"
 
 namespace CoreML {
     
@@ -81,8 +82,20 @@ namespace CoreML {
                     return a.wordtagger() == b.wordtagger();
                 case Model::kTextClassifier:
                     return a.textclassifier() == b.textclassifier();
+                case Model::kGazetteer:
+                    return a.gazetteer() == b.gazetteer();
+                case Model::kWordEmbedding:
+                    return a.wordembedding() == b.wordembedding();
                 case Model::kVisionFeaturePrint:
                     return a.visionfeatureprint() == b.visionfeatureprint();
+                case Model::kKNearestNeighborsClassifier:
+                    return a.knearestneighborsclassifier() == b.knearestneighborsclassifier();
+                case Model::kItemSimilarityRecommender:
+                    return a.itemsimilarityrecommender() == b.itemsimilarityrecommender();
+                case Model::kSoundAnalysisPreprocessing:
+                    return a.soundanalysispreprocessing() == b.soundanalysispreprocessing();
+                case Model::kLinkedModel:
+                    return a.linkedmodel() == b.linkedmodel();
                 case Model::TYPE_NOT_SET:
                     return true;
             }
@@ -684,6 +697,76 @@ namespace CoreML {
             }
         }
         
+        bool operator==(const KNearestNeighborsClassifier& a,
+                        const KNearestNeighborsClassifier& b) {
+            auto aIndex = a.nearestneighborsindex();
+            auto bIndex = b.nearestneighborsindex();
+            if (aIndex.numberofdimensions() != bIndex.numberofdimensions()) {
+                return false;
+            }
+            if (aIndex.floatsamples_size() != bIndex.floatsamples_size()) {
+                return false;
+            }
+            for (int i = 0; i < aIndex.floatsamples_size(); i++) {
+                if (aIndex.floatsamples(i).vector_size() != bIndex.floatsamples(i).vector_size()) {
+                    return false;
+                }
+                if (aIndex.floatsamples(i).vector() != bIndex.floatsamples(i).vector()) {
+                    return false;
+                }
+            }
+            if (aIndex.IndexType_case() != bIndex.IndexType_case()) {
+                return false;
+            }
+            if (aIndex.DistanceFunction_case() != bIndex.DistanceFunction_case()) {
+                return false;
+            }
+            if (a.numberofneighbors().defaultvalue() != b.numberofneighbors().defaultvalue()) {
+                return false;
+            }
+            if (a.numberofneighbors().AllowedValues_case() != b.numberofneighbors().AllowedValues_case()) {
+                return false;
+            }
+            switch (a.numberofneighbors().AllowedValues_case()) {
+                case Specification::Int64Parameter::AllowedValuesCase::kRange:
+                {
+                    if (a.numberofneighbors().range().minvalue() != b.numberofneighbors().range().minvalue() || a.numberofneighbors().range().maxvalue() != b.numberofneighbors().range().maxvalue()) {
+                        return false;
+                    }
+                    break;
+                }
+                case Specification::Int64Parameter::AllowedValuesCase::kSet:
+                {
+                    if (a.numberofneighbors().set().values_size() != b.numberofneighbors().set().values_size()) {
+                        return false;
+                    }
+                    int64_t count = a.numberofneighbors().set().values_size();
+                    for (int64_t i = 0; i < count; i++) {
+                        if (a.numberofneighbors().set().values((int)i) != b.numberofneighbors().set().values((int)i)) {
+                            return false;
+                        }
+                    } // for i in set
+                    break;
+                } // case kSet
+                case Specification::Int64Parameter::AllowedValuesCase::ALLOWEDVALUES_NOT_SET:
+                    break;
+            } // switch AllowedValuesCase
+            if (a.ClassLabels_case() != b.ClassLabels_case()) {
+                return false;
+            }
+            switch (a.ClassLabels_case()) {
+                case KNearestNeighborsClassifier::kInt64ClassLabels:
+                    return a.int64classlabels() == b.int64classlabels();
+                case KNearestNeighborsClassifier::kStringClassLabels:
+                    return a.stringclasslabels() == b.stringclasslabels();
+                case KNearestNeighborsClassifier::CLASSLABELS_NOT_SET:
+                    return true;
+            }
+            if (a.WeightingScheme_case() != b.WeightingScheme_case()) {
+                return false;
+            }
+        }
+        
 #pragma mark Generic models
 
         bool operator==(const NeuralNetwork& a,
@@ -703,6 +786,29 @@ namespace CoreML {
                 return false;
             }
             // TODO: Check parameters match
+            return true;
+        }
+
+        bool operator==(const LinkedModel& a,
+                        const LinkedModel& b) {
+            if (a.LinkType_case() != b.LinkType_case()) {
+                return false;
+            }
+
+            switch (a.LinkType_case()) {
+                case LinkedModel::kLinkedModelFile:
+                    if (a.linkedmodelfile().linkedmodelfilename().defaultvalue() !=
+                        b.linkedmodelfile().linkedmodelfilename().defaultvalue()) {
+                        return false;
+                    }
+                    if (a.linkedmodelfile().linkedmodelsearchpath().defaultvalue() !=
+                        b.linkedmodelfile().linkedmodelsearchpath().defaultvalue()) {
+                        return false;
+                    }
+                    break;
+                case LinkedModel::LINKTYPE_NOT_SET:
+                    break;
+            }
             return true;
         }
 
@@ -799,6 +905,70 @@ namespace CoreML {
             
             return true;
         }
+        
+        bool operator==(const CoreMLModels::Gazetteer& a,
+                        const CoreMLModels::Gazetteer& b) {
+            
+            if (a.revision()!= b.revision()) {
+                return false;
+            }
+            
+            if (a.language()!= b.language()) {
+                return false;
+            }
+            
+            if (a.ClassLabels_case()!= b.ClassLabels_case()) {
+                return false;
+            }
+            
+            switch (a.ClassLabels_case()) {
+                case CoreMLModels::Gazetteer::kStringClassLabels:
+                    if (a.stringclasslabels()!= b.stringclasslabels()) {
+                        return false;
+                    }
+                    break;
+                case CoreMLModels::Gazetteer::CLASSLABELS_NOT_SET:
+                    break;
+            }
+            
+            if (a.modelparameterdata().size() != b.modelparameterdata().size()) {
+                return false;
+            }
+            
+            size_t s = a.modelparameterdata().size();
+            if (s > 0) {
+                if (memcmp(&a.modelparameterdata()[0], &b.modelparameterdata()[0], s)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        bool operator==(const CoreMLModels::WordEmbedding& a,
+                        const CoreMLModels::WordEmbedding& b) {
+            
+            if (a.revision()!= b.revision()) {
+                return false;
+            }
+            
+            if (a.language()!= b.language()) {
+                return false;
+            }
+            
+            if (a.modelparameterdata().size() != b.modelparameterdata().size()) {
+                return false;
+            }
+            
+            size_t s = a.modelparameterdata().size();
+            if (s > 0) {
+                if (memcmp(&a.modelparameterdata()[0], &b.modelparameterdata()[0], s)) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
 
         bool operator==(const CoreMLModels::VisionFeaturePrint& a,
                         const CoreMLModels::VisionFeaturePrint& b) {
@@ -820,6 +990,16 @@ namespace CoreML {
             return true;
         }
         
+        bool operator==(const CoreMLModels::SoundAnalysisPreprocessing& a,
+                        const CoreMLModels::SoundAnalysisPreprocessing& b) {
+
+            if (a.SoundAnalysisPreprocessingType_case() != b.SoundAnalysisPreprocessingType_case()) {
+                return false;
+            }
+
+            return true;
+        }
+
 #pragma mark Feature engineering
 
         bool operator==(const OneHotEncoder& a,
@@ -1037,7 +1217,19 @@ namespace CoreML {
                         const ArrayFeatureExtractor& b) {
             return a.extractindex() == b.extractindex();
         }
+#pragma mark Recommenders
         
+        bool operator==(const ItemSimilarityRecommender& a,
+                        const ItemSimilarityRecommender& b) {
+            try {
+               return (Recommender::_ItemSimilarityRecommenderData(a)
+                       == Recommender::_ItemSimilarityRecommenderData(b));
+            } catch(const std::invalid_argument&) {
+                return false;
+            }
+        }
+
+
 #pragma mark Data structures
         
         template<typename T>

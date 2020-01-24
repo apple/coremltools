@@ -1,7 +1,5 @@
 #ifndef __MODEL_ENUMS_H
 #define __MODEL_ENUMS_H
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
 enum MLModelType: int {
     MLModelType_pipelineClassifier = 200,
     MLModelType_pipelineRegressor = 201,
@@ -15,8 +13,11 @@ enum MLModelType: int {
     MLModelType_supportVectorClassifier = 401,
     MLModelType_treeEnsembleClassifier = 402,
     MLModelType_neuralNetworkClassifier = 403,
+    MLModelType_kNearestNeighborsClassifier = 404,
     MLModelType_neuralNetwork = 500,
+    MLModelType_itemSimilarityRecommender = 501,
     MLModelType_customModel = 555,
+    MLModelType_linkedModel = 556,
     MLModelType_oneHotEncoder = 600,
     MLModelType_imputer = 601,
     MLModelType_featureVectorizer = 602,
@@ -30,9 +31,13 @@ enum MLModelType: int {
     MLModelType_textClassifier = 2000,
     MLModelType_wordTagger = 2001,
     MLModelType_visionFeaturePrint = 2002,
+    MLModelType_soundAnalysisPreprocessing = 2003,
+    MLModelType_gazetteer = 2004,
+    MLModelType_wordEmbedding = 2005,
     MLModelType_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLModelType_Name(MLModelType x) {
     switch (x) {
         case MLModelType_pipelineClassifier:
@@ -59,10 +64,16 @@ static const char * MLModelType_Name(MLModelType x) {
             return "MLModelType_treeEnsembleClassifier";
         case MLModelType_neuralNetworkClassifier:
             return "MLModelType_neuralNetworkClassifier";
+        case MLModelType_kNearestNeighborsClassifier:
+            return "MLModelType_kNearestNeighborsClassifier";
         case MLModelType_neuralNetwork:
             return "MLModelType_neuralNetwork";
+        case MLModelType_itemSimilarityRecommender:
+            return "MLModelType_itemSimilarityRecommender";
         case MLModelType_customModel:
             return "MLModelType_customModel";
+        case MLModelType_linkedModel:
+            return "MLModelType_linkedModel";
         case MLModelType_oneHotEncoder:
             return "MLModelType_oneHotEncoder";
         case MLModelType_imputer:
@@ -89,10 +100,16 @@ static const char * MLModelType_Name(MLModelType x) {
             return "MLModelType_wordTagger";
         case MLModelType_visionFeaturePrint:
             return "MLModelType_visionFeaturePrint";
+        case MLModelType_soundAnalysisPreprocessing:
+            return "MLModelType_soundAnalysisPreprocessing";
+        case MLModelType_gazetteer:
+            return "MLModelType_gazetteer";
+        case MLModelType_wordEmbedding:
+            return "MLModelType_wordEmbedding";
         case MLModelType_NOT_SET:
             return "INVALID";
     }
+    return "INVALID";
 }
 
-#pragma clang diagnostic pop
 #endif

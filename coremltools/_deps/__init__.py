@@ -11,6 +11,7 @@ from distutils.version import StrictVersion as _StrictVersion
 import logging as _logging
 import re as _re
 
+
 def __get_version(version):
     # matching 1.6.1, and 1.6.1rc, 1.6.1.dev
     version_regex = '^\d+\.\d+\.\d+'
@@ -53,12 +54,40 @@ except:
     HAS_XGBOOST = False
 
 # ---------------------------------------------------------------------------------------
+HAS_TF = True
+HAS_TF_1_14 = True
+HAS_TF_2 = False
+TF_MIN_VERSION = '1.0.0'
+TF_MAX_VERSION = '1.14.0'
+
+try:
+    import tensorflow
+    tf_ver = __get_version(tensorflow.__version__)
+
+    # TensorFlow
+    if tf_ver < _StrictVersion(TF_MIN_VERSION):
+        _logging.warn(('TensorFlow version %s is not supported. Minimum required version: %s .'
+                      'TensorFlow conversion will be disabled.')
+                      % (tensorflow.__version__, TF_MIN_VERSION))
+    if tf_ver > _StrictVersion(TF_MAX_VERSION):
+        _logging.warn('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
+                      % (tensorflow.__version__, TF_MAX_VERSION))
+
+    if tf_ver < _StrictVersion('1.14.0'):
+        HAS_TF_1_14 = False
+
+    if tf_ver >= _StrictVersion('2.0.0'):
+        HAS_TF_2 = True
+except:
+    HAS_TF = False
+    HAS_TF_1_14 = False
+    HAS_TF_2 = False
+
+# ---------------------------------------------------------------------------------------
 HAS_KERAS_TF = True
 HAS_KERAS2_TF = True
 KERAS_MIN_VERSION = '1.2.2'
-KERAS_MAX_VERSION = '2.1.6'
-TF_MIN_VERSION = '1.0.0'
-TF_MAX_VERSION = '1.5.0'
+KERAS_MAX_VERSION = '2.2.4'
 
 try:
     # Prevent keras from printing things that are not errors to standard error.
@@ -66,7 +95,7 @@ try:
     import sys
     if six.PY2:
         import StringIO
-        temp = StringIO.StringIO()        
+        temp = StringIO.StringIO()
     else:
         import io
         temp = io.StringIO()
@@ -83,9 +112,8 @@ try:
         sys.stderr = stderr
     import tensorflow
 
-    tf_ver = __get_version(tensorflow.__version__)
     k_ver = __get_version(keras.__version__)
-    
+
     # keras 1 version too old
     if k_ver < _StrictVersion(KERAS_MIN_VERSION):
         HAS_KERAS_TF = False
@@ -106,20 +134,10 @@ try:
     else:
         HAS_KERAS_TF = True
         HAS_KERAS2_TF = False
-    # TensorFlow too old
-    if tf_ver < _StrictVersion(TF_MIN_VERSION):
-        HAS_KERAS_TF = False
-        HAS_KERAS2_TF = False
-        _logging.warn(('TensorFlow version %s is not supported. Minimum required version: %s .'
-                      'Keras conversion will be disabled.')
-                      % (tensorflow.__version__, TF_MIN_VERSION))
-    if tf_ver > _StrictVersion(TF_MAX_VERSION):
-        _logging.warn(('TensorFlow version %s detected. Last version known to be fully compatible is %s .')
-                      % (tensorflow.__version__, TF_MAX_VERSION))
     if keras.backend.backend() != 'tensorflow':
         HAS_KERAS_TF = False
         HAS_KERAS2_TF = False
-        _logging.warn(('Unsupported Keras backend (only Tensorflow is currently supported). '
+        _logging.warn(('Unsupported Keras backend (only TensorFlow is currently supported). '
                       'Keras conversion will be disabled.'))
 
 except:
@@ -132,4 +150,3 @@ try:
     import caffe2
 except:
     HAS_CAFFE2 = False
-# ---------------------------------------------------------------------------------------

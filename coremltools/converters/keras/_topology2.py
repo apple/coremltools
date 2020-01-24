@@ -338,6 +338,7 @@ class NetGraph(object):
         for idx, layer in enumerate(self.layer_list):
             keras_layer = self.keras_layer_map[layer]
             inbound_nodes = keras_layer.inbound_nodes if hasattr(keras_layer, 'inbound_nodes') else keras_layer._inbound_nodes
+            inbound_nodes = [node for node in inbound_nodes if len(node.inbound_layers) > 0]
             if not _is_merge_layer(self.keras_layer_map[layer]) and \
                 len(self.get_predecessors(layer)) > 1 and \
                 len(inbound_nodes) > 1:
@@ -350,7 +351,7 @@ class NetGraph(object):
             if isinstance(keras_layer, layer_type):
                 return idx
         return -1
-    
+
     def _add_edge(self, src, snk):
         if src not in self.edge_map:
             self.edge_map[src] = []
@@ -360,15 +361,15 @@ class NetGraph(object):
             self.reverse_edge_map[snk] = []
         if src not in self.reverse_edge_map[snk]:
             self.reverse_edge_map[snk].append(src)
-    
+
     def _remove_edge(self, src, snk):
         self.edge_map[src].remove(snk)
         if len(self.edge_map[src]) == 0:
             self.edge_map.pop(src)
         self.reverse_edge_map[snk].remove(src)
-        if len(self.reverse_edge_map[snk]) == 0: 
+        if len(self.reverse_edge_map[snk]) == 0:
             self.reverse_edge_map.pop(snk)
-    
+
     def _remove_layer(self, layer):
         """
         remove the layer and its input/output edges
@@ -385,7 +386,7 @@ class NetGraph(object):
         self.layer_list.remove(layer)
     
     def _remove_layer_and_reconnect(self, layer):
-        """ Remove the layer, and reconnect each of its predecessor to each of 
+        """ Remove the layer, and reconnect each of its predecessor to each of
         its successor
         """
         successors = self.get_successors(layer)
@@ -470,26 +471,26 @@ class NetGraph(object):
         if layer in self.output_layers:
             idx = self.output_layers.index(layer)
             self.output_layers[idx] = new_layer
-        
+
     def _insert_layer_between(self, src, snk, new_layer, new_keras_layer):
         """ Insert the new_layer, whose keras layer parameters are stored in 
         new_keras_layer, between src and snk.
         """
-        if snk is None: 
+        if snk is None:
             insert_pos = self.layer_list.index(src) + 1
-        else: 
-            insert_pos = self.layer_list.index(snk) # insert position
+        else:
+            insert_pos = self.layer_list.index(snk)  # insert position
         self.layer_list.insert(insert_pos, new_layer)
         self.keras_layer_map[new_layer] = new_keras_layer
-        if src is None: # snk is an input layer
+        if src is None:  # snk is an input layer
             self._add_edge(new_layer, snk)
         elif snk is None:  # src is an output layer
             self._add_edge(src, new_layer)
-        else: 
+        else:
             self._add_edge(src, new_layer)
             self._add_edge(new_layer, snk)
             self._remove_edge(src, snk)
-            
+
         # if layer is an output layer, change the output layer tag
         if src in self.output_layers:
             idx = self.output_layers.index(src)
@@ -536,85 +537,84 @@ class NetGraph(object):
             if isinstance(keras_layer, layer_type):
                 return True
         return False
-    
+
     def _get_1d_interface_edges(self):
         """ Get edges that represents transition from not-1D to 1D, and 1D to 
         not-1D. A 'in_edge e(u,v)' means u operates on non-1D blobs, but v 
         operates on 1D blobs. An 'out_edge e(u,v)' means u operates on 1D
         blobs, but v operates on non-1D blobs. 
         """
-        in_edges = []
-        for layer in self.layer_list: 
+        in_edges = set()
+        for layer in self.layer_list:
             if not self.is_1d_layer(layer):
                 continue
             preds = self.get_predecessors(layer)
             if len(preds) == 0:
-                in_edges.append((None, layer))
-            else: 
+                in_edges.add((None, layer))
+            else:
                 # because 1D layers are all 1-input, 
                 # there should only be 1 predecessor
                 u, v = preds[0], layer
-                while (u != None) and (self.is_activation(u) or type(u) in \
-                        _KERAS_NORMALIZATION_LAYERS):
+                while u and (self.is_activation(u) or type(u) in _KERAS_NORMALIZATION_LAYERS):
                     preds = self.get_predecessors(u)
                     v = u
                     u = preds[0] if len(preds) > 0 else None
                 if u is None or (not self.is_1d_layer(u)):
-                    in_edges.append((u, v))
+                    in_edges.add((u, v))
 
-        out_edges = []
+        out_edges = set()
         for layer in self.layer_list:
             if not self.is_1d_layer(layer):
                 continue
             # cases for 1d->output
             if layer in self.output_layers:
-                out_edges.append((layer, None))
-            
+                out_edges.add((layer, None))
+
             succs = self.get_successors(layer)
             if len(succs) > 0:
                 # this should be handled in 1d->output already
                 if not self.is_activation(succs[0]):
-                    for succ in succs: 
+                    for succ in succs:
                         if not self.is_1d_layer(succ):
-                            out_edges.append((layer, succ))
-                else: 
+                            out_edges.add((layer, succ))
+                else:
                     act_layer = succs[0]
                     succs = self.get_successors(act_layer)
                     if len(succs) == 0:
-                        out_edges.append((act_layer, None))
-                    else: 
-                        for succ in succs: 
+                        out_edges.add((act_layer, None))
+                    else:
+                        for succ in succs:
                             if not self.is_1d_layer(succ):
-                                out_edges.append((act_layer, succ))
+                                out_edges.add((act_layer, succ))
 
-        return in_edges, out_edges
-    
+        return list(in_edges), list(out_edges)
+
     def insert_1d_permute_layers(self):
         """
         Insert permutation layers before a 1D start point or after 1D end point 
         """
         idx, nb_layers = 0, len(self.layer_list)
         in_edges, out_edges = self._get_1d_interface_edges()
-        
-        # Hacky Warning: (1) use a 4-D permute, which is not likely to happen in Keras, 
+
+        # Hacky Warning: (1) use a 4-D permute, which is not likely to happen in Keras,
         # to represent actual permutation needed for (seq, c, h, w) in CoreML
         # (2) Assume 2-D input shape has meaning (seq, c), and during CoreML runtime, 
         # it is represented as 4D blob, (seq, c, h, w)
-        for in_edge in in_edges: 
+        for in_edge in in_edges:
             src, snk = in_edge
             if src is None:
                 permute_layer = '_permute_' + snk
-            else: 
+            else:
                 permute_layer = src + '_permute_' + snk
-            keras_permute = _keras.layers.Permute(dims=(3,1,2,0)) # assume w = 1, switch seq and w
+            keras_permute = _keras.layers.Permute(dims=(3, 1, 2, 0))  # assume w = 1, switch seq and w
             self._insert_layer_between(src, snk, permute_layer, keras_permute)
-        for out_edge in out_edges: 
+        for out_edge in out_edges:
             src, snk = out_edge
-            if snk is None: 
+            if snk is None:
                 permute_layer = src + '_permute_'
             else:
                 permute_layer = src + '_permute_' + snk
-            keras_permute = _keras.layers.Permute(dims=(3,1,2,0)) # assume w = 1, switch seq and w back
+            keras_permute = _keras.layers.Permute(dims=(3, 1, 2, 0))  # assume w = 1, switch seq and w back
             self._insert_layer_between(src, snk, permute_layer, keras_permute)
     
     def insert_permute_for_spatial_bn(self):
@@ -653,9 +653,7 @@ class NetGraph(object):
         model = self.model
         if not (type(model) == _keras.models.Sequential or type(model) == _keras.models.Model):
             raise TypeError("Keras layer of type %s is not supported." % type(model))
-            self = None
-            return
-        
+
         # build the graph without considering embedded subgraphs
         for i, layer in enumerate(model.layers):
             in_nodes = layer._inbound_nodes if hasattr(layer,
@@ -780,5 +778,3 @@ class NetGraph(object):
         self.print_edge_map()
         self.print_reverse_edge_map()
         self.print_mapping()
-    
-    

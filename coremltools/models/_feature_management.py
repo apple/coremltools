@@ -223,7 +223,7 @@ def process_or_validate_features(features, num_dimensions = None, feature_type_m
 
         for i, k in enumerate(features):
             if not isinstance(k, _string_types):
-                raise_type_error("List of feature names must be list of strings.")
+                raise_type_error("List of feature names must either be a list of strings, or a list of (name, datatypes.Array instance) tuples.")
 
         if num_dimensions is not None and len(features) != num_dimensions:
             raise_type_error(("List of feature names has wrong length; "

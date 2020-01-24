@@ -1,9 +1,10 @@
-*****************
-:mod:`Converters`
-*****************
+**********
+Converters
+**********
 
 Automatically convert models from popular machine learning libraries such as
-Keras, Caffe, scikit-learn, LibSVM, and XGboost to the Core ML format.
+TensorFlow, Keras, Caffe, scikit-learn, LIBSVM, and XGBoost to the Core ML
+format.
 
 .. automodule:: coremltools.converters
 .. currentmodule:: coremltools.converters
@@ -12,8 +13,9 @@ Keras, Caffe, scikit-learn, LibSVM, and XGboost to the Core ML format.
   :nosignatures:
   :toctree: generated/
 
-    caffe.convert
+    tensorflow.convert
     keras.convert
+    caffe.convert
     libsvm.convert
     sklearn.convert
     xgboost.convert

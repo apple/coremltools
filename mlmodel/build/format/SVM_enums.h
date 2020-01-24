@@ -1,7 +1,5 @@
 #ifndef __SVM_ENUMS_H
 #define __SVM_ENUMS_H
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-function"
 enum MLKernelkernel: int {
     MLKernelkernel_linearKernel = 1,
     MLKernelkernel_rbfKernel = 2,
@@ -10,6 +8,7 @@ enum MLKernelkernel: int {
     MLKernelkernel_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLKernelkernel_Name(MLKernelkernel x) {
     switch (x) {
         case MLKernelkernel_linearKernel:
@@ -23,6 +22,7 @@ static const char * MLKernelkernel_Name(MLKernelkernel x) {
         case MLKernelkernel_NOT_SET:
             return "INVALID";
     }
+    return "INVALID";
 }
 
 enum MLSupportVectorRegressorsupportVectors: int {
@@ -31,6 +31,7 @@ enum MLSupportVectorRegressorsupportVectors: int {
     MLSupportVectorRegressorsupportVectors_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLSupportVectorRegressorsupportVectors_Name(MLSupportVectorRegressorsupportVectors x) {
     switch (x) {
         case MLSupportVectorRegressorsupportVectors_sparseSupportVectors:
@@ -40,6 +41,7 @@ static const char * MLSupportVectorRegressorsupportVectors_Name(MLSupportVectorR
         case MLSupportVectorRegressorsupportVectors_NOT_SET:
             return "INVALID";
     }
+    return "INVALID";
 }
 
 enum MLSupportVectorClassifiersupportVectors: int {
@@ -48,6 +50,7 @@ enum MLSupportVectorClassifiersupportVectors: int {
     MLSupportVectorClassifiersupportVectors_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLSupportVectorClassifiersupportVectors_Name(MLSupportVectorClassifiersupportVectors x) {
     switch (x) {
         case MLSupportVectorClassifiersupportVectors_sparseSupportVectors:
@@ -57,6 +60,7 @@ static const char * MLSupportVectorClassifiersupportVectors_Name(MLSupportVector
         case MLSupportVectorClassifiersupportVectors_NOT_SET:
             return "INVALID";
     }
+    return "INVALID";
 }
 
 enum MLSupportVectorClassifierClassLabels: int {
@@ -65,6 +69,7 @@ enum MLSupportVectorClassifierClassLabels: int {
     MLSupportVectorClassifierClassLabels_NOT_SET = 0,
 };
 
+__attribute__((__unused__))
 static const char * MLSupportVectorClassifierClassLabels_Name(MLSupportVectorClassifierClassLabels x) {
     switch (x) {
         case MLSupportVectorClassifierClassLabels_stringClassLabels:
@@ -74,7 +79,7 @@ static const char * MLSupportVectorClassifierClassLabels_Name(MLSupportVectorCla
         case MLSupportVectorClassifierClassLabels_NOT_SET:
             return "INVALID";
     }
+    return "INVALID";
 }
 
-#pragma clang diagnostic pop
 #endif

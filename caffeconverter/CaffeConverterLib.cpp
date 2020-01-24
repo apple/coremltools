@@ -53,7 +53,7 @@ void convertCaffe(const std::string& srcPath,
     caffe::NetParameter caffeWeightsNetwork;
     std::map<std::string, caffe::BlobProto> caffeMeanImageBlob;
     
-    // TODO: We need to use only one caffe network proto variable (rdar://problem/30400140)
+    // TODO: We need to use only one caffe network proto variable
     // This is a workaround for that.
     if (caffeProtoTxtPath != "") {
         CoreMLConverter::loadCaffeNetwork(srcPath, caffeWeightsNetwork, caffeProtoTxtPath, caffeNetwork, meanImageProtoPath, caffeMeanImageBlob);
