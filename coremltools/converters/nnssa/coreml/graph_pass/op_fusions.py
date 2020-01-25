@@ -5,7 +5,7 @@ from __future__ import absolute_import as _
 
 import numpy as np
 from ...commons import builtins
-from ...commons.symbolic import * 
+from ...commons.symbolic import *
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
     delete_node, replace_node, connect_dests, topsort
 from ...nnssa import ParsedNode
@@ -102,7 +102,7 @@ def _is_NHWC(graph, node):
         return all(graph[inp].attr.get('data_format') == 'NHWC_format_inserted'
                    for inp in node.inputs[:-1])
 
-    if node.op == 'Pad'and len(node.datatype.get_shape()) == 4:
+    if node.op == 'Pad' and len(node.datatype.get_shape()) == 4:
         # adjust constant padding values
         parent_node = graph[node.inputs[1]]
         if parent_node.value is not None:
@@ -122,8 +122,10 @@ def _is_NHWC(graph, node):
             parent_node = graph[inp]
             if parent_node.value is not None:
                 val = np.array(parent_node.value.val)
+                if isinstance(parent_node.value.val, np.int32):
+                    val = np.array([parent_node.value.val])
                 m_nhwc_to_nchw = {0: 0, 1: 2, 2: 3, 3: 1}
-                reduction_indices = np.array([m_nhwc_to_nchw[x] for x in val], dtype=np.int32)
+                reduction_indices = np.array([m_nhwc_to_nchw[x if x >= 0 else 4 + x] for x in val], dtype=np.int32)
                 parent_node.value.val = np.reshape(reduction_indices, parent_node.value.val.shape)
                 node.attr['reduction_indices'] = reduction_indices
         return True
@@ -245,7 +247,6 @@ def transform_nhwc_to_nchw(nnssa):
                 nhwc_nodes.append(name)
 
         for name in nhwc_nodes:
-
             node = graph[name]
 
             # Adjust type inference
@@ -265,24 +266,30 @@ def transform_nhwc_to_nchw(nnssa):
             if node.op in ELEMENTWISE_OPS:
                 for inp in node.inputs:
                     parent_node = graph[inp]
-                    if parent_node.value is not None:
-                        # if there is a constant vector input
-                        val = np.array(parent_node.value.val)
-                        if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype):
-                            new_shape = (1, val.shape[0], 1, 1)
-                            parent_node.datatype = builtins.tensor(parent_node.datatype.get_primitive(), new_shape)
-                            parent_node.value.val = np.reshape(parent_node.value.val, new_shape)
+                    if parent_node.value is None:
+                        continue
+
+                    # if there is a constant vector input
+                    val = np.array(parent_node.value.val)
+                    if len(val.shape) == 1 and builtins.is_tensor(parent_node.datatype):
+                        new_shape = (1, val.shape[0], 1, 1)
+                        parent_node.datatype = builtins.tensor(
+                            parent_node.datatype.get_primitive(), new_shape
+                        )
+                        parent_node.value.val = np.reshape(
+                            parent_node.value.val, new_shape
+                        )
 
             # Insert NHWC -> NCHW transpose
             for i, inp_node_name in enumerate(node.inputs):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
                 symbolic_value = graph[inp_node_name].attr['symbolic_value']
                 if (graph[inp_node_name].op == 'Const' or
-                    len(graph[inp_node_name].datatype.get_shape()) != 4 or
-                    ( symbolic_value and not any_symbolic_or_unknown(symbolic_value))):
+                        len(graph[inp_node_name].datatype.get_shape()) != 4 or
+                        (symbolic_value and not any_symbolic_or_unknown(symbolic_value))):
                     # Const weights and parameters
                     continue
-            
+
                 if inp_node_format != 'NHWC_format_inserted':
                     assert len(graph[inp_node_name].datatype.get_shape()) == 4
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
@@ -331,9 +338,15 @@ def fuse_bias_add(nnssa):
             if current_node.op == 'BiasAdd' and len(current_node.inputs) == 2:
                 parent_node = f.graph[current_node.inputs[0]]
                 second_p_node = f.graph[current_node.inputs[1]]
-                if (parent_node.op == 'MatMul' or parent_node.op == 'Conv2D' and len(parent_node.outputs) == 1) and \
-                        (second_p_node.value is not None and len(second_p_node.outputs) == 1 and second_p_node.outputs[0] == k):
-
+                ops_to_merge = ['MatMul', 'Conv2D', 'DepthwiseConv2dNative']
+                if (
+                    (parent_node.op in ops_to_merge
+                     and len(parent_node.outputs) == 1)
+                    and
+                    (second_p_node.value is not None
+                     and len(second_p_node.outputs) == 1
+                     and second_p_node.outputs[0] == k)
+                ):
                     parent_node.attr['bias'] = second_p_node.value.val
                     disconnect_edge(f.graph, second_p_node.name, k)  # disconnect the const
                     disconnect_edge(f.graph, parent_node.name, k)  # disconnect the first parent
@@ -391,9 +404,9 @@ def onehot_matmul_to_embedding(nnssa):
                 print('[Op Fusion] Node %s is removed.' % inp_node.name)
 
 
-def _search_nodes_by_type(gf, node_names, op_type):
+def _search_nodes_by_type(gf, node_names, op_types):
     for name in node_names:
-        if gf[name].op == op_type:
+        if gf[name].op in op_types:
             return gf[name]
 
 
@@ -406,9 +419,9 @@ def _match_layernorm_pattern(gf, entry_node):
 
     try:
         params = {}
-        mean_1 = _search_nodes_by_type(gf, entry_node.outputs, 'Mean')
-        sqdiff_2 = _search_nodes_by_type(gf, entry_node.outputs, 'SquaredDifference')
-        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, 'Mul')
+        mean_1 = _search_nodes_by_type(gf, entry_node.outputs, ['Mean'])
+        sqdiff_2 = _search_nodes_by_type(gf, entry_node.outputs, ['SquaredDifference'])
+        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, ['Mul'])
 
         if not (mean_1.op == 'Mean' and sqdiff_2.op == 'SquaredDifference' and
                 mul_3.op == 'Mul'):
@@ -440,7 +453,7 @@ def _match_layernorm_pattern(gf, entry_node):
         params['epsilon'] = const_8.value.val
         rsqrt_9 = gf[add_7.outputs[0]]
         mul_10 = gf[rsqrt_9.outputs[0]]
-        if not (add_7.op == 'Add' and const_8.op == 'Const' and
+        if not (add_7.op in ['Add','AddV2'] and const_8.op == 'Const' and
                 rsqrt_9.op == 'Rsqrt' and mul_10.op == 'Mul'):
             return None
         const_11 = gf[mul_10.inputs[1]]
@@ -458,7 +471,7 @@ def _match_layernorm_pattern(gf, entry_node):
             return None
         params['beta'] = const_14.value.val
         add_15 = gf[sub_13.outputs[0]]
-        if not (gf[add_15.inputs[0]] == mul_3 and add_15.op == 'Add'):
+        if not (gf[add_15.inputs[0]] == mul_3 and add_15.op in ['Add','AddV2']):
             return None
 
         layernorm_nodes = [mean_1, sqdiff_2, mul_3, const_4, mean_5, const_6,
@@ -481,7 +494,6 @@ def _fuse_layer_norm(graph):
         if layernorm_nodes_params is not None:
             ln_nodes, ln_params = layernorm_nodes_params
             out_node = ln_nodes[-1]
-            ln_outputs = out_node.outputs[:]
 
             # Instantiate a new fused node in the graph
             fused_ln_node = ParsedNode()
@@ -495,7 +507,6 @@ def _fuse_layer_norm(graph):
             # Connect fused node to entry and output nodes
             connect_edge(graph, current_node.name, fused_ln_node.name)
             replace_node(graph, out_node.name, fused_ln_node.name)
-            # connect_dests(graph, fused_ln_node.name, ln_outputs)
 
             # Delete nodes
             ln_node_names = [x.name for x in ln_nodes]
@@ -509,6 +520,20 @@ def _fuse_layer_norm(graph):
 
 
 def fuse_layer_norm(nnssa):
+    """
+    Layernorm op replaces the following sub-graph:
+
+    [...] -----> Mean ---> SquaredDifference ---> Mean ---> Add/AddV2 (epsilon) ---> Rsqrt ---> Mul (gamma) ---->  Mul ----> Sub (beta) ---->  Add/AddV2 -------> [...]
+      |            |             ^                                                                  |               ^                              ^
+      |            |             |                                                                  |               |                              |
+      | --------------------------                                                                  |               |                              |
+      |            |------------------------------------------------------------------------------------------------                               |
+      |                                                                                             |------------------------------> Mul------------
+      |                                                                                                                               ^
+      |                                                                                                                               |
+      | -------------------------------------------------------------------------------------------------------------------------------
+
+    """
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_layer_norm(f.graph)
@@ -520,11 +545,11 @@ def _match_gelu_pattern(gf, entry_node):
     try:
         if not len(entry_node.outputs) == 3:
             return None
-        pow_1 = _search_nodes_by_type(gf, entry_node.outputs, 'Pow')
-        add_2 = _search_nodes_by_type(gf, entry_node.outputs, 'Add')
-        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, 'Mul')
+        pow_1 = _search_nodes_by_type(gf, entry_node.outputs, ['Pow'])
+        add_2 = _search_nodes_by_type(gf, entry_node.outputs, ['Add', 'AddV2'])
+        mul_3 = _search_nodes_by_type(gf, entry_node.outputs, ['Mul'])
 
-        if not (pow_1.op == 'Pow' and add_2.op == 'Add' and mul_3.op == 'Mul'):
+        if not (pow_1.op == 'Pow' and add_2.op in ['Add','AddV2'] and mul_3.op == 'Mul'):
             return None
         const_4 = gf[pow_1.inputs[1]]
         if not (const_4.op == 'Const' and int(round(const_4.value.val)) == 3):
@@ -544,7 +569,7 @@ def _match_gelu_pattern(gf, entry_node):
         tanh_9 = gf[mul_7.outputs[0]]
         add_10 = gf[tanh_9.outputs[0]]
         const_11 = gf[add_10.inputs[0]]
-        if not (tanh_9.op == 'Tanh' and add_10.op == 'Add' and \
+        if not (tanh_9.op == 'Tanh' and add_10.op in ['Add','AddV2'] and \
                 const_11.op == 'Const' and int(round(const_11.value.val)) == 1):
             return None
         mul_12 = gf[add_10.outputs[0]]
@@ -552,8 +577,8 @@ def _match_gelu_pattern(gf, entry_node):
         if not (mul_12.op == 'Mul' and const_13.op == 'Const' and \
                 abs(const_13.value.val - 0.5) < 1e-3):
             return None
-        if not (gf[mul_3.inputs[0]] == entry_node and \
-                gf[mul_3.inputs[1]] == mul_12):
+        if not ([gf[mul_3.inputs[0]], gf[mul_3.inputs[1]]] == [entry_node, mul_12] \
+                or [gf[mul_3.inputs[1]], gf[mul_3.inputs[0]]] == [entry_node, mul_12]):
             return None
 
         gelu_nodes = [pow_1, add_2, mul_3, const_4, mul_5, const_6, mul_7,
@@ -575,7 +600,6 @@ def _fuse_gelu(graph):
         gelu_nodes = _match_gelu_pattern(graph, current_node)
         if gelu_nodes is not None:
             out_node = gelu_nodes[2]
-            gelu_outputs = out_node.outputs[:]
 
             # Instantiate a new fused node in the graph
             fused_gelu_node = ParsedNode()
@@ -586,14 +610,14 @@ def _fuse_gelu(graph):
 
             graph[fused_gelu_node.name] = fused_gelu_node
 
+            # Connect fused node to entry and output nodes
+            connect_edge(graph, current_node.name, fused_gelu_node.name)
+            replace_node(graph, out_node.name, fused_gelu_node.name)
+
             # Delete nodes
             gelu_node_names = [x.name for x in gelu_nodes]
             for name in gelu_node_names:
                 delete_node(graph, name)
-
-            # Connect fused node to entry and output nodes
-            connect_edge(graph, current_node.name, fused_gelu_node.name)
-            connect_dests(graph, fused_gelu_node.name, gelu_outputs)
 
             count += 1
 
@@ -602,6 +626,17 @@ def _fuse_gelu(graph):
 
 
 def fuse_gelu(nnssa):
+    """
+    This is the Gelu pattern:
+    [...] -----> Pow (3) ----> Mul (.0447) -----> Add/AddV2 -----> Mul (sqrt(2/pi)) ---> tanh ----> Add/AddV2 (1) ----> Mul (0.5) -----> Mul ------> [...]
+      |                                            ^                                                                                      ^
+      |                                            |                                                                                      |
+      |------------------------------------------------------------------------------------------------------------------------------------
+
+    y = ( tanh((.0447)x^3 + x ) * (sqrt(2/pi)) + 1 ) * 0.5 * x
+
+    Replace this subgraph with a single "GeLU" op
+    """
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
         _fuse_gelu(f.graph)
@@ -642,7 +677,11 @@ def fuse_batch_norm(ssa):
                 return None
             if not _check_number_inputs(node, 2):
                 return None
-            const_node = graph[node.inputs[1]]
+            node_inputs = [graph[n].op.lower() for n in node.inputs]
+            try:
+                const_node = graph[node.inputs[node_inputs.index('const')]]
+            except ValueError:
+                return None
             if not _check_single_out_vector_constant_node(const_node):
                 return None
             if not _check_rank_matches(const_node, node):
@@ -692,14 +731,23 @@ def fuse_batch_norm(ssa):
         graph[fused_bn_node.name] = fused_bn_node
 
         # combine control i/o
-        control_inputs = list()
-        control_outputs = list()
+        control_inputs = []
+        control_outputs = []
         bn_node_names = [x.name for x in nodes]
+
         for name in bn_node_names:
             control_inputs += graph[name].control_inputs
             control_outputs += graph[name].control_outputs
-        fused_bn_node.control_inputs.extend(control_inputs)
-        fused_bn_node.control_outputs.extend(control_outputs)
+
+            # Modify control outputs with name of fused batch norm node.
+            for control_output_name in graph[name].control_outputs:
+                ctrl_node = graph[control_output_name]
+                for i, inpt_name in enumerate(ctrl_node.control_inputs):
+                    if inpt_name == name:
+                        ctrl_node.control_inputs[i] = fused_bn_node.name
+
+        fused_bn_node.control_inputs = control_inputs
+        fused_bn_node.control_outputs = control_outputs
 
         # connect fused node to entry and output nodes
         connect_edge(graph, current_node.name, fused_bn_node.name)

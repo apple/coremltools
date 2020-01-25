@@ -10,6 +10,7 @@ from ...models.neural_network.update_optimizer_utils import AdamParams
 from ...models.neural_network.update_optimizer_utils import SgdParams
 from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from collections import OrderedDict as _OrderedDict
+from ...proto import Model_pb2 as _Model_pb2
 from ...models import datatypes
 from ...models import MLModel as _MLModel
 from ...models.utils import save_spec as _save_spec
@@ -32,7 +33,7 @@ if _HAS_KERAS2_TF:
 
         _keras.layers.convolutional.Conv2D: _layers2.convert_convolution,
         _keras.layers.convolutional.Conv2DTranspose: _layers2.convert_convolution,
-        _keras.layers.convolutional.SeparableConv2D: _layers2.convert_separable_convolution, 
+        _keras.layers.convolutional.SeparableConv2D: _layers2.convert_separable_convolution,
         _keras.layers.pooling.AveragePooling2D: _layers2.convert_pooling,
         _keras.layers.pooling.MaxPooling2D: _layers2.convert_pooling,
         _keras.layers.pooling.GlobalAveragePooling2D: _layers2.convert_pooling,
@@ -63,7 +64,7 @@ if _HAS_KERAS2_TF:
         _keras.layers.Maximum: _layers2.convert_merge,
         _keras.layers.Concatenate: _layers2.convert_merge,
         _keras.layers.Dot: _layers2.convert_merge,
-    
+
         _keras.layers.core.Flatten: _layers2.convert_flatten,
         _keras.layers.core.Permute:_layers2.convert_permute,
         _keras.layers.core.Reshape:_layers2.convert_reshape,
@@ -91,7 +92,7 @@ if _HAS_KERAS2_TF:
          _KERAS_LAYER_REGISTRY[_keras.engine.topology.InputLayer] = \
              _layers2.default_skip
     # end if _HAS_KERAS2_TF
-    
+
 
 def _is_merge_layer(layer):
     if _HAS_KERAS2_TF:
@@ -106,7 +107,7 @@ def _is_activation_layer(layer):
             isinstance(layer, _keras.layers.advanced_activations.LeakyReLU) or
             isinstance(layer, _keras.layers.advanced_activations.PReLU) or
             isinstance(layer, _keras.layers.advanced_activations.ELU) or
-            isinstance(layer, 
+            isinstance(layer,
                        _keras.layers.advanced_activations.ThresholdedReLU) or
             isinstance(layer, _keras.layers.advanced_activations.Softmax))
 
@@ -163,7 +164,7 @@ def _load_keras_model(model_network_path, model_weight_path, custom_objects=None
         Path where the model network weights are (hd5 file)
 
     custom_objects:
-        A dictionary of layers or other custom classes 
+        A dictionary of layers or other custom classes
         or functions used by the model
 
     Returns
@@ -300,7 +301,8 @@ def _convert(model,
              custom_objects=None,
              input_shapes=None,
              output_shapes=None,
-             respect_trainable=False):
+             respect_trainable=False,
+             use_float_arraytype=False):
 
     # Check Keras format
     if _keras.backend.image_data_format() == 'channels_first':
@@ -309,7 +311,7 @@ def _convert(model,
               "Changing to 'channels_last', but your model may not be converted "
               "converted properly.")
         _keras.backend.set_image_data_format('channels_last')
-    
+
     # Check custom conversion functions / custom objects
     add_custom_layers = custom_conversion_functions is not None
 
@@ -317,10 +319,10 @@ def _convert(model,
         model = _keras.models.load_model(model, custom_objects = custom_objects)
     elif isinstance(model, tuple):
         model = _load_keras_model(model[0], model[1])
-    
+
     # Check valid versions
     _check_unsupported_layers(model, add_custom_layers)
-    
+
     # Build network graph to represent Keras model
     graph = _topology2.NetGraph(model)
     graph.build()
@@ -328,29 +330,29 @@ def _convert(model,
     # The graph should be finalized before executing this
     graph.generate_blob_names()
     graph.add_recurrent_optionals()
-    
+
     inputs = graph.get_input_layers()
     outputs = graph.get_output_layers()
-    
+
     # check input / output names validity
-    if input_names is not None: 
+    if input_names is not None:
         if isinstance(input_names, _string_types):
             input_names = [input_names]
-    else: 
+    else:
         input_names = ['input' + str(i+1) for i in range(len(inputs))]
 
-    if output_names is not None: 
+    if output_names is not None:
         if isinstance(output_names, _string_types):
             output_names = [output_names]
-    else: 
+    else:
         output_names = ['output' + str(i+1) for i in range(len(outputs))]
-    
+
     if image_input_names is not None and isinstance(image_input_names, _string_types):
         image_input_names = [image_input_names]
-    
+
     graph.reset_model_input_names(input_names)
     graph.reset_model_output_names(output_names)
-    
+
     # Keras -> Core ML input dimension dictionary
     # (None, None) -> [1, 1, 1, 1, 1]
     # (None, D) -> [D] or [D, 1, 1, 1, 1]
@@ -478,7 +480,8 @@ def _convert(model,
     input_features = list(zip(input_names, input_types))
     output_features = list(zip(output_names, output_types))
 
-    builder = _NeuralNetworkBuilder(input_features, output_features, mode = mode)
+    builder = _NeuralNetworkBuilder(input_features, output_features, mode = mode,
+                                    use_float_arraytype=use_float_arraytype)
 
     for iter, layer in enumerate(graph.layer_list):
         keras_layer = graph.keras_layer_map[layer]
@@ -548,4 +551,21 @@ def _convert(model,
 
     # Return the protobuf spec
     spec = builder.spec
+
+    # If the model has multi-arrays of type double, recommend to the user the utility function
+    # coremltools.models.utils.convert_double_to_float_multiarray_type(spec)
+    has_double_multiarray = False
+    for feature in list(spec.description.input) + list(spec.description.output):
+        if feature.type.HasField('multiArrayType'):
+            if feature.type.multiArrayType.dataType == _Model_pb2.ArrayFeatureType.DOUBLE:
+                has_double_multiarray = True
+                break
+
+    if has_double_multiarray:
+        print("\n\nRecommendation: This model has at least one multiarray input/output of type double.\n"
+              "For large sized arrays, multiarrays of type float32 are more efficient.\n"
+              "In future, float input/output multiarrays will be produced by default by the converter.\n"
+              "Please use, either the flag 'use_float_arraytype' during the call to convert or\n"
+              "the utility 'coremltools.utils.convert_double_to_float_multiarray_type(spec)', post-conversion.\n\n")
+
     return spec

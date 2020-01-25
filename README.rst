@@ -21,34 +21,6 @@ the .mlmodel format. In particular, it can be used to:
 - Making predictions using the Core ML framework (on select platforms) to
   verify conversion.
 
-Installation
-------------
-
-The method for installing :code:`coremltools` follows the
-`standard python package installation steps <https://packaging.python.org/installing/>`_.
-Once you have set up a python environment, run::
-
-    pip install -U coremltools
-
-The package `documentation <https://apple.github.io/coremltools/>`_ contains
-more details on how to use coremltools.
-
-Dependencies
-------------
-
-:code:`coremltools` has the following dependencies:
-
-- numpy (1.10.0+)
-- protobuf (3.1.0+)
-
-In addition, it has the following soft dependencies that are only needed when
-you are converting models of these formats:
-
-- Keras (1.2.2, 2.0.4+) with corresponding TensorFlow version
-- XGBoost (0.7+)
-- scikit-learn (0.17+)
-- LIBSVM
-
 More Information
 ----------------
 

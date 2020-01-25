@@ -442,6 +442,10 @@ Step 1 can be replaced by respective framework to ONNX converter.
 ## Building an mlmodel Using the Builder API
 
 [Code snippet](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#building-an-mlmodel-from-scratch-using-neural-network-builder)
+of building a toy 2 layer Core ML model.
+
+[Here](https://github.com/huggingface/swift-coreml-transformers/blob/ec00de7414c90a4c972ce9e2838353e57d45eaf4/model_generation/gpt2.py) is an example of building the GPT2 model from scratch using the Core ML builder API, with pre-trained weights.
+  
 
 ## Model Quantization
 

@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import sys as _sys
+import os
 import six as _six
 from ...models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, _VALID_MLMODEL_PRECISION_TYPES
 
@@ -191,6 +191,10 @@ def convert(model, image_input_names=[], is_bgr=False,
             green_bias, gray_bias, image_scale, class_labels,
             predicted_feature_name)
     model = MLModel(model_path)
+    try:
+        os.remove(model_path)
+    except OSError:
+        pass
 
     if model_precision == _MLMODEL_HALF_PRECISION and model is not None:
         model = convert_neural_network_weights_to_fp16(model)

@@ -1,4 +1,3 @@
-docs/APIExamples.md
 # API Code snippets
 
 ## Converting between MLModel and Spec
@@ -34,7 +33,26 @@ mlmodel = coremltools.models.MLModel(spec)
 spec = coremltools.models.utils.load_spec('path/to/the/model.mlmodel')
 ```
 
-## Printing the pre-processing parameters 
+## Visualizing Neural Network Core ML models
+
+```python
+import coremltools
+
+mlmodel = coremltools.models.MLModel('path/to/the/model.mlmodel')
+mlmodel.visualize_spec()
+
+# To print a succinct description of the neural network
+spec = mlmodel.get_spec()
+from coremltools.models.neural_network.printer import print_network_spec
+
+print_network_spec(spec, style='coding')
+# or
+print_network_spec(spec)
+```
+
+Another useful tool for visualizing CoreML models and models from other frameworks: [Netron](https://github.com/lutzroeder/netron)
+
+## Printing the pre-processing parameters
 
 This is useful for image based neural network models
 
@@ -95,6 +113,7 @@ import coremltools
 import numpy as np
 import PIL.Image
 
+# load a model whose input type is "Image"
 model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
 
 Height = 20  # use the correct input image height
@@ -123,14 +142,53 @@ pil_img = PIL.Image.fromarray(data)
 out_dict = model.predict({'image': pil_img})
 ```
 
+Now, let us say the Core ML model has an input type of MultiArray, but it really represents an image.
+How can a jpeg image be used to call predict on such a model? For this, the loaded image should first
+be converted to a numpy array. Here is one way to do it:
+
+```python
+
+Height = 20  # use the correct input image height
+Width = 60  # use the correct input image width
+
+
+# assumption: the mlmodel's input is of type MultiArray and of shape (1, 3, Height, Width)
+model_expected_input_shape = (1, 3, Height, Width) # depending on the model description, this could be (3, Height, Width)
+
+# load the model
+model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
+
+def load_image_as_numpy_array(path, resize_to=None):
+    # resize_to: (Width, Height)
+    img = PIL.Image.open(path)
+    if resize_to is not None:
+        img = img.resize(resize_to, PIL.Image.ANTIALIAS)
+    img_np = np.array(img).astype(np.float32) # shape of this numpy array is (Height, Width, 3)
+    return img_np
+
+# load the image and resize using PIL utilities
+img_as_np_array = load_image_as_numpy_array('/path/to/image.jpg', resize_to=(Width, Height)) # shape (Height, Width, 3)
+
+# note that PIL returns an image in the format in which the channel dimension is in the end,
+# which is different than CoreML's input format, so that needs to be modified
+img_as_np_array = np.transpose(img_as_np_array, (2,0,1)) # shape (3, Height, Width)
+
+# add the batch dimension if the model description has it
+img_as_np_array = np.reshape(img_as_np_array, model_expected_input_shape)
+
+# now call predict
+out_dict = model.predict({'image': img_as_np_array})
+```  
+
+
 ## Building an mlmodel from scratch using Neural Network Builder
 
-The neural network [builder class](https://github.com/apple/coremltools/blob/master/coremltools/models/neural_network/builder.py) can be used to programmatically construct a CoreML model. 
-Lets look at an example of 
+The neural network [builder class](https://github.com/apple/coremltools/blob/master/coremltools/models/neural_network/builder.py) can be used to programmatically construct a CoreML model.
+Lets look at an example of
 making a tiny 2 layer model with a convolution layer (with random weights) and an activation.
 
-To find the list of all the neural network layer types supported see [this](https://github.com/aseemw/coremltools/blob/f95f9b230f6a1bd8b0d9ee298b78d7786e3e7cfd/mlmodel/format/NeuralNetwork.proto#L472) 
-portion of the NeuralNetwork.proto 
+To find the list of all the neural network layer types supported see [this](https://github.com/aseemw/coremltools/blob/f95f9b230f6a1bd8b0d9ee298b78d7786e3e7cfd/mlmodel/format/NeuralNetwork.proto#L472)
+portion of the NeuralNetwork.proto
 
 ```python
 import coremltools
@@ -141,7 +199,7 @@ import numpy as np
 input_features = [('data', datatypes.Array(*(1, 3, 10, 10)))]
 output_features = [('output', None)]
 
-builder = neural_network.NeuralNetworkBuilder(input_features, output_features, 
+builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
                                               disable_rank5_shape_mapping=True)
 
 builder.add_convolution(name='conv',
@@ -169,11 +227,33 @@ spec = builder.spec
 model = coremltools.models.MLModel(spec)
 model.save('conv_prelu.mlmodel')
 
-output_dict = model.predict({'data': np.ones((1, 3, 10, 10))}, useCPUOnly=False)
+output_dict = model.predict({'data': np.ones((3, 10, 10))}, useCPUOnly=False)
 print(output_dict['output'].shape)
-#print(output_dict['output'])
+print(output_dict['output'].flatten()[:3])
 ```
 
+## Print out layer attributes for debugging
+
+Sometimes we want to print out weights of a particular layer for debugging purposes.
+Following is an example showing how we can utilize the `protobuf` APIs to access any
+attributes include weight parameters. This code snippet uses the model we created in
+the previous example.
+
+```python
+import coremltools
+import numpy as np
+
+model = coremltools.models.MLModel('conv_prelu.mlmodel')
+
+spec = model.get_spec()
+print(spec)
+
+layer = spec.neuralNetwork.layers[0]
+weight_params = layer.convolution.weights
+
+print('Weights of {} layer: {}.'.format(layer.WhichOneof('layer'), layer.name))
+print(np.reshape(np.asarray(weight_params.floatValue), (1, 1, 3, 3)))
+```
 
 ## Quantizing a neural network mlmodel
 
@@ -214,7 +294,6 @@ class MyLayerSelector(QuantizedLayerSelector):
     def do_quantize(self, layer, **kwargs):
         ret = super(MyLayerSelector, self).do_quantize(layer)
         if not ret or layer.name == 'dense_2':
-            return False
             return True
 
 

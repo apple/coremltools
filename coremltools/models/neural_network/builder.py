@@ -202,7 +202,8 @@ class NeuralNetworkBuilder(object):
                  spec=None,
                  nn_spec=None,
                  disable_rank5_shape_mapping=False,
-                 training_features=None):
+                 training_features=None,
+                 use_float_arraytype=False):
         """
         Construct a NeuralNetworkBuilder object to build an MLModel specification with
         model interface or a NeuralNetwork protobuf message, either from scratch or an
@@ -254,6 +255,10 @@ class NeuralNetworkBuilder(object):
             If nn_spec is not None and spec is None, the builder will build a NeuralNetwork spec without
             wrapping it within an MLModel. This is useful to create nested NeuralNetworks for models
             with control flow operations.
+
+        use_float_arraytype: bool
+            If true, the datatype of input/output multiarrays is set to Float32 instead
+            of double.
 
         Examples
         --------
@@ -314,8 +319,14 @@ class NeuralNetworkBuilder(object):
         if len(self.spec.description.output) > 0:
             del self.spec.description.output[:]
 
+        if use_float_arraytype:
+            array_datatype = _Model_pb2.ArrayFeatureType.FLOAT32
+        else:
+            array_datatype = _Model_pb2.ArrayFeatureType.DOUBLE
+
         self.spec = set_transform_interface_params(self.spec, input_features,
-                                                   out_features_with_shape, training_features=training_features)
+                                                   out_features_with_shape, training_features=training_features,
+                                                   array_datatype=array_datatype)
 
         for input in input_features:
             self.rank_dict[input[0]] = len(input[1].dimensions)
@@ -685,12 +696,12 @@ class NeuralNetworkBuilder(object):
 
     def set_mean_squared_error_loss(self, name, input_feature=None):
         """
-        input_feature: (str, datatypes.Array) or None
+        input_feature: [(str, datatypes.Array)] or None
             The input feature of the loss layer. Each feature is a (name,
             array) tuple, where name is the name of the model's tensor our loss will be attached to,
             and array is a datatypes.Array object describing the shape of that tensor.
             Both the name and the array's shape must be provided in the tuple.
-            >>> feature = ('output_tensor', datatypes.Array(299, 299, 3))
+            >>> feature = [('output_tensor', datatypes.Array((299, 299, 3)))]
         """
         if self.spec is None:
             return
@@ -3258,7 +3269,7 @@ class NeuralNetworkBuilder(object):
 
         image_scale: float or dict()
             Value by which to scale the images.
-        
+
         image_format: str
             Image format, either 'NCHW' / 'NHWC'
 
@@ -3318,7 +3329,7 @@ class NeuralNetworkBuilder(object):
                             input_name=input_.name,
                             output_name=input_transpose
                         )
-                        layers = spec.neuralNetwork.layers
+                        layers = self.nn_spec.layers
                         layers.insert(0, layers.pop())
                         for layer_ in layers:
                             for i in range(len(layer_.input)):
