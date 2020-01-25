@@ -134,6 +134,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
     def test_boston_housing_simple_boosted_tree_regression(self):
         self._train_convert_evaluate_assert(num_boost_round = 10)
 
+    @pytest.mark.xfail
     def test_boston_housing_simple_random_forest_regression(self):
         self._train_convert_evaluate_assert({"subsample":0.5})
 
