@@ -28,7 +28,14 @@ after which you can use make to build the project.
 ```shell
 make -j3
 ```
-You can use `make dist` to make a wheel after all of these steps. 
+
+### Running Unit Tests
+
+In order to run unit tests, you need `pytest`, `pandas`, and `h5py`.
+
+```shell
+pytest -rfs -m "not slow" coremltools/test
+```
 
 ### Building Installable Wheel
 
@@ -38,14 +45,6 @@ To make a wheel/egg from scratch that you can distribute, you can do the followi
 ./scripts/make_wheel.sh
 ```
 A python wheel is put into the `build/dist` folder.
-
-### Running Unit Tests
-
-In order to run unit tests, you need `pytest`, `pandas`, and `h5py`.
-
-```shell
-pytest -rfs -m "not slow" coremltools/test
-```
 
 ### Building Documentation
 
