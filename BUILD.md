@@ -20,32 +20,32 @@ source ./scripts/python_env.sh
 Now you can build the package as follows:
 
 ```shell
-cd build
-cmake ../
+cmake -H. -Bbuild
+make -C build -j3
 ```
-after which you can use make to build the project.
+
+Then you can install it into your virtualenv:
 
 ```shell
-make -j3
+pip install -e .
 ```
-You can use `make dist` to make a wheel after all of these steps. 
-
-### Building Installable Wheel
-
-To make a wheel/egg from scratch that you can distribute, you can do the following:
-
-```shell
-./scripts/make_wheel.sh
-```
-A python wheel is put into the `build/dist` folder.
-
 ### Running Unit Tests
 
-In order to run unit tests, you need `pytest`, `pandas`, and `h5py`.
+You can run all the unite tests using the following command.
 
 ```shell
 pytest -rfs -m "not slow" coremltools/test
 ```
+See [pytest documentation](https://docs.pytest.org/en/latest/) to learn more
+about how to run a single unit test.
+
+If you would like a wheel to install outside of the virtualenv, 
+use `make -C build dist` and find the resulting wheels in `build/dist/*.whl`.
+
+If you want to build a wheel for distribution or testing, there is a script
+that automates all of the steps necessary for building a wheel,
+`scripts/make_wheel.sh`, that can be used instead (but make sure to install the
+wheel before running unit tests, if you plan to run the tests).
 
 ### Building Documentation
 
@@ -55,10 +55,8 @@ First install all external dependencies.
 pip install Sphinx==1.8.5 sphinx-rtd-theme==0.4.3 numpydoc==0.9.1
 pip install -e git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
 ```
-
-You also must have the *coremltools* package install, see the *Building* section.
-
-Then from the root of the repository:
+You also must have the *coremltools* package install, see the *Building*
+section. Then from the root of the repository:
 
 ```shell
 cd docs
