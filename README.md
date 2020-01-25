@@ -112,7 +112,8 @@ more details on how to use coremltools.
 
 *coremltools* has the following dependencies:
 
-- numpy (1.10.0+)
+- numpy (1.10.0+) [![Travis](https://img.shields.io/travis/numpy/numpy/master.svg?label=Travis%20CI)](
+    https://travis-ci.org/numpy/numpy)
 - protobuf (3.1.0+)
 
 In addition, it has the following soft dependencies that are only needed when
