@@ -7,6 +7,8 @@ set -e
 ## Main configuration processing
 COREMLTOOLS_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 BUILD_DIR="${COREMLTOOLS_HOME}/build"
+# TODO(Keith-Wyss): Allow configuring BUILD_DIR. This doesn't have to be the
+# same as CMAKE's build directory, but scripts/python_env.sh relies on it.
 COREMLTOOLS_ENV=coremltools-dev
 
 # command flag options

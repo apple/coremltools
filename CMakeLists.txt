@@ -127,19 +127,12 @@ foreach(cdir IN ITEMS ${copy_dirs})
   file(COPY ${CMAKE_SOURCE_DIR}/coremltools/${cdir}
        DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 endforeach()
-if(APPLE)
-  add_custom_command(
-    TARGET caffeconverter
-    POST_BUILD
-    COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
-  )
-else()
-  add_custom_command(
-    TARGET caffeconverter
-    POST_BUILD
-    COMMAND cp $<TARGET_FILE:caffeconverter> coremltools/libcaffeconverter.so
-  )
-endif()
+
+add_custom_command(
+  TARGET caffeconverter
+  POST_BUILD
+  COMMAND cp $<TARGET_FILE:caffeconverter> ${PROJECT_SOURCE_DIR}/coremltools/libcaffeconverter.so
+)
 
 find_library(CORE_VIDEO CoreVideo)
 find_library(CORE_ML CoreML)
@@ -187,7 +180,7 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
   add_custom_command(
     TARGET coremlpython
     POST_BUILD
-    COMMAND cp $<TARGET_FILE:coremlpython> coremltools/libcoremlpython.so
+    COMMAND cp $<TARGET_FILE:coremlpython> ${PROJECT_SOURCE_DIR}/coremltools/libcoremlpython.so
   )
 
 else()
@@ -222,7 +215,17 @@ endforeach()
 # Add a 'dist' target that will build wheels for all possible platforms.
 add_custom_target(dist DEPENDS ${plat_targets})
 
+add_custom_target(pip_install_dev
+  COMMAND pip install -e ${PROJECT_SOURCE_DIR}
+  DEPENDS "caffeconverter;coremlpython"
+)
+
 add_custom_target(pytest
-  COMMAND pytest coremltools/test/
-  DEPENDS dist
+  COMMAND pytest -r fs ${PROJECT_SOURCE_DIR}/coremltools/test/
+  DEPENDS pip_install_dev
+)
+
+add_custom_target(pytest_no_slow
+  COMMAND pytest -r fs -m '"no slow"' ${PROJECT_SOURCE_DIR}/coremltools/test/
+  DEPENDS pip_install_dev
 )
