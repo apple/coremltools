@@ -24,22 +24,35 @@ cmake -H. -Bbuild
 make -C build -j3
 ```
 
-Then you can install it into your virtualenv:
+This build directory does not have to be identical to the `build` directory
+created by `./configure` as it is here.
 
-```shell
-pip install -e .
-```
+CMake `POST_BUILD` hooks on shared libraries targets will handle installing the
+dev tree into your virtualenv.
+
 ### Running Unit Tests
 
-You can run all the unite tests using the following command.
+You can run all the unit tests not marked as slow using the following command.
 
 ```shell
-pytest -rfs -m "not slow" coremltools/test
+pytest -rfs -m "no slow" <project_source_directory>/coremltools/test
 ```
+
+Shortcut targets to rebuild and run all the tests exist as well.
+This takes time, so the recommended workflow is to run only relevant tests until
+you're confident in a change.
+
+```shell
+make -j3 -C build pytest_no_slow
+make -j3 -C build pytest
+```
+
 See [pytest documentation](https://docs.pytest.org/en/latest/) to learn more
 about how to run a single unit test.
 
-If you would like a wheel to install outside of the virtualenv, 
+### Building wheels
+
+If you would like a wheel to install outside of the virtualenv (or in it), 
 use `make -C build dist` and find the resulting wheels in `build/dist/*.whl`.
 
 If you want to build a wheel for distribution or testing, there is a script
