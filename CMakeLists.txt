@@ -223,9 +223,11 @@ add_custom_target(pip_install_dev
 add_custom_target(pytest
   COMMAND pytest -r fs ${PROJECT_SOURCE_DIR}/coremltools/test/
   DEPENDS pip_install_dev
+  USES_TERMINAL
 )
 
 add_custom_target(pytest_no_slow
   COMMAND pytest -r fs -m '"no slow"' ${PROJECT_SOURCE_DIR}/coremltools/test/
   DEPENDS pip_install_dev
+  USES_TERMINAL
 )
