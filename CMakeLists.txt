@@ -207,8 +207,9 @@ foreach(platform IN ITEMS ${PLAT_NAME})
       bdist_wheel
       --plat-name=${platform}
       --python-tag=${PYTHON_TAG}
+      --dist-dir=${PROJECT_BINARY_DIR}/dist
     DEPENDS "caffeconverter;coremlpython;${plat_targets}"
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   )
   set(plat_targets "${plat_targets};dist_${platform}")
 endforeach()
