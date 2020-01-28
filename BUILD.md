@@ -35,10 +35,17 @@ dev tree into your virtualenv.
 You can run all the unit tests not marked as slow using the following command.
 
 ```shell
-make -j3 -C build pytest_no_slow
+pytest -rfs -m "no slow" <project_source_directory>/coremltools/test
 ```
 
-To run all the tests instead, use the `pytest` target.
+Shortcut targets to rebuild and run all the tests exist as well.
+This takes time, so the recommended workflow is to run only relevant tests until
+you're confident in a change.
+
+```shell
+make -j3 -C build pytest_no_slow
+make -j3 -C build pytest
+```
 
 See [pytest documentation](https://docs.pytest.org/en/latest/) to learn more
 about how to run a single unit test.
