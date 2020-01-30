@@ -946,8 +946,6 @@ class NewLayersSimpleTest(CorrectnessTest):
             x = np.random.randint(vocab_size, size=input_shape)
 
             np_out = np.take(np.transpose(W), np.squeeze(x, axis=-1), axis=0)
-import pytest
-from packaging import version
             expected = {'output': np_out}
 
             input_features = [('data', datatypes.Array(*input_shape))]
@@ -2105,7 +2103,7 @@ from packaging import version
     def test_linear_activation_different_ranks_gpu(self):
         self.test_linear_activation_different_ranks_cpu(cpu_only=False)
 
-    @pytest.mark.skipif(pytest.version.parse(np.__version__) <= version.parse("1.16.0"), 
+    @pytest.mark.skipif(version.parse(np.__version__) <= version.parse("1.16.0"), 
                         reason = "Requrires newer version of numpy")
     def test_topk_cpu(self, cpu_only=True):
         test_input_shapes = [(9,), (8, 6), (9, 8, 10), (5, 9, 7, 9), (12, 8, 6, 6, 7)]
@@ -3934,8 +3932,7 @@ from packaging import version
     def test_gather_gpu(self):
         self.test_gather_cpu(cpu_only=False)
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="requires python3.6 or higher")
-    @pytest.mark.skipif(pytest.version.parse(np.__version__) <= version.parse("1.16.0"), 
+    @pytest.mark.skipif(version.parse(np.__version__) <= version.parse("1.16.0"), 
                         reason = "Requrires newer version of numpy")
     def test_gather_along_axis_cpu(self, cpu_only=True):
         for rank in range(1, 6):
