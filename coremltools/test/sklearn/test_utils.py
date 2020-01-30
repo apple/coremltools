@@ -6,6 +6,7 @@ from coremltools.models.utils import rename_feature, macos_version, is_macos
 from coremltools.models import MLModel
 from coremltools._deps import HAS_SKLEARN
 import pandas as pd
+import pytest
 
 if HAS_SKLEARN:
     from sklearn.preprocessing import OneHotEncoder
@@ -15,6 +16,7 @@ if HAS_SKLEARN:
     from coremltools.converters import sklearn as converter
 
 
+@pytest.mark.xfail
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class PipeLineRenameTests(unittest.TestCase):
     """
