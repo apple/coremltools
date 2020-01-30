@@ -448,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		    for (var i = keys.length - 1; i >= 0; i--) {
 		  	    if (keys[i] != 'desc') {
                     var val = ele.data('info')[keys[i]].replace(/["]+/g, '');
-                    content += keys[i] + ' : ' + val.charAt(0).toUpperCase().replace(/(?:\r\n|\r|\n)/g, '<br>') + val.slice(1) + '<br />';
+                    content += keys[i] + ' : ' + val.charAt(0).replace(/(?:\r\n|\r|\n)/g, '<br>') + val.slice(1) + '<br />';
                 }
             }
 			content += '</div>';
