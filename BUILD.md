@@ -20,9 +20,14 @@ source ./scripts/python_env.sh
 Now you can build the package as follows:
 
 ```shell
-cmake -H. -Bbuild
+cmake -H. -Bbuild \
+  -DPYTHON_EXECUTABLE:FILEPATH=$VIRTUAL_ENV/bin/python \
+  -DPYTHON_INCLUDE_DIR=$VIRTUAL_ENV/include/python3.7m \
+  -DPYTHON_LIBRARY=$VIRTUAL_ENV/lib
 make -C build -j3
 ```
+(Note that if your `virtualenv` uses a different version of Python,
+you will need to modify the `-DPYTHON_INCLUDE_DIR` value accordingly.)
 
 This build directory does not have to be identical to the `build` directory
 created by `./configure` as it is here.
@@ -35,7 +40,8 @@ dev tree into your virtualenv.
 You can run all the unit tests not marked as slow using the following command.
 
 ```shell
-pytest -rfs -m "no slow" <project_source_directory>/coremltools/test
+pip install -e .
+pytest -rfs -m '"no slow"' coremltools/test
 ```
 
 Shortcut targets to rebuild and run all the tests exist as well.
