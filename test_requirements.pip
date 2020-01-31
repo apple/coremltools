@@ -5,7 +5,6 @@ ipython
 numpy
 olefile==0.44
 pandas
-pytest
 scikit-learn==0.19.2
 sympy
 tensorflow==1.14.0
