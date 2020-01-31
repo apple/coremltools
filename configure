@@ -13,7 +13,7 @@ COREMLTOOLS_ENV=coremltools-dev
 
 # command flag options
 cleanup_option=0
-buildonly_option=0
+build_only_option=0
 PYTHON=$(which python)
 
 function print_help {
