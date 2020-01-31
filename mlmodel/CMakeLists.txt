@@ -155,6 +155,9 @@ set_property(TARGET mlmodel
     PROPERTY POSITION_INDEPENDENT_CODE ON
 )
 
+target_compile_options(mlmodel PRIVATE -fvisibility=hidden)
+
+
 target_link_libraries(mlmodel
   libprotobuf-lite
 )

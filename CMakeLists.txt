@@ -40,11 +40,11 @@ include_directories(
   deps/pybind11/include
   mlmodel/src
   ${PYTHON_INCLUDE_DIRS}
-)
+  )
 
 set(CMAKE_CXX_FLAGS " \
-  ${CMAKE_CXX_FLAGS} \
-  --std=c++14 \
+${CMAKE_CXX_FLAGS} \
+--std=c++14 \
 ")
 
 if(APPLE)
@@ -52,16 +52,16 @@ if(APPLE)
 endif()
 
 set(CMAKE_EXE_LINKER_FLAGS " \
-  ${CMAKE_EXE_LINKER_FLAGS} \
-  --std=c++14 \
+${CMAKE_EXE_LINKER_FLAGS} \
+--std=c++14 \
 ")
 set(CMAKE_MODULE_LINKER_FLAGS " \
-  ${CMAKE_MODULE_LINKER_FLAGS} \
-  --std=c++14 \
+${CMAKE_MODULE_LINKER_FLAGS} \
+--std=c++14 \
 ")
 set(CMAKE_SHARED_LINKER_FLAGS " \
-  ${CMAKE_SHARED_LINKER_FLAGS} \
-  --std=c++14 \
+${CMAKE_SHARED_LINKER_FLAGS} \
+--std=c++14 \
 ")
 
 add_library(caffeconverter
@@ -99,17 +99,17 @@ add_library(caffeconverter
   caffeconverter/Caffe/Reshape.cpp
   deps/caffe/src/caffe/proto/caffe.pb.cc
   deps/caffe/src/caffe/util/upgrade_proto.cpp
-)
+  )
 
 target_compile_definitions(caffeconverter
   PRIVATE
   CPU_ONLY=1
-)
+  )
 
 target_link_libraries(caffeconverter
   mlmodel
   libprotobuf
-)
+  )
 
 if (APPLE)
   # Allow Python to be found at runtime instead of compile/link time
@@ -119,13 +119,13 @@ endif()
 
 file(COPY ${CMAKE_SOURCE_DIR}/README.rst DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__init__.py
-     DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
+  DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__main__.py
-     DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
+  DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 set(copy_dirs _deps _scripts converters graph_visualization models proto)
 foreach(cdir IN ITEMS ${copy_dirs})
   file(COPY ${CMAKE_SOURCE_DIR}/coremltools/${cdir}
-       DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
+    DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 endforeach()
 
 add_custom_command(
@@ -171,11 +171,21 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     ${PYTHON_LIBRARIES}
   )
 
-  if (APPLE)
-    # Allow Python to be found at runtime instead of compile/link time
-    # This is apparently the default on Linux
-    set_target_properties(coremlpython PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
-  endif()
+if(APPLE)
+  set(osx_export_file ${CMAKE_SOURCE_DIR}/coremlpython/exported_symbols_osx.ver)
+  set_property(TARGET coremlpython APPEND PROPERTY LINK_DEPENDS "${osx_export_file}")
+  set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-exported_symbols_list,${osx_export_file} ")
+    
+  # Allow Python to be found at runtime instead of compile/link time
+  # This is apparently the default on Linux
+  set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS "-undefined dynamic_lookup")
+
+else()
+  set(linux_export_file coremlpython/exported_symbols_linux.ver)
+  set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--version-script=${linux_export_file} ")
+endif()
+  
+  set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-dead_strip")
 
   add_custom_command(
     TARGET coremlpython
