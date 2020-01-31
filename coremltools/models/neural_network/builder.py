@@ -3316,8 +3316,9 @@ class NeuralNetworkBuilder(object):
                     _, channels, height, width = [array_shape[e] for e in input_indices]
 
                     if image_format == 'NHWC':
-                        # If input format is 'NHWC', then add transpose
-                        # after the input and replace all use of input
+                        # If input format is 'NHWC' for TF model, it will be
+                        # 'NCHW' for CoreML model. Therefore, add transpose to
+                        # NHWC after the input and replace all use of input
                         # with output of transpose
                         axes = [1, 2, 0]
                         if len(array_shape) == 4:
