@@ -12,6 +12,7 @@ def convert(filename,
             inputs=None,
             outputs=None,
             image_input_names=None,
+            image_format=None,
             is_bgr=False,
             red_bias=0.0,
             green_bias=0.0,
@@ -48,6 +49,9 @@ def convert(filename,
       Input names (a subset of the keys of input_name_shape_dict)
       that can be treated as images by Core ML. All other inputs
       are treated as MultiArrays.
+    image_format: str
+      Optional. Specify either 'NCHW' or 'NHWC' to set or override the image format. Without this
+      field set, the image format may be determined from the input model.
     is_bgr: bool | dict():
       Applicable only if image_input_names is specified.
       To specify different values for each image input provide a dictionary with input names as keys and booleans as values.
@@ -178,6 +182,7 @@ def convert(filename,
                              inputs=inputs,
                              outputs=outputs,
                              image_input_names=image_input_names,
+                             image_format=image_format,
                              is_bgr=is_bgr,
                              red_bias=red_bias,
                              green_bias=green_bias,

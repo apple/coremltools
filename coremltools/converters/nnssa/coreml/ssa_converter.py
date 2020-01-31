@@ -36,6 +36,7 @@ def ssa_convert(ssa,
                 inputs=None,
                 outputs=None,
                 image_input_names=None,
+                image_format=None,
                 is_bgr=False,
                 red_bias=0.0,
                 green_bias=0.0,
@@ -88,6 +89,9 @@ def ssa_convert(ssa,
     custom_shape_functions : dict of str -> functions or empty dict
         Specify custom function to compute `output` shape given `input` shape for given custom operator
         This is required for new converter path, which maintains and propagates shapes while converting operators.
+    image_format: str
+      Optional and valid if image_input_names is also set. Specify either 'NCHW' or 'NHWC'  to set or
+      override the image format. Without this field set, the image format may be determined from the input model.
     """
     if not custom_conversion_functions:
         custom_conversion_functions = dict()
@@ -184,7 +188,7 @@ def ssa_convert(ssa,
         else:
             builder.set_class_labels(classes)
 
-    image_format = ssa.get_image_format()
+    image_format = image_format or ssa.get_image_format()
     # Set pre-processing parameters
     builder.set_pre_processing_parameters(image_input_names=image_input_names,
                                           is_bgr=is_bgr,

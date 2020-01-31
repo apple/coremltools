@@ -243,6 +243,35 @@ class TFBasicConversionTest(unittest.TestCase):
             predicted_feature_name='classLabel',
             class_labels=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
 
+    def test_classifier_without_class_labels(self):
+        coremltools.converters.tensorflow.convert(
+            self.frozen_graph_file,
+            mlmodel_path=self.converted_coreml_file,
+            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            image_input_names=['input'],
+            output_feature_names=['Softmax'])
+
+    def test_classifier_nhwc(self):
+        # Test manually specifying the image format. The converter would have
+        # detected NHWC.
+        coremltools.converters.tensorflow.convert(
+            self.frozen_graph_file,
+            mlmodel_path=self.converted_coreml_file,
+            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            image_input_names=['input'],
+            output_feature_names=['Softmax'],
+            image_format='NHWC')
+
+    def test_classifier_nchw(self):
+        # Expect failure - input dimensions are incompatible with NCHW
+        with self.assertRaises(ValueError) as e:
+            coremltools.converters.tensorflow.convert(
+                self.frozen_graph_file,
+                mlmodel_path=self.converted_coreml_file,
+                input_name_shape_dict={'input': [1, 224, 224, 3]},
+                image_input_names=['input'],
+                output_feature_names=['Softmax'],
+                image_format='NCHW')
 
 class CustomLayerUtilsTest(unittest.TestCase):
 
