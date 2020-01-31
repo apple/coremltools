@@ -13,6 +13,7 @@ COREMLTOOLS_ENV=coremltools-dev
 
 # command flag options
 cleanup_option=0
+buildonly_option=0
 PYTHON=$(which python)
 
 function print_help {
@@ -24,6 +25,7 @@ function print_help {
   echo "Usage: ./configure <options>"
   echo
   echo "  --cleanup         Clean up everything."
+  echo "  --build-only      Do not include packages needed for testing" 
   echo "  --python=*        Python to use for configuration."
   echo
   echo "Example: ./configure"
@@ -71,6 +73,7 @@ while [ $# -gt 0 ]
   do case $1 in
     --python=*)          PYTHON=${1##--python=} ;;
     --cleanup)           cleanup_option=1;;
+    --build-only)        build_only_option=1;;
     --help)              print_help ;;
 
     *) unknown_option $1 ;;
@@ -93,8 +96,12 @@ $PYTHON -m virtualenv $BUILD_DIR/$COREMLTOOLS_ENV
 
 # Activate and install packages in the environment
 source $BUILD_DIR/$COREMLTOOLS_ENV/bin/activate
-pip install -r $COREMLTOOLS_HOME/requirements.pip
+pip install -r $COREMLTOOLS_HOME/build_requirements.pip
+if [[ $build_only_option == 0 ]]; then
+  pip install -r $COREMLTOOLS_HOME/test_requirements.pip
+fi
 deactivate
+
 
 echo 
 echo 
