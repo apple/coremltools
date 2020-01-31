@@ -2103,8 +2103,6 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_linear_activation_different_ranks_gpu(self):
         self.test_linear_activation_different_ranks_cpu(cpu_only=False)
 
-    @pytest.mark.skipif(version.parse(np.__version__) <= version.parse("1.16.0"), 
-                        reason = "Requrires newer version of numpy")
     def test_topk_cpu(self, cpu_only=True):
         test_input_shapes = [(9,), (8, 6), (9, 8, 10), (5, 9, 7, 9), (12, 8, 6, 6, 7)]
         K = [3, 5]
@@ -3932,8 +3930,6 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_gather_gpu(self):
         self.test_gather_cpu(cpu_only=False)
 
-    @pytest.mark.skipif(version.parse(np.__version__) <= version.parse("1.16.0"), 
-                        reason = "Requrires newer version of numpy")
     def test_gather_along_axis_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             for axis in range(-rank, rank):
