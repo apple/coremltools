@@ -186,22 +186,22 @@ namespace CoreML {
         
         if (confidence_in.type().multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
             return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                          "Input confidence must have dataType DOUBLE");
+                          "Input 'confidence' must have dataType DOUBLE");
         }
         
         if (confidence_out.type().multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
             return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                          "Output confidence must have dataType DOUBLE");
+                          "Output 'confidence' must have dataType DOUBLE");
         }
         
         if (coordinates_in.type().multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
             return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                          "Input coordinates must have dataType DOUBLE");
+                          "Input 'coordinates' must have dataType DOUBLE");
         }
         
         if (coordinates_out.type().multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
             return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                          "Output confidence must have dataType DOUBLE");
+                          "Output 'coordinates' must have dataType DOUBLE");
         }
 
         auto rankOfFlexibleShape = [] (const CoreML::Specification::ArrayFeatureType &marray) -> size_t {
