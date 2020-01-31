@@ -1,0 +1,8 @@
+
+{
+  global:
+    _PyInit_*;
+
+  local:
+    *;
+};
