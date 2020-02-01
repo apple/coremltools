@@ -1,13 +1,11 @@
 Keras==2.1.6
 Pillow
 h5py
+ipython
 numpy
 olefile==0.44
 pandas
-protobuf
-pytest
 scikit-learn==0.19.2
-six
 sympy
 tensorflow==1.14.0
 xgboost
