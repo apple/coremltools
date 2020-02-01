@@ -97,8 +97,10 @@ $PYTHON -m virtualenv $BUILD_DIR/$COREMLTOOLS_ENV
 # Activate and install packages in the environment
 source $BUILD_DIR/$COREMLTOOLS_ENV/bin/activate
 pip install -r $COREMLTOOLS_HOME/build_requirements.pip
+
+# Install test requirements (upgrades packages if required)
 if [[ $build_only_option == 0 ]]; then
-  pip install -r $COREMLTOOLS_HOME/test_requirements.pip
+  pip install -r $COREMLTOOLS_HOME/test_requirements.pip --upgrade
 fi
 deactivate
 
