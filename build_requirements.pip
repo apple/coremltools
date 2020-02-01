@@ -1,0 +1,4 @@
+numpy==1.14.5
+protobuf
+pytest
+six
