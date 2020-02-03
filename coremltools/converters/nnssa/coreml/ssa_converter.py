@@ -219,7 +219,9 @@ def ssa_convert(ssa,
     mlmodel_spec.description.output.extend(modified_output_features_list)
 
     # MLModel passes
-    mlmodel_passes = [remove_disconnected_layers]
+    mlmodel_passes = [remove_disconnected_layers,
+                      remove_redundant_transposes,
+                     ]
     for p in mlmodel_passes:
         p(mlmodel_spec)
 

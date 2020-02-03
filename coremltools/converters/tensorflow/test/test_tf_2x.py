@@ -670,6 +670,34 @@ class TestCornerCases(unittest.TestCase):
                                  inputs={input_name: (1, 28, 28)},
                                  outputs=[output_name], decimal=3)
 
+    def test_redundant_transpose(self):
+        H = 224
+        W = 224
+        C = 3
+        inputs = tf.keras.layers.Input(shape=(H, W, C), batch_size=1)
+        out = tf.keras.layers.Conv2D(
+            filters=4,
+            kernel_size=3,
+        )(inputs)
+        model = tf.keras.Model(inputs, out)
+        input_name = model.inputs[0].name.split(":")[0]
+        input_shape = (1, H, W, C)
+        output_name = model.outputs[0].name.split(':')[0].split('/')[-1]
+
+        model.save(self.model_path, include_optimizer=False, save_format="h5")
+
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.model_path,
+            inputs={input_name: input_shape},
+            image_input_names=input_name,
+            outputs=[output_name],
+        )
+
+        spec = mlmodel.get_spec()
+        output_names = [layer.name for layer in spec.neuralNetwork.layers]
+        expected_names = [u'model/conv2d/Conv2D', u'Identity']
+        np.testing.assert_array_equal(output_names, expected_names)
+
 
 if __name__ == '__main__':
     np.random.seed(1984)
