@@ -6,7 +6,6 @@ from coremltools.models.utils import rename_feature, macos_version, is_macos
 from coremltools.models import MLModel
 from coremltools._deps import HAS_SKLEARN
 import pandas as pd
-import pytest
 
 if HAS_SKLEARN:
     from sklearn.preprocessing import OneHotEncoder
