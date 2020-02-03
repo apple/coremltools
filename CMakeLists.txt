@@ -63,6 +63,10 @@ set(CMAKE_SHARED_LINKER_FLAGS " \
 ${CMAKE_SHARED_LINKER_FLAGS} \
 --std=c++14 \
 ")
+  
+if(CMAKE_BUILD_TYPE STREQUAL "Release") 
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os ")
+endif()
 
 add_library(caffeconverter
   SHARED
@@ -128,11 +132,17 @@ foreach(cdir IN ITEMS ${copy_dirs})
     DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 endforeach()
 
+if(CMAKE_BUILD_TYPE STREQUAL "Release") 
+  set(_additional_caffeconverter_command COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libcaffeconverter.so)
+endif()
+
 add_custom_command(
   TARGET caffeconverter
   POST_BUILD
   COMMAND cp $<TARGET_FILE:caffeconverter> ${PROJECT_SOURCE_DIR}/coremltools/libcaffeconverter.so
+  ${_additional_caffeconverter_command}
 )
+
 
 find_library(CORE_VIDEO CoreVideo)
 find_library(CORE_ML CoreML)
@@ -187,10 +197,17 @@ endif()
   
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-dead_strip")
 
+  if(CMAKE_BUILD_TYPE STREQUAL "Release") 
+    set(_additional_libcoremlpython_command
+      COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libcoremlpython.so
+    )
+  endif()
+
   add_custom_command(
     TARGET coremlpython
     POST_BUILD
     COMMAND cp $<TARGET_FILE:coremlpython> ${PROJECT_SOURCE_DIR}/coremltools/libcoremlpython.so
+    ${_additional_libcoremlpython_command}
   )
 
 else()
