@@ -6,7 +6,6 @@ from coremltools.models.utils import rename_feature, macos_version, is_macos
 from coremltools.models import MLModel
 from coremltools._deps import HAS_SKLEARN
 import pandas as pd
-import pytest
 
 if HAS_SKLEARN:
     from sklearn.preprocessing import OneHotEncoder
@@ -16,21 +15,11 @@ if HAS_SKLEARN:
     from coremltools.converters import sklearn as converter
 
 
-@pytest.mark.xfail
 @unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class PipeLineRenameTests(unittest.TestCase):
-    """
-    Unit test class for testing scikit-learn converter.
-    """
 
     @classmethod
     def setUpClass(self):
-        """
-        Set up the unit test by loading the dataset and training a model.
-        """
-
-        if not(HAS_SKLEARN):
-            return
 
         scikit_data = load_boston()
         feature_names = scikit_data.feature_names
@@ -55,5 +44,5 @@ class PipeLineRenameTests(unittest.TestCase):
         
         # Check the predictions
         if is_macos() and macos_version() >= (10, 13):
-            self.assertEquals(model.predict({'input': sample_data}),
-                              renamed_model.predict({'renamed_input': sample_data}))
+            self.assertAlmostEquals(model.predict({'input': sample_data}),
+                      renamed_model.predict({'renamed_input': sample_data}))
