@@ -204,75 +204,79 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal('crop', spec.layers[3].WhichOneof('layer'))
 
     def test_redundant_transposes(self):
-        input_features = [('data', datatypes.Array(1, 10, 10))]
-        output_features = [('out', None)]
-        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
-        # These transposes together are the identity.
-        builder.add_transpose(name='t1',
-                              axes=[2, 0, 1],
-                              input_name='data',
-                              output_name='t1_out')
-        builder.add_transpose(name='t2',
-                              axes=[1, 2, 0],
-                              input_name='t1_out',
-                              output_name='out')
-        # Transpose1 -> Transpose2
-        spec = builder.spec.neuralNetwork
-        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
-        np.testing.assert_equal('transpose', spec.layers[1].WhichOneof('layer'))
-        # Run the removal pass.
-        remove_redundant_transposes(builder.spec)
-        # Redundant transposes removed.
-        np.testing.assert_equal(len(spec.layers), 0)
 
-        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
-        # These transposes are not inverses.
-        builder.add_transpose(name='t1',
-                              axes=[2, 0, 1],
-                              input_name='data',
-                              output_name='t1_out')
-        builder.add_transpose(name='t2',
-                              axes=[2, 0, 1],
-                              input_name='t1_out',
-                              output_name='out')
-        # Transpose1 -> Transpose2
-        spec = builder.spec.neuralNetwork
-        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
-        np.testing.assert_equal('transpose', spec.layers[1].WhichOneof('layer'))
-        # Run the removal pass.
-        remove_redundant_transposes(builder.spec)
-        # Transpose1 -> Transpose2
-        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
-        np.testing.assert_equal('transpose', spec.layers[1].WhichOneof('layer'))
+        def _build_and_test_network(input_size, transpose_layers, expected_layers):
+            """
+            Helper function for testing transpose removal.
 
-        input_features = [('data', datatypes.Array(1, 1, 10, 10, 3))]
-        output_features = [('out', None)]
-        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
-        # These transposes together are the identity.
-        builder.add_transpose(name='t1',
-                              axes=[2, 4, 1, 0, 3],
-                              input_name='data',
-                              output_name='t1_out')
-        builder.add_transpose(name='t2',
-                              axes=[3, 2, 0, 4, 1],
-                              input_name='t1_out',
-                              output_name='t2_out')
-        # An extra transpose, shouldn't get removed.
-        builder.add_transpose(name='t3',
-                              axes=[1, 0, 2, 3, 4],
-                              input_name='t2_out',
-                              output_name='out')
-        # Transpose1 -> Transpose2 -> Transpose3
-        spec = builder.spec.neuralNetwork
-        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
-        np.testing.assert_equal('transpose', spec.layers[1].WhichOneof('layer'))
-        np.testing.assert_equal('transpose', spec.layers[2].WhichOneof('layer'))
-        # Run the removal pass.
-        remove_redundant_transposes(builder.spec)
-        # Tranpose3
-        np.testing.assert_equal(len(spec.layers), 1)
-        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
-        np.testing.assert_array_equal([1, 0, 2, 3, 4], spec.layers[0].transpose.axes)
+            Args:
+                input_size: Size of the input network tensor.
+                transpose_layers: Array of transpose axes definitions.
+                expected_layers: Array of indices into transpose_layers indicating
+                    which of the transpose layers should be present after the
+                    graph pass.
+            """
+            input_features = [('data', datatypes.Array(*input_size))]
+            output_features = [('out', None)]
+            builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+            last_layer = 'data'
+            for idx, axes in enumerate(transpose_layers):
+                name = 't{}'.format(idx)
+                if idx == len(transpose_layers) - 1:
+                    output_name = 'out'
+                else:
+                    output_name = name + '_out'
+                builder.add_transpose(name=name,
+                                      axes=axes,
+                                      input_name=last_layer,
+                                      output_name=output_name)
+                last_layer = output_name
+
+            spec = builder.spec.neuralNetwork
+            # Check the network before the graph pass.
+            for idx in range(len(transpose_layers)):
+                np.testing.assert_equal('transpose', spec.layers[idx].WhichOneof('layer'))
+            # Run the removal pass.
+            remove_redundant_transposes(builder.spec)
+            # Verify only the expected layers remain.
+            np.testing.assert_equal(len(spec.layers), len(expected_layers))
+            for output_layer_idx, input_layer_idx in enumerate(expected_layers):
+                np.testing.assert_equal(
+                    'transpose',
+                    spec.layers[output_layer_idx].WhichOneof('layer')
+                )
+                np.testing.assert_array_equal(
+                    transpose_layers[input_layer_idx],
+                    spec.layers[output_layer_idx].transpose.axes
+                )
+
+        _build_and_test_network(
+            input_size=[1, 10, 10],
+            # These transposes together are the identity.
+            transpose_layers=[[2, 0, 1], [1, 2, 0]],
+            expected_layers=[],
+        )
+
+        _build_and_test_network(
+            input_size=[1, 10, 10],
+            # These transposes are not inverses.
+            transpose_layers=[[2, 0, 1], [2, 0, 1]],
+            expected_layers=[0, 1],
+        )
+
+        _build_and_test_network(
+            input_size=[1, 1, 10, 10, 3],
+            # First two are the identity, then an extra.
+            transpose_layers=[[2, 4, 1, 0, 3], [3, 2, 0, 4, 1], [1, 0, 2, 3, 4]],
+            expected_layers=[2],
+        )
+
+        _build_and_test_network(
+            input_size=[1, 1, 10, 10, 3],
+            # First is okay, next two are the identity.
+            transpose_layers=[[1, 0, 2, 3, 4], [2, 4, 1, 0, 3], [3, 2, 0, 4, 1]],
+            expected_layers=[0],
+        )
 
 
 if __name__ == '__main__':
