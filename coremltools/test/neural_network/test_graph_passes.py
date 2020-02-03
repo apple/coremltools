@@ -5,7 +5,7 @@ from coremltools.models import neural_network as neural_network
 from coremltools.models import MLModel
 from coremltools.models.neural_network.printer import print_network_spec
 from coremltools.converters.nnssa.coreml.graph_pass.mlmodel_passes import \
-        remove_disconnected_layers, transform_conv_crop
+        remove_disconnected_layers, transform_conv_crop, remove_redundant_transposes
 import copy
 import pytest
 
@@ -202,6 +202,77 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal('batchnorm', spec.layers[1].WhichOneof('layer'))
         np.testing.assert_equal('activation', spec.layers[2].WhichOneof('layer'))
         np.testing.assert_equal('crop', spec.layers[3].WhichOneof('layer'))
+
+    def test_redundant_transposes(self):
+        input_features = [('data', datatypes.Array(1, 10, 10))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        # These transposes together are the identity.
+        builder.add_transpose(name='t1',
+                              axes=[2, 0, 1],
+                              input_name='data',
+                              output_name='t1_out')
+        builder.add_transpose(name='t2',
+                              axes=[1, 2, 0],
+                              input_name='t1_out',
+                              output_name='out')
+        # Transpose1 -> Transpose2
+        spec = builder.spec.neuralNetwork
+        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
+        np.testing.assert_equal('transpose', spec.layers[1].WhichOneof('layer'))
+        # Run the removal pass.
+        remove_redundant_transposes(builder.spec)
+        # Redundant transposes removed.
+        np.testing.assert_equal(len(spec.layers), 0)
+
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        # These transposes are not inverses.
+        builder.add_transpose(name='t1',
+                              axes=[2, 0, 1],
+                              input_name='data',
+                              output_name='t1_out')
+        builder.add_transpose(name='t2',
+                              axes=[2, 0, 1],
+                              input_name='t1_out',
+                              output_name='out')
+        # Transpose1 -> Transpose2
+        spec = builder.spec.neuralNetwork
+        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
+        np.testing.assert_equal('transpose', spec.layers[1].WhichOneof('layer'))
+        # Run the removal pass.
+        remove_redundant_transposes(builder.spec)
+        # Transpose1 -> Transpose2
+        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
+        np.testing.assert_equal('transpose', spec.layers[1].WhichOneof('layer'))
+
+        input_features = [('data', datatypes.Array(1, 1, 10, 10, 3))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+        # These transposes together are the identity.
+        builder.add_transpose(name='t1',
+                              axes=[2, 4, 1, 0, 3],
+                              input_name='data',
+                              output_name='t1_out')
+        builder.add_transpose(name='t2',
+                              axes=[3, 2, 0, 4, 1],
+                              input_name='t1_out',
+                              output_name='t2_out')
+        # An extra transpose, shouldn't get removed.
+        builder.add_transpose(name='t3',
+                              axes=[1, 0, 2, 3, 4],
+                              input_name='t2_out',
+                              output_name='out')
+        # Transpose1 -> Transpose2 -> Transpose3
+        spec = builder.spec.neuralNetwork
+        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
+        np.testing.assert_equal('transpose', spec.layers[1].WhichOneof('layer'))
+        np.testing.assert_equal('transpose', spec.layers[2].WhichOneof('layer'))
+        # Run the removal pass.
+        remove_redundant_transposes(builder.spec)
+        # Tranpose3
+        np.testing.assert_equal(len(spec.layers), 1)
+        np.testing.assert_equal('transpose', spec.layers[0].WhichOneof('layer'))
+        np.testing.assert_array_equal([1, 0, 2, 3, 4], spec.layers[0].transpose.axes)
 
 
 if __name__ == '__main__':
