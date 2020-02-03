@@ -50,4 +50,5 @@ echo "Using python from $(which python)"
 echo
 
 $PIP_EXECUTABLE install ${WHEEL_PATH}
-$PYTEST_EXECUTABLE -rfXs -m "not slow" coremltools/test
+#  (f)ailed, (E)error, (s)skipped, (x)failed, (X)passed (w)pytest-warnings
+$PYTEST_EXECUTABLE -r wxXsf -m "not slow" coremltools/test
