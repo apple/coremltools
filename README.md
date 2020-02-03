@@ -28,7 +28,7 @@ For the latest changes please see the [release notes](https://github.com/apple/c
 
 ## Neural Network Conversion
 
-[Link](docs/NeuralNetworkGuide.md) to the detailed NN conversion guide.
+[Link](examples/NeuralNetworkGuide.md) to the detailed NN conversion guide.
 
 There are several `converters` available to translate neural networks trained
 in various frameworks into the Core ML model format.  Following formats can be
@@ -49,7 +49,7 @@ For iOS 12 or earlier, the code path is different and lives entirely in the [tfc
 
 To get an overview on how to use the converters and features such as
 post-training quantization using coremltools, please see the [neural network
-guide](docs/NeuralNetworkGuide.md).  
+guide](examples/NeuralNetworkGuide.md).  
 
 ## Core ML Specification
 
@@ -68,8 +68,8 @@ portion of the `NeuralNetwork.proto` file.
 - [API documentation](https://apple.github.io/coremltools)
 - [Updatable models](examples/updatable_models)
 - [Neural network inference examples](examples/neural_network_inference)
-- [Neural network guide](docs/NeuralNetworkGuide.md)
-- [Miscellaneous How-to code snippets](docs/APIExamples.md)
+- [Neural network guide](examples/NeuralNetworkGuide.md)
+- [Miscellaneous How-to code snippets](examples/APIExamples.md)
 
 ## Installation
 
