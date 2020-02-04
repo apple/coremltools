@@ -254,13 +254,15 @@ class TFBasicConversionTest(unittest.TestCase):
     def test_classifier_nhwc(self):
         # Test manually specifying the image format. The converter would have
         # detected NHWC.
-        coremltools.converters.tensorflow.convert(
+        mlmodel = coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
             mlmodel_path=self.converted_coreml_file,
             input_name_shape_dict={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
             output_feature_names=['Softmax'],
             image_format='NHWC')
+        spec = mlmodel.get_spec()
+        self.assertEqual(spec.neuralNetwork.layers[0].name, "input_to_nhwc",)
 
     def test_classifier_nchw(self):
         # Expect failure - input dimensions are incompatible with NCHW
