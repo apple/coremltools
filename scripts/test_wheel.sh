@@ -50,4 +50,4 @@ echo "Using python from $(which python)"
 echo
 
 $PIP_EXECUTABLE install ${WHEEL_PATH}
-$PYTEST_EXECUTABLE -rfXs -m "not slow" coremltools/test
+$PYTEST_EXECUTABLE -ra -m "not slow" --durations=100 coremltools/test -p no:warnings
