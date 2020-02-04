@@ -262,12 +262,6 @@ class TFBasicConversionTest(unittest.TestCase):
             output_feature_names=['Softmax'],
             image_format='NHWC')
         spec = mlmodel.get_spec()
-        # Layers are not in a deterministic order - checking all layers to see that
-        # the expected one is present.
-        for layer in spec.neuralNetwork.layers:
-            if layer.name == "input_to_nhwc":
-                return
-        self.fail("Could not find input_to_nhwc layer")
 
     def test_classifier_nchw(self):
         # Expect failure - input dimensions are incompatible with NCHW
