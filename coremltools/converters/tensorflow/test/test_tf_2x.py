@@ -694,9 +694,9 @@ class TestCornerCases(unittest.TestCase):
         )
 
         spec = mlmodel.get_spec()
-        output_names = [layer.name for layer in spec.neuralNetwork.layers]
-        expected_names = [u'model/conv2d/Conv2D', u'Identity']
-        np.testing.assert_array_equal(output_names, expected_names)
+        output_types = [layer.WhichOneof('layer') for layer in spec.neuralNetwork.layers]
+        expected_types = ['convolution', 'transpose']
+        np.testing.assert_array_equal(output_types, expected_types)
 
 
 if __name__ == '__main__':
