@@ -6,7 +6,6 @@ RUN  apt-get -y update \
         python-setuptools curl git libssl-dev \
         make vim-common zlib1g-dev libffi-dev \
         libbz2-dev libopenblas-dev liblapack-dev \
-     && ln -s /usr/bin/gcc-5 /usr/bin/gcc \
      && ln -s /usr/bin/g++-5 /usr/bin/g++
 WORKDIR /                                                                                                                            
 RUN  mkdir src                                                                                                                                   
