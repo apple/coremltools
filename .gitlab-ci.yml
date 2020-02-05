@@ -40,6 +40,12 @@ build_wheel_linux_py36:
   variables:
     PYTHON: /usr/local/bin/python3
 
+build_wheel_linux_py37:
+  <<: *build_linux
+  image: registry.gitlab.com/coremltools/coremltools/build-image-ubuntu:1.0.0
+  variables:
+    PYTHON: /usr/local/bin/python3.7
+
 .test_linux: &test_linux
   tags:
     - dockerized
@@ -73,6 +79,16 @@ test_wheel_linux_py36:
   variables:
     WHEEL_PATH: build/dist/coremltools*cp36-none-manylinux1_x86_64.whl
     PYTHON: /usr/local/bin/python3
+
+test_wheel_linux_py37:
+  <<: *test_linux
+  image: registry.gitlab.com/coremltools/coremltools/build-image-ubuntu:1.0.0
+  dependencies:
+    - build_wheel_linux_py37
+  variables:
+    WHEEL_PATH: build/dist/coremltools*cp37-none-manylinux1_x86_64.whl
+    PYTHON: /usr/local/bin/python3.7
+
 
 #########################################################################
 ##
