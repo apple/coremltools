@@ -16,11 +16,11 @@ unknown_option() {
 }
 
 print_help() {
-  echo "Test the wheel by running all unit tests"
+  echo "Builds the docs associated with the code"
   echo
-  echo "Usage: ./test_wheel.sh"
+  echo "Usage: ./make_docs.sh"
   echo
-  echo "  --wheel-path=*          Specify which wheel to test."
+  echo "  --wheel-path=*          Specify which wheel to use to make docs."
   echo "  --python=*              Python to use for configuration."
   echo
   exit 1
@@ -40,8 +40,8 @@ done
 
 # First configure
 echo ${COREMLTOOLS_HOME}
-cd ${COREMLTOOLS_HOME}
-bash -e configure --python=$PYTHON
+pushd ${COREMLTOOLS_HOME}
+bash -e configure --python=$PYTHON --include-docs-deps
 
 # Setup the right python
 source scripts/python_env.sh
@@ -50,4 +50,14 @@ echo "Using python from $(which python)"
 echo
 
 $PIP_EXECUTABLE install ${WHEEL_PATH}
-$PYTEST_EXECUTABLE -ra -m "not slow" --durations=100 coremltools/test -p no:warnings
+pushd ${COREMLTOOLS_HOME}/docs
+make html
+popd
+
+echo "Zipping docs"
+TARGET_DIR=${COREMLTOOLS_HOME}/build/dist
+pushd ${COREMLTOOLS_HOME}/docs/_build/
+zip -r ${TARGET_DIR}/docs.zip html
+popd
+
+popd

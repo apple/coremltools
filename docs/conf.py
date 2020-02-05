@@ -93,9 +93,7 @@ html_theme_path = ["_themes", ]
 # documentation.
 html_theme_options = {
     'navigation_depth': 2,
-    'style_nav_header_background': '#007AFF',
     'collapse_navigation': False,
-    'style_external_links': True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,

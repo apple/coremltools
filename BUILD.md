@@ -57,7 +57,6 @@ See [pytest documentation](https://docs.pytest.org/en/latest/) to learn more
 about how to run a single unit test.
 
 ### Building wheels
-
 If you would like a wheel to install outside of the virtualenv (or in it), 
 use `make -C build dist` and find the resulting wheels in `build/dist/*.whl`.
 
@@ -68,17 +67,8 @@ wheel before running unit tests, if you plan to run the tests).
 
 ### Building Documentation
 
-First install all external dependencies.
-
-```shell
-pip install Sphinx==1.8.5 sphinx-rtd-theme==0.4.3 numpydoc==0.9.1
-pip install -e git+git://github.com/michaeljones/sphinx-to-github.git#egg=sphinx-to-github
+The API docs for this package can be build using the following:
 ```
-You also must have the *coremltools* package install, see the *Building*
-section. Then from the root of the repository:
-
-```shell
-cd docs
-make html
-open _build/html/index.html
+./scripts/make_docs.sh --wheel-path=[PATH_TO_WHEEL]
 ```
+The API docs are saved at `docs/_build/html`.
