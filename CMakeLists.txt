@@ -64,10 +64,6 @@ ${CMAKE_SHARED_LINKER_FLAGS} \
 --std=c++14 \
 ")
   
-if(CMAKE_BUILD_TYPE STREQUAL "Release") 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os ")
-endif()
-
 add_library(caffeconverter
   SHARED
   caffeconverter/CaffeConverterLib.cpp
@@ -132,7 +128,7 @@ foreach(cdir IN ITEMS ${copy_dirs})
     DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 endforeach()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release") 
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug") 
   set(_additional_caffeconverter_command COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libcaffeconverter.so)
 endif()
 
@@ -197,7 +193,7 @@ endif()
   
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-dead_strip")
 
-  if(CMAKE_BUILD_TYPE STREQUAL "Release") 
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug") 
     set(_additional_libcoremlpython_command
       COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libcoremlpython.so
     )
