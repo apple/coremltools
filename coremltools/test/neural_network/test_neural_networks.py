@@ -141,6 +141,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
             for i in range(0, num_channels2):
                 self.assertAlmostEquals(fullOutputs['middle_layer_output'][i], partialOutput['output2'][i], 2)
 
+# Base class for basic TF conversions
 @unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
 class TfConversionTestBase(unittest.TestCase):
     def setUp(self):
@@ -149,7 +150,6 @@ class TfConversionTestBase(unittest.TestCase):
         _, self.checkpoint_file = tempfile.mkstemp(suffix='.ckpt', prefix=self.tmp_dir)
         _, self.class_label_file = tempfile.mkstemp(suffix='.txt', prefix=self.tmp_dir)
         _, self.frozen_graph_file = tempfile.mkstemp(suffix='.pb', prefix=self.tmp_dir)
-        _, self.converted_coreml_file = tempfile.mkstemp(suffix='.mlmodel', prefix=self.tmp_dir)
         self.image_size = 224
         self._setup_tf_model()
 
@@ -198,6 +198,7 @@ class TfConversionTestBase(unittest.TestCase):
     def _get_input_shape(self):
         raise NotImplementedError
 
+# Converting TF models with convolution layers
 @unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
 class TFBasicConversionTest(TfConversionTestBase):
     # Basic NN using convolutions
@@ -229,65 +230,59 @@ class TFBasicConversionTest(TfConversionTestBase):
     def test_classifier_with_label_file(self):
         coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
-            mlmodel_path=self.converted_coreml_file,
-            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            inputs={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
-            output_feature_names=['Softmax'],
+            outputs=['Softmax'],
             predicted_feature_name='classLabel',
             class_labels=self.class_label_file)
 
     def test_classifier_with_int_label_list(self):
         coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
-            mlmodel_path=self.converted_coreml_file,
-            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            inputs={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
-            output_feature_names=['Softmax'],
+            outputs=['Softmax'],
             predicted_feature_name='classLabel',
             class_labels=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 
     def test_classifier_with_string_label_list(self):
         coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
-            mlmodel_path=self.converted_coreml_file,
-            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            inputs={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
-            output_feature_names=['Softmax'],
+            outputs=['Softmax'],
             predicted_feature_name='classLabel',
             class_labels=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
 
     def test_classifier_without_class_labels(self):
         coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
-            mlmodel_path=self.converted_coreml_file,
-            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            inputs={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
-            output_feature_names=['Softmax'])
+            outputs=['Softmax'])
 
     def test_classifier_nhwc(self):
         # Test manually specifying the image format. The converter would have
         # detected NHWC.
         coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
-            mlmodel_path=self.converted_coreml_file,
-            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            inputs={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
-            output_feature_names=['Softmax'],
-            image_format='NHWC')
+            outputs=['Softmax'],
+            tf_image_format='NHWC')
 
     def test_classifier_nchw(self):
         # Expect failure - input dimensions are incompatible with NCHW
         with self.assertRaises(ValueError) as e:
             coremltools.converters.tensorflow.convert(
                 self.frozen_graph_file,
-                mlmodel_path=self.converted_coreml_file,
-                input_name_shape_dict={'input': [1, 224, 224, 3]},
+                inputs={'input': [1, 224, 224, 3]},
                 image_input_names=['input'],
-                output_feature_names=['Softmax'],
-                image_format='NCHW')
+                outputs=['Softmax'],
+                tf_image_format='NCHW')
 
 class TFConversionTestWithSimpleModelBase(TfConversionTestBase):
-    # Create a basic network with no convolution layers to provide hints to the converter
+    # Create a basic network with no convolution layers; converter is not given hints about the image format
     def _get_network(self):
         i_placeholder = tf.placeholder(name='input', dtype=tf.float32, shape=self._get_input_shape())
         net = tf.layers.Flatten(name='flatten')(i_placeholder)
@@ -303,36 +298,33 @@ class TFConversionTestWithSimpleNHWCModel(TFConversionTestWithSimpleModelBase):
     def _get_input_shape(self):
         return [1, self.image_size, self.image_size, 3]
 
-    def test_classifier_no_image_format_selected(self):
+    def test_classifier_no_tf_image_format_selected(self):
         # Expect to succeed; model has no convolutions but NHWC should have been
         # default
         coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
-            mlmodel_path=self.converted_coreml_file,
-            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            inputs={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
-            output_feature_names=['Softmax'])
+            outputs=['Softmax'])
 
     def test_classifier_nhwc(self):
         # Manually using the correct format should succeed
         coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
-            mlmodel_path=self.converted_coreml_file,
-            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            inputs={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
-            output_feature_names=['Softmax'],
-            image_format='NHWC')
+            outputs=['Softmax'],
+            tf_image_format='NHWC')
 
     def test_classifier_nchw(self):
         # Expect failure - input dimensions are incompatible with NCHW
         with self.assertRaises(ValueError) as e:
             coremltools.converters.tensorflow.convert(
                 self.frozen_graph_file,
-                mlmodel_path=self.converted_coreml_file,
-                input_name_shape_dict={'input': [1, 224, 224, 3]},
+                inputs={'input': [1, 224, 224, 3]},
                 image_input_names=['input'],
-                output_feature_names=['Softmax'],
-                image_format='NCHW')
+                outputs=['Softmax'],
+                tf_image_format='NCHW')
 
 @unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
 class TFConversionTestWithSimpleNCHWModel(TFConversionTestWithSimpleModelBase):
@@ -340,37 +332,34 @@ class TFConversionTestWithSimpleNCHWModel(TFConversionTestWithSimpleModelBase):
     def _get_input_shape(self):
         return [1, 3, self.image_size, self.image_size]
 
-    def test_classifier_no_image_format_selected(self):
+    def test_classifier_no_tf_image_format_selected(self):
         # Expect to fail. Could not find image format in convolution layers and no parameter was given,
         # so fall back to NHWC which is incompatible
         with self.assertRaises(ValueError) as e:
             coremltools.converters.tensorflow.convert(
                 self.frozen_graph_file,
-                mlmodel_path=self.converted_coreml_file,
-                input_name_shape_dict={'input': [1, 3, 224, 224]},
+                inputs={'input': [1, 3, 224, 224]},
                 image_input_names=['input'],
-                output_feature_names=['Softmax'])
+                outputs=['Softmax'])
 
     def test_classifier_nhwc(self):
         # Expect to fail, NHWC is incorrect format
         with self.assertRaises(ValueError) as e:
             coremltools.converters.tensorflow.convert(
                 self.frozen_graph_file,
-                mlmodel_path=self.converted_coreml_file,
-                input_name_shape_dict={'input': [1, 3, 224, 224]},
+                inputs={'input': [1, 3, 224, 224]},
                 image_input_names=['input'],
-                output_feature_names=['Softmax'],
-                image_format='NHWC')
+                outputs=['Softmax'],
+                tf_image_format='NHWC')
 
     def test_classifier_nchw(self):
         # Expect success - user selected the correct format
         coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
-            mlmodel_path=self.converted_coreml_file,
-            input_name_shape_dict={'input': [1, 3, 224, 224]},
+            inputs={'input': [1, 3, 224, 224]},
             image_input_names=['input'],
-            output_feature_names=['Softmax'],
-            image_format='NCHW')
+            outputs=['Softmax'],
+            tf_image_format='NCHW')
 
 class CustomLayerUtilsTest(unittest.TestCase):
 

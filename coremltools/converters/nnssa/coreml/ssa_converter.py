@@ -93,7 +93,8 @@ def ssa_convert(ssa,
         This is required for new converter path, which maintains and propagates shapes while converting operators.
     image_format: str
       Optional and valid if image_input_names is also set. Specify either 'NCHW' or 'NHWC' to set or
-      override the image format. Defaults to None, in which case the image format may be determined from the input model.
+      override the image format. If not set, tries to use hints from the graph which may be present in convolution or
+      other image-specific layers. Ultimately defaults to NHWC.
     """
     if not custom_conversion_functions:
         custom_conversion_functions = dict()
