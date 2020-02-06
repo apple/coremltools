@@ -194,7 +194,7 @@ def ssa_convert(ssa,
     if image_format and detected_image_format and image_format != detected_image_format:
         warn('[SSAConverter] Detected image format different from input.'
               'Detected: {} Input: {}'.format(detected_image_format, image_format))
-    image_format = image_format or detected_image_format
+    image_format = image_format or detected_image_format or 'NHWC'
 
     # Set pre-processing parameters
     builder.set_pre_processing_parameters(image_input_names=image_input_names,

@@ -141,23 +141,77 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
             for i in range(0, num_channels2):
                 self.assertAlmostEquals(fullOutputs['middle_layer_output'][i], partialOutput['output2'][i], 2)
 
-
 @unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
-class TFBasicConversionTest(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(self):
+class TfConversionTestBase(unittest.TestCase):
+    def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
         _, self.graph_file = tempfile.mkstemp(suffix='.pb', prefix=self.tmp_dir)
         _, self.checkpoint_file = tempfile.mkstemp(suffix='.ckpt', prefix=self.tmp_dir)
         _, self.class_label_file = tempfile.mkstemp(suffix='.txt', prefix=self.tmp_dir)
         _, self.frozen_graph_file = tempfile.mkstemp(suffix='.pb', prefix=self.tmp_dir)
         _, self.converted_coreml_file = tempfile.mkstemp(suffix='.mlmodel', prefix=self.tmp_dir)
+        self.image_size = 224
+        self._setup_tf_model()
 
-    @classmethod
-    def tearDownClass(self):
+    def tearDown(self):
         if os.path.exists(self.tmp_dir):
             shutil.rmtree(self.tmp_dir)
+
+    def _setup_tf_model(self):
+        with open(self.class_label_file, 'w+') as labels_file:
+            for a in range(10):
+                labels_file.write(str(a + 1) + "\n")
+
+        with tf.Graph().as_default():
+            images = tf.random.uniform(self._get_input_shape(), maxval=1)
+
+            # Create the model.
+            (i_placeholder, probabilities) = self._get_network()
+
+            saver = tf.train.Saver()
+            init_op = tf.global_variables_initializer()
+
+            with tf.Session() as sess:
+                sess.run(init_op)
+                probabilities = sess.run(probabilities, {i_placeholder: images.eval()})
+                saver.save(sess, self.checkpoint_file)
+
+                with gfile.GFile(self.graph_file, 'wb') as f:
+                    f.write(sess.graph_def.SerializeToString())
+                freeze_graph.freeze_graph(self.graph_file,
+                                          '',
+                                          True,
+                                          self.checkpoint_file,
+                                          'Softmax',
+                                          '',
+                                          '',
+                                          self.frozen_graph_file,
+                                          False,
+                                          '')
+
+    # Returns (input_layer, output_layer)
+    def _get_network(self):
+        raise NotImplementedError
+
+    # Returns something like [batch_size, height, width, channels] or
+    # [batch_size, channels, height, width]
+    def _get_input_shape(self):
+        raise NotImplementedError
+
+@unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
+class TFBasicConversionTest(TfConversionTestBase):
+    # Basic NN using convolutions
+    def _get_network(self):
+        i_placeholder = tf.placeholder(name='input', dtype=tf.float32, shape=self._get_input_shape())
+        net = self.my_conv_2d(i_placeholder, [1, 3, 3, 1], 1, 1, 'first')
+        net = tf.nn.avg_pool2d(net, 224, strides=1, padding='VALID', name='AvgPool_1a')
+        net = self.my_conv_2d(net, [1, 1, 1, 10], 10, 1, 'fc', activation_fn=None, with_bias_add=False)
+        net = tf.squeeze(net, [1, 2], name='SpatialSqueeze')
+        probabilities = tf.nn.softmax(net, name='Softmax')
+        return (i_placeholder, probabilities)
+
+    def _get_input_shape(self):
+        return [1, self.image_size, self.image_size, 3]
 
     def my_conv_2d(self, input, weight_shape, num_filters, strides, name, activation_fn=tf.nn.relu, with_bias_add=True):
         my_weights = tf.get_variable(name=name + 'weights', shape=weight_shape)
@@ -171,47 +225,6 @@ class TFBasicConversionTest(unittest.TestCase):
         else:
             conv_layer_out = my_conv
         return conv_layer_out
-
-    def test_1(self):
-        with open(self.class_label_file, 'w+') as labels_file:
-            for a in range(10):
-                labels_file.write(str(a + 1) + "\n")
-
-        image_size = 224
-
-        with tf.Graph().as_default():
-            batch_size, height, width, channels = 1, image_size, image_size, 3
-            images = tf.random.uniform([batch_size, height, width, channels], maxval=1)
-
-            # Create the model.
-            i_placeholder = tf.placeholder(name='input', dtype=tf.float32, shape=[1, image_size, image_size, 3])
-            net = self.my_conv_2d(i_placeholder, [1, 3, 3, 1], 1, 1, 'first')
-            net = tf.nn.avg_pool2d(net, 224, strides=1, padding='VALID', name='AvgPool_1a')
-            net = self.my_conv_2d(net, [1, 1, 1, 10], 10, 1, 'fc', activation_fn=None, with_bias_add=False)
-            net = tf.squeeze(net, [1, 2], name='SpatialSqueeze')
-            probabilities = tf.nn.softmax(net, name='Softmax')
-
-            saver = tf.train.Saver()
-            init_op = tf.global_variables_initializer()
-
-            with tf.Session() as sess:
-                sess.run(init_op)
-                probabilities = sess.run(probabilities, {i_placeholder: images.eval()})
-                save_path = saver.save(sess, self.checkpoint_file)
-
-                with gfile.GFile(self.graph_file, 'wb') as f:
-                    f.write(sess.graph_def.SerializeToString())
-
-                freeze_graph.freeze_graph(self.graph_file,
-                                          '',
-                                          True,
-                                          self.checkpoint_file,
-                                          'Softmax',
-                                          '',
-                                          '',
-                                          self.frozen_graph_file,
-                                          False,
-                                          '')
 
     def test_classifier_with_label_file(self):
         coremltools.converters.tensorflow.convert(
@@ -254,14 +267,13 @@ class TFBasicConversionTest(unittest.TestCase):
     def test_classifier_nhwc(self):
         # Test manually specifying the image format. The converter would have
         # detected NHWC.
-        mlmodel = coremltools.converters.tensorflow.convert(
+        coremltools.converters.tensorflow.convert(
             self.frozen_graph_file,
             mlmodel_path=self.converted_coreml_file,
             input_name_shape_dict={'input': [1, 224, 224, 3]},
             image_input_names=['input'],
             output_feature_names=['Softmax'],
             image_format='NHWC')
-        spec = mlmodel.get_spec()
 
     def test_classifier_nchw(self):
         # Expect failure - input dimensions are incompatible with NCHW
@@ -273,6 +285,92 @@ class TFBasicConversionTest(unittest.TestCase):
                 image_input_names=['input'],
                 output_feature_names=['Softmax'],
                 image_format='NCHW')
+
+class TFConversionTestWithSimpleModelBase(TfConversionTestBase):
+    # Create a basic network with no convolution layers to provide hints to the converter
+    def _get_network(self):
+        i_placeholder = tf.placeholder(name='input', dtype=tf.float32, shape=self._get_input_shape())
+        net = tf.layers.Flatten(name='flatten')(i_placeholder)
+        net = tf.contrib.slim.fully_connected(net, 256)
+        net = tf.contrib.slim.dropout(net)
+        net = tf.contrib.slim.fully_connected(net, 10, activation_fn=None)
+        probabilities = tf.nn.softmax(net, name='Softmax')
+        return (i_placeholder, probabilities)
+
+@unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
+class TFConversionTestWithSimpleNHWCModel(TFConversionTestWithSimpleModelBase):
+    # Use NHWC format
+    def _get_input_shape(self):
+        return [1, self.image_size, self.image_size, 3]
+
+    def test_classifier_no_image_format_selected(self):
+        # Expect to succeed; model has no convolutions but NHWC should have been
+        # default
+        coremltools.converters.tensorflow.convert(
+            self.frozen_graph_file,
+            mlmodel_path=self.converted_coreml_file,
+            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            image_input_names=['input'],
+            output_feature_names=['Softmax'])
+
+    def test_classifier_nhwc(self):
+        # Manually using the correct format should succeed
+        coremltools.converters.tensorflow.convert(
+            self.frozen_graph_file,
+            mlmodel_path=self.converted_coreml_file,
+            input_name_shape_dict={'input': [1, 224, 224, 3]},
+            image_input_names=['input'],
+            output_feature_names=['Softmax'],
+            image_format='NHWC')
+
+    def test_classifier_nchw(self):
+        # Expect failure - input dimensions are incompatible with NCHW
+        with self.assertRaises(ValueError) as e:
+            coremltools.converters.tensorflow.convert(
+                self.frozen_graph_file,
+                mlmodel_path=self.converted_coreml_file,
+                input_name_shape_dict={'input': [1, 224, 224, 3]},
+                image_input_names=['input'],
+                output_feature_names=['Softmax'],
+                image_format='NCHW')
+
+@unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
+class TFConversionTestWithSimpleNCHWModel(TFConversionTestWithSimpleModelBase):
+    # Use NHWC format
+    def _get_input_shape(self):
+        return [1, 3, self.image_size, self.image_size]
+
+    def test_classifier_no_image_format_selected(self):
+        # Expect to fail. Could not find image format in convolution layers and no parameter was given,
+        # so fall back to NHWC which is incompatible
+        with self.assertRaises(ValueError) as e:
+            coremltools.converters.tensorflow.convert(
+                self.frozen_graph_file,
+                mlmodel_path=self.converted_coreml_file,
+                input_name_shape_dict={'input': [1, 3, 224, 224]},
+                image_input_names=['input'],
+                output_feature_names=['Softmax'])
+
+    def test_classifier_nhwc(self):
+        # Expect to fail, NHWC is incorrect format
+        with self.assertRaises(ValueError) as e:
+            coremltools.converters.tensorflow.convert(
+                self.frozen_graph_file,
+                mlmodel_path=self.converted_coreml_file,
+                input_name_shape_dict={'input': [1, 3, 224, 224]},
+                image_input_names=['input'],
+                output_feature_names=['Softmax'],
+                image_format='NHWC')
+
+    def test_classifier_nchw(self):
+        # Expect success - user selected the correct format
+        coremltools.converters.tensorflow.convert(
+            self.frozen_graph_file,
+            mlmodel_path=self.converted_coreml_file,
+            input_name_shape_dict={'input': [1, 3, 224, 224]},
+            image_input_names=['input'],
+            output_feature_names=['Softmax'],
+            image_format='NCHW')
 
 class CustomLayerUtilsTest(unittest.TestCase):
 
