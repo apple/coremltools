@@ -236,6 +236,7 @@ collect_artifacts:
     - build_wheel_linux_py27
     - build_wheel_linux_py35
     - build_wheel_linux_py36
+    - build_wheel_linux_py37
     - build_wheel_macos_py27
     - build_wheel_macos_py35
     - build_wheel_macos_py36
