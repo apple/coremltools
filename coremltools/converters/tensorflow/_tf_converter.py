@@ -12,6 +12,7 @@ def convert(filename,
             inputs=None,
             outputs=None,
             image_input_names=None,
+            tf_image_format=None,
             is_bgr=False,
             red_bias=0.0,
             green_bias=0.0,
@@ -45,9 +46,13 @@ def convert(filename,
         Model output names.
 
     image_input_names: [str] | str
-      Input names (a subset of the keys of input_name_shape_dict)
+      Input names (a subset of the keys of inputs)
       that can be treated as images by Core ML. All other inputs
       are treated as MultiArrays.
+    tf_image_format: str
+      Optional and valid if image_input_names is also set. Specify either 'NCHW' or 'NHWC' to set or
+      override the image format. If not set, tries to use hints from the graph which may be present in convolution or
+      other image-specific layers. Ultimately defaults to NHWC.
     is_bgr: bool | dict():
       Applicable only if image_input_names is specified.
       To specify different values for each image input provide a dictionary with input names as keys and booleans as values.
@@ -123,8 +128,8 @@ def convert(filename,
 
         model = coremltools.converters.tensorflow.convert(
             './model.h5',
-             input_name_shape_dict={'input_1': (1, 224, 224, 3)},
-             output_feature_names=['Identity']
+             inputs={'input_1': (1, 224, 224, 3)},
+             outputs=['Identity']
         )
 
     For more examples, see: https://github.com/apple/coremltools/blob/master/docs/NeuralNetworkGuide.md
@@ -178,6 +183,7 @@ def convert(filename,
                              inputs=inputs,
                              outputs=outputs,
                              image_input_names=image_input_names,
+                             image_format=tf_image_format,
                              is_bgr=is_bgr,
                              red_bias=red_bias,
                              green_bias=green_bias,

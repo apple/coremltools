@@ -1,5 +1,7 @@
 import numpy as np
 
+from warnings import warn
+
 from six import string_types as _string_types
 
 from coremltools.models import datatypes
@@ -36,6 +38,7 @@ def ssa_convert(ssa,
                 inputs=None,
                 outputs=None,
                 image_input_names=None,
+                image_format=None,
                 is_bgr=False,
                 red_bias=0.0,
                 green_bias=0.0,
@@ -88,6 +91,10 @@ def ssa_convert(ssa,
     custom_shape_functions : dict of str -> functions or empty dict
         Specify custom function to compute `output` shape given `input` shape for given custom operator
         This is required for new converter path, which maintains and propagates shapes while converting operators.
+    image_format: str
+      Optional and valid if image_input_names is also set. Specify either 'NCHW' or 'NHWC' to set or
+      override the image format. If not set, tries to use hints from the graph which may be present in convolution or
+      other image-specific layers. Ultimately defaults to NHWC.
     """
     if not custom_conversion_functions:
         custom_conversion_functions = dict()
@@ -184,7 +191,12 @@ def ssa_convert(ssa,
         else:
             builder.set_class_labels(classes)
 
-    image_format = ssa.get_image_format()
+    detected_image_format = ssa.get_image_format()
+    if image_format and detected_image_format and image_format != detected_image_format:
+        warn('[SSAConverter] Detected image format different from input.'
+              'Detected: {} Input: {}'.format(detected_image_format, image_format))
+    image_format = image_format or detected_image_format or 'NHWC'
+
     # Set pre-processing parameters
     builder.set_pre_processing_parameters(image_input_names=image_input_names,
                                           is_bgr=is_bgr,
@@ -1988,7 +2000,7 @@ class SSAConverter(object):
         top, bottom = paddings[1][0], paddings[1][1]
 
         if node.attr.get('mode', '').lower() == 'symmetric':
-            print('[SSAConverter]Warning: Symmetric MirrorPad is not supported'
+            warn('[SSAConverter]Warning: Symmetric MirrorPad is not supported'
                   'but can be approximated with non-symmetric padding in some'
                   'cases. Conversion will continue, but expect some loss'
                   'of model accuracy.')
