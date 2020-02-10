@@ -6,6 +6,7 @@ from .type_int import is_int, int8 as builtins_int8, int16 as builtins_int16, in
     uint64 as builtins_uint64
 from .type_str import str as builtins_str
 import numpy as np
+from .get_type_info import get_type_info
 
 _NPTYPES_TO_BUILTINS = {
     np.dtype(np.bool_): builtins_bool,
@@ -80,3 +81,21 @@ def is_scalar(btype):
     Is the given builtin type a scalar integer, float, or boolean?
     """
     return btype is builtins_bool or is_int(btype) or is_float(btype)
+
+def is_tensor(tensor_type):
+    if tensor_type is None:
+        return False
+    return get_type_info(tensor_type).name == 'tensor'
+
+def is_str(t):
+    if t is None:
+        return False
+    return get_type_info(t).name == 'str'
+
+def is_tuple(t):
+    if t is None:
+        return False
+    return get_type_info(t).name == 'tuple'
+
+def is_builtin(t):
+    return is_scalar(t) or is_tensor(t) or is_str(t) or is_tuple(t)

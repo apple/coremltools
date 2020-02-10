@@ -12,17 +12,12 @@ using namespace ::CoreML::ILIL;
 
 IROperation::~IROperation() = default;
 
-const IROperatorDescription& IROperation::GetDescription() const
-{
-    return GetIROperatorDescription(GetType());
-}
-
-IRScope::ConstIRValuePtr IROperation::GetValue(const std::string& name) const
+const IRValue& IROperation::GetValue(const std::string& name) const
 {
     return GetScope().GetValue(name);
 }
 
-IRScope::ConstIRValuePtr IROperation::TryGetValue(const std::string& name) const
+const IRValue* IROperation::TryGetValue(const std::string& name) const
 {
     return GetScope().TryGetValue(name);
 }

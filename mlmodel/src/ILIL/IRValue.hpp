@@ -137,6 +137,17 @@ public:
 
     /** Get the offset of the start of the data within the file. */
     uint64_t GetOffset() const;
+    
+    /** Assumes the file value is a scalar and returns that scalar.
+        The value will be read from disk and is not cached. */
+    bool AsBool() const override;
+    float AsFloat32() const override;
+    int32_t AsInt32() const override;
+    int64_t AsInt64() const override;
+    std::string AsString() const override;
+    
+    /** Reads this value from disk on each call. */
+    std::unique_ptr<const IRValue> GetValue() const;
 
     void CopyTo(void* dest, uint64_t destSize) const override;
 private:

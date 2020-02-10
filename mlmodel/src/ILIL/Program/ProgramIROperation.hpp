@@ -27,9 +27,17 @@ namespace Program {
 class ProgramIROperation : public ILIL::IROperation {
 public:
     using OperationSpec = ::CoreML::Specification::V5::Operation;
-    using ScopePtr = std::shared_ptr<IRScope>;
 
     ~ProgramIROperation();
+
+    /** Create a new instance with the given attributes. */
+    static std::unique_ptr<ProgramIROperation> Make(ScopePtr scope,
+                                                    const std::string& name,
+                                                    const std::string& type,
+                                                    AttributesMap&& attributes,
+                                                    InputBindingMap&& inputs,
+                                                    StringVec&& outputs,
+                                                    IRBlockPtrVec&& blocks);
 
     /** Create a new instance with the specified operation spec in the given model. */
     static std::unique_ptr<ProgramIROperation>

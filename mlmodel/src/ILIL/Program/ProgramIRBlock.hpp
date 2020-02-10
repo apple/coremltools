@@ -27,8 +27,15 @@ class ProgramIRBlock : public ILIL::IRBlock {
 public:
     using BlockSpec = ::CoreML::Specification::V5::Block;
     using ConstScopePtr = std::shared_ptr<const IRScope>;
+    using ScopePtr = std::shared_ptr<IRScope>;
 
     ~ProgramIRBlock();
+
+    /** Create a new instance with the given attributes. */
+    static std::unique_ptr<ProgramIRBlock> Make(ScopePtr scope,
+                                                InputBindingMap&& inputs,
+                                                StringVec&& outputs,
+                                                ConstIROperationPtrVec&& operations);
 
     /** Create a new instance from the specified block in the given model. */
     static std::unique_ptr<ProgramIRBlock> Parse(const BlockSpec& block, ConstScopePtr parentScope);

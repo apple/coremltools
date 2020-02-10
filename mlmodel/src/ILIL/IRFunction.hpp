@@ -16,8 +16,11 @@ namespace ILIL {
 /** A function in an IRProgram. */
 class IRFunction {
 public:
+    using ConstIRBlockPtr = std::shared_ptr<const IRBlock>;
     using ConstIRValueTypePtr = std::shared_ptr<const IRValueType>;
     using ConstIRValueTypePtrVec = std::vector<ConstIRValueTypePtr>;
+    using Rename = std::pair<std::string, std::string>;
+    using RenameVec = std::vector<Rename>;
     using ValueTypeMap = std::unordered_map<std::string, std::shared_ptr<const IRValueType>>;
 
     virtual ~IRFunction() = default;
@@ -42,6 +45,15 @@ public:
 
     /** Get the output types. */
     virtual const ConstIRValueTypePtrVec& GetOutputTypes() const = 0;
+
+    /** Get the scope associated with this function. */
+    virtual const IRScope& GetScope() const = 0;
+
+    /** Create a new instance with the given block. */
+    virtual std::unique_ptr<const IRFunction> WithBlock(ConstIRBlockPtr block) const = 0;
+
+    /** Create a new instance with the specified value renames applied. */
+    virtual std::unique_ptr<const IRFunction> WithRenames(const RenameVec& renames) const = 0;
 };
 
 }

@@ -65,3 +65,4 @@ if Features.tf_new_ssa() or Features.onnx_new_ssa():
 else:
     Features.register('new_ssa', 'TEST_NEW_SSA_FLAG', False)
 
+Features.register('nnv2_ssa', 'TEST_NNV2_SSA', False)

@@ -41,7 +41,7 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
 
     ssa = graphdef_to_ssa(gd)
 
-    if not Features.new_ssa():
+    if not Features.new_ssa() and not Features.nnv2_ssa():
         placeholder_shape = kwargs.get("inputs", {})
 
         if placeholder_shape and len(placeholder_shape) > 0:

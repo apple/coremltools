@@ -38,6 +38,10 @@ class IRScope {
 public:
     using ConstIRValueTypePtr = std::shared_ptr<const IRValueType>;
     using ConstIRValuePtr = std::shared_ptr<const IRValue>;
+    using Rename = std::pair<std::string, std::string>;
+    using RenameVec = std::vector<Rename>;
+    using TypeMap = std::unordered_map<std::string, ConstIRValueTypePtr>;
+    using ValueMap = std::unordered_map<std::string, ConstIRValuePtr>;
 
     ~IRScope();
 
@@ -51,7 +55,16 @@ public:
      @return a type pointer if the type is found.
      @throw std::runtime_error if the type is not found.
      */
-    ConstIRValueTypePtr GetType(const std::string& name, bool includeRoot = true) const;
+    const IRValueType& GetType(const std::string& name, bool includeRoot = true) const;
+
+    /**
+     Get a shread pointer to the type of the given value.
+     If not found in this instance, the search will continue
+     through parent scopes.
+     @return a type pointer if the type is found.
+     @throw std::runtime_error if the type is not found.
+     */
+    ConstIRValueTypePtr GetTypeSharedPtr(const std::string& name, bool includeRoot = true) const;
 
     /**
      Get the type of the given value.
@@ -59,7 +72,18 @@ public:
      through parent scopes.
      @return A pointer to a type or nullptr if it cannot be found.
      */
-    ConstIRValueTypePtr TryGetType(const std::string& name, bool includeRoot = true) const;
+    const IRValueType* TryGetType(const std::string& name, bool includeRoot = true) const;
+
+    /**
+     Get the type of the given value.
+     If not found in this instance, the search will continue
+     through parent scopes.
+     @return A pointer to a type or nullptr if it cannot be found.
+     */
+    ConstIRValueTypePtr TryGetTypeSharedPtr(const std::string& name, bool includeRoot = true) const;
+
+    /** Get all types. */
+    const TypeMap& GetTypes() const;
 
     /**
      Associate the given type with the specified name. Optionally replace
@@ -83,7 +107,7 @@ public:
      @return a value pointer if the value is found.
      @throw std::runtime_error if the value is not found.
      */
-    ConstIRValuePtr GetValue(const std::string& name, bool includeRoot = true) const;
+    const IRValue& GetValue(const std::string& name, bool includeRoot = true) const;
 
     /**
      Get a value.
@@ -91,7 +115,18 @@ public:
      through parent scopes.
      @return A pointer to a value or nullptr if it cannot be found.
      */
-    ConstIRValuePtr TryGetValue(const std::string& name, bool includeRoot = true) const;
+    const IRValue* TryGetValue(const std::string& name, bool includeRoot = true) const;
+
+    /**
+     Get a value.
+     If not found in this instance, the search will continue
+     through parent scopes.
+     @return A pointer to a value or nullptr if it cannot be found.
+     */
+    ConstIRValuePtr TryGetValueSharedPtr(const std::string& name, bool includeRoot = true) const;
+
+    /** Get all values. */
+    const ValueMap& GetValues() const;
 
     /**
      Associate the given value with the specified name. Optionally replaces
@@ -102,10 +137,13 @@ public:
      */
     bool SetValue(const std::string& name, ConstIRValuePtr value, bool allowReplace = false);
 
+    /** Create a new instance with the specified renames applied. */
+    std::unique_ptr<IRScope> WithRenames(const RenameVec& renames) const;
+
 private:
     std::shared_ptr<const IRScope> m_parent;
-    std::unordered_map<std::string, ConstIRValueTypePtr> m_types;
-    std::unordered_map<std::string, ConstIRValuePtr> m_values;
+    TypeMap m_types;
+    ValueMap m_values;
 };
 
 }

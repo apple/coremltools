@@ -30,6 +30,11 @@ public:
 
     ~ProgramIRFunction();
 
+    /** Create a new instance with the given attributes. */
+    static std::unique_ptr<ProgramIRFunction>
+    Make(ValueTypeMap&& inputs, ConstIRValueTypePtrVec&& outputs,
+         ConstIRScopePtr scope, ConstIRBlockPtr&& block);
+
     /** Create a new instance from the specified function. */
     static std::unique_ptr<ProgramIRFunction>
     Parse(const FunctionSpec& function, ConstIRScopePtr parentScope);

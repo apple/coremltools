@@ -13,7 +13,7 @@ class ParsedTFNode(ParsedNode):
     name: The name of the node (str)
     op: The operation represented by the node (str)
     datatype: The type of the node. (type)
-    value: The value of the node if available 
+    value: The value of the node if available
     inputs: The list of nodes which are inputs to this node (list[str])
     control_inputs: The list of nodes which have to be executed before this node (list[str])
     attr: The attributes of the node
@@ -21,8 +21,9 @@ class ParsedTFNode(ParsedNode):
     control_outputs: The list of nodes which have to be executed after this node (list[str])
     """
     def __init__(self, tfnode=None):
-        ParsedNode.__init__(self)
+        super(ParsedTFNode, self).__init__()
         self.original_node = tfnode
+
         if tfnode is not None:
             from .parse import parse_attr
             self.name = tfnode.name

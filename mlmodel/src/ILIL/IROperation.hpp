@@ -27,8 +27,11 @@ class IROperation {
 public:
     using AttributesMap = std::unordered_map<std::string, std::shared_ptr<const IRValue>>;
     using InputBindingMap = std::unordered_map<std::string, std::string>;
-    using IRBlockPtr = std::shared_ptr<IRBlock>;
+    using IRBlockPtr = std::shared_ptr<const IRBlock>;
     using IRBlockPtrVec = std::vector<IRBlockPtr>;
+    using Rename = std::pair<std::string, std::string>;
+    using RenameVec = std::vector<Rename>;
+    using ScopePtr = std::shared_ptr<IRScope>;
     using StringVec = std::vector<std::string>;
 
     virtual ~IROperation();
@@ -44,9 +47,6 @@ public:
 
     /** Get this operation's nested blocks. */
     virtual const IRBlockPtrVec& GetBlocks() const = 0;
-
-    /** Get a description of the operator being invoked. */
-    const IROperatorDescription& GetDescription() const;
 
     /**
      Get the name of the argument specified for the given parameter.
@@ -85,17 +85,27 @@ public:
     virtual const IRScope& GetScope() const = 0;
 
     /** Get the type of operator being invoked. */
-    virtual IROperatorType GetType() const = 0;
+    virtual const std::string& GetType() const = 0;
+
+    /** Create a new instance with the given blocks. */
+    virtual std::unique_ptr<IROperation> WithBlocks(IRBlockPtrVec&& blocks) const = 0;
+
+    /**
+     Create a new instance with the specified value renames applied.
+     @param renames Pairs of (old, new).
+     @param scope A scope with renames already applied.
+     */
+    virtual std::unique_ptr<IROperation> WithRenames(const RenameVec& renames, ScopePtr scope) const = 0;
 
     /**
      Convenience method to get the indicated compile-time constant from our scope.
      */
-    IRScope::ConstIRValuePtr GetValue(const std::string& name) const;
+    const IRValue& GetValue(const std::string& name) const;
 
     /**
      Convenience method to get the indicated compile-time constant from our scope.
      */
-    IRScope::ConstIRValuePtr TryGetValue(const std::string& name) const;
+    const IRValue* TryGetValue(const std::string& name) const;
 };
 
 }

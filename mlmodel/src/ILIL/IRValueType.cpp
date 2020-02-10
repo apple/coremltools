@@ -139,7 +139,7 @@ static std::unique_ptr<const IRValue> ReadScalarValue(const std::string& filePat
     EnsureFileExists(filePath);
 
     std::vector<ScalarT> value;
-    NNBuffer::NeuralNetworkBuffer nnBuffer(filePath, /*readOnly=*/ true);
+    NNBuffer::NeuralNetworkBuffer nnBuffer(filePath, /*mode=*/ NNBuffer::bufferMode::read);
     nnBuffer.getBuffer(offset, value);
     auto retval = IRScalarValue<ScalarT>::Make(value.at(0));
 
@@ -177,6 +177,8 @@ std::unique_ptr<const IRValue> IRScalarValueType::ReadValue(const std::string& f
         case IRScalarValueTypeEnum::UInt32:
         case IRScalarValueTypeEnum::UInt64:
             throw std::runtime_error("Reading binary data of the given type is not supported.");
+        case IRScalarValueTypeEnum::Any:
+            throw std::runtime_error("'Any' scalar type is a placeholder and can't be read.");
     }
 }
 
@@ -271,6 +273,11 @@ bool IRScalarValueType::operator==(const IRValueType& other) const
     return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::UInt64));
 }
 
+/*static*/ std::shared_ptr<const IRScalarValueType> IRScalarValueType::Any()
+{
+    return std::shared_ptr<IRScalarValueType>(new IRScalarValueType(IRScalarValueTypeEnum::Any));
+}
+
 //-----------------------------------------------------------------
 
 IRTensorValueType::~IRTensorValueType() = default;
@@ -285,6 +292,13 @@ IRTensorValueType::Make(std::shared_ptr<const IRScalarValueType> scalarType, Sha
 {
     return std::shared_ptr<const IRTensorValueType>(new IRTensorValueType(std::move(scalarType), std::move(shape)));
 }
+
+/*static*/ std::shared_ptr<const IRTensorValueType>
+IRTensorValueType::Make(std::shared_ptr<const IRScalarValueType> scalarType)
+{
+    return std::shared_ptr<const IRTensorValueType>(new IRTensorValueType(std::move(scalarType), Shape()));
+}
+
 
 template<typename ScalarT>
 std::unique_ptr<const IRTensorValue<ScalarT>> IRTensorValueType::Make(std::vector<ScalarT>&& values) const
@@ -339,7 +353,7 @@ static std::unique_ptr<const IRValue> ReadTensorValue(const std::string& filePat
     EnsureFileExists(filePath);
 
     std::vector<ScalarT> values;
-    NNBuffer::NeuralNetworkBuffer nnBuffer(filePath, /*readOnly=*/ true);
+    NNBuffer::NeuralNetworkBuffer nnBuffer(filePath, /*mode=*/ NNBuffer::bufferMode::read);
     nnBuffer.getBuffer(offset, values);
     return tensorType.Make(std::move(values));
 }
@@ -371,6 +385,8 @@ std::unique_ptr<const IRValue> IRTensorValueType::ReadValue(const std::string& f
         case IRScalarValueTypeEnum::UInt32:
         case IRScalarValueTypeEnum::UInt64:
             throw std::runtime_error("Reading binary data of the given type is not supported.");
+        case IRScalarValueTypeEnum::Any:
+            throw std::runtime_error("'Any' scalar type is a placeholder and can't be read.");
     }
 }
 

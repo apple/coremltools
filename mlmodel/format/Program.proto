@@ -75,6 +75,8 @@ message Program {
 message Function {
 
     // Function inputs are unordered (name, ValueType) pairs.
+    // Inputs intended to process images must be rank-4 Float32 tensors. Dimensions
+    // are interpreted as NCHW, with N == 1 and C being 1 for grayscale and 3 for RGB.
     repeated NamedValueType inputs = 1;
 
     // output types should be consistent with block.outputs (whose ValueType is
@@ -215,6 +217,7 @@ message TensorType {
     int64 rank = 2;
 
     // Tensor shape values; must be of length "rank"
+    // TODO: rdar://58496993 
     repeated Dimension dimension = 3;
 }
 
@@ -229,6 +232,7 @@ message ListType {
 
 message TupleType {
     // Recursively define TupleType from ValueType.
+    // TODO: rdar://58496978
     repeated ValueType values = 1;
 }
 

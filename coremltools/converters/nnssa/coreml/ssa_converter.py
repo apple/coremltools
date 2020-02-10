@@ -104,7 +104,7 @@ def ssa_convert(ssa,
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa')
 
     # apply passes on the ssa, prior to conversion
@@ -125,6 +125,8 @@ def ssa_convert(ssa,
         spatial_reduce_to_global_pool,
         fuse_pad_into_conv,
         remove_oneway_split,
+        remove_noneffective_transpose,
+        remove_noneffective_reshape
     ]
 
     for p in passes:
@@ -132,7 +134,7 @@ def ssa_convert(ssa,
 
     if DEBUG:
         import graphviz
-        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=False, highlight_debug_nodes=[])
+        dot_string = ssa.get_dot_string(annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_passes')
 
     for f in list(ssa.functions.values()):
@@ -442,6 +444,7 @@ class SSAConverter(object):
             'StridedSlice': self._convert_slice,
             'Sub': self._convert_binary,
             'Sum': self._convert_reduction,
+            'Softplus': self._convert_unary_activation,
             'Tan': self._convert_unary_trigonometric,
             'Tanh': self._convert_unary_activation,
             'TensorArrayGatherV3': self._convert_tensorarray_gather,
@@ -726,6 +729,7 @@ class SSAConverter(object):
         if dim is None:
             raise ValueError('[SSAConverter] Cannot handle dynamic Transpose')
         dim = list(dim)
+
         builder = self._get_builder()
 
         layer = builder.add_transpose(
@@ -1397,7 +1401,6 @@ class SSAConverter(object):
             shapes.propagate_single_layer(layer, self.tensor_shapes)
         else:
             self.op_tensor_map[node.name] = [input_names[-1]]
-
 
     def _convert_tensorarray_size(self, node):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
@@ -2136,7 +2139,7 @@ class SSAConverter(object):
         assert len(node.inputs) == 1
         input_nodes, input_names, input_types = self._get_input_tensors(node)
 
-        # Core ML has 3 modes: EXACT, TANH_APPROXIMATION,SIGMOID_APPROXIMATION
+        # Core ML has 3 modes: EXACT, TANH_APPROXIMATION, SIGMOID_APPROXIMATION
         layer = self._get_builder().add_gelu(
             name=node.name,
             input_name=input_names[0],

@@ -793,6 +793,7 @@ enum MLLossLayerLossLayerType: int {
     MLLossLayerLossLayerType_sigmoidCrossEntropyLossLayer = 12,
     MLLossLayerLossLayerType_meanAbsoluteErrorLossLayer = 13,
     MLLossLayerLossLayerType_huberLossLayer = 14,
+    MLLossLayerLossLayerType_yoloLossLayer = 15,
     MLLossLayerLossLayerType_NOT_SET = 0,
 };
 
@@ -809,6 +810,8 @@ static const char * MLLossLayerLossLayerType_Name(MLLossLayerLossLayerType x) {
             return "MLLossLayerLossLayerType_meanAbsoluteErrorLossLayer";
         case MLLossLayerLossLayerType_huberLossLayer:
             return "MLLossLayerLossLayerType_huberLossLayer";
+        case MLLossLayerLossLayerType_yoloLossLayer:
+            return "MLLossLayerLossLayerType_yoloLossLayer";
         case MLLossLayerLossLayerType_NOT_SET:
             return "INVALID";
     }
@@ -818,6 +821,7 @@ static const char * MLLossLayerLossLayerType_Name(MLLossLayerLossLayerType x) {
 enum MLOptimizerOptimizerType: int {
     MLOptimizerOptimizerType_sgdOptimizer = 10,
     MLOptimizerOptimizerType_adamOptimizer = 11,
+    MLOptimizerOptimizerType_rmsPropOptimizer = 12,
     MLOptimizerOptimizerType_NOT_SET = 0,
 };
 
@@ -828,6 +832,8 @@ static const char * MLOptimizerOptimizerType_Name(MLOptimizerOptimizerType x) {
             return "MLOptimizerOptimizerType_sgdOptimizer";
         case MLOptimizerOptimizerType_adamOptimizer:
             return "MLOptimizerOptimizerType_adamOptimizer";
+        case MLOptimizerOptimizerType_rmsPropOptimizer:
+            return "MLOptimizerOptimizerType_rmsPropOptimizer";
         case MLOptimizerOptimizerType_NOT_SET:
             return "INVALID";
     }

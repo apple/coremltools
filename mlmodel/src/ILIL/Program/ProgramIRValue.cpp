@@ -119,7 +119,10 @@ static std::unique_ptr<const IRValue> ParseTensorValue(const V5::TensorValue& va
         case IRScalarValueTypeEnum::Int16:
             throw std::runtime_error("Int16 is not a supported immediate type.");
         case IRScalarValueTypeEnum::Int32:
-            throw std::runtime_error("Int32 is not a supported immediate type.");
+        {
+            std::vector<int32_t> ints(value.ints().cbegin(), value.ints().cend());
+            return tensorType.Make(std::move(ints));
+        }
         case IRScalarValueTypeEnum::Int64:
         {
             std::vector<int64_t> ints(value.ints().cbegin(), value.ints().cend());
@@ -136,6 +139,8 @@ static std::unique_ptr<const IRValue> ParseTensorValue(const V5::TensorValue& va
             throw std::runtime_error("UInt32 is not a supported immediate type.");
         case IRScalarValueTypeEnum::UInt64:
             throw std::runtime_error("UInt32 is not a supported immediate type.");
+        case IRScalarValueTypeEnum::Any:
+            throw std::runtime_error("Any is not a supported immediate type.");
     }
 }
 

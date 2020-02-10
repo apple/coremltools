@@ -28,36 +28,30 @@ int testParseProgramIRBlock()
 {
     // [Parent scope] string a <- "relu";
     // [Parent scope] fp[2] b <- ... ;
-    // [x <- a, y <- b] { z = activation(data=y, activation=x); } [z]
-    auto block = MakeBlock({ { "x", "a" }, { "y", "b" } }, // inputs
+    // [x <- a] { z = relu(x=x); } [z]
+    auto block = MakeBlock({ { "x", "a" } }, // inputs
                            { "z" }, // outputs
                            { // ops
-        MakeOp("z", "activation",
-               { { "activation", "a" }, { "data", "b" } }, // inputs
+        MakeOp("z", "relu",
+               { { "x", "x" } }, // inputs
                { { "z", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
                {})
     });
 
     auto parentScope = std::make_shared<IRScope>(/*parentScope=*/ nullptr);
-    parentScope->SetType("a", IRScalarValueType::String());
-    parentScope->SetValue("a", IRScalarValueType::String()->Make<std::string>("relu"));
     auto tensorType = IRTensorValueType::Make(IRScalarValueType::Float32(), { std::make_shared<IRConstantDimension>(2)} );
-    parentScope->SetType("b", tensorType);
+    parentScope->SetType("a", tensorType);
 
     auto irBlock = ProgramIRBlock::Parse(block, parentScope);
 
     ML_ASSERT_EQ("a", irBlock->GetArgumentName("x"))
-    ML_ASSERT_EQ("b", irBlock->GetArgumentName("y"))
-    ML_ASSERT_EQ(2, irBlock->GetInputs().size());
+    ML_ASSERT_EQ(1, irBlock->GetInputs().size());
     ML_ASSERT_EQ("a", irBlock->GetInputs().at("x"));
-    ML_ASSERT_EQ("b", irBlock->GetInputs().at("y"));
     ML_ASSERT_EQ(1, irBlock->GetOperations().size());
     ML_ASSERT_EQ(1, irBlock->GetOutputs().size());
     ML_ASSERT_EQ("z", irBlock->GetOutputs()[0]);
 
-    ML_ASSERT_EQ(*IRScalarValueType::String(), *irBlock->GetScope().GetType("x"));
-    ML_ASSERT_EQ("relu", irBlock->GetScope().GetValue("x")->AsString());
-    ML_ASSERT_EQ(*tensorType, *irBlock->GetScope().GetType("y"));
+    ML_ASSERT_EQ(*tensorType, irBlock->GetScope().GetType("x"));
 
     return 0;
 }
@@ -129,8 +123,8 @@ int testParseProgramIRProgram()
 
     ML_ASSERT_EQ(1, irProgram->GetParameterNames().size());
     ML_ASSERT_EQ("aBool", irProgram->GetParameterNames()[0]);
-    ML_ASSERT_EQ(*IRScalarValueType::Bool(), *irProgram->GetScope().GetType("aBool"));
-    ML_ASSERT_EQ(true, irProgram->GetScope().GetValue("aBool")->AsBool());
+    ML_ASSERT_EQ(*IRScalarValueType::Bool(), irProgram->GetScope().GetType("aBool"));
+    ML_ASSERT_EQ(true, irProgram->GetScope().GetValue("aBool").AsBool());
     ML_ASSERT_EQ(true, irProgram->GetParameterValue("aBool").AsBool());
 
     ML_ASSERT_EQ(1, irProgram->GetFunctions().size());
@@ -378,6 +372,197 @@ int testParseProgramIRValueType()
         ML_ASSERT_EQ(*IRScalarValueType::UInt64(), *irListType->GetElementType().As<IRScalarValueType>());
         ML_ASSERT_EQ("s3", irListType->GetLength().As<IRSymbolicDimension>()->GetName());
         ML_ASSERT_THROWS(irListType->GetNumElements(), std::range_error); // can't compute length from with symbolic dimension
+    }
+
+    return 0;
+}
+
+int testProgramIRBlockRename()
+{
+    // Input Params
+    {
+        auto scope = std::make_shared<IRScope>(nullptr);
+        scope->SetType("a", IRScalarValueType::Int8());
+        IROperation::IRBlockPtr block = ProgramIRBlock::Make(scope, { { "x", "a" } }, {}, {});
+        block = block->WithRenames({ { "x", "notX" } });
+
+        ML_ASSERT_EQ(size_t(0), block->GetInputs().count("x"));
+        ML_ASSERT_EQ(size_t(1), block->GetInputs().count("notX"));
+    }
+
+    // Input Args
+    {
+        auto scope = std::make_shared<IRScope>(nullptr);
+        scope->SetType("a", IRScalarValueType::Int8());
+        IROperation::IRBlockPtr block = ProgramIRBlock::Make(scope, { { "x", "a" } }, {}, {});
+        block = block->WithRenames({ {"a", "notA" } });
+
+        ML_ASSERT_EQ("notA", block->GetInputs().at("x"));
+        ML_ASSERT_NULL(block->GetScope().TryGetType("a"));
+        ML_ASSERT_NOT_NULL(block->GetScope().TryGetType("notA"));
+    }
+
+    // Outputs
+    {
+        auto scope = std::make_shared<IRScope>(nullptr);
+        scope->SetType("a", IRScalarValueType::Int8());
+        IROperation::IRBlockPtr block = ProgramIRBlock::Make(scope, {}, { "a" }, {});
+        block = block->WithRenames({{ "a", "notA" }});
+
+        ML_ASSERT_EQ("notA", block->GetOutputs().at(0));
+    }
+
+    // Ops
+    {
+        auto scope = std::make_shared<IRScope>(nullptr);
+        scope->SetType("a", IRScalarValueType::Int8());
+        auto op = ProgramIROperation::Make(scope, "anOp", "const", {}, {}, { "a" }, {});
+        IROperation::IRBlockPtr block = ProgramIRBlock::Make(scope, {}, {}, { std::move(op) });
+        block = block->WithRenames({{ "a", "notA" }});
+
+        ML_ASSERT_EQ("notA", block->GetOperations().at(0)->GetOutputNames().at(0));
+    }
+
+    return 0;
+}
+
+int testProgramIRFunctionRename()
+{
+    // inputs and scope
+    {
+        auto funcScope = std::make_shared<IRScope>(nullptr);
+        funcScope->SetType("x", IRScalarValueType::UInt8());
+
+        auto blockScope = std::make_shared<IRScope>(funcScope);
+        auto block = ProgramIRBlock::Make(blockScope, {}, {}, {});
+
+        auto origFunc = ProgramIRFunction::Make({{ "x", funcScope->GetTypeSharedPtr("x") }},
+                                                {}, funcScope, std::move(block));
+        auto renamedFunc = origFunc->WithRenames({{ "x", "notX" }});
+
+        ML_ASSERT_EQ(size_t(1), renamedFunc->GetInputs().size());
+        ML_ASSERT_EQ(size_t(1), renamedFunc->GetInputs().count("notX"));
+
+        ML_ASSERT_NULL(renamedFunc->GetScope().TryGetType("x"));
+        ML_ASSERT_NOT_NULL(renamedFunc->GetScope().TryGetType("notX"));
+    }
+
+    // block
+    {
+        auto funcScope = std::make_shared<IRScope>(nullptr);
+        auto blockScope = std::make_shared<IRScope>(funcScope);
+        blockScope->SetType("x", IRScalarValueType::UInt8());
+
+        auto block = ProgramIRBlock::Make(blockScope, {}, {}, {});
+
+        auto origFunc = ProgramIRFunction::Make({}, {}, funcScope, std::move(block));
+        auto renamedFunc = origFunc->WithRenames({{ "x", "notX" }});
+
+        ML_ASSERT_NULL(renamedFunc->GetBlock().GetScope().TryGetType("x"));
+        ML_ASSERT_NOT_NULL(renamedFunc->GetBlock().GetScope().TryGetType("notX"));
+    }
+
+    return 0;
+}
+
+int testProgramIROperationRename()
+{
+    auto makeScope = []() {
+        auto scope = std::make_shared<IRScope>(nullptr);
+        scope->SetType("x", IRScalarValueType::BFloat16());
+        return scope;
+    };
+
+    { // Rename input args
+        auto origScope = makeScope();
+        auto origOp = ProgramIROperation::Make(origScope, "anOp", "const", {},
+                                               { { "param1", "x" } }, {}, {});
+
+        ProgramIROperation::RenameVec renames{{ "x", "notX", }};
+        ProgramIROperation::ScopePtr renamedScope = origScope->WithRenames(renames);
+        auto renamedOp = origOp->WithRenames(renames, renamedScope);
+
+        ML_ASSERT_EQ("notX", renamedOp->GetInput("param1"));
+        ML_ASSERT_EQ("notX", renamedOp->GetInputNames().at(0));
+        ML_ASSERT_EQ(*IRScalarValueType::BFloat16(), renamedOp->GetScope().GetType("notX"));
+        ML_ASSERT_NULL(renamedOp->GetScope().TryGetType("x"));
+    }
+
+    { // Rename output
+        auto origScope = makeScope();
+        auto origOp = ProgramIROperation::Make(origScope, "anOp", "const", {},
+                                               {}, { "x" }, {});
+
+        ProgramIROperation::RenameVec renames{{ "x", "notX", }};
+        ProgramIROperation::ScopePtr renamedScope = origScope->WithRenames(renames);
+        auto renamedOp = origOp->WithRenames(renames, renamedScope);
+
+        ML_ASSERT_EQ("notX", renamedOp->GetOutputNames().at(0));
+    }
+
+    { // Rename in child block
+        // {
+        //   x = ...
+        //   _ = outerOp{    # Call rename (x -> notX) on this
+        //     x = innerOp()
+        //   }
+        // }
+        auto outerScope = std::make_shared<IRScope>(nullptr);
+        auto innerScope = std::make_shared<IRScope>(outerScope);
+        outerScope->SetType("x", IRScalarValueType::BFloat16());
+
+        auto innerOp = ProgramIROperation::Make(innerScope, "innerOp", "const", {},
+                                              {}, { "x" }, {});
+        auto innerBlock = ProgramIRBlock::Make(innerScope, {}, {}, { std::move(innerOp) });
+
+        auto op = ProgramIROperation::Make(outerScope, "outerOp", "const",
+                                           {}, {}, {}, { std::move(innerBlock) });
+
+        ProgramIROperation::RenameVec renames{{ "x", "notX", }};
+        ProgramIROperation::ScopePtr renamedScope = outerScope->WithRenames(renames);
+        auto renamedOp = op->WithRenames({{ "x", "notX" }}, renamedScope);
+
+        ML_ASSERT_EQ("notX", renamedOp->GetBlocks().at(0)->GetOperations().at(0)->GetOutputNames().at(0));
+    }
+
+    return 0;
+}
+
+int testProgramIRProgramRename()
+{
+    // parameters, parameter names, scope
+    {
+        auto scope = std::make_shared<IRScope>(nullptr);
+        scope->SetType("x", IRScalarValueType::Int32());
+
+        auto origProgram = ProgramIRProgram::Make({{ "x", IRScalarValueType::Int32()->Make(56) }}, scope, {});
+        auto renamedProgram = origProgram->WithRenames({{ "x", "notX" }});
+
+        ML_ASSERT_EQ(size_t(1), renamedProgram->GetParameters().size());
+        ML_ASSERT_EQ(size_t(1), renamedProgram->GetParameters().count("notX"));
+        ML_ASSERT_EQ(size_t(1), renamedProgram->GetParameterNames().size());
+        ML_ASSERT_EQ("notX", renamedProgram->GetParameterNames().at(0));
+        ML_ASSERT_NULL(renamedProgram->GetScope().TryGetType("x"));
+        ML_ASSERT_NOT_NULL(renamedProgram->GetScope().TryGetType("notX"));
+    }
+
+    // functions
+    {
+        auto programScope = std::make_shared<IRScope>(nullptr);
+
+        auto funcScope = std::make_shared<IRScope>(programScope);
+        funcScope->SetType("x", IRScalarValueType::UInt8());
+
+        auto blockScope = std::make_shared<IRScope>(funcScope);
+        auto block = ProgramIRBlock::Make(blockScope, {}, {}, {});
+
+        auto func = ProgramIRFunction::Make({{ "x", funcScope->GetTypeSharedPtr("x") }},
+                                            {}, funcScope, std::move(block));
+
+        auto origProgram = ProgramIRProgram::Make({}, programScope, {{ "main", std::move(func) }});
+        auto renamedProgram = origProgram->WithRenames({{ "x", "notX" }});
+
+        ML_ASSERT_EQ(size_t(1), renamedProgram->GetFunction("main").GetInputs().count("notX"));
     }
 
     return 0;

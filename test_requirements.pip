@@ -7,3 +7,4 @@ Pillow
 pandas
 scikit-learn==0.19.2
 h5py
+scipy

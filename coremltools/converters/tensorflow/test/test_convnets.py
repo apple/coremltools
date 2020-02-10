@@ -2,6 +2,8 @@ import unittest
 import tensorflow.compat.v1 as tf
 import numpy as np
 from coremltools._deps import HAS_TF_1_14
+from coremltools.models.utils import is_macos, macos_version
+import math
 
 from test_base import TFNetworkTest, TFNetworkBatchTest
 import itertools
@@ -1076,6 +1078,8 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             out = tf.nn.relu(a)
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
+    @unittest.skipUnless(
+            macos_version() >= (10, 16), 'Only supported on MacOS 10.16+')
     def test_unary_activation_relu6(self):
         shape = [1, 5, 5, 6]
         graph = tf.Graph()
@@ -1559,6 +1563,26 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             c = tf.fill(dims=a, value=0.2)
             out = tf.zeros_like(c)
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_gelu_approximate(self):
+        '''
+        test that gelu tanh approximate formula pattern is fused into a single gelu layer
+        '''
+
+        shape = [3]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            b = 0.5 * (1.0 + tf.tanh((math.sqrt(2 / math.pi) * (a + 0.044715 * tf.pow(a, 3)))))
+            out = b * a
+        mlmodel = self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+        spec = mlmodel.get_spec()
+        nn_spec = spec.neuralNetwork
+        number_gelu_layers = 0
+        for layer in nn_spec.layers:
+            if layer.WhichOneof('layer') == 'gelu':
+                number_gelu_layers += 1
+        self.assertEqual(number_gelu_layers, 1)
 
 
 if __name__ == '__main__':

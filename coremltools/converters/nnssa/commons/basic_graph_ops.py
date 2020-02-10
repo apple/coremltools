@@ -7,6 +7,7 @@ import six
 
 from coremltools.converters.nnssa.commons.features import Features
 
+
 def connect_edge(g, source, dest):
     if isinstance(source, six.string_types):
         source = g[source]
@@ -14,7 +15,7 @@ def connect_edge(g, source, dest):
         dest = g[dest]
     source.outputs.append(dest.name)
     if Features.new_ssa():
-        dest.input = dest.input[:] + [source]
+        dest.inputs = dest.inputs[:] + [source]
     else:
         dest.inputs.append(source.name)
 
@@ -49,14 +50,18 @@ def replace_control_source(g, source, dest, new_source):
         new_source = g[new_source]
     dest_inputs = []
     for inp in dest.control_inputs:
-        if inp == source:
-            if Features.new_ssa():
+        if Features.new_ssa():
+            if inp == source:
                 dest_inputs.append(new_source)
+                g[new_source.name].control_outputs.append(dest.name)
             else:
-                dest_inputs.append(new_source.name)
-            g[new_source.name].outputs.append(dest.name)
+                dest_inputs.append(inp)
         else:
-            dest_inputs.append(inp)
+            if inp == source.name:
+                dest_inputs.append(new_source.name)
+                g[new_source.name].control_outputs.append(dest.name)
+            else:
+                dest_inputs.append(inp)
     dest.control_inputs = dest_inputs
     source.control_outputs = [i for i in g[source.name].outputs if i != dest.name]
 
@@ -81,6 +86,7 @@ def replace_dest(g, source, dest, new_dest):
     else:
         dest.inputs = [i for i in dest.inputs if i != source.name]
 
+
 def replace_control_dest(g, source, dest, new_dest):
     if isinstance(source, six.string_types):
         source = g[source]
@@ -90,11 +96,11 @@ def replace_control_dest(g, source, dest, new_dest):
         new_dest = g[new_dest]
     for idx, d in enumerate(source.control_outputs):
         if d == dest.name:
-            source.outputs[idx] = new_dest.name
+            source.control_outputs[idx] = new_dest.name
             if Features.new_ssa():
-                new_dest.inputs = new_dest.inputs[:] + [source]
+                new_dest.control_inputs = new_dest.control_inputs[:] + [source]
             else:
-                new_dest.inputs = new_dest.inputs[:] + [source.name]
+                new_dest.control_inputs = new_dest.control_inputs[:] + [source.name]
 
     if Features.new_ssa():
         dest.control_inputs = [i for i in dest.control_inputs if i != source]
@@ -184,19 +190,30 @@ def disconnect_vertex_control_outs(g, source):
     source.control_outputs = []
 
 
-def delete_node(g, name):
-    disconnect_vertex_ins(g, name)
-    disconnect_vertex_outs(g, name)
-    disconnect_vertex_control_ins(g, name)
-    disconnect_vertex_control_outs(g, name)
-    del g[name]
+def delete_node(g, node):
+    if not isinstance(node, six.string_types):
+        node = node.name
+    disconnect_vertex_ins(g, node)
+    disconnect_vertex_outs(g, node)
+    disconnect_vertex_control_ins(g, node)
+    disconnect_vertex_control_outs(g, node)
+    del g[node]
 
 
 def replace_node(g, original_node, new_node):
+    if isinstance(new_node, six.string_types):
+        new_node = g[new_node]
+    if not isinstance(original_node, six.string_types):
+        original_node = original_node.name
+
     for o in list(g[original_node].control_outputs):
         replace_control_source(g, original_node, o, new_node)
     for o in list(g[original_node].outputs):
         replace_source(g, original_node, o, new_node)
+    for i in list(g[original_node].control_inputs):
+        replace_control_dest(g, i, original_node, new_node)
+    for i in list(g[original_node].inputs):
+        replace_dest(g, i, original_node, new_node)
 
 
 def fill_outputs(gd):
@@ -223,7 +240,7 @@ def fill_outputs(gd):
 
 def check_connections(gd):
     """
-    Given a graph, checks that all 
+    Given a graph, checks that all
      - inputs/outputs are symmetric
      - control_inputs/control_outputs are symmetric
      - The graph does not reference vertices outside of the graph
@@ -242,15 +259,19 @@ def check_connections(gd):
             inputs = [inp if isinstance(inp, six.string_types) else inp.name for inp in gd[i].inputs]
             assert (k in inputs)
         for i in v.control_inputs:
-            assert (k in gd[i].control_outputs)
+            if isinstance(i, six.string_types):
+                assert (k in gd[i].control_outputs)
+            else:
+                assert (k in gd[i.name].control_outputs)
         for i in v.control_outputs:
-            assert (k in gd[i].control_inputs)
+            control_inputs = [inp if isinstance(inp, six.string_types) else inp.name for inp in gd[i].control_inputs]
+            assert (k in control_inputs)
 
 
 def const_determined_nodes(gd, assume_variable_nodes=None):
     """
     Given a graph, extract all nodes that only depends on const nodes.
-    
+
     # TODO: extract nodes that depends on the "const part" of placeholders.
     """
     if assume_variable_nodes is None:

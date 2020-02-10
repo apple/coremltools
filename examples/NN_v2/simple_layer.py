@@ -63,7 +63,7 @@ out = pm.Operation(name='softmax', type='softmax',
                    outputs=[pm.NamedValueType(name='output0', type=create_valuetype_tensor([2, 2], pm.FLOAT32))])
 
 # Create a block
-main_block = pm.Block(inputs={'input0':'input0'}, outputs=['output0'], operations=[softmax_axis, dense1, bias1, out])
+main_block = pm.Block(inputs={}, outputs=['output0'], operations=[softmax_axis, dense1, bias1, out])
 
 # Create function
 main_function = pm.Function(inputs=[pm.NamedValueType(name='input0', type=create_valuetype_tensor([2, 4], pm.FLOAT32))],

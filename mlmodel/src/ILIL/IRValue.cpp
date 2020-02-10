@@ -281,10 +281,40 @@ IRFileValue::IRFileValue(ConstIRValueTypePtr type, const std::string& path, uint
     , m_offset(offset)
 { }
 
+bool IRFileValue::AsBool() const
+{
+    return GetValue()->AsBool();
+}
+
+float IRFileValue::AsFloat32() const
+{
+    
+    return GetValue()->AsFloat32();
+}
+
+int32_t IRFileValue::AsInt32() const
+{
+    return GetValue()->AsInt32();
+}
+
+int64_t IRFileValue::AsInt64() const
+{
+    return GetValue()->AsInt64();
+}
+
+std::string IRFileValue::AsString() const
+{
+    return GetValue()->AsString();
+}
+
+std::unique_ptr<const IRValue> IRFileValue::GetValue() const
+{
+    return GetType().ReadValue(GetPath(), GetOffset());
+}
+
 void IRFileValue::CopyTo(void* dest, uint64_t destSize) const
 {
-    auto value = GetType().ReadValue(GetPath(), GetOffset());
-    value->CopyTo(dest, destSize);
+    GetValue()->CopyTo(dest, destSize);
 }
 
 const std::string& IRFileValue::GetPath() const

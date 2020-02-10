@@ -49,9 +49,3 @@ def tuple(args):
 
     tuple.__template_name__ = "tuple[" + ",".join([get_type_info(arg).name for arg in args]) + "]"
     return tuple
-
-
-def is_tuple(t):
-    if t is None:
-        return False
-    return get_type_info(t).name == 'tuple'

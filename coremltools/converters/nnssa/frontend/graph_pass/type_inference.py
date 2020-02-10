@@ -1768,6 +1768,9 @@ class TypeInferenceVisitor(object):
     def visit_Softmax(self, node):
         return self._visit_unary(node)
 
+    def visit_Softplus(self, node):
+        return self._visit_unary(node)
+
     def visit_LogSoftmax(self, node):
         return self._visit_unary(node)
 

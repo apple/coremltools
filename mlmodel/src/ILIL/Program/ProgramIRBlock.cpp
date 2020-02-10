@@ -21,10 +21,15 @@ using namespace ::google;
 
 class ProgramIRBlockImpl : public ProgramIRBlock {
 public:
-    using ScopePtr = std::shared_ptr<IRScope>;
-
     using SpecInputMap = protobuf::Map<std::string, std::string>;
     using SpecOutputVec = protobuf::RepeatedPtrField<std::string>;
+
+    ProgramIRBlockImpl(ScopePtr scope, InputBindingMap&& inputs, StringVec&& outputs, ConstIROperationPtrVec&& operations)
+        : m_scope(std::move(scope))
+        , m_inputs(std::move(inputs))
+        , m_outputs(std::move(outputs))
+        , m_operations(std::move(operations))
+    { }
 
     ProgramIRBlockImpl(const BlockSpec& block, ConstScopePtr parentScope)
         : m_scope(std::make_shared<IRScope>(parentScope))
@@ -55,6 +60,53 @@ public:
         return *m_scope;
     }
 
+    std::unique_ptr<IRBlock> WithOperations(ConstIROperationPtrVec&& ops) const override {
+        auto copy = std::make_unique<ProgramIRBlockImpl>(*this);
+        copy->m_operations = std::move(ops);
+        return copy;
+    }
+
+    std::unique_ptr<IRBlock> WithRenames(const RenameVec& renames) const override {
+        auto copy = std::make_unique<ProgramIRBlockImpl>(*this);
+
+        // Input Params
+        for (const auto& oldAndNew : renames) {
+            auto iter = copy->m_inputs.find(oldAndNew.first);
+            if (iter != copy->m_inputs.end()) {
+                copy->m_inputs[oldAndNew.second] = iter->second;
+                copy->m_inputs.erase(oldAndNew.first);
+            }
+        }
+
+        // Input Args
+        for (auto& inputParamAndName : copy->m_inputs) {
+            for (const auto& oldAndNew : renames) {
+                if (oldAndNew.first == inputParamAndName.second) {
+                    inputParamAndName.second.assign(oldAndNew.second);
+                }
+            }
+        }
+
+        // Outputs
+        for (auto& output : copy->m_outputs) {
+            for (const auto& oldAndNew : renames) {
+                if (output == oldAndNew.first) {
+                    output.assign(oldAndNew.second);
+                }
+            }
+        }
+
+        // Scope
+        copy->m_scope = copy->m_scope->WithRenames(renames);
+
+        // Ops
+        for (auto& op : copy->m_operations) {
+            op = op->WithRenames(renames, copy->m_scope);
+        }
+
+        return copy;
+    }
+
 private:
     static InputBindingMap ParseInputs(const SpecInputMap& specInputs) {
         InputBindingMap inputs;
@@ -67,7 +119,7 @@ private:
 
     static ConstIROperationPtrVec ParseOperations(const BlockSpec& block, ScopePtr scope)
     {
-        std::vector<std::unique_ptr<IROperation>> operations;
+        ConstIROperationPtrVec operations;
         operations.reserve(static_cast<size_t>(block.outputs_size()));
         for (const auto& op : block.operations()) {
             operations.push_back(ProgramIROperation::Parse(op, scope));
@@ -96,10 +148,10 @@ private:
     {
         // Copy arguments into new scope
         for (const auto& paramAndArg : thisBlock.inputs()) {
-            auto argType = parentScope.GetType(paramAndArg.second);
+            auto argType = parentScope.GetTypeSharedPtr(paramAndArg.second);
             m_scope->SetType(paramAndArg.first, std::move(argType));
 
-            auto argValue = parentScope.TryGetValue(paramAndArg.second);
+            auto argValue = parentScope.TryGetValueSharedPtr(paramAndArg.second);
             if (argValue) {
                 m_scope->SetValue(paramAndArg.first, std::move(argValue));
             }
@@ -130,6 +182,15 @@ private:
 
 ProgramIRBlock::~ProgramIRBlock() = default;
 ProgramIRBlock::ProgramIRBlock() = default;
+
+/*static*/ std::unique_ptr<ProgramIRBlock> ProgramIRBlock::Make(ScopePtr scope,
+                                                                InputBindingMap&& inputs,
+                                                                StringVec&& outputs,
+                                                                ConstIROperationPtrVec&& operations)
+{
+    return std::make_unique<ProgramIRBlockImpl>(std::move(scope), std::move(inputs),
+                                                std::move(outputs), std::move(operations));
+}
 
 /*static*/ std::unique_ptr<ProgramIRBlock>
 ProgramIRBlock::Parse(const BlockSpec& block, ConstScopePtr parentScope)

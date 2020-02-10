@@ -4,7 +4,7 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 from .type_spec import Type
 from .get_type_info import get_type_info
-from .utils import promote_types
+from .utils import promote_types, is_tensor
 import sympy as sm
 
 
@@ -156,13 +156,6 @@ def is_tensor_and_is_compatible_general_shape(tensor_type1, tensor_type2):
             return False, None
 
     return True, tensor(tensor_type1.get_primitive(), most_general_shape)
-
-
-def is_tensor(tensor_type):
-    if tensor_type is None:
-        return False
-    return get_type_info(tensor_type).name == 'tensor'
-
 
 def tensor_has_complete_shape(tensor_type):
     if not is_tensor(tensor_type):

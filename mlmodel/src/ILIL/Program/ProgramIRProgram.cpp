@@ -21,15 +21,20 @@ using namespace ::google;
 
 class ProgramIRProgramImpl : public ProgramIRProgram {
 public:
-    using ConstIRValuePtr = std::shared_ptr<const IRValue>;
-    using ConstIRScopePtr = std::shared_ptr<const IRScope>;
     using ProtoAttributesMap = protobuf::Map<std::string, V5::Value>;
     using ProtoFunctionMap = protobuf::Map<std::string, V5::Function>;
     using StringVec = std::vector<std::string>;
 
+    ProgramIRProgramImpl(ParameterMap&& parameters, ConstIRScopePtr&& scope, IRFunctionMap&& functions)
+        : m_parameters(std::move(parameters))
+        , m_parameterNames(ParseParameterNames())
+        , m_scope(std::move(scope))
+        , m_functions(std::move(functions))
+    { }
+
     ProgramIRProgramImpl(const ProgramSpec& program)
         : m_parameters(ParseParameters(program.parameters()))
-        , m_parameterNames(ParseParameterNames(program.parameters()))
+        , m_parameterNames(ParseParameterNames())
         , m_scope(ParseScope(m_parameters))
         , m_functions(ParseFunctions(program.functions(), m_scope))
     {  }
@@ -62,17 +67,54 @@ public:
         return *nameAndParamIter->second;
     }
 
-    ConstIRValuePtr TryGetParameterValue(const std::string& name) const override {
+    const IRValue* TryGetParameterValue(const std::string& name) const override {
         auto nameAndParamIter = m_parameters.find(name);
         return nameAndParamIter == m_parameters.cend()
             ? nullptr
-            : nameAndParamIter->second;
+        : nameAndParamIter->second.get();
     }
 
     const IRScope& GetScope() const override {
         return *m_scope;
     }
 
+    std::unique_ptr<IRProgram> WithFunctions(IRFunctionMap&& funcs) const override {
+        auto copy = std::make_unique<ProgramIRProgramImpl>(*this);
+        copy->m_functions = std::move(funcs);
+        return copy;
+    }
+
+    std::unique_ptr<IRProgram> WithRenames(const RenameVec& renames) const override {
+        auto copy = std::make_unique<ProgramIRProgramImpl>(*this);
+
+        // parameters
+        for (const auto& oldAndNew : renames) {
+            auto iter = copy->m_parameters.find(oldAndNew.first);
+            if (iter != copy->m_parameters.end()) {
+                copy->m_parameters[oldAndNew.second] = iter->second;
+                copy->m_parameters.erase(oldAndNew.first);
+            }
+        }
+
+        // parameter names
+        for (auto& paramName : copy->m_parameterNames) {
+            for (const auto& oldAndNew : renames) {
+                if (paramName == oldAndNew.first) {
+                    paramName.assign(oldAndNew.second);
+                }
+            }
+        }
+
+        // scope
+        copy->m_scope = copy->m_scope->WithRenames(renames);
+
+        // functions
+        for (auto& nameAndFunc : copy->m_functions) {
+            nameAndFunc.second = nameAndFunc.second->WithRenames(renames);
+        }
+
+        return copy;
+    }
 private:
     static IRFunctionMap ParseFunctions(const ProtoFunctionMap& specFunctions, ConstIRScopePtr thisScope) {
         IRFunctionMap functions;
@@ -82,11 +124,11 @@ private:
         return functions;
     }
 
-    static StringVec ParseParameterNames(const ProtoAttributesMap& specParameters) {
+    StringVec ParseParameterNames() const {
         StringVec parameterNames;
-        parameterNames.reserve(specParameters.size());
-        for (const auto& specNameAndValue : specParameters) {
-            parameterNames.push_back(specNameAndValue.first);
+        parameterNames.reserve(m_parameters.size());
+        for (const auto& nameAndValue : m_parameters) {
+            parameterNames.push_back(nameAndValue.first);
         }
         std::sort(parameterNames.begin(), parameterNames.end());
         return parameterNames;
@@ -120,6 +162,12 @@ private:
 
 ProgramIRProgram::~ProgramIRProgram() = default;
 ProgramIRProgram::ProgramIRProgram() = default;
+
+/*static*/ std::unique_ptr<ProgramIRProgram>
+ProgramIRProgram::Make(ParameterMap&& parameters, ConstIRScopePtr scope, IRFunctionMap&& functions)
+{
+    return std::make_unique<ProgramIRProgramImpl>(std::move(parameters), std::move(scope), std::move(functions));
+}
 
 /*static*/ std::unique_ptr<ProgramIRProgram> ProgramIRProgram::Parse(const ProgramSpec& program)
 {

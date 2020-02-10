@@ -22,11 +22,11 @@ int testIRScopeGetSetType()
     ML_ASSERT_NULL(scope.GetParent());
 
     scope.SetType("anInt", IRScalarValueType::Int32(), /*allowReplace=*/ false);
-    ML_ASSERT_EQ(*IRScalarValueType::Int32(), *scope.GetType("anInt"));
+    ML_ASSERT_EQ(*IRScalarValueType::Int32(), scope.GetType("anInt"));
     ML_ASSERT_NULL(scope.TryGetType("anInt", /*includeRoot=*/ false));
 
     scope.SetType("anInt", IRScalarValueType::UInt32(), /*allowReplace=*/ true);
-    ML_ASSERT_EQ(*IRScalarValueType::UInt32(), *scope.GetType("anInt"));
+    ML_ASSERT_EQ(*IRScalarValueType::UInt32(), scope.GetType("anInt"));
 
     ML_ASSERT_THROWS(scope.SetType("anInt", IRScalarValueType::UInt32(), /*allowReplace=*/ false), std::runtime_error);
     ML_ASSERT_THROWS(scope.SetType("anInt", IRScalarValueType::UInt32() /*allowReplace=false*/), std::runtime_error);
@@ -43,11 +43,11 @@ int testIRScopeGetSetValue()
     ML_ASSERT_NULL(scope.GetParent());
 
     scope.SetValue("anInt", IRScalarValueType::Int64()->Make(int64_t{1030}), /*allowReplace=*/ false);
-    ML_ASSERT_EQ(1030, scope.GetValue("anInt")->AsInt64());
+    ML_ASSERT_EQ(1030, scope.GetValue("anInt").AsInt64());
     ML_ASSERT_NULL(scope.TryGetValue("anInt", /*includeRoot=*/ false));
 
     scope.SetValue("anInt", IRScalarValueType::Int64()->Make(int64_t{1031}), /*allowReplace=*/ true);
-    ML_ASSERT_EQ(1031, scope.GetValue("anInt")->AsInt64());
+    ML_ASSERT_EQ(1031, scope.GetValue("anInt").AsInt64());
 
     ML_ASSERT_THROWS(scope.SetValue("anInt", IRScalarValueType::Int64()->Make(int64_t{1032}), /*allowReplace=*/ false), std::runtime_error);
     ML_ASSERT_THROWS(scope.SetValue("anInt", IRScalarValueType::Int64()->Make(int64_t{1032}) /*allowReplace=false*/), std::runtime_error);
@@ -69,9 +69,9 @@ int testIRScopeNestedTypeSearch()
     scope->SetType("inBoth", IRScalarValueType::String());
     scope->SetType("inChild", IRScalarValueType::Bool());
 
-    ML_ASSERT_EQ(*IRScalarValueType::Int8(), *scope->GetType("inParent"));
-    ML_ASSERT_EQ(*IRScalarValueType::Bool(), *scope->GetType("inChild"));
-    ML_ASSERT_EQ(*IRScalarValueType::String(), *scope->GetType("inBoth"));
+    ML_ASSERT_EQ(*IRScalarValueType::Int8(), scope->GetType("inParent"));
+    ML_ASSERT_EQ(*IRScalarValueType::Bool(), scope->GetType("inChild"));
+    ML_ASSERT_EQ(*IRScalarValueType::String(), scope->GetType("inBoth"));
 
     ML_ASSERT_NULL(scope->TryGetType("undefined"));
     ML_ASSERT_THROWS(scope->GetType("undefined"), std::runtime_error);
@@ -93,15 +93,40 @@ int testIRScopeNestedValueSearch()
     scope->SetValue("inBoth", IRScalarValueType::String()->Make<std::string>("child"));
     scope->SetValue("inChild", IRScalarValueType::Float32()->Make(34.3f));
 
-    ML_ASSERT_EQ(false, scope->GetValue("inParent")->AsBool());
-    ML_ASSERT_EQ("child", scope->GetValue("inBoth")->AsString());
-    ML_ASSERT_EQ(34.3f, scope->GetValue("inChild")->AsFloat32());
+    ML_ASSERT_EQ(false, scope->GetValue("inParent").AsBool());
+    ML_ASSERT_EQ("child", scope->GetValue("inBoth").AsString());
+    ML_ASSERT_EQ(34.3f, scope->GetValue("inChild").AsFloat32());
 
     ML_ASSERT_NULL(scope->TryGetType("undefined"));
     ML_ASSERT_THROWS(scope->GetType("undefined"), std::runtime_error);
 
     ML_ASSERT_THROWS(scope->GetValue("inParent", /*searchRoot=*/ false), std::runtime_error);
     ML_ASSERT_NULL(scope->TryGetValue("inParent", /*searchRoot=*/ false));
+
+    return 0;
+}
+
+int testIRScopeWithRenames()
+{
+    auto scope = std::make_shared<IRScope>(/*parentScope=*/ nullptr);
+
+    scope->SetType("x", IRScalarValueType::Bool());
+    scope->SetValue("x", IRScalarValueType::Bool()->Make(false));
+
+    scope->SetType("y", IRScalarValueType::Int32());
+    scope->SetValue("y", IRScalarValueType::Int32()->Make(55));
+
+    scope = scope->WithRenames({{ "x", "newX" }});
+
+    ML_ASSERT_NULL(scope->TryGetType("x"));
+    ML_ASSERT_NULL(scope->TryGetValue("x"));
+    ML_ASSERT_NOT_NULL(scope->TryGetType("newX"));
+    ML_ASSERT_NOT_NULL(scope->TryGetValue("newX"));
+    ML_ASSERT_NOT_NULL(scope->TryGetType("y"));
+    ML_ASSERT_NOT_NULL(scope->TryGetValue("y"));
+
+    ML_ASSERT_EQ(*IRScalarValueType::Bool(), *scope->TryGetType("newX"));
+    ML_ASSERT_EQ(false, scope->TryGetValue("newX")->AsBool());
 
     return 0;
 }

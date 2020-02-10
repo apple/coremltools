@@ -250,6 +250,7 @@ MLMODEL_TEST(testIRScopeGetSetType)
 MLMODEL_TEST(testIRScopeGetSetValue)
 MLMODEL_TEST(testIRScopeNestedTypeSearch)
 MLMODEL_TEST(testIRScopeNestedValueSearch)
+MLMODEL_TEST(testIRScopeWithRenames);
 
 MLMODEL_TEST(testParseProgramIRBlock)
 MLMODEL_TEST(testParseProgramIRFunction)
@@ -259,13 +260,22 @@ MLMODEL_TEST(testParseProgramIRScalarValue)
 MLMODEL_TEST(testParseProgramIRTensorValue)
 MLMODEL_TEST(testParseProgramIRTupleValue)
 MLMODEL_TEST(testParseProgramIRValueType)
+MLMODEL_TEST(testProgramIRBlockRename);
+MLMODEL_TEST(testProgramIRFunctionRename);
+MLMODEL_TEST(testProgramIROperationRename);
+MLMODEL_TEST(testProgramIRProgramRename);
 
 // Program validation tests
 MLMODEL_TEST(testValidateProgramBlock)
 MLMODEL_TEST(testValidateProgramFunction)
 MLMODEL_TEST(testValidateProgramMain)
 MLMODEL_TEST(testValidateProgramModel)
+MLMODEL_TEST(testValidateProgramModelInputShapes);
 MLMODEL_TEST(testValidateProgramOp)
+MLMODEL_TEST(testValidateProgramPreprocessing)
 MLMODEL_TEST(testValidateProgramProgram)
+
+// Operator specific validation
+MLMODEL_TEST(testValidatePadOp)
 
 #undef MLMODEL_TEST

@@ -10,7 +10,6 @@
 
 #include "Format.hpp"
 #include "ILIL/Program/ProgramIRBlock.hpp"
-#include "ILIL/Program/ProgramIROperatorTypeConverter.hpp"
 #include "ILIL/Program/ProgramIRValue.hpp"
 
 using namespace ::CoreML::ILIL;
@@ -28,15 +27,31 @@ public:
     using ProtoInputsMap = protobuf::Map<std::string, std::string>;
     using ProtoNamedValueTypeVec = protobuf::RepeatedPtrField<V5::NamedValueType>;
 
+    ProgramIROperationImpl(ScopePtr scope,
+                           const std::string& name,
+                           const std::string& type,
+                           AttributesMap&& attributes,
+                           InputBindingMap&& inputs,
+                           StringVec&& outputs,
+                           IRBlockPtrVec&& blocks)
+        : m_scope(std::move(scope))
+        , m_name(name)
+        , m_type(type)
+        , m_attributes(std::move(attributes))
+        , m_inputNames(ParseInputNames(inputs))
+        , m_inputsMap(std::move(inputs))
+        , m_outputNames(std::move(outputs))
+        , m_blocks(std::move(blocks))
+    { }
+
     ProgramIROperationImpl(const OperationSpec& operation, ScopePtr scope)
-        : m_scope(scope)
-        , m_name(operation.name())
-        , m_type(ProgramIROperatorTypeConverter::Instance().GetType(operation.type()))
-        , m_attributes(ParseAttributes(operation.attributes()))
-        , m_inputNames(ParseInputNames(operation.inputs()))
-        , m_inputsMap(ParseInputMap(operation.inputs()))
-        , m_outputNames(ParseOutputNames(operation.outputs()))
-        , m_blocks(ParseBlocks(operation.blocks(), scope))
+        : ProgramIROperationImpl(scope,
+                                 operation.name(),
+                                 operation.type(),
+                                 ParseAttributes(operation.attributes()),
+                                 ParseInputMap(operation.inputs()),
+                                 ParseOutputNames(operation.outputs()),
+                                 ParseBlocks(operation.blocks(), scope))
     { }
 
     const AttributesMap& GetAttributes() const override {
@@ -96,8 +111,56 @@ public:
         return *m_scope;
     }
 
-    IROperatorType GetType() const override {
+    const std::string& GetType() const override {
         return m_type;
+    }
+
+    std::unique_ptr<IROperation> WithBlocks(IRBlockPtrVec&& blocks) const override
+    {
+        auto copy = std::make_unique<ProgramIROperationImpl>(*this);
+        copy->m_blocks = std::move(blocks);
+        return copy;
+    }
+
+    std::unique_ptr<IROperation> WithRenames(const RenameVec& renames, ScopePtr scope) const override
+    {
+        auto copy = std::make_unique<ProgramIROperationImpl>(*this);
+
+        // Input arguments
+        for (auto& inputParamAndName : copy->m_inputsMap) {
+            for (const auto& oldAndNew : renames) {
+                if (oldAndNew.first == inputParamAndName.second) {
+                    inputParamAndName.second.assign(oldAndNew.second);
+                }
+            }
+        }
+
+        // Input names
+        for (auto& input : copy->m_inputNames) {
+            for (const auto& oldAndNew : renames) {
+                if (oldAndNew.first == input) {
+                    input.assign(oldAndNew.second);
+                }
+            }
+        }
+
+        // Outputs
+        for (auto& output : copy->m_outputNames) {
+            for (const auto& oldAndNew : renames) {
+                if (oldAndNew.first == output) {
+                    output.assign(oldAndNew.second);
+                }
+            }
+        }
+
+        // Blocks
+        for (auto& block : copy->m_blocks) {
+            block = block->WithRenames(renames);
+        }
+
+        copy->m_scope = std::move(scope);
+
+        return copy;
     }
 
 private:
@@ -128,11 +191,11 @@ private:
         return inputs;
     }
 
-    static StringVec ParseInputNames(const ProtoInputsMap& specInputs)
+    static StringVec ParseInputNames(const InputBindingMap& inputs)
     {
         StringVec inputNames;
-        inputNames.reserve(specInputs.size());
-        for (const auto& paramAndArg : specInputs) {
+        inputNames.reserve(inputs.size());
+        for (const auto& paramAndArg : inputs) {
             inputNames.push_back(paramAndArg.second);
         }
         std::sort(inputNames.begin(), inputNames.end());
@@ -151,7 +214,7 @@ private:
 
     ScopePtr m_scope;
     std::string m_name;
-    IROperatorType m_type;
+    std::string m_type;
     AttributesMap m_attributes;
     StringVec m_inputNames;
     InputBindingMap m_inputsMap;
@@ -162,6 +225,15 @@ private:
 
 ProgramIROperation::~ProgramIROperation() = default;
 ProgramIROperation::ProgramIROperation() = default;
+
+/*static*/ std::unique_ptr<ProgramIROperation>
+ProgramIROperation::Make(ScopePtr scope, const std::string& name, const std::string& type,
+                         AttributesMap&& attributes, InputBindingMap&& inputs,
+                         StringVec&& outputs, IRBlockPtrVec&& blocks)
+{
+    return std::make_unique<ProgramIROperationImpl>(std::move(scope), name, type, std::move(attributes),
+                                                    std::move(inputs), std::move(outputs), std::move(blocks));
+}
 
 /*static*/ std::unique_ptr<ProgramIROperation>
 ProgramIROperation::Parse(const OperationSpec& operation, ScopePtr scope)

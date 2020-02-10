@@ -18,7 +18,7 @@ class ParsedNode(object):
     name: The name of the node (str)
     op: The operation represented by the node (str)
     datatype: The type of the node. (type)
-    value: The value of the node if available 
+    value: The value of the node if available
     inputs: The list of nodes which are inputs to this node (list[str])
     control_inputs: The list of nodes which have to be executed before this node (list[str])
     attr: The attributes of the node
@@ -321,7 +321,7 @@ class NetworkEnsemble(object):
 
     def delete_subgraph(self, name):
         """
-        Delete the SSAfunction with function_name. 
+        Delete the SSAfunction with function_name.
         """
         if name not in self.functions:
             logging.warning("(%s) not in NetworkEnsemble", name)
@@ -353,7 +353,7 @@ class NetworkEnsemble(object):
     def get_dot_string(self, name_and_op_style=False, annotation=False, highlight_debug_nodes=None):
         """
         Return the dot string that can be used to show the whole graph
-        with dot. By default, the graph contains op and type. If 
+        with dot. By default, the graph contains op and type. If
         name_and_op_style is set, the graph will contain the name of the node
         and the op instead.
 
@@ -373,7 +373,7 @@ class NetworkEnsemble(object):
         --------
         >>> import graphviz
         >>> graphviz.Source(network.get_dot_string()).view()
-        
+
         """
         if highlight_debug_nodes is None:
             highlight_debug_nodes = []

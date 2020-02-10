@@ -10,6 +10,7 @@ Program builder class to construct Core ML models.
 from ...proto import Model_pb2 as _Model_pb2
 from ...proto import Program_pb2 as _Program_pb2
 from ...libcoremlpython import _NeuralNetworkBuffer as NetBuff
+
 import numpy as np
 
 class NeuralNetBuffer():
@@ -19,8 +20,15 @@ class NeuralNetBuffer():
     # NOTE:
     # This class can maintain map of <variable_name> to <offset>
     # Abstracting out offset details from user for quering the information
-    def __init__(self, file_path):
-        self.net_buffer = NetBuff(file_path)
+    def __init__(self, file_path, mode='write'):
+        bufferMode = NetBuff.mode.write
+        if mode == 'read':
+            bufferMode = NetBuff.mode.read
+        elif mode == 'append':
+            bufferMode = NetBuff.mode.append
+        else:
+            assert mode == 'write' and "mode must be one of 'read', 'write' or 'append'"
+        self.net_buffer = NetBuff(file_path, bufferMode)
 
     def add_buffer(self, data):
         out = self.net_buffer.add_buffer(data)

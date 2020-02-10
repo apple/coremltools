@@ -24,9 +24,15 @@ namespace Program {
 
 class ProgramIRProgram : public ILIL::IRProgram {
 public:
+    using ConstIRScopePtr = std::shared_ptr<const IRScope>;
     using ProgramSpec = ::CoreML::Specification::V5::Program;
 
     ~ProgramIRProgram();
+
+    /** Create a new instance from the given attributes. */
+    static std::unique_ptr<ProgramIRProgram> Make(ParameterMap&& parameters,
+                                                  ConstIRScopePtr scope,
+                                                  IRFunctionMap&& functions);
 
     /** Create a new instance with the specified program spec in the given model. */
     static std::unique_ptr<ProgramIRProgram> Parse(const ProgramSpec& program);

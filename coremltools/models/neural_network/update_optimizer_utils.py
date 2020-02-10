@@ -132,6 +132,59 @@ class SgdParams(object):
         return self._momentum
 
 
+class RMSPropParams(object):
+
+    def __init__(self, lr=1e-2, batch=10, momentum=0, alpha=0.99, eps=1e-8, centered=False):
+        self._lr = RangeParam(lr)
+        self._batch = Batch(batch)
+        self._momentum = RangeParam(momentum)
+        self._alpha = RangeParam(alpha)
+        self._eps = RangeParam(eps)
+        self._centered = BooleanParam(centered)
+
+    def set_lr(self, value, min, max):
+        self._lr = RangeParam(value, min, max)
+
+    def set_batch(self, value, allowed_set):
+        self._batch = Batch(value, allowed_set)
+
+    def set_momentum(self, value, min, max):
+        self._momentum = RangeParam(value, min, max)
+
+    def set_alpha(self, value, min, max):
+        self._alpha = RangeParam(value, min, max)
+
+    def set_eps(self, value, min, max):
+        self._eps = RangeParam(value, min, max)
+
+    def set_centered(self, value):
+        self._centered = BooleanParam(value)
+
+    @property
+    def lr(self):
+        return self._lr
+
+    @property
+    def batch(self):
+        return self._batch
+
+    @property
+    def momentum(self):
+        return self._momentum
+
+    @property
+    def alpha(self):
+        return self._alpha
+
+    @property
+    def eps(self):
+        return self._eps
+
+    @property
+    def centered(self):
+        return self._centered
+
+
 class RangeParam:
     def __init__(self, value, min=0, max=1):
         self._value = value
@@ -151,6 +204,15 @@ class RangeParam:
     @property
     def max(self):
         return self._max
+
+
+class BooleanParam:
+    def __init__(self, value):
+        self._value = value
+
+    @property
+    def value(self):
+        return self._value
 
 
 class Batch:

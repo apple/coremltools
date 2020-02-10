@@ -35,7 +35,7 @@ from coremltools.converters.nnssa.commons.features import Features
 def remove_variable_node_impl(fn, ssa):
     variables = [var for var in fn.graph.values() if var.op == 'VariableV2']
     assigns = [assign for assign in fn.graph.values() if assign.op == 'Assign']
-    if Features.new_ssa():
+    if Features.new_ssa() or Features.nnv2_ssa():
         reads = [
             read for read in fn.graph.values() if read.op == 'Identity' and len(read.inputs) == 1
             and fn.graph[read.inputs[0].name].op == 'VariableV2'
@@ -53,7 +53,7 @@ def remove_variable_node_impl(fn, ssa):
         v.parse_from_attr()
         variable_values[v.name] = v.datatype()
         for node in fn.graph.values():
-            if Features.new_ssa():
+            if Features.new_ssa() or Features.nnv2_ssa():
                 if node.op == 'Assign' and node.inputs[0] == v.name and node.inputs[
                         1].name == v.name + "/initial_value":
                     variable_values[v.name] = fn.graph[node.inputs[1].name].value
@@ -65,7 +65,7 @@ def remove_variable_node_impl(fn, ssa):
                     additional_nodes_to_delete += [node.name, node.inputs[1]]
     for r in reads:
         r.op = 'get_global'
-        if Features.new_ssa():
+        if Features.new_ssa() or Features.nnv2_ssa():
             r.attr['variable'] = r.inputs[0].name
         else:
             r.attr['variable'] = r.inputs[0]
@@ -74,7 +74,7 @@ def remove_variable_node_impl(fn, ssa):
     # transform writes to set_global
     for r in assigns:
         r.op = 'set_global'
-        if Features.new_ssa():
+        if Features.new_ssa() or Features.nnv2_ssa():
             r.attr['variable'] = r.inputs[0].name
         else:
             r.attr['variable'] = r.inputs[0]

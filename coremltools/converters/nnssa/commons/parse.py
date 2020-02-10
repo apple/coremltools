@@ -2,6 +2,7 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
+import six
 
 import numpy as np
 
@@ -37,6 +38,8 @@ def numpy_primitive_type_to_builtin_type(nptype):
         return builtins.fp32
     elif np.issubclass_(nptype, np.float64):
         return builtins.fp64
+    elif issubclass(nptype, six.string_types):
+        return builtins.str
     else:
         raise TypeError("Not supported numpy type: %s" % (nptype))
 

@@ -50,11 +50,10 @@ namespace CoreML {
                 std::unique_ptr<NNBuffer::NeuralNetworkBuffer> nnBuffer;
 
             public:
-                NeuralNetworkBufferInformation(const std::string &bufferFilePath);
+                NeuralNetworkBufferInformation(const std::string& bufferFilePath, NNBuffer::bufferMode mode);
                 ~NeuralNetworkBufferInformation();
-
-                u_int64_t addBuffer(const std::vector<float> &);
-                std::vector<float> getBuffer(const u_int64_t &offset);
+                std::vector<float> getBuffer(const u_int64_t offset);
+                u_int64_t addBuffer(const std::vector<float>& buffer);
         };
     }
 }

@@ -20,6 +20,8 @@ public:
     using ConstIRValuePtr = std::shared_ptr<const IRValue>;
     using IRFunctionMap = std::unordered_map<std::string, ConstIRFunctionPtr>;
     using ParameterMap = std::unordered_map<std::string, ConstIRValuePtr>;
+    using Rename = std::pair<std::string, std::string>;
+    using RenameVec = std::vector<Rename>;
 
     virtual ~IRProgram() = default;
 
@@ -48,10 +50,16 @@ public:
      Get the value of the given parameter.
      @return The parameter value or nullptr if it does not exist.
      */
-    virtual ConstIRValuePtr TryGetParameterValue(const std::string& name) const = 0;
+    virtual const IRValue* TryGetParameterValue(const std::string& name) const = 0;
 
     /** Get the program's root scope. */
     virtual const IRScope& GetScope() const = 0;
+
+    /** Create a new instance with the given functions. */
+    virtual std::unique_ptr<IRProgram> WithFunctions(IRFunctionMap&& funcs) const = 0;
+
+    /** Create a new instance with the specified value renames applied. */
+    virtual std::unique_ptr<IRProgram> WithRenames(const RenameVec& renames) const = 0;
 };
 
 }

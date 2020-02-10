@@ -10,13 +10,14 @@ from .type_str import str
 from .type_bool import bool, is_bool
 from .type_list import list, empty_list, is_list
 from .type_tensor import tensor, is_tensor_and_is_compatible, \
-        is_tensor_and_is_compatible_general_shape, is_tensor, tensor_has_complete_shape
+        is_tensor_and_is_compatible_general_shape, tensor_has_complete_shape
 from .type_dict import dict, empty_dict
 from .type_void import void
 from .type_globals_pseudo_type import globals_pseudo_type
 from .type_unknown import unknown
-from .type_tuple import tuple, is_tuple
-from .utils import is_primitive, is_scalar
+from .type_tuple import tuple
+from .utils import (is_primitive, is_scalar, is_tensor, is_tuple, is_str,\
+        is_builtin, promote_types)
 from .annotate import annotate
 from .annotate import class_annotate
 from .annotate import apply_delayed_types

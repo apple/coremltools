@@ -29,5 +29,24 @@ class WeightTest(unittest.TestCase):
         output_arr = np.array(nn_buffer.get_buffer(offset))
         np.testing.assert_almost_equal(input_arr, output_arr)
 
+    def test_weight_write_then_read(self):
+        nn_buffer = NetBuffer(self.working_dir + '/net.wt')
+        input_arr = np.random.rand(100000,)
+        offset    = nn_buffer.add_buffer(input_arr)
+        nn_buffer = NetBuffer(self.working_dir + '/net.wt', mode='read')
+        output_arr = np.array(nn_buffer.get_buffer(offset))
+        np.testing.assert_almost_equal(input_arr, output_arr)
+
+    def test_weight_write_then_append(self):
+        nn_buffer = NetBuffer(self.working_dir + '/net.wt')
+        input_arr = np.random.rand(100000,)
+        offset    = nn_buffer.add_buffer(input_arr)
+        nn_buffer = NetBuffer(self.working_dir + '/net.wt', mode='append')
+        input_arr = np.random.rand(100000,)
+        offset    = nn_buffer.add_buffer(input_arr)
+        output_arr = np.array(nn_buffer.get_buffer(offset))
+        np.testing.assert_almost_equal(input_arr, output_arr)
+
+
 if __name__ == '__main__':
     unittest.main()

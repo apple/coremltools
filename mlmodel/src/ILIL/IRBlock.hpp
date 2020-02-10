@@ -21,8 +21,10 @@ namespace ILIL {
 class IRBlock {
 public:
     using InputBindingMap = std::unordered_map<std::string, std::string>;
-    using ConstIROperationPtr = std::unique_ptr<IROperation>;
+    using ConstIROperationPtr = std::shared_ptr<const IROperation>;
     using ConstIROperationPtrVec = std::vector<ConstIROperationPtr>;
+    using Rename = std::pair<std::string, std::string>;
+    using RenameVec = std::vector<Rename>;
     using StringVec = std::vector<std::string>;
 
     virtual ~IRBlock() = default;
@@ -41,6 +43,12 @@ public:
 
     /** Get the scope associated with this block. */
     virtual const IRScope& GetScope() const = 0;
+
+    /** Create a new instance with the specified ops. */
+    virtual std::unique_ptr<IRBlock> WithOperations(ConstIROperationPtrVec&& ops) const = 0;
+
+    /** Create a new instance with the specified value renames applied. */
+    virtual std::unique_ptr<IRBlock> WithRenames(const RenameVec& renames) const = 0;
 };
 
 }

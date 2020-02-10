@@ -13,20 +13,26 @@
 #include <iostream>
 #include <vector>
 
-static std::ios_base::openmode GetOpenMode(bool readOnly)
-{
-    return readOnly
-        ? (std::fstream::in | std::ios::binary)
-        : (std::fstream::in | std::fstream::out | std::ios::binary | std::ios::app);
-}
-
 namespace NNBuffer {
+
+    /*
+     * getOpenMode - Returns open model as per the mode provided
+     */
+    static std::ios_base::openmode getOpenMode(bufferMode mode)
+    {
+        return (mode == bufferMode::read)
+            ? (std::fstream::in | std::ios::binary)
+            : (std::fstream::in | std::fstream::out | std::ios::binary
+                                | (mode == bufferMode::write ? std::ios::trunc : std::ios::app));
+
+    }
+
     /*
      * NeuralNetworkBuffer - NeuralNetworkBuffer
      */
-    NeuralNetworkBuffer::NeuralNetworkBuffer(const std::string &bufferFilePath, bool readOnly)
+    NeuralNetworkBuffer::NeuralNetworkBuffer(const std::string& bufferFilePath, bufferMode mode)
         : bufferFilePath(bufferFilePath),
-          bufferStream(bufferFilePath, GetOpenMode(readOnly))
+          bufferStream(bufferFilePath, getOpenMode(mode))
     {
         if (!bufferStream) {
             throw std::runtime_error(std::string("Could not open buffer file '" + bufferFilePath + "': ") + std::strerror(errno) + '.');
@@ -46,7 +52,7 @@ namespace NNBuffer {
      * Number of bytes written = Length_Of_Data * Size_Of_Data_Type
      */
     template<class T>
-    uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<T> &buffer) {
+    uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<T>& buffer) {
         bufferStream.seekp(0, std::ios::end);
         if (!bufferStream.good()) {
             throw std::runtime_error(std::string("Could not seek to end of data file: ") + std::strerror(errno) + '.');
@@ -82,7 +88,7 @@ namespace NNBuffer {
      * Reads data from given offset
      */
     template<class T>
-    void NeuralNetworkBuffer::getBuffer(const uint64_t offset, std::vector<T> &buffer) {
+    void NeuralNetworkBuffer::getBuffer(const uint64_t offset, std::vector<T>& buffer) {
         uint64_t lenOfBuffer = 0;
         uint64_t sizeOfBlock = 0;
 
@@ -114,13 +120,13 @@ namespace NNBuffer {
     }
 
     // Explicit include templated functions
-    template uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<int32_t> &);
-    template uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<int64_t> &);
-    template uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<float> &);
-    template uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<double> &);
+    template uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<int32_t>&);
+    template uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<int64_t>&);
+    template uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<float>&);
+    template uint64_t NeuralNetworkBuffer::addBuffer(const std::vector<double>&);
 
-    template void NeuralNetworkBuffer::getBuffer(const uint64_t, std::vector<int32_t> &);
-    template void NeuralNetworkBuffer::getBuffer(const uint64_t, std::vector<int64_t> &);
-    template void NeuralNetworkBuffer::getBuffer(const uint64_t, std::vector<float> &);
-    template void NeuralNetworkBuffer::getBuffer(const uint64_t, std::vector<double> &);
+    template void NeuralNetworkBuffer::getBuffer(const uint64_t, std::vector<int32_t>&);
+    template void NeuralNetworkBuffer::getBuffer(const uint64_t, std::vector<int64_t>&);
+    template void NeuralNetworkBuffer::getBuffer(const uint64_t, std::vector<float>&);
+    template void NeuralNetworkBuffer::getBuffer(const uint64_t, std::vector<double>&);
 }

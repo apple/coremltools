@@ -180,6 +180,10 @@ enum class IRScalarValueTypeEnum {
     UInt16 = 32,
     UInt32 = 33,
     UInt64 = 34,
+    
+    // Any Scalar Value
+    // Should only be used in the context of validating inputs.
+    Any = 99,
 };
 
 //-----------------------------------------------------------------
@@ -218,7 +222,7 @@ public:
     static std::shared_ptr<const IRScalarValueType> UInt16();
     static std::shared_ptr<const IRScalarValueType> UInt32();
     static std::shared_ptr<const IRScalarValueType> UInt64();
-
+    static std::shared_ptr<const IRScalarValueType> Any();
 private:
     IRScalarValueType(IRScalarValueTypeEnum type);
 
@@ -238,6 +242,9 @@ public:
     static std::shared_ptr<const IRTensorValueType>
     Make(std::shared_ptr<const IRScalarValueType> scalarType, Shape&& shape);
 
+    /** Create a new instance with no shape information */
+    static std::shared_ptr<const IRTensorValueType>
+    Make(std::shared_ptr<const IRScalarValueType> scalarType);
 
     /** Get the type of element stored in this tensor type. */
     const IRScalarValueType& GetScalarType() const;

@@ -9,6 +9,7 @@ Neural network builder class to construct Core ML models.
 
 from ... import SPECIFICATION_VERSION
 from ... import _MINIMUM_NDARRAY_SPEC_VERSION
+
 from ... import _MINIMUM_UPDATABLE_SPEC_VERSION
 from ... import SPECIFICATION_VERSION_IOS_14
 from ...proto import Model_pb2 as _Model_pb2
@@ -19,9 +20,7 @@ from .. import datatypes
 import numpy as np
 from .quantization_utils import unpack_to_bytes, _convert_array_to_nbit_quantized_bytes
 from .spec_inspection_utils import *
-from .update_optimizer_utils import AdamParams, SgdParams
-
-_SUPPORTED_UPDATABLE_LAYERS = ['innerProduct', 'convolution']
+from .update_optimizer_utils import AdamParams, SgdParams, RMSPropParams
 
 
 def _set_recurrent_activation(param, activation):
@@ -598,10 +597,6 @@ class NeuralNetworkBuilder(object):
             if trainable not in self.layer_specs:
                 raise ValueError('Layer %s does not exist.' % trainable)
             spec_layer = self.layer_specs[trainable]
-            spec_layer_type = spec_layer.WhichOneof('layer')
-            if spec_layer_type not in _SUPPORTED_UPDATABLE_LAYERS:
-                raise ValueError('Layer %s is not supported to be marked as updatable. Only %s layers '
-                                 'are supported to be marked updatable.' % (trainable, _SUPPORTED_UPDATABLE_LAYERS))
             spec_layer.isUpdatable = True
             typed_layer = getattr(spec_layer, spec_layer.WhichOneof('layer'))
             for fd in typed_layer.DESCRIPTOR.fields:
@@ -824,7 +819,6 @@ class NeuralNetworkBuilder(object):
 
         loss_layer.meanSquaredErrorLossLayer.reductionType = _NeuralNetwork_pb2.ReductionType.Value(reduction_type)
 
-
     def set_mean_absolute_error_loss(self, name, input_feature=None, weights=None, reduction_type='MEAN'):
         """
         input_feature: [(str, datatypes.Array)] or None
@@ -935,6 +929,80 @@ class NeuralNetworkBuilder(object):
 
         loss_layer.huberLossLayer.reductionType = _NeuralNetwork_pb2.ReductionType.Value(reduction_type)
 
+    def set_yolo_loss(self, name, input_feature=None,
+                      scale_spatial_position_loss=10.0,
+                      scale_spatial_size_loss=10.0,
+                      scale_object_confidence_loss=100.0,
+                      scale_no_object_confidence_loss=0.5,
+                      scale_class_loss=2.0,
+                      minimum_iou_object_presence=0.7,
+                      maximum_iou_object_absence= 0.3):
+        if self.spec is None:
+            return
+
+        if name in self.layer_specs:
+            raise ValueError("Name %s is already used." % name)
+
+        if input_feature is None:
+            raise ValueError('Loss Layer input must be specified')
+
+        if not isinstance(input_feature, tuple):
+            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
+
+        (fname, ftype) = input_feature
+        if not isinstance(fname, str):
+            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
+        if not isinstance(ftype, datatypes.Array):
+            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
+
+        target = fname + '_true'
+
+        if len(self.nn_spec.layers) < 1:
+            raise ValueError('Loss layer (%s) cannot be attached to an empty model.' % name)
+
+        # validate target
+        output_names = [x.name for x in self.spec.description.output]
+        if target in output_names:
+            raise ValueError('Loss layer target (%s) must not be a model output.' % target)
+
+        loss_layer = self.nn_spec.updateParams.lossLayers.add()
+        self.layers.append(name)
+        self.layer_specs[name] = loss_layer
+        loss_layer.name = name
+        loss_layer.yoloLossLayer.input = input_feature[0]
+        loss_layer.yoloLossLayer.target = target
+
+        training_inputs = self.spec.description.trainingInput
+        training_inputs.extend(self.spec.description.input)
+        training_input = training_inputs.add()
+        training_input.name = target
+
+        if scale_spatial_position_loss is not None:
+            loss_layer.yoloLossLayer.scaleSpatialPositionLoss.defaultValue = scale_spatial_position_loss
+
+        if scale_spatial_size_loss is not None:
+            loss_layer.yoloLossLayer.scaleSpatialSizeLoss.defaultValue = scale_spatial_size_loss
+
+        if scale_object_confidence_loss is not None:
+            loss_layer.yoloLossLayer.scaleObjectConfidenceLoss.defaultValue = scale_object_confidence_loss
+
+        if scale_no_object_confidence_loss is not None:
+            loss_layer.yoloLossLayer.scaleNoObjectConfidenceLoss.defaultValue = scale_no_object_confidence_loss
+
+        if scale_class_loss is not None:
+            loss_layer.yoloLossLayer.scaleClassLoss.defaultValue = scale_class_loss
+
+        if minimum_iou_object_presence is not None:
+            loss_layer.yoloLossLayer.minimumIOUForObjectPresence.defaultValue = minimum_iou_object_presence
+
+        if maximum_iou_object_absence is not None:
+            loss_layer.yoloLossLayer.maximumIOUForObjectAbsence.defaultValue = maximum_iou_object_absence
+
+        datatypes._set_datatype(training_input.type, input_feature[1])
+        training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+
+        print('added input {} as target for yolo loss layer.'.format(target))
+
     def set_sgd_optimizer(self, sgd_params):
         if self.spec is None:
             return
@@ -990,6 +1058,42 @@ class NeuralNetworkBuilder(object):
         adam_optimizer.eps.defaultValue = adam_params.eps.value
         adam_optimizer.eps.range.minValue = adam_params.eps.min
         adam_optimizer.eps.range.maxValue = adam_params.eps.max
+
+    def set_rmsprop_optimizer(self, rmsprop_params):
+        if self.spec is None:
+            return
+
+        if not isinstance(rmsprop_params, RMSPropParams):
+            raise Exception('rmsprop_params must be of instance RMSPropParams')
+
+        rmsprop_optimizer = self.nn_spec.updateParams.optimizer.rmsPropOptimizer
+
+        # set learning rate
+        rmsprop_optimizer.learningRate.defaultValue = rmsprop_params.lr.value
+        rmsprop_optimizer.learningRate.range.minValue = rmsprop_params.lr.min
+        rmsprop_optimizer.learningRate.range.maxValue = rmsprop_params.lr.max
+
+        # set mini batch size
+        rmsprop_optimizer.miniBatchSize.defaultValue = rmsprop_params.batch.value
+        rmsprop_optimizer.miniBatchSize.set.values.extend(rmsprop_params.batch.allowed_set)
+
+        # set momentum
+        rmsprop_optimizer.momentum.defaultValue = rmsprop_params.momentum.value
+        rmsprop_optimizer.momentum.range.minValue = rmsprop_params.momentum.min
+        rmsprop_optimizer.momentum.range.maxValue = rmsprop_params.momentum.max
+
+        # set alpha
+        rmsprop_optimizer.alpha.defaultValue = rmsprop_params.alpha.value
+        rmsprop_optimizer.alpha.range.minValue = rmsprop_params.alpha.min
+        rmsprop_optimizer.alpha.range.maxValue = rmsprop_params.alpha.max
+
+        # set eps
+        rmsprop_optimizer.eps.defaultValue = rmsprop_params.eps.value
+        rmsprop_optimizer.eps.range.minValue = rmsprop_params.eps.min
+        rmsprop_optimizer.eps.range.maxValue = rmsprop_params.eps.max
+
+        # set centered
+        rmsprop_optimizer.centered = rmsprop_params.centered.value
 
     def set_epochs(self, epochs=1, allowed_set=None):
         if self.spec is None:
@@ -1115,6 +1219,21 @@ class NeuralNetworkBuilder(object):
             print('beta1: {}, min: {}, max: {}'.format(beta1.defaultValue, beta1.range.minValue, beta1.range.maxValue))
             print('beta2: {}, min: {}, max: {}'.format(beta2.defaultValue, beta2.range.minValue, beta2.range.maxValue))
             print('epsilon: {}, min: {}, max: {}'.format(eps.defaultValue, eps.range.minValue, eps.range.maxValue))
+
+        elif optimizer_type == 'rmsPropOptimizer':
+            lr = optimizer.rmsPropOptimizer.learningRate
+            batch = optimizer.rmsPropOptimizer.miniBatchSize
+            momentum = optimizer.rmsPropOptimizer.momentum
+            alpha = optimizer.rmsPropOptimizer.alpha
+            eps = optimizer.rmsPropOptimizer.eps
+            centered = optimizer.rmsPropOptimizer.centered
+            print('lr: {}, min: {}, max: {}'.format(lr.defaultValue, lr.range.minValue, lr.range.maxValue))
+            print('batch: {}, allowed_set: {}'.format(batch.defaultValue, batch.set.values))
+            print('momentum: {}, min: {}, max: {}'.format(momentum.defaultValue, momentum.range.minValue, momentum.range.maxValue))
+            print('alpha: {}, min: {}, max: {}'.format(alpha.defaultValue, alpha.range.minValue, alpha.range.maxValue))
+            print('epsilon: {}, min: {}, max: {}'.format(eps.defaultValue, eps.range.minValue, eps.range.maxValue))
+            print('centered: {}'.format(centered))
+
 
     def inspect_updatable_layers(self):
         """ Prints all updatable layers with their inputs and outputs.

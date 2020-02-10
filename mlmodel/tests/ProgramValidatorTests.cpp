@@ -17,94 +17,6 @@ using ::CoreML::ResultReason;
 using namespace ::CoreML::Specification;
 using namespace ::ProgramModelUtils;
 
-static Model ProgramWithMain(const V5::Function& main);
-
-static ArrayFeatureType MakeArrayFeatureType(const V5::TensorType& tensorType)
-{
-    ArrayFeatureType aft;
-
-    switch (tensorType.scalartype()) {
-        case CoreML::Specification::V5::FLOAT32:
-            aft.set_datatype(ArrayFeatureType_ArrayDataType_FLOAT32);
-            break;
-        case CoreML::Specification::V5::FLOAT64:
-            aft.set_datatype(ArrayFeatureType_ArrayDataType_DOUBLE);
-            break;
-        case CoreML::Specification::V5::INT32:
-            aft.set_datatype(ArrayFeatureType_ArrayDataType_INT32);
-            break;
-        default:
-            throw std::runtime_error("Cannot create array datatype from unsupported scalar type.");
-    }
-
-    for (const auto& dim : tensorType.dimension()) {
-        switch (dim.dimension_case()) {
-            case CoreML::Specification::V5::Dimension::kSize:
-                aft.add_shape(dim.size());
-                break;
-            case CoreML::Specification::V5::Dimension::kSymbol:
-            case CoreML::Specification::V5::Dimension::DIMENSION_NOT_SET:
-                throw std::runtime_error("Cannot create array dimension from unsupported dimension type.");
-        }
-    }
-
-    return aft;
-}
-
-static FeatureDescription MakeFeatureDescription(const std::string& name, const V5::ValueType& type)
-{
-    FeatureDescription fd;
-
-    fd.set_name(name);
-
-    switch (type.type_case()) {
-        case V5::ValueType::kTensorType:
-            fd.mutable_type()->mutable_multiarraytype()->CopyFrom(MakeArrayFeatureType(type.tensortype()));
-            break;
-        case V5::ValueType::kListType:
-        case V5::ValueType::kScalarType:
-        case V5::ValueType::kTupleType:
-        case V5::ValueType::TYPE_NOT_SET:
-            throw std::runtime_error("Cannot create feature from unsupported type.");
-    }
-
-    return fd;
-}
-
-static FeatureDescription MakeFeatureDescription(const V5::NamedValueType& namedType)
-{
-    return MakeFeatureDescription(namedType.name(), namedType.type());
-}
-
-static Model EmptyProgram()
-{
-    return ProgramWithMain(MakeFunction({}, {}, MakeBlock({}, {}, {})));
-};
-
-static Model ProgramWithMain(const V5::Function& main)
-{
-    Model model;
-    (*model.mutable_program()->mutable_functions())["main"].CopyFrom(main);
-
-    for (const auto& input : main.inputs()) {
-        auto modelInput = MakeFeatureDescription(input);
-        model.mutable_description()->add_input()->CopyFrom(modelInput);
-    }
-
-    if (main.outputs_size() != main.block().outputs_size()) {
-        throw std::runtime_error("main() returns different number of values than its block.");
-    }
-
-    for (int i = 0; i < main.outputs_size(); ++i) {
-        const auto& outputType = main.outputs(i);
-        const auto& outputName = main.block().outputs(i);
-        auto modelOutput = MakeFeatureDescription(outputName, outputType);
-        model.mutable_description()->add_output()->CopyFrom(modelOutput);
-    }
-
-    return model;
-}
-
 int testValidateProgramBlock()
 {
     // Block arguments must exist
@@ -138,21 +50,37 @@ int testValidateProgramBlock()
                                   ResultReason::BLOCK_PARAM_NAME_EMPTY);
     }
 
+    // Block parameter names must not shadow existing declarations
+    {
+        // main(a : fp[2], b : fp[2]):
+        //   [ a <- b ] { } [ ]
+        auto block = MakeBlock({{ "a", "b" }}, {}, {});
+        NameAndTypeVec mainParams {
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) },
+            { "b", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
+        };
+
+        auto main = MakeFunction(mainParams, /*outputs=*/ {}, block);
+        auto model = ProgramWithMain(main);
+
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::BLOCK_PARAM_NAME_SHADOWS);
+    }
+
     // Block return values must exist
     {
-        // main(b : fp[2]):
-        //   [/*no inputs*/] { a = const(); z = activation(data=b, type=a); } [ bonk ]
+        // main(a : fp[2]):
+        //   [/*no inputs*/] { z = relu(x=a); } [ bonk ]
         auto block = MakeBlock({ }, // inputs
                                { "bonk" }, // outputs
                                { // ops
-            MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
-            MakeOp("z", "activation",
-                   { { "type", "a" }, { "data", "b" } }, // inputs
+            MakeOp("z", "relu",
+                   { { "x", "a" } }, // inputs
                    { }, // outputs
                    { } /* attributes */)
         });
         NameAndTypeVec mainParams{
-            { "b", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
         };
 
         auto model = ProgramWithMain(MakeFunction(mainParams,
@@ -176,6 +104,17 @@ int testValidateProgramFunction()
                                    MakeBlock({}, {}, {})));
         ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
                                   ResultReason::FUNCTION_PARAM_NAME_EMPTY);
+    }
+
+    // Parameter names must not shadow earlier declarations
+    {
+        // Program params: { a : bool }
+        // main(a : fp[2]) { ... }
+        auto main = MakeFunction({{ "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }}, {}, {});
+        auto model = ProgramWithMain(main);
+        (*model.mutable_program()->mutable_parameters())["a"] = MakeBoolValue(true);
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::FUNCTION_PARAM_NAME_SHADOWS);
     }
 
     // We have the same number of outputs as our block
@@ -284,7 +223,7 @@ int testValidateProgramModel()
                                   ResultReason::MODEL_MAIN_MISSING_INPUT_OUTPUT);
     }
 
-    // Model inputs must be tensors
+    // Model inputs must be tensors or images
     {
         // main(a : string)
         //   [ ] { } [ ]
@@ -304,7 +243,25 @@ int testValidateProgramModel()
                                   ResultReason::MODEL_INVALID_INPUT_TYPE);
     }
 
-    // Model outputs must be tensors
+    // Model image inputs must be coded as float32
+    {
+        // main(a : int8[1, 3, 10, 10])
+        //   [ ] { } [ ]
+        auto block = MakeBlock({}, {}, {});
+        NameAndTypeVec mainParams{
+            { "a", MakeTensorValueType(V5::ScalarType::INT8, { MakeDim(1), MakeDim(3), MakeDim(10), MakeDim(10) }) }
+        };
+
+        auto model = EmptyProgram();
+        (*model.mutable_program()->mutable_functions())["main"].CopyFrom(MakeFunction(mainParams, {}, block));
+
+        auto fd = MakeImageFeatureDescription("a", ImageFeatureType_ColorSpace::ImageFeatureType_ColorSpace_RGB, 10, 10);
+        model.mutable_description()->add_input()->CopyFrom(fd);
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::MODEL_MAIN_BAD_IMAGE_INPUT_TYPE);
+    }
+
+    // Model outputs must be tensors or images
     {
         // main()
         //  [] { a:string = const(); } [a]
@@ -362,6 +319,57 @@ int testValidateProgramModel()
                                   ResultReason::MODEL_MAIN_MISMATCHED_OUTPUT_TYPE);
     }
 
+    // Models with image outputs must return fp32 tensor from main
+    {
+        // main(a : fp32[1, 1, 4, 4]):
+        //   [ x <- a] { /*empty block*/ } [x]
+        auto block = MakeBlock({ { "x", "a" } }, // inputs
+                               { "x" }, // outputs
+                               { } // ops
+                               );
+        NameAndTypeVec mainParams{
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(1), MakeDim(3), MakeDim(10), MakeDim(10) }) }
+        };
+
+        TypeVec modelOutputs{
+            MakeTensorValueType(V5::ScalarType::FLOAT64, { MakeDim(1), MakeDim(3), MakeDim(10), MakeDim(10) })
+        };
+        auto model = ProgramWithMain(MakeFunction(mainParams, { modelOutputs }, block));
+        auto fd = MakeImageFeatureDescription("a", ImageFeatureType_ColorSpace::ImageFeatureType_ColorSpace_RGB, 10, 10);
+        model.mutable_description()->mutable_output(0)->CopyFrom(fd);
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::MODEL_MAIN_BAD_IMAGE_OUTPUT_TYPE);
+
+    }
+
+    // Model and main() must have compatible output tensor dimensions -- mismatched static dimensions
+    {
+        // main(a : fp32[2, 4]):
+        //   [ ] { /*empty block*/ } [ a ]
+        auto block = MakeBlock({ },  // inputs
+                               { "a" },  // outputs
+                               { }); // ops
+        auto fp32_2_4 = MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2), MakeDim(4) });
+        NameAndTypeVec mainParams{
+            { "a", fp32_2_4 }
+        };
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, { fp32_2_4 }, block));
+
+        { // Change the model's output to fp32[2, 5]
+            model.mutable_description()->mutable_output(0)->mutable_type()
+                ->mutable_multiarraytype()->mutable_shape()->Set(1, 5);
+        }
+
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::MODEL_MAIN_MISMATCHED_OUTPUT_SHAPE);
+    }
+
+    return 0;
+}
+
+int testValidateProgramModelInputShapes()
+{
     // Model and main() must have compatible input tensor dimensions -- mismatched static dimensions
     {
         // main(a : fp32[2, 4]):
@@ -376,6 +384,24 @@ int testValidateProgramModel()
         auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
         model.mutable_description()->mutable_input(0)->mutable_type()->
             mutable_multiarraytype()->mutable_shape()->Set(0, 3);
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::MODEL_MAIN_MISMATCHED_INPUT_SHAPE);
+    }
+
+    // Model and main() must have compatible input image sizes -- mismatched static dimensions
+    {
+        // main(a : fp32[1, 3, 10, 10])
+        //   [ ] { } [ ]
+        auto block = MakeBlock({}, {}, {});
+        NameAndTypeVec mainParams{
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(1), MakeDim(3), MakeDim(10), MakeDim(10) }) }
+        };
+
+        auto model = EmptyProgram();
+        (*model.mutable_program()->mutable_functions())["main"].CopyFrom(MakeFunction(mainParams, {}, block));
+
+        auto fd = MakeImageFeatureDescription("a", ImageFeatureType_ColorSpace::ImageFeatureType_ColorSpace_RGB, 10, 11);
+        model.mutable_description()->add_input()->CopyFrom(fd);
         ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
                                   ResultReason::MODEL_MAIN_MISMATCHED_INPUT_SHAPE);
     }
@@ -415,6 +441,41 @@ int testValidateProgramModel()
                                   ResultReason::MODEL_MAIN_MISMATCHED_INPUT_SHAPE);
     }
 
+    // Model and main() must have compatible input image sizes -- enumerated size not
+    // covered by program symbolic shape
+    {
+        // main(a : fp32[1, 3, s0, 10]):
+        //   [ ] { /*empty block*/ } [/*no outputs*/]
+        auto block = MakeBlock({ },  // inputs
+                               { },  // outputs
+                               { }); // ops
+        NameAndTypeVec mainParams{
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(1), MakeDim(3), MakeDim(10), MakeDim(10) }) }
+        };
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+
+        // make the height dimension symbolic
+        (*model.mutable_program()->mutable_functions())["main"].mutable_inputs(0)
+            ->mutable_type()->mutable_tensortype()->mutable_dimension(2)->set_symbol("s0");
+
+        { // add some enumerated shapes to the model
+            auto enumSizes = model.mutable_description()->mutable_input(0)->mutable_type()->
+                mutable_imagetype()->mutable_enumeratedsizes();
+
+            auto enumSize = enumSizes->add_sizes();
+            enumSize->set_height(10);
+            enumSize->set_width(10);
+
+            enumSize = enumSizes->add_sizes();
+            enumSize->set_height(10);
+            enumSize->set_width(8);
+        }
+
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::MODEL_MAIN_BAD_IMAGE_INPUT_SIZE);
+    }
+
     // Model and main() must have compatible input tensor dimensions -- model shape range not
     // covered by program symbolic shape
     {
@@ -446,27 +507,35 @@ int testValidateProgramModel()
                                   ResultReason::MODEL_MAIN_MISMATCHED_INPUT_SHAPE);
     }
 
-    // Model and main() must have compatible output tensor dimensions -- mismatched static dimensions
+    // Model and main() must have compatible input image sizes -- image size range not
+    // covered by program symbolic shape
     {
-        // main(a : fp32[2, 4]):
-        //   [ ] { /*empty block*/ } [ a ]
+        // main(a : fp32[1, 3, 10, 10]):
+        //   [ ] { /*empty block*/ } [/*no outputs*/]
         auto block = MakeBlock({ },  // inputs
-                               { "a" },  // outputs
+                               { },  // outputs
                                { }); // ops
-        auto fp32_2_4 = MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2), MakeDim(4) });
         NameAndTypeVec mainParams{
-            { "a", fp32_2_4 }
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(1), MakeDim(3), MakeDim(10), MakeDim(10) }) }
         };
 
-        auto model = ProgramWithMain(MakeFunction(mainParams, { fp32_2_4 }, block));
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
 
-        { // Change the model's output to fp32[2, 5]
-            model.mutable_description()->mutable_output(0)->mutable_type()
-                ->mutable_multiarraytype()->mutable_shape()->Set(1, 5);
+        { // Change the model's input size to [ (10,10), (8,9) ]
+            auto sizeRange = model.mutable_description()->mutable_input(0)->mutable_type()->
+                mutable_imagetype()->mutable_imagesizerange();
+
+            auto heightRange = sizeRange->mutable_heightrange();
+            heightRange->set_lowerbound(10);
+            heightRange->set_upperbound(10);
+
+            auto widthRange = sizeRange->mutable_widthrange();
+            widthRange->set_lowerbound(10);
+            widthRange->set_upperbound(10);
         }
 
         ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
-                                  ResultReason::MODEL_MAIN_MISMATCHED_OUTPUT_SHAPE);
+                                  ResultReason::MODEL_MAIN_BAD_IMAGE_INPUT_SIZE);
     }
 
     return 0;
@@ -476,19 +545,18 @@ int testValidateProgramOp()
 {
     // Ops must have non-empty names
     {
-        // main(b : fp[2]):
-        //   [/*no inputs*/] { a = const(); z = <unnamed op> activation(data=b, type=a); } [/*no outputs*/]
+        // main(a : fp[2]):
+        //   [/*no inputs*/] { z = <unnamed op> relu(x=a); } [/*no outputs*/]
         auto block = MakeBlock({ }, // inputs
                                { }, // outputs
                                { // ops
-            MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
-            MakeOp("", "activation",
-                   { { "type", "a" }, { "data", "b" } }, // inputs
+            MakeOp("", "relu",
+                   { { "x", "a" }}, // inputs
                    { }, // outputs
                    { } /* attributes */)
         });
         NameAndTypeVec mainParams{
-            { "b", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
         };
 
         auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
@@ -498,24 +566,54 @@ int testValidateProgramOp()
 
     // Op outputs have non-empty names
     {
-        // main(b : fp[2]):
-        //   [/*no inputs*/] { a = const();  = activation(data=b, type=a); } [/*no outputs*/]
+        // main(a : fp[2]):
+        //   [/*no inputs*/] { = relu(x=a); } [/*no outputs*/]
         auto block = MakeBlock({ }, // inputs
                                { }, // outputs
                                { // ops
-            MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
-            MakeOp("z", "activation",
-                   { { "type", "a" }, { "data", "b" } }, // inputs
+            MakeOp("z", "relu",
+                   { { "x", "a" } }, // inputs
                    { { "", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
                    { } /* attributes */)
         });
+        NameAndTypeVec mainParams{
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
+        };
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_OUTPUT_NAME_EMPTY);
+    }
+
+    // Op outputs may not shadow previous definitions
+    {
+        // main(b : fp[2]):
+        //   [] { b = const(); } []  # ERROR: b already defined in containing scope
+        auto block = MakeBlock({}, {}, {
+            MakeOp("anOp", "const", {}, { { "b", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, {})
+        });
+
         NameAndTypeVec mainParams{
             { "b", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
         };
 
         auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
         ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
-                                  ResultReason::OP_OUTPUT_NAME_EMPTY);
+                                  ResultReason::OP_OUTPUT_NAME_SHADOWS);
+    }
+
+    // Ops cannot use their outputs as inputs
+    {
+        auto block = MakeBlock({}, {}, {
+            MakeOp("a", "relu",
+                   { { "x", "a", }},
+                   { { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } },
+                   { })
+        });
+
+        auto model = ProgramWithMain(MakeFunction({}, {}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_ARG_OUTPUT_CIRCULAR_DEFINITION);
     }
 
     // Op attribute names must be non-empty
@@ -539,13 +637,12 @@ int testValidateProgramOp()
 
     // Validate that we catch missing inputs
     {
-        // [/*no inputs*/] { a = const(); z = activation(data=b, activation=a); } [/*no outputs*/]
+        // [/*no inputs*/] { z = relu(x=a); } [/*no outputs*/]
         auto block = MakeBlock({ }, // inputs
                                { }, // outputs
                                { // ops
-            MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
-            MakeOp("z", "activation",
-                   { { "activation", "a" }, { "data", "b" } }, // inputs
+            MakeOp("z", "relu",
+                   { { "x", "a" } }, // inputs
                    { }, // outputs
                    { } /* attributes */)
         });
@@ -555,17 +652,82 @@ int testValidateProgramOp()
                                   ResultReason::OP_ARG_VALUE_UNDEFINED);
     }
 
+    // Validate that we catch mis-match in number of input
+    {
+        // [/*no inputs*/] { z = relu(); } [/*no outputs*/]
+        auto block = MakeBlock({ }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("z", "relu",
+                   { }, // inputs
+                   { }, // outputs
+                   { } /* attributes */)
+        });
+
+        auto model = ProgramWithMain(MakeFunction(/*params=*/ {}, /*outputs=*/ {}, block));
+
+        CoreML::Result res = CoreML::validate<MLModelType_program>(model);
+        ML_ASSERT_BAD_WITH_REASON(res, ResultReason::OP_REQUIRED_ARG_NOT_FOUND);
+        ML_ASSERT(res.message().find("z") != std::string::npos);
+        ML_ASSERT(res.message().find("x") != std::string::npos);
+    }
+
+    // Validates that we catch mis-match in number of output
+    {
+        // main(a : fp[2]):
+        //   [y <- a] { z = relu(x=y); } [/*no outputs*/]
+        auto block = MakeBlock({ { "y", "a" } }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("z", "relu",
+                   { { "x", "y" } }, // inputs
+                   { }, // outputs
+                   { } /* attributes */)
+        });
+        NameAndTypeVec mainParams{
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
+        };
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+
+        CoreML::Result res = CoreML::validate<MLModelType_program>(model);
+        ML_ASSERT_BAD_WITH_REASON(res, ResultReason::OP_MISMATCHED_OUTPUT_COUNT);
+        ML_ASSERT(res.message().find("z") != std::string::npos);
+        ML_ASSERT(res.message().find("relu") != std::string::npos);
+    }
+
+    // Validates that we catch if input is one of the output
+    {
+        // main(a : fp[2]):
+        //   [y <- b] { z = relu(x=y); } [/*no outputs*/]
+        auto block = MakeBlock({ { "y", "a" } }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("z", "relu",
+                   { { "x", "y" } }, // inputs
+                   { { "y", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
+                   { } /* attributes */)
+        });
+        NameAndTypeVec mainParams{
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
+        };
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::PROGRAM_PARSE_THREW);
+    }
+
     // Validate that Block inputs are found
     {
         // main(b : fp[2]):
-        //   [y <- b] { a = const(); z = activation(data=y, type=x); } [/*no outputs*/]
+        //   [y <- b] { z = relu(x=y); } [/*no outputs*/]
         auto block = MakeBlock({ { "y", "b" } }, // inputs
                                { }, // outputs
                                { // ops
             MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
-            MakeOp("z", "activation",
-                   { { "type", "a" }, { "data", "y" } }, // inputs
-                   { }, // outputs
+            MakeOp("z", "relu",
+                   { { "x", "y" } }, // inputs
+                   { { "z", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
                    { } /* attributes */)
         });
         NameAndTypeVec mainParams{
@@ -578,19 +740,18 @@ int testValidateProgramOp()
 
     // Validate that Function inputs are found
     {
-        // main(b : fp[2]):
-        //   [/*no inputs*/] { a = const(); z = activation(data=b, type=a); } [/*no outputs*/]
+        // main(a : fp[2]):
+        //   [/*no inputs*/] { z = relu(x=a); } [/*no outputs*/]
         auto block = MakeBlock({ }, // inputs
                                { }, // outputs
                                { // ops
-            MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
-            MakeOp("z", "activation",
-                   { { "type", "a" }, { "data", "b" } }, // inputs
-                   { }, // outputs
+            MakeOp("z", "relu",
+                   { { "x", "a" } }, // inputs
+                   { { "z", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
                    { } /* attributes */)
         });
         NameAndTypeVec mainParams{
-            { "b", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
         };
 
         auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
@@ -599,59 +760,155 @@ int testValidateProgramOp()
 
     // Validate that inputs in the Parameters are found
     {
-        // params: { b : fp[2] }
+        // params: { a : fp[2] }
         // main():
-        //   [/*no inputs*/] { a = const(); z = activation(data=y, type=x); } [/*no outputs*/]
+        //   [/*no inputs*/] { z = relu(x=a); } [/*no outputs*/]
         auto block = MakeBlock({ }, // inputs
                                { }, // outputs
                                { // ops
-            MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
-            MakeOp("z", "activation",
-                   { { "type", "a" }, { "data", "b" } }, // inputs
-                   { }, // outputs
+            MakeOp("z", "relu",
+                   { { "x", "a" } }, // inputs
+                   { { "z", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
                    {} /* attributes */)
         });
 
         auto main = MakeFunction(/*params=*/ {}, /*outputs=*/ {}, block);
 
-        V5::Value bValue;
-        bValue.mutable_type()->CopyFrom(MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }));
-        bValue.mutable_immediatevalue()->mutable_tensor()->add_floats(7.f);
-        bValue.mutable_immediatevalue()->mutable_tensor()->add_floats(8.f);
+        V5::Value aValue;
+        aValue.mutable_type()->CopyFrom(MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }));
+        aValue.mutable_immediatevalue()->mutable_tensor()->add_floats(7.f);
+        aValue.mutable_immediatevalue()->mutable_tensor()->add_floats(8.f);
 
         auto model = ProgramWithMain(main);
-        (*model.mutable_program()->mutable_parameters())["b"].CopyFrom(bValue);
+        (*model.mutable_program()->mutable_parameters())["a"].CopyFrom(aValue);
 
         ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
     }
 
     // Validate that inputs generated by previous ops are found
     {
-        // main(b : fp[2]):
+        // main(a : fp[2]):
         //   [/*no inputs*/] {
-        //     a = const();
-        //     j = activation(data=b, type=a);
-        //     k = activation(data=j, type=a);
+        //     j = relu(x=a);
+        //     k = relu(x=j);
         // } [/*no outputs*/]
         auto block = MakeBlock({ }, // inputs
                                { }, // outputs
                                { // ops
-            MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
-            MakeOp("j", "activation",
-                   { { "type", "a" }, { "data", "b" } }, // inputs
+            MakeOp("j", "relu",
+                   { { "x", "a" } }, // inputs
                    { { "j", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
                    { } /* attributes */),
-            MakeOp("k", "activation",
-                   { { "type", "j" }, { "data", "b" } }, // inputs
-                   { }, // outputs
+            MakeOp("k", "relu",
+                   { { "x", "j" } }, // inputs
+                   { { "k", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
                    { } /* attributes */)
         });
         NameAndTypeVec mainParams{
-            { "b", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
+            { "a", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) }
         };
 
         auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
         ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
+    }
+
+    return 0;
+}
+
+int testValidateProgramPreprocessing()
+{
+    auto imgTensorType = MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(1), MakeDim(3), MakeDim(10), MakeDim(10) });
+
+    // model(a : img[10, 10, rgb]) {
+    //   main(a : fp[1, 3, 10, 10]) {
+    //     s = const(1.f)
+    //     blue = const(0.f)
+    //     green = const(0.f)
+    //     red = const(0.f)
+    //     gray = const(0.f)
+    //     b = scale_image(x = a, scale = s, blueBias = blue, greenBias = green, redBias = red, grayBias = gray)
+    //   } -> [b]
+    // }
+    auto happyModel = [&imgTensorType]() {
+        auto block = MakeBlock({ },  // inputs
+                               { "b" },  // outputs
+                               {
+            MakeOp("s",     "const", { }, { { "s",     MakeScalarValueType(V5::ScalarType::FLOAT32) } }, { { "val", MakeFloatValue(1.f) } }),
+            MakeOp("blue",  "const", { }, { { "blue",  MakeScalarValueType(V5::ScalarType::FLOAT32) } }, { { "val", MakeFloatValue(0.f) } }),
+            MakeOp("green", "const", { }, { { "green", MakeScalarValueType(V5::ScalarType::FLOAT32) } }, { { "val", MakeFloatValue(0.f) } }),
+            MakeOp("red",   "const", { }, { { "red",   MakeScalarValueType(V5::ScalarType::FLOAT32) } }, { { "val", MakeFloatValue(0.f) } }),
+            MakeOp("gray",  "const", { }, { { "gray",  MakeScalarValueType(V5::ScalarType::FLOAT32) } }, { { "val", MakeFloatValue(0.f) } }),
+            MakeOp("b", "scale_image", {
+                { "x", "a", }, { "scale", "s" }, { "blueBias", "blue" },
+                { "greenBias", "green" },{ "redBias", "red" }, { "grayBias", "gray" } },
+            { { "b", imgTensorType }}, { })
+        }); // ops
+        NameAndTypeVec mainParams{
+            { "a", imgTensorType }
+        };
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, { imgTensorType }, block));
+        auto fd = MakeImageFeatureDescription("a", ImageFeatureType_ColorSpace::ImageFeatureType_ColorSpace_RGB, 10, 10);
+        model.mutable_description()->mutable_input(0)->CopyFrom(fd);
+
+        return model;
+    };
+
+    // Happy path: scale_image applied to model/main image input
+    {
+        auto model = happyModel();
+
+        ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
+    }
+
+    // scale_image applied to model/main non-image input
+    {
+        auto model = happyModel();
+        MakeFeatureDescription("a", imgTensorType);
+        model.mutable_description()->mutable_input(0)->CopyFrom(MakeFeatureDescription("a", imgTensorType));
+
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::MODEL_INVALID_INPUT_TYPE);
+    }
+
+    // scale_image applied to non-main input
+    {
+        auto model = happyModel();
+        auto main = model.program().functions().at("main");
+        (*model.mutable_program()->mutable_functions())["notMain"].CopyFrom(main);
+
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_INVALID_IN_CONTEXT);
+    }
+
+    // scale_image in a nested block
+    {
+        // This is a bit convoluted, but what we're going to do is stuff the scale_image
+        // from our happy path model into both sides of a conditional.
+        // main() {
+        //    <... consts ...>
+        //    p = true
+        //    b = cond(p, { b.0 = scale_image(...) } -> [b.0], { b.1 = scale_image(...) } -> [b.1])
+        // }
+        auto model = happyModel();
+        auto origScale = model.program().functions().at("main").block().operations(5);
+        auto scaleWithName = [&origScale](const std::string& name) {
+            V5::Operation renamedScale;
+            renamedScale.CopyFrom(origScale);
+            renamedScale.mutable_outputs(0)->set_name(name);
+            return renamedScale;
+        };
+        auto condOp = MakeOp("cond", "cond", {{ "pred", "p" }}, {{ "b", imgTensorType }}, {}, {
+            MakeBlock({}, { "b.0" }, { scaleWithName("b.0") }),
+            MakeBlock({}, { "b.1" }, { scaleWithName("b.1") })
+        });
+
+        auto mainBlock = model.mutable_program()->mutable_functions()->at("main").mutable_block();
+        mainBlock->mutable_operations(5)->CopyFrom(condOp);
+        mainBlock->add_operations()->CopyFrom(MakeOp("p", "const", {}, {{ "p", MakeScalarValueType(V5::ScalarType::BOOL) }}, {{ "val", MakeBoolValue(true) }}));
+
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_INVALID_IN_CONTEXT);
     }
 
     return 0;
@@ -679,6 +936,281 @@ int testValidateProgramProgram()
         (*model.mutable_program()->mutable_parameters())[""] = MakeBoolValue(true);
         ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
                                   ResultReason::PARAMETER_NAME_EMPTY);
+    }
+
+    return 0;
+}
+
+int testValidatePadOp()
+{
+    // main(a : fp32[1]) -> (fp32[1]) {
+    //   b = const(value=[[1, 1], [2, 2]])
+    //   output = pad(x=a, pad=b)
+    // } -> (output)
+
+    auto tensorType = MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2), MakeDim(3) });
+    auto outType = MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(4), MakeDim(7) });
+    auto paddingType = MakeTensorValueType(V5::ScalarType::INT32, { MakeDim(2), MakeDim(2) });
+    auto paddingValue = MakeIntTensorValue({ MakeDim(2), MakeDim(2) }, {1, 1, 2, 2});
+    auto modeType = MakeScalarValueType(V5::ScalarType::STRING);
+    auto modeValue = MakeStringValue("reflect");
+    auto constantType = MakeScalarValueType(V5::ScalarType::FLOAT32);
+    auto constantVal = MakeFloatValue(0.0);
+
+    NameAndTypeVec mainParams{
+        { "a", tensorType }
+    };
+    // pad works with mode "reflect"
+    {
+        // main(a : fp[2]):
+        //   [/*no inputs*/] {
+        //      b = const(val=[[1, 1], [2, 2]]
+        //      c = const(val="reflect")
+        //      output = const_pad(x=a, pad=b, mode=c)
+        //  } [output]
+        auto block = MakeBlock({ }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("b", "const",
+                   { }, // inputs
+                   { {"b", paddingType} }, // outputs
+                   { {"val", paddingValue }} /* attributes */),
+            MakeOp("c", "const",
+                   { }, // inputs
+                   { {"c", modeType} }, // outputs
+                   { {"val", modeValue} } /* attributes */),
+            MakeOp("d", "const",
+                   { }, // inputs
+                   { {"d", constantType} }, // outputs
+                   { {"val", constantVal} } /* attributes */),
+            MakeOp("aPad", "pad",
+                   { {"x", "a"}, {"pad", "b"}, {"mode", "c"}, {"constant_val", "d"} }, // inputs
+                   { {"output", outType} }, // outputs
+                   { } /* attributes */)
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
+    }
+    // pad works with mode "constant"
+    modeValue = MakeStringValue("constant");
+    {
+        // main(a : fp[2]):
+        //   [/*no inputs*/] {
+        //      b = const(val=[[1, 1], [2]]
+        //      c = const(val="reflect")
+        //      output = const_pad(x=a, pad=b, mode=c)
+        //  } [output]
+        paddingType = MakeTensorValueType(V5::ScalarType::INT32, { MakeDim(2), MakeDim(2) });
+        paddingValue = MakeIntTensorValue({ MakeDim(2), MakeDim(2) }, {1, 1, 2, 2});
+        auto block = MakeBlock({ }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("b", "const",
+                   { }, // inputs
+                   { {"b", paddingType} }, // outputs
+                   { {"val", paddingValue }} /* attributes */),
+            MakeOp("c", "const",
+                   { }, // inputs
+                   { {"c", modeType} }, // outputs
+                   { {"val", modeValue} } /* attributes */),
+            MakeOp("d", "const",
+                   { }, // inputs
+                   { {"d", constantType} }, // outputs
+                   { {"val", constantVal} } /* attributes */),
+            MakeOp("aPad", "pad",
+                   { {"x", "a"}, {"pad", "b"}, {"mode", "c"}, {"constant_val", "d"} }, // inputs
+                   { {"output", outType} }, // outputs
+                   { } /* attributes */)
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
+    }
+
+    // pad works with mode "replicate"
+    modeValue = MakeStringValue("replicate");
+    {
+        // main(a : fp[2]):
+        //   [/*no inputs*/] {
+        //      b = const(val=[[1, 1], [2]]
+        //      c = const(val="replicate")
+        //      output = const_pad(x=a, pad=b, mode=c)
+        //  } [output]
+        paddingType = MakeTensorValueType(V5::ScalarType::INT32, { MakeDim(2), MakeDim(2) });
+        paddingValue = MakeIntTensorValue({ MakeDim(2), MakeDim(2) }, {1, 1, 2, 2});
+        auto block = MakeBlock({ }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("b", "const",
+                   { }, // inputs
+                   { {"b", paddingType} }, // outputs
+                   { {"val", paddingValue }} /* attributes */),
+            MakeOp("c", "const",
+                   { }, // inputs
+                   { {"c", modeType} }, // outputs
+                   { {"val", modeValue} } /* attributes */),
+            MakeOp("d", "const",
+                   { }, // inputs
+                   { {"d", constantType} }, // outputs
+                   { {"val", constantVal} } /* attributes */),
+            MakeOp("aPad", "pad",
+                   { {"x", "a"}, {"pad", "b"}, {"mode", "c"}, {"constant_val", "d"} }, // inputs
+                   { {"output", outType} }, // outputs
+                   { } /* attributes */)
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
+    }
+    // pad fails with mode "symmetry"
+    modeValue = MakeStringValue("symmetry");
+    {
+        // main(a : fp[2]):
+        //   [/*no inputs*/] {
+        //      b = const(val=[[1, 1], [2, 2]]
+        //      c = const(val="symmetry")
+        //      output = const_pad(x=a, pad=b, mode=c)
+        //  } [output]
+        paddingType = MakeTensorValueType(V5::ScalarType::INT32, { MakeDim(2), MakeDim(2) });
+        paddingValue = MakeIntTensorValue({ MakeDim(2), MakeDim(2) }, {1, 1, 2, 2});
+        auto block = MakeBlock({ }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("b", "const",
+                   { }, // inputs
+                   { {"b", paddingType} }, // outputs
+                   { {"val", paddingValue }} /* attributes */),
+            MakeOp("c", "const",
+                   { }, // inputs
+                   { {"c", modeType} }, // outputs
+                   { {"val", modeValue} } /* attributes */),
+            MakeOp("d", "const",
+                   { }, // inputs
+                   { {"d", constantType} }, // outputs
+                   { {"val", constantVal} } /* attributes */),
+            MakeOp("aPad", "pad",
+                   { {"x", "a"}, {"pad", "b"}, {"mode", "c"}, {"constant_val", "d"} }, // inputs
+                   { {"output", outType} }, // outputs
+                   { } /* attributes */)
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_PARAM_INVALID);
+    }
+
+    // pad fails with padding more than rank 2 and non-constant mode
+    modeValue = MakeStringValue("replicate");
+    {
+        // main(a : fp[2]):
+        //   [/*no inputs*/] {
+        //      b = const(val=[[1, 1], [2, 2], [1, 1]]
+        //      c = const(val="replicate")
+        //      output = const_pad(x=a, pad=b, mode=c)
+        //  } [output]
+        tensorType = MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2), MakeDim(2), MakeDim(3) });
+        paddingType = MakeTensorValueType(V5::ScalarType::INT32, { MakeDim(3), MakeDim(2) });
+        paddingValue = MakeIntTensorValue({ MakeDim(3), MakeDim(2) }, {1, 1, 2, 2, 1, 1});
+        auto block = MakeBlock({ }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("b", "const",
+                   { }, // inputs
+                   { {"b", paddingType} }, // outputs
+                   { {"val", paddingValue }} /* attributes */),
+            MakeOp("c", "const",
+                   { }, // inputs
+                   { {"c", modeType} }, // outputs
+                   { {"val", modeValue} } /* attributes */),
+            MakeOp("d", "const",
+                   { }, // inputs
+                   { {"d", constantType} }, // outputs
+                   { {"val", constantVal} } /* attributes */),
+            MakeOp("aPad", "pad",
+                   { {"x", "a"}, {"pad", "b"}, {"mode", "c"}, {"constant_val", "d"} }, // inputs
+                   { {"output", outType} }, // outputs
+                   { } /* attributes */)
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_PARAM_INVALID);
+    }
+    // pad requires padding to be of (nx2) shape
+    mainParams = { { "a", tensorType } };
+    {
+        // main(a : fp[2]):
+        //   [/*no inputs*/] {
+        //      b = const(val=[[1, 1, 1], [2, 2, 2], [1, 1, 1]]
+        //      c = const(val="constant")
+        //      output = const_pad(x=a, pad=b, mode=c)
+        //  } [output]
+        modeValue = MakeStringValue("constant");
+        tensorType = MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2), MakeDim(2), MakeDim(3) });
+        paddingType = MakeTensorValueType(V5::ScalarType::INT32, { MakeDim(3), MakeDim(3) });
+        paddingValue = MakeIntTensorValue({ MakeDim(3), MakeDim(3) }, {1, 1, 1, 2, 2, 2, 1, 1, 1});
+        auto block = MakeBlock({ }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("b", "const",
+                   { }, // inputs
+                   { {"b", paddingType} }, // outputs
+                   { {"val", paddingValue }} /* attributes */),
+            MakeOp("c", "const",
+                   { }, // inputs
+                   { {"c", modeType} }, // outputs
+                   { {"val", modeValue} } /* attributes */),
+            MakeOp("d", "const",
+                   { }, // inputs
+                   { {"d", constantType} }, // outputs
+                   { {"val", constantVal} } /* attributes */),
+            MakeOp("aPad", "pad",
+                   { {"x", "a"}, {"pad", "b"}, {"mode", "c"}, {"constant_val", "d"} }, // inputs
+                   { {"output", outType} }, // outputs
+                   { } /* attributes */)
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_PARAM_INVALID);
+    }
+
+    // pad working
+    {
+        // main(a : fp[2]):
+        //   [/*no inputs*/] {
+        //      b = const(val=[[1, 1], [2, 2], [1, 1]]
+        //      c = const(val="reflect")
+        //      output = const_pad(x=a, pad=b, mode=c)
+        //  } [output]
+        modeValue = MakeStringValue("constant");
+        tensorType = MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2), MakeDim(2), MakeDim(3) });
+        paddingType = MakeTensorValueType(V5::ScalarType::INT32, { MakeDim(3), MakeDim(2) });
+        paddingValue = MakeIntTensorValue({ MakeDim(3), MakeDim(2) }, {1, 1, 2, 2, 1, 1});
+        auto block = MakeBlock({ }, // inputs
+                               { }, // outputs
+                               { // ops
+            MakeOp("b", "const",
+                   { }, // inputs
+                   { {"b", paddingType} }, // outputs
+                   { {"val", paddingValue }} /* attributes */),
+            MakeOp("c", "const",
+                   { }, // inputs
+                   { {"c", modeType} }, // outputs
+                   { {"val", modeValue} } /* attributes */),
+            MakeOp("d", "const",
+                   { }, // inputs
+                   { {"d", constantType} }, // outputs
+                   { {"val", constantVal} } /* attributes */),
+            MakeOp("aPad", "pad",
+                   { {"x", "a"}, {"pad", "b"}, {"mode", "c"}, {"constant_val", "d"} }, // inputs
+                   { {"output", outType} }, // outputs
+                   { } /* attributes */)
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
+        ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
     }
 
     return 0;

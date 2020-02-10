@@ -7,75 +7,111 @@
 //
 
 #include "ILIL/IROperatorDescription.hpp"
+#include "ILIL/IROperationValidator.hpp"
+#include "Result.hpp"
 
 #include <limits>
 #include <mutex>
 #include <unordered_map>
+#include <memory>
+#include <vector>
 
 using namespace CoreML::ILIL;
 
-IROperatorDescription::IROperatorDescription(uint64_t minInputs, uint64_t maxInputs, uint64_t numOutputs)
-    : m_minInputs(minInputs)
-    , m_maxInputs(maxInputs)
-    , m_numOutputs(numOutputs)
+/** Checks if this valuetype matches another for the purposes of an operator's description.
+    In particular, scalartypes and valuetypes are compared manually to verify
+    equality. Type "any" is a wildcard for scalars and tensor shapes are not matched. */
+static bool ValidateEquivalentTypes(const IRValueType& t1, const IRValueType& t2)
+{
+    auto t1_scalar = t1.TryAs<const IRScalarValueType>();
+    if (t1_scalar) {
+        auto t2_scalar = t2.TryAs<const IRScalarValueType>();
+        if (!t2_scalar) return false;
+        if (t2_scalar->GetType() == IRScalarValueTypeEnum::Any || t1_scalar->GetType() == IRScalarValueTypeEnum::Any) return true;
+        return t2_scalar->GetType() == t1_scalar->GetType();
+    }
+
+    auto t1_tensor = t1.TryAs<const IRTensorValueType>();
+    if (t1_tensor) {
+        auto t2_tensor = t2.TryAs<const IRTensorValueType>();
+        if (!t2_tensor) return false;
+        // Only check if the size of both tensors are scalar (rank 0) or tensor (rank 1+).
+        if ((t1_tensor->GetShape().size() == 0 && t2_tensor->GetShape().size() != 0) ||
+            (t1_tensor->GetShape().size() != 0 && t2_tensor->GetShape().size() == 0)) {
+            return 0;
+        }
+        
+        return ValidateEquivalentTypes(t1_tensor->GetScalarType(), t2_tensor->GetScalarType());
+    }
+
+    auto t1_list = t1.TryAs<const IRListValueType>();
+    if (t1_list) {
+        auto t2_list = t2.TryAs<const IRListValueType>();
+        if (!t2_list) return false;
+        return ValidateEquivalentTypes(t1_list->GetElementType(), t2_list->GetElementType());
+    }
+
+    auto t1_tuple = t1.TryAs<const IRTupleValueType>();
+    if (t1_tuple) {
+        auto t2_tuple = t2.TryAs<const IRTupleValueType>();
+        if (!t2_tuple) return false;
+        if (t1_tuple->GetTypes().size() != t2_tuple->GetTypes().size()) {
+            return false;
+        }
+
+        for (size_t i = 0; i < t1_tuple->GetTypes().size(); ++i) {
+            if (!ValidateEquivalentTypes(*t1_tuple->GetTypes()[i], *t2_tuple->GetTypes()[i])) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+IROperatorDescription::IROperatorDescription(uint64_t minOutputs,
+                                             uint64_t maxOutputs,
+                                             InputMapPtr expectedInputs,
+                                             ValidationFunction validationFunction)
+    : m_minOutputs(minOutputs)
+    , m_maxOutputs(maxOutputs)
+    , m_expectedInputs(std::move(expectedInputs))
+    , m_validationFunction(validationFunction)
 { }
 
-uint64_t IROperatorDescription::GetMinInputs() const
+uint64_t IROperatorDescription::GetMinOutputs() const
 {
-    return m_minInputs;
+    return m_minOutputs;
 }
 
-uint64_t IROperatorDescription::GetMaxInputs() const
+uint64_t IROperatorDescription::GetMaxOutputs() const
 {
-    return m_maxInputs;
+    return m_maxOutputs;
 }
 
-uint64_t IROperatorDescription::GetNumOutputs() const
+::CoreML::Result IROperatorDescription::ValidateOp(const IROperation& op) const
 {
-    return m_numOutputs;
+    return m_validationFunction(op);
 }
 
-using OpDescriptionMap = std::unordered_map<IROperatorType, IROperatorDescription>;
-static std::unique_ptr<OpDescriptionMap> MakeOpDescriptionMap()
+const IROperatorDescription::InputMap& IROperatorDescription::GetExpectedInputs() const
 {
-    std::unique_ptr<OpDescriptionMap> map(new OpDescriptionMap{
-        { IROperatorType::Activation, IROperatorDescription(2, 4, 1) },
-        { IROperatorType::Add, IROperatorDescription(2, 2, 1) },
-        { IROperatorType::Const, IROperatorDescription(0, 0, 1) },
-        { IROperatorType::Convolution, IROperatorDescription(1, 2, 1) },
-        { IROperatorType::InnerProduct, IROperatorDescription(2, 3, 1) },
-        { IROperatorType::MatMul, IROperatorDescription(2, 4, 1) },
-        { IROperatorType::Pooling, IROperatorDescription(1, std::numeric_limits<uint64_t>::max(), 1) },
-        { IROperatorType::Softmax, IROperatorDescription(1, 2, 1) }
-    });
-
-    assert(map->size() == static_cast<size_t>(IROperatorType::COUNT));
-    return map;
+    return *m_expectedInputs;
 }
 
-const IROperatorDescription& ::CoreML::ILIL::GetIROperatorDescription(IROperatorType type)
+bool IROperatorDescription::IsValidType(const std::string& input, const IRValueType& type) const
 {
-#pragma clang diagnostic push
-    // This warns us that tearing down "s_opDescriptions" will happen at program exit.
-    // The concern is that this happens in an effectively non-deterministic
-    // order which can cause crashes when statics depend on each other.
-    // It can also be slow. In this case, we have no external dependencies so
-    // it's safe. The cost is freeing our data (which is useless at shutdown),
-    // but not terribly costly.
-    // If we're deeply concerned, there are at least two ways to get around this.
-    // (1) Explicitly instantiate and teardown statics from main().
-    // (2) Observe that leaking this object at shutdown is really fine and just
-    //     initialize it using a raw new.
-    // The first one is a lot of work and the second will probably make static
-    // analysis complain so I'm just going to tell the compiler to hush.
-#pragma clang diagnostic ignored "-Wexit-time-destructors"
-    static std::unique_ptr<OpDescriptionMap> s_opDescriptions;
-#pragma clang diagnostic pop
-    static std::once_flag flag;
+    if (m_expectedInputs.get() == nullptr) return true;
+    auto& validTypeList = m_expectedInputs->find(input)->second;
+    for (auto t : *validTypeList) {
+        if (ValidateEquivalentTypes(*t, type)) return true;
+    }
+    return false;
+}
 
-    std::call_once(flag, []() {
-        s_opDescriptions = MakeOpDescriptionMap();
-    });
+/* static */ IROperatorDescription::InputTypeSetPtr IROperatorDescription::MakeTypeList(std::initializer_list<IROperatorDescription::InputTypeSet::value_type> iolist) {
+    return std::make_shared<IROperatorDescription::InputTypeSet>(iolist);
+}
 
-    return s_opDescriptions->at(type);
+/* static */ IROperatorDescription::InputMapPtr IROperatorDescription::MakeInputMap(std::initializer_list<IROperatorDescription::InputMap::value_type> iolist) {
+    return std::make_shared<IROperatorDescription::InputMap>(iolist);
 }
