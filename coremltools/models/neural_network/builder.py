@@ -3298,7 +3298,7 @@ class NeuralNetworkBuilder(object):
             image_scale = dict.fromkeys(image_input_names, image_scale)
 
         # Raise error if any key in image preprocessing parameters
-        # are not in imaghe_input_names.
+        # are not in image_input_names.
         def check_valid_preprocessing_keys(input, target, input_name):
             for key in input:
                 if not key in target:
