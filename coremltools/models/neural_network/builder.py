@@ -3277,7 +3277,6 @@ class NeuralNetworkBuilder(object):
         --------
         set_input, set_output, set_class_labels
         """
-        spec = self.spec
         if not image_input_names:
             return  # nothing to do here
 
@@ -3298,6 +3297,22 @@ class NeuralNetworkBuilder(object):
         if not isinstance(image_scale, dict):
             image_scale = dict.fromkeys(image_input_names, image_scale)
 
+        # Raise error if any key in image preprocessing parameters
+        # are not in imaghe_input_names.
+        def check_valid_preprocessing_keys(input, target, input_name):
+            for key in input:
+                if not key in target:
+                    raise ValueError('Invalid key {} in {}.'.format(key, input_name))
+
+        target = image_input_names
+        check_valid_preprocessing_keys(is_bgr, target, 'is_bgr')
+        check_valid_preprocessing_keys(red_bias, target, 'red_bias')
+        check_valid_preprocessing_keys(blue_bias, target, 'blue_bias')
+        check_valid_preprocessing_keys(green_bias, target, 'green_bias')
+        check_valid_preprocessing_keys(gray_bias, target, 'gray_bias')
+        check_valid_preprocessing_keys(image_scale, target, 'image_scale')
+
+        spec = self.spec
         # Add image inputs
         for input_ in spec.description.input:
             if input_.name in image_input_names:
