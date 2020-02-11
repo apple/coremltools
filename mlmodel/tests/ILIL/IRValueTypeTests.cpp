@@ -73,13 +73,13 @@ int testIRScalarValueType()
 
 int testIRTensorValueType()
 {
-    auto int4t = IRTensorValueType::Make(IRScalarValueType::Int4(), {
+    auto int4t = IRTensorValueType::Make(IRScalarValueTypeEnum::Int4, {
         IRSymbolicDimension::Make("s1"),
         IRSymbolicDimension::Make("s2") });
-    auto int4tAgain = IRTensorValueType::Make(IRScalarValueType::Int4(), {
+    auto int4tAgain = IRTensorValueType::Make(IRScalarValueTypeEnum::Int4, {
         IRSymbolicDimension::Make("s1"),
         IRSymbolicDimension::Make("s2") });
-    auto int8t = IRTensorValueType::Make(IRScalarValueType::Int8(), {
+    auto int8t = IRTensorValueType::Make(IRScalarValueTypeEnum::Int8, {
         IRConstantDimension::Make(2),
         IRConstantDimension::Make(4) });
 
@@ -88,8 +88,8 @@ int testIRTensorValueType()
     ML_ASSERT_EQ(*int8t, *int8t);
     ML_ASSERT_NE(*int4t, *int8t);
 
-    ML_ASSERT_EQ(IRScalarValueTypeEnum::Int4, int4t->GetScalarType().GetType());
-    ML_ASSERT_EQ(IRScalarValueTypeEnum::Int8, int8t->GetScalarType().GetType());
+    ML_ASSERT_EQ(IRScalarValueTypeEnum::Int4, int4t->GetScalarType());
+    ML_ASSERT_EQ(IRScalarValueTypeEnum::Int8, int8t->GetScalarType());
 
     ML_ASSERT_EQ(8, int8t->GetNumElements());
     ML_ASSERT_THROWS(int4t->GetNumElements(), std::range_error);
@@ -103,12 +103,12 @@ int testIRTensorValueType()
     ML_ASSERT_NOT(int4t->Is<IRScalarValueType>());
 
     {
-        auto floatType = IRTensorValueType::Make(IRScalarValueType::Float32(), { IRConstantDimension::Make(1) });
+        auto floatType = IRTensorValueType::Make(IRScalarValueTypeEnum::Float32, { IRConstantDimension::Make(1) });
         std::vector<double> wrongTypeValues{1.0};
         std::vector<float> wrongNumValues{1.0f, 2.0f};
 
-        ML_ASSERT_THROWS(floatType->Make(std::move(wrongTypeValues)), std::runtime_error);
-        ML_ASSERT_THROWS(floatType->Make(std::move(wrongNumValues)), std::runtime_error);
+        ML_ASSERT_THROWS(floatType->MakeValue(std::move(wrongTypeValues)), std::runtime_error);
+        ML_ASSERT_THROWS(floatType->MakeValue(std::move(wrongNumValues)), std::runtime_error);
     }
 
     return 0;

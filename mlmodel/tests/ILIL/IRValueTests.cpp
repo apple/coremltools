@@ -43,9 +43,9 @@ int testIRImmediateScalarValue()
 
 int testIRImmediateTensorValue()
 {
-    auto int64t = IRTensorValueType::Make(IRScalarValueType::Int64(), {
+    auto int64t = IRTensorValueType::Make(IRScalarValueTypeEnum::Int64, {
         IRConstantDimension::Make(1),
-        IRConstantDimension::Make(4) })->Make<int64_t>({1, 2, 3, 4});
+        IRConstantDimension::Make(4) })->MakeValue<int64_t>({1, 2, 3, 4});
 
     ML_ASSERT(int64t->GetType().Is<IRTensorValueType>());
     ML_ASSERT_THROWS(int64t->AsInt64(), std::bad_cast);

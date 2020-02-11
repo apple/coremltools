@@ -223,9 +223,11 @@ public:
     static std::shared_ptr<const IRScalarValueType> UInt32();
     static std::shared_ptr<const IRScalarValueType> UInt64();
     static std::shared_ptr<const IRScalarValueType> Any();
-private:
+
+    // TODO (rdar://59235676): Remove ScalarValueType
     IRScalarValueType(IRScalarValueTypeEnum type);
 
+private:
     IRScalarValueTypeEnum m_type;
 };
 
@@ -240,30 +242,40 @@ public:
 
     /** Create a new instance. */
     static std::shared_ptr<const IRTensorValueType>
-    Make(std::shared_ptr<const IRScalarValueType> scalarType, Shape&& shape);
-
+    Make(IRScalarValueTypeEnum scalarType, Shape&& shape);
+    
     /** Create a new instance with no shape information */
     static std::shared_ptr<const IRTensorValueType>
-    Make(std::shared_ptr<const IRScalarValueType> scalarType);
+    MakeScalar(IRScalarValueTypeEnum scalarType);
+
+    /** Create a new value with this type */
+    template<typename ScalarT>
+    std::unique_ptr<const IRTensorValue<ScalarT>>
+    MakeValue(std::vector<ScalarT>&& value) const;
+
+    /** Create a new scalar value with this type */
+    template<typename ScalarT>
+    std::unique_ptr<const IRTensorValue<ScalarT>>
+    MakeScalarValue(ScalarT value) const;
 
     /** Get the type of element stored in this tensor type. */
-    const IRScalarValueType& GetScalarType() const;
+    IRScalarValueTypeEnum GetScalarType() const;
 
     /** Get the shape of this tensor type. */
     const Shape& GetShape() const;
 
-    /** Make a new immediate tensor value. */
-    template<typename ScalarT>
-    std::unique_ptr<const IRTensorValue<ScalarT>> Make(std::vector<ScalarT>&& values) const;
+    /** If this tensor is rank 0. */
+    bool IsScalar() const;
 
     uint64_t GetNumElements() const override;
         std::unique_ptr<const IRValue> ReadValue(const std::string& filePath, uint64_t offset) const override;
+
     bool operator==(const IRValueType& other) const override;
 
 private:
-    IRTensorValueType(std::shared_ptr<const IRScalarValueType> scalarType, Shape&& shape);
+    IRTensorValueType(IRScalarValueTypeEnum scalarType, Shape&& shape);
 
-    std::shared_ptr<const IRScalarValueType> m_scalarType;
+    IRScalarValueTypeEnum m_scalarType;
     Shape m_shape;
 };
 

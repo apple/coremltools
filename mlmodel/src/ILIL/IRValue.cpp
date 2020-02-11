@@ -8,6 +8,7 @@
 
 #include "ILIL/IRValue.hpp"
 #include "ILIL/IRValueType.hpp"
+#include "ILIL/IRValueTypeTraits.hpp"
 
 using namespace ::CoreML::ILIL;
 
@@ -241,6 +242,78 @@ template<typename T>
 const std::vector<T>& IRTensorValue<T>::GetValues() const
 {
     return m_values;
+}
+
+// General-case implementations of scalar convenience getters: fail
+template<typename T>
+bool IRTensorValue<T>::AsBool() const
+{
+    return IRValue::AsBool();
+}
+
+template<typename T>
+float IRTensorValue<T>::AsFloat32() const
+{
+    return IRValue::AsFloat32();
+}
+
+template<typename T>
+int32_t IRTensorValue<T>::AsInt32() const
+{
+    return IRValue::AsInt32();
+}
+
+template<typename T>
+int64_t IRTensorValue<T>::AsInt64() const
+{
+    return IRValue::AsInt64();
+}
+
+template<typename T>
+std::string IRTensorValue<T>::AsString() const
+{
+    return IRValue::AsString();
+}
+
+template<typename T>
+T IRTensorValue<T>::GetScalarValue() const {
+    if (!GetType().template As<const IRTensorValueType>()->IsScalar()) {
+        throw std::bad_cast();
+    }
+    
+    return GetValues()[0];
+}
+
+// Specializations to actually fetch values
+template<>
+bool IRTensorValue<bool>::AsBool() const
+{
+    return GetScalarValue();
+}
+
+template<>
+float IRTensorValue<float>::AsFloat32() const
+{
+    return GetScalarValue();
+}
+
+template<>
+int32_t IRTensorValue<int32_t>::AsInt32() const
+{
+    return GetScalarValue();
+}
+
+template<>
+int64_t IRTensorValue<int64_t>::AsInt64() const
+{
+    return GetScalarValue();
+}
+
+template<>
+
+std::string IRTensorValue<std::string>::AsString() const
+{
+    return GetScalarValue();
 }
 
 template class ::CoreML::ILIL::IRTensorValue<float>;

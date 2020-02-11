@@ -35,13 +35,14 @@ static bool ValidateEquivalentTypes(const IRValueType& t1, const IRValueType& t2
     if (t1_tensor) {
         auto t2_tensor = t2.TryAs<const IRTensorValueType>();
         if (!t2_tensor) return false;
+
         // Only check if the size of both tensors are scalar (rank 0) or tensor (rank 1+).
         if ((t1_tensor->GetShape().size() == 0 && t2_tensor->GetShape().size() != 0) ||
             (t1_tensor->GetShape().size() != 0 && t2_tensor->GetShape().size() == 0)) {
             return 0;
         }
         
-        return ValidateEquivalentTypes(t1_tensor->GetScalarType(), t2_tensor->GetScalarType());
+        return t1_tensor->GetScalarType() == t2_tensor->GetScalarType();
     }
 
     auto t1_list = t1.TryAs<const IRListValueType>();

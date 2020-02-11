@@ -93,8 +93,14 @@ public:
     ~IRTensorValue();
 
     const std::vector<T>& GetValues() const;
+    T GetScalarValue() const;
 
     void CopyTo(void* dest, uint64_t destSize) const override;
+    bool AsBool() const override;
+    float AsFloat32() const override;
+    int32_t AsInt32() const override;
+    int64_t AsInt64() const override;
+    std::string AsString() const override;
 
 private:
     IRTensorValue(ConstIRTensorValueTypePtr type, ValueVec&& values);

@@ -27,10 +27,11 @@ static Context::IROpDescriptionMap DefineOps(Context::IROpDescriptionMap&& addit
 
     // Type definitions
     auto float32Scalar = IRScalarValueType::Float32();
-    auto float32Tensor = IRTensorValueType::Make(IRScalarValueType::Float32(), {IRConstantDimension::Make(0)});
-
+    auto float32Tensor = IRTensorValueType::Make(IRScalarValueTypeEnum::Float32, {IRConstantDimension::Make(0)}); // Can be any shape, just not rank 0
+    
     auto int32Scalar = IRScalarValueType::Int32();
-    auto int32Tensor = IRTensorValueType::Make(IRScalarValueType::Int32(), {IRConstantDimension::Make(0)});
+    auto int32Tensor = IRTensorValueType::Make(IRScalarValueTypeEnum::Int32, {IRConstantDimension::Make(0)}); // Can be any shape, just not rank 0
+
     auto stringScalar = IRScalarValueType::String();
 
     // Some basic input check routines

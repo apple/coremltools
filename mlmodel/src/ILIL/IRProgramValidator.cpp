@@ -336,7 +336,7 @@ static Result SameTypes(const std::string& name,
                       "Model input '" + name + "' has a different rank than its corresponding " + whereSingular + " to main.");
     }
 
-    if (!SameDataTypes(modelType.datatype(), programType.GetScalarType().GetType())) {
+    if (!SameDataTypes(modelType.datatype(), programType.GetScalarType())) {
         auto reason = isInput
             ? ResultReason::MODEL_MAIN_MISMATCHED_INPUT_TYPE
             : ResultReason::MODEL_MAIN_MISMATCHED_OUTPUT_TYPE;
@@ -361,7 +361,7 @@ static Result SameTypes(const std::string& name,
                         bool isInput,
                         const std::string& whereSingular)
 {
-    if (programType.GetScalarType() != *IRScalarValueType::Float32()) {
+    if (programType.GetScalarType() != IRScalarValueTypeEnum::Float32) {
         auto reason = isInput
             ? ResultReason::MODEL_MAIN_BAD_IMAGE_INPUT_TYPE
             : ResultReason::MODEL_MAIN_BAD_IMAGE_OUTPUT_TYPE;
@@ -371,7 +371,7 @@ static Result SameTypes(const std::string& name,
 
     // Program images are NCHW, where C is 3 (RGB) or 1 (grayscale)
     uint64_t channels = modelType.colorspace() == CoreML::Specification::ImageFeatureType_ColorSpace_GRAYSCALE ? 1 : 3;
-    auto imageTensorType = IRTensorValueType::Make(IRScalarValueType::Float32(), {
+    auto imageTensorType = IRTensorValueType::Make(IRScalarValueTypeEnum::Float32, {
         IRConstantDimension::Make(1),
         IRConstantDimension::Make(channels),
         IRConstantDimension::Make(static_cast<uint64_t>(modelType.height())),

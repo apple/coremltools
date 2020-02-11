@@ -39,7 +39,7 @@ int testParseProgramIRBlock()
     });
 
     auto parentScope = std::make_shared<IRScope>(/*parentScope=*/ nullptr);
-    auto tensorType = IRTensorValueType::Make(IRScalarValueType::Float32(), { std::make_shared<IRConstantDimension>(2)} );
+    auto tensorType = IRTensorValueType::Make(IRScalarValueTypeEnum::Float32, { std::make_shared<IRConstantDimension>(2)});
     parentScope->SetType("a", tensorType);
 
     auto irBlock = ProgramIRBlock::Parse(block, parentScope);
@@ -324,7 +324,7 @@ int testParseProgramIRValueType()
         auto irValueType = ProgramIRValueType::Parse(tensorType);
         auto irTensorType = irValueType->As<IRTensorValueType>();
 
-        ML_ASSERT_EQ(*IRScalarValueType::BFloat16(), irTensorType->GetScalarType());
+        ML_ASSERT_EQ(IRScalarValueTypeEnum::BFloat16, irTensorType->GetScalarType());
         ML_ASSERT_EQ(2, irTensorType->GetShape().size());
         ML_ASSERT_EQ(4, irTensorType->GetShape()[0]->As<IRConstantDimension>()->GetSize());
         ML_ASSERT_EQ("s1", irTensorType->GetShape()[1]->As<IRSymbolicDimension>()->GetName());
@@ -341,7 +341,7 @@ int testParseProgramIRValueType()
         auto irValueType = ProgramIRValueType::Parse(tensorType);
         auto irTensorType = irValueType->As<IRTensorValueType>();
 
-        ML_ASSERT_EQ(*IRScalarValueType::Dynamic(), irTensorType->GetScalarType());
+        ML_ASSERT_EQ(IRScalarValueTypeEnum::Dynamic, irTensorType->GetScalarType());
         ML_ASSERT_EQ(2, irTensorType->GetShape().size());
         ML_ASSERT_EQ(4, irTensorType->GetShape()[0]->As<IRConstantDimension>()->GetSize());
         ML_ASSERT_EQ(2, irTensorType->GetShape()[1]->As<IRConstantDimension>()->GetSize());

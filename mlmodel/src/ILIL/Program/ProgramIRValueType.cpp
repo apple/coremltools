@@ -31,43 +31,43 @@ static std::shared_ptr<const IRListValueType> ParseListType(const V5::ListType& 
     return IRListValueType::Make(std::move(elementType), std::move(length));
 }
 
-static std::shared_ptr<const IRScalarValueType> ParseScalarType(V5::ScalarType specType)
+static IRScalarValueTypeEnum ParseScalarType(V5::ScalarType specType)
 {
     switch (specType) {
         case V5::DYNAMIC:
-            return IRScalarValueType::Dynamic();
+            return IRScalarValueTypeEnum::Dynamic;
         case V5::STRING:
-            return IRScalarValueType::String();
+            return IRScalarValueTypeEnum::String;
         case V5::BOOL:
-            return IRScalarValueType::Bool();
+            return IRScalarValueTypeEnum::Bool;
         case V5::FLOAT16:
-            return IRScalarValueType::Float16();
+            return IRScalarValueTypeEnum::Float16;
         case V5::FLOAT32:
-            return IRScalarValueType::Float32();
+            return IRScalarValueTypeEnum::Float32;
         case V5::FLOAT64:
-            return IRScalarValueType::Float64();
+            return IRScalarValueTypeEnum::Float64;
         case V5::BFLOAT16:
-            return IRScalarValueType::BFloat16();
+            return IRScalarValueTypeEnum::BFloat16;
         case V5::INT4:
-            return IRScalarValueType::Int4();
+            return IRScalarValueTypeEnum::Int4;
         case V5::INT8:
-            return IRScalarValueType::Int8();
+            return IRScalarValueTypeEnum::Int8;
         case V5::INT16:
-            return IRScalarValueType::Int16();
+            return IRScalarValueTypeEnum::Int16;
         case V5::INT32:
-            return IRScalarValueType::Int32();
+            return IRScalarValueTypeEnum::Int32;
         case V5::INT64:
-            return IRScalarValueType::Int64();
+            return IRScalarValueTypeEnum::Int64;
         case V5::UINT4:
-            return IRScalarValueType::UInt4();
+            return IRScalarValueTypeEnum::UInt4;
         case V5::UINT8:
-            return IRScalarValueType::UInt8();
+            return IRScalarValueTypeEnum::UInt8;
         case V5::UINT16:
-            return IRScalarValueType::UInt16();
+            return IRScalarValueTypeEnum::UInt16;
         case V5::UINT32:
-            return IRScalarValueType::UInt32();
+            return IRScalarValueTypeEnum::UInt32;
         case V5::UINT64:
-            return IRScalarValueType::UInt64();
+            return IRScalarValueTypeEnum::UInt64;
 
         case V5::ScalarType_INT_MAX_SENTINEL_DO_NOT_USE_:
         case V5::ScalarType_INT_MIN_SENTINEL_DO_NOT_USE_:
@@ -108,7 +108,7 @@ std::shared_ptr<const IRValueType> ProgramIRValueType::Parse(const SpecValueType
         case SpecValueType::kListType:
             return ParseListType(type.listtype());
         case SpecValueType::kScalarType:
-            return ParseScalarType(type.scalartype());
+            return std::make_shared<const IRScalarValueType>(ParseScalarType(type.scalartype()));
         case SpecValueType::kTensorType:
             return ParseTensorType(type.tensortype());
         case SpecValueType::kTupleType:

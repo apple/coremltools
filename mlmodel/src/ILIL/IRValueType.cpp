@@ -282,45 +282,61 @@ bool IRScalarValueType::operator==(const IRValueType& other) const
 
 IRTensorValueType::~IRTensorValueType() = default;
 
-IRTensorValueType::IRTensorValueType(std::shared_ptr<const IRScalarValueType> scalarType, Shape&& shape)
-    : m_scalarType(std::move(scalarType))
+IRTensorValueType::IRTensorValueType(IRScalarValueTypeEnum scalarType, Shape&& shape)
+    : m_scalarType(scalarType)
     , m_shape(std::move(shape))
 { }
 
 /*static*/ std::shared_ptr<const IRTensorValueType>
-IRTensorValueType::Make(std::shared_ptr<const IRScalarValueType> scalarType, Shape&& shape)
+IRTensorValueType::Make(IRScalarValueTypeEnum scalarType, Shape&& shape)
 {
-    return std::shared_ptr<const IRTensorValueType>(new IRTensorValueType(std::move(scalarType), std::move(shape)));
+    return std::shared_ptr<const IRTensorValueType>(new IRTensorValueType(scalarType, std::move(shape)));
 }
+
+template std::unique_ptr<const IRTensorValue<float>> IRTensorValueType::MakeScalarValue<float>(float value) const;
+template std::unique_ptr<const IRTensorValue<double>> IRTensorValueType::MakeScalarValue<double>(double value) const;
+template std::unique_ptr<const IRTensorValue<bool>> IRTensorValueType::MakeScalarValue<bool>(bool value) const;
+template std::unique_ptr<const IRTensorValue<int32_t>> IRTensorValueType::MakeScalarValue<int32_t>(int32_t value) const;
+template std::unique_ptr<const IRTensorValue<int64_t>> IRTensorValueType::MakeScalarValue<int64_t>(int64_t value) const;
+template std::unique_ptr<const IRTensorValue<std::string>> IRTensorValueType::MakeScalarValue<std::string>(std::string value) const;
 
 /*static*/ std::shared_ptr<const IRTensorValueType>
-IRTensorValueType::Make(std::shared_ptr<const IRScalarValueType> scalarType)
+IRTensorValueType::MakeScalar(IRScalarValueTypeEnum scalarType)
 {
-    return std::shared_ptr<const IRTensorValueType>(new IRTensorValueType(std::move(scalarType), Shape()));
+    return Make(scalarType, Shape());
 }
 
+template std::unique_ptr<const IRTensorValue<float>> IRTensorValueType::MakeValue<float>(std::vector<float>&& values) const;
+template std::unique_ptr<const IRTensorValue<double>> IRTensorValueType::MakeValue<double>(std::vector<double>&& values) const;
+template std::unique_ptr<const IRTensorValue<bool>> IRTensorValueType::MakeValue<bool>(std::vector<bool>&& values) const;
+template std::unique_ptr<const IRTensorValue<int32_t>> IRTensorValueType::MakeValue<int32_t>(std::vector<int32_t>&& values) const;
+template std::unique_ptr<const IRTensorValue<int64_t>> IRTensorValueType::MakeValue<int64_t>(std::vector<int64_t>&& values) const;
+template std::unique_ptr<const IRTensorValue<std::string>> IRTensorValueType::MakeValue<std::string>(std::vector<std::string>&& values) const;
 
 template<typename ScalarT>
-std::unique_ptr<const IRTensorValue<ScalarT>> IRTensorValueType::Make(std::vector<ScalarT>&& values) const
-{
-    if (GetNumElements() != values.size()) {
-        throw std::range_error("Wrong number of elements specified for immediate tensor value.");
+std::unique_ptr<const IRTensorValue<ScalarT>>
+IRTensorValueType::MakeValue(std::vector<ScalarT>&& value) const {
+    if (GetScalarType() != CppTypeTraits<ScalarT>::IRTypeEnum) {
+        throw std::runtime_error("Cannot initialize tensor value from value with wrong type.");
     }
 
-    if (GetScalarType().GetType() != CppTypeTraits<ScalarT>::IRTypeEnum) {
-        throw std::runtime_error("Cannot initialize tensor value from values with wrong type.");
+    if (value.size() != GetNumElements()) {
+        throw std::runtime_error("Cannot initialize tensor value from vector of incorrect size.");
+    }
+
+    return std::unique_ptr<IRTensorValue<ScalarT>>
+        (new IRTensorValue<ScalarT>(std::dynamic_pointer_cast<const IRTensorValueType>(shared_from_this()), std::move(value)));
+};
+
+template<typename ScalarT>
+std::unique_ptr<const IRTensorValue<ScalarT>>
+IRTensorValueType::MakeScalarValue(ScalarT value) const {
+    if (!IsScalar()) {
+        throw std::runtime_error("Cannot create scalar tensor value from non-scalar type.");
     }
     
-    return std::unique_ptr<IRTensorValue<ScalarT>>
-        (new IRTensorValue<ScalarT>(std::dynamic_pointer_cast<const IRTensorValueType>(shared_from_this()), std::move(values)));
+    return MakeValue<ScalarT>({value});
 }
-
-template std::unique_ptr<const IRTensorValue<float>> IRTensorValueType::Make(std::vector<float>&& values) const;
-template std::unique_ptr<const IRTensorValue<double>> IRTensorValueType::Make(std::vector<double>&& values) const;
-template std::unique_ptr<const IRTensorValue<int32_t>> IRTensorValueType::Make(std::vector<int32_t>&& values) const;
-template std::unique_ptr<const IRTensorValue<int64_t>> IRTensorValueType::Make(std::vector<int64_t>&& values) const;
-template std::unique_ptr<const IRTensorValue<bool>> IRTensorValueType::Make(std::vector<bool>&& values) const;
-template std::unique_ptr<const IRTensorValue<std::string>> IRTensorValueType::Make(std::vector<std::string>&& values) const;
 
 uint64_t IRTensorValueType::GetNumElements() const
 {
@@ -337,14 +353,18 @@ uint64_t IRTensorValueType::GetNumElements() const
     return numElements;
 }
 
-const IRScalarValueType& IRTensorValueType::GetScalarType() const
+IRScalarValueTypeEnum IRTensorValueType::GetScalarType() const
 {
-    return *m_scalarType;
+    return m_scalarType;
 }
 
 const IRTensorValueType::Shape& IRTensorValueType::GetShape() const
 {
     return m_shape;
+}
+
+bool IRTensorValueType::IsScalar() const {
+    return GetShape().size() == 0;
 }
 
 template<typename ScalarT>
@@ -355,22 +375,20 @@ static std::unique_ptr<const IRValue> ReadTensorValue(const std::string& filePat
     std::vector<ScalarT> values;
     NNBuffer::NeuralNetworkBuffer nnBuffer(filePath, /*mode=*/ NNBuffer::bufferMode::read);
     nnBuffer.getBuffer(offset, values);
-    return tensorType.Make(std::move(values));
+    return tensorType.MakeValue(std::move(values));
 }
 
 std::unique_ptr<const IRValue> IRTensorValueType::ReadValue(const std::string& filePath, uint64_t offset) const
 {
-    switch (GetScalarType().GetType()) {
+    switch (GetScalarType()) {
         case IRScalarValueTypeEnum::Float32:
             return ReadTensorValue<float>(filePath, offset, *this->As<IRTensorValueType>());
         case IRScalarValueTypeEnum::Float64:
             return ReadTensorValue<double>(filePath, offset, *this->As<IRTensorValueType>());
-
         case IRScalarValueTypeEnum::Int32:
             return ReadTensorValue<int32_t>(filePath, offset, *this->As<IRTensorValueType>());
         case IRScalarValueTypeEnum::Int64:
             return ReadTensorValue<int64_t>(filePath, offset, *this->As<IRTensorValueType>());
-
         case IRScalarValueTypeEnum::Dynamic:
         case IRScalarValueTypeEnum::Bool:
         case IRScalarValueTypeEnum::String:
@@ -384,9 +402,8 @@ std::unique_ptr<const IRValue> IRTensorValueType::ReadValue(const std::string& f
         case IRScalarValueTypeEnum::UInt16:
         case IRScalarValueTypeEnum::UInt32:
         case IRScalarValueTypeEnum::UInt64:
-            throw std::runtime_error("Reading binary data of the given type is not supported.");
         case IRScalarValueTypeEnum::Any:
-            throw std::runtime_error("'Any' scalar type is a placeholder and can't be read.");
+            throw std::runtime_error("Reading binary data of the given type is not supported.");
     }
 }
 
