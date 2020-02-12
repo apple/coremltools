@@ -415,3 +415,31 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         # fails since output_names and output_dims do not have same size
         with self.assertRaises(ValueError):
             builder.set_output(output_names=['out_1', 'out_2'], output_dims=[(3,)])
+
+    def test_invalid_image_preprocessing_params(self):
+        builder = self._build_nn_with_one_ip_layer()
+        image_input_names = ['input1','input2']
+        with self.assertRaises(ValueError):
+          image_scale = {'invalid':1./255.}
+          builder.set_pre_processing_parameters(image_input_names=image_input_names,
+                                                image_scale=image_scale)
+        with self.assertRaises(ValueError):
+          red_bias = {'invalid':-1}
+          builder.set_pre_processing_parameters(image_input_names=image_input_names,
+                                                red_bias=red_bias)
+        with self.assertRaises(ValueError):
+          blue_bias = {'invalid':-1}
+          builder.set_pre_processing_parameters(image_input_names=image_input_names,
+                                                blue_bias=blue_bias)
+        with self.assertRaises(ValueError):
+          green_bias = {'invalid':-1}
+          builder.set_pre_processing_parameters(image_input_names=image_input_names,
+                                                green_bias=green_bias)
+        with self.assertRaises(ValueError):
+          gray_bias = {'invalid':-1}
+          builder.set_pre_processing_parameters(image_input_names=image_input_names,
+                                                gray_bias=gray_bias)
+        with self.assertRaises(ValueError):
+          is_bgr = {'invalid':False}
+          builder.set_pre_processing_parameters(image_input_names=image_input_names,
+                                                is_bgr=is_bgr)
