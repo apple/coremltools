@@ -3382,14 +3382,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 inputs = {'data': data, 'tensor': tensor}
                 expected = {'output': np.reshape(data, target_shape)}
 
-                #Make sure GPU doesn't have too much batch
-                max_batch_size_gpu = 400
-                if any([ dim > max_batch_size_gpu for dim in target_shape]):
-                    useCPUOnly = True
-                else:
-                    useCPUOnly = cpu_only
-
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=useCPUOnly)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
                 self.assertEqual(target_rank, builder._get_rank('output'))
 
     def test_reshape_like_gpu(self):
