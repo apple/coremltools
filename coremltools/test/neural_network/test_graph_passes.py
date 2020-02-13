@@ -278,6 +278,30 @@ class MLModelPassesTest(unittest.TestCase):
             expected_layers=[0],
         )
 
+        # A slightly more complicated test case where there are two transposes
+        # in topological order, but are actually in parallel in the graph.
+        builder = neural_network.NeuralNetworkBuilder(
+            [('data', datatypes.Array(2, 4, 8))],
+            [('out', None)]
+        )
+        last_layer = 'data'
+        builder.add_transpose(name='t1',
+                              axes=[0, 2, 1],
+                              input_name='data',
+                              output_name='t1')
+        builder.add_transpose(name='t2',
+                              axes=[0, 2, 1],
+                              input_name='data',
+                              output_name='t2')
+        builder.add_stack(name='stack',
+                          input_names=['t1', 't2'],
+                          output_name='out')
+        spec = builder.spec.neuralNetwork
+        # Run the removal pass.
+        remove_redundant_transposes(builder.spec)
+        # Verify nothing was removed.
+        np.testing.assert_equal(len(spec.layers), 3)
+
 
 if __name__ == '__main__':
     RUN_ALL_TESTS = True

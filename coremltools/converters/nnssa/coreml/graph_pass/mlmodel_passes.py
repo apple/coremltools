@@ -269,7 +269,9 @@ def remove_redundant_transposes(spec):
     def _find_redundant_transposes(nn_spec):
         """
         Search the neural network spec for pairs of transposes that together
-        are the identity, and return a list of those pairs.
+        are the identity, and return a list of those pairs. This will only find
+        redundant pairs that are adjacent in the topologically sorted layer
+        list and will not find pairs in more complicated structure.
         """
         nn_layers = nn_spec.layers
         layers_to_delete = []
@@ -285,11 +287,13 @@ def remove_redundant_transposes(spec):
             if not previous_transpose:
                 previous_transpose = {'layer': _layer, 'axes':_layer.transpose.axes}
             else:
-                # This layer and the previous are transposes. Check if they're each
-                # other's inverses.
+                # Check if the layers are connected in the graph.
+                connected = (previous_transpose['layer'].output == _layer.input)
+                # Check if they're each other's inverses.
                 this_transpose = _layer.transpose.axes
                 composed = [previous_transpose['axes'][i] for i in this_transpose]
-                if all([ax == i for i, ax in enumerate(composed)]):
+                compose_to_identity = all([ax == i for i, ax in enumerate(composed)])
+                if connected and compose_to_identity:
                     # These transpose ops are redundant, remove them.
                     layers_to_delete.append((previous_transpose['layer'], _layer))
                 else:
@@ -301,6 +305,6 @@ def remove_redundant_transposes(spec):
 
     nn_spec = _get_nn_spec(spec)
     layers_to_delete = _find_redundant_transposes(nn_spec)
-    _delete_layers(nn_spec, layers_to_delete)
     if len(layers_to_delete) > 0:
+        _delete_layers(nn_spec, layers_to_delete)
         print('{} transpose pairs deleted'.format(len(layers_to_delete)))
