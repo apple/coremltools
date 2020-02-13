@@ -323,7 +323,7 @@ class SimpleTest(CorrectnessTest):
         self._test_model(builder.spec, input, expected)
         for output_ in output_names:
             self.assertEqual(len(input_dim), builder._get_rank(output_))
-        
+
     def test_scale_constant(self):
         input_dim = (1, 2, 2)
         input_features = [('data', datatypes.Array(*input_dim))]
@@ -616,7 +616,7 @@ class SimpleTest(CorrectnessTest):
         expected = {'output': np.reshape(x, (1, 10, 1, 1))}
 
         self._test_model(builder.spec, input, expected)
-        self.assertEqual(len(target_dim), builder._get_rank('output'))  
+        self.assertEqual(len(target_dim), builder._get_rank('output'))
 
     def test_bias_matrix_cpu(self):
         input_dim = (1, 2, 2)
@@ -737,7 +737,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
         kernel_channels = input_dim[0]
         output_channels, kernel_channels, height, width = weight_dim
-        
+
         input_features = [
             ('input', datatypes.Array(*input_dim)),
             ('weight', datatypes.Array(*weight_dim))]
@@ -1264,7 +1264,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             builder.add_where_broadcastable(name='where',
                                             input_names=['condition', 'x', 'y'],
                                             output_name='output')
-            
+
             self.assertEqual(builder._get_rank('output'), -1)
 
 
@@ -3382,7 +3382,14 @@ class NewLayersSimpleTest(CorrectnessTest):
                 inputs = {'data': data, 'tensor': tensor}
                 expected = {'output': np.reshape(data, target_shape)}
 
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
+                #Make sure GPU doesn't have too much batch
+                max_batch_size_gpu = 400
+                if any([ dim > max_batch_size_gpu for dim in target_shape]):
+                    useCPUOnly = True
+                else:
+                    useCPUOnly = cpu_only
+
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=useCPUOnly)
                 self.assertEqual(target_rank, builder._get_rank('output'))
 
     def test_reshape_like_gpu(self):
@@ -3501,7 +3508,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     if expected_rank == 0:
                         expected_rank = 1
                     self.assertEqual(expected_rank, builder._get_rank('output'))
-    
+
     def test_reduce_sum_gpu(self):
         self.test_reduce_sum_cpu(cpu_only=False)
 
