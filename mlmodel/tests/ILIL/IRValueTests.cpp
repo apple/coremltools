@@ -17,17 +17,17 @@ using namespace CoreML::ILIL;
 
 int testIRImmediateScalarValue()
 {
-    auto intVal = IRScalarValue<int64_t>::Make(55);
-    auto floatVal = IRScalarValue<float>::Make(5.5f);
+    auto intVal = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int64)->MakeValue<int64_t>(55);
+    auto floatVal = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Float32)->MakeValue(5.5f);
 
-    ML_ASSERT_EQ(IRScalarValueTypeEnum::Int64, intVal->GetType().As<IRScalarValueType>()->GetType());
-    ML_ASSERT_EQ(IRScalarValueTypeEnum::Float32, floatVal->GetType().As<IRScalarValueType>()->GetType());
+    ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int64), intVal->GetType());
+    ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Float32), floatVal->GetType());
 
-    ML_ASSERT_EQ(55, intVal->GetValue());
+    ML_ASSERT_EQ(55, intVal->GetScalarValue());
     ML_ASSERT_EQ(55, intVal->AsInt64());
     ML_ASSERT_THROWS(intVal->AsBool(), std::bad_cast);
 
-    ML_ASSERT_EQ(5.5f, floatVal->GetValue());
+    ML_ASSERT_EQ(5.5f, floatVal->GetScalarValue());
     ML_ASSERT_EQ(5.5f, floatVal->AsFloat32());
     ML_ASSERT_THROWS(floatVal->AsInt64(), std::bad_cast);
 
@@ -66,13 +66,13 @@ int testIRImmediateTensorValue()
 
 int testIRImmediateTupleValue()
 {
-    auto boolType = IRScalarValueType::Bool();
-    auto int64Type = IRScalarValueType::Int64();
+    auto boolType = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Bool);
+    auto int64Type = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int64);
 
     auto boolAndint64Type = IRTupleValueType::Make({ boolType, int64Type });
     auto boolAndint64 = boolAndint64Type->Make({
-        boolType->Make(false),
-        int64Type->Make(int64_t{97})
+        boolType->MakeValue(false),
+        int64Type->MakeValue(std::vector<int64_t>({97}))
     });
 
     ML_ASSERT(boolAndint64->GetType().Is<IRTupleValueType>());

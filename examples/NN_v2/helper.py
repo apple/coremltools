@@ -13,7 +13,8 @@ def create_scalartype(scalar_type):
     Return pm.ValueType with ScalarType set
     """
     v_type = pm.ValueType()
-    v_type.scalarType = scalar_type
+    v_type.tensorType.scalarType = scalar_type
+    v_type.tensorType.rank = 0
     return v_type
 
 def create_valuetype_tensor(shape, scalar_type):

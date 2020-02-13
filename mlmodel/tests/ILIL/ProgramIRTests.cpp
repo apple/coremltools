@@ -70,10 +70,11 @@ int testParseProgramIRFunction()
     ML_ASSERT_EQ(1, irFunc->GetBlock().GetOutputs().size());
     ML_ASSERT_EQ("x", irFunc->GetBlock().GetOutputs()[0]);
 
-    ML_ASSERT_EQ(*IRScalarValueType::Int4(), irFunc->GetInputType("x"));
+    std::string fuckyou = "x";
+    ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int4), irFunc->GetInputType(fuckyou));
 
     ML_ASSERT_EQ(1, irFunc->GetOutputTypes().size());
-    ML_ASSERT_EQ(*IRScalarValueType::Int4(), *irFunc->GetOutputTypes()[0]);
+    ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int4), *irFunc->GetOutputTypes()[0]);
 
     return 0;
 }
@@ -123,51 +124,16 @@ int testParseProgramIRProgram()
 
     ML_ASSERT_EQ(1, irProgram->GetParameterNames().size());
     ML_ASSERT_EQ("aBool", irProgram->GetParameterNames()[0]);
-    ML_ASSERT_EQ(*IRScalarValueType::Bool(), irProgram->GetScope().GetType("aBool"));
+    auto irTensorTypePtr = irProgram->GetScope().GetType("aBool").TryAs<const IRTensorValueType>();
+    ML_ASSERT_NOT_NULL(irTensorTypePtr);
+    ML_ASSERT_EQ(IRScalarValueTypeEnum::Bool, irTensorTypePtr->GetScalarType());
     ML_ASSERT_EQ(true, irProgram->GetScope().GetValue("aBool").AsBool());
     ML_ASSERT_EQ(true, irProgram->GetParameterValue("aBool").AsBool());
 
     ML_ASSERT_EQ(1, irProgram->GetFunctions().size());
-    ML_ASSERT_EQ(*IRScalarValueType::Bool(), *irProgram->GetFunction("main").GetOutputTypes()[0]);
-
-    return 0;
-}
-
-int testParseProgramIRScalarValue()
-{
-    // Immediate float value
-    {
-        auto irValue = ProgramIRValue::Parse(MakeFloatValue(8.24f));
-        ML_ASSERT_EQ(*IRScalarValueType::Float32(), irValue->GetType());
-        ML_ASSERT_EQ(8.24f, irValue->AsFloat32());
-    }
-
-    // Immediate int64 value
-    {
-        V5::Value value;
-        value.mutable_type()->CopyFrom(MakeScalarValueType(V5::ScalarType::INT64));
-        value.mutable_immediatevalue()->set_i(74);
-        auto irValue = ProgramIRValue::Parse(value);
-        ML_ASSERT_EQ(*IRScalarValueType::Int64(), irValue->GetType());
-        ML_ASSERT_EQ(74, irValue->AsInt64());
-    }
-
-    // Immediate bool value
-    {
-        auto irValue = ProgramIRValue::Parse(MakeBoolValue(false));
-        ML_ASSERT_EQ(*IRScalarValueType::Bool(), irValue->GetType());
-        ML_ASSERT_EQ(false, irValue->AsBool());
-    }
-
-    // Immediate bool value
-    {
-        V5::Value value;
-        value.mutable_type()->CopyFrom(MakeScalarValueType(V5::ScalarType::STRING));
-        value.mutable_immediatevalue()->set_s("hi there");
-        auto irValue = ProgramIRValue::Parse(value);
-        ML_ASSERT_EQ(*IRScalarValueType::String(), irValue->GetType());
-        ML_ASSERT_EQ("hi there", irValue->AsString());
-    }
+    irTensorTypePtr = irProgram->GetFunction("main").GetOutputTypes()[0]->TryAs<const IRTensorValueType>();
+    ML_ASSERT_NOT_NULL(irTensorTypePtr);
+    ML_ASSERT_EQ(IRScalarValueTypeEnum::Bool, irTensorTypePtr->GetScalarType());
 
     return 0;
 }
@@ -258,6 +224,34 @@ int testParseProgramIRTensorValue()
         std::array<std::string, 2> actual;
         ML_ASSERT_THROWS(irValue->CopyTo(&actual, sizeof(actual)), std::runtime_error);
     }
+    
+    // Immediate bool value
+    {
+        auto irValue = ProgramIRValue::Parse(MakeBoolValue(false));
+        ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Bool), irValue->GetType());
+        ML_ASSERT_EQ(false, irValue->AsBool());
+    }
+    
+    // Immediate float value
+    {
+        auto irValue = ProgramIRValue::Parse(MakeFloatValue(8.24f));
+        ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Float32), irValue->GetType());
+        ML_ASSERT_EQ(8.24f, irValue->AsFloat32());
+    }
+
+    // Immediate int32 value
+    {
+        auto irValue = ProgramIRValue::Parse(MakeIntValue(74));
+        ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int32), irValue->GetType());
+        ML_ASSERT_EQ(74, irValue->AsInt32());
+    }
+
+    // Immediate string value
+    {
+        auto irValue = ProgramIRValue::Parse(MakeStringValue("abc123"));
+        ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::String), irValue->GetType());
+        ML_ASSERT_EQ("abc123", irValue->AsString());
+    }
 
     return 0;
 }
@@ -310,7 +304,7 @@ int testParseProgramIRValueType()
         for (const auto& protoAndIr : cases) {
             V5::ValueType specValueType = MakeScalarValueType(protoAndIr.first);
             auto irValueType = ProgramIRValueType::Parse(specValueType);
-            ML_ASSERT_EQ(protoAndIr.second, irValueType->As<IRScalarValueType>()->GetType());
+            ML_ASSERT_EQ(protoAndIr.second, irValueType->As<IRTensorValueType>()->GetScalarType());
         }
     }
 
@@ -351,12 +345,12 @@ int testParseProgramIRValueType()
     // List type with constant length
     {
         V5::ValueType listType;
-        listType.mutable_listtype()->mutable_type()->set_scalartype(V5::ScalarType::UINT64);
+        listType.mutable_listtype()->mutable_type()->mutable_tensortype()->set_scalartype(V5::ScalarType::UINT64);
         listType.mutable_listtype()->mutable_length()->set_size(102);
         auto irValueType = ProgramIRValueType::Parse(listType);
         auto irListType = irValueType->As<IRListValueType>();
 
-        ML_ASSERT_EQ(*IRScalarValueType::UInt64(), *irListType->GetElementType().As<IRScalarValueType>());
+        ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::UInt64), irListType->GetElementType());
         ML_ASSERT_EQ(102, irListType->GetLength().As<IRConstantDimension>()->GetSize());
         ML_ASSERT_EQ(102, irListType->GetNumElements());
     }
@@ -364,12 +358,12 @@ int testParseProgramIRValueType()
     // List type with symbolic length
     {
         V5::ValueType listType;
-        listType.mutable_listtype()->mutable_type()->set_scalartype(V5::ScalarType::UINT64);
+        listType.mutable_listtype()->mutable_type()->mutable_tensortype()->set_scalartype(V5::ScalarType::UINT64);
         listType.mutable_listtype()->mutable_length()->set_symbol("s3");
         auto irValueType = ProgramIRValueType::Parse(listType);
         auto irListType = irValueType->As<IRListValueType>();
 
-        ML_ASSERT_EQ(*IRScalarValueType::UInt64(), *irListType->GetElementType().As<IRScalarValueType>());
+        ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::UInt64), irListType->GetElementType());
         ML_ASSERT_EQ("s3", irListType->GetLength().As<IRSymbolicDimension>()->GetName());
         ML_ASSERT_THROWS(irListType->GetNumElements(), std::range_error); // can't compute length from with symbolic dimension
     }
@@ -382,7 +376,7 @@ int testProgramIRBlockRename()
     // Input Params
     {
         auto scope = std::make_shared<IRScope>(nullptr);
-        scope->SetType("a", IRScalarValueType::Int8());
+        scope->SetType("a", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int8));
         IROperation::IRBlockPtr block = ProgramIRBlock::Make(scope, { { "x", "a" } }, {}, {});
         block = block->WithRenames({ { "x", "notX" } });
 
@@ -393,7 +387,7 @@ int testProgramIRBlockRename()
     // Input Args
     {
         auto scope = std::make_shared<IRScope>(nullptr);
-        scope->SetType("a", IRScalarValueType::Int8());
+        scope->SetType("a", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int8));
         IROperation::IRBlockPtr block = ProgramIRBlock::Make(scope, { { "x", "a" } }, {}, {});
         block = block->WithRenames({ {"a", "notA" } });
 
@@ -405,7 +399,7 @@ int testProgramIRBlockRename()
     // Outputs
     {
         auto scope = std::make_shared<IRScope>(nullptr);
-        scope->SetType("a", IRScalarValueType::Int8());
+        scope->SetType("a", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int8));
         IROperation::IRBlockPtr block = ProgramIRBlock::Make(scope, {}, { "a" }, {});
         block = block->WithRenames({{ "a", "notA" }});
 
@@ -415,7 +409,7 @@ int testProgramIRBlockRename()
     // Ops
     {
         auto scope = std::make_shared<IRScope>(nullptr);
-        scope->SetType("a", IRScalarValueType::Int8());
+        scope->SetType("a", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int8));
         auto op = ProgramIROperation::Make(scope, "anOp", "const", {}, {}, { "a" }, {});
         IROperation::IRBlockPtr block = ProgramIRBlock::Make(scope, {}, {}, { std::move(op) });
         block = block->WithRenames({{ "a", "notA" }});
@@ -431,7 +425,7 @@ int testProgramIRFunctionRename()
     // inputs and scope
     {
         auto funcScope = std::make_shared<IRScope>(nullptr);
-        funcScope->SetType("x", IRScalarValueType::UInt8());
+        funcScope->SetType("x", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::UInt8));
 
         auto blockScope = std::make_shared<IRScope>(funcScope);
         auto block = ProgramIRBlock::Make(blockScope, {}, {}, {});
@@ -451,7 +445,7 @@ int testProgramIRFunctionRename()
     {
         auto funcScope = std::make_shared<IRScope>(nullptr);
         auto blockScope = std::make_shared<IRScope>(funcScope);
-        blockScope->SetType("x", IRScalarValueType::UInt8());
+        blockScope->SetType("x", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::UInt8));
 
         auto block = ProgramIRBlock::Make(blockScope, {}, {}, {});
 
@@ -469,7 +463,7 @@ int testProgramIROperationRename()
 {
     auto makeScope = []() {
         auto scope = std::make_shared<IRScope>(nullptr);
-        scope->SetType("x", IRScalarValueType::BFloat16());
+        scope->SetType("x", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::BFloat16));
         return scope;
     };
 
@@ -484,7 +478,7 @@ int testProgramIROperationRename()
 
         ML_ASSERT_EQ("notX", renamedOp->GetInput("param1"));
         ML_ASSERT_EQ("notX", renamedOp->GetInputNames().at(0));
-        ML_ASSERT_EQ(*IRScalarValueType::BFloat16(), renamedOp->GetScope().GetType("notX"));
+        ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::BFloat16), renamedOp->GetScope().GetType("notX"));
         ML_ASSERT_NULL(renamedOp->GetScope().TryGetType("x"));
     }
 
@@ -509,7 +503,7 @@ int testProgramIROperationRename()
         // }
         auto outerScope = std::make_shared<IRScope>(nullptr);
         auto innerScope = std::make_shared<IRScope>(outerScope);
-        outerScope->SetType("x", IRScalarValueType::BFloat16());
+        outerScope->SetType("x", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::BFloat16));
 
         auto innerOp = ProgramIROperation::Make(innerScope, "innerOp", "const", {},
                                               {}, { "x" }, {});
@@ -533,9 +527,9 @@ int testProgramIRProgramRename()
     // parameters, parameter names, scope
     {
         auto scope = std::make_shared<IRScope>(nullptr);
-        scope->SetType("x", IRScalarValueType::Int32());
+        scope->SetType("x", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int32));
 
-        auto origProgram = ProgramIRProgram::Make({{ "x", IRScalarValueType::Int32()->Make(56) }}, scope, {});
+        auto origProgram = ProgramIRProgram::Make({{ "x", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int32)->MakeValue(56) }}, scope, {});
         auto renamedProgram = origProgram->WithRenames({{ "x", "notX" }});
 
         ML_ASSERT_EQ(size_t(1), renamedProgram->GetParameters().size());
@@ -551,7 +545,7 @@ int testProgramIRProgramRename()
         auto programScope = std::make_shared<IRScope>(nullptr);
 
         auto funcScope = std::make_shared<IRScope>(programScope);
-        funcScope->SetType("x", IRScalarValueType::UInt8());
+        funcScope->SetType("x", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::UInt8));
 
         auto blockScope = std::make_shared<IRScope>(funcScope);
         auto block = ProgramIRBlock::Make(blockScope, {}, {}, {});

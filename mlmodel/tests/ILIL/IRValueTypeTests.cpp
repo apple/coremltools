@@ -51,22 +51,22 @@ int testIRDimension()
 
 int testIRScalarValueType()
 {
-    auto fp16 = IRScalarValueType::Float16();
-    auto bfp16 = IRScalarValueType::BFloat16();
+    auto fp16 = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Float16);
+    auto bfp16 = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::BFloat16);
 
-    ML_ASSERT_EQ(IRScalarValueTypeEnum::Float16, fp16->GetType());
+    ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Float16), *fp16);
     ML_ASSERT_EQ(1, fp16->GetNumElements());
-    ML_ASSERT_EQ(IRScalarValueTypeEnum::BFloat16, bfp16->GetType());
+    ML_ASSERT_EQ(*IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::BFloat16), *bfp16);
     ML_ASSERT_EQ(1, bfp16->GetNumElements());
 
     ML_ASSERT_EQ(*fp16, *fp16);
     ML_ASSERT_NE(*fp16, *bfp16);
 
-    ML_ASSERT_NULL(fp16->TryAs<IRTensorValueType>());
-    ML_ASSERT_NOT_NULL(fp16->TryAs<IRScalarValueType>());
+    ML_ASSERT_NULL(fp16->TryAs<IRListValueType>());
+    ML_ASSERT_NOT_NULL(fp16->TryAs<IRTensorValueType>());
 
-    ML_ASSERT(fp16->Is<IRScalarValueType>());
-    ML_ASSERT_NOT(fp16->Is<IRTensorValueType>());
+    ML_ASSERT(fp16->Is<IRTensorValueType>());
+    ML_ASSERT_NOT(fp16->Is<IRListValueType>());
 
     return 0;
 }
@@ -92,15 +92,14 @@ int testIRTensorValueType()
     ML_ASSERT_EQ(IRScalarValueTypeEnum::Int8, int8t->GetScalarType());
 
     ML_ASSERT_EQ(8, int8t->GetNumElements());
-    ML_ASSERT_THROWS(int4t->GetNumElements(), std::range_error);
 
     ML_ASSERT_NOT_NULL(int4t->TryAs<IRTensorValueType>());
     ML_ASSERT_NOT_NULL(int4t->As<IRTensorValueType>());
-    ML_ASSERT_NULL(int8t->TryAs<IRScalarValueType>());
-    ML_ASSERT_THROWS(int8t->As<IRScalarValueType>(), std::bad_cast);
+    ML_ASSERT_NULL(int8t->TryAs<IRListValueType>());
+    ML_ASSERT_THROWS(int8t->As<IRListValueType>(), std::bad_cast);
 
     ML_ASSERT(int4t->Is<IRTensorValueType>());
-    ML_ASSERT_NOT(int4t->Is<IRScalarValueType>());
+    ML_ASSERT_NOT(int4t->Is<IRListValueType>());
 
     {
         auto floatType = IRTensorValueType::Make(IRScalarValueTypeEnum::Float32, { IRConstantDimension::Make(1) });
@@ -116,23 +115,23 @@ int testIRTensorValueType()
 
 int testIRListValueType()
 {
-    auto lst1 = IRListValueType::Make(IRScalarValueType::Int4(), IRConstantDimension::Make(55));
-    auto lst2 = IRListValueType::Make(IRScalarValueType::Int4(), IRSymbolicDimension::Make("55"));
-    auto lst1Again = IRListValueType::Make(IRScalarValueType::Int4(), IRConstantDimension::Make(55));
+    auto lst1 = IRListValueType::Make(IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int4), IRConstantDimension::Make(55));
+    auto lst2 = IRListValueType::Make(IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int4), IRSymbolicDimension::Make("55"));
+    auto lst1Again = IRListValueType::Make(IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int4), IRConstantDimension::Make(55));
 
     ML_ASSERT_EQ(*lst1, *lst1);
     ML_ASSERT_EQ(*lst1, *lst1Again);
     ML_ASSERT_NE(*lst1, *lst2);
 
-    ML_ASSERT(lst1->GetElementType().Is<IRScalarValueType>());
+    ML_ASSERT(lst1->GetElementType().Is<IRTensorValueType>());
 
     ML_ASSERT_EQ(55, lst1->GetNumElements());
     ML_ASSERT_THROWS(lst2->GetNumElements(), std::range_error);
 
     ML_ASSERT_NOT_NULL(lst1->TryAs<IRListValueType>());
     ML_ASSERT_NOT_NULL(lst1->As<IRListValueType>());
-    ML_ASSERT_NULL(lst1->TryAs<IRScalarValueType>());
-    ML_ASSERT_THROWS(lst1->As<IRScalarValueType>(), std::bad_cast);
+    ML_ASSERT_NULL(lst1->TryAs<IRTensorValueType>());
+    ML_ASSERT_THROWS(lst1->As<IRTensorValueType>(), std::bad_cast);
 
     ML_ASSERT(lst1->Is<IRListValueType>());
     ML_ASSERT_NOT(lst1->Is<IRTupleValueType>());
@@ -143,18 +142,18 @@ int testIRListValueType()
 int testIRTupleValueType()
 {
     auto tup1 = IRTupleValueType::Make(IRTupleValueType::ValueTypePtrVec{
-        IRListValueType::Make(IRScalarValueType::UInt16(), IRConstantDimension::Make(400)),
-        IRScalarValueType::Bool()
+        IRListValueType::Make(IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::UInt16), IRConstantDimension::Make(400)),
+        IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Bool)
     });
 
     auto tup1Again = IRTupleValueType::Make(IRTupleValueType::ValueTypePtrVec{
-        IRListValueType::Make(IRScalarValueType::UInt16(), IRConstantDimension::Make(400)),
-        IRScalarValueType::Bool()
+        IRListValueType::Make(IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::UInt16), IRConstantDimension::Make(400)),
+        IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Bool)
     });
 
     auto tup2 = IRTupleValueType::Make(IRTupleValueType::ValueTypePtrVec{
-        IRListValueType::Make(IRScalarValueType::UInt64(), IRConstantDimension::Make(400)),
-        IRScalarValueType::Bool()
+        IRListValueType::Make(IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::UInt64), IRConstantDimension::Make(400)),
+        IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Bool)
     });
 
     ML_ASSERT_EQ(*tup1, *tup1);
@@ -162,7 +161,7 @@ int testIRTupleValueType()
     ML_ASSERT_NE(*tup1, *tup2);
 
     ML_ASSERT(tup1->GetTypes()[0]->Is<IRListValueType>());
-    ML_ASSERT(tup1->GetTypes()[1]->Is<IRScalarValueType>());
+    ML_ASSERT(tup1->GetTypes()[1]->Is<IRTensorValueType>());
 
     ML_ASSERT_THROWS(tup1->GetNumElements(), std::range_error);
 
@@ -172,13 +171,13 @@ int testIRTupleValueType()
     ML_ASSERT_NULL(tup1->TryAs<IRListValueType>());
     ML_ASSERT_THROWS(tup1->As<IRListValueType>(), std::bad_cast);
 
-    auto boolType = IRScalarValueType::Bool();
-    auto int64Type = IRScalarValueType::Int64();
+    auto boolType = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Bool);
+    auto int64Type = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int64);
 
     auto boolAndint64Type = IRTupleValueType::Make({ boolType, int64Type });
     auto boolAndint64 = boolAndint64Type->Make({
-        boolType->Make(false),
-        int64Type->Make(int64_t{97})
+        boolType->MakeValue(false),
+        int64Type->MakeValue<int64_t>(97)
     });
 
     ML_ASSERT(boolAndint64->GetType().Is<IRTupleValueType>());
@@ -189,8 +188,8 @@ int testIRTupleValueType()
 
     {
         IRTupleValueType::ConstIRValueVec wrongTypeValues{
-            boolType->Make(false),
-            IRScalarValueType::Int32()->Make(97)
+            boolType->MakeValue(false),
+            IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int32)->MakeValue(97)
         };
         IRTupleValueType::ConstIRValueVec wrongNumValues{ };
         ML_ASSERT_THROWS(boolAndint64Type->Make(std::move(wrongTypeValues)), std::runtime_error);
@@ -203,10 +202,10 @@ int testIRTupleValueType()
 
 int testIRNamedValueType()
 {
-    auto nvt = IRNamedValueType::Make("aDynamic", IRScalarValueType::Dynamic());
+    auto nvt = IRNamedValueType::Make("aDynamic", IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Dynamic));
 
     ML_ASSERT_EQ("aDynamic", nvt->GetName());
-    ML_ASSERT(nvt->GetType().Is<IRScalarValueType>());
+    ML_ASSERT(nvt->GetType().Is<IRTensorValueType>());
 
     return 0;
 }

@@ -12,9 +12,10 @@ namespace ProgramModelUtils {
 
 V5::ValueType MakeScalarValueType(V5::ScalarType scalarType)
 {
-    V5::ValueType valueType;
-    valueType.set_scalartype(scalarType);
-    return valueType;
+    V5::ValueType tensorType;
+    tensorType.mutable_tensortype()->set_scalartype(scalarType);
+    tensorType.mutable_tensortype()->set_rank(static_cast<int64_t>(0));
+    return tensorType;
 }
 
 V5::ValueType MakeTensorValueType(V5::ScalarType scalarType, const std::vector<V5::Dimension>& dims)
@@ -31,34 +32,24 @@ V5::ValueType MakeTensorValueType(V5::ScalarType scalarType, const std::vector<V
 
 V5::Value MakeBoolValue(bool b)
 {
-    V5::Value value;
-    value.mutable_type()->CopyFrom(MakeScalarValueType(V5::ScalarType::BOOL));
-    value.mutable_immediatevalue()->set_b(b);
-    return value;
+    return MakeBoolTensorValue({}, {b});
 }
 
 V5::Value MakeFloatValue(float f)
 {
-    V5::Value value;
-    value.mutable_type()->CopyFrom(MakeScalarValueType(V5::ScalarType::FLOAT32));
-    value.mutable_immediatevalue()->set_f(f);
-    return value;
+    return MakeFloatTensorValue({}, {f});
 }
 
 V5::Value MakeIntValue(int i)
 {
-    V5::Value value;
-    value.mutable_type()->CopyFrom(MakeScalarValueType(V5::ScalarType::INT32));
-    value.mutable_immediatevalue()->set_i(i);
-    return value;
+    return MakeIntTensorValue({}, {i});
 }
 
 V5::Value MakeStringValue(std::string s)
 {
-    V5::Value value;
-    value.mutable_type()->CopyFrom(MakeScalarValueType(V5::ScalarType::STRING));
-    value.mutable_immediatevalue()->set_s(s);
-    return value;
+    std::vector<std::string> v;
+    v.emplace_back(std::move(s));
+    return MakeStringTensorValue({}, std::move(v));
 }
 
 V5::Dimension MakeDim(int64_t size)
@@ -81,6 +72,16 @@ V5::Value MakeFileValue(const std::string& file_name, uint64_t offset, const V5:
     return v;
 }
 
+V5::Value MakeBoolTensorValue(const std::vector<V5::Dimension>& dims, const std::vector<bool>& bs)
+{
+    V5::Value value;
+    value.mutable_type()->CopyFrom(MakeTensorValueType(V5::ScalarType::BOOL, dims));
+    for (const auto b: bs) {
+        value.mutable_immediatevalue()->mutable_tensor()->mutable_bools()->Add(b);
+    }
+    return value;
+}
+
 V5::Value MakeFloatTensorValue(const std::vector<V5::Dimension>& dims, const std::vector<float>& fs)
 {
     V5::Value value;
@@ -97,6 +98,16 @@ V5::Value MakeIntTensorValue(const std::vector<V5::Dimension>& dims, const std::
     value.mutable_type()->CopyFrom(MakeTensorValueType(V5::ScalarType::INT32, dims));
     for (const auto& i: is) {
         value.mutable_immediatevalue()->mutable_tensor()->mutable_ints()->Add(i);
+    }
+    return value;
+}
+
+V5::Value MakeStringTensorValue(const std::vector<V5::Dimension>& dims, const std::vector<std::string>& ss)
+{
+    V5::Value value;
+    value.mutable_type()->CopyFrom(MakeTensorValueType(V5::ScalarType::STRING, dims));
+    for (const auto& s: ss) {
+        value.mutable_immediatevalue()->mutable_tensor()->mutable_strings()->Add(std::string(s));
     }
     return value;
 }

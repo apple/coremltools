@@ -42,11 +42,17 @@ V5::Value MakeStringValue(std::string s);
 /** Make an NNv2 file value. */
 V5::Value MakeFileValue(const std::string& file_name, uint64_t offset, const V5::ValueType& valueType);
 
+/** Make an NNv2 tensor of bool value. */
+V5::Value MakeBoolTensorValue(const std::vector<V5::Dimension>& dims, const std::vector<bool>& bs);
+
 /** Make an NNv2 tensor of float32 value. */
 V5::Value MakeFloatTensorValue(const std::vector<V5::Dimension>& dims, const std::vector<float>& fs);
 
 /** Make an NNv2 tensor of int32 value. */
 V5::Value MakeIntTensorValue(const std::vector<V5::Dimension>& dims, const std::vector<int>& is);
+
+/** Make an NNv2 tensor of string value. */
+V5::Value MakeStringTensorValue(const std::vector<V5::Dimension>& dims, const std::vector<std::string>& ss);
 
 /** Make an NNv2 constant dimension. */
 V5::Dimension MakeDim(int64_t size);

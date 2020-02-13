@@ -26,13 +26,13 @@ static Context::IROpDescriptionMap DefineOps(Context::IROpDescriptionMap&& addit
     const auto TypeList = IROperatorDescription::MakeTypeList;
 
     // Type definitions
-    auto float32Scalar = IRScalarValueType::Float32();
+    auto float32Scalar = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Float32);
     auto float32Tensor = IRTensorValueType::Make(IRScalarValueTypeEnum::Float32, {IRConstantDimension::Make(0)}); // Can be any shape, just not rank 0
     
-    auto int32Scalar = IRScalarValueType::Int32();
+    auto int32Scalar = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::Int32);
     auto int32Tensor = IRTensorValueType::Make(IRScalarValueTypeEnum::Int32, {IRConstantDimension::Make(0)}); // Can be any shape, just not rank 0
 
-    auto stringScalar = IRScalarValueType::String();
+    auto stringScalar = IRTensorValueType::MakeScalar(IRScalarValueTypeEnum::String);
 
     // Some basic input check routines
     // NOTE: more specifialized should be part of reside near validator

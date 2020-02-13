@@ -293,25 +293,11 @@ IRTensorValueType::Make(IRScalarValueTypeEnum scalarType, Shape&& shape)
     return std::shared_ptr<const IRTensorValueType>(new IRTensorValueType(scalarType, std::move(shape)));
 }
 
-template std::unique_ptr<const IRTensorValue<float>> IRTensorValueType::MakeScalarValue<float>(float value) const;
-template std::unique_ptr<const IRTensorValue<double>> IRTensorValueType::MakeScalarValue<double>(double value) const;
-template std::unique_ptr<const IRTensorValue<bool>> IRTensorValueType::MakeScalarValue<bool>(bool value) const;
-template std::unique_ptr<const IRTensorValue<int32_t>> IRTensorValueType::MakeScalarValue<int32_t>(int32_t value) const;
-template std::unique_ptr<const IRTensorValue<int64_t>> IRTensorValueType::MakeScalarValue<int64_t>(int64_t value) const;
-template std::unique_ptr<const IRTensorValue<std::string>> IRTensorValueType::MakeScalarValue<std::string>(std::string value) const;
-
 /*static*/ std::shared_ptr<const IRTensorValueType>
 IRTensorValueType::MakeScalar(IRScalarValueTypeEnum scalarType)
 {
     return Make(scalarType, Shape());
 }
-
-template std::unique_ptr<const IRTensorValue<float>> IRTensorValueType::MakeValue<float>(std::vector<float>&& values) const;
-template std::unique_ptr<const IRTensorValue<double>> IRTensorValueType::MakeValue<double>(std::vector<double>&& values) const;
-template std::unique_ptr<const IRTensorValue<bool>> IRTensorValueType::MakeValue<bool>(std::vector<bool>&& values) const;
-template std::unique_ptr<const IRTensorValue<int32_t>> IRTensorValueType::MakeValue<int32_t>(std::vector<int32_t>&& values) const;
-template std::unique_ptr<const IRTensorValue<int64_t>> IRTensorValueType::MakeValue<int64_t>(std::vector<int64_t>&& values) const;
-template std::unique_ptr<const IRTensorValue<std::string>> IRTensorValueType::MakeValue<std::string>(std::vector<std::string>&& values) const;
 
 template<typename ScalarT>
 std::unique_ptr<const IRTensorValue<ScalarT>>
@@ -328,15 +314,29 @@ IRTensorValueType::MakeValue(std::vector<ScalarT>&& value) const {
         (new IRTensorValue<ScalarT>(std::dynamic_pointer_cast<const IRTensorValueType>(shared_from_this()), std::move(value)));
 };
 
+template std::unique_ptr<const IRTensorValue<float>> IRTensorValueType::MakeValue<float>(std::vector<float>&& values) const;
+template std::unique_ptr<const IRTensorValue<double>> IRTensorValueType::MakeValue<double>(std::vector<double>&& values) const;
+template std::unique_ptr<const IRTensorValue<bool>> IRTensorValueType::MakeValue<bool>(std::vector<bool>&& values) const;
+template std::unique_ptr<const IRTensorValue<int32_t>> IRTensorValueType::MakeValue<int32_t>(std::vector<int32_t>&& values) const;
+template std::unique_ptr<const IRTensorValue<int64_t>> IRTensorValueType::MakeValue<int64_t>(std::vector<int64_t>&& values) const;
+template std::unique_ptr<const IRTensorValue<std::string>> IRTensorValueType::MakeValue<std::string>(std::vector<std::string>&& values) const;
+
 template<typename ScalarT>
 std::unique_ptr<const IRTensorValue<ScalarT>>
-IRTensorValueType::MakeScalarValue(ScalarT value) const {
+IRTensorValueType::MakeValue(ScalarT value) const {
     if (!IsScalar()) {
         throw std::runtime_error("Cannot create scalar tensor value from non-scalar type.");
     }
     
-    return MakeValue<ScalarT>({value});
+    return MakeValue(std::vector<ScalarT>({value}));
 }
+
+template std::unique_ptr<const IRTensorValue<float>> IRTensorValueType::MakeValue<float>(float value) const;
+template std::unique_ptr<const IRTensorValue<double>> IRTensorValueType::MakeValue<double>(double value) const;
+template std::unique_ptr<const IRTensorValue<bool>> IRTensorValueType::MakeValue<bool>(bool value) const;
+template std::unique_ptr<const IRTensorValue<int32_t>> IRTensorValueType::MakeValue<int32_t>(int32_t value) const;
+template std::unique_ptr<const IRTensorValue<int64_t>> IRTensorValueType::MakeValue<int64_t>(int64_t value) const;
+template std::unique_ptr<const IRTensorValue<std::string>> IRTensorValueType::MakeValue<std::string>(std::string value) const;
 
 uint64_t IRTensorValueType::GetNumElements() const
 {

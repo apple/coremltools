@@ -256,7 +256,7 @@ public:
     /** Create a new scalar value with this type */
     template<typename ScalarT>
     std::unique_ptr<const IRTensorValue<ScalarT>>
-    MakeScalarValue(ScalarT value) const;
+    MakeValue(ScalarT value) const;
 
     /** Get the type of element stored in this tensor type. */
     IRScalarValueTypeEnum GetScalarType() const;
