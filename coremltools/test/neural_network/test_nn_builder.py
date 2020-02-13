@@ -443,3 +443,52 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
           is_bgr = {'invalid':False}
           builder.set_pre_processing_parameters(image_input_names=image_input_names,
                                                 is_bgr=is_bgr)
+
+
+class UseFloatArraytypeTest(unittest.TestCase):
+    """Test that the boolean flag `use_float_arraytype` correctly changes the datatype of the
+    network's inputs and outputs and produces a spec that the `MLModel` class can call `predict`
+    with.
+    """
+
+    def _test_use_float_array_helper(self, use_float_arraytype):
+        input_features = [('data', datatypes.Array(3))]
+        output_features = [('probs', None)]
+        builder = NeuralNetworkBuilder(input_features=input_features,
+                                       output_features=output_features,
+                                       use_float_arraytype=use_float_arraytype)
+        weights = np.ones((3,3))
+        builder.add_inner_product(name='ip1',
+                                  W=weights,
+                                  b=None,
+                                  input_channels=3,
+                                  output_channels=3,
+                                  has_bias=False,
+                                  input_name='data',
+                                  output_name='probs')
+        spec = builder.spec
+        array_feature_type = (coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32
+                              if use_float_arraytype else
+                              coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.DOUBLE)
+        for input in spec.description.input:
+            self.assertEquals(input.type.multiArrayType.dataType, array_feature_type)
+        for output in spec.description.input:
+            self.assertEquals(output.type.multiArrayType.dataType, array_feature_type)
+
+        # Assert that the generated spec is functional
+        mlmodel = MLModel(spec)
+        data = np.ones((3,))
+        data_dict = {'data': data}
+        try:
+            predictions = mlmodel.predict(data_dict)
+        except Exception as e:
+            self.fail(e)
+        self.assertTrue(np.allclose(predictions['probs'], np.ones(3) * 3))
+
+    def test_true_use_float_array(self):
+        # Instruct the builder to use the Float32 datatype for inputs and outputs
+        self._test_use_float_array_helper(True)
+
+    def test_false_use_float_array(self):
+        # Instruct the builder to use its default Double datatype for inputs and outputs
+        self._test_use_float_array_helper(False)

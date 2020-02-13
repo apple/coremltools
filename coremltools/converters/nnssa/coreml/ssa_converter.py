@@ -329,11 +329,13 @@ class SSAConverter(object):
         else:
             top_output_features = list(zip(top_output_names, [None] * len(top_output_names)))
 
+        # Indicate whether the builder should use the Float32 datatype for inputs and outputs or its default Double datatype
+        use_float_arraytype = True
         self.top_builder = NeuralNetworkBuilder(input_features=top_input_features,
                                                 output_features=top_output_features,
                                                 disable_rank5_shape_mapping=True,
                                                 mode=neural_network_type,
-                                                use_float_arraytype=True)
+                                                use_float_arraytype=use_float_arraytype)
 
         self.spec = self.top_builder.spec
 
@@ -353,7 +355,10 @@ class SSAConverter(object):
 
             if is_input_optional[idx]:
                 self.spec.description.input[idx].type.isOptional = True
-                self.spec.description.input[idx].type.multiArrayType.doubleDefaultValue = optional_inputs[top_input_names[idx]]
+                if use_float_arraytype:
+                    self.spec.description.input[idx].type.multiArrayType.floatDefaultValue = optional_inputs[top_input_names[idx]]
+                else:
+                    self.spec.description.input[idx].type.multiArrayType.doubleDefaultValue = optional_inputs[top_input_names[idx]]
 
         self.CONVERT_FUNCTION_MAP = {
             'Abs': self._convert_unary_common,
