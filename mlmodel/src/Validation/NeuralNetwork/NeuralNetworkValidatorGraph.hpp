@@ -15,12 +15,6 @@ static bool isLayerSupportedForBackprop(const Specification::NeuralNetworkLayer*
         case Specification::NeuralNetworkLayer::kFlatten:
         case Specification::NeuralNetworkLayer::kPooling:
         case Specification::NeuralNetworkLayer::kBatchnorm:
-        case Specification::NeuralNetworkLayer::kReshape:
-        case Specification::NeuralNetworkLayer::kClampedReLU:
-        case Specification::NeuralNetworkLayer::kTranspose:
-        case Specification::NeuralNetworkLayer::kReshapeStatic:
-        case Specification::NeuralNetworkLayer::kConcat:
-        case Specification::NeuralNetworkLayer::kConcatND:
             return true;
         case Specification::NeuralNetworkLayer::kActivation:{
             switch(layer->activation().NonlinearityType_case()) {
@@ -64,15 +58,6 @@ struct LayerNode {
                 break;
             case CoreML::Specification::LossLayer::kMeanSquaredErrorLossLayer:
                 inputNames.push_back(lossLayer->meansquarederrorlosslayer().input());
-                break;
-            case CoreML::Specification::LossLayer::kSigmoidCrossEntropyLossLayer:
-                inputNames.push_back(lossLayer->sigmoidcrossentropylosslayer().input());
-                break;
-            case CoreML::Specification::LossLayer::kMeanAbsoluteErrorLossLayer:
-                inputNames.push_back(lossLayer->meanabsoluteerrorlosslayer().input());
-                break;
-            case CoreML::Specification::LossLayer::kHuberLossLayer:
-                inputNames.push_back(lossLayer->huberlosslayer().input());
                 break;
             default:
                 break;

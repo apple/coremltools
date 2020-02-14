@@ -306,9 +306,6 @@ extern GreaterEqualLayerParamsDefaultTypeInternal _GreaterEqualLayerParams_defau
 class GreaterThanLayerParams;
 class GreaterThanLayerParamsDefaultTypeInternal;
 extern GreaterThanLayerParamsDefaultTypeInternal _GreaterThanLayerParams_default_instance_;
-class HuberLossLayer;
-class HuberLossLayerDefaultTypeInternal;
-extern HuberLossLayerDefaultTypeInternal _HuberLossLayer_default_instance_;
 class ImageFeatureType;
 class ImageFeatureTypeDefaultTypeInternal;
 extern ImageFeatureTypeDefaultTypeInternal _ImageFeatureType_default_instance_;
@@ -408,9 +405,6 @@ extern LoopLayerParamsDefaultTypeInternal _LoopLayerParams_default_instance_;
 class LossLayer;
 class LossLayerDefaultTypeInternal;
 extern LossLayerDefaultTypeInternal _LossLayer_default_instance_;
-class LossWeightParams;
-class LossWeightParamsDefaultTypeInternal;
-extern LossWeightParamsDefaultTypeInternal _LossWeightParams_default_instance_;
 class LowerTriangularLayerParams;
 class LowerTriangularLayerParamsDefaultTypeInternal;
 extern LowerTriangularLayerParamsDefaultTypeInternal _LowerTriangularLayerParams_default_instance_;
@@ -423,9 +417,6 @@ extern MaxBroadcastableLayerParamsDefaultTypeInternal _MaxBroadcastableLayerPara
 class MaxLayerParams;
 class MaxLayerParamsDefaultTypeInternal;
 extern MaxLayerParamsDefaultTypeInternal _MaxLayerParams_default_instance_;
-class MeanAbsoluteErrorLossLayer;
-class MeanAbsoluteErrorLossLayerDefaultTypeInternal;
-extern MeanAbsoluteErrorLossLayerDefaultTypeInternal _MeanAbsoluteErrorLossLayer_default_instance_;
 class MeanSquaredErrorLossLayer;
 class MeanSquaredErrorLossLayerDefaultTypeInternal;
 extern MeanSquaredErrorLossLayerDefaultTypeInternal _MeanSquaredErrorLossLayer_default_instance_;
@@ -510,9 +501,6 @@ extern PowBroadcastableLayerParamsDefaultTypeInternal _PowBroadcastableLayerPara
 class QuantizationParams;
 class QuantizationParamsDefaultTypeInternal;
 extern QuantizationParamsDefaultTypeInternal _QuantizationParams_default_instance_;
-class RMSPropOptimizer;
-class RMSPropOptimizerDefaultTypeInternal;
-extern RMSPropOptimizerDefaultTypeInternal _RMSPropOptimizer_default_instance_;
 class RandomBernoulliDynamicLayerParams;
 class RandomBernoulliDynamicLayerParamsDefaultTypeInternal;
 extern RandomBernoulliDynamicLayerParamsDefaultTypeInternal _RandomBernoulliDynamicLayerParams_default_instance_;
@@ -636,9 +624,6 @@ extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_insta
 class SequenceRepeatLayerParams;
 class SequenceRepeatLayerParamsDefaultTypeInternal;
 extern SequenceRepeatLayerParamsDefaultTypeInternal _SequenceRepeatLayerParams_default_instance_;
-class SigmoidCrossEntropyLossLayer;
-class SigmoidCrossEntropyLossLayerDefaultTypeInternal;
-extern SigmoidCrossEntropyLossLayerDefaultTypeInternal _SigmoidCrossEntropyLossLayer_default_instance_;
 class SignLayerParams;
 class SignLayerParamsDefaultTypeInternal;
 extern SignLayerParamsDefaultTypeInternal _SignLayerParams_default_instance_;
@@ -750,9 +735,6 @@ extern WhereBroadcastableLayerParamsDefaultTypeInternal _WhereBroadcastableLayer
 class WhereNonZeroLayerParams;
 class WhereNonZeroLayerParamsDefaultTypeInternal;
 extern WhereNonZeroLayerParamsDefaultTypeInternal _WhereNonZeroLayerParams_default_instance_;
-class YoloLossLayer;
-class YoloLossLayerDefaultTypeInternal;
-extern YoloLossLayerDefaultTypeInternal _YoloLossLayer_default_instance_;
 }  // namespace Specification
 }  // namespace CoreML
 
@@ -977,18 +959,6 @@ bool ScatterMode_IsValid(int value);
 const ScatterMode ScatterMode_MIN = SCATTER_UPDATE;
 const ScatterMode ScatterMode_MAX = SCATTER_MIN;
 const int ScatterMode_ARRAYSIZE = ScatterMode_MAX + 1;
-
-enum ReductionType {
-  MEAN = 0,
-  SUM = 1,
-  SUM_NON_ZERO_WEIGHTS = 2,
-  ReductionType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
-  ReductionType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
-};
-bool ReductionType_IsValid(int value);
-const ReductionType ReductionType_MIN = MEAN;
-const ReductionType ReductionType_MAX = SUM_NON_ZERO_WEIGHTS;
-const int ReductionType_ARRAYSIZE = ReductionType_MAX + 1;
 
 // ===================================================================
 
@@ -20741,91 +20711,6 @@ class NetworkUpdateParameters : public ::google::protobuf::MessageLite /* @@prot
 };
 // -------------------------------------------------------------------
 
-class LossWeightParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.LossWeightParams) */ {
- public:
-  LossWeightParams();
-  virtual ~LossWeightParams();
-
-  LossWeightParams(const LossWeightParams& from);
-
-  inline LossWeightParams& operator=(const LossWeightParams& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  static const LossWeightParams& default_instance();
-
-  static inline const LossWeightParams* internal_default_instance() {
-    return reinterpret_cast<const LossWeightParams*>(
-               &_LossWeightParams_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    193;
-
-  void Swap(LossWeightParams* other);
-
-  // implements Message ----------------------------------------------
-
-  inline LossWeightParams* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  LossWeightParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const LossWeightParams& from);
-  void MergeFrom(const LossWeightParams& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(LossWeightParams* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // repeated float weights = 1;
-  int weights_size() const;
-  void clear_weights();
-  static const int kWeightsFieldNumber = 1;
-  float weights(int index) const;
-  void set_weights(int index, float value);
-  void add_weights(float value);
-  const ::google::protobuf::RepeatedField< float >&
-      weights() const;
-  ::google::protobuf::RepeatedField< float >*
-      mutable_weights();
-
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.LossWeightParams)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::RepeatedField< float > weights_;
-  mutable int _weights_cached_byte_size_;
-  mutable int _cached_size_;
-  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
 class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.LossLayer) */ {
  public:
   LossLayer();
@@ -20843,10 +20728,6 @@ class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
   enum LossLayerTypeCase {
     kCategoricalCrossEntropyLossLayer = 10,
     kMeanSquaredErrorLossLayer = 11,
-    kSigmoidCrossEntropyLossLayer = 12,
-    kMeanAbsoluteErrorLossLayer = 13,
-    kHuberLossLayer = 14,
-    kYoloLossLayer = 15,
     LOSSLAYERTYPE_NOT_SET = 0,
   };
 
@@ -20855,7 +20736,7 @@ class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_LossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    194;
+    193;
 
   void Swap(LossLayer* other);
 
@@ -20912,15 +20793,6 @@ class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
   ::std::string* release_name();
   void set_allocated_name(::std::string* name);
 
-  // .CoreML.Specification.LossWeightParams weight = 2;
-  bool has_weight() const;
-  void clear_weight();
-  static const int kWeightFieldNumber = 2;
-  const ::CoreML::Specification::LossWeightParams& weight() const;
-  ::CoreML::Specification::LossWeightParams* mutable_weight();
-  ::CoreML::Specification::LossWeightParams* release_weight();
-  void set_allocated_weight(::CoreML::Specification::LossWeightParams* weight);
-
   // .CoreML.Specification.CategoricalCrossEntropyLossLayer categoricalCrossEntropyLossLayer = 10;
   bool has_categoricalcrossentropylosslayer() const;
   void clear_categoricalcrossentropylosslayer();
@@ -20939,51 +20811,11 @@ class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
   ::CoreML::Specification::MeanSquaredErrorLossLayer* release_meansquarederrorlosslayer();
   void set_allocated_meansquarederrorlosslayer(::CoreML::Specification::MeanSquaredErrorLossLayer* meansquarederrorlosslayer);
 
-  // .CoreML.Specification.SigmoidCrossEntropyLossLayer sigmoidCrossEntropyLossLayer = 12;
-  bool has_sigmoidcrossentropylosslayer() const;
-  void clear_sigmoidcrossentropylosslayer();
-  static const int kSigmoidCrossEntropyLossLayerFieldNumber = 12;
-  const ::CoreML::Specification::SigmoidCrossEntropyLossLayer& sigmoidcrossentropylosslayer() const;
-  ::CoreML::Specification::SigmoidCrossEntropyLossLayer* mutable_sigmoidcrossentropylosslayer();
-  ::CoreML::Specification::SigmoidCrossEntropyLossLayer* release_sigmoidcrossentropylosslayer();
-  void set_allocated_sigmoidcrossentropylosslayer(::CoreML::Specification::SigmoidCrossEntropyLossLayer* sigmoidcrossentropylosslayer);
-
-  // .CoreML.Specification.MeanAbsoluteErrorLossLayer meanAbsoluteErrorLossLayer = 13;
-  bool has_meanabsoluteerrorlosslayer() const;
-  void clear_meanabsoluteerrorlosslayer();
-  static const int kMeanAbsoluteErrorLossLayerFieldNumber = 13;
-  const ::CoreML::Specification::MeanAbsoluteErrorLossLayer& meanabsoluteerrorlosslayer() const;
-  ::CoreML::Specification::MeanAbsoluteErrorLossLayer* mutable_meanabsoluteerrorlosslayer();
-  ::CoreML::Specification::MeanAbsoluteErrorLossLayer* release_meanabsoluteerrorlosslayer();
-  void set_allocated_meanabsoluteerrorlosslayer(::CoreML::Specification::MeanAbsoluteErrorLossLayer* meanabsoluteerrorlosslayer);
-
-  // .CoreML.Specification.HuberLossLayer huberLossLayer = 14;
-  bool has_huberlosslayer() const;
-  void clear_huberlosslayer();
-  static const int kHuberLossLayerFieldNumber = 14;
-  const ::CoreML::Specification::HuberLossLayer& huberlosslayer() const;
-  ::CoreML::Specification::HuberLossLayer* mutable_huberlosslayer();
-  ::CoreML::Specification::HuberLossLayer* release_huberlosslayer();
-  void set_allocated_huberlosslayer(::CoreML::Specification::HuberLossLayer* huberlosslayer);
-
-  // .CoreML.Specification.YoloLossLayer yoloLossLayer = 15;
-  bool has_yololosslayer() const;
-  void clear_yololosslayer();
-  static const int kYoloLossLayerFieldNumber = 15;
-  const ::CoreML::Specification::YoloLossLayer& yololosslayer() const;
-  ::CoreML::Specification::YoloLossLayer* mutable_yololosslayer();
-  ::CoreML::Specification::YoloLossLayer* release_yololosslayer();
-  void set_allocated_yololosslayer(::CoreML::Specification::YoloLossLayer* yololosslayer);
-
   LossLayerTypeCase LossLayerType_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.LossLayer)
  private:
   void set_has_categoricalcrossentropylosslayer();
   void set_has_meansquarederrorlosslayer();
-  void set_has_sigmoidcrossentropylosslayer();
-  void set_has_meanabsoluteerrorlosslayer();
-  void set_has_huberlosslayer();
-  void set_has_yololosslayer();
 
   inline bool has_LossLayerType() const;
   void clear_LossLayerType();
@@ -20991,15 +20823,10 @@ class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr name_;
-  ::CoreML::Specification::LossWeightParams* weight_;
   union LossLayerTypeUnion {
     LossLayerTypeUnion() {}
     ::CoreML::Specification::CategoricalCrossEntropyLossLayer* categoricalcrossentropylosslayer_;
     ::CoreML::Specification::MeanSquaredErrorLossLayer* meansquarederrorlosslayer_;
-    ::CoreML::Specification::SigmoidCrossEntropyLossLayer* sigmoidcrossentropylosslayer_;
-    ::CoreML::Specification::MeanAbsoluteErrorLossLayer* meanabsoluteerrorlosslayer_;
-    ::CoreML::Specification::HuberLossLayer* huberlosslayer_;
-    ::CoreML::Specification::YoloLossLayer* yololosslayer_;
   } LossLayerType_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -21027,7 +20854,7 @@ class CategoricalCrossEntropyLossLayer : public ::google::protobuf::MessageLite 
                &_CategoricalCrossEntropyLossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    195;
+    194;
 
   void Swap(CategoricalCrossEntropyLossLayer* other);
 
@@ -21098,147 +20925,12 @@ class CategoricalCrossEntropyLossLayer : public ::google::protobuf::MessageLite 
   ::std::string* release_target();
   void set_allocated_target(::std::string* target);
 
-  // .CoreML.Specification.DoubleParameter labelSmoothing = 3;
-  bool has_labelsmoothing() const;
-  void clear_labelsmoothing();
-  static const int kLabelSmoothingFieldNumber = 3;
-  const ::CoreML::Specification::DoubleParameter& labelsmoothing() const;
-  ::CoreML::Specification::DoubleParameter* mutable_labelsmoothing();
-  ::CoreML::Specification::DoubleParameter* release_labelsmoothing();
-  void set_allocated_labelsmoothing(::CoreML::Specification::DoubleParameter* labelsmoothing);
-
-  // .CoreML.Specification.ReductionType reductionType = 4;
-  void clear_reductiontype();
-  static const int kReductionTypeFieldNumber = 4;
-  ::CoreML::Specification::ReductionType reductiontype() const;
-  void set_reductiontype(::CoreML::Specification::ReductionType value);
-
   // @@protoc_insertion_point(class_scope:CoreML.Specification.CategoricalCrossEntropyLossLayer)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr input_;
   ::google::protobuf::internal::ArenaStringPtr target_;
-  ::CoreML::Specification::DoubleParameter* labelsmoothing_;
-  int reductiontype_;
-  mutable int _cached_size_;
-  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
-class SigmoidCrossEntropyLossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.SigmoidCrossEntropyLossLayer) */ {
- public:
-  SigmoidCrossEntropyLossLayer();
-  virtual ~SigmoidCrossEntropyLossLayer();
-
-  SigmoidCrossEntropyLossLayer(const SigmoidCrossEntropyLossLayer& from);
-
-  inline SigmoidCrossEntropyLossLayer& operator=(const SigmoidCrossEntropyLossLayer& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  static const SigmoidCrossEntropyLossLayer& default_instance();
-
-  static inline const SigmoidCrossEntropyLossLayer* internal_default_instance() {
-    return reinterpret_cast<const SigmoidCrossEntropyLossLayer*>(
-               &_SigmoidCrossEntropyLossLayer_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    196;
-
-  void Swap(SigmoidCrossEntropyLossLayer* other);
-
-  // implements Message ----------------------------------------------
-
-  inline SigmoidCrossEntropyLossLayer* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  SigmoidCrossEntropyLossLayer* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const SigmoidCrossEntropyLossLayer& from);
-  void MergeFrom(const SigmoidCrossEntropyLossLayer& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(SigmoidCrossEntropyLossLayer* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // string input = 1;
-  void clear_input();
-  static const int kInputFieldNumber = 1;
-  const ::std::string& input() const;
-  void set_input(const ::std::string& value);
-  #if LANG_CXX11
-  void set_input(::std::string&& value);
-  #endif
-  void set_input(const char* value);
-  void set_input(const char* value, size_t size);
-  ::std::string* mutable_input();
-  ::std::string* release_input();
-  void set_allocated_input(::std::string* input);
-
-  // string target = 2;
-  void clear_target();
-  static const int kTargetFieldNumber = 2;
-  const ::std::string& target() const;
-  void set_target(const ::std::string& value);
-  #if LANG_CXX11
-  void set_target(::std::string&& value);
-  #endif
-  void set_target(const char* value);
-  void set_target(const char* value, size_t size);
-  ::std::string* mutable_target();
-  ::std::string* release_target();
-  void set_allocated_target(::std::string* target);
-
-  // .CoreML.Specification.DoubleParameter labelSmoothing = 3;
-  bool has_labelsmoothing() const;
-  void clear_labelsmoothing();
-  static const int kLabelSmoothingFieldNumber = 3;
-  const ::CoreML::Specification::DoubleParameter& labelsmoothing() const;
-  ::CoreML::Specification::DoubleParameter* mutable_labelsmoothing();
-  ::CoreML::Specification::DoubleParameter* release_labelsmoothing();
-  void set_allocated_labelsmoothing(::CoreML::Specification::DoubleParameter* labelsmoothing);
-
-  // .CoreML.Specification.ReductionType reductionType = 4;
-  void clear_reductiontype();
-  static const int kReductionTypeFieldNumber = 4;
-  ::CoreML::Specification::ReductionType reductiontype() const;
-  void set_reductiontype(::CoreML::Specification::ReductionType value);
-
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.SigmoidCrossEntropyLossLayer)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::ArenaStringPtr input_;
-  ::google::protobuf::internal::ArenaStringPtr target_;
-  ::CoreML::Specification::DoubleParameter* labelsmoothing_;
-  int reductiontype_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -21263,7 +20955,7 @@ class MeanSquaredErrorLossLayer : public ::google::protobuf::MessageLite /* @@pr
                &_MeanSquaredErrorLossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    197;
+    195;
 
   void Swap(MeanSquaredErrorLossLayer* other);
 
@@ -21334,416 +21026,12 @@ class MeanSquaredErrorLossLayer : public ::google::protobuf::MessageLite /* @@pr
   ::std::string* release_target();
   void set_allocated_target(::std::string* target);
 
-  // .CoreML.Specification.ReductionType reductionType = 3;
-  void clear_reductiontype();
-  static const int kReductionTypeFieldNumber = 3;
-  ::CoreML::Specification::ReductionType reductiontype() const;
-  void set_reductiontype(::CoreML::Specification::ReductionType value);
-
   // @@protoc_insertion_point(class_scope:CoreML.Specification.MeanSquaredErrorLossLayer)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr input_;
   ::google::protobuf::internal::ArenaStringPtr target_;
-  int reductiontype_;
-  mutable int _cached_size_;
-  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
-class MeanAbsoluteErrorLossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.MeanAbsoluteErrorLossLayer) */ {
- public:
-  MeanAbsoluteErrorLossLayer();
-  virtual ~MeanAbsoluteErrorLossLayer();
-
-  MeanAbsoluteErrorLossLayer(const MeanAbsoluteErrorLossLayer& from);
-
-  inline MeanAbsoluteErrorLossLayer& operator=(const MeanAbsoluteErrorLossLayer& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  static const MeanAbsoluteErrorLossLayer& default_instance();
-
-  static inline const MeanAbsoluteErrorLossLayer* internal_default_instance() {
-    return reinterpret_cast<const MeanAbsoluteErrorLossLayer*>(
-               &_MeanAbsoluteErrorLossLayer_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    198;
-
-  void Swap(MeanAbsoluteErrorLossLayer* other);
-
-  // implements Message ----------------------------------------------
-
-  inline MeanAbsoluteErrorLossLayer* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  MeanAbsoluteErrorLossLayer* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const MeanAbsoluteErrorLossLayer& from);
-  void MergeFrom(const MeanAbsoluteErrorLossLayer& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(MeanAbsoluteErrorLossLayer* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // string input = 1;
-  void clear_input();
-  static const int kInputFieldNumber = 1;
-  const ::std::string& input() const;
-  void set_input(const ::std::string& value);
-  #if LANG_CXX11
-  void set_input(::std::string&& value);
-  #endif
-  void set_input(const char* value);
-  void set_input(const char* value, size_t size);
-  ::std::string* mutable_input();
-  ::std::string* release_input();
-  void set_allocated_input(::std::string* input);
-
-  // string target = 2;
-  void clear_target();
-  static const int kTargetFieldNumber = 2;
-  const ::std::string& target() const;
-  void set_target(const ::std::string& value);
-  #if LANG_CXX11
-  void set_target(::std::string&& value);
-  #endif
-  void set_target(const char* value);
-  void set_target(const char* value, size_t size);
-  ::std::string* mutable_target();
-  ::std::string* release_target();
-  void set_allocated_target(::std::string* target);
-
-  // .CoreML.Specification.ReductionType reductionType = 3;
-  void clear_reductiontype();
-  static const int kReductionTypeFieldNumber = 3;
-  ::CoreML::Specification::ReductionType reductiontype() const;
-  void set_reductiontype(::CoreML::Specification::ReductionType value);
-
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.MeanAbsoluteErrorLossLayer)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::ArenaStringPtr input_;
-  ::google::protobuf::internal::ArenaStringPtr target_;
-  int reductiontype_;
-  mutable int _cached_size_;
-  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
-class HuberLossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.HuberLossLayer) */ {
- public:
-  HuberLossLayer();
-  virtual ~HuberLossLayer();
-
-  HuberLossLayer(const HuberLossLayer& from);
-
-  inline HuberLossLayer& operator=(const HuberLossLayer& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  static const HuberLossLayer& default_instance();
-
-  static inline const HuberLossLayer* internal_default_instance() {
-    return reinterpret_cast<const HuberLossLayer*>(
-               &_HuberLossLayer_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    199;
-
-  void Swap(HuberLossLayer* other);
-
-  // implements Message ----------------------------------------------
-
-  inline HuberLossLayer* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  HuberLossLayer* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const HuberLossLayer& from);
-  void MergeFrom(const HuberLossLayer& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(HuberLossLayer* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // string input = 1;
-  void clear_input();
-  static const int kInputFieldNumber = 1;
-  const ::std::string& input() const;
-  void set_input(const ::std::string& value);
-  #if LANG_CXX11
-  void set_input(::std::string&& value);
-  #endif
-  void set_input(const char* value);
-  void set_input(const char* value, size_t size);
-  ::std::string* mutable_input();
-  ::std::string* release_input();
-  void set_allocated_input(::std::string* input);
-
-  // string target = 2;
-  void clear_target();
-  static const int kTargetFieldNumber = 2;
-  const ::std::string& target() const;
-  void set_target(const ::std::string& value);
-  #if LANG_CXX11
-  void set_target(::std::string&& value);
-  #endif
-  void set_target(const char* value);
-  void set_target(const char* value, size_t size);
-  ::std::string* mutable_target();
-  ::std::string* release_target();
-  void set_allocated_target(::std::string* target);
-
-  // .CoreML.Specification.DoubleParameter delta = 3;
-  bool has_delta() const;
-  void clear_delta();
-  static const int kDeltaFieldNumber = 3;
-  const ::CoreML::Specification::DoubleParameter& delta() const;
-  ::CoreML::Specification::DoubleParameter* mutable_delta();
-  ::CoreML::Specification::DoubleParameter* release_delta();
-  void set_allocated_delta(::CoreML::Specification::DoubleParameter* delta);
-
-  // .CoreML.Specification.ReductionType reductionType = 4;
-  void clear_reductiontype();
-  static const int kReductionTypeFieldNumber = 4;
-  ::CoreML::Specification::ReductionType reductiontype() const;
-  void set_reductiontype(::CoreML::Specification::ReductionType value);
-
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.HuberLossLayer)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::ArenaStringPtr input_;
-  ::google::protobuf::internal::ArenaStringPtr target_;
-  ::CoreML::Specification::DoubleParameter* delta_;
-  int reductiontype_;
-  mutable int _cached_size_;
-  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
-class YoloLossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.YoloLossLayer) */ {
- public:
-  YoloLossLayer();
-  virtual ~YoloLossLayer();
-
-  YoloLossLayer(const YoloLossLayer& from);
-
-  inline YoloLossLayer& operator=(const YoloLossLayer& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  static const YoloLossLayer& default_instance();
-
-  static inline const YoloLossLayer* internal_default_instance() {
-    return reinterpret_cast<const YoloLossLayer*>(
-               &_YoloLossLayer_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    200;
-
-  void Swap(YoloLossLayer* other);
-
-  // implements Message ----------------------------------------------
-
-  inline YoloLossLayer* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  YoloLossLayer* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const YoloLossLayer& from);
-  void MergeFrom(const YoloLossLayer& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(YoloLossLayer* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // string input = 1;
-  void clear_input();
-  static const int kInputFieldNumber = 1;
-  const ::std::string& input() const;
-  void set_input(const ::std::string& value);
-  #if LANG_CXX11
-  void set_input(::std::string&& value);
-  #endif
-  void set_input(const char* value);
-  void set_input(const char* value, size_t size);
-  ::std::string* mutable_input();
-  ::std::string* release_input();
-  void set_allocated_input(::std::string* input);
-
-  // string target = 2;
-  void clear_target();
-  static const int kTargetFieldNumber = 2;
-  const ::std::string& target() const;
-  void set_target(const ::std::string& value);
-  #if LANG_CXX11
-  void set_target(::std::string&& value);
-  #endif
-  void set_target(const char* value);
-  void set_target(const char* value, size_t size);
-  ::std::string* mutable_target();
-  ::std::string* release_target();
-  void set_allocated_target(::std::string* target);
-
-  // .CoreML.Specification.DoubleParameter scaleSpatialPositionLoss = 3;
-  bool has_scalespatialpositionloss() const;
-  void clear_scalespatialpositionloss();
-  static const int kScaleSpatialPositionLossFieldNumber = 3;
-  const ::CoreML::Specification::DoubleParameter& scalespatialpositionloss() const;
-  ::CoreML::Specification::DoubleParameter* mutable_scalespatialpositionloss();
-  ::CoreML::Specification::DoubleParameter* release_scalespatialpositionloss();
-  void set_allocated_scalespatialpositionloss(::CoreML::Specification::DoubleParameter* scalespatialpositionloss);
-
-  // .CoreML.Specification.DoubleParameter scaleSpatialSizeLoss = 4;
-  bool has_scalespatialsizeloss() const;
-  void clear_scalespatialsizeloss();
-  static const int kScaleSpatialSizeLossFieldNumber = 4;
-  const ::CoreML::Specification::DoubleParameter& scalespatialsizeloss() const;
-  ::CoreML::Specification::DoubleParameter* mutable_scalespatialsizeloss();
-  ::CoreML::Specification::DoubleParameter* release_scalespatialsizeloss();
-  void set_allocated_scalespatialsizeloss(::CoreML::Specification::DoubleParameter* scalespatialsizeloss);
-
-  // .CoreML.Specification.DoubleParameter scaleObjectConfidenceLoss = 5;
-  bool has_scaleobjectconfidenceloss() const;
-  void clear_scaleobjectconfidenceloss();
-  static const int kScaleObjectConfidenceLossFieldNumber = 5;
-  const ::CoreML::Specification::DoubleParameter& scaleobjectconfidenceloss() const;
-  ::CoreML::Specification::DoubleParameter* mutable_scaleobjectconfidenceloss();
-  ::CoreML::Specification::DoubleParameter* release_scaleobjectconfidenceloss();
-  void set_allocated_scaleobjectconfidenceloss(::CoreML::Specification::DoubleParameter* scaleobjectconfidenceloss);
-
-  // .CoreML.Specification.DoubleParameter scaleNoObjectConfidenceLoss = 6;
-  bool has_scalenoobjectconfidenceloss() const;
-  void clear_scalenoobjectconfidenceloss();
-  static const int kScaleNoObjectConfidenceLossFieldNumber = 6;
-  const ::CoreML::Specification::DoubleParameter& scalenoobjectconfidenceloss() const;
-  ::CoreML::Specification::DoubleParameter* mutable_scalenoobjectconfidenceloss();
-  ::CoreML::Specification::DoubleParameter* release_scalenoobjectconfidenceloss();
-  void set_allocated_scalenoobjectconfidenceloss(::CoreML::Specification::DoubleParameter* scalenoobjectconfidenceloss);
-
-  // .CoreML.Specification.DoubleParameter scaleClassLoss = 7;
-  bool has_scaleclassloss() const;
-  void clear_scaleclassloss();
-  static const int kScaleClassLossFieldNumber = 7;
-  const ::CoreML::Specification::DoubleParameter& scaleclassloss() const;
-  ::CoreML::Specification::DoubleParameter* mutable_scaleclassloss();
-  ::CoreML::Specification::DoubleParameter* release_scaleclassloss();
-  void set_allocated_scaleclassloss(::CoreML::Specification::DoubleParameter* scaleclassloss);
-
-  // .CoreML.Specification.DoubleParameter minimumIOUForObjectPresence = 8;
-  bool has_minimumiouforobjectpresence() const;
-  void clear_minimumiouforobjectpresence();
-  static const int kMinimumIOUForObjectPresenceFieldNumber = 8;
-  const ::CoreML::Specification::DoubleParameter& minimumiouforobjectpresence() const;
-  ::CoreML::Specification::DoubleParameter* mutable_minimumiouforobjectpresence();
-  ::CoreML::Specification::DoubleParameter* release_minimumiouforobjectpresence();
-  void set_allocated_minimumiouforobjectpresence(::CoreML::Specification::DoubleParameter* minimumiouforobjectpresence);
-
-  // .CoreML.Specification.DoubleParameter maximumIOUForObjectAbsence = 9;
-  bool has_maximumiouforobjectabsence() const;
-  void clear_maximumiouforobjectabsence();
-  static const int kMaximumIOUForObjectAbsenceFieldNumber = 9;
-  const ::CoreML::Specification::DoubleParameter& maximumiouforobjectabsence() const;
-  ::CoreML::Specification::DoubleParameter* mutable_maximumiouforobjectabsence();
-  ::CoreML::Specification::DoubleParameter* release_maximumiouforobjectabsence();
-  void set_allocated_maximumiouforobjectabsence(::CoreML::Specification::DoubleParameter* maximumiouforobjectabsence);
-
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.YoloLossLayer)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::google::protobuf::internal::ArenaStringPtr input_;
-  ::google::protobuf::internal::ArenaStringPtr target_;
-  ::CoreML::Specification::DoubleParameter* scalespatialpositionloss_;
-  ::CoreML::Specification::DoubleParameter* scalespatialsizeloss_;
-  ::CoreML::Specification::DoubleParameter* scaleobjectconfidenceloss_;
-  ::CoreML::Specification::DoubleParameter* scalenoobjectconfidenceloss_;
-  ::CoreML::Specification::DoubleParameter* scaleclassloss_;
-  ::CoreML::Specification::DoubleParameter* minimumiouforobjectpresence_;
-  ::CoreML::Specification::DoubleParameter* maximumiouforobjectabsence_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -21766,7 +21054,6 @@ class Optimizer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
   enum OptimizerTypeCase {
     kSgdOptimizer = 10,
     kAdamOptimizer = 11,
-    kRmsPropOptimizer = 12,
     OPTIMIZERTYPE_NOT_SET = 0,
   };
 
@@ -21775,7 +21062,7 @@ class Optimizer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_Optimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    201;
+    196;
 
   void Swap(Optimizer* other);
 
@@ -21836,21 +21123,11 @@ class Optimizer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
   ::CoreML::Specification::AdamOptimizer* release_adamoptimizer();
   void set_allocated_adamoptimizer(::CoreML::Specification::AdamOptimizer* adamoptimizer);
 
-  // .CoreML.Specification.RMSPropOptimizer rmsPropOptimizer = 12;
-  bool has_rmspropoptimizer() const;
-  void clear_rmspropoptimizer();
-  static const int kRmsPropOptimizerFieldNumber = 12;
-  const ::CoreML::Specification::RMSPropOptimizer& rmspropoptimizer() const;
-  ::CoreML::Specification::RMSPropOptimizer* mutable_rmspropoptimizer();
-  ::CoreML::Specification::RMSPropOptimizer* release_rmspropoptimizer();
-  void set_allocated_rmspropoptimizer(::CoreML::Specification::RMSPropOptimizer* rmspropoptimizer);
-
   OptimizerTypeCase OptimizerType_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.Optimizer)
  private:
   void set_has_sgdoptimizer();
   void set_has_adamoptimizer();
-  void set_has_rmspropoptimizer();
 
   inline bool has_OptimizerType() const;
   void clear_OptimizerType();
@@ -21861,7 +21138,6 @@ class Optimizer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
     OptimizerTypeUnion() {}
     ::CoreML::Specification::SGDOptimizer* sgdoptimizer_;
     ::CoreML::Specification::AdamOptimizer* adamoptimizer_;
-    ::CoreML::Specification::RMSPropOptimizer* rmspropoptimizer_;
   } OptimizerType_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -21889,7 +21165,7 @@ class SGDOptimizer : public ::google::protobuf::MessageLite /* @@protoc_insertio
                &_SGDOptimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    202;
+    197;
 
   void Swap(SGDOptimizer* other);
 
@@ -21990,7 +21266,7 @@ class AdamOptimizer : public ::google::protobuf::MessageLite /* @@protoc_inserti
                &_AdamOptimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    203;
+    198;
 
   void Swap(AdamOptimizer* other);
 
@@ -22087,134 +21363,6 @@ class AdamOptimizer : public ::google::protobuf::MessageLite /* @@protoc_inserti
   ::CoreML::Specification::DoubleParameter* beta1_;
   ::CoreML::Specification::DoubleParameter* beta2_;
   ::CoreML::Specification::DoubleParameter* eps_;
-  mutable int _cached_size_;
-  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
-};
-// -------------------------------------------------------------------
-
-class RMSPropOptimizer : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.RMSPropOptimizer) */ {
- public:
-  RMSPropOptimizer();
-  virtual ~RMSPropOptimizer();
-
-  RMSPropOptimizer(const RMSPropOptimizer& from);
-
-  inline RMSPropOptimizer& operator=(const RMSPropOptimizer& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  static const RMSPropOptimizer& default_instance();
-
-  static inline const RMSPropOptimizer* internal_default_instance() {
-    return reinterpret_cast<const RMSPropOptimizer*>(
-               &_RMSPropOptimizer_default_instance_);
-  }
-  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    204;
-
-  void Swap(RMSPropOptimizer* other);
-
-  // implements Message ----------------------------------------------
-
-  inline RMSPropOptimizer* New() const PROTOBUF_FINAL { return New(NULL); }
-
-  RMSPropOptimizer* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
-  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
-    PROTOBUF_FINAL;
-  void CopyFrom(const RMSPropOptimizer& from);
-  void MergeFrom(const RMSPropOptimizer& from);
-  void Clear() PROTOBUF_FINAL;
-  bool IsInitialized() const PROTOBUF_FINAL;
-
-  size_t ByteSizeLong() const PROTOBUF_FINAL;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
-  void DiscardUnknownFields();
-  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  void InternalSwap(RMSPropOptimizer* other);
-  private:
-  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
-    return NULL;
-  }
-  inline void* MaybeArenaPtr() const {
-    return NULL;
-  }
-  public:
-
-  ::std::string GetTypeName() const PROTOBUF_FINAL;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // .CoreML.Specification.DoubleParameter learningRate = 1;
-  bool has_learningrate() const;
-  void clear_learningrate();
-  static const int kLearningRateFieldNumber = 1;
-  const ::CoreML::Specification::DoubleParameter& learningrate() const;
-  ::CoreML::Specification::DoubleParameter* mutable_learningrate();
-  ::CoreML::Specification::DoubleParameter* release_learningrate();
-  void set_allocated_learningrate(::CoreML::Specification::DoubleParameter* learningrate);
-
-  // .CoreML.Specification.Int64Parameter miniBatchSize = 2;
-  bool has_minibatchsize() const;
-  void clear_minibatchsize();
-  static const int kMiniBatchSizeFieldNumber = 2;
-  const ::CoreML::Specification::Int64Parameter& minibatchsize() const;
-  ::CoreML::Specification::Int64Parameter* mutable_minibatchsize();
-  ::CoreML::Specification::Int64Parameter* release_minibatchsize();
-  void set_allocated_minibatchsize(::CoreML::Specification::Int64Parameter* minibatchsize);
-
-  // .CoreML.Specification.DoubleParameter momentum = 3;
-  bool has_momentum() const;
-  void clear_momentum();
-  static const int kMomentumFieldNumber = 3;
-  const ::CoreML::Specification::DoubleParameter& momentum() const;
-  ::CoreML::Specification::DoubleParameter* mutable_momentum();
-  ::CoreML::Specification::DoubleParameter* release_momentum();
-  void set_allocated_momentum(::CoreML::Specification::DoubleParameter* momentum);
-
-  // .CoreML.Specification.DoubleParameter alpha = 4;
-  bool has_alpha() const;
-  void clear_alpha();
-  static const int kAlphaFieldNumber = 4;
-  const ::CoreML::Specification::DoubleParameter& alpha() const;
-  ::CoreML::Specification::DoubleParameter* mutable_alpha();
-  ::CoreML::Specification::DoubleParameter* release_alpha();
-  void set_allocated_alpha(::CoreML::Specification::DoubleParameter* alpha);
-
-  // .CoreML.Specification.DoubleParameter eps = 5;
-  bool has_eps() const;
-  void clear_eps();
-  static const int kEpsFieldNumber = 5;
-  const ::CoreML::Specification::DoubleParameter& eps() const;
-  ::CoreML::Specification::DoubleParameter* mutable_eps();
-  ::CoreML::Specification::DoubleParameter* release_eps();
-  void set_allocated_eps(::CoreML::Specification::DoubleParameter* eps);
-
-  // bool centered = 6;
-  void clear_centered();
-  static const int kCenteredFieldNumber = 6;
-  bool centered() const;
-  void set_centered(bool value);
-
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.RMSPropOptimizer)
- private:
-
-  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
-  ::CoreML::Specification::DoubleParameter* learningrate_;
-  ::CoreML::Specification::Int64Parameter* minibatchsize_;
-  ::CoreML::Specification::DoubleParameter* momentum_;
-  ::CoreML::Specification::DoubleParameter* alpha_;
-  ::CoreML::Specification::DoubleParameter* eps_;
-  bool centered_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -40709,40 +39857,6 @@ inline void NetworkUpdateParameters::set_allocated_seed(::CoreML::Specification:
 
 // -------------------------------------------------------------------
 
-// LossWeightParams
-
-// repeated float weights = 1;
-inline int LossWeightParams::weights_size() const {
-  return weights_.size();
-}
-inline void LossWeightParams::clear_weights() {
-  weights_.Clear();
-}
-inline float LossWeightParams::weights(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.LossWeightParams.weights)
-  return weights_.Get(index);
-}
-inline void LossWeightParams::set_weights(int index, float value) {
-  weights_.Set(index, value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.LossWeightParams.weights)
-}
-inline void LossWeightParams::add_weights(float value) {
-  weights_.Add(value);
-  // @@protoc_insertion_point(field_add:CoreML.Specification.LossWeightParams.weights)
-}
-inline const ::google::protobuf::RepeatedField< float >&
-LossWeightParams::weights() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.LossWeightParams.weights)
-  return weights_;
-}
-inline ::google::protobuf::RepeatedField< float >*
-LossWeightParams::mutable_weights() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.LossWeightParams.weights)
-  return &weights_;
-}
-
-// -------------------------------------------------------------------
-
 // LossLayer
 
 // string name = 1;
@@ -40796,45 +39910,6 @@ inline void LossLayer::set_allocated_name(::std::string* name) {
   }
   name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.LossLayer.name)
-}
-
-// .CoreML.Specification.LossWeightParams weight = 2;
-inline bool LossLayer::has_weight() const {
-  return this != internal_default_instance() && weight_ != NULL;
-}
-inline void LossLayer::clear_weight() {
-  if (GetArenaNoVirtual() == NULL && weight_ != NULL) delete weight_;
-  weight_ = NULL;
-}
-inline const ::CoreML::Specification::LossWeightParams& LossLayer::weight() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.LossLayer.weight)
-  return weight_ != NULL ? *weight_
-                         : *::CoreML::Specification::LossWeightParams::internal_default_instance();
-}
-inline ::CoreML::Specification::LossWeightParams* LossLayer::mutable_weight() {
-  
-  if (weight_ == NULL) {
-    weight_ = new ::CoreML::Specification::LossWeightParams;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.LossLayer.weight)
-  return weight_;
-}
-inline ::CoreML::Specification::LossWeightParams* LossLayer::release_weight() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.LossLayer.weight)
-  
-  ::CoreML::Specification::LossWeightParams* temp = weight_;
-  weight_ = NULL;
-  return temp;
-}
-inline void LossLayer::set_allocated_weight(::CoreML::Specification::LossWeightParams* weight) {
-  delete weight_;
-  weight_ = weight;
-  if (weight) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.LossLayer.weight)
 }
 
 // .CoreML.Specification.CategoricalCrossEntropyLossLayer categoricalCrossEntropyLossLayer = 10;
@@ -40931,198 +40006,6 @@ inline void LossLayer::set_allocated_meansquarederrorlosslayer(::CoreML::Specifi
     LossLayerType_.meansquarederrorlosslayer_ = meansquarederrorlosslayer;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.LossLayer.meanSquaredErrorLossLayer)
-}
-
-// .CoreML.Specification.SigmoidCrossEntropyLossLayer sigmoidCrossEntropyLossLayer = 12;
-inline bool LossLayer::has_sigmoidcrossentropylosslayer() const {
-  return LossLayerType_case() == kSigmoidCrossEntropyLossLayer;
-}
-inline void LossLayer::set_has_sigmoidcrossentropylosslayer() {
-  _oneof_case_[0] = kSigmoidCrossEntropyLossLayer;
-}
-inline void LossLayer::clear_sigmoidcrossentropylosslayer() {
-  if (has_sigmoidcrossentropylosslayer()) {
-    delete LossLayerType_.sigmoidcrossentropylosslayer_;
-    clear_has_LossLayerType();
-  }
-}
-inline  const ::CoreML::Specification::SigmoidCrossEntropyLossLayer& LossLayer::sigmoidcrossentropylosslayer() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.LossLayer.sigmoidCrossEntropyLossLayer)
-  return has_sigmoidcrossentropylosslayer()
-      ? *LossLayerType_.sigmoidcrossentropylosslayer_
-      : ::CoreML::Specification::SigmoidCrossEntropyLossLayer::default_instance();
-}
-inline ::CoreML::Specification::SigmoidCrossEntropyLossLayer* LossLayer::mutable_sigmoidcrossentropylosslayer() {
-  if (!has_sigmoidcrossentropylosslayer()) {
-    clear_LossLayerType();
-    set_has_sigmoidcrossentropylosslayer();
-    LossLayerType_.sigmoidcrossentropylosslayer_ = new ::CoreML::Specification::SigmoidCrossEntropyLossLayer;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.LossLayer.sigmoidCrossEntropyLossLayer)
-  return LossLayerType_.sigmoidcrossentropylosslayer_;
-}
-inline ::CoreML::Specification::SigmoidCrossEntropyLossLayer* LossLayer::release_sigmoidcrossentropylosslayer() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.LossLayer.sigmoidCrossEntropyLossLayer)
-  if (has_sigmoidcrossentropylosslayer()) {
-    clear_has_LossLayerType();
-    ::CoreML::Specification::SigmoidCrossEntropyLossLayer* temp = LossLayerType_.sigmoidcrossentropylosslayer_;
-    LossLayerType_.sigmoidcrossentropylosslayer_ = NULL;
-    return temp;
-  } else {
-    return NULL;
-  }
-}
-inline void LossLayer::set_allocated_sigmoidcrossentropylosslayer(::CoreML::Specification::SigmoidCrossEntropyLossLayer* sigmoidcrossentropylosslayer) {
-  clear_LossLayerType();
-  if (sigmoidcrossentropylosslayer) {
-    set_has_sigmoidcrossentropylosslayer();
-    LossLayerType_.sigmoidcrossentropylosslayer_ = sigmoidcrossentropylosslayer;
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.LossLayer.sigmoidCrossEntropyLossLayer)
-}
-
-// .CoreML.Specification.MeanAbsoluteErrorLossLayer meanAbsoluteErrorLossLayer = 13;
-inline bool LossLayer::has_meanabsoluteerrorlosslayer() const {
-  return LossLayerType_case() == kMeanAbsoluteErrorLossLayer;
-}
-inline void LossLayer::set_has_meanabsoluteerrorlosslayer() {
-  _oneof_case_[0] = kMeanAbsoluteErrorLossLayer;
-}
-inline void LossLayer::clear_meanabsoluteerrorlosslayer() {
-  if (has_meanabsoluteerrorlosslayer()) {
-    delete LossLayerType_.meanabsoluteerrorlosslayer_;
-    clear_has_LossLayerType();
-  }
-}
-inline  const ::CoreML::Specification::MeanAbsoluteErrorLossLayer& LossLayer::meanabsoluteerrorlosslayer() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.LossLayer.meanAbsoluteErrorLossLayer)
-  return has_meanabsoluteerrorlosslayer()
-      ? *LossLayerType_.meanabsoluteerrorlosslayer_
-      : ::CoreML::Specification::MeanAbsoluteErrorLossLayer::default_instance();
-}
-inline ::CoreML::Specification::MeanAbsoluteErrorLossLayer* LossLayer::mutable_meanabsoluteerrorlosslayer() {
-  if (!has_meanabsoluteerrorlosslayer()) {
-    clear_LossLayerType();
-    set_has_meanabsoluteerrorlosslayer();
-    LossLayerType_.meanabsoluteerrorlosslayer_ = new ::CoreML::Specification::MeanAbsoluteErrorLossLayer;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.LossLayer.meanAbsoluteErrorLossLayer)
-  return LossLayerType_.meanabsoluteerrorlosslayer_;
-}
-inline ::CoreML::Specification::MeanAbsoluteErrorLossLayer* LossLayer::release_meanabsoluteerrorlosslayer() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.LossLayer.meanAbsoluteErrorLossLayer)
-  if (has_meanabsoluteerrorlosslayer()) {
-    clear_has_LossLayerType();
-    ::CoreML::Specification::MeanAbsoluteErrorLossLayer* temp = LossLayerType_.meanabsoluteerrorlosslayer_;
-    LossLayerType_.meanabsoluteerrorlosslayer_ = NULL;
-    return temp;
-  } else {
-    return NULL;
-  }
-}
-inline void LossLayer::set_allocated_meanabsoluteerrorlosslayer(::CoreML::Specification::MeanAbsoluteErrorLossLayer* meanabsoluteerrorlosslayer) {
-  clear_LossLayerType();
-  if (meanabsoluteerrorlosslayer) {
-    set_has_meanabsoluteerrorlosslayer();
-    LossLayerType_.meanabsoluteerrorlosslayer_ = meanabsoluteerrorlosslayer;
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.LossLayer.meanAbsoluteErrorLossLayer)
-}
-
-// .CoreML.Specification.HuberLossLayer huberLossLayer = 14;
-inline bool LossLayer::has_huberlosslayer() const {
-  return LossLayerType_case() == kHuberLossLayer;
-}
-inline void LossLayer::set_has_huberlosslayer() {
-  _oneof_case_[0] = kHuberLossLayer;
-}
-inline void LossLayer::clear_huberlosslayer() {
-  if (has_huberlosslayer()) {
-    delete LossLayerType_.huberlosslayer_;
-    clear_has_LossLayerType();
-  }
-}
-inline  const ::CoreML::Specification::HuberLossLayer& LossLayer::huberlosslayer() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.LossLayer.huberLossLayer)
-  return has_huberlosslayer()
-      ? *LossLayerType_.huberlosslayer_
-      : ::CoreML::Specification::HuberLossLayer::default_instance();
-}
-inline ::CoreML::Specification::HuberLossLayer* LossLayer::mutable_huberlosslayer() {
-  if (!has_huberlosslayer()) {
-    clear_LossLayerType();
-    set_has_huberlosslayer();
-    LossLayerType_.huberlosslayer_ = new ::CoreML::Specification::HuberLossLayer;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.LossLayer.huberLossLayer)
-  return LossLayerType_.huberlosslayer_;
-}
-inline ::CoreML::Specification::HuberLossLayer* LossLayer::release_huberlosslayer() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.LossLayer.huberLossLayer)
-  if (has_huberlosslayer()) {
-    clear_has_LossLayerType();
-    ::CoreML::Specification::HuberLossLayer* temp = LossLayerType_.huberlosslayer_;
-    LossLayerType_.huberlosslayer_ = NULL;
-    return temp;
-  } else {
-    return NULL;
-  }
-}
-inline void LossLayer::set_allocated_huberlosslayer(::CoreML::Specification::HuberLossLayer* huberlosslayer) {
-  clear_LossLayerType();
-  if (huberlosslayer) {
-    set_has_huberlosslayer();
-    LossLayerType_.huberlosslayer_ = huberlosslayer;
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.LossLayer.huberLossLayer)
-}
-
-// .CoreML.Specification.YoloLossLayer yoloLossLayer = 15;
-inline bool LossLayer::has_yololosslayer() const {
-  return LossLayerType_case() == kYoloLossLayer;
-}
-inline void LossLayer::set_has_yololosslayer() {
-  _oneof_case_[0] = kYoloLossLayer;
-}
-inline void LossLayer::clear_yololosslayer() {
-  if (has_yololosslayer()) {
-    delete LossLayerType_.yololosslayer_;
-    clear_has_LossLayerType();
-  }
-}
-inline  const ::CoreML::Specification::YoloLossLayer& LossLayer::yololosslayer() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.LossLayer.yoloLossLayer)
-  return has_yololosslayer()
-      ? *LossLayerType_.yololosslayer_
-      : ::CoreML::Specification::YoloLossLayer::default_instance();
-}
-inline ::CoreML::Specification::YoloLossLayer* LossLayer::mutable_yololosslayer() {
-  if (!has_yololosslayer()) {
-    clear_LossLayerType();
-    set_has_yololosslayer();
-    LossLayerType_.yololosslayer_ = new ::CoreML::Specification::YoloLossLayer;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.LossLayer.yoloLossLayer)
-  return LossLayerType_.yololosslayer_;
-}
-inline ::CoreML::Specification::YoloLossLayer* LossLayer::release_yololosslayer() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.LossLayer.yoloLossLayer)
-  if (has_yololosslayer()) {
-    clear_has_LossLayerType();
-    ::CoreML::Specification::YoloLossLayer* temp = LossLayerType_.yololosslayer_;
-    LossLayerType_.yololosslayer_ = NULL;
-    return temp;
-  } else {
-    return NULL;
-  }
-}
-inline void LossLayer::set_allocated_yololosslayer(::CoreML::Specification::YoloLossLayer* yololosslayer) {
-  clear_LossLayerType();
-  if (yololosslayer) {
-    set_has_yololosslayer();
-    LossLayerType_.yololosslayer_ = yololosslayer;
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.LossLayer.yoloLossLayer)
 }
 
 inline bool LossLayer::has_LossLayerType() const {
@@ -41244,222 +40127,6 @@ inline void CategoricalCrossEntropyLossLayer::set_allocated_target(::std::string
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CategoricalCrossEntropyLossLayer.target)
 }
 
-// .CoreML.Specification.DoubleParameter labelSmoothing = 3;
-inline bool CategoricalCrossEntropyLossLayer::has_labelsmoothing() const {
-  return this != internal_default_instance() && labelsmoothing_ != NULL;
-}
-inline void CategoricalCrossEntropyLossLayer::clear_labelsmoothing() {
-  if (GetArenaNoVirtual() == NULL && labelsmoothing_ != NULL) delete labelsmoothing_;
-  labelsmoothing_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& CategoricalCrossEntropyLossLayer::labelsmoothing() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.CategoricalCrossEntropyLossLayer.labelSmoothing)
-  return labelsmoothing_ != NULL ? *labelsmoothing_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* CategoricalCrossEntropyLossLayer::mutable_labelsmoothing() {
-  
-  if (labelsmoothing_ == NULL) {
-    labelsmoothing_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CategoricalCrossEntropyLossLayer.labelSmoothing)
-  return labelsmoothing_;
-}
-inline ::CoreML::Specification::DoubleParameter* CategoricalCrossEntropyLossLayer::release_labelsmoothing() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.CategoricalCrossEntropyLossLayer.labelSmoothing)
-  
-  ::CoreML::Specification::DoubleParameter* temp = labelsmoothing_;
-  labelsmoothing_ = NULL;
-  return temp;
-}
-inline void CategoricalCrossEntropyLossLayer::set_allocated_labelsmoothing(::CoreML::Specification::DoubleParameter* labelsmoothing) {
-  delete labelsmoothing_;
-  labelsmoothing_ = labelsmoothing;
-  if (labelsmoothing) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CategoricalCrossEntropyLossLayer.labelSmoothing)
-}
-
-// .CoreML.Specification.ReductionType reductionType = 4;
-inline void CategoricalCrossEntropyLossLayer::clear_reductiontype() {
-  reductiontype_ = 0;
-}
-inline ::CoreML::Specification::ReductionType CategoricalCrossEntropyLossLayer::reductiontype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.CategoricalCrossEntropyLossLayer.reductionType)
-  return static_cast< ::CoreML::Specification::ReductionType >(reductiontype_);
-}
-inline void CategoricalCrossEntropyLossLayer::set_reductiontype(::CoreML::Specification::ReductionType value) {
-  
-  reductiontype_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.CategoricalCrossEntropyLossLayer.reductionType)
-}
-
-// -------------------------------------------------------------------
-
-// SigmoidCrossEntropyLossLayer
-
-// string input = 1;
-inline void SigmoidCrossEntropyLossLayer::clear_input() {
-  input_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& SigmoidCrossEntropyLossLayer::input() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.SigmoidCrossEntropyLossLayer.input)
-  return input_.GetNoArena();
-}
-inline void SigmoidCrossEntropyLossLayer::set_input(const ::std::string& value) {
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.SigmoidCrossEntropyLossLayer.input)
-}
-#if LANG_CXX11
-inline void SigmoidCrossEntropyLossLayer::set_input(::std::string&& value) {
-  
-  input_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.SigmoidCrossEntropyLossLayer.input)
-}
-#endif
-inline void SigmoidCrossEntropyLossLayer::set_input(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.SigmoidCrossEntropyLossLayer.input)
-}
-inline void SigmoidCrossEntropyLossLayer::set_input(const char* value, size_t size) {
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.SigmoidCrossEntropyLossLayer.input)
-}
-inline ::std::string* SigmoidCrossEntropyLossLayer::mutable_input() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.SigmoidCrossEntropyLossLayer.input)
-  return input_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* SigmoidCrossEntropyLossLayer::release_input() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.SigmoidCrossEntropyLossLayer.input)
-  
-  return input_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void SigmoidCrossEntropyLossLayer::set_allocated_input(::std::string* input) {
-  if (input != NULL) {
-    
-  } else {
-    
-  }
-  input_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), input);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SigmoidCrossEntropyLossLayer.input)
-}
-
-// string target = 2;
-inline void SigmoidCrossEntropyLossLayer::clear_target() {
-  target_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& SigmoidCrossEntropyLossLayer::target() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.SigmoidCrossEntropyLossLayer.target)
-  return target_.GetNoArena();
-}
-inline void SigmoidCrossEntropyLossLayer::set_target(const ::std::string& value) {
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.SigmoidCrossEntropyLossLayer.target)
-}
-#if LANG_CXX11
-inline void SigmoidCrossEntropyLossLayer::set_target(::std::string&& value) {
-  
-  target_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.SigmoidCrossEntropyLossLayer.target)
-}
-#endif
-inline void SigmoidCrossEntropyLossLayer::set_target(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.SigmoidCrossEntropyLossLayer.target)
-}
-inline void SigmoidCrossEntropyLossLayer::set_target(const char* value, size_t size) {
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.SigmoidCrossEntropyLossLayer.target)
-}
-inline ::std::string* SigmoidCrossEntropyLossLayer::mutable_target() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.SigmoidCrossEntropyLossLayer.target)
-  return target_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* SigmoidCrossEntropyLossLayer::release_target() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.SigmoidCrossEntropyLossLayer.target)
-  
-  return target_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void SigmoidCrossEntropyLossLayer::set_allocated_target(::std::string* target) {
-  if (target != NULL) {
-    
-  } else {
-    
-  }
-  target_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), target);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SigmoidCrossEntropyLossLayer.target)
-}
-
-// .CoreML.Specification.DoubleParameter labelSmoothing = 3;
-inline bool SigmoidCrossEntropyLossLayer::has_labelsmoothing() const {
-  return this != internal_default_instance() && labelsmoothing_ != NULL;
-}
-inline void SigmoidCrossEntropyLossLayer::clear_labelsmoothing() {
-  if (GetArenaNoVirtual() == NULL && labelsmoothing_ != NULL) delete labelsmoothing_;
-  labelsmoothing_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& SigmoidCrossEntropyLossLayer::labelsmoothing() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.SigmoidCrossEntropyLossLayer.labelSmoothing)
-  return labelsmoothing_ != NULL ? *labelsmoothing_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* SigmoidCrossEntropyLossLayer::mutable_labelsmoothing() {
-  
-  if (labelsmoothing_ == NULL) {
-    labelsmoothing_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.SigmoidCrossEntropyLossLayer.labelSmoothing)
-  return labelsmoothing_;
-}
-inline ::CoreML::Specification::DoubleParameter* SigmoidCrossEntropyLossLayer::release_labelsmoothing() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.SigmoidCrossEntropyLossLayer.labelSmoothing)
-  
-  ::CoreML::Specification::DoubleParameter* temp = labelsmoothing_;
-  labelsmoothing_ = NULL;
-  return temp;
-}
-inline void SigmoidCrossEntropyLossLayer::set_allocated_labelsmoothing(::CoreML::Specification::DoubleParameter* labelsmoothing) {
-  delete labelsmoothing_;
-  labelsmoothing_ = labelsmoothing;
-  if (labelsmoothing) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SigmoidCrossEntropyLossLayer.labelSmoothing)
-}
-
-// .CoreML.Specification.ReductionType reductionType = 4;
-inline void SigmoidCrossEntropyLossLayer::clear_reductiontype() {
-  reductiontype_ = 0;
-}
-inline ::CoreML::Specification::ReductionType SigmoidCrossEntropyLossLayer::reductiontype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.SigmoidCrossEntropyLossLayer.reductionType)
-  return static_cast< ::CoreML::Specification::ReductionType >(reductiontype_);
-}
-inline void SigmoidCrossEntropyLossLayer::set_reductiontype(::CoreML::Specification::ReductionType value) {
-  
-  reductiontype_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.SigmoidCrossEntropyLossLayer.reductionType)
-}
-
 // -------------------------------------------------------------------
 
 // MeanSquaredErrorLossLayer
@@ -41570,690 +40237,6 @@ inline void MeanSquaredErrorLossLayer::set_allocated_target(::std::string* targe
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MeanSquaredErrorLossLayer.target)
 }
 
-// .CoreML.Specification.ReductionType reductionType = 3;
-inline void MeanSquaredErrorLossLayer::clear_reductiontype() {
-  reductiontype_ = 0;
-}
-inline ::CoreML::Specification::ReductionType MeanSquaredErrorLossLayer::reductiontype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.MeanSquaredErrorLossLayer.reductionType)
-  return static_cast< ::CoreML::Specification::ReductionType >(reductiontype_);
-}
-inline void MeanSquaredErrorLossLayer::set_reductiontype(::CoreML::Specification::ReductionType value) {
-  
-  reductiontype_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.MeanSquaredErrorLossLayer.reductionType)
-}
-
-// -------------------------------------------------------------------
-
-// MeanAbsoluteErrorLossLayer
-
-// string input = 1;
-inline void MeanAbsoluteErrorLossLayer::clear_input() {
-  input_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& MeanAbsoluteErrorLossLayer::input() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.MeanAbsoluteErrorLossLayer.input)
-  return input_.GetNoArena();
-}
-inline void MeanAbsoluteErrorLossLayer::set_input(const ::std::string& value) {
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.MeanAbsoluteErrorLossLayer.input)
-}
-#if LANG_CXX11
-inline void MeanAbsoluteErrorLossLayer::set_input(::std::string&& value) {
-  
-  input_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MeanAbsoluteErrorLossLayer.input)
-}
-#endif
-inline void MeanAbsoluteErrorLossLayer::set_input(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.MeanAbsoluteErrorLossLayer.input)
-}
-inline void MeanAbsoluteErrorLossLayer::set_input(const char* value, size_t size) {
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MeanAbsoluteErrorLossLayer.input)
-}
-inline ::std::string* MeanAbsoluteErrorLossLayer::mutable_input() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.MeanAbsoluteErrorLossLayer.input)
-  return input_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MeanAbsoluteErrorLossLayer::release_input() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.MeanAbsoluteErrorLossLayer.input)
-  
-  return input_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MeanAbsoluteErrorLossLayer::set_allocated_input(::std::string* input) {
-  if (input != NULL) {
-    
-  } else {
-    
-  }
-  input_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), input);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MeanAbsoluteErrorLossLayer.input)
-}
-
-// string target = 2;
-inline void MeanAbsoluteErrorLossLayer::clear_target() {
-  target_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& MeanAbsoluteErrorLossLayer::target() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.MeanAbsoluteErrorLossLayer.target)
-  return target_.GetNoArena();
-}
-inline void MeanAbsoluteErrorLossLayer::set_target(const ::std::string& value) {
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.MeanAbsoluteErrorLossLayer.target)
-}
-#if LANG_CXX11
-inline void MeanAbsoluteErrorLossLayer::set_target(::std::string&& value) {
-  
-  target_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MeanAbsoluteErrorLossLayer.target)
-}
-#endif
-inline void MeanAbsoluteErrorLossLayer::set_target(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.MeanAbsoluteErrorLossLayer.target)
-}
-inline void MeanAbsoluteErrorLossLayer::set_target(const char* value, size_t size) {
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MeanAbsoluteErrorLossLayer.target)
-}
-inline ::std::string* MeanAbsoluteErrorLossLayer::mutable_target() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.MeanAbsoluteErrorLossLayer.target)
-  return target_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* MeanAbsoluteErrorLossLayer::release_target() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.MeanAbsoluteErrorLossLayer.target)
-  
-  return target_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void MeanAbsoluteErrorLossLayer::set_allocated_target(::std::string* target) {
-  if (target != NULL) {
-    
-  } else {
-    
-  }
-  target_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), target);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MeanAbsoluteErrorLossLayer.target)
-}
-
-// .CoreML.Specification.ReductionType reductionType = 3;
-inline void MeanAbsoluteErrorLossLayer::clear_reductiontype() {
-  reductiontype_ = 0;
-}
-inline ::CoreML::Specification::ReductionType MeanAbsoluteErrorLossLayer::reductiontype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.MeanAbsoluteErrorLossLayer.reductionType)
-  return static_cast< ::CoreML::Specification::ReductionType >(reductiontype_);
-}
-inline void MeanAbsoluteErrorLossLayer::set_reductiontype(::CoreML::Specification::ReductionType value) {
-  
-  reductiontype_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.MeanAbsoluteErrorLossLayer.reductionType)
-}
-
-// -------------------------------------------------------------------
-
-// HuberLossLayer
-
-// string input = 1;
-inline void HuberLossLayer::clear_input() {
-  input_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& HuberLossLayer::input() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.HuberLossLayer.input)
-  return input_.GetNoArena();
-}
-inline void HuberLossLayer::set_input(const ::std::string& value) {
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.HuberLossLayer.input)
-}
-#if LANG_CXX11
-inline void HuberLossLayer::set_input(::std::string&& value) {
-  
-  input_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.HuberLossLayer.input)
-}
-#endif
-inline void HuberLossLayer::set_input(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.HuberLossLayer.input)
-}
-inline void HuberLossLayer::set_input(const char* value, size_t size) {
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.HuberLossLayer.input)
-}
-inline ::std::string* HuberLossLayer::mutable_input() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.HuberLossLayer.input)
-  return input_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* HuberLossLayer::release_input() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.HuberLossLayer.input)
-  
-  return input_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void HuberLossLayer::set_allocated_input(::std::string* input) {
-  if (input != NULL) {
-    
-  } else {
-    
-  }
-  input_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), input);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.HuberLossLayer.input)
-}
-
-// string target = 2;
-inline void HuberLossLayer::clear_target() {
-  target_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& HuberLossLayer::target() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.HuberLossLayer.target)
-  return target_.GetNoArena();
-}
-inline void HuberLossLayer::set_target(const ::std::string& value) {
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.HuberLossLayer.target)
-}
-#if LANG_CXX11
-inline void HuberLossLayer::set_target(::std::string&& value) {
-  
-  target_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.HuberLossLayer.target)
-}
-#endif
-inline void HuberLossLayer::set_target(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.HuberLossLayer.target)
-}
-inline void HuberLossLayer::set_target(const char* value, size_t size) {
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.HuberLossLayer.target)
-}
-inline ::std::string* HuberLossLayer::mutable_target() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.HuberLossLayer.target)
-  return target_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* HuberLossLayer::release_target() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.HuberLossLayer.target)
-  
-  return target_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void HuberLossLayer::set_allocated_target(::std::string* target) {
-  if (target != NULL) {
-    
-  } else {
-    
-  }
-  target_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), target);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.HuberLossLayer.target)
-}
-
-// .CoreML.Specification.DoubleParameter delta = 3;
-inline bool HuberLossLayer::has_delta() const {
-  return this != internal_default_instance() && delta_ != NULL;
-}
-inline void HuberLossLayer::clear_delta() {
-  if (GetArenaNoVirtual() == NULL && delta_ != NULL) delete delta_;
-  delta_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& HuberLossLayer::delta() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.HuberLossLayer.delta)
-  return delta_ != NULL ? *delta_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* HuberLossLayer::mutable_delta() {
-  
-  if (delta_ == NULL) {
-    delta_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.HuberLossLayer.delta)
-  return delta_;
-}
-inline ::CoreML::Specification::DoubleParameter* HuberLossLayer::release_delta() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.HuberLossLayer.delta)
-  
-  ::CoreML::Specification::DoubleParameter* temp = delta_;
-  delta_ = NULL;
-  return temp;
-}
-inline void HuberLossLayer::set_allocated_delta(::CoreML::Specification::DoubleParameter* delta) {
-  delete delta_;
-  delta_ = delta;
-  if (delta) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.HuberLossLayer.delta)
-}
-
-// .CoreML.Specification.ReductionType reductionType = 4;
-inline void HuberLossLayer::clear_reductiontype() {
-  reductiontype_ = 0;
-}
-inline ::CoreML::Specification::ReductionType HuberLossLayer::reductiontype() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.HuberLossLayer.reductionType)
-  return static_cast< ::CoreML::Specification::ReductionType >(reductiontype_);
-}
-inline void HuberLossLayer::set_reductiontype(::CoreML::Specification::ReductionType value) {
-  
-  reductiontype_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.HuberLossLayer.reductionType)
-}
-
-// -------------------------------------------------------------------
-
-// YoloLossLayer
-
-// string input = 1;
-inline void YoloLossLayer::clear_input() {
-  input_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& YoloLossLayer::input() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.input)
-  return input_.GetNoArena();
-}
-inline void YoloLossLayer::set_input(const ::std::string& value) {
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.YoloLossLayer.input)
-}
-#if LANG_CXX11
-inline void YoloLossLayer::set_input(::std::string&& value) {
-  
-  input_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.YoloLossLayer.input)
-}
-#endif
-inline void YoloLossLayer::set_input(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.YoloLossLayer.input)
-}
-inline void YoloLossLayer::set_input(const char* value, size_t size) {
-  
-  input_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.YoloLossLayer.input)
-}
-inline ::std::string* YoloLossLayer::mutable_input() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.input)
-  return input_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* YoloLossLayer::release_input() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.input)
-  
-  return input_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void YoloLossLayer::set_allocated_input(::std::string* input) {
-  if (input != NULL) {
-    
-  } else {
-    
-  }
-  input_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), input);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.input)
-}
-
-// string target = 2;
-inline void YoloLossLayer::clear_target() {
-  target_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline const ::std::string& YoloLossLayer::target() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.target)
-  return target_.GetNoArena();
-}
-inline void YoloLossLayer::set_target(const ::std::string& value) {
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:CoreML.Specification.YoloLossLayer.target)
-}
-#if LANG_CXX11
-inline void YoloLossLayer::set_target(::std::string&& value) {
-  
-  target_.SetNoArena(
-    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.YoloLossLayer.target)
-}
-#endif
-inline void YoloLossLayer::set_target(const char* value) {
-  GOOGLE_DCHECK(value != NULL);
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.YoloLossLayer.target)
-}
-inline void YoloLossLayer::set_target(const char* value, size_t size) {
-  
-  target_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
-      ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.YoloLossLayer.target)
-}
-inline ::std::string* YoloLossLayer::mutable_target() {
-  
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.target)
-  return target_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline ::std::string* YoloLossLayer::release_target() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.target)
-  
-  return target_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-}
-inline void YoloLossLayer::set_allocated_target(::std::string* target) {
-  if (target != NULL) {
-    
-  } else {
-    
-  }
-  target_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), target);
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.target)
-}
-
-// .CoreML.Specification.DoubleParameter scaleSpatialPositionLoss = 3;
-inline bool YoloLossLayer::has_scalespatialpositionloss() const {
-  return this != internal_default_instance() && scalespatialpositionloss_ != NULL;
-}
-inline void YoloLossLayer::clear_scalespatialpositionloss() {
-  if (GetArenaNoVirtual() == NULL && scalespatialpositionloss_ != NULL) delete scalespatialpositionloss_;
-  scalespatialpositionloss_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& YoloLossLayer::scalespatialpositionloss() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.scaleSpatialPositionLoss)
-  return scalespatialpositionloss_ != NULL ? *scalespatialpositionloss_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::mutable_scalespatialpositionloss() {
-  
-  if (scalespatialpositionloss_ == NULL) {
-    scalespatialpositionloss_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.scaleSpatialPositionLoss)
-  return scalespatialpositionloss_;
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::release_scalespatialpositionloss() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.scaleSpatialPositionLoss)
-  
-  ::CoreML::Specification::DoubleParameter* temp = scalespatialpositionloss_;
-  scalespatialpositionloss_ = NULL;
-  return temp;
-}
-inline void YoloLossLayer::set_allocated_scalespatialpositionloss(::CoreML::Specification::DoubleParameter* scalespatialpositionloss) {
-  delete scalespatialpositionloss_;
-  scalespatialpositionloss_ = scalespatialpositionloss;
-  if (scalespatialpositionloss) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.scaleSpatialPositionLoss)
-}
-
-// .CoreML.Specification.DoubleParameter scaleSpatialSizeLoss = 4;
-inline bool YoloLossLayer::has_scalespatialsizeloss() const {
-  return this != internal_default_instance() && scalespatialsizeloss_ != NULL;
-}
-inline void YoloLossLayer::clear_scalespatialsizeloss() {
-  if (GetArenaNoVirtual() == NULL && scalespatialsizeloss_ != NULL) delete scalespatialsizeloss_;
-  scalespatialsizeloss_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& YoloLossLayer::scalespatialsizeloss() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.scaleSpatialSizeLoss)
-  return scalespatialsizeloss_ != NULL ? *scalespatialsizeloss_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::mutable_scalespatialsizeloss() {
-  
-  if (scalespatialsizeloss_ == NULL) {
-    scalespatialsizeloss_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.scaleSpatialSizeLoss)
-  return scalespatialsizeloss_;
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::release_scalespatialsizeloss() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.scaleSpatialSizeLoss)
-  
-  ::CoreML::Specification::DoubleParameter* temp = scalespatialsizeloss_;
-  scalespatialsizeloss_ = NULL;
-  return temp;
-}
-inline void YoloLossLayer::set_allocated_scalespatialsizeloss(::CoreML::Specification::DoubleParameter* scalespatialsizeloss) {
-  delete scalespatialsizeloss_;
-  scalespatialsizeloss_ = scalespatialsizeloss;
-  if (scalespatialsizeloss) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.scaleSpatialSizeLoss)
-}
-
-// .CoreML.Specification.DoubleParameter scaleObjectConfidenceLoss = 5;
-inline bool YoloLossLayer::has_scaleobjectconfidenceloss() const {
-  return this != internal_default_instance() && scaleobjectconfidenceloss_ != NULL;
-}
-inline void YoloLossLayer::clear_scaleobjectconfidenceloss() {
-  if (GetArenaNoVirtual() == NULL && scaleobjectconfidenceloss_ != NULL) delete scaleobjectconfidenceloss_;
-  scaleobjectconfidenceloss_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& YoloLossLayer::scaleobjectconfidenceloss() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.scaleObjectConfidenceLoss)
-  return scaleobjectconfidenceloss_ != NULL ? *scaleobjectconfidenceloss_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::mutable_scaleobjectconfidenceloss() {
-  
-  if (scaleobjectconfidenceloss_ == NULL) {
-    scaleobjectconfidenceloss_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.scaleObjectConfidenceLoss)
-  return scaleobjectconfidenceloss_;
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::release_scaleobjectconfidenceloss() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.scaleObjectConfidenceLoss)
-  
-  ::CoreML::Specification::DoubleParameter* temp = scaleobjectconfidenceloss_;
-  scaleobjectconfidenceloss_ = NULL;
-  return temp;
-}
-inline void YoloLossLayer::set_allocated_scaleobjectconfidenceloss(::CoreML::Specification::DoubleParameter* scaleobjectconfidenceloss) {
-  delete scaleobjectconfidenceloss_;
-  scaleobjectconfidenceloss_ = scaleobjectconfidenceloss;
-  if (scaleobjectconfidenceloss) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.scaleObjectConfidenceLoss)
-}
-
-// .CoreML.Specification.DoubleParameter scaleNoObjectConfidenceLoss = 6;
-inline bool YoloLossLayer::has_scalenoobjectconfidenceloss() const {
-  return this != internal_default_instance() && scalenoobjectconfidenceloss_ != NULL;
-}
-inline void YoloLossLayer::clear_scalenoobjectconfidenceloss() {
-  if (GetArenaNoVirtual() == NULL && scalenoobjectconfidenceloss_ != NULL) delete scalenoobjectconfidenceloss_;
-  scalenoobjectconfidenceloss_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& YoloLossLayer::scalenoobjectconfidenceloss() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.scaleNoObjectConfidenceLoss)
-  return scalenoobjectconfidenceloss_ != NULL ? *scalenoobjectconfidenceloss_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::mutable_scalenoobjectconfidenceloss() {
-  
-  if (scalenoobjectconfidenceloss_ == NULL) {
-    scalenoobjectconfidenceloss_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.scaleNoObjectConfidenceLoss)
-  return scalenoobjectconfidenceloss_;
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::release_scalenoobjectconfidenceloss() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.scaleNoObjectConfidenceLoss)
-  
-  ::CoreML::Specification::DoubleParameter* temp = scalenoobjectconfidenceloss_;
-  scalenoobjectconfidenceloss_ = NULL;
-  return temp;
-}
-inline void YoloLossLayer::set_allocated_scalenoobjectconfidenceloss(::CoreML::Specification::DoubleParameter* scalenoobjectconfidenceloss) {
-  delete scalenoobjectconfidenceloss_;
-  scalenoobjectconfidenceloss_ = scalenoobjectconfidenceloss;
-  if (scalenoobjectconfidenceloss) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.scaleNoObjectConfidenceLoss)
-}
-
-// .CoreML.Specification.DoubleParameter scaleClassLoss = 7;
-inline bool YoloLossLayer::has_scaleclassloss() const {
-  return this != internal_default_instance() && scaleclassloss_ != NULL;
-}
-inline void YoloLossLayer::clear_scaleclassloss() {
-  if (GetArenaNoVirtual() == NULL && scaleclassloss_ != NULL) delete scaleclassloss_;
-  scaleclassloss_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& YoloLossLayer::scaleclassloss() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.scaleClassLoss)
-  return scaleclassloss_ != NULL ? *scaleclassloss_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::mutable_scaleclassloss() {
-  
-  if (scaleclassloss_ == NULL) {
-    scaleclassloss_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.scaleClassLoss)
-  return scaleclassloss_;
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::release_scaleclassloss() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.scaleClassLoss)
-  
-  ::CoreML::Specification::DoubleParameter* temp = scaleclassloss_;
-  scaleclassloss_ = NULL;
-  return temp;
-}
-inline void YoloLossLayer::set_allocated_scaleclassloss(::CoreML::Specification::DoubleParameter* scaleclassloss) {
-  delete scaleclassloss_;
-  scaleclassloss_ = scaleclassloss;
-  if (scaleclassloss) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.scaleClassLoss)
-}
-
-// .CoreML.Specification.DoubleParameter minimumIOUForObjectPresence = 8;
-inline bool YoloLossLayer::has_minimumiouforobjectpresence() const {
-  return this != internal_default_instance() && minimumiouforobjectpresence_ != NULL;
-}
-inline void YoloLossLayer::clear_minimumiouforobjectpresence() {
-  if (GetArenaNoVirtual() == NULL && minimumiouforobjectpresence_ != NULL) delete minimumiouforobjectpresence_;
-  minimumiouforobjectpresence_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& YoloLossLayer::minimumiouforobjectpresence() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.minimumIOUForObjectPresence)
-  return minimumiouforobjectpresence_ != NULL ? *minimumiouforobjectpresence_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::mutable_minimumiouforobjectpresence() {
-  
-  if (minimumiouforobjectpresence_ == NULL) {
-    minimumiouforobjectpresence_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.minimumIOUForObjectPresence)
-  return minimumiouforobjectpresence_;
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::release_minimumiouforobjectpresence() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.minimumIOUForObjectPresence)
-  
-  ::CoreML::Specification::DoubleParameter* temp = minimumiouforobjectpresence_;
-  minimumiouforobjectpresence_ = NULL;
-  return temp;
-}
-inline void YoloLossLayer::set_allocated_minimumiouforobjectpresence(::CoreML::Specification::DoubleParameter* minimumiouforobjectpresence) {
-  delete minimumiouforobjectpresence_;
-  minimumiouforobjectpresence_ = minimumiouforobjectpresence;
-  if (minimumiouforobjectpresence) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.minimumIOUForObjectPresence)
-}
-
-// .CoreML.Specification.DoubleParameter maximumIOUForObjectAbsence = 9;
-inline bool YoloLossLayer::has_maximumiouforobjectabsence() const {
-  return this != internal_default_instance() && maximumiouforobjectabsence_ != NULL;
-}
-inline void YoloLossLayer::clear_maximumiouforobjectabsence() {
-  if (GetArenaNoVirtual() == NULL && maximumiouforobjectabsence_ != NULL) delete maximumiouforobjectabsence_;
-  maximumiouforobjectabsence_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& YoloLossLayer::maximumiouforobjectabsence() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.YoloLossLayer.maximumIOUForObjectAbsence)
-  return maximumiouforobjectabsence_ != NULL ? *maximumiouforobjectabsence_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::mutable_maximumiouforobjectabsence() {
-  
-  if (maximumiouforobjectabsence_ == NULL) {
-    maximumiouforobjectabsence_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.YoloLossLayer.maximumIOUForObjectAbsence)
-  return maximumiouforobjectabsence_;
-}
-inline ::CoreML::Specification::DoubleParameter* YoloLossLayer::release_maximumiouforobjectabsence() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.YoloLossLayer.maximumIOUForObjectAbsence)
-  
-  ::CoreML::Specification::DoubleParameter* temp = maximumiouforobjectabsence_;
-  maximumiouforobjectabsence_ = NULL;
-  return temp;
-}
-inline void YoloLossLayer::set_allocated_maximumiouforobjectabsence(::CoreML::Specification::DoubleParameter* maximumiouforobjectabsence) {
-  delete maximumiouforobjectabsence_;
-  maximumiouforobjectabsence_ = maximumiouforobjectabsence;
-  if (maximumiouforobjectabsence) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.YoloLossLayer.maximumIOUForObjectAbsence)
-}
-
 // -------------------------------------------------------------------
 
 // Optimizer
@@ -42352,54 +40335,6 @@ inline void Optimizer::set_allocated_adamoptimizer(::CoreML::Specification::Adam
     OptimizerType_.adamoptimizer_ = adamoptimizer;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Optimizer.adamOptimizer)
-}
-
-// .CoreML.Specification.RMSPropOptimizer rmsPropOptimizer = 12;
-inline bool Optimizer::has_rmspropoptimizer() const {
-  return OptimizerType_case() == kRmsPropOptimizer;
-}
-inline void Optimizer::set_has_rmspropoptimizer() {
-  _oneof_case_[0] = kRmsPropOptimizer;
-}
-inline void Optimizer::clear_rmspropoptimizer() {
-  if (has_rmspropoptimizer()) {
-    delete OptimizerType_.rmspropoptimizer_;
-    clear_has_OptimizerType();
-  }
-}
-inline  const ::CoreML::Specification::RMSPropOptimizer& Optimizer::rmspropoptimizer() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.Optimizer.rmsPropOptimizer)
-  return has_rmspropoptimizer()
-      ? *OptimizerType_.rmspropoptimizer_
-      : ::CoreML::Specification::RMSPropOptimizer::default_instance();
-}
-inline ::CoreML::Specification::RMSPropOptimizer* Optimizer::mutable_rmspropoptimizer() {
-  if (!has_rmspropoptimizer()) {
-    clear_OptimizerType();
-    set_has_rmspropoptimizer();
-    OptimizerType_.rmspropoptimizer_ = new ::CoreML::Specification::RMSPropOptimizer;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Optimizer.rmsPropOptimizer)
-  return OptimizerType_.rmspropoptimizer_;
-}
-inline ::CoreML::Specification::RMSPropOptimizer* Optimizer::release_rmspropoptimizer() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.Optimizer.rmsPropOptimizer)
-  if (has_rmspropoptimizer()) {
-    clear_has_OptimizerType();
-    ::CoreML::Specification::RMSPropOptimizer* temp = OptimizerType_.rmspropoptimizer_;
-    OptimizerType_.rmspropoptimizer_ = NULL;
-    return temp;
-  } else {
-    return NULL;
-  }
-}
-inline void Optimizer::set_allocated_rmspropoptimizer(::CoreML::Specification::RMSPropOptimizer* rmspropoptimizer) {
-  clear_OptimizerType();
-  if (rmspropoptimizer) {
-    set_has_rmspropoptimizer();
-    OptimizerType_.rmspropoptimizer_ = rmspropoptimizer;
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Optimizer.rmsPropOptimizer)
 }
 
 inline bool Optimizer::has_OptimizerType() const {
@@ -42731,232 +40666,7 @@ inline void AdamOptimizer::set_allocated_eps(::CoreML::Specification::DoublePara
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.AdamOptimizer.eps)
 }
 
-// -------------------------------------------------------------------
-
-// RMSPropOptimizer
-
-// .CoreML.Specification.DoubleParameter learningRate = 1;
-inline bool RMSPropOptimizer::has_learningrate() const {
-  return this != internal_default_instance() && learningrate_ != NULL;
-}
-inline void RMSPropOptimizer::clear_learningrate() {
-  if (GetArenaNoVirtual() == NULL && learningrate_ != NULL) delete learningrate_;
-  learningrate_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& RMSPropOptimizer::learningrate() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.RMSPropOptimizer.learningRate)
-  return learningrate_ != NULL ? *learningrate_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* RMSPropOptimizer::mutable_learningrate() {
-  
-  if (learningrate_ == NULL) {
-    learningrate_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.RMSPropOptimizer.learningRate)
-  return learningrate_;
-}
-inline ::CoreML::Specification::DoubleParameter* RMSPropOptimizer::release_learningrate() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.RMSPropOptimizer.learningRate)
-  
-  ::CoreML::Specification::DoubleParameter* temp = learningrate_;
-  learningrate_ = NULL;
-  return temp;
-}
-inline void RMSPropOptimizer::set_allocated_learningrate(::CoreML::Specification::DoubleParameter* learningrate) {
-  delete learningrate_;
-  learningrate_ = learningrate;
-  if (learningrate) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.RMSPropOptimizer.learningRate)
-}
-
-// .CoreML.Specification.Int64Parameter miniBatchSize = 2;
-inline bool RMSPropOptimizer::has_minibatchsize() const {
-  return this != internal_default_instance() && minibatchsize_ != NULL;
-}
-inline void RMSPropOptimizer::clear_minibatchsize() {
-  if (GetArenaNoVirtual() == NULL && minibatchsize_ != NULL) delete minibatchsize_;
-  minibatchsize_ = NULL;
-}
-inline const ::CoreML::Specification::Int64Parameter& RMSPropOptimizer::minibatchsize() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.RMSPropOptimizer.miniBatchSize)
-  return minibatchsize_ != NULL ? *minibatchsize_
-                         : *::CoreML::Specification::Int64Parameter::internal_default_instance();
-}
-inline ::CoreML::Specification::Int64Parameter* RMSPropOptimizer::mutable_minibatchsize() {
-  
-  if (minibatchsize_ == NULL) {
-    minibatchsize_ = new ::CoreML::Specification::Int64Parameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.RMSPropOptimizer.miniBatchSize)
-  return minibatchsize_;
-}
-inline ::CoreML::Specification::Int64Parameter* RMSPropOptimizer::release_minibatchsize() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.RMSPropOptimizer.miniBatchSize)
-  
-  ::CoreML::Specification::Int64Parameter* temp = minibatchsize_;
-  minibatchsize_ = NULL;
-  return temp;
-}
-inline void RMSPropOptimizer::set_allocated_minibatchsize(::CoreML::Specification::Int64Parameter* minibatchsize) {
-  delete minibatchsize_;
-  minibatchsize_ = minibatchsize;
-  if (minibatchsize) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.RMSPropOptimizer.miniBatchSize)
-}
-
-// .CoreML.Specification.DoubleParameter momentum = 3;
-inline bool RMSPropOptimizer::has_momentum() const {
-  return this != internal_default_instance() && momentum_ != NULL;
-}
-inline void RMSPropOptimizer::clear_momentum() {
-  if (GetArenaNoVirtual() == NULL && momentum_ != NULL) delete momentum_;
-  momentum_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& RMSPropOptimizer::momentum() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.RMSPropOptimizer.momentum)
-  return momentum_ != NULL ? *momentum_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* RMSPropOptimizer::mutable_momentum() {
-  
-  if (momentum_ == NULL) {
-    momentum_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.RMSPropOptimizer.momentum)
-  return momentum_;
-}
-inline ::CoreML::Specification::DoubleParameter* RMSPropOptimizer::release_momentum() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.RMSPropOptimizer.momentum)
-  
-  ::CoreML::Specification::DoubleParameter* temp = momentum_;
-  momentum_ = NULL;
-  return temp;
-}
-inline void RMSPropOptimizer::set_allocated_momentum(::CoreML::Specification::DoubleParameter* momentum) {
-  delete momentum_;
-  momentum_ = momentum;
-  if (momentum) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.RMSPropOptimizer.momentum)
-}
-
-// .CoreML.Specification.DoubleParameter alpha = 4;
-inline bool RMSPropOptimizer::has_alpha() const {
-  return this != internal_default_instance() && alpha_ != NULL;
-}
-inline void RMSPropOptimizer::clear_alpha() {
-  if (GetArenaNoVirtual() == NULL && alpha_ != NULL) delete alpha_;
-  alpha_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& RMSPropOptimizer::alpha() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.RMSPropOptimizer.alpha)
-  return alpha_ != NULL ? *alpha_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* RMSPropOptimizer::mutable_alpha() {
-  
-  if (alpha_ == NULL) {
-    alpha_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.RMSPropOptimizer.alpha)
-  return alpha_;
-}
-inline ::CoreML::Specification::DoubleParameter* RMSPropOptimizer::release_alpha() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.RMSPropOptimizer.alpha)
-  
-  ::CoreML::Specification::DoubleParameter* temp = alpha_;
-  alpha_ = NULL;
-  return temp;
-}
-inline void RMSPropOptimizer::set_allocated_alpha(::CoreML::Specification::DoubleParameter* alpha) {
-  delete alpha_;
-  alpha_ = alpha;
-  if (alpha) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.RMSPropOptimizer.alpha)
-}
-
-// .CoreML.Specification.DoubleParameter eps = 5;
-inline bool RMSPropOptimizer::has_eps() const {
-  return this != internal_default_instance() && eps_ != NULL;
-}
-inline void RMSPropOptimizer::clear_eps() {
-  if (GetArenaNoVirtual() == NULL && eps_ != NULL) delete eps_;
-  eps_ = NULL;
-}
-inline const ::CoreML::Specification::DoubleParameter& RMSPropOptimizer::eps() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.RMSPropOptimizer.eps)
-  return eps_ != NULL ? *eps_
-                         : *::CoreML::Specification::DoubleParameter::internal_default_instance();
-}
-inline ::CoreML::Specification::DoubleParameter* RMSPropOptimizer::mutable_eps() {
-  
-  if (eps_ == NULL) {
-    eps_ = new ::CoreML::Specification::DoubleParameter;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.RMSPropOptimizer.eps)
-  return eps_;
-}
-inline ::CoreML::Specification::DoubleParameter* RMSPropOptimizer::release_eps() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.RMSPropOptimizer.eps)
-  
-  ::CoreML::Specification::DoubleParameter* temp = eps_;
-  eps_ = NULL;
-  return temp;
-}
-inline void RMSPropOptimizer::set_allocated_eps(::CoreML::Specification::DoubleParameter* eps) {
-  delete eps_;
-  eps_ = eps;
-  if (eps) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.RMSPropOptimizer.eps)
-}
-
-// bool centered = 6;
-inline void RMSPropOptimizer::clear_centered() {
-  centered_ = false;
-}
-inline bool RMSPropOptimizer::centered() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.RMSPropOptimizer.centered)
-  return centered_;
-}
-inline void RMSPropOptimizer::set_centered(bool value) {
-  
-  centered_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.RMSPropOptimizer.centered)
-}
-
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
@@ -43380,7 +41090,6 @@ template <> struct is_proto_enum< ::CoreML::Specification::GeluLayerParams_GeluM
 template <> struct is_proto_enum< ::CoreML::Specification::NeuralNetworkMultiArrayShapeMapping> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::NeuralNetworkImageShapeMapping> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::ScatterMode> : ::google::protobuf::internal::true_type {};
-template <> struct is_proto_enum< ::CoreML::Specification::ReductionType> : ::google::protobuf::internal::true_type {};
 
 }  // namespace protobuf
 }  // namespace google

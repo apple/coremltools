@@ -59,42 +59,6 @@ static Result validateLossLayer(const Specification::LossLayer *lossLayer, const
             
             break;
         }
-            
-        case CoreML::Specification::LossLayer::kSigmoidCrossEntropyLossLayer:
-        {
-            std::string lossInputName = lossLayer->sigmoidcrossentropylosslayer().input();
-
-            // validate loss input.
-            std::string lossLayerName = lossLayer->name();
-            const auto *lossNode = graph->getNodeFromName(lossLayerName);
-            if (lossNode == NULL) {
-                err = "Failed to look up node for '" + lossLayerName + "'.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-            
-            bool lossInputValidated = false;
-            const auto &parents = lossNode->parents;
-            for (const auto *node : parents) {
-                if (node->sigmoidActivation) {
-                    lossInputValidated = true;
-                    break;
-                }
-            }
-
-            if (!lossInputValidated) {
-                err = "For the sigmoid cross entropy loss layer named '" + lossLayer->name() + "', input is not generated from a sigmoid output.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            // validate loss target
-            std::string targetName = lossLayer->sigmoidcrossentropylosslayer().target();
-            if (graph->blobNameToProducingNode.find(targetName) != graph->blobNameToProducingNode.end()) {
-                err = "For the sigmoid entropy loss layer named '" + lossLayer->name() + "', target is generated within the graph.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-            
-            break;
-        }
         case CoreML::Specification::LossLayer::kMeanSquaredErrorLossLayer:
         {
             std::string inputName = lossLayer->meansquarederrorlosslayer().input();
@@ -109,54 +73,6 @@ static Result validateLossLayer(const Specification::LossLayer *lossLayer, const
                 return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
             }
             
-            break;
-        }
-        case CoreML::Specification::LossLayer::kMeanAbsoluteErrorLossLayer:
-        {
-            std::string inputName = lossLayer->meanabsoluteerrorlosslayer().input();
-            if (graph->blobNameToProducingNode.find(inputName) == graph->blobNameToProducingNode.end()) {
-                err = "For the MAE loss layer named '" + lossLayer->name() + "', input is not generated within the graph.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            std::string targetName = lossLayer->meanabsoluteerrorlosslayer().target();
-            if (graph->blobNameToProducingNode.find(targetName) != graph->blobNameToProducingNode.end()) {
-                err = "For the MAE loss layer named '" + lossLayer->name() + "', target is generated within the graph.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            break;
-        }
-        case CoreML::Specification::LossLayer::kHuberLossLayer:
-        {
-            std::string inputName = lossLayer->huberlosslayer().input();
-            if (graph->blobNameToProducingNode.find(inputName) == graph->blobNameToProducingNode.end()) {
-                err = "For the Huber loss layer named '" + lossLayer->name() + "', input is not generated within the graph.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            std::string targetName = lossLayer->huberlosslayer().target();
-            if (graph->blobNameToProducingNode.find(targetName) != graph->blobNameToProducingNode.end()) {
-                err = "For the Huber loss layer named '" + lossLayer->name() + "', target is generated within the graph.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            break;
-        }
-        case CoreML::Specification::LossLayer::kYoloLossLayer:
-        {
-            std::string inputName = lossLayer->yololosslayer().input();
-            if (graph->blobNameToProducingNode.find(inputName) == graph->blobNameToProducingNode.end()) {
-                err = "For the Yolo loss layer named '" + lossLayer->name() + "', input is not generated within the graph.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            std::string targetName = lossLayer->yololosslayer().target();
-            if (graph->blobNameToProducingNode.find(targetName) != graph->blobNameToProducingNode.end()) {
-                err = "For the Yolo loss layer named '" + lossLayer->name() + "', target is generated within the graph.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
             break;
         }
         default:
@@ -220,29 +136,9 @@ template<typename T> Result validateTrainingInputs(const Specification::ModelDes
                 target = updateParams.losslayers(0).categoricalcrossentropylosslayer().target();
                 break;
             }
-            case Specification::LossLayer::kSigmoidCrossEntropyLossLayer:
-            {
-                target = updateParams.losslayers(0).sigmoidcrossentropylosslayer().target();
-                break;
-            }
             case Specification::LossLayer::kMeanSquaredErrorLossLayer:
             {
                 target = updateParams.losslayers(0).meansquarederrorlosslayer().target();
-                break;
-            }
-            case Specification::LossLayer::kMeanAbsoluteErrorLossLayer:
-            {
-                target = updateParams.losslayers(0).meanabsoluteerrorlosslayer().target();
-                break;
-            }
-            case Specification::LossLayer::kHuberLossLayer:
-            {
-                target = updateParams.losslayers(0).huberlosslayer().target();
-                break;
-            }
-            case Specification::LossLayer::kYoloLossLayer:
-            {
-                target = updateParams.losslayers(0).yololosslayer().target();
                 break;
             }
             default:
@@ -377,52 +273,6 @@ static Result validateOptimizer(const Specification::Optimizer& optimizer) {
             r = validateDoubleParameter("eps", adamOptimizer.eps());
             if (!r.good()) {return r;}
     
-            break;
-        }
-        case Specification::Optimizer::kRmsPropOptimizer:
-        {
-            const Specification::RMSPropOptimizer &rmsPropOptimizer = optimizer.rmspropoptimizer();
-
-            if (false == rmsPropOptimizer.has_learningrate()) {
-                err = "RMSProp optimizer should include learningRate parameter.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            r = validateDoubleParameter("learningRate", rmsPropOptimizer.learningrate());
-            if (!r.good()) {return r;}
-
-            if (false == rmsPropOptimizer.has_minibatchsize()) {
-                err = "RMSProp optimizer should include miniBatchSize parameter.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            r = validateInt64Parameter("miniBatchSize", rmsPropOptimizer.minibatchsize(), true);
-            if (!r.good()) {return r;}
-
-            if (false == rmsPropOptimizer.has_momentum()) {
-                err = "RMSProp optimizer should include momentum parameter.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            r = validateDoubleParameter("momentum", rmsPropOptimizer.momentum());
-            if (!r.good()) {return r;}
-
-            if (false == rmsPropOptimizer.has_alpha()) {
-                err = "RMSProp optimizer should include alpha parameter.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            r = validateDoubleParameter("alpha", rmsPropOptimizer.alpha());
-            if (!r.good()) {return r;}
-
-            if (false == rmsPropOptimizer.has_eps()) {
-                err = "RMSProp optimizer should include eps (epslion) parameter.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
-            }
-
-            r = validateDoubleParameter("eps", rmsPropOptimizer.eps());
-            if (!r.good()) {return r;}
-
             break;
         }
         default:

@@ -5862,34 +5862,15 @@ message NetworkUpdateParameters {
     Int64Parameter seed = 20;
 }
 
-message LossWeightParams {
-    
-    repeated float weights = 1;
-}
-
 message LossLayer {
 
     string name = 1;
-    LossWeightParams weight = 2;
 
     oneof LossLayerType {
 
         CategoricalCrossEntropyLossLayer categoricalCrossEntropyLossLayer = 10;
         MeanSquaredErrorLossLayer meanSquaredErrorLossLayer = 11;
-        SigmoidCrossEntropyLossLayer sigmoidCrossEntropyLossLayer = 12;
-        MeanAbsoluteErrorLossLayer meanAbsoluteErrorLossLayer = 13;
-        HuberLossLayer huberLossLayer = 14;
-        YoloLossLayer yoloLossLayer = 15;
-
     }
-
-}
-
-enum ReductionType {
-    
-    MEAN = 0;
-    SUM = 1;
-    SUM_NON_ZERO_WEIGHTS = 2;
 
 }
 
@@ -5910,18 +5891,6 @@ message CategoricalCrossEntropyLossLayer {
 
     string input = 1;
     string target = 2;
-    DoubleParameter labelSmoothing = 3;
-    ReductionType reductionType = 4;
-
-}
-
-message SigmoidCrossEntropyLossLayer{
-
-    string input = 1;
-    string target = 2;
-    DoubleParameter labelSmoothing = 3;
-    ReductionType reductionType = 4;
-
 }
 
 /**
@@ -5932,38 +5901,6 @@ message MeanSquaredErrorLossLayer {
 
     string input = 1;
     string target = 2;
-    ReductionType reductionType = 3;
-
-}
-
-message MeanAbsoluteErrorLossLayer {
-
-    string input = 1;
-    string target = 2;
-    ReductionType reductionType = 3;
-
-}
-
-message HuberLossLayer {
-
-    string input = 1;
-    string target = 2;
-    DoubleParameter delta = 3;
-    ReductionType reductionType = 4;
-
-}
-
-message YoloLossLayer {
-
-    string input = 1;
-    string target = 2;
-    DoubleParameter scaleSpatialPositionLoss = 3;
-    DoubleParameter scaleSpatialSizeLoss = 4;
-    DoubleParameter scaleObjectConfidenceLoss = 5;
-    DoubleParameter scaleNoObjectConfidenceLoss = 6;
-    DoubleParameter scaleClassLoss = 7;
-    DoubleParameter minimumIOUForObjectPresence = 8;
-    DoubleParameter maximumIOUForObjectAbsence = 9;
 }
 
 /**
@@ -5975,10 +5912,8 @@ message Optimizer {
 
         SGDOptimizer sgdOptimizer = 10;
         AdamOptimizer adamOptimizer = 11;
-        RMSPropOptimizer rmsPropOptimizer = 12;
 
     }
-
 }
 
 /**
@@ -5990,7 +5925,6 @@ message SGDOptimizer {
     DoubleParameter learningRate = 1;
     Int64Parameter miniBatchSize = 2;
     DoubleParameter momentum = 3;
-
 }
 
 /**
@@ -6004,16 +5938,4 @@ message AdamOptimizer {
     DoubleParameter beta1 = 3;
     DoubleParameter beta2 = 4;
     DoubleParameter eps = 5;
-
-}
-
-message RMSPropOptimizer {
-
-    DoubleParameter learningRate = 1;
-    Int64Parameter miniBatchSize = 2;
-    DoubleParameter momentum = 3;
-    DoubleParameter alpha = 4;
-    DoubleParameter eps = 5;
-    bool centered = 6;
-
 }

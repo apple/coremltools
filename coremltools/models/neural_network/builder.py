@@ -20,7 +20,7 @@ from .. import datatypes
 import numpy as np
 from .quantization_utils import unpack_to_bytes, _convert_array_to_nbit_quantized_bytes
 from .spec_inspection_utils import *
-from .update_optimizer_utils import AdamParams, SgdParams, RMSPropParams
+from .update_optimizer_utils import AdamParams, SgdParams
 
 
 def _set_recurrent_activation(param, activation):
@@ -610,17 +610,13 @@ class NeuralNetworkBuilder(object):
                 else:
                     pass
 
-    def set_categorical_cross_entropy_loss(self, name, input, weights=None, label_smoothing=0.0, reduction_type='MEAN'):
+    def set_categorical_cross_entropy_loss(self, name, input):
         """
         Categorical Cross Entropy is used for single label categorization (only one category is applicable for each data point).
-
         Parameters
         ----------
         name: The name of the loss layer
         input: The name of the input, which should be a vector of length N representing the distribution over N categories. This must be the output of a softmax.
-        label_smoothing: The label smoothing parameter is an optional float value. The default value is 0.0f.
-        weights: The weight parameter is an optional scale factor to apply to each element of a result.
-
         .. math::
         Loss_ {CCE}(input, target) = -\sum_{i = 1} ^ {N}(target == i) log(input[i]) = - log(input[target])
         """
@@ -670,69 +666,7 @@ class NeuralNetworkBuilder(object):
         loss_layer.categoricalCrossEntropyLossLayer.input = input
         loss_layer.categoricalCrossEntropyLossLayer.target = target
 
-        training_inputs = self.spec.description.trainingInput
-        training_inputs.extend(self.spec.description.input)
-        training_input = training_inputs.add()
-
-        if updating_classifier:
-            training_input.name = predicted_feature_name
-            classifier_output_type = [x.type for x in self.spec.description.output if x.name == predicted_feature_name]
-
-            model_type = classifier_output_type[0].WhichOneof('Type')
-            if model_type == 'stringType':
-                datatypes._set_datatype(training_input.type, datatypes.String())
-            elif model_type == 'int64Type':
-                datatypes._set_datatype(training_input.type, datatypes.Int64())
-        else:
-            training_input.name = target
-            datatypes._set_datatype(training_input.type, datatypes.Array(1))
-            training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.INT32
-
-        # set label_smoothing
-        loss_layer.categoricalCrossEntropyLossLayer.labelSmoothing.defaultValue = label_smoothing
-
-        # set weight
-        if weights is not None:
-            loss_layer.weight.weights.extend(weights)
-
-        # set reduction type
-        loss_layer.categoricalCrossEntropyLossLayer.reductionType = _NeuralNetwork_pb2.ReductionType.Value(reduction_type)
-
-        print('added input {} as target for categorical cross entropy loss layer.'.format(target))
-
-    def set_sigmoid_cross_entropy_loss(self, name, input, weights=None, label_smoothing=0.0, reduction_type='MEAN'):
-
-        if self.spec is None:
-            return
-
-        if name in self.layer_specs:
-            raise ValueError("Name %s is already used." % name)
-
-        if input is None:
-            raise ValueError('Loss Layer input must be specified')
-
-        target = input + '_true'
-
-        if len(self.nn_spec.layers) < 1:
-            raise ValueError('Loss layer (%s) cannot be attached to an empty model.' % name)
-
-        # validate target
-        output_names = [x.name for x in self.spec.description.output]
-        if target in output_names:
-            raise ValueError('Loss layer target (%s) must not be a model output.' % target)
-
-        updating_classifier = False
-        predicted_probabilities_name = self.spec.description.predictedProbabilitiesName
-        predicted_feature_name = self.spec.description.predictedFeatureName
-        if self.spec.HasField('neuralNetworkClassifier') and input == predicted_probabilities_name:
-            updating_classifier = True
-
-        loss_layer = self.nn_spec.updateParams.lossLayers.add()
-        self.layers.append(name)
-        self.layer_specs[name] = loss_layer
-        loss_layer.name = name
-        loss_layer.sigmoidCrossEntropyLossLayer.input = input
-        loss_layer.sigmoidCrossEntropyLossLayer.target = target
+        classifier_output = self.spec.description.predictedFeatureName
 
         training_inputs = self.spec.description.trainingInput
         training_inputs.extend(self.spec.description.input)
@@ -752,19 +686,9 @@ class NeuralNetworkBuilder(object):
             datatypes._set_datatype(training_input.type, datatypes.Array(1))
             training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.INT32
 
-        # set label_smoothing
-        loss_layer.sigmoidCrossEntropyLossLayer.labelSmoothing.defaultValue = label_smoothing
+        print('Now adding input {} as target for categorical cross-entropy loss layer.'.format(target))
 
-        # set weight
-        if weights is not None:
-            loss_layer.weight.weights.extend(weights)
-
-        # set reduction type
-        loss_layer.sigmoidCrossEntropyLossLayer.reductionType = _NeuralNetwork_pb2.ReductionType.Value(reduction_type)
-
-        print('added input {} as target for sigmoid cross entropy loss layer.'.format(target))
-
-    def set_mean_squared_error_loss(self, name, input_feature=None, weights=None, reduction_type='MEAN'):
+    def set_mean_squared_error_loss(self, name, input_feature=None):
         """
         input_feature: [(str, datatypes.Array)] or None
             The input feature of the loss layer. Each feature is a (name,
@@ -812,196 +736,7 @@ class NeuralNetworkBuilder(object):
 
         datatypes._set_datatype(training_input.type, input_feature[1])
         training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
-        print('added input {} as target for mean squared error loss layer.'.format(target))
-
-        if weights is not None:
-            loss_layer.weight.weights.extend(weights)
-
-        loss_layer.meanSquaredErrorLossLayer.reductionType = _NeuralNetwork_pb2.ReductionType.Value(reduction_type)
-
-    def set_mean_absolute_error_loss(self, name, input_feature=None, weights=None, reduction_type='MEAN'):
-        """
-        input_feature: [(str, datatypes.Array)] or None
-            The input feature of the loss layer. Each feature is a (name,
-            array) tuple, where name is the name of the model's tensor our loss will be attached to,
-            and array is a datatypes.Array object describing the shape of that tensor.
-            Both the name and the array's shape must be provided in the tuple.
-            >>> feature = [('output_tensor', datatypes.Array((299, 299, 3)))]
-        """
-        if self.spec is None:
-            return
-
-        if name in self.layer_specs:
-            raise ValueError("Name %s is already used." % name)
-
-        if input_feature is None:
-            raise ValueError('Loss Layer input must be specified')
-
-        if not isinstance(input_feature, tuple):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-
-        (fname, ftype) = input_feature
-        if not isinstance(fname, str):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-        if not isinstance(ftype, datatypes.Array):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-
-        target = fname + '_true'
-
-        loss_layer = self.nn_spec.updateParams.lossLayers.add()
-        self.layers.append(name)
-        self.layer_specs[name] = loss_layer
-        loss_layer.name = name
-
-        output_names = [x.name for x in self.spec.description.output]
-        if target in output_names:
-            raise ValueError('Loss Layer target (%s) must not be a model output' % target)
-
-        loss_layer.meanAbsoluteErrorLossLayer.input = input_feature[0]
-        loss_layer.meanAbsoluteErrorLossLayer.target = target
-
-        training_inputs = self.spec.description.trainingInput
-        training_inputs.extend(self.spec.description.input)
-        training_input = training_inputs.add()
-        training_input.name = target
-
-        datatypes._set_datatype(training_input.type, input_feature[1])
-        training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
-        print('added input {} as target for mean absolute error loss layer.'.format(target))
-
-        if weights is not None:
-            loss_layer.weight.weights.extend(weights)
-
-        loss_layer.meanAbsoluteErrorLossLayer.reductionType = _NeuralNetwork_pb2.ReductionType.Value(reduction_type)
-
-    def set_huber_loss(self, name, input_feature=None, weights=None, reduction_type='MEAN'):
-        """
-        input_feature: [(str, datatypes.Array)] or None
-            The input feature of the loss layer. Each feature is a (name,
-            array) tuple, where name is the name of the model's tensor our loss will be attached to,
-            and array is a datatypes.Array object describing the shape of that tensor.
-            Both the name and the array's shape must be provided in the tuple.
-            >>> feature = [('output_tensor', datatypes.Array((299, 299, 3)))]
-        """
-        if self.spec is None:
-            return
-
-        if name in self.layer_specs:
-            raise ValueError("Name %s is already used." % name)
-
-        if input_feature is None:
-            raise ValueError('Loss Layer input must be specified')
-
-        if not isinstance(input_feature, tuple):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-
-        (fname, ftype) = input_feature
-        if not isinstance(fname, str):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-        if not isinstance(ftype, datatypes.Array):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-
-        target = fname + '_true'
-
-        loss_layer = self.nn_spec.updateParams.lossLayers.add()
-        self.layers.append(name)
-        self.layer_specs[name] = loss_layer
-        loss_layer.name = name
-
-        output_names = [x.name for x in self.spec.description.output]
-        if target in output_names:
-            raise ValueError('Loss Layer target (%s) must not be a model output' % target)
-
-        loss_layer.huberLossLayer.input = input_feature[0]
-        loss_layer.huberLossLayer.target = target
-
-        training_inputs = self.spec.description.trainingInput
-        training_inputs.extend(self.spec.description.input)
-        training_input = training_inputs.add()
-        training_input.name = target
-
-        datatypes._set_datatype(training_input.type, input_feature[1])
-        training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
-        print('added input {} as target for huber loss layer.'.format(target))
-
-        if weights is not None:
-            loss_layer.weight.weights.extend(weights)
-
-        loss_layer.huberLossLayer.reductionType = _NeuralNetwork_pb2.ReductionType.Value(reduction_type)
-
-    def set_yolo_loss(self, name, input_feature=None,
-                      scale_spatial_position_loss=10.0,
-                      scale_spatial_size_loss=10.0,
-                      scale_object_confidence_loss=100.0,
-                      scale_no_object_confidence_loss=0.5,
-                      scale_class_loss=2.0,
-                      minimum_iou_object_presence=0.7,
-                      maximum_iou_object_absence= 0.3):
-        if self.spec is None:
-            return
-
-        if name in self.layer_specs:
-            raise ValueError("Name %s is already used." % name)
-
-        if input_feature is None:
-            raise ValueError('Loss Layer input must be specified')
-
-        if not isinstance(input_feature, tuple):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-
-        (fname, ftype) = input_feature
-        if not isinstance(fname, str):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-        if not isinstance(ftype, datatypes.Array):
-            raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
-
-        target = fname + '_true'
-
-        if len(self.nn_spec.layers) < 1:
-            raise ValueError('Loss layer (%s) cannot be attached to an empty model.' % name)
-
-        # validate target
-        output_names = [x.name for x in self.spec.description.output]
-        if target in output_names:
-            raise ValueError('Loss layer target (%s) must not be a model output.' % target)
-
-        loss_layer = self.nn_spec.updateParams.lossLayers.add()
-        self.layers.append(name)
-        self.layer_specs[name] = loss_layer
-        loss_layer.name = name
-        loss_layer.yoloLossLayer.input = input_feature[0]
-        loss_layer.yoloLossLayer.target = target
-
-        training_inputs = self.spec.description.trainingInput
-        training_inputs.extend(self.spec.description.input)
-        training_input = training_inputs.add()
-        training_input.name = target
-
-        if scale_spatial_position_loss is not None:
-            loss_layer.yoloLossLayer.scaleSpatialPositionLoss.defaultValue = scale_spatial_position_loss
-
-        if scale_spatial_size_loss is not None:
-            loss_layer.yoloLossLayer.scaleSpatialSizeLoss.defaultValue = scale_spatial_size_loss
-
-        if scale_object_confidence_loss is not None:
-            loss_layer.yoloLossLayer.scaleObjectConfidenceLoss.defaultValue = scale_object_confidence_loss
-
-        if scale_no_object_confidence_loss is not None:
-            loss_layer.yoloLossLayer.scaleNoObjectConfidenceLoss.defaultValue = scale_no_object_confidence_loss
-
-        if scale_class_loss is not None:
-            loss_layer.yoloLossLayer.scaleClassLoss.defaultValue = scale_class_loss
-
-        if minimum_iou_object_presence is not None:
-            loss_layer.yoloLossLayer.minimumIOUForObjectPresence.defaultValue = minimum_iou_object_presence
-
-        if maximum_iou_object_absence is not None:
-            loss_layer.yoloLossLayer.maximumIOUForObjectAbsence.defaultValue = maximum_iou_object_absence
-
-        datatypes._set_datatype(training_input.type, input_feature[1])
-        training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
-
-        print('added input {} as target for yolo loss layer.'.format(target))
+        print('Now adding input {} as target for mean squared error loss layer.'.format(target))
 
     def set_sgd_optimizer(self, sgd_params):
         if self.spec is None:
@@ -1058,42 +793,6 @@ class NeuralNetworkBuilder(object):
         adam_optimizer.eps.defaultValue = adam_params.eps.value
         adam_optimizer.eps.range.minValue = adam_params.eps.min
         adam_optimizer.eps.range.maxValue = adam_params.eps.max
-
-    def set_rmsprop_optimizer(self, rmsprop_params):
-        if self.spec is None:
-            return
-
-        if not isinstance(rmsprop_params, RMSPropParams):
-            raise Exception('rmsprop_params must be of instance RMSPropParams')
-
-        rmsprop_optimizer = self.nn_spec.updateParams.optimizer.rmsPropOptimizer
-
-        # set learning rate
-        rmsprop_optimizer.learningRate.defaultValue = rmsprop_params.lr.value
-        rmsprop_optimizer.learningRate.range.minValue = rmsprop_params.lr.min
-        rmsprop_optimizer.learningRate.range.maxValue = rmsprop_params.lr.max
-
-        # set mini batch size
-        rmsprop_optimizer.miniBatchSize.defaultValue = rmsprop_params.batch.value
-        rmsprop_optimizer.miniBatchSize.set.values.extend(rmsprop_params.batch.allowed_set)
-
-        # set momentum
-        rmsprop_optimizer.momentum.defaultValue = rmsprop_params.momentum.value
-        rmsprop_optimizer.momentum.range.minValue = rmsprop_params.momentum.min
-        rmsprop_optimizer.momentum.range.maxValue = rmsprop_params.momentum.max
-
-        # set alpha
-        rmsprop_optimizer.alpha.defaultValue = rmsprop_params.alpha.value
-        rmsprop_optimizer.alpha.range.minValue = rmsprop_params.alpha.min
-        rmsprop_optimizer.alpha.range.maxValue = rmsprop_params.alpha.max
-
-        # set eps
-        rmsprop_optimizer.eps.defaultValue = rmsprop_params.eps.value
-        rmsprop_optimizer.eps.range.minValue = rmsprop_params.eps.min
-        rmsprop_optimizer.eps.range.maxValue = rmsprop_params.eps.max
-
-        # set centered
-        rmsprop_optimizer.centered = rmsprop_params.centered.value
 
     def set_epochs(self, epochs=1, allowed_set=None):
         if self.spec is None:
@@ -1184,12 +883,6 @@ class NeuralNetworkBuilder(object):
             elif loss_type == 'meanSquaredErrorLossLayer':
                 loss_input = loss_layer.meanSquaredErrorLossLayer.input
                 loss_target = loss_layer.meanSquaredErrorLossLayer.target
-            elif loss_type == 'sigmoidCrossEntropyLossLayer':
-                loss_input = loss_layer.sigmoidCrossEntropyLossLayer.input
-                loss_target = loss_layer.sigmoidCrossEntropyLossLayer.target
-            elif loss_type == 'meanAbsoluteErrorLossLayer':
-                loss_input = loss_layer.meanAbsoluteErrorLossLayer.input
-                loss_target = loss_layer.meanAbsoluteErrorLossLayer.target
 
             print('[Id: {}], Name: {} (Type: {})'.format(n_loss_layers - i - 1, loss_name, loss_type))
             print(' ' * 10 + 'Loss Input: {}'.format(loss_input))
@@ -1219,21 +912,6 @@ class NeuralNetworkBuilder(object):
             print('beta1: {}, min: {}, max: {}'.format(beta1.defaultValue, beta1.range.minValue, beta1.range.maxValue))
             print('beta2: {}, min: {}, max: {}'.format(beta2.defaultValue, beta2.range.minValue, beta2.range.maxValue))
             print('epsilon: {}, min: {}, max: {}'.format(eps.defaultValue, eps.range.minValue, eps.range.maxValue))
-
-        elif optimizer_type == 'rmsPropOptimizer':
-            lr = optimizer.rmsPropOptimizer.learningRate
-            batch = optimizer.rmsPropOptimizer.miniBatchSize
-            momentum = optimizer.rmsPropOptimizer.momentum
-            alpha = optimizer.rmsPropOptimizer.alpha
-            eps = optimizer.rmsPropOptimizer.eps
-            centered = optimizer.rmsPropOptimizer.centered
-            print('lr: {}, min: {}, max: {}'.format(lr.defaultValue, lr.range.minValue, lr.range.maxValue))
-            print('batch: {}, allowed_set: {}'.format(batch.defaultValue, batch.set.values))
-            print('momentum: {}, min: {}, max: {}'.format(momentum.defaultValue, momentum.range.minValue, momentum.range.maxValue))
-            print('alpha: {}, min: {}, max: {}'.format(alpha.defaultValue, alpha.range.minValue, alpha.range.maxValue))
-            print('epsilon: {}, min: {}, max: {}'.format(eps.defaultValue, eps.range.minValue, eps.range.maxValue))
-            print('centered: {}'.format(centered))
-
 
     def inspect_updatable_layers(self):
         """ Prints all updatable layers with their inputs and outputs.
