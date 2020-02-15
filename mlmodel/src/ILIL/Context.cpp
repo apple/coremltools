@@ -14,6 +14,7 @@
 #include "ILIL/IRValueType.hpp"
 #include "ILIL/IROperation.hpp"
 
+#include <cassert>
 #include <limits>
 #include <memory>
 

@@ -187,7 +187,7 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
     float *destination_weights = weightsWrite->mutable_data();
     for (uint64_t i = 0; i < C_in; i++) {
         for (uint64_t j = 0; j < C_out; j++) {
-            float random = float(rand())/(RAND_MAX);
+            float random = float(rand())/float(RAND_MAX);
             destination_weights[i * C_out + j] = random;
         }
     }
@@ -200,7 +200,7 @@ Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(S
         float *destination_bias = biasWrite->mutable_data();
         for (uint64_t i = 0; i < 1; i++) {
             for (uint64_t j = 0; j < C_out; j++) {
-                float random = float(rand())/(RAND_MAX);
+                float random = float(rand())/float(RAND_MAX);
                 destination_bias[i * C_out + j] = random;
             }
         }
