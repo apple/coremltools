@@ -3353,10 +3353,10 @@ class NewLayersSimpleTest(CorrectnessTest):
 
         for rank in range(1, 6):
             for _ in range(20):
-                input_shape = np.random.randint(low=2, high=8, size=rank)
+                input_shape = np.random.randint(low=2, high=4, size=rank)
                 n = int(np.prod(input_shape))
                 divisors = [d for d in range(1, n) if n % d == 0]
-                target_rank = np.random.randint(low=2, high=6)
+                target_rank = np.random.randint(low=2, high=4)
                 target_shape = [1]
                 for i in range(target_rank - 1):
                     dim_size = np.random.choice(divisors)
@@ -3382,14 +3382,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 inputs = {'data': data, 'tensor': tensor}
                 expected = {'output': np.reshape(data, target_shape)}
 
-                #Make sure GPU doesn't have too much batch
-                max_batch_size_gpu = 400
-                if any([ dim > max_batch_size_gpu for dim in target_shape]):
-                    useCPUOnly = True
-                else:
-                    useCPUOnly = cpu_only
-
-                self._test_model(builder.spec, inputs, expected, useCPUOnly=useCPUOnly)
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
                 self.assertEqual(target_rank, builder._get_rank('output'))
 
     def test_reshape_like_gpu(self):
