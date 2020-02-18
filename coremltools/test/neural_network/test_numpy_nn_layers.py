@@ -323,7 +323,7 @@ class SimpleTest(CorrectnessTest):
         self._test_model(builder.spec, input, expected)
         for output_ in output_names:
             self.assertEqual(len(input_dim), builder._get_rank(output_))
-        
+
     def test_scale_constant(self):
         input_dim = (1, 2, 2)
         input_features = [('data', datatypes.Array(*input_dim))]
@@ -616,7 +616,7 @@ class SimpleTest(CorrectnessTest):
         expected = {'output': np.reshape(x, (1, 10, 1, 1))}
 
         self._test_model(builder.spec, input, expected)
-        self.assertEqual(len(target_dim), builder._get_rank('output'))  
+        self.assertEqual(len(target_dim), builder._get_rank('output'))
 
     def test_bias_matrix_cpu(self):
         input_dim = (1, 2, 2)
@@ -737,7 +737,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
         kernel_channels = input_dim[0]
         output_channels, kernel_channels, height, width = weight_dim
-        
+
         input_features = [
             ('input', datatypes.Array(*input_dim)),
             ('weight', datatypes.Array(*weight_dim))]
@@ -1264,7 +1264,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             builder.add_where_broadcastable(name='where',
                                             input_names=['condition', 'x', 'y'],
                                             output_name='output')
-            
+
             self.assertEqual(builder._get_rank('output'), -1)
 
 
@@ -3353,10 +3353,10 @@ class NewLayersSimpleTest(CorrectnessTest):
 
         for rank in range(1, 6):
             for _ in range(20):
-                input_shape = np.random.randint(low=2, high=8, size=rank)
+                input_shape = np.random.randint(low=2, high=4, size=rank)
                 n = int(np.prod(input_shape))
                 divisors = [d for d in range(1, n) if n % d == 0]
-                target_rank = np.random.randint(low=2, high=6)
+                target_rank = np.random.randint(low=2, high=4)
                 target_shape = [1]
                 for i in range(target_rank - 1):
                     dim_size = np.random.choice(divisors)
@@ -3501,7 +3501,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     if expected_rank == 0:
                         expected_rank = 1
                     self.assertEqual(expected_rank, builder._get_rank('output'))
-    
+
     def test_reduce_sum_gpu(self):
         self.test_reduce_sum_cpu(cpu_only=False)
 
