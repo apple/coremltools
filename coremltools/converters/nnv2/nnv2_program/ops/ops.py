@@ -254,12 +254,16 @@ class fill(Operation):
         super(fill, self).__init__(**kwargs)
 
     def type_inference(self):
-        shape_dtype = self.shape.dtype
-        shape_shape = self.shape.shape
-        shape_value = self.shape.val
-        if shape_value is not None:
-            return builtins.tensor(builtins.fp32, tuple(shape_value.tolist()))
-        raise NotImplementedError()  # TODO: rdar://58818028
+        if any_symbolic(self.shape.shape):
+            # We can't infer any shape if shape has variable length.
+            return builtins.tensor(builtins.fp32, (get_new_variadic_symbol(),))
+
+        # shape has fixed length here.
+        if self.shape.sym_val is None:
+            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
+            return builtins.tensor(builtins.fp32, shape)
+
+        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
 
     def eval(self):
         return np.full(shape=self.shape.val, fill_value=self.value.val)
@@ -1181,12 +1185,16 @@ class random_bernoulli(Operation):
         super(random_bernoulli, self).__init__(**kwargs)
 
     def type_inference(self):
-        shape_dtype = self.shape.dtype
-        shape_shape = self.shape.shape
-        shape_value = self.shape.val
-        if shape_value is not None:
-            return builtins.tensor(builtins.fp32, tuple(shape_value.tolist()))
-        raise NotImplementedError()  # TODO: rdar://58818028
+        if any_symbolic(self.shape.shape):
+            # We can't infer any shape if shape has variable length.
+            return builtins.tensor(builtins.fp32, (get_new_variadic_symbol(),))
+
+        # shape has fixed length here.
+        if self.shape.sym_val is None:
+            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
+            return builtins.tensor(builtins.fp32, shape)
+
+        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
 
     def sym_eval(self):
         pass
@@ -1276,12 +1284,16 @@ class random_normal(Operation):
         super(random_normal, self).__init__(**kwargs)
 
     def type_inference(self):
-        shape_dtype = self.shape.dtype
-        shape_shape = self.shape.shape
-        shape_value = self.shape.val
-        if shape_value is not None:
-            return builtins.tensor(builtins.fp32, tuple(shape_value.tolist()))
-        raise NotImplementedError()  # TODO: rdar://58818028
+        if any_symbolic(self.shape.shape):
+            # We can't infer any shape if shape has variable length.
+            return builtins.tensor(builtins.fp32, (get_new_variadic_symbol(),))
+
+        # shape has fixed length here.
+        if self.shape.sym_val is None:
+            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
+            return builtins.tensor(builtins.fp32, shape)
+
+        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
 
     def sym_eval(self):
         pass
@@ -1328,12 +1340,16 @@ class random_uniform(Operation):
         super(random_uniform, self).__init__(**kwargs)
 
     def type_inference(self):
-        shape_dtype = self.shape.dtype
-        shape_shape = self.shape.shape
-        shape_value = self.shape.val
-        if shape_value is not None:
-            return builtins.tensor(builtins.fp32, tuple(shape_value.tolist()))
-        raise NotImplementedError()  # TODO: rdar://58818028
+        if any_symbolic(self.shape.shape):
+            # We can't infer any shape if shape has variable length.
+            return builtins.tensor(builtins.fp32, (get_new_variadic_symbol(),))
+
+        # shape has fixed length here.
+        if self.shape.sym_val is None:
+            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
+            return builtins.tensor(builtins.fp32, shape)
+
+        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
 
     def sym_eval(self):
         pass
@@ -1628,8 +1644,22 @@ class reduce_argmax(ReductionAxis):
     def __init__(self, **kwargs):
         super(reduce_argmax, self).__init__(**kwargs)
 
-    def get_operator(self):
-        return np.argmax
+    def type_inference(self):
+        x_type = self.x.dtype
+        x_shape = self.x.shape
+        axis = self.axis.val
+
+        reduced_shape = list(x_shape)
+        axis = axis if axis >= 0 else axis + len(reduced_shape)
+        if self.keep_dims.val:
+            reduced_shape[axis] = 1
+        else:
+            reduced_shape.pop(axis)
+
+        return builtins.tensor(x_type, tuple(reduced_shape))
+
+    def eval(self):
+        return np.argmax(self.x.val, axis=self.axis.val)
 
 
 # rdar://58622145
@@ -1639,8 +1669,22 @@ class reduce_argmin(ReductionAxis):
     def __init__(self, **kwargs):
         super(reduce_argmin, self).__init__(**kwargs)
 
-    def get_operator(self):
-        return np.argmin
+    def type_inference(self):
+        x_type = self.x.dtype
+        x_shape = self.x.shape
+        axis = self.axis.val
+
+        reduced_shape = list(x_shape)
+        axis = axis if axis >= 0 else axis + len(reduced_shape)
+        if self.keep_dims.val:
+            reduced_shape[axis] = 1
+        else:
+            reduced_shape.pop(axis)
+
+        return builtins.tensor(x_type, tuple(reduced_shape))
+
+    def eval(self):
+        return np.argmin(self.x.val, axis=self.axis.val)
 
 
 # rdar://58622145

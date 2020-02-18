@@ -749,7 +749,7 @@ class TestElementwiseBinary:
                              itertools.product(
                                  [True, False],
                                  ['nnv1', 'nnv2'],
-                                 ['add', 'floor_div', 'maximum', 'minimum', 
+                                 ['add', 'floor_div', 'maximum', 'minimum',
                                   'mod', 'mul', 'pow', 'real_div', 'sub']
                              ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend, mode):
@@ -898,7 +898,7 @@ class TestElementwiseBinary:
                                  [True, False],
                                  ['nnv1', 'nnv2'],
                                  [rank for rank in range(1, 4)],
-                                 ['add', 'floor_div', 'maximum', 'minimum', 
+                                 ['add', 'floor_div', 'maximum', 'minimum',
                                   'mod', 'mul', 'pow', 'real_div', 'sub']
                              )
                              )
@@ -3543,7 +3543,7 @@ class TestClampedRelu:
     def test_builder_eval(self):
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         v = cb.clamped_relu(x=x_val, alpha=2.0, beta=1.0)
-        
+
         x = np.minimum(np.maximum(x_val, 0), 1.0)
         y = np.minimum(np.minimum(x_val, 0) * 2.0, 1.0)
         assert is_close(x + y, v.val)
@@ -3897,7 +3897,7 @@ class TestPReLU:
         b = np.minimum(x_val, 0)
 
         assert is_close(x_pos + b * alpha_br, v.val)
-        
+
         with pytest.raises(ValueError, match=r".* dimension -3 .*"):
             v = cb.prelu(x=x_val,
                          alpha=np.array([1, 2], dtype=np.float32))
@@ -3921,7 +3921,7 @@ class TestPReLU:
         shape = np.array([chan, dim, dim])
         x_val = np.random.rand(*shape)
         alpha_val = np.random.rand(chan).astype(np.float32)
-        
+
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 
@@ -3988,7 +3988,7 @@ class TestParametricSoftplus:
         out = alpha_br * np.log(np.exp(x_val * beta_br) + 1)
 
         assert is_close(out, v.val)
-        
+
         with pytest.raises(ValueError, match=r".* dimension -3 .*"):
             v = cb.softplus_parametric(x=x_val,
                                        alpha=np.array([1, 2], dtype=np.float32),
@@ -4025,7 +4025,7 @@ class TestParametricSoftplus:
         x_val = np.random.rand(*shape)
         alpha_val = np.random.rand(chan).astype(np.float32)
         beta_val = np.random.rand(chan).astype(np.float32)
-        
+
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 

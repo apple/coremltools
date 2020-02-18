@@ -472,6 +472,112 @@ def expand_dims(const_context, builder, op):
         output_name=op.name,
         axes=[op.axis.val])
 
+
+@register_v2_op
+def fill(const_context, builder, op):
+    if op.shape.val is None:
+        builder.add_fill_dynamic(
+            name=op.name,
+            input_name=op.shape.name,
+            output_name=op.name,
+            value=op.value.val
+        )
+    else:
+        builder.add_fill_static(
+            name=op.name,
+            output_name=op.name,
+            output_shape=op.shape.val,
+            value=op.value.val
+        )
+
+
+@register_v2_op
+def random_bernoulli(const_context, builder, op):
+    if op.shape.val is None:
+        builder.add_random_bernoulli_dynamic(
+            name=op.name,
+            input_name=op.shape.name,
+            output_name=op.name,
+            prob=op.prob.val,
+            seed=op.seed.val,
+        )
+    else:
+        builder.add_random_bernoulli_static(
+            name=op.name,
+            output_name=op.name,
+            output_shape=op.shape.val,
+            prob=op.prob.val,
+            seed=op.seed.val,
+        )
+
+
+@register_v2_op
+def random_categorical(const_context, builder, op):
+    builder.add_categorical_distribution(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        num_samples=op.size.val,
+        is_logits=(op.mode.val == 'logits'),
+        seed=op.seed.val,
+    )
+
+
+@register_v2_op
+def random_normal(const_context, builder, op):
+    if op.shape.val is None:
+        builder.add_random_normal_dynamic(
+            name=op.name,
+            input_name=op.shape.name,
+            output_name=op.name,
+            mean=op.mean.val,
+            stddev=op.stddev.val,
+            seed=op.seed.val,
+        )
+    else:
+        builder.add_random_normal_static(
+            name=op.name,
+            output_name=op.name,
+            output_shape=op.shape.val,
+            mean=op.mean.val,
+            stddev=op.stddev.val,
+            seed=op.seed.val,
+        )
+
+
+@register_v2_op
+def random_uniform(const_context, builder, op):
+    if op.shape.val is None:
+        builder.add_random_uniform_dynamic(
+            name=op.name,
+            input_name=op.shape.name,
+            output_name=op.name,
+            minval=op.low.val,
+            maxval=op.high.val,
+            seed=op.seed.val,
+        )
+    else:
+        builder.add_random_uniform_static(
+            name=op.name,
+            output_name=op.name,
+            output_shape=op.shape.val,
+            minval=op.low.val,
+            maxval=op.high.val,
+            seed=op.seed.val,
+        )
+
+
+@register_v2_op
+def reduce_argmax(const_context, builder, op):
+    builder.add_argmax(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axis=op.axis.val,
+        keepdims=op.keep_dims.val,
+    )
+
+
 @register_v2_op
 def gru(const_context, builder, op):
     # Input shape: [b, s, I]
