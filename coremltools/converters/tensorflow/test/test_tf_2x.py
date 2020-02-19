@@ -12,6 +12,102 @@ import pytest
 
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+class TestSingleOp(unittest.TestCase):
+    # In this class we test tensorflow 2.x op without using Keras API
+
+    def _test_coreml(self, model, input_dic=None, output_names=None):
+
+        # Get concrete function
+        concrete_func = model.__call__.get_concrete_function()
+
+        # Get function input
+        if input_dic == None:
+            input_dic = []
+            for input in concrete_func.inputs:
+                name = input.name.split(':')[0]
+                shape = input.shape
+                if shape == None or any([x is None for x in input.shape.as_list()]):
+                    raise ValueError("Please specify 'input_dic' for dynamic shape input.")
+                shape = input.shape.as_list()
+                input_dic.append((name, shape))
+        else:
+            if not isinstance(input_dic, list):
+                raise TypeError("'input_dic' should be [(str, tensor)] type.")
+
+        inputs = [(name, np.random.uniform(-1,1,shape).astype(np.float32), shape)
+                  for name, shape in input_dic]
+
+        # Get output names
+        if output_names == None:
+            output_names = [output.name.split(':')[0] for output in concrete_func.outputs]
+        else:
+            if not isinstance(output_names, list):
+                raise TypeError("'output_names' should be [str] type.")
+        # Tensorflow predict
+        tf_inputs = [tf.convert_to_tensor(value) for name, value, shape in inputs]
+        tf_outputs = model(*tf_inputs)
+
+        # Coreml model predict
+        # Somehow the converter cannot have input shape [] now
+        # TODO: Need to fix it
+        coreml_inputs = {name: shape if not shape == [] else [1,] for name, value, shape in inputs}
+        coreml_predict_inputs = {name: value if not shape == [] else np.array([value]) for name, value, shape in inputs}
+
+        coreml_model = coremltools.converters.tensorflow.convert(
+            [concrete_func],
+            inputs=coreml_inputs,
+            outputs=output_names
+        )
+        coreml_outputs = coreml_model.predict(coreml_predict_inputs)
+
+        # Compare Tensorflow and Coreml
+        if not isinstance(tf_outputs, tuple):
+            tf_outputs = tuple([tf_outputs])
+        self.assertTrue(len(tf_outputs), len(coreml_outputs))
+        self.assertTrue(len(tf_outputs), len(output_names))
+        for i, output_name in enumerate(output_names):
+            np.testing.assert_almost_equal(tf_outputs[i].numpy(), coreml_outputs[output_name], decimal=3)
+
+    def test_single_output_example(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return x+y
+        self._test_coreml(model())
+
+    def test_multiple_outputs_example(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return x+y, x-y, x*y
+        self._test_coreml(model())
+
+    def test_relu(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[10,10], dtype=tf.float32)])
+
+            def __call__(self, x):
+                return tf.nn.relu(x)
+        self._test_coreml(model())
+
+    def test_control_flow(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.float32)])
+
+            def __call__(self, x):
+                if x <= 0.:
+                    return 0.
+                else:
+                    return x * 3.
+        self._test_coreml(model())
+
+@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
 
     def setUp(self):
