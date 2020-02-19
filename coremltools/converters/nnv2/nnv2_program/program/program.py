@@ -168,7 +168,7 @@ class Operation(object):
                 self.eval()
             except NotImplementedError as e:
                 do_auto_val = False
-        elif do_auto_sym_val:
+        if not do_auto_val and do_auto_sym_val:
             # Is ref_impl_sym implemented?
             try:
                 self.sym_eval()

@@ -445,6 +445,15 @@ def MaxPool(context, node):
 
 
 @register_tf_op
+def MatrixBandPart(context, node):
+    x = context[node.inputs[0]]
+    lower = context[node.inputs[1]]
+    upper = context[node.inputs[2]]
+    x = cb.band_part(x=x, lower=lower, upper=upper, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
 def Max(context, node):
     x = context[node.inputs[0]]
     axes = context[node.inputs[1]]
@@ -612,8 +621,10 @@ def Squeeze(context, node):
 @register_tf_op
 def Multinomial(context, node):
     x = context[node.inputs[0]]
-    num_samples = context[node.inputs[1]]
-    x = cb.random_categorical(x=x, size=num_samples, name=node.name)
+    size = context[node.inputs[1]]
+    x = cb.random_categorical(x=x, size=size, name=node.name)
+    context.add(node.name, x)
+
 
 @register_tf_op(tf_alias=['Elu'])
 def ELU(context, node):

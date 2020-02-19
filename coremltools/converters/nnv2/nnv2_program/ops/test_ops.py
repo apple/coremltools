@@ -195,12 +195,13 @@ class TestCumsum():
         with pytest.raises(TypeError):
             pred = cb.cumsum(x=x_val)
 
+
 class TestAvgPool:
 
     @pytest.mark.parametrize('use_cpu_only, backend',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                              ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x_val = np.array([
@@ -227,11 +228,11 @@ class TestAvgPool:
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [(1,)],
                                  [(1,), (2,)],
                                  ['same', 'valid']))
-    def test_avg_pool_1d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
+    def test_tf_avg_pool_1d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
         input_shape = np.random.randint(low=2, high=6, size=3)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=input_shape)
@@ -243,17 +244,92 @@ class TestAvgPool:
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [(1,), (2,), (1, 1), (1, 2), (2, 2)],
                                  [(1,), (2,), (1, 1), (1, 2), (2, 2)],
                                  ['same', 'valid']))
-    def test_avg_pool_2d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
+    def test_tf_avg_pool_2d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
         shape = np.random.randint(low=2, high=6, size=4)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             res = tf.nn.avg_pool(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
             run_compare_tf(graph, {x: _random_gen(shape, rand_min=-100, rand_max=100)},
                            res, use_cpu_only=use_cpu_only, backend=backend)
+
+
+class TestBandPart:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        x_val = np.array(
+            [[3., 3., 5., 1.],
+             [5., 6., 3., 8.],
+             [7., 2., 7., 2.],
+             [6., 7., 7., 1.]], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+        input_values = {'x': x_val}
+
+        def build(x):
+            return [
+                cb.band_part(x=x),
+                cb.band_part(x=x, lower=0, upper=-1),
+                cb.band_part(x=x, lower=-1, upper=0),
+                cb.band_part(x=x, lower=0, upper=0)
+            ]
+
+        expected_output_types = [
+            (4, 4, builtins.fp32), (4, 4, builtins.fp32),
+            (4, 4, builtins.fp32), (4, 4, builtins.fp32),
+        ]
+
+        expected_outputs = [
+            np.array(
+                [[3., 3., 5., 1.],
+                 [5., 6., 3., 8.],
+                 [7., 2., 7., 2.],
+                 [6., 7., 7., 1.]], dtype=np.float32),
+            np.array(
+                [[3., 3., 5., 1.],
+                 [0., 6., 3., 8.],
+                 [0., 0., 7., 2.],
+                 [0., 0., 0., 1.]], dtype=np.float32),
+            np.array(
+                [[3., 0., 0., 0.],
+                 [5., 6., 0., 0.],
+                 [7., 2., 7., 0.],
+                 [6., 7., 7., 1.]], dtype=np.float32),
+            np.array(
+                [[3., 0., 0., 0.],
+                 [0., 6., 0., 0.],
+                 [0., 0., 7., 0.],
+                 [0., 0., 0., 1.]], dtype=np.float32),
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, lower_and_upper',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                                 [rank for rank in range(2, 6)],
+                                 [(0, -1), (-1, 0), (0, 0)]))
+    def test_tf(self, use_cpu_only, backend, rank, lower_and_upper):
+        lower, upper = lower_and_upper
+        shape = np.random.randint(low=3, high=4, size=rank)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=shape)
+            res = tf.matrix_band_part(x, num_lower=lower, num_upper=upper)
+            run_compare_tf(graph, {x: _random_gen(shape, rand_min=-100, rand_max=100)},
+                           res, use_cpu_only=use_cpu_only, backend=backend)
+
 
 class TestDepthToSpace:
 
@@ -1131,60 +1207,108 @@ class TestExpandDims:
 
 class TestFill:
 
-    @pytest.mark.skipif(True, reason='TODO')
-    @pytest.mark.parametrize('use_cpu_only, value',
+    @pytest.mark.parametrize('use_cpu_only, backend',
                              itertools.product(
                                  [True, False],
-                                 [0.]))
-    def test_builder_to_backend_smoke(self, use_cpu_only, value):
+                                 ['nnv1', 'nnv2']
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         shape = (2, 1, 3)
-        x_val = np.array([1.], dtype=np.float32)
-        input_placeholders = {
-            'x': cb.placeholder(shape=x_val.shape),
-            'y': cb.placeholder(shape=x_val.shape)}
+        x_val = np.zeros(shape=shape, dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
 
-        input_values = {'x': x_val, 'y': x_val}
+        input_values = {'x': x_val}
 
-        def build(x, y):
-            return [
-                cb.add(x=x, y=y),
-                cb.fill(shape=shape, value=value)
-            ]
+        def build(x):
+            return cb.add(x=x, y=cb.fill(shape=shape, value=1.))
 
-        expected_output_types = [
-            (1, builtins.fp32),
-            (2, 1, 3, builtins.fp32)
-        ]
+        expected_output_types = [(2, 1, 3, builtins.fp32)]
+        expected_outputs = [np.full(shape=shape, fill_value=1.)]
 
-        expected_outputs = [
-            np.array(np.ones(shape=(1,)) * 2., np.float32),
-            np.full(shape=shape, fill_value=value)
-        ]
-
-        run_compare_builder(build, input_placeholders, input_values, expected_output_types,
-                            expected_outputs=expected_outputs,
-                            use_cpu_only=use_cpu_only)
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
 
     @ssa_fn
     def test_builder_eval(self):
         shape = np.random.randint(low=1, high=3, size=5).astype(np.int32)
-        v = cb.fill(shape=shape, value=1991.)
-        assert is_close(np.full(shape, fill_value=1991.), v.val)
+        res = cb.fill(shape=shape, value=1991.).val
+        assert is_close(np.full(shape, fill_value=1991.), res)
+
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, value',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 [rank for rank in range(1, 6)],
+                                 [-1917., 0., 2048.]
+                             ))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, value):
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
+        x_val = np.zeros(shape=shape, dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+        input_values = {'x': x_val}
+
+        def build(x):
+            return cb.add(x=x, y=cb.fill(shape=shape, value=value))
+
+        expected_outputs = [np.full(shape=shape, fill_value=value)]
+        expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                             ))
+    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+        # Test variadic (rdar://59559656)
+
+        s_len = get_new_symbol()
+        input_placeholders = {
+            'shape': cb.placeholder(shape=(s_len,), dtype=pm.INT32),
+        }
+
+        def build(shape):
+            return [cb.fill(shape=shape)]
+
+        expected_output_types = [(UNK_VARIADIC, builtins.fp32)]
+        expected_outputs = [np.zeros(shape=(2, 1, 3), dtype=np.float32)]
+        input_values = {'shape': np.array([2, 1, 3], dtype=np.float32)}
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
     @pytest.mark.parametrize('use_cpu_only, backend, rank, value',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1'],
                                  [rank for rank in range(1, 6)],
                                  [-19., 0., 37.]))
     def test_tf(self, use_cpu_only, backend, rank, value):
-        shape = np.random.randint(low=1, high=3, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.fill(dims=np.array(shape, dtype=np.float32), value=value))
-            run_compare_tf(graph, {x: np.random.rand(*shape)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+
+        def test_tf_static():
+            shape = np.random.randint(low=1, high=3, size=rank)
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=shape)
+                ref = tf.add(x, tf.fill(dims=np.array(shape, dtype=np.float32), value=value))
+                run_compare_tf(graph, {x: np.random.rand(*shape)},
+                               ref, use_cpu_only=use_cpu_only, backend=backend)
+
+        def test_tf_dynamic():
+            shape = np.random.randint(low=1, high=3, size=rank)
+            with tf.Graph().as_default() as graph:
+                s = tf.placeholder(tf.int32, shape=(len(shape),))
+                ref = tf.fill(dims=s, value=value)
+                run_compare_tf(graph, {s: np.array(shape, dtype=np.float32)},
+                               ref, use_cpu_only=use_cpu_only, backend=backend)
+
+        test_tf_static()
+        test_tf_dynamic()
 
 
 class TestGreater:
@@ -1388,6 +1512,33 @@ class TestGRU:
                     use_cpu_only=use_cpu_only, frontend_only=False,
                     backend=backend)
 
+
+class TestL2Pool:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True],
+                                 ['nnv1'],
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        x_val = np.array([
+            [[[-10., -6.], [-7., 9.]], [[-3., 0.], [11., 7.]]]], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+        input_values = {'x': x_val}
+
+        def build(x):
+            return [
+                cb.l2_pool(x=x, kernel_sizes=[1, 2], strides=[2, 1], pad_type='valid'),
+            ]
+
+        expected_output_types = [(1, 2, 1, 1, builtins.fp32)]
+        expected_outputs = [np.array([[[[11.66190338]], [[3.]]]], dtype=np.float32)]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False, backend=backend)
+
+
 class TestLess:
 
     @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
@@ -1558,7 +1709,7 @@ class TestMaxPool:
     @pytest.mark.parametrize('use_cpu_only, backend',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                              ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x_val = np.array([
@@ -1584,7 +1735,7 @@ class TestMaxPool:
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [(1,)],
                                  [(1,), (2,)],
                                  ['same', 'valid']))
@@ -1600,7 +1751,7 @@ class TestMaxPool:
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [(1,), (2,), (1, 1), (1, 2), (2, 2)],
                                  [(1,), (2,), (1, 1), (1, 2), (2, 2)],
                                  ['same', 'valid']))
@@ -1615,18 +1766,14 @@ class TestMaxPool:
 
 class TestMatMul:
 
-    @pytest.mark.skipif(not sys.version_info.major == 3 and sys.version_info.minor >= 6,
-                        reason='input map order not guaranteed.')
     @pytest.mark.parametrize('use_cpu_only, backend',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2']
                              ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x_val = np.array([[-4.71823726, 11.94002459],
-                          [-3.39397839, 9.21668793]], dtype=np.float32)
-        y_val = np.array([[1.23134601, -0.09504865],
-                          [-1.40759034, -0.88166538]], dtype=np.float32)
+        x_val = np.array([[-4., 13.], [-3., 9.]], dtype=np.float32)
+        y_val = np.array([[1., -7.], [-1., -8.]], dtype=np.float32)
         input_placeholders = {
             'x': cb.placeholder(shape=x_val.shape),
             'y': cb.placeholder(shape=y_val.shape)}
@@ -1634,13 +1781,14 @@ class TestMatMul:
 
         def build(x, y):
             return [
-                cb.matmul(x=x, y=y)
+                cb.matmul(x=x, y=y),
+                cb.matmul(x=x, y=y, transpose_x=True, transpose_y=True)
             ]
 
-        expected_output_types = [(2, 2, builtins.fp32)]
+        expected_output_types = [(2, 2, builtins.fp32), (2, 2, builtins.fp32)]
         expected_outputs = [
-            np.array([[-22.61644592, -10.07864419],
-                      [-17.15248267, -7.80344157]], dtype=np.float32)
+            np.array([[-17., -76.], [-12., -51.]], dtype=np.float32),
+            np.array([[17., 28.], [-50., -85.]], dtype=np.float32)
         ]
 
         run_compare_builder(build, input_placeholders, input_values,
@@ -1654,19 +1802,18 @@ class TestMatMul:
         v = cb.matmul(x=x_val, y=y_val)
         assert is_close(np.matmul(x_val, y_val), v.val)
 
-    # TODO: rdar://59460970 (NNv2: More tests for MatMul op)
-    @pytest.mark.skipif(not sys.version_info.major == 3 and sys.version_info.minor >= 6,
-                        reason='input map order not guaranteed.')
-    @pytest.mark.parametrize('use_cpu_only, backend, dim, transpose_x, transpose_y',
+    @pytest.mark.parametrize('use_cpu_only, backend, shapes',
                              itertools.product(
-                                 [True],
-                                 ['nnv2'],
-                                 [2, 4, 8],
-                                 [False],
-                                 [True, False]))
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, dim, transpose_x, transpose_y):
-        shape_x = np.array([dim, dim])
-        shape_y = shape_x if transpose_y else np.flip(shape_x, axis=-1)
+                                 [True, False],
+                                 ['nnv1'],
+                                 [((3, 2, 3, 4), (3, 2, 4, 5)),
+                                  ((1, 1, 1, 3, 4), (1, 3, 2, 4, 5)),
+                                  ((1, 3, 1, 2, 3), (1, 4, 3, 2)),
+                                  ((1, 3, 4), (3, 2, 4, 6)),
+                                  ((7, 4), (3, 9, 5, 4, 3))]
+                             ))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, shapes):
+        shape_x, shape_y = shapes
         x_val = np.random.rand(*shape_x)
         y_val = np.random.rand(*shape_y)
         input_placeholders = {
@@ -1676,25 +1823,20 @@ class TestMatMul:
         input_values = {'x': x_val, 'y': y_val}
 
         def build(x, y):
-            return [
-                cb.matmul(x=x, y=y, transpose_x=transpose_x, transpose_y=transpose_y)
-            ]
+            return [cb.matmul(x=x, y=y, transpose_x=False, transpose_y=False)]
 
-        expected_outputs = [
-            np.matmul(x_val, np.transpose(y_val) if transpose_y else y_val)
-        ]
-
+        expected_outputs = [np.matmul(x_val, y_val)]
         expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
 
-        run_compare_builder(build, input_placeholders, input_values, expected_output_types,
-                            expected_outputs=expected_outputs,
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
     @pytest.mark.parametrize('use_cpu_only, backend, dim, transpose_x, transpose_y',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [2, 4, 8],
                                  [True, False],
                                  [True, False]))
@@ -1867,26 +2009,23 @@ class TestRandomBernoulli:
     @pytest.mark.parametrize('use_cpu_only, backend',
             itertools.product(
                 [True, False],
-                ['nnv2'],
+                ['nnv1', 'nnv2'],
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        """
-        Construct op from builder and test output numerical parity.
-        """
 
-        x_val = np.array([1.], dtype=np.int32)
+        x_val = np.array([0.], dtype=np.float32)
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 
         def build(x):
             return [
-                cb.relu(x=x),
+                cb.add(x=x, y=x),
                 cb.random_bernoulli(shape=np.array([2, 1, 3], np.int32), prob=1.0),
                 cb.random_bernoulli(shape=np.array([3, 1, 2], np.int32), prob=0.0),
             ]
 
         expected_outputs = [
-            np.array(np.ones(shape=(1,)), np.float32),
+            np.array(np.zeros(shape=(1,)), np.float32),
             np.array(np.ones(shape=(2, 1, 3)), np.float32),
             np.array(np.zeros(shape=(3, 1, 2)), np.float32),
         ]
@@ -1901,26 +2040,23 @@ class TestRandomBernoulli:
     @pytest.mark.parametrize('use_cpu_only, backend, rank, prob',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [rank for rank in range(1, 6)],
                                  [1.0, 0.0]))
     def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, prob):
-        low_factor = np.random.randint(low=2, high=4)
-        lo = int(np.power(1000, 1. / rank)) * low_factor
-        hi = int(np.power(2000, 1. / rank)) * np.random.randint(low=low_factor, high=4)
-        shape = np.random.randint(low=lo, high=hi, size=rank, dtype=np.int32)
-        x_val = np.array([1], dtype=np.int32)
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
+        x_val = np.array([0.], dtype=np.float32)
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 
         def build(x):
             return [
-                cb.relu(x=x),
+                cb.add(x=x, y=x),
                 cb.random_bernoulli(shape=shape, prob=prob)
             ]
 
         expected_outputs = [
-            np.array(np.ones(shape=(1,)), np.float32),
+            np.array(np.zeros(shape=(1,)), np.float32),
             np.random.binomial(1, prob, shape)
         ]
 
@@ -1930,19 +2066,20 @@ class TestRandomBernoulli:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skip("TODO: rdar://59071295 (Add dynamic input / TF conversion in frontend for Random Distribution ops)")
     @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
-    @pytest.mark.parametrize('use_cpu_only, backend, size',
+    @pytest.mark.parametrize('use_cpu_only, backend, size, rank',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
-                                 [size for size in range(1, 10)]))
-    def test_tf(self, use_cpu_only, backend, size):
-        input_shape = np.random.randint(low=2, high=6, size=2)
+                                 ['nnv1', 'nnv2'],
+                                 [size for size in range(1, 5)],
+                                 [rank for rank in range(1, 6)],
+                             ))
+    def test_tf_keras(self, use_cpu_only, backend, size, rank):
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            ref = tf.keras.backend.random_binomial(shape=(1, 2, 3), p=1.0)
-            run_compare_tf(graph, {x: np.random.rand(*input_shape)},
+            x = tf.placeholder(tf.float32, shape=shape)
+            ref = tf.add(x, tf.keras.backend.random_binomial(shape=shape, p=1.0))
+            run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
@@ -1955,12 +2092,9 @@ class TestRandomCategorical:
     @pytest.mark.parametrize('use_cpu_only, backend',
             itertools.product(
                 [True, False],
-                ['nnv2'],
+                ['nnv1', 'nnv2'],
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        """
-        Construct op from builder and test output numerical parity.
-        """
         x_val = np.array([1], dtype=np.int32)
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
@@ -2051,7 +2185,6 @@ class TestRandomCategorical:
         assert np.allclose(np.true_divide(pred1, n_sample),
                            np.true_divide(ref1, n_sample), atol=1e-2)
 
-    @pytest.mark.skip("TODO: rdar://59071295 (Add dynamic input / TF conversion in frontend for Random Distribution ops)")
     @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
     @pytest.mark.parametrize('use_cpu_only, backend, size',
                              itertools.product(
@@ -2060,11 +2193,11 @@ class TestRandomCategorical:
                                  [size for size in range(1, 10)]))
     def test_tf(self, use_cpu_only, backend, size):
         # TensorFlow's input is 2-D tensor with shape [batch_size, num_classes].
-        input_shape = np.random.randint(low=2, high=6, size=2)
+        shape = np.random.randint(low=1, high=6, size=2)
         with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
+            x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.random.categorical(x, size)
-            run_compare_tf(graph, {x: np.random.rand(*input_shape)},
+            run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only,
                            validate_shapes_only=True, backend=backend)
 
@@ -2074,26 +2207,22 @@ class TestRandomNormal:
     @pytest.mark.parametrize('use_cpu_only, backend',
             itertools.product(
                 [True, False],
-                ['nnv2'],
+                ['nnv1', 'nnv2'],
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        """
-        Construct op from builder and test output numerical parity.
-        """
-
-        x_val = np.array([1], dtype=np.float32)
+        x_val = np.array([0.], dtype=np.float32)
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 
         def build(x):
             return [
-                cb.relu(x=x),
+                cb.add(x=x, y=x),
                 cb.random_normal(shape=np.array([2, 1, 3], np.int32), mean=1., stddev=0.),
                 cb.random_normal(shape=np.array([3, 1, 2], np.int32), mean=0., stddev=0.),
             ]
 
         expected_outputs = [
-            np.array(np.ones(shape=(1,)), np.float32),
+            np.array(np.zeros(shape=(1,)), np.float32),
             np.array(np.ones(shape=(2, 1, 3)), np.float32),
             np.array(np.zeros(shape=(3, 1, 2)), np.float32),
         ]
@@ -2107,23 +2236,23 @@ class TestRandomNormal:
     @pytest.mark.parametrize('use_cpu_only, backend, rank, mean',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [rank for rank in range(1, 6)],
                                  [1.0, 0.0]))
     def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, mean):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
-        x_val = np.array([1], dtype=np.int32)
+        x_val = np.array([0.], dtype=np.float32)
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 
         def build(x):
             return [
-                cb.relu(x=x),
+                cb.add(x=x, y=x),
                 cb.random_normal(shape=shape, mean=mean, stddev=0.)
             ]
 
         expected_outputs = [
-            np.array(np.ones(shape=(1,)), np.float32),
+            np.array(np.zeros(shape=(1,)), np.float32),
             np.random.normal(loc=mean, scale=0., size=shape)
         ]
 
@@ -2133,19 +2262,36 @@ class TestRandomNormal:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skip("TODO: rdar://59071295 (Add dynamic input / TF conversion in frontend for Random Distribution ops)")
     @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
-    @pytest.mark.parametrize('use_cpu_only, backend, mean',
+    @pytest.mark.parametrize('use_cpu_only, backend, mean, rank',
                              itertools.product(
-                                 [True],
-                                 ['nnv2'],
-                                 [0.]))
-    def test_tf(self, use_cpu_only, backend, mean):
-        input_shape = np.random.randint(low=2, high=6, size=2)
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 [0.],
+                                 [rank for rank in range(1, 6)]
+                             ))
+    def test_tf(self, use_cpu_only, backend, mean, rank):
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            ref = tf.keras.backend.random_normal(shape=(1, 2, 3), mean=mean, stddev=0.)
-            run_compare_tf(graph, {x: np.random.rand(*input_shape)},
+            x = tf.placeholder(tf.float32, shape=shape)
+            ref = tf.add(x, tf.random.normal(shape=shape, mean=mean, stddev=0.))
+            run_compare_tf(graph, {x: np.random.rand(*shape)},
+                           ref, use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, mean, rank',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 [0.],
+                                 [rank for rank in range(1, 6)]
+                             ))
+    def test_tf_keras(self, use_cpu_only, backend, mean, rank):
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=shape)
+            ref = tf.add(x, tf.keras.backend.random_normal(shape=shape, mean=mean, stddev=0.))
+            run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
@@ -2154,26 +2300,22 @@ class TestRandomUniform:
     @pytest.mark.parametrize('use_cpu_only, backend',
             itertools.product(
                 [True, False],
-                ['nnv2'],
+                ['nnv1', 'nnv2'],
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        """
-        Construct op from builder and test output numerical parity.
-        """
-
-        x_val = np.array([1], dtype=np.int32)
+        x_val = np.array([0.], dtype=np.float32)
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 
         def build(x):
             return [
-                cb.relu(x=x),
+                cb.add(x=x, y=x),
                 cb.random_uniform(shape=np.array([2, 1, 3], np.int32), low=0., high=0.),
                 cb.random_uniform(shape=np.array([3, 1, 2], np.int32), low=1., high=1.),
             ]
 
         expected_outputs = [
-            np.array(np.ones(shape=(1,)), np.float32),
+            np.array(np.zeros(shape=(1,)), np.float32),
             np.array(np.zeros(shape=(2, 1, 3)), np.float32),
             np.array(np.ones(shape=(3, 1, 2)), np.float32),
         ]
@@ -2187,26 +2329,23 @@ class TestRandomUniform:
     @pytest.mark.parametrize('use_cpu_only, backend, rank, low, high',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [rank for rank in range(1, 6)],
                                  [0.0], [0.0]))
     def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, low, high):
-        low_factor = np.random.randint(low=2, high=4)
-        lo = int(np.power(1000, 1. / rank)) * low_factor
-        hi = int(np.power(2000, 1. / rank)) * np.random.randint(low=low_factor, high=4)
-        shape = np.random.randint(low=lo, high=hi, size=rank, dtype=np.int32)
-        x_val = np.array([1], dtype=np.int32)
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
+        x_val = np.array([0.], dtype=np.float32)
         input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 
         def build(x):
             return [
-                cb.relu(x=x),
+                cb.add(x=x, y=x),
                 cb.random_uniform(shape=shape, low=low, high=high)
             ]
 
         expected_outputs = [
-            np.array(np.ones(shape=(1,)), np.float32),
+            np.array(np.zeros(shape=(1,)), np.float32),
             np.random.uniform(low=low, high=high, size=shape)
         ]
 
@@ -2216,19 +2355,32 @@ class TestRandomUniform:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skip("TODO: rdar://59071295 (Add dynamic input / TF conversion in frontend for Random Distribution ops)")
     @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
-    @pytest.mark.parametrize('use_cpu_only, backend, low, high',
+    @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank',
                              itertools.product(
-                                 [True],
-                                 ['nnv2'],
-                                 [0.], [0.]))
-    def test_tf(self, use_cpu_only, backend, low, high):
-        input_shape = np.random.randint(low=2, high=6, size=2)
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 [0.], [0.], [rank for rank in range(1, 2)]))
+    def test_tf(self, use_cpu_only, backend, low, high, rank):
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            ref = tf.keras.backend.random_uniform(shape=(1, 2, 3), minval=low, maxval=high)
-            run_compare_tf(graph, {x: np.random.rand(*input_shape)},
+            x = tf.placeholder(tf.float32, shape=shape)
+            ref = tf.add(x, tf.random.uniform(shape=shape, minval=low, maxval=high))
+            run_compare_tf(graph, {x: np.random.rand(*shape)},
+                           ref, use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 [1.], [1.], [rank for rank in range(1, 6)]))
+    def test_tf_keras(self, use_cpu_only, backend, low, high, rank):
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=shape)
+            ref = tf.add(x, tf.keras.backend.random_uniform(shape=shape, minval=low, maxval=high))
+            run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
@@ -3737,7 +3889,7 @@ class TestLinear:
     @pytest.mark.parametrize('use_cpu_only, backend',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                              ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x_val = np.array([[-4.7182, 11.94],
@@ -3774,7 +3926,7 @@ class TestLinear:
     @pytest.mark.parametrize('use_cpu_only, backend, dim',
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
+                                 ['nnv1', 'nnv2'],
                                  [2, 4, 8]))
     def test_builder_to_backend_stress(self, use_cpu_only, backend, dim):
         shape = np.array([dim, dim])

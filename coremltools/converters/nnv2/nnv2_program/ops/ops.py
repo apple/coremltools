@@ -18,6 +18,51 @@ from ..program.program import (
 from ..program.input_type import *
 from .op_registry import register_op
 
+
+def _broadcast_shapes(shape_x, shape_y):
+    """
+    Check and broadcast given input shapes.
+    :param shape_x: tuple of int or symbols
+        Shape of the first tensor (possibly symbolic).
+    :param shape_y: tuple of int or symbols
+        Shape of the second tensor (possibly symbolic).
+    :return: tuple of int or symbols
+        Result from broadcast.
+    """
+    if len(shape_x) < len(shape_y):
+        shape_x = ([1] * (len(shape_y) - len(shape_x))) + shape_x
+    if len(shape_y) < len(shape_x):
+        shape_y = ([1] * (len(shape_x) - len(shape_y))) + shape_y
+
+    ret_shapes = list()
+    for i in range(len(shape_x)):
+        x_unknown = is_symbolic(shape_x[i])
+        y_unknown = is_symbolic(shape_y[i])
+        if shape_x[i] == 1:
+            ret_shapes.append(shape_y[i])
+        elif shape_y[i] == 1:
+            ret_shapes.append(shape_x[i])
+        elif not y_unknown and shape_y[i] > 1:
+            if not x_unknown and shape_x[i] != shape_y[i]:
+                raise ValueError(
+                    'Incompatible dim {} in shapes {} vs. {}'.format(
+                        i, shape_x, shape_y))
+            ret_shapes.append(shape_y[i])
+        elif not x_unknown and shape_x[i] > 1:
+            if not y_unknown and shape_x[i] != shape_y[i]:
+                raise ValueError(
+                    'Incompatible dim {} in shapes {} vs. {}'.format(
+                        i, shape_x, shape_y))
+            ret_shapes.append(shape_x[i])
+        elif x_unknown or y_unknown:
+            ret_shapes.append(sm.functions.Max(shape_x[i], shape_y[i]))
+        else:
+            assert (shape_x[i] == shape_y[i])
+            ret_shapes.append(shape_x[i])
+
+    return tuple(ret_shapes)
+
+
 def _promoted_primitive_type(type1, type2):
     """
     Given a pair of tensor or primitive types, find the smallest type that can store an instance
@@ -70,38 +115,8 @@ class elementwise_binary(Operation):
         # both a, b are tensors
         shapea = list(typea.get_shape())
         shapeb = list(typeb.get_shape())
-        if len(shapea) < len(shapeb):
-            shapea = ([1] * (len(shapeb) - len(shapea))) + shapea
-        if len(shapeb) < len(shapea):
-            shapeb = ([1] * (len(shapea) - len(shapeb))) + shapeb
-        # get loosest shape
-        retshape = []
-        for i in range(len(shapea)):
-            a_unknown = is_symbolic(shapea[i])
-            b_unknown = is_symbolic(shapeb[i])
-            if shapea[i] == 1:
-                retshape.append(shapeb[i])
-            elif shapeb[i] == 1:
-                retshape.append(shapea[i])
-            elif not b_unknown and shapeb[i] > 1:
-                if not a_unknown and shapea[i] != shapeb[i]:
-                    raise ValueError(
-                        'Incompatible dimension {} in {} operation {}'.format(
-                            i, node.op, node.name))
-                retshape.append(shapeb[i])
-            elif not a_unknown and shapea[i] > 1:
-                if not b_unknown and shapea[i] != shapeb[i]:
-                    raise ValueError(
-                        'Incompatible dimension {} in {} operation {}'.format(
-                            i, node.op, node.name))
-                retshape.append(shapea[i])
-            elif a_unknown or b_unknown:
-                retshape.append(sm.functions.Max(shapea[i], shapeb[i]))
-            else:
-                assert (shapea[i] == shapeb[i])
-                retshape.append(shapea[i])
-        return builtins.tensor(primitive_type, retshape)
-
+        ret_shape = _broadcast_shapes(shapea, shapeb)
+        return builtins.tensor(primitive_type, ret_shape)
 
     def eval(self):
         return self.get_operator()(self.x.val, self.y.val)
@@ -118,6 +133,61 @@ class elementwise_binary(Operation):
         (e.g., less, greater)
         """
         return promoted_dtype
+
+
+class Pooling(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        kernel_sizes=IntTensorInputType(const=True),
+        strides=IntTensorInputType(const=True, optional=True),
+        pad_type=StringInputType(const=True),
+        pad=IntTensorInputType(const=True, optional=True),
+    )
+
+    def __init__(self, **kwargs):
+        super(Pooling, self).__init__(**kwargs)
+
+    def type_inference(self):
+        ksize = self.kernel_sizes.val
+        x_shape = self.x.shape
+        D_in_rank = len(x_shape) - 2
+
+        strides = [1] * D_in_rank if self.strides is None else self.strides.val
+        pad_type = 'valid' if self.pad_type is None else self.pad_type.val.lower()
+        pad = None if self.pad is None else self.pad.val
+        D_in = x_shape[2:]  # spatial dimensions
+
+        if pad_type == 'same':
+            D_out_shape = [int(math.ceil(float(d) / float(s))) for d, s in zip(D_in, strides)]
+        else:
+            # rdar://59740053 (Padding Calculation for Conv2D does not work for custom padding)
+            pad = _conv2d_pad(pad_type, D_in_rank, pad, ksize, strides)
+            D_out_shape = [
+                ((D_in[r] + pad[r] - (ksize[r] - 1) - 1) // strides[r] + 1) for r in range(D_in_rank)
+            ]
+        ret_shape = list(x_shape[:2]) + D_out_shape
+        return builtins.tensor(self.x.dtype, tuple(ret_shape))
+
+
+class RandomDistribution(Operation):
+    input_types = InputSpec(
+        shape=IntTensorInputType(),
+    )
+
+    def __init__(self, **kwargs):
+        super(RandomDistribution, self).__init__(**kwargs)
+
+    def type_inference(self):
+        if any_symbolic(self.shape.shape):
+            # We can't infer any shape if shape has variable length.
+            return builtins.tensor(builtins.fp32, (get_new_variadic_symbol(),))
+
+        # shape has fixed length here.
+        if self.shape.sym_val is None:
+            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
+            return builtins.tensor(builtins.fp32, shape)
+
+        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
 
 
 @register_op(doc_str='TODO')
@@ -151,6 +221,47 @@ class atan(elementwise_unary):
 
     def eval(self):
         return np.arctan(self.x.val)
+
+
+@register_op(doc_str="""
+Returns a tensor setting everything outside a center band to zeros for the innermost matrix. Special cases:
+
+* band_part(x, 0, -1) returns upper triangular part.
+* band_part(x, -1, 0) returns lower triangular part.
+* band_part(x, 0, 0) returns diagonal.
+
+Inputs
+
+* x <*, T> Required
+    * Input tensor.
+* lower: const<i32> Optional
+    * Number of lower / below sub-diagonals to keep. If negative, keep entire lower triangle.
+    * Defaults to -1 (keep the entire lower triangle)
+* upper: const<i32> Optional
+    * Number of upper / above sub-diagonals to keep. If negative, keep entire lower triangle.
+    * Defaults to -1 (keep the entire upper triangle)
+
+Outputs
+
+* <*, T> same type as the input tensor.
+
+Type Domains
+
+* T: f32
+""")
+class band_part(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        lower=IntInputType(const=True, default=-1),
+        upper=IntInputType(const=True, default=-1),
+    )
+
+    def __init__(self, **kwargs):
+        super(band_part, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
 
 @register_op(doc_str='TODO')
 class atanh(elementwise_unary):
@@ -475,7 +586,7 @@ class sinh(elementwise_unary):
 
 # rdar://58622145
 @register_op(doc_str='TODO')
-class avg_pool(Operation):
+class avg_pool(Pooling):
     input_types = InputSpec(
         x=TensorInputType(),
         kernel_sizes=IntTensorInputType(const=True),
@@ -487,26 +598,6 @@ class avg_pool(Operation):
 
     def __init__(self, **kwargs):
         super(avg_pool, self).__init__(**kwargs)
-
-    def type_inference(self):
-        ksize = self.kernel_sizes.val
-        x_shape = self.x.shape
-        D_in_rank = len(x_shape) - 2
-
-        strides = [1] * D_in_rank if self.strides is None else self.strides.val
-        pad_type = 'valid' if self.pad_type is None else self.pad_type.val.lower()
-        pad = None if self.pad is None else self.pad.val
-        D_in = x_shape[2:]  # spatial dimensions
-
-        if pad_type == 'same':
-            D_out_shape = [int(math.ceil(float(d) / float(s))) for d, s in zip(D_in, strides)]
-        else:
-            pad = _conv2d_pad(pad_type, D_in_rank, pad, ksize, strides)
-            D_out_shape = [
-                ((D_in[r] + pad[r] - (ksize[r] - 1) - 1) // strides[r] + 1) for r in range(D_in_rank)
-            ]
-        ret_shape = list(x_shape[:2]) + D_out_shape
-        return builtins.tensor(self.x.dtype, tuple(ret_shape))
 
 
 # rdar://58622145
@@ -709,8 +800,9 @@ class matmul(Operation):
                is_symbolic(y_shape[-2])):
             msg = "Op {} (matmul): x {}, y {} are not broadcastable"
             raise ValueError(msg.format(self.name, self.x.shape, self.y.shape))
-        ret_shape = list(x_shape)
-        ret_shape[-1] = y_shape[-1]
+
+        ret_shape = list(_broadcast_shapes(x_shape[:-2], y_shape[:-2]))
+        ret_shape += [x_shape[-2], y_shape[-1]]
         return builtins.tensor(x_type, tuple(ret_shape))
 
     def eval(self):
@@ -908,9 +1000,10 @@ class pad(Operation):
         # NumPy does not support non-constant mode and constant_values argument
         return np.pad(self.x.val, self.pad.val, mode)
 
+
 # rdar://58622145
 @register_op(doc_str='TODO')
-class max_pool(Operation):
+class max_pool(Pooling):
     input_types = InputSpec(
         x=TensorInputType(),
         kernel_sizes=IntTensorInputType(const=True),
@@ -921,26 +1014,6 @@ class max_pool(Operation):
 
     def __init__(self, **kwargs):
         super(max_pool, self).__init__(**kwargs)
-
-    def type_inference(self):
-        ksize = self.kernel_sizes.val
-        x_shape = self.x.shape
-        D_in_rank = len(x_shape) - 2
-
-        strides = [1] * D_in_rank if self.strides is None else self.strides.val
-        pad_type = 'valid' if self.pad_type is None else self.pad_type.val.lower()
-        pad = None if self.pad is None else self.pad.val
-        D_in = x_shape[2:]  # spatial dimensions
-
-        if pad_type == 'same':
-            D_out_shape = [int(math.ceil(float(d) / float(s))) for d, s in zip(D_in, strides)]
-        else:
-            pad = _conv2d_pad(pad_type, D_in_rank, pad, ksize, strides)
-            D_out_shape = [
-                ((D_in[r] + pad[r] - (ksize[r] - 1) - 1) // strides[r] + 1) for r in range(D_in_rank)
-            ]
-        ret_shape = list(x_shape[:2]) + D_out_shape
-        return builtins.tensor(self.x.dtype, tuple(ret_shape))
 
 
 @register_op(doc_str='TODO')
@@ -1087,7 +1160,7 @@ Returns
 class gelu(elementwise_unary):
     def __init__(self, **kwargs):
       super(gelu, self).__init__(**kwargs)
-      
+
     def eval(self):
         return 0.5 * self.x.val * (1 + scipy.special.erf(self.x.val / np.sqrt(2)))
 
@@ -1174,7 +1247,7 @@ See Also
 --------
 random_categorical, random_normal, random_uniform
 """)
-class random_bernoulli(Operation):
+class random_bernoulli(RandomDistribution):
     input_types = InputSpec(
         shape=IntTensorInputType(),
         prob=FloatInputType(const=True, default=0.5),
@@ -1183,21 +1256,6 @@ class random_bernoulli(Operation):
 
     def __init__(self, **kwargs):
         super(random_bernoulli, self).__init__(**kwargs)
-
-    def type_inference(self):
-        if any_symbolic(self.shape.shape):
-            # We can't infer any shape if shape has variable length.
-            return builtins.tensor(builtins.fp32, (get_new_variadic_symbol(),))
-
-        # shape has fixed length here.
-        if self.shape.sym_val is None:
-            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
-            return builtins.tensor(builtins.fp32, shape)
-
-        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
-
-    def sym_eval(self):
-        pass
 
 
 @register_op(doc_str="""
@@ -1239,9 +1297,6 @@ class random_categorical(Operation):
         output_shape = self.x.shape[:-1] + (self.size.val,)
         return builtins.tensor(builtins.fp32, output_shape)
 
-    def sym_eval(self):
-        pass
-
 
 @register_op(doc_str="""
 Returns a tensor with specified shape with random values from a normal distribution.
@@ -1272,7 +1327,7 @@ See Also
 --------
 random_categorical, random_bernoulli, random_uniform
 """)
-class random_normal(Operation):
+class random_normal(RandomDistribution):
     input_types = InputSpec(
         shape=IntTensorInputType(),
         mean=FloatInputType(const=True, default=0.),
@@ -1282,21 +1337,6 @@ class random_normal(Operation):
 
     def __init__(self, **kwargs):
         super(random_normal, self).__init__(**kwargs)
-
-    def type_inference(self):
-        if any_symbolic(self.shape.shape):
-            # We can't infer any shape if shape has variable length.
-            return builtins.tensor(builtins.fp32, (get_new_variadic_symbol(),))
-
-        # shape has fixed length here.
-        if self.shape.sym_val is None:
-            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
-            return builtins.tensor(builtins.fp32, shape)
-
-        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
-
-    def sym_eval(self):
-        pass
 
 
 @register_op(doc_str="""
@@ -1328,7 +1368,7 @@ See Also
 --------
 random_categorical, random_bernoulli, random_normal
 """)
-class random_uniform(Operation):
+class random_uniform(RandomDistribution):
     input_types = InputSpec(
         shape=IntTensorInputType(),
         low=FloatInputType(const=True, default=0.),
@@ -1338,21 +1378,6 @@ class random_uniform(Operation):
 
     def __init__(self, **kwargs):
         super(random_uniform, self).__init__(**kwargs)
-
-    def type_inference(self):
-        if any_symbolic(self.shape.shape):
-            # We can't infer any shape if shape has variable length.
-            return builtins.tensor(builtins.fp32, (get_new_variadic_symbol(),))
-
-        # shape has fixed length here.
-        if self.shape.sym_val is None:
-            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
-            return builtins.tensor(builtins.fp32, shape)
-
-        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
-
-    def sym_eval(self):
-        pass
 
 
 # rdar://58622145
@@ -1644,22 +1669,8 @@ class reduce_argmax(ReductionAxis):
     def __init__(self, **kwargs):
         super(reduce_argmax, self).__init__(**kwargs)
 
-    def type_inference(self):
-        x_type = self.x.dtype
-        x_shape = self.x.shape
-        axis = self.axis.val
-
-        reduced_shape = list(x_shape)
-        axis = axis if axis >= 0 else axis + len(reduced_shape)
-        if self.keep_dims.val:
-            reduced_shape[axis] = 1
-        else:
-            reduced_shape.pop(axis)
-
-        return builtins.tensor(x_type, tuple(reduced_shape))
-
-    def eval(self):
-        return np.argmax(self.x.val, axis=self.axis.val)
+    def get_operator(self):
+        return np.argmax
 
 
 # rdar://58622145
@@ -1669,22 +1680,8 @@ class reduce_argmin(ReductionAxis):
     def __init__(self, **kwargs):
         super(reduce_argmin, self).__init__(**kwargs)
 
-    def type_inference(self):
-        x_type = self.x.dtype
-        x_shape = self.x.shape
-        axis = self.axis.val
-
-        reduced_shape = list(x_shape)
-        axis = axis if axis >= 0 else axis + len(reduced_shape)
-        if self.keep_dims.val:
-            reduced_shape[axis] = 1
-        else:
-            reduced_shape.pop(axis)
-
-        return builtins.tensor(x_type, tuple(reduced_shape))
-
-    def eval(self):
-        return np.argmin(self.x.val, axis=self.axis.val)
+    def get_operator(self):
+        return np.argmin
 
 
 # rdar://58622145
@@ -2069,6 +2066,20 @@ class elu(Operation):
 
     def type_inference(self):
         return self.x.sym_type
+
+
+@register_op(doc_str='TODO')
+class l2_pool(Pooling):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        kernel_sizes=IntTensorInputType(const=True),
+        strides=IntTensorInputType(const=True, optional=True),
+        pad_type=StringInputType(const=True),
+        pad=IntTensorInputType(const=True, optional=True),
+    )
+
+    def __init__(self, **kwargs):
+        super(l2_pool, self).__init__(**kwargs)
 
 
 @register_op(doc_str="""

@@ -93,7 +93,8 @@ class ScalarOrTensorInputType(_InputType):
 
 class IntInputType(ScalarOrTensorInputType):
     """
-    Int32 input, with _sym_type == builtins.int32
+    Int32 input, with _sym_type == builtins.int32 or Int64 input, with
+    _sym_type == builtins.int64 predefined to be builtins.int32 by default.
 
     Set with IntAttribute.val
     Raise error when value set is not integer.
@@ -102,7 +103,7 @@ class IntInputType(ScalarOrTensorInputType):
         super(IntInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype == builtins.int32
+        return v.dtype in {builtins.int32, builtins.int64}
 
     def _get_predefined_datatype(self):
         return builtins.int32

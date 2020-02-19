@@ -8,6 +8,23 @@ def register_v2_op(func):
     V2_TO_V1_OP_REGISTRY[func.__name__] = func
     return func
 
+
+def _convert_pool(const_context, builder, op, mode):
+    builder.add_pooling(
+        name=op.name,
+        height=op.kernel_sizes.val[-2],
+        width=op.kernel_sizes.val[-1],
+        stride_height=op.strides.val[-2],
+        stride_width=op.strides.val[-1],
+        layer_type=mode.upper(),
+        padding_type=op.pad_type.val.upper(),
+        input_name=op.x.name,
+        output_name=op.name,
+        exclude_pad_area=True,
+        is_global=False,
+    )
+
+
 def add_const(const_context, builder, name, val):
     """
     const_context (set(str)): const names added to v1 builder. Const names are
@@ -93,6 +110,62 @@ def _split_bias(b, sections):
     b = b[0] + b[1]
     b = _split(b, sections=sections, axis=0)
     return b
+
+@register_v2_op
+def add(const_context, builder, op):
+    if op.x.val is not None and op.x.rank > 0:
+        add_const(const_context, builder, op.x.name, op.x.val)
+    if op.y.val is not None and op.y.rank > 0:
+        add_const(const_context, builder, op.y.name, op.y.val)
+
+    if op.x.shape != op.y.shape:
+        # Use the braodcast version
+        builder.add_add_broadcastable(
+                name=op.name,
+                input_names=[op.x.name, op.y.name],
+                output_name=op.name)
+    elif op.x.rank == 0 and op.x.val is not None:
+        builder.add_elementwise(
+                name=op.name,
+                input_names=[op.y.name],
+                output_name=op.name,
+                alpha=op.x.val,
+                mode='ADD')
+    elif op.y.rank == 0 and op.y.val is not None:
+        builder.add_elementwise(
+                name=op.name,
+                input_names=[op.x.name],
+                output_name=op.name,
+                alpha=op.y.val,
+                mode='ADD')
+    else:
+        # x, y are same shape
+        builder.add_elementwise(
+                name=op.name,
+                input_names=[op.x.name, op.y.name],
+                output_name=op.name,
+                mode='ADD')
+
+
+@register_v2_op
+def avg_pool(const_context, builder, op):
+    _convert_pool(
+        const_context=const_context,
+        builder=builder,
+        op=op,
+        mode='average')
+
+
+@register_v2_op
+def band_part(const_context, builder, op):
+    builder.add_matrix_band_part(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        num_lower=op.lower.val,
+        num_upper=op.upper.val,
+    )
+
 
 @register_v2_op
 def const(const_context, builder, op):
@@ -645,6 +718,36 @@ def gru(const_context, builder, op):
     # to output shape of [Batch Size, Hidden Size]
     _squeeze(builder, op.outputs[1].name, output_names[1], axes=[0, 3, 4])
 
+
+@register_v2_op
+def squeeze(const_context, builder, op):
+    builder.add_squeeze(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        squeeze_all=(op.axes.val is None)
+    )
+
+
+@register_v2_op
+def transpose(const_context, builder, op):
+    builder.add_transpose(
+            name=op.name,
+            axes=op.perm.val,
+            input_name=op.x.name,
+            output_name=op.name)
+
+
+@register_v2_op
+def l2_pool(const_context, builder, op):
+    _convert_pool(
+        const_context=const_context,
+        builder=builder,
+        op=op,
+        mode='l2')
+
+
 @register_v2_op
 def linear(const_context, builder, op):
     out_channels, in_channels = op.weight.shape
@@ -658,6 +761,27 @@ def linear(const_context, builder, op):
             has_bias=has_bias,
             input_name=op.x.name,
             output_name=op.name)
+
+
+@register_v2_op
+def matmul(const_context, builder, op):
+    builder.add_batched_mat_mul(
+        name=op.name,
+        input_names=[op.x.name, op.y.name],
+        output_name=op.name,
+        transpose_a=op.transpose_x.val,
+        transpose_b=op.transpose_y.val,
+    )
+
+
+@register_v2_op
+def max_pool(const_context, builder, op):
+    _convert_pool(
+        const_context=const_context,
+        builder=builder,
+        op=op,
+        mode='max')
+
 
 @register_v2_op
 def lstm(const_context, builder, op):
