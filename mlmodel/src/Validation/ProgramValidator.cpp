@@ -6,11 +6,11 @@
 //  Copyright © 2019 Apple Inc. All rights reserved.
 //
 
+#include "../../../CoreML/ILIL/Contexts/Context.hpp"
+#include "../../../CoreML/ILIL/Validation/IRProgramValidator.hpp"
+#include "../../../CoreML/ILIL/IRValueType.hpp"
+#include "ProgramIRProgram.hpp"
 #include "Format.hpp"
-#include "ILIL/Context.hpp"
-#include "ILIL/IRProgramValidator.hpp"
-#include "ILIL/IRValueType.hpp"
-#include "ILIL/Program/ProgramIRProgram.hpp"
 #include "Result.hpp"
 #include "ResultReason.hpp"
 #include "Validation/NeuralNetwork/NeuralNetworkValidatorUtils.hpp"
@@ -18,7 +18,7 @@
 
 using namespace ::CoreML;
 using namespace ::CoreML::ILIL;
-using namespace ::CoreML::ILIL::Program;
+using namespace ::CoreML::ILIL::Frontends::Program;
 
 template <>
 Result CoreML::validate<MLModelType_program>(const Specification::Model& model)

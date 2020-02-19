@@ -33,19 +33,12 @@ add_library(mlmodel_test
     tests/NNShapeTests.cpp
     tests/NNValidatorTests.cpp
     tests/ParameterTests.cpp
-    tests/ProgramModelUtils.cpp
-    tests/ProgramValidatorTests.cpp
     tests/OneHotEncoderTests.cpp
     tests/SaveLoadTests.cpp
     tests/SoundAnalysisPreprocessingValidatorTests.cpp
     tests/TreeEnsembleTests.cpp
     tests/UpdatableModelValidatorTests.cpp
     tests/UtilsTests.cpp
-
-    tests/ILIL/IRScopeTests.cpp
-    tests/ILIL/IRValueTests.cpp
-    tests/ILIL/IRValueTypeTests.cpp
-    tests/ILIL/ProgramIRTests.cpp
 )
 
 set_property(TARGET mlmodel_test
@@ -114,22 +107,6 @@ add_library(mlmodel
     src/Result.cpp
     src/TreeEnsembleCommon.cpp
     src/Utils.cpp
-
-    src/ILIL/Context.cpp
-    src/ILIL/IROperation.cpp
-    src/ILIL/IROperationValidator.cpp
-    src/ILIL/IROperationValidators/IRActivationOperationValidator.cpp
-    src/ILIL/IROperatorDescription.cpp
-    src/ILIL/IRProgramValidator.cpp
-    src/ILIL/IRScope.cpp
-    src/ILIL/IRValue.cpp
-    src/ILIL/IRValueType.cpp
-    src/ILIL/Program/ProgramIRBlock.cpp
-    src/ILIL/Program/ProgramIRFunction.cpp
-    src/ILIL/Program/ProgramIROperation.cpp
-    src/ILIL/Program/ProgramIRProgram.cpp
-    src/ILIL/Program/ProgramIRValue.cpp
-    src/ILIL/Program/ProgramIRValueType.cpp
 
     src/transforms/LinearModel.cpp
     src/transforms/Pipeline.cpp
