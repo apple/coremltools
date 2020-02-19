@@ -15,15 +15,10 @@ import pytest
 class TestSingleOp(unittest.TestCase):
     # In this class we test tensorflow 2.x op without using Keras API
 
-    def setUp(self):
-        self.saved_model_dir = tempfile.mkdtemp()
-
     def _test_coreml(self, model, input_dic=None, output_names=None):
 
         # Get concrete function
-        tf.saved_model.save(model, self.saved_model_dir)
-        tf_model = tf.saved_model.load(self.saved_model_dir)
-        concrete_func = tf_model.signatures[tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+        concrete_func = model.__call__.get_concrete_function()
 
         # Get function input
         inputs = []
@@ -43,19 +38,21 @@ class TestSingleOp(unittest.TestCase):
         # Get output names
         if output_names == None:
             output_names = [output.name.split(':')[0] for output in concrete_func.outputs]
-
+        else:
+            if not isinstance(output_names, list):
+                raise TypeError("'output_names' should be [str] type.")
         # Tensorflow predict
         tf_inputs = [tf.convert_to_tensor(value) for name, value, shape in inputs]
-        tf_outputs = tf_model(*tf_inputs)
+        tf_outputs = model(*tf_inputs)
 
         # Coreml model predict
         coreml_inputs = {name: shape for name, value, shape in inputs}
-        model = coremltools.converters.tensorflow.convert(
+        coreml_model = coremltools.converters.tensorflow.convert(
             [concrete_func],
             inputs=coreml_inputs,
             outputs=output_names
         )
-        coreml_outputs = model.predict({name: value for name, value, shape in inputs})
+        coreml_outputs = coreml_model.predict({name: value for name, value, shape in inputs})
 
         # Compare Tensorflow and Coreml
         if not isinstance(tf_outputs, tuple):
