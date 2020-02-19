@@ -105,7 +105,7 @@ class TestSingleOp(unittest.TestCase):
                     return 0.
                 else:
                     return x * 3.
-        self._test_coreml(model(), input_dic=[('x',[])])
+        self._test_coreml(model())
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
