@@ -12,6 +12,79 @@ import pytest
 
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+class TestSingleOp(unittest.TestCase):
+    # In this class we test tensorflow 2.x op without using Keras API
+
+    def setUp(self):
+        self.saved_model_dir = tempfile.mkdtemp()
+
+    def _test_coreml(self, model, input_dic=None, output_names=None):
+
+        # Get concrete function
+        tf.saved_model.save(model, self.saved_model_dir)
+        tf_model = tf.saved_model.load(self.saved_model_dir)
+        concrete_func = tf_model.signatures[tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+
+        # Get function input
+        inputs = []
+        if input_dic == None:
+            for input in concrete_func.inputs:
+                name = input.name.split(':')[0]
+                shape = input.shape
+                if shape == None or any([x is None for x in input.shape.as_list()]):
+                    raise ValueError("Please specify 'input_dic' for dynamic shape input.")
+                shape = input.shape.as_list()
+                inputs.append((name, np.random.rand(*shape).astype(np.float32), shape))
+        else:
+            if not isinstance(input_dic, list):
+                raise TypeError("'input_dic' should be [(str, tensor)] type.")
+            inputs = input_dic
+
+        # Get output names
+        if output_names == None:
+            output_names = [output.name.split(':')[0] for output in concrete_func.outputs]
+
+        # Tensorflow predict
+        tf_inputs = [tf.convert_to_tensor(value) for name, value, shape in inputs]
+        tf_outputs = tf_model(*tf_inputs)
+
+        # Coreml model predict
+        coreml_inputs = {name: shape for name, value, shape in inputs}
+        model = coremltools.converters.tensorflow.convert(
+            [concrete_func],
+            inputs=coreml_inputs,
+            outputs=output_names
+        )
+        coreml_outputs = model.predict({name: value for name, value, shape in inputs})
+
+        # Compare Tensorflow and Coreml
+        if not isinstance(tf_outputs, tuple):
+            tf_outputs = tuple([tf_outputs])
+        self.assertTrue(len(tf_outputs), len(coreml_outputs))
+        self.assertTrue(len(tf_outputs), len(output_names))
+        for i, output_name in enumerate(output_names):
+            np.testing.assert_almost_equal(tf_outputs[i].numpy(), coreml_outputs[output_name], decimal=3)
+
+    def test_single_output_example(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return x+y
+        self._test_coreml(model())
+
+    def test_multiple_outputs_example(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return x+y, x-y, x*y
+        self._test_coreml(model())
+
+
+@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
 
     def setUp(self):
