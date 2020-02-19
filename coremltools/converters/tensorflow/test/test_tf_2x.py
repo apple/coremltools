@@ -21,19 +21,21 @@ class TestSingleOp(unittest.TestCase):
         concrete_func = model.__call__.get_concrete_function()
 
         # Get function input
-        inputs = []
         if input_dic == None:
+            input_dic = []
             for input in concrete_func.inputs:
                 name = input.name.split(':')[0]
                 shape = input.shape
                 if shape == None or any([x is None for x in input.shape.as_list()]):
                     raise ValueError("Please specify 'input_dic' for dynamic shape input.")
                 shape = input.shape.as_list()
-                inputs.append((name, np.random.uniform(-1,1,shape).astype(np.float32), shape))
+                input_dic.append((name, shape))
         else:
             if not isinstance(input_dic, list):
                 raise TypeError("'input_dic' should be [(str, tensor)] type.")
-            inputs = input_dic
+
+        inputs = [(name, np.random.uniform(-1,1,shape).astype(np.float32), shape)
+                  for name, shape in input_dic]
 
         # Get output names
         if output_names == None:
@@ -46,13 +48,17 @@ class TestSingleOp(unittest.TestCase):
         tf_outputs = model(*tf_inputs)
 
         # Coreml model predict
-        coreml_inputs = {name: shape for name, value, shape in inputs}
+        # Somehow the converter cannot have input shape [] now
+        # TODO: Need to fix it
+        coreml_inputs = {name: shape if not shape == [] else [1,] for name, value, shape in inputs}
+        coreml_predict_inputs = {name: value if not shape == [] else np.array([value]) for name, value, shape in inputs}
+
         coreml_model = coremltools.converters.tensorflow.convert(
             [concrete_func],
             inputs=coreml_inputs,
             outputs=output_names
         )
-        coreml_outputs = coreml_model.predict({name: value for name, value, shape in inputs})
+        coreml_outputs = coreml_model.predict(coreml_predict_inputs)
 
         # Compare Tensorflow and Coreml
         if not isinstance(tf_outputs, tuple):
@@ -95,11 +101,11 @@ class TestSingleOp(unittest.TestCase):
             @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.float32)])
 
             def __call__(self, x):
-                if x <= 0:
+                if x <= 0.:
                     return 0.
                 else:
                     return x * 3.
-        self._test_coreml(model(), input_dic={'x':[]})
+        self._test_coreml(model(), input_dic=[('x',[])])
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
