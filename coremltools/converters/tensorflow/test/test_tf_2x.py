@@ -87,9 +87,19 @@ class TestSingleOp(unittest.TestCase):
 
             def __call__(self, x):
                 return tf.nn.relu(x)
-
         self._test_coreml(model())
 
+    def test_control_flow(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.float32)])
+
+            def __call__(self, x):
+                if x <= 0:
+                    return 0.
+                else:
+                    return x * 3.
+        self._test_coreml(model(), input_dic={'x':[]})
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
