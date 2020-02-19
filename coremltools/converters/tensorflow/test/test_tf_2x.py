@@ -29,7 +29,7 @@ class TestSingleOp(unittest.TestCase):
                 if shape == None or any([x is None for x in input.shape.as_list()]):
                     raise ValueError("Please specify 'input_dic' for dynamic shape input.")
                 shape = input.shape.as_list()
-                inputs.append((name, np.random.rand(*shape).astype(np.float32), shape))
+                inputs.append((name, np.random.uniform(-1,1,shape).astype(np.float32), shape))
         else:
             if not isinstance(input_dic, list):
                 raise TypeError("'input_dic' should be [(str, tensor)] type.")
@@ -78,6 +78,16 @@ class TestSingleOp(unittest.TestCase):
                                           tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
             def __call__(self, x, y):
                 return x+y, x-y, x*y
+        self._test_coreml(model())
+
+    def test_relu(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[10,10], dtype=tf.float32)])
+
+            def __call__(self, x):
+                return tf.nn.relu(x)
+
         self._test_coreml(model())
 
 
