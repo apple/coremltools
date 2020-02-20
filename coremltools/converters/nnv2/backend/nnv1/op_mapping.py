@@ -398,47 +398,106 @@ def _squeeze(builder, node_name, input_name, axes):
         axes=axes
     )
 
+def _split(x, sections, axis):
+    if x is None:
+        return None
+    if x.shape[axis] % sections != 0:
+        raise ValueError("Cannot split axis {} into {} sections for input of shape {}".format(axis, sections, x.shape))
+    return np.split(x, sections, axis=axis)
+
+# Split weights into given number of sections
+# This method should be used when weights are combined into
+# one matrix for several nodes e.g. Input, forget, cell and output gate
+# of LSTM
+def _split_weights(w, sections):
+    hidden_size = w.shape[-1] // sections
+    input_size = w.shape[0] - hidden_size
+    w = np.transpose(w, (1, 0))
+    w_x = _split(w[:, :input_size], sections=sections, axis=0)
+    w_h = _split(w[:, input_size:], sections=sections, axis=0)
+    return w_x, w_h
+
+# Split bias into given number of sections
+# This method should be used when biases are combined into
+# one matrix for several nodes e.g. Input, forget, cell and output gate
+# of LSTM
+def _split_bias(b, sections):
+    if b is None:
+        return None
+    # Combine input-hidden and hidden-hidden bias
+    b = b[0] + b[1]
+    b = _split(b, sections=sections, axis=0)
+    return b
+
+@register_v2_op
+def gru(const_context, builder, op):
+    # Input shape: [b, s, I]
+    input_name = op.x.name
+    # Shape: [b, H]
+    initial_h = op.initial_h.name
+
+    w = op.weight.val
+    b = op.bias.val if op.bias is not None else None
+    direction = op.direction.val
+    output_sequence = op.output_sequence.val
+    activations = op.activations.val
+
+    # Add expand dims for input, in
+    _expand_dim(builder, input_name+'_expanded', input_name, [3, 4])
+    input_name += '_expanded'
+
+    if direction not in {"forward", "reverse"}:
+        raise ValueError('Unknown direction {} for GRU layer. Supported are forward, reverse'.format(direction))
+
+    # Expand initial_h
+    _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
+    initial_h += '_expanded'
+
+    # Get weights here
+    # weight format: [I+H, 3*H]
+    # Split into Input and hidden weights
+    # w_x: [I*H, I*H, I*H]
+    # w_h: [H*H, H*H, H*H]
+    # where, format is [Z, R, O]
+    # Z: Update gate, R: Reset gate, O: Output gate
+    w_x, w_h = _split_weights(w, sections=3)
+    # bias format: [2, 3*H]
+    # bias[0]: Input-Hidden bias
+    # bias[1]: Hidden-Hidden bias
+    # Combine bias into one and split into [Z, R, O] format
+    b = _split_bias(b, sections=3)
+
+    input_size = w_x[0].shape[1]
+    hidden_size = w_x[0].shape[0]
+
+    # 2 outputs
+    # Y  : [s/1, b, h, 1, 1]
+    # Y_h: [  1, b, h, 1, 1]
+    output_names = [_output.name + '_5d' for _output in op.outputs]
+    builder.add_gru(
+        name=op.name,
+        W_h=w_h,
+        W_x=w_x,
+        b=b,
+        hidden_size=hidden_size,
+        input_size=input_size,
+        input_names=[input_name, initial_h],
+        output_names=output_names,
+        inner_activation=activations[0],
+        activation=activations[1],
+        output_all=output_sequence,
+        reverse_input=(direction=="reverse")
+    )
+
+    # Squeeze Output
+    # to output shape of [Seq Len or 1, Batch Size, Hidden Size]
+    _squeeze(builder, op.outputs[0].name, output_names[0], axes=[3, 4])
+    # Squeeze Output H and Output C
+    # to output shape of [Batch Size, Hidden Size]
+    _squeeze(builder, op.outputs[1].name, output_names[1], axes=[0, 3, 4])
+
 @register_v2_op
 def lstm(const_context, builder, op):
-    # Helper rountines
-    # CoreML expects weights to be in
-    # Input, Forget, Output and Cell Gate format
-    def _split_into_ifoz(x):
-        if x is None:
-            return None
-        if x.shape[0] % 4 != 0:
-            raise ValueError("Cannot split Weight/Bias into I, F, O, Z format")
-        i, f, o, z = np.split(x, 4, axis=0)
-        return [i, f, o, z]
-
-    # CoreML expects peephole to be in
-    # Input, Forget, Output Gate format
-    def _split_into_ifo(x):
-        if x is None:
-            return None
-        if x.shape[0] % 3 != 0:
-            raise ValueError("Cannot split Peephole into I, F, O format")
-        i, f, o = np.split(x, 3, axis=0)
-        return [i, f, o]
-
-    def _split_weights(w):
-        hidden_size = w.shape[-1] // 4
-        input_size = w.shape[0] - hidden_size
-        # Weight is in <input_size + hidden_size, {4,8}*hidden_size> format
-        # Hence, transpose before extracting weights for each gate
-        w = np.transpose(w, (1, 0))
-        w_x = _split_into_ifoz(w[:, :input_size])
-        w_h = _split_into_ifoz(w[:, input_size:])
-        return w_x, w_h
-
-    def _split_bias(b):
-        if b is None:
-            return None
-        # Combine input-hidden and hidden-hidden bias
-        b = b[0] + b[1]
-        b = _split_into_ifoz(b)
-        return b
-
     # Input shape [b, s, I]
     input_name = op.x.name
     # Shape: [b, DIRECTION*H]
@@ -457,7 +516,7 @@ def lstm(const_context, builder, op):
     _expand_dim(builder, input_name+'_expanded', input_name, [3, 4])
     input_name += '_expanded'
 
-    if direction == "forward" or direction == "reverse":
+    if direction in {"forward", "reverse"}:
         # Expand initial_h and initial_c
         _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
         initial_h += '_expanded'
@@ -469,13 +528,15 @@ def lstm(const_context, builder, op):
         # Split into Input and hidden weights
         # w_x: [I*H, I*H, I*H, I*H]
         # w_h: [H*H, H*H, H*H, H*H]
-        w_x, w_h = _split_weights(w)
+        # where format is, [input gate, forget gate, cell gate, output gate]
+        w_x, w_h = _split_weights(w, sections=4)
         # bias format: [2, 4*H]
         # bias[0]: Input-Hidden bias
         # bias[1]: Hidden-Hidden bias
-        b = _split_bias(b)
+        b = _split_bias(b, sections=4)
         # peephole format: [3*H]
-        peephole = _split_into_ifo(peephole)
+        # where format is, [input gate, forget gate, output gate]
+        peephole = _split(peephole, sections=3, axis=0)
 
         input_size = w_x[0].shape[1]
         hidden_size = w_x[0].shape[0]
@@ -505,26 +566,12 @@ def lstm(const_context, builder, op):
 
         # Squeeze Output
         # to output shape of [Seq Len or 1, Batch Size, Hidden Size]
-        _squeeze(
-            builder=builder,
-            node_name=op.outputs[0].name,
-            input_name=output_names[0],
-            axes=[3, 4]
-        )
+        _squeeze(builder, op.outputs[0].name, output_names[0], axes=[3, 4])
         # Squeeze Output H and Output C
         # to output shape of [Batch Size, Hidden Size]
-        _squeeze(
-            builder=builder,
-            node_name=op.outputs[1].name,
-            input_name=output_names[1],
-            axes=[0, 3, 4]
-        )
-        _squeeze(
-            builder=builder,
-            node_name=op.outputs[2].name,
-            input_name=output_names[2],
-            axes=[0, 3, 4]
-        )
+        _squeeze(builder, op.outputs[1].name, output_names[1], axes=[0, 3, 4])
+        _squeeze(builder, op.outputs[2].name, output_names[2], axes=[0, 3, 4])
+
     elif direction == "bidirectional":
         # Expand initial_h and initial_c
         _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
@@ -558,23 +605,24 @@ def lstm(const_context, builder, op):
         forward_wts_index = 4*hidden_size
         # f_w_x and r_w_x: [I*H, I*H, I*H, I*H]
         # f_w_h and r_w_h: [H*H, H*H, H*H, H*H]
-        f_w_x, f_w_h = _split_weights(w[:,:forward_wts_index])
-        r_w_x, r_w_h = _split_weights(w[:,forward_wts_index:])
+        # where format is, [input gate, forget gate, cell gate, output gate]
+        f_w_x, f_w_h = _split_weights(w[:,:forward_wts_index], sections=4)
+        r_w_x, r_w_h = _split_weights(w[:,forward_wts_index:], sections=4)
 
         # bias format: [2, 2*4*H]
         # bias[0]: Input-Hidden bias
         # bias[1]: Hidden-Hidden bias
         f_b, r_b = None, None
         if b is not None:
-            f_b = _split_bias(b[:,:forward_wts_index])
-            r_b = _split_bias(b[:,forward_wts_index:])
+            f_b = _split_bias(b[:,:forward_wts_index], sections=4)
+            r_b = _split_bias(b[:,forward_wts_index:], sections=4)
 
         # peephole format: [2*3*H] -> [3*H (forward) : 3*H (backward)]
         if peephole is None:
             f_peephole, r_peephole = None, None
         else:
-            f_peephole = _split_into_ifo(peephole[:3*hidden_size])
-            r_peephole = _split_into_ifo(peephole[3*hidden_size:])
+            f_peephole = _split(peephole[:3*hidden_size], sections=3, axis=0)
+            r_peephole = _split(peephole[3*hidden_size:], sections=3, axis=0)
 
         output_names = [op.outputs[0].name + '_5d',         # Output Y           [s/1, b, 2*h, 1, 1]
                         op.outputs[1].name + '_5d_foward',  # Output Y_h         [  1, b,   h, 1, 1]
@@ -605,12 +653,7 @@ def lstm(const_context, builder, op):
 
         # Squeeze Output
         # to output shape of [Seq Len or 1, Batch Size, 2*Hidden Size]
-        _squeeze(
-            builder=builder,
-            node_name=op.outputs[0].name,
-            input_name=output_names[0],
-            axes=[3, 4]
-        )
+        _squeeze(builder, op.outputs[0].name, output_names[0], axes=[3, 4])
 
         # Output H is of format
         # 1, Batch_Size, Hidden_Size, 1, 1
@@ -633,28 +676,15 @@ def lstm(const_context, builder, op):
 
         # Squeeze Output H and Output C
         # to output shape of [Batch Size, 2*Hidden Size]
-        _squeeze(
-            builder=builder,
-            node_name=op.outputs[1].name,
-            input_name=op.outputs[1].name + '_5d',
-            axes=[0, 3, 4]
-        )
-
-        _squeeze(
-            builder=builder,
-            node_name=op.outputs[2].name,
-            input_name=op.outputs[2].name + '_5d',
-            axes=[0, 3, 4]
-        )
+        _squeeze(builder, op.outputs[1].name, op.outputs[1].name + '_5d', axes=[0, 3, 4])
+        _squeeze(builder, op.outputs[2].name, op.outputs[2].name + '_5d', axes=[0, 3, 4])
     else:
         raise ValueError('Unknown direction {} for LSTM layer. Supported are forward, reverse or bidirectional'.format(direction))
 
 @register_v2_op
 def rnn(const_context, builder, op):
-    # Input shape [b, s, I]
-    input_name = op.x.name
-    # Shape: [b, DIRECTION*H]
-    initial_h = op.initial_h.name
+    input_name = op.x.name # [b, s, I]
+    initial_h = op.initial_h.name # [b, H]
 
     w = op.weight.val
     b = op.bias.val if op.bias is not None else None
@@ -666,59 +696,49 @@ def rnn(const_context, builder, op):
     _expand_dim(builder, input_name+'_expanded', input_name, [3, 4])
     input_name += '_expanded'
 
-    if direction == "forward" or direction == "reverse":
-        # Expand initial_h and initial_c
-        _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
-        initial_h += '_expanded'
-
-        # Get weights here
-        # weight format: [I+H, H]
-        # Split into Input and hidden weights
-        # w_x: (H, I)
-        # w_h: (H, H)
-        w = w.transpose()
-        hidden_size = w.shape[0]
-        input_size  = w.shape[-1] - hidden_size
-        w_x, w_h = w[:,:input_size], w[:, input_size:]
-        # bias format: [2, H]
-        # bias[0]: Input-Hidden bias
-        # bias[1]: Hidden-Hidden bias
-        if b is not None:
-            b = b[0] + b[1]
-
-        # 3 outputs
-        # Y  : [s/1, b, h, 1, 1]
-        # Y_h: [  1, b, h, 1, 1]
-        output_names = [ _output.name + '_5d' for _output in op.outputs]
-        builder.add_simple_rnn(
-            name=op.name,
-            W_h=w_h,
-            W_x=w_x,
-            b=b,
-            hidden_size=hidden_size,
-            input_size=input_size,
-            input_names=[input_name, initial_h],
-            output_names=output_names,
-            activation=activation,
-            output_all=output_sequence,
-            reverse_input=(direction=="reverse")
-        )
-
-        # Squeeze Output
-        # to output shape of [Seq Len or 1, Batch Size, Hidden Size]
-        _squeeze(
-            builder=builder,
-            node_name=op.outputs[0].name,
-            input_name=output_names[0],
-            axes=[3, 4]
-        )
-        # Squeeze Output H and Output C
-        # to output shape of [Batch Size, Hidden Size]
-        _squeeze(
-            builder=builder,
-            node_name=op.outputs[1].name,
-            input_name=output_names[1],
-            axes=[0, 3, 4]
-        )
-    else:
+    if direction not in {"forward", "reverse"}:
         raise ValueError('Unknown direction {} for RNN layer. Supported are forward and reverse'.format(direction))
+
+    # Expand initial_h and initial_c
+    _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
+    initial_h += '_expanded'
+
+    # Get weights here
+    # weight format: [I+H, H]
+    # Split into Input and hidden weights
+    # w_x: (H, I)
+    # w_h: (H, H)
+    w = w.transpose()
+    hidden_size = w.shape[0]
+    input_size  = w.shape[-1] - hidden_size
+    w_x, w_h = w[:,:input_size], w[:, input_size:]
+    # bias format: [2, H]
+    # bias[0]: Input-Hidden bias
+    # bias[1]: Hidden-Hidden bias
+    if b is not None:
+        b = b[0] + b[1]
+
+    # 3 outputs
+    # Y  : [s/1, b, h, 1, 1]
+    # Y_h: [  1, b, h, 1, 1]
+    output_names = [ _output.name + '_5d' for _output in op.outputs]
+    builder.add_simple_rnn(
+        name=op.name,
+        W_h=w_h,
+        W_x=w_x,
+        b=b,
+        hidden_size=hidden_size,
+        input_size=input_size,
+        input_names=[input_name, initial_h],
+        output_names=output_names,
+        activation=activation,
+        output_all=output_sequence,
+        reverse_input=(direction=="reverse")
+    )
+
+    # Squeeze Output
+    # to output shape of [Seq Len or 1, Batch Size, Hidden Size]
+    _squeeze(builder, op.outputs[0].name, output_names[0], [3, 4])
+    # Squeeze Output H and Output C
+    # to output shape of [Batch Size, Hidden Size]
+    _squeeze(builder, op.outputs[1].name, output_names[1], [0, 3, 4])

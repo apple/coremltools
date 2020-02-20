@@ -770,6 +770,49 @@ class conv(Operation):
         return builtins.tensor(self.x.dtype, tuple(retshape))
 
 @register_op(doc_str='TODO')
+class gru(Operation):
+    input_types = InputSpec(
+            x = TensorInputType(),
+            initial_h = TensorInputType(),
+            weight = TensorInputType(const=True),
+            bias = TensorInputType(const=True, optional=True, default=None),
+            direction = StringInputType(const=True, default="forward"),
+            output_sequence = BoolInputType(const=True, default=False),
+            activations = PyTupleInputType(const=True, default=("sigmoid", "tanh")),
+            )
+
+    def __init__(self, **kwargs):
+        super(gru, self).__init__(**kwargs)
+
+    def type_inference(self):
+        if self.x.rank != 3:
+            raise ValueError('Invalid input shape. Expecting Rank 3 input, got {}'.format(len(self.x.shape)))
+
+        sequence_length, batch_size, input_size = self.x.shape
+
+        if self.weight.rank != 2:
+            raise ValueError('Invalid weight shape. Expecting Rank 2 input, got {}'.format(len(self.weight.shape)))
+
+        input_hidden_size, hidden_dim = self.weight.shape
+        hidden_size = input_hidden_size - input_size
+
+        direction = self.direction.val
+        valid_directions = {'forward', 'reverse'}
+        if direction not in valid_directions:
+            raise ValueError('Direction {} not supported. Supported directions: {}'.format(direction, valid_directions))
+
+        dim_factor = 3
+        if hidden_size != (hidden_dim // dim_factor):
+            raise ValueError("Incorrect weight matrix: hidden dim size mismatch. \
+                              Provided  {}. Expecting <b, 3*H>".format(self.weight.shape))
+
+        out_seq_len = sequence_length if self.output_sequence.val else 1
+        output_shape = [out_seq_len, batch_size, hidden_size]
+        output_h_shape = [batch_size, hidden_size]
+        return builtins.tensor(self.x.dtype, tuple(output_shape)), \
+               builtins.tensor(self.x.dtype, tuple(output_h_shape))
+
+@register_op(doc_str='TODO')
 class lstm(Operation):
     # Setting clip threshold in range signed 32-bit Integer range
     CLIP_DEFAULT_VAL = 2147483647.0
@@ -819,9 +862,6 @@ class lstm(Operation):
         return builtins.tensor(self.x.dtype, tuple(output_shape)), \
                builtins.tensor(self.x.dtype, tuple(output_h_shape)), \
                builtins.tensor(self.x.dtype, tuple(output_c_shape))
-
-    # TODO: <rdar://problem/59540160> [NNv2] LSTM layer- Implement eval and tf register routine
-
 
 # rdar://58622145
 @register_op(doc_str='TODO')
