@@ -1117,6 +1117,16 @@ class TypeInferenceVisitor(object):
         shape[-1], shape[-2] = shape[-2], shape[-1]
         return tuple(shape)
 
+    def visit_Einsum(self, node):
+
+        if len(node.inputs) > 2:
+            raise ValueError('No support for more than 2 inputs to {} node {} now.'.format(node.op, node.name))
+        output_shape = node.attr.get("_output_shapes")
+        if not len(output_shape) == 1:
+            raise ValueError('Expect only one output for Einsum.')
+
+        print(output_shape)
+        quit()
     def visit_MatMul(self, node):
         """
         Inputs:

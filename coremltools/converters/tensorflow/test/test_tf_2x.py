@@ -110,12 +110,12 @@ class TestSingleOp(unittest.TestCase):
     def test_einsum_transpose(self):
 
         class model(tf.Module):
-            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,5,2], dtype=tf.float32)])
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,3,5,2], dtype=tf.float32)])
 
             def __call__(self, x):
                 return (tf.einsum('ijkt->jtki', x),
                        tf.einsum('ijkt->ijkt', x))
-        self._test_coreml(model())
+        self._test_coreml(model(), input_dic=[('x',[7,3,5,2])])
 
     def test_einsum_inner_product(self):
 
