@@ -256,6 +256,7 @@ static Context::IROpDescriptionMap DefineOps(Context::IROpDescriptionMap&& addit
         { "fill", IROperatorDescription(1, 1, fillInput) },
         { "floor", IROperatorDescription(1, 1, elementwiseUnaryInput) },
         { "floor_div", IROperatorDescription(1, 1, elementwiseBinaryInput) },
+        { "gelu", IROperatorDescription(1, 1, elementwiseUnaryInput) },
         { "greater", IROperatorDescription(1, 1, elementwiseBinaryInput) },
         { "greater_equal", IROperatorDescription(1, 1, elementwiseBinaryInput) },
         { "innerproduct", IROperatorDescription(1, 1, innerProductInput) },
@@ -286,6 +287,7 @@ static Context::IROpDescriptionMap DefineOps(Context::IROpDescriptionMap&& addit
         { "real_div", IROperatorDescription(1, 1, elementwiseBinaryInput) },
         { "reducemean", IROperatorDescription(1, 1, reduceMeanInput) },
         { "relu", IROperatorDescription(1, 1, elementwiseUnaryInput) },
+        { "relu6", IROperatorDescription(1, 1, elementwiseUnaryInput) },
         { "reshape", IROperatorDescription(1, 1, reshapeInput, &ValidateReshape) },
         { "round", IROperatorDescription(1, 1, elementwiseUnaryInput) },
         { "rsqrt", IROperatorDescription(1, 1, elementwiseUnaryInput) },
@@ -307,6 +309,7 @@ static Context::IROpDescriptionMap DefineOps(Context::IROpDescriptionMap&& addit
         { "tanh", IROperatorDescription(1, 1, elementwiseUnaryInput) },
         { "transpose", IROperatorDescription(1, 1, transposeInput) },
         { "threshold", IROperatorDescription(1, 1, alphaInput) },
+        { "thresholded_relu", IROperatorDescription(1, 1, alphaInput) },
         // Special Beta operator for validation of beta-operators
         { "beta", IROperatorDescription(0, UIntLimit::max(), noInputCheck)}
     };

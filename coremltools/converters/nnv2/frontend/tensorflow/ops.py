@@ -583,6 +583,12 @@ def Relu(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def Relu6(context, node):
+    x = context[node.inputs[0]]
+    x = cb.relu6(x=x, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
 def Reshape(context, node):
     x = context[node.inputs[0]]
     new_shape = context[node.inputs[1]]

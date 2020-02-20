@@ -725,3 +725,162 @@ def transpose(const_context, builder, op):
             axes=op.perm.val,
             input_name=op.x.name,
             output_name=op.name)
+
+@register_v2_op
+def tanh(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='TANH',
+        input_name=op.x.name,
+        output_name=op.name,
+    )
+
+@register_v2_op
+def scaled_tanh(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='SCALED_TANH',
+        input_name=op.x.name,
+        output_name=op.name,
+        params=[op.alpha.val, op.beta.val]
+    )
+
+@register_v2_op
+def sigmoid(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='SIGMOID',
+        input_name=op.x.name,
+        output_name=op.name,
+    )
+
+@register_v2_op
+def sigmoid_hard(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='SIGMOID_HARD',
+        input_name=op.x.name,
+        output_name=op.name,
+        params=[op.alpha.val, op.beta.val]
+    )
+
+@register_v2_op
+def erf(const_context, builder, op):
+    builder.add_erf(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name
+    )
+
+@register_v2_op
+def thresholded_relu(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='THRESHOLDEDRELU',
+        input_name=op.x.name,
+        output_name=op.name,
+        params=op.alpha.val
+    )
+
+@register_v2_op
+def elu(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='ELU',
+        input_name=op.x.name,
+        output_name=op.name,
+        params=op.alpha.val
+    )
+
+@register_v2_op
+def leaky_relu(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='LEAKYRELU',
+        input_name=op.x.name,
+        output_name=op.name,
+        params=[op.alpha.val]
+    )
+
+@register_v2_op
+def gelu(const_context, builder, op):
+    builder.add_gelu(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+    )
+
+@register_v2_op
+def softplus(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='SOFTPLUS',
+        input_name=op.x.name,
+        output_name=op.name,
+    )
+
+@register_v2_op
+def softplus_parametric(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='PARAMETRICSOFTPLUS',
+        input_name=op.x.name,
+        output_name=op.name,
+        params=[op.alpha.val, op.beta.val]
+    )
+
+@register_v2_op
+def softsign(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='SOFTSIGN',
+        input_name=op.x.name,
+        output_name=op.name
+    )
+
+@register_v2_op
+def linear_activation(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='LINEAR',
+        input_name=op.x.name,
+        output_name=op.name,
+        params=[op.alpha.val, op.beta.val]
+    )
+
+@register_v2_op
+def relu(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='RELU',
+        input_name=op.x.name,
+        output_name=op.name
+    )
+
+@register_v2_op
+def clamped_relu(const_context, builder, op):
+    builder.add_clamped_relu(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        alpha=op.alpha.val,
+        beta=op.beta.val
+    )
+
+@register_v2_op
+def relu6(const_context, builder, op):
+    builder.add_clamped_relu(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name
+    )
+
+@register_v2_op
+def prelu(const_context, builder, op):
+    builder.add_activation(
+        name=op.name,
+        non_linearity='PRELU',
+        input_name=op.x.name,
+        output_name=op.name,
+        params=op.alpha.val
+    )
