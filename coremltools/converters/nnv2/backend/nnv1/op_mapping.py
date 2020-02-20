@@ -38,6 +38,89 @@ def add_const(const_context, builder, name, val):
                 shape=val.shape)
     const_context.add(name)
 
+# Helper routines for recurrent layers
+def _expand_dim(builder, node_name, input_name, axes):
+    builder.add_expand_dims(
+        name=node_name,
+        input_name=input_name,
+        output_name=node_name,
+        axes=axes
+    )
+
+def _squeeze(builder, node_name, input_name, axes):
+    builder.add_squeeze(
+        name=node_name,
+        input_name=input_name,
+        output_name=node_name,
+        axes=axes
+    )
+
+def _split(x, sections, axis):
+    if x is None:
+        return None
+    if x.shape[axis] % sections != 0:
+        raise ValueError("Cannot split axis {} into {} sections for input of shape {}".format(axis, sections, x.shape))
+    return np.split(x, sections, axis=axis)
+
+# Split weights into given number of sections
+# This method should be used when weights are combined into
+# one matrix for several nodes e.g. Input, forget, cell and output gate
+# of LSTM
+def _split_weights(w, sections):
+    hidden_size = w.shape[-1] // sections
+    input_size = w.shape[0] - hidden_size
+    w = np.transpose(w, (1, 0))
+    w_x = _split(w[:, :input_size], sections=sections, axis=0)
+    w_h = _split(w[:, input_size:], sections=sections, axis=0)
+    return w_x, w_h
+
+# Split bias into given number of sections
+# This method should be used when biases are combined into
+# one matrix for several nodes e.g. Input, forget, cell and output gate
+# of LSTM
+def _split_bias(b, sections):
+    if b is None:
+        return None
+    # Combine input-hidden and hidden-hidden bias
+    b = b[0] + b[1]
+    b = _split(b, sections=sections, axis=0)
+    return b
+
+@register_v2_op
+def add(const_context, builder, op):
+    if op.x.val is not None and op.x.rank > 0:
+        add_const(const_context, builder, op.x.name, op.x.val)
+    if op.y.val is not None and op.y.rank > 0:
+        add_const(const_context, builder, op.y.name, op.y.val)
+
+    if op.x.shape != op.y.shape:
+        # Use the braodcast version
+        builder.add_add_broadcastable(
+                name=op.name,
+                input_names=[op.x.name, op.y.name],
+                output_name=op.name)
+    elif op.x.rank == 0 and op.x.val is not None:
+        builder.add_elementwise(
+                name=op.name,
+                input_names=[op.y.name],
+                output_name=op.name,
+                alpha=op.x.val,
+                mode='ADD')
+    elif op.y.rank == 0 and op.y.val is not None:
+        builder.add_elementwise(
+                name=op.name,
+                input_names=[op.x.name],
+                output_name=op.name,
+                alpha=op.y.val,
+                mode='ADD')
+    else:
+        # x, y are same shape
+        builder.add_elementwise(
+                name=op.name,
+                input_names=[op.x.name, op.y.name],
+                output_name=op.name,
+                mode='ADD')
+
 @register_v2_op
 def const(const_context, builder, op):
     # const in V2 are added to V1 lazily.
@@ -123,42 +206,6 @@ def conv(const_context, builder, op):
             **pad)
 
 @register_v2_op
-def add(const_context, builder, op):
-    if op.x.val is not None and op.x.rank > 0:
-        add_const(const_context, builder, op.x.name, op.x.val)
-    if op.y.val is not None and op.y.rank > 0:
-        add_const(const_context, builder, op.y.name, op.y.val)
-
-    if op.x.shape != op.y.shape:
-        # Use the braodcast version
-        builder.add_add_broadcastable(
-                name=op.name,
-                input_names=[op.x.name, op.y.name],
-                output_name=op.name)
-    elif op.x.rank == 0 and op.x.val is not None:
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.y.name],
-                output_name=op.name,
-                alpha=op.x.val,
-                mode='ADD')
-    elif op.y.rank == 0 and op.y.val is not None:
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.x.name],
-                output_name=op.name,
-                alpha=op.y.val,
-                mode='ADD')
-    else:
-        # x, y are same shape
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.x.name, op.y.name],
-                output_name=op.name,
-                mode='ADD')
-
-
-@register_v2_op
 def depth_to_space(const_context, builder, op):
     builder.add_reorganize_data(
         name=op.name,
@@ -168,7 +215,6 @@ def depth_to_space(const_context, builder, op):
         block_size=op.block_size.val
     )
 
-
 @register_v2_op
 def expand_dims(const_context, builder, op):
     builder.add_expand_dims(
@@ -176,258 +222,6 @@ def expand_dims(const_context, builder, op):
         input_name=op.x.name,
         output_name=op.name,
         axes=[op.axis.val])
-
-
-@register_v2_op
-def reduce_argmax(const_context, builder, op):
-    builder.add_argmax(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axis=op.axis.val,
-        keepdims=op.keep_dims.val,
-    )
-
-
-@register_v2_op
-def reduce_argmin(const_context, builder, op):
-    builder.add_argmin(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axis=op.axis.val,
-        keepdims=op.keep_dims.val,
-    )
-
-
-@register_v2_op
-def reduce_l1_norm(const_context, builder, op):
-    builder.add_reduce_l1(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_l2_norm(const_context, builder, op):
-    builder.add_reduce_l2(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_log_sum(const_context, builder, op):
-    builder.add_reduce_logsum(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_log_sum_exp(const_context, builder, op):
-    builder.add_reduce_logsumexp(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_max(const_context, builder, op):
-    # rdar://59609180 (Optimization: mapping reduce to global_pool)
-    builder.add_reduce_max(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_mean(const_context, builder, op):
-    # rdar://59609180 (Optimization: mapping reduce to global_pool)
-    builder.add_reduce_mean(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_min(const_context, builder, op):
-    builder.add_reduce_min(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_prod(const_context, builder, op):
-    builder.add_reduce_prod(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_sum(const_context, builder, op):
-    builder.add_reduce_sum(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def reduce_sum_square(const_context, builder, op):
-    builder.add_reduce_sumsquare(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
-
-@register_v2_op
-def space_to_depth(const_context, builder, op):
-    builder.add_reorganize_data(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        mode='SPACE_TO_DEPTH',
-        block_size=op.block_size.val
-    )
-
-
-@register_v2_op
-def transpose(const_context, builder, op):
-    builder.add_transpose(
-            name=op.name,
-            axes=op.perm.val,
-            input_name=op.x.name,
-            output_name=op.name)
-
-
-@register_v2_op
-def linear(const_context, builder, op):
-    out_channels, in_channels = op.weight.shape
-    has_bias = op.bias.val is not None
-    builder.add_inner_product(
-            name=op.name,
-            W=op.weight.val,
-            b=op.bias.val,
-            input_channels=in_channels,
-            output_channels=out_channels,
-            has_bias=has_bias,
-            input_name=op.x.name,
-            output_name=op.name)
-
-@register_v2_op
-def reshape(const_context, builder, op):
-    if op.shape.val is None:
-        builder.add_reshape_dynamic(
-                name=op.name,
-                input_names=[op.x.name, op.shape.name],
-                output_name=op.name)
-    elif -1 in op.shape.val and len(op.shape.val) == op.x.rank:
-        # Support 0 in shape.
-        builder.add_rank_preserving_reshape(
-                name=op.name,
-                input_name=op.x.name,
-                output_name=op.name,
-                output_shape=op.shape.val)
-    else:
-        if 0 in op.shape.val:
-            # Does not support 0 in shape
-            msg = 'Use 0 in shape only if len(shape) == x.rank. Report bug.'
-            raise ValueError(msg)
-        builder.add_reshape_static(
-                name=op.name,
-                input_name=op.x.name,
-                output_name=op.name,
-                output_shape=op.shape.val)
-
-# Helper routines for recurrent layers
-def _expand_dim(builder, node_name, input_name, axes):
-    builder.add_expand_dims(
-        name=node_name,
-        input_name=input_name,
-        output_name=node_name,
-        axes=axes
-    )
-
-def _squeeze(builder, node_name, input_name, axes):
-    builder.add_squeeze(
-        name=node_name,
-        input_name=input_name,
-        output_name=node_name,
-        axes=axes
-    )
-
-def _split(x, sections, axis):
-    if x is None:
-        return None
-    if x.shape[axis] % sections != 0:
-        raise ValueError("Cannot split axis {} into {} sections for input of shape {}".format(axis, sections, x.shape))
-    return np.split(x, sections, axis=axis)
-
-# Split weights into given number of sections
-# This method should be used when weights are combined into
-# one matrix for several nodes e.g. Input, forget, cell and output gate
-# of LSTM
-def _split_weights(w, sections):
-    hidden_size = w.shape[-1] // sections
-    input_size = w.shape[0] - hidden_size
-    w = np.transpose(w, (1, 0))
-    w_x = _split(w[:, :input_size], sections=sections, axis=0)
-    w_h = _split(w[:, input_size:], sections=sections, axis=0)
-    return w_x, w_h
-
-# Split bias into given number of sections
-# This method should be used when biases are combined into
-# one matrix for several nodes e.g. Input, forget, cell and output gate
-# of LSTM
-def _split_bias(b, sections):
-    if b is None:
-        return None
-    # Combine input-hidden and hidden-hidden bias
-    b = b[0] + b[1]
-    b = _split(b, sections=sections, axis=0)
-    return b
 
 @register_v2_op
 def gru(const_context, builder, op):
@@ -495,6 +289,20 @@ def gru(const_context, builder, op):
     # Squeeze Output H and Output C
     # to output shape of [Batch Size, Hidden Size]
     _squeeze(builder, op.outputs[1].name, output_names[1], axes=[0, 3, 4])
+
+@register_v2_op
+def linear(const_context, builder, op):
+    out_channels, in_channels = op.weight.shape
+    has_bias = op.bias.val is not None
+    builder.add_inner_product(
+            name=op.name,
+            W=op.weight.val,
+            b=op.bias.val,
+            input_channels=in_channels,
+            output_channels=out_channels,
+            has_bias=has_bias,
+            input_name=op.x.name,
+            output_name=op.name)
 
 @register_v2_op
 def lstm(const_context, builder, op):
@@ -682,6 +490,163 @@ def lstm(const_context, builder, op):
         raise ValueError('Unknown direction {} for LSTM layer. Supported are forward, reverse or bidirectional'.format(direction))
 
 @register_v2_op
+def reshape(const_context, builder, op):
+    if op.shape.val is None:
+        builder.add_reshape_dynamic(
+                name=op.name,
+                input_names=[op.x.name, op.shape.name],
+                output_name=op.name)
+    elif -1 in op.shape.val and len(op.shape.val) == op.x.rank:
+        # Support 0 in shape.
+        builder.add_rank_preserving_reshape(
+                name=op.name,
+                input_name=op.x.name,
+                output_name=op.name,
+                output_shape=op.shape.val)
+    else:
+        if 0 in op.shape.val:
+            # Does not support 0 in shape
+            msg = 'Use 0 in shape only if len(shape) == x.rank. Report bug.'
+            raise ValueError(msg)
+        builder.add_reshape_static(
+                name=op.name,
+                input_name=op.x.name,
+                output_name=op.name,
+                output_shape=op.shape.val)
+
+@register_v2_op
+def reduce_argmax(const_context, builder, op):
+    builder.add_argmax(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axis=op.axis.val,
+        keepdims=op.keep_dims.val,
+    )
+
+@register_v2_op
+def reduce_argmin(const_context, builder, op):
+    builder.add_argmin(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axis=op.axis.val,
+        keepdims=op.keep_dims.val,
+    )
+
+@register_v2_op
+def reduce_l1_norm(const_context, builder, op):
+    builder.add_reduce_l1(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_l2_norm(const_context, builder, op):
+    builder.add_reduce_l2(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_log_sum(const_context, builder, op):
+    builder.add_reduce_logsum(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_log_sum_exp(const_context, builder, op):
+    builder.add_reduce_logsumexp(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_max(const_context, builder, op):
+    # rdar://59609180 (Optimization: mapping reduce to global_pool)
+    builder.add_reduce_max(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_mean(const_context, builder, op):
+    # rdar://59609180 (Optimization: mapping reduce to global_pool)
+    builder.add_reduce_mean(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_min(const_context, builder, op):
+    builder.add_reduce_min(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_prod(const_context, builder, op):
+    builder.add_reduce_prod(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_sum(const_context, builder, op):
+    builder.add_reduce_sum(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
+def reduce_sum_square(const_context, builder, op):
+    builder.add_reduce_sumsquare(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axes=op.axes.val,
+        keepdims=op.keep_dims.val,
+        reduce_all=op.axes.val is None
+    )
+
+@register_v2_op
 def rnn(const_context, builder, op):
     input_name = op.x.name # [b, s, I]
     initial_h = op.initial_h.name # [b, H]
@@ -742,3 +707,21 @@ def rnn(const_context, builder, op):
     # Squeeze Output H and Output C
     # to output shape of [Batch Size, Hidden Size]
     _squeeze(builder, op.outputs[1].name, output_names[1], [0, 3, 4])
+
+@register_v2_op
+def space_to_depth(const_context, builder, op):
+    builder.add_reorganize_data(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        mode='SPACE_TO_DEPTH',
+        block_size=op.block_size.val
+    )
+
+@register_v2_op
+def transpose(const_context, builder, op):
+    builder.add_transpose(
+            name=op.name,
+            axes=op.perm.val,
+            input_name=op.x.name,
+            output_name=op.name)
