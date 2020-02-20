@@ -66,7 +66,7 @@ class TestSingleOp(unittest.TestCase):
         self.assertTrue(len(tf_outputs), len(coreml_outputs))
         self.assertTrue(len(tf_outputs), len(output_names))
         for i, output_name in enumerate(output_names):
-            np.testing.assert_almost_equal(tf_outputs[i].numpy(), coreml_outputs[output_name], decimal=3)
+            np.testing.assert_almost_equal(tf_outputs[i].numpy(), coreml_outputs[output_name], decimal=2)
 
     def test_single_output_example(self):
 
@@ -106,6 +106,33 @@ class TestSingleOp(unittest.TestCase):
                 else:
                     return x * 3.
         self._test_coreml(model())
+
+    def test_add_n(self):
+
+        class model(tf.Module):
+
+            # TODO: Add single input and constant testcases
+            # Blocked by a bug in coremltools
+
+            def test_single_variable(self, x):
+                return tf.add_n([x, x])
+
+            def test_variable(self, x, y, z):
+                return tf.add_n([x,y,z,2*z])
+
+            def test_variable_and_constant(self, x):
+                return tf.add_n([x, tf.constant([[1,2,3],[4,5,6]], dtype=tf.float32)])
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (self.test_single_variable(x),
+                        self.test_variable(x, y, z),
+                        self.test_variable_and_constant(x))
+
+        self._test_coreml(model())
+
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
