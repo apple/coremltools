@@ -4042,6 +4042,10 @@ class TestLSTM:
             if b is not None:
                 arguments["bias"] = b
             return cb.lstm(**arguments)
+        run_compare_builder(build, input_placeholders, input_values,
+                    expected_output_types, expected_outputs,
+                    use_cpu_only=use_cpu_only, frontend_only=False,
+                    backend=backend)
 
     @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len", "batch_size", "input_size",
@@ -4161,3 +4165,88 @@ class TestLSTM:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
+
+class TestRNN:
+    @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
+    @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",
+                             "batch_size", "input_size", "hidden_size", "has_bias",
+                             "output_sequence", "direction", "symbolic"],
+                             argvalues=
+                             itertools.product(
+                                [True, False],
+                                ['nnv1'],
+                                [2, 8],
+                                [1, 32],
+                                [1, 64],
+                                [1, 16],
+                                [True, False],
+                                [True, False],
+                                ["forward", "reverse"],
+                                [True, False]
+                                )
+                            )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, seq_len, batch_size, input_size,
+                                              hidden_size, has_bias, output_sequence, direction, symbolic):
+        torch.manual_seed(50)
+        rnn = torch.nn.RNN(input_size, hidden_size, 1, bias=has_bias)
+        state_dict = rnn.state_dict()
+
+        ih_wt = state_dict['weight_ih_l0'].detach().numpy()
+        hh_wt = state_dict['weight_hh_l0'].detach().numpy()
+        w = np.concatenate([ih_wt, hh_wt], axis=1).transpose()
+
+        b = None
+        if has_bias:
+            ih_b = state_dict['bias_ih_l0'].detach().numpy()
+            hh_b = state_dict['bias_hh_l0'].detach().numpy()
+            b = np.stack([ih_b, hh_b], axis=0)
+
+        t = torch.randn(seq_len, batch_size, input_size)
+        h0 = torch.randn(1, batch_size, hidden_size)
+
+        n_t = t
+        if direction == "reverse":
+            n_t = torch.flip(n_t, [0])
+
+        output, hn = rnn(n_t, h0)
+        if output_sequence == False:
+            output = output[-1].unsqueeze(0)
+
+        output = output.detach().numpy()
+        hn = hn.detach().numpy()
+
+        t = np.reshape(t.detach().numpy(), [seq_len, batch_size, input_size])
+        h = np.reshape(h0.detach().numpy().squeeze(0), [batch_size, hidden_size])
+
+        if symbolic:
+            batch_size = get_new_symbol()
+            seq_len = get_new_symbol()
+
+        input_shape = [seq_len, batch_size, input_size]
+        h_shape = [batch_size, hidden_size]
+
+        expected_output_types = [(seq_len if output_sequence else 1, batch_size, hidden_size, builtins.fp32),
+                                 (batch_size, hidden_size, builtins.fp32)]
+        expected_outputs = [output, hn]
+
+        input_placeholders = {"x": cb.placeholder(shape=input_shape),
+                              "initial_h": cb.placeholder(shape=h_shape)}
+        input_values = {"x": t, "initial_h": h}
+
+        def build(x, initial_h):
+            arguments = {
+                        "x":x,
+                        "initial_h":initial_h,
+                        "weight":w,
+                        "direction":direction,
+                        "output_sequence":output_sequence,
+                        }
+            # If bias is provided, add in arguments
+            if b is not None:
+                arguments["bias"] = b
+            return cb.rnn(**arguments)
+
+        run_compare_builder(build, input_placeholders, input_values,
+                    expected_output_types, expected_outputs,
+                    use_cpu_only=use_cpu_only, frontend_only=False,
+                    backend=backend)

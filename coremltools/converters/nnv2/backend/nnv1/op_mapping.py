@@ -381,25 +381,26 @@ def reshape(const_context, builder, op):
                 output_name=op.name,
                 output_shape=op.shape.val)
 
+# Helper routines for recurrent layers
+def _expand_dim(builder, node_name, input_name, axes):
+    builder.add_expand_dims(
+        name=node_name,
+        input_name=input_name,
+        output_name=node_name,
+        axes=axes
+    )
+
+def _squeeze(builder, node_name, input_name, axes):
+    builder.add_squeeze(
+        name=node_name,
+        input_name=input_name,
+        output_name=node_name,
+        axes=axes
+    )
+
 @register_v2_op
 def lstm(const_context, builder, op):
-    # Helper routines
-    def _expand_dim(node_name, input_name, axes):
-        builder.add_expand_dims(
-            name=node_name,
-            input_name=input_name,
-            output_name=node_name,
-            axes=axes
-        )
-
-    def _squeeze(node_name, input_name, axes):
-        builder.add_squeeze(
-            name=node_name,
-            input_name=input_name,
-            output_name=node_name,
-            axes=axes
-        )
-
+    # Helper rountines
     # CoreML expects weights to be in
     # Input, Forget, Output and Cell Gate format
     def _split_into_ifoz(x):
@@ -453,14 +454,14 @@ def lstm(const_context, builder, op):
     clip = op.clip.val
 
     # Add expand dims for input, in
-    _expand_dim(input_name+'_expanded', input_name, [3, 4])
+    _expand_dim(builder, input_name+'_expanded', input_name, [3, 4])
     input_name += '_expanded'
 
     if direction == "forward" or direction == "reverse":
         # Expand initial_h and initial_c
-        _expand_dim(initial_h+'_expanded', initial_h, [2, 3, 4])
+        _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
         initial_h += '_expanded'
-        _expand_dim(initial_c+'_expanded', initial_c, [2, 3, 4])
+        _expand_dim(builder, initial_c+'_expanded', initial_c, [2, 3, 4])
         initial_c += '_expanded'
 
         # Get weights here
@@ -505,6 +506,7 @@ def lstm(const_context, builder, op):
         # Squeeze Output
         # to output shape of [Seq Len or 1, Batch Size, Hidden Size]
         _squeeze(
+            builder=builder,
             node_name=op.outputs[0].name,
             input_name=output_names[0],
             axes=[3, 4]
@@ -512,20 +514,22 @@ def lstm(const_context, builder, op):
         # Squeeze Output H and Output C
         # to output shape of [Batch Size, Hidden Size]
         _squeeze(
+            builder=builder,
             node_name=op.outputs[1].name,
             input_name=output_names[1],
             axes=[0, 3, 4]
         )
         _squeeze(
+            builder=builder,
             node_name=op.outputs[2].name,
             input_name=output_names[2],
             axes=[0, 3, 4]
         )
     elif direction == "bidirectional":
         # Expand initial_h and initial_c
-        _expand_dim(initial_h+'_expanded', initial_h, [2, 3, 4])
+        _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
         initial_h += '_expanded'
-        _expand_dim(initial_c+'_expanded', initial_c, [2, 3, 4])
+        _expand_dim(builder, initial_c+'_expanded', initial_c, [2, 3, 4])
         initial_c += '_expanded'
 
         initial_h_f = initial_h + '_forward'
@@ -602,6 +606,7 @@ def lstm(const_context, builder, op):
         # Squeeze Output
         # to output shape of [Seq Len or 1, Batch Size, 2*Hidden Size]
         _squeeze(
+            builder=builder,
             node_name=op.outputs[0].name,
             input_name=output_names[0],
             axes=[3, 4]
@@ -629,15 +634,91 @@ def lstm(const_context, builder, op):
         # Squeeze Output H and Output C
         # to output shape of [Batch Size, 2*Hidden Size]
         _squeeze(
+            builder=builder,
             node_name=op.outputs[1].name,
             input_name=op.outputs[1].name + '_5d',
             axes=[0, 3, 4]
         )
 
         _squeeze(
+            builder=builder,
             node_name=op.outputs[2].name,
             input_name=op.outputs[2].name + '_5d',
             axes=[0, 3, 4]
         )
     else:
-        raise ValueError('Unknown direction {} for LSTM layer. Supported are forward, backward or bidirectional'.format(direction))
+        raise ValueError('Unknown direction {} for LSTM layer. Supported are forward, reverse or bidirectional'.format(direction))
+
+@register_v2_op
+def rnn(const_context, builder, op):
+    # Input shape [b, s, I]
+    input_name = op.x.name
+    # Shape: [b, DIRECTION*H]
+    initial_h = op.initial_h.name
+
+    w = op.weight.val
+    b = op.bias.val if op.bias is not None else None
+    direction = op.direction.val
+    output_sequence = op.output_sequence.val
+    activation = op.activation.val
+
+    # Add expand dims for input, in
+    _expand_dim(builder, input_name+'_expanded', input_name, [3, 4])
+    input_name += '_expanded'
+
+    if direction == "forward" or direction == "reverse":
+        # Expand initial_h and initial_c
+        _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
+        initial_h += '_expanded'
+
+        # Get weights here
+        # weight format: [I+H, H]
+        # Split into Input and hidden weights
+        # w_x: (H, I)
+        # w_h: (H, H)
+        w = w.transpose()
+        hidden_size = w.shape[0]
+        input_size  = w.shape[-1] - hidden_size
+        w_x, w_h = w[:,:input_size], w[:, input_size:]
+        # bias format: [2, H]
+        # bias[0]: Input-Hidden bias
+        # bias[1]: Hidden-Hidden bias
+        if b is not None:
+            b = b[0] + b[1]
+
+        # 3 outputs
+        # Y  : [s/1, b, h, 1, 1]
+        # Y_h: [  1, b, h, 1, 1]
+        output_names = [ _output.name + '_5d' for _output in op.outputs]
+        builder.add_simple_rnn(
+            name=op.name,
+            W_h=w_h,
+            W_x=w_x,
+            b=b,
+            hidden_size=hidden_size,
+            input_size=input_size,
+            input_names=[input_name, initial_h],
+            output_names=output_names,
+            activation=activation,
+            output_all=output_sequence,
+            reverse_input=(direction=="reverse")
+        )
+
+        # Squeeze Output
+        # to output shape of [Seq Len or 1, Batch Size, Hidden Size]
+        _squeeze(
+            builder=builder,
+            node_name=op.outputs[0].name,
+            input_name=output_names[0],
+            axes=[3, 4]
+        )
+        # Squeeze Output H and Output C
+        # to output shape of [Batch Size, Hidden Size]
+        _squeeze(
+            builder=builder,
+            node_name=op.outputs[1].name,
+            input_name=output_names[1],
+            axes=[0, 3, 4]
+        )
+    else:
+        raise ValueError('Unknown direction {} for RNN layer. Supported are forward and reverse'.format(direction))
