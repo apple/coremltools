@@ -490,7 +490,7 @@ class TypeInferenceVisitor(object):
         return self._visit_broadcast(node)
 
     def visit_AddN(self, node):
-        return self.visit_AddN(node)
+        return self._get_type_from_attr(node)
 
     def visit_AddV2(self, node):
         return self._visit_broadcast(node)
@@ -707,9 +707,6 @@ class TypeInferenceVisitor(object):
                 raise ValueError('Invalid custom padding; expected (t, b, l, r)')
             return [custom_pad[0] + custom_pad[1], custom_pad[2] + custom_pad[3]]
         raise ValueError('Invalid padding algorithm "{}"'.format(algorithm))
-
-    def visit_AddN(self, node):
-        return self._get_type_from_attr(node)
 
     def visit_Conv2D(self, node):
         """
