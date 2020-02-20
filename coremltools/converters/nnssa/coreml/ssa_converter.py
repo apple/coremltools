@@ -376,7 +376,6 @@ class SSAConverter(object):
             'Cos': self._convert_unary_trigonometric,
             'DepthToSpace': self._convert_reorganize_data,
             'DepthwiseConv2dNative': self._convert_conv2d,
-            'Einsum': self._convert_einsum,
             'Elu': self._convert_unary_activation,
             'Embedding': self._convert_embedding,
             'Equal': self._convert_binary_broadcastable,
@@ -730,35 +729,6 @@ class SSAConverter(object):
         if node.op not in self.custom_shape_functions:
             raise ValueError('Custom Shape Function for {} not provided!'.format(node.op))
         shapes.propagate_single_layer(layer, self.tensor_shapes, custom_shape_function=self.custom_shape_functions[node.op])
-
-    def _convert_einsum(self, node):
-
-        input_nodes, input_names, input_types = self._get_input_tensors(node)
-        if len(input_names) > 2:
-            raise ValueError('current einsum only supports inputs tensors number <= 2.')
-        equation = node.attr.get('equation')
-        if not '->' in equation:
-            raise ValueError('current einsum does not support matrix diagonal operations.')
-
-        # Parse equation
-        prefix = equation.split('->')[0]
-        suffix = equation.split('->')[1]
-        print(prefix, suffix)
-        quit()
-
-        # Pattern matching
-        builder = self._get_builder()
-        if not ',' in prefix:
-            # Transpose
-            prefix_map = dict(zip(prefix,range(len(prefix))))
-            axes = [prefix_map[x] for x in suffix]
-            layer = builder.add_transpose(
-                    name = node.name,
-                    axes = axes,
-                    input_name = input_names[0],
-                    output_name = node.name)
-        elif siffic == '':
-            pass
 
     def _convert_transpose(self, node):
         """ Convert a transpose op.
