@@ -1,5 +1,6 @@
 # An Ubuntu based image that is used for gitlab based ci infrastructure
 FROM ubuntu:16.04
+
 # Install dependencies, particularly libraries that python or CMake need
 RUN  apt-get -y update \                                                                                                                            
      && apt-get -y install gcc-5 g++-5 libstdc++6 \
@@ -10,13 +11,40 @@ RUN  apt-get -y update \
 WORKDIR /                                                                                                                            
 RUN  mkdir src                                                                                                                                   
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin                                                
-ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:                                                                                
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:       
+
+# Install Python 3.7 from source
 WORKDIR /src                                                                                                                         
 RUN  curl -O https://www.python.org/ftp/python/3.7.6/Python-3.7.6.tgz \
      && tar xvf Python-3.7.6.tgz
 WORKDIR /src/Python-3.7.6
 RUN  ./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-shared --enable-loadable-sqlite-extensions \
      && make -j16 && make install
+
+# Install Python 3.6 from source
+WORKDIR /src
+RUN curl -O https://www.python.org/ftp/python/3.6.4/Python-3.6.4.tgz \
+     && tar xvf Python-3.6.4.tgz
+WORKDIR /src/Python-3.6.4
+RUN ./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-shared --enable-loadable-sqlite-extensions \
+     && make -j16 && make install
+
+# Install Python 3.5 from source
+WORKDIR /src
+RUN curl -O https://www.python.org/ftp/python/3.5.4/Python-3.5.4.tgz \
+     && tar xvf Python-3.5.4.tgz
+WORKDIR /src/Python-3.5.4
+RUN ./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-shared --enable-loadable-sqlite-extensions \
+     && make -j16 && make install
+
+# Install Python 2.7 from source
+WORKDIR /src
+RUN curl -O https://www.python.org/ftp/python/2.7.13/Python-2.7.13.tgz \
+     && tar xvf Python-2.7.13.tgz
+WORKDIR /src/Python-2.7.13
+RUN ./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-shared --enable-loadable-sqlite-extensions \
+     && make -j16 && make install
+
 WORKDIR /opt
 RUN  curl -L https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4-Linux-x86_64.tar.gz -o cmake-3.13.4-Linux-x86_64.tar.gz \
      && tar xf cmake-3.13.4-Linux-x86_64.tar.gz 
