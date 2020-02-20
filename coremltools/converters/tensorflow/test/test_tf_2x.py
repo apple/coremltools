@@ -107,6 +107,36 @@ class TestSingleOp(unittest.TestCase):
                     return x * 3.
         self._test_coreml(model())
 
+    def test_einsum_transpose(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,5,2], dtype=tf.float32)])
+
+            def __call__(self, x):
+                return (tf.einsum('ijkt->jtki', x),
+                       tf.einsum('ijkt->ijkt', x))
+        self._test_coreml(model())
+
+    def test_einsum_inner_product(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,2,2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[4,2,2,3], dtype=tf.float32)])
+
+            def __call__(self, x, y):
+                return tf.einsum('ijkt,ijkt->', x, x)
+
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,5], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tf.einsum('ij,jk->ki', x, y)
+        self._test_coreml(model())
+
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
 
