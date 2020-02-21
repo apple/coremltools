@@ -207,6 +207,7 @@ MLMODEL_TEST(testEpochsOutOfAllowedRange)
 MLMODEL_TEST(testEpochsOutOfAllowedSet)
 
 // Training input validation test
+
 // All are non-classifier unless otherwise described. All include model inputs unless specified "Only"
 MLMODEL_TEST(testInvalid_NoTrainingInputs)
 MLMODEL_TEST(testInvalid_OnlyModelInputs)
@@ -273,5 +274,6 @@ MLMODEL_TEST(testValidateProgramProgram)
 
 // Operator specific validation
 MLMODEL_TEST(testValidatePadOp)
+MLMODEL_TEST(testValidatePoolingOp)
 
 #undef MLMODEL_TEST

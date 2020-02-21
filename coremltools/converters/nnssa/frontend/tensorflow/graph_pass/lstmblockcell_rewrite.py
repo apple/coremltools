@@ -5,9 +5,9 @@ from ....commons.basic_graph_ops import replace_node, delete_node
 from ..parsed_tf_node import ParsedTFNode
 
 
-def Linear(builder, mul1, mul2, add, name=None):
+def linear(builder, mul1, mul2, add, name=None):
     mul = builder.add_matmul([mul1, mul2], name=name)
-    return builder.add_elementwise("Add", [mul, add], name=name)
+    return builder.add_elementwise('Add', [mul, add], name=name)
 
 
 def expand_lstm_block_cell(graph, node):
@@ -129,6 +129,7 @@ def expand_lstm_block_cell(graph, node):
     concat_axis = builder.add_const(one, name='concat_axis')
     xh = builder.add_concat([x, h_prev_expand], concat_axis)
     icifo_presplit = Linear(builder, xh, w, b)
+
     icifo = builder.add_split(value=icifo_presplit, split_dim=concat_axis, num_split=4)
     i = builder.add_get_tuple(icifo, index=0)
     ci = builder.add_get_tuple(icifo, index=1)
@@ -140,8 +141,8 @@ def expand_lstm_block_cell(graph, node):
         bias = builder.add_const(fb, name='forget_bias')
         f = builder.add_elementwise("Add", [f, bias])
     if peephole:
-        i = builder.add_activation('Sigmoid', Linear(builder, cs_prev, wci, i))
-        f = builder.add_activation('Sigmoid', Linear(builder, cs_prev, wcf, f))
+        i = builder.add_activation('Sigmoid', linear(builder, cs_prev, wci, i))
+        f = builder.add_activation('Sigmoid', linear(builder, cs_prev, wcf, f))
     else:
         i = builder.add_activation('Sigmoid', i)
         f = builder.add_activation('Sigmoid', f)
@@ -160,7 +161,7 @@ def expand_lstm_block_cell(graph, node):
         cs = builder.add_elementwise('Maximum', [cs, lower_clip])
         cs = builder.add_elementwise('Minimum', [cs, upper_clip])
     if peephole:
-        o = builder.add_activation('Sigmoid', Linear(builder, cs, wco, o))
+        o = builder.add_activation('Sigmoid', linear(builder, cs, wco, o))
     else:
         o = builder.add_activation('Sigmoid', o)
     co = builder.add_activation('Tanh', cs)

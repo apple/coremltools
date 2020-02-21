@@ -801,6 +801,6 @@ def _start_server(port, web_dir):
         subprocess.Popen(['python', '-m', 'SimpleHTTPServer', str(port)])
     else:
         subprocess.Popen(['python', '-m', 'http.server', str(port)])
-    webbrowser.open_new_tab('localhost:{}'.format(str(port)))
+    webbrowser.open_new_tab('http://localhost:{}'.format(str(port)))
     _os.chdir(curr_dir)
     return True

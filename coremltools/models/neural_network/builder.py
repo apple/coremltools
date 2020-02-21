@@ -999,7 +999,7 @@ class NeuralNetworkBuilder(object):
         else:
             if reduce_all or self._get_rank(input_name) == 1:
                 self.rank_dict[output_name] = 1
-            elif axes and len(axes) > 0:
+            elif axes is not None and len(axes) > 0:
                 rank = self._get_rank(input_name) - len(axes)
                 self.rank_dict[output_name] = rank if rank != 0 else 1
             else:
@@ -3263,7 +3263,7 @@ class NeuralNetworkBuilder(object):
 
         image_scale: float or dict()
             Value by which to scale the images.
-        
+
         image_format: str
             Image format, either 'NCHW' / 'NHWC'
 
@@ -3271,7 +3271,6 @@ class NeuralNetworkBuilder(object):
         --------
         set_input, set_output, set_class_labels
         """
-        spec = self.spec
         if not image_input_names:
             return  # nothing to do here
 
@@ -3292,6 +3291,23 @@ class NeuralNetworkBuilder(object):
         if not isinstance(image_scale, dict):
             image_scale = dict.fromkeys(image_input_names, image_scale)
 
+        # Raise error if any key in image preprocessing parameters
+        # are not in image_input_names.
+        def check_valid_preprocessing_keys(input, target, input_name):
+            for key in input:
+                if not key in target:
+                    raise ValueError('Invalid key {} in {}.'.format(key, input_name))
+
+        target = image_input_names
+        check_valid_preprocessing_keys(is_bgr, target, 'is_bgr')
+        check_valid_preprocessing_keys(red_bias, target, 'red_bias')
+        check_valid_preprocessing_keys(blue_bias, target, 'blue_bias')
+        check_valid_preprocessing_keys(green_bias, target, 'green_bias')
+        check_valid_preprocessing_keys(gray_bias, target, 'gray_bias')
+        check_valid_preprocessing_keys(image_scale, target, 'image_scale')
+
+        spec = self.spec
+
         # Add image inputs
         for input_ in spec.description.input:
             if input_.name in image_input_names:
@@ -3310,9 +3326,9 @@ class NeuralNetworkBuilder(object):
                     _, channels, height, width = [array_shape[e] for e in input_indices]
 
                     if image_format == 'NHWC':
-                        # If input format is 'NHWC', then add transpose
-                        # after the input and replace all use of input
-                        # with output of transpose
+                        # If input format is 'NHWC' for TF model, it will be
+                        # 'NCHW' for CoreML model. Therefore, add transpose to
+                        # NHWC after the input and replace all use of input
                         axes = [1, 2, 0]
                         if len(array_shape) == 4:
                             axes = [0, 2, 3, 1]
@@ -3323,7 +3339,7 @@ class NeuralNetworkBuilder(object):
                             input_name=input_.name,
                             output_name=input_transpose
                         )
-                        layers = spec.neuralNetwork.layers
+                        layers = self.nn_spec.layers
                         layers.insert(0, layers.pop())
                         for layer_ in layers:
                             for i in range(len(layer_.input)):
@@ -6281,7 +6297,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceSum
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6327,7 +6343,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceProd
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6371,7 +6387,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceMean
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6415,7 +6431,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceMax
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6459,7 +6475,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceMin
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6503,7 +6519,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceL2
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6547,7 +6563,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceL1
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6591,7 +6607,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceSumSquare
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6635,7 +6651,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceLogSum
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True
@@ -6679,7 +6695,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.reduceLogSumExp
 
-        if axes and len(axes) != 0:
+        if axes is not None and len(axes) != 0:
             spec_layer_params.axes.extend(map(int, axes))
         else:
             reduce_all = True

@@ -108,7 +108,7 @@ def is_valid_feature_list(features):
     return (type(features) is list
         and len(features) >= 1
         and all(type(t) is tuple and len(t) == 2 for t in features)
-        and all(isinstance(n, str) for n, td in features)
+        and all(isinstance(n, _string_types) for n, td in features)
         and all(datatypes._is_valid_datatype(td) for n, td in features))
 
 
@@ -245,7 +245,7 @@ def process_or_validate_features(features, num_dimensions = None, feature_type_m
 
     for k, v in list(features.items()):
 
-        if not isinstance(k, str):
+        if not isinstance(k, _string_types):
             raise_type_error("Feature names must be strings.")
 
         def test_index(val):

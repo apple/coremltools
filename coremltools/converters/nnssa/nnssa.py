@@ -205,15 +205,12 @@ class NetworkEnsemble(object):
             logging.debug("Changed (%s) to (%s) in function (%s)", src_node, tgt_node, success)
 
     def extract_subgraph(self, outputs, target_inputs=None, name=""):
-        """Add a new SSAFunction to the current NetworkEnsemble to produce the given outputs.
-
-        Args:
-            outputs: The outputs the new function must produce.
-            traget_inputs:
-            name: The name of the new function to create. If unspecified, a name will be generated
-                  by joining output names.
-        Returns:
-            The name of the new function.
+        """
+        Given a list of outputs, determine which nodes are needed for
+        producing the outputs and build a new SSAFunction in the original
+        NetworkEnsemble that would produce the target outputs.
+        The function name for the new function would be concatenating all
+        outputs together unless specified.
         """
         if not isinstance(outputs, list):
             raise TypeError("Expected a list of output names for subgraph extraction")
@@ -350,7 +347,7 @@ class NetworkEnsemble(object):
                 ret += "    %s\n" % (out)
         return ret
 
-    def get_dot_string(self, name_and_op_style=False, annotation=False, highlight_debug_nodes=None):
+    def get_dot_string(self, name_and_op_style=False, annotation=False, highlight_debug_nodes=[]):
         """
         Return the dot string that can be used to show the whole graph
         with dot. By default, the graph contains op and type. If

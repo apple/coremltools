@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Copyright (c) 2017, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import imp
 import os
@@ -42,6 +47,20 @@ setup(name='coremltools',
           'coremltools.converters.nnssa.frontend.graph_pass',
           'coremltools.converters.nnssa.frontend.tensorflow',
           'coremltools.converters.nnssa.frontend.tensorflow.graph_pass',
+          'coremltools.converters.nnv2',
+          'coremltools.converters.nnv2.backend',
+          'coremltools.converters.nnv2.backend.nnv1',
+          'coremltools.converters.nnv2.backend.nnv2',
+          'coremltools.converters.nnv2.builtin_types',
+          'coremltools.converters.nnv2.builtin_types.builtins',
+          'coremltools.converters.nnv2.builtin_types.serialization',
+          'coremltools.converters.nnv2.frontend',
+          'coremltools.converters.nnv2.frontend.tensorflow',
+          'coremltools.converters.nnv2.frontend.tensorflow.tf_graph_pass',
+          'coremltools.converters.nnv2.nnv2_program',
+          'coremltools.converters.nnv2.nnv2_program.ops',
+          'coremltools.converters.nnv2.nnv2_program.passes',
+          'coremltools.converters.nnv2.nnv2_program.program',
           'coremltools.graph_visualization',
           'coremltools.models',
           'coremltools.models.program',
@@ -71,6 +90,7 @@ setup(name='coremltools',
           'Intended Audience :: End Users/Desktop',
           'Intended Audience :: Developers',
           'Operating System :: MacOS :: MacOS X',
+          'Operating System :: POSIX :: Linux',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',

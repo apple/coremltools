@@ -328,7 +328,9 @@ static Result SameTypes(const std::string& name,
                         const std::string& whereSingular)
 {
     auto rank = static_cast<size_t>(modelType.shape().size());
-    if (programType.GetShape().size() != rank) {
+    auto rank_ir = programType.GetShape().size();
+    if ((rank_ir != 0 && rank_ir != rank) ||
+        (rank_ir == 0 && (rank != 1 || modelType.shape().Get(0) != 1))) {
         auto reason = isInput
             ? ResultReason::MODEL_MAIN_INPUT_MISMATCHED_RANK
             : ResultReason::MODEL_MAIN_OUTPUT_MISMATCHED_RANK;
@@ -533,17 +535,42 @@ static Result ValidateOp(const IROperation& op, const Context& context)
 
     for (auto& nameAndTypeInfo: opDescription->GetExpectedInputs()) {
         auto input = op.TryGetInput(nameAndTypeInfo.first);
-        if (input == nullptr) {
+        if (!input && !nameAndTypeInfo.second.IsOptional()) {
             return Result(ResultType::INVALID_MODEL_INTERFACE,
                           ResultReason::OP_REQUIRED_ARG_NOT_FOUND,
-                          "Input " + nameAndTypeInfo.first + " is missing for layer: " + op.GetName());
+                          "Required input " + nameAndTypeInfo.first + " is missing for layer: " + op.GetName());
         }
-        
-        auto& inputType = op.GetScope().GetType(*input);
-        if (!opDescription->IsValidType(nameAndTypeInfo.first, inputType)) {
-            return Result(ResultType::INVALID_MODEL_INTERFACE,
-                          ResultReason::OP_ARG_TYPE_MISMATCH,
-                          "Input " + nameAndTypeInfo.first + " is incorrect type for layer: " + op.GetName());
+         
+        if (input) {
+            const IROperatorInputDescription& inputInfo = nameAndTypeInfo.second;
+
+             // Validate this is const if necessary
+            if (inputInfo.IsConst() && !op.GetScope().TryGetValue(*input)) {
+                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                           ResultReason::OP_REQUIRED_ARG_NOT_FOUND,
+                           "Input " + nameAndTypeInfo.first + " should be const for layer: " + op.GetName());
+            }
+
+            // If the input is const, it can't have symbolic dimensions
+            auto& inputType = op.GetScope().GetType(*input);
+            auto inputTypeTensor = inputType.TryAs<const IRTensorValueType>();
+            if (inputTypeTensor && inputInfo.IsConst()) {
+                for (auto d : inputTypeTensor->GetShape()) {
+                    if (!d->Is<const IRConstantDimension>()) {
+                        return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                   ResultReason::OP_REQUIRED_ARG_NOT_FOUND,
+                                   "All dimensions of constant input " + nameAndTypeInfo.first + \
+                                   " should be constant for layer: " + op.GetName());
+                    }
+                }
+            }
+
+             // Validate type matches
+            if (!inputInfo.IsValidType(inputType)) {
+                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                              ResultReason::OP_ARG_TYPE_MISMATCH,
+                              "Input " + nameAndTypeInfo.first + " is incorrect type for layer: " + op.GetName());
+            }
         }
     }
     

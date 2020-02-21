@@ -51,7 +51,11 @@ def common_symbolic_value_elimination_impl(gdict):
 
         for anodeval in nodeval_list:
             val = anodeval.val
-            if not try_hash(val):
+            if isscalar(val) and val == -1:
+                continue
+            if (not isscalar(val)) and -1 in val:
+                continue
+            if isinstance(val, np.ndarray) and np.issctype(val.dtype) and val.size > 100:
                 continue
 
             hashable_val, any_symbolic = make_hashable(val)

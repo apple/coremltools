@@ -44,4 +44,4 @@ class bool:
         return str(self.val)
 
 def is_bool(t):
-    return t is bool or isinstance(t,bool)
+    return t is bool or isinstance(t, bool)

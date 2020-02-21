@@ -229,7 +229,16 @@ FeatureDescription MakeFeatureDescription(const std::string& name, const V5::Val
 
     switch (type.type_case()) {
         case V5::ValueType::kTensorType:
-            fd.mutable_type()->mutable_multiarraytype()->CopyFrom(MakeArrayFeatureType(type.tensortype()));
+            // Scalars are rank 0, but CoreML framework should see tham as 1 dim with size 1 if it's a model input
+            if (type.tensortype().rank() == 0) {
+                V5::TensorType tensorType_dim1;
+                tensorType_dim1.set_scalartype(type.tensortype().scalartype());
+                tensorType_dim1.set_rank(1);
+                tensorType_dim1.mutable_dimension()->Add()->CopyFrom(MakeDim(1));
+                fd.mutable_type()->mutable_multiarraytype()->CopyFrom(MakeArrayFeatureType(tensorType_dim1));
+            } else {
+                fd.mutable_type()->mutable_multiarraytype()->CopyFrom(MakeArrayFeatureType(type.tensortype()));
+            }
             break;
         case V5::ValueType::kListType:
         case V5::ValueType::kScalarType:

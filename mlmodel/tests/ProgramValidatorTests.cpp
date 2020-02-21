@@ -137,12 +137,14 @@ int testValidateProgramFunction()
 
     // The types returned by our block match those in our outputs
     {
+        auto wrongValue = MakeFloatTensorValue({MakeDim(2)}, {1.f, 2.f});
+
         // main() -> [ fp32[2] ]
-        //  [] { a = const(); } [a : fp64[2] ]
+        //  [] { a = const(); } [val : fp64[2] ]
         auto model = ProgramWithMain(MakeFunction(/*params=*/ {},
-                                                  { MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) })},
+                                                  { MakeTensorValueType(V5::ScalarType::FLOAT64, { MakeDim(2) })},
                                                   MakeBlock(/*bindings=*/ {}, {"a"}, {
-            MakeOp("a", "const", {}, { {"a", MakeTensorValueType(V5::ScalarType::FLOAT64, { MakeDim(2) })} }, { })
+            MakeOp("genA", "const", {}, {{"a", wrongValue.type()}}, {{"val", wrongValue}})
         })));
 
         ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
@@ -724,7 +726,6 @@ int testValidateProgramOp()
         auto block = MakeBlock({ { "y", "b" } }, // inputs
                                { }, // outputs
                                { // ops
-            MakeOp("a", "const", {}, { {"a", MakeScalarValueType(V5::ScalarType::STRING)} }, { }),
             MakeOp("z", "relu",
                    { { "x", "y" } }, // inputs
                    { { "z", MakeTensorValueType(V5::ScalarType::FLOAT32, { MakeDim(2) }) } }, // outputs
@@ -857,6 +858,8 @@ int testValidateProgramPreprocessing()
     // Happy path: scale_image applied to model/main image input
     {
         auto model = happyModel();
+        
+        auto abc = ::CoreML::validate<MLModelType_program>(model);
 
         ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
     }
@@ -907,6 +910,8 @@ int testValidateProgramPreprocessing()
         mainBlock->mutable_operations(5)->CopyFrom(condOp);
         mainBlock->add_operations()->CopyFrom(MakeOp("p", "const", {}, {{ "p", MakeScalarValueType(V5::ScalarType::BOOL) }}, {{ "val", MakeBoolValue(true) }}));
 
+        auto abs123 = ::CoreML::validate<MLModelType_program>(model);
+        
         ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
                                   ResultReason::OP_INVALID_IN_CONTEXT);
     }
@@ -1211,6 +1216,103 @@ int testValidatePadOp()
 
         auto model = ProgramWithMain(MakeFunction(mainParams, /*outputs=*/ {}, block));
         ML_ASSERT_GOOD(::CoreML::validate<MLModelType_program>(model));
+    }
+
+    return 0;
+}
+
+int testValidatePoolingOp()
+{
+    auto iType = MakeTensorValueType(V5::ScalarType::FLOAT32, {
+        MakeDim(1), MakeDim(3), MakeDim(2), MakeDim(3)});
+    auto oType = MakeTensorValueType(V5::ScalarType::FLOAT32, {
+        MakeDim(1), MakeDim(3), MakeDim(1), MakeDim(2)});
+    auto intTensor2Type = MakeTensorValueType(V5::ScalarType::INT32, {MakeDim(2)});
+    auto intTensor3Type = MakeTensorValueType(V5::ScalarType::INT32, {MakeDim(3)});
+    auto intTensor4Type = MakeTensorValueType(V5::ScalarType::INT32, {MakeDim(4)});
+    auto boolScalarType = MakeScalarValueType(V5::ScalarType::BOOL);
+    auto stringScalarType = MakeScalarValueType(V5::ScalarType::STRING);
+    NameAndTypeVec mainParams{{"x", iType}};
+
+    { // negative case: invalid length of kernel_sizes
+        auto block = MakeBlock({}, {"output"}, {
+            MakeOp("kernel_sizes", "const", {},
+                   {{"kernel_sizes", intTensor3Type}},
+                   {{"val", MakeIntTensorValue({MakeDim(3)}, {2, 1, 1})}}),
+            MakeOp("strides", "const", {},
+                   {{"strides", intTensor2Type}},
+                   {{"val", MakeIntTensorValue({MakeDim(2)}, {2, 2})}}),
+            MakeOp("pad_type", "const", {},
+                   {{"pad_type", stringScalarType}},
+                   {{"val", MakeStringValue("valid")}}),
+            MakeOp("exclude_padding_from_average", "const", {},
+                   {{"exclude_padding_from_average", boolScalarType}},
+                   {{"val", MakeBoolValue(false)}}),
+            MakeOp("avg_pool",
+                   "avg_pool",
+                   {{"x", "x"}, {"kernel_sizes", "kernel_sizes"},
+                    {"strides", "strides"}, {"pad_type", "pad_type"},
+                    {"exclude_padding_from_average", "exclude_padding_from_average"}},
+                   {{"output", oType}}, {})
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, {oType}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_PARAM_INVALID);
+    }
+
+    { // negative case: invalid length of strides
+        auto block = MakeBlock({}, {"output"}, {
+            MakeOp("kernel_sizes", "const", {},
+                   {{"kernel_sizes", intTensor2Type}},
+                   {{"val", MakeIntTensorValue({MakeDim(2)}, {1, 1})}}),
+            MakeOp("strides", "const", {},
+                   {{"strides", intTensor4Type}},
+                   {{"val", MakeIntTensorValue({MakeDim(4)}, {1, 1, 2, 2})}}),
+            MakeOp("pad_type", "const", {},
+                   {{"pad_type", stringScalarType}},
+                   {{"val", MakeStringValue("valid")}}),
+            MakeOp("exclude_padding_from_average", "const", {},
+                   {{"exclude_padding_from_average", boolScalarType}},
+                   {{"val", MakeBoolValue(false)}}),
+            MakeOp("avg_pool",
+                   "avg_pool",
+                   {{"x", "x"}, {"kernel_sizes", "kernel_sizes"},
+                    {"strides", "strides"}, {"pad_type", "pad_type"},
+                    {"exclude_padding_from_average", "exclude_padding_from_average"}},
+                   {{"output", oType}}, {})
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, {oType}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_PARAM_INVALID);
+    }
+
+    { // negative case: invalid pad mode
+        auto block = MakeBlock({}, {"output"}, {
+            MakeOp("kernel_sizes", "const", {},
+                   {{"kernel_sizes", intTensor2Type}},
+                   {{"val", MakeIntTensorValue({MakeDim(2)}, {1, 1})}}),
+            MakeOp("strides", "const", {},
+                   {{"strides", intTensor2Type}},
+                   {{"val", MakeIntTensorValue({MakeDim(2)}, {1, 1})}}),
+            MakeOp("pad_type", "const", {},
+                   {{"pad_type", stringScalarType}},
+                   {{"val", MakeStringValue("invalid_mode")}}),
+            MakeOp("exclude_padding_from_average", "const", {},
+                   {{"exclude_padding_from_average", boolScalarType}},
+                   {{"val", MakeBoolValue(false)}}),
+            MakeOp("avg_pool",
+                   "avg_pool",
+                   {{"x", "x"}, {"kernel_sizes", "kernel_sizes"},
+                    {"strides", "strides"}, {"pad_type", "pad_type"},
+                    {"exclude_padding_from_average", "exclude_padding_from_average"}},
+                   {{"output", oType}}, {})
+        });
+
+        auto model = ProgramWithMain(MakeFunction(mainParams, {oType}, block));
+        ML_ASSERT_BAD_WITH_REASON(::CoreML::validate<MLModelType_program>(model),
+                                  ResultReason::OP_PARAM_INVALID);
     }
 
     return 0;

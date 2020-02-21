@@ -22,20 +22,53 @@ namespace ILIL {
 class IROperation;
 
 /**
+A description of an ILIL operator input.
+*/
+class IROperatorInputDescription {
+public:
+    using InputTypeSet = std::unordered_set<std::shared_ptr<const IRValueType>>;
+    using InputTypeSetPtr = std::shared_ptr<InputTypeSet>;
+
+    IROperatorInputDescription() = delete;
+
+    IROperatorInputDescription(bool isConst,
+                               bool isOptional,
+                               InputTypeSetPtr validTypeSet);
+    IROperatorInputDescription(bool isConst,
+                               InputTypeSetPtr validTypeSet);
+    IROperatorInputDescription(InputTypeSetPtr validTypeSet);
+
+    bool IsConst() const;
+    bool IsOptional() const;
+    bool IsValidType(const IRValueType& type) const;
+
+    static InputTypeSetPtr MakeTypeList(std::initializer_list<InputTypeSet::value_type> iolist);
+
+private:
+    bool m_isConst;
+    bool m_isOptional;
+    InputTypeSetPtr m_validTypeSet;
+}; // class IROperatorInputDescription
+
+/**
  A description of an ILIL operator.
  */
 class IROperatorDescription {
 public:
-    using InputTypeSet = std::unordered_set<std::shared_ptr<const IRValueType>>;
-    using InputTypeSetPtr = std::shared_ptr<InputTypeSet>;
-    using InputMap = std::unordered_map<std::string, InputTypeSetPtr>;
+    using InputMap = std::unordered_map<std::string, IROperatorInputDescription>;
     using InputMapPtr = std::shared_ptr<InputMap>;
     using ValidationFunction = std::function<Result(const IROperation&)>;
+    
+    IROperatorDescription() = delete;
 
     IROperatorDescription(uint64_t minOutputs,
                           uint64_t maxOutputs,
                           InputMapPtr expectedInputs,
-                          ValidationFunction validate);
+                          ValidationFunction validationFunction);
+
+    IROperatorDescription(uint64_t minOutputs,
+                          uint64_t maxOutputs,
+                          InputMapPtr expectedInputs);
 
     /** Get the minimum number of outputs this operator produces. */
     uint64_t GetMinOutputs() const;
@@ -43,13 +76,12 @@ public:
     /** Get the maximum number of outputs this operator produces. */
     uint64_t GetMaxOutputs() const;
 
-    /** Get list of inputs and their expected types */
+    /** Get list of inputs and their expected types. */
     const InputMap& GetExpectedInputs() const;
 
+    /** Calls the validation function defined at class construction. */
     Result ValidateOp(const IROperation& op) const;
 
-    bool IsValidType(const std::string& input, const IRValueType& type) const;
-    static InputTypeSetPtr MakeTypeList(std::initializer_list<IROperatorDescription::InputTypeSet::value_type> iolist);
     static InputMapPtr MakeInputMap(std::initializer_list<IROperatorDescription::InputMap::value_type> iolist);
     
 private:

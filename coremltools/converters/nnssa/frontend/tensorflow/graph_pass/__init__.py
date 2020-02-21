@@ -7,7 +7,6 @@ from __future__ import absolute_import as _
 from .delete_disconnected_nodes import delete_disconnected_nodes
 from .insert_get_tuple import insert_get_tuple
 from .tensor_array_transform import tensor_array_resource_removal
-from .prune_nodes import prune_nodes
 
 # graph passes
 from .delete_asserts import delete_asserts

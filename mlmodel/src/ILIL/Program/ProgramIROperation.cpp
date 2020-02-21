@@ -59,11 +59,17 @@ public:
     }
 
     const IRValue& GetAttribute(const std::string& name) const override {
-        auto nameAndValue = m_attributes.find(name);
-        if (nameAndValue == m_attributes.cend()) {
+        auto irvalueptr = TryGetAttribute(name);
+        if (!irvalueptr) {
             throw std::out_of_range("Attribute does not exist.");
         }
-        return *nameAndValue->second;
+        return *irvalueptr;
+    }
+
+    const IRValue* TryGetAttribute(const std::string& name) const override {
+        auto nameAndValue = m_attributes.find(name);
+        if (nameAndValue == m_attributes.cend()) return nullptr;
+        return nameAndValue->second.get();
     }
 
     const IRBlockPtrVec& GetBlocks() const override {

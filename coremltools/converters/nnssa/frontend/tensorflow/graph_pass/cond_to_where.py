@@ -4,6 +4,8 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 from ....commons.basic_graph_ops import delete_node, disconnect_edge
 from .visitors import FindAllUpstreamTerminals
+from .functionalize_loops import *
+from coremltools._deps import HAS_TF_2
 
 import logging
 from coremltools._deps import HAS_TF_2

@@ -9,7 +9,7 @@
 using namespace CoreML;
 
 Result CoreML::validateInt64Parameter(const std::string& parameterName, const Specification::Int64Parameter& int64Parameter, bool shouldBePositive) {
-    
+
     const ::google::protobuf::int64 defaultValue = int64Parameter.defaultvalue();
 
     if (shouldBePositive) {
@@ -60,23 +60,22 @@ Result CoreML::validateInt64Parameter(const std::string& parameterName, const Sp
 
         }
     }
-    
+
     return Result();
 }
 
 Result CoreML::validateDoubleParameter(const std::string& parameterName, const Specification::DoubleParameter& doubleParameter) {
-    
+
     const ::google::protobuf::double_t defaultValue = doubleParameter.defaultvalue();
-    
+
     if (doubleParameter.has_range()) {
         const Specification::DoubleRange& range = doubleParameter.range();
-        
+
         if (defaultValue < range.minvalue() || defaultValue > range.maxvalue()) {
             std::string err = "Specified Default Value (" + std::to_string(defaultValue) + ") out of Allowed Value Range for '" + parameterName + "'";
             return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
         }
     }
-    
+
     return Result();
 }
-

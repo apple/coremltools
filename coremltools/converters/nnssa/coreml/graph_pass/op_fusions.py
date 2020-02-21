@@ -338,9 +338,15 @@ def fuse_bias_add(nnssa):
             if current_node.op == 'BiasAdd' and len(current_node.inputs) == 2:
                 parent_node = f.graph[current_node.inputs[0]]
                 second_p_node = f.graph[current_node.inputs[1]]
-                if (parent_node.op == 'MatMul' or parent_node.op == 'Conv2D' and len(parent_node.outputs) == 1) and \
-                        (second_p_node.value is not None and len(second_p_node.outputs) == 1 and second_p_node.outputs[0] == k):
-
+                ops_to_merge = ['MatMul', 'Conv2D', 'DepthwiseConv2dNative']
+                if (
+                    (parent_node.op in ops_to_merge
+                     and len(parent_node.outputs) == 1)
+                    and
+                    (second_p_node.value is not None
+                     and len(second_p_node.outputs) == 1
+                     and second_p_node.outputs[0] == k)
+                ):
                     parent_node.attr['bias'] = second_p_node.value.val
                     disconnect_edge(f.graph, second_p_node.name, k)  # disconnect the const
                     disconnect_edge(f.graph, parent_node.name, k)  # disconnect the first parent
@@ -447,7 +453,7 @@ def _match_layernorm_pattern(gf, entry_node):
         params['epsilon'] = const_8.value.val
         rsqrt_9 = gf[add_7.outputs[0]]
         mul_10 = gf[rsqrt_9.outputs[0]]
-        if not (add_7.op in ['Add','AddV2'] and const_8.op == 'Const' and
+        if not (add_7.op in ['Add', 'AddV2'] and const_8.op == 'Const' and
                 rsqrt_9.op == 'Rsqrt' and mul_10.op == 'Mul'):
             return None
         const_11 = gf[mul_10.inputs[1]]
@@ -465,7 +471,7 @@ def _match_layernorm_pattern(gf, entry_node):
             return None
         params['beta'] = const_14.value.val
         add_15 = gf[sub_13.outputs[0]]
-        if not (gf[add_15.inputs[0]] == mul_3 and add_15.op in ['Add','AddV2']):
+        if not (gf[add_15.inputs[0]] == mul_3 and add_15.op in ['Add', 'AddV2']):
             return None
 
         layernorm_nodes = [mean_1, sqdiff_2, mul_3, const_4, mean_5, const_6,

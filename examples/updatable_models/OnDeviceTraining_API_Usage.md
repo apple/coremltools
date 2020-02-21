@@ -30,7 +30,6 @@ func createTrainingBatchProvider() throws -> MLBatchProvider {
 
             // create a CVPixelBuffer containing the image used for training
             let imageBuffer = try MLFeatureValue(imageAt: imageURL,
-
 			                                     pixelsWide: 28,
 			                                     pixelsHigh: 28,
 			                                     pixelFormatType: kCVPixelFormatType_OneComponent8,

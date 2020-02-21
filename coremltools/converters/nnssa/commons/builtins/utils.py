@@ -6,7 +6,9 @@ from .type_int import is_int, int8 as builtins_int8, int16 as builtins_int16, in
     uint64 as builtins_uint64
 from .type_str import str as builtins_str
 import numpy as np
+
 from .get_type_info import get_type_info
+
 
 _NPTYPES_TO_BUILTINS = {
     np.dtype(np.bool_): builtins_bool,
@@ -60,7 +62,7 @@ def promote_types(dtype1, dtype2):
     Args:
         dtype1 (apple_nitro.builtin):
         dtype2 (apple_nitro.builtin):
-    
+
     Returns:
         A Nitro builtin datatype or None.
     """

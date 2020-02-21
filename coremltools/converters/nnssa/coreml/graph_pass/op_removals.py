@@ -194,9 +194,9 @@ def remove_oneway_split(nnssa):
             for out_name in get_tuple_node.outputs:
                 out_node = f.graph[out_name]
                 out_node.inputs = [parent_name if x == get_tuple_name else x \
-                                   for x in out_node.inputs]
+                    for x in out_node.inputs]
                 out_node.control_inputs = [parent_name if x == get_tuple_name \
-                                               else x for x in out_node.control_inputs]
+                    else x for x in out_node.control_inputs]
             parent_node.outputs = get_tuple_node.outputs[:]
             parent_node.control_outputs = get_tuple_node.control_outputs[:]
 

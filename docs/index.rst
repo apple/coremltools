@@ -46,7 +46,7 @@ The method for installing **coremltools** follows the
 `standard python package installation steps <https://packaging.python.org/installing/>`_.
 Once you have set up a python environment, run::
 
-    pip install -U coremltools
+    pip install --upgrade coremltools
 
 to install **coremltools**.
 

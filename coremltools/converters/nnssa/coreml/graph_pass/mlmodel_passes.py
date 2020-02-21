@@ -86,7 +86,6 @@ def _get_network_output(spec):
         network_output_names.append(_out.name)
     return network_output_names
 
-
 def transform_conv_crop(spec):
     """
     Transforms Conv -> Crop -> BN (if present) -> Activation (if present) into
@@ -131,7 +130,7 @@ def transform_conv_crop(spec):
         # Conv --->  Crop  ---> BN ---> Activation ---> Layer1
         # In following three steps
         # 1. Conv --------------> BN ---> Activation ---> Layer1
-        #        \            /  
+        #        \            /
         #         ---> Crop --
         nn_layers[i].output[0] = nn_layers[i+1].output[0]
         # 2. Conv ---> BN ---> Activation ---> Layer1
@@ -237,3 +236,74 @@ def remove_disconnected_layers(spec):
     nn_spec = _get_nn_spec(spec)
     # Initiate removal from high level Neural Network spec
     _remove_disconnected_layers_rec(nn_spec)
+
+def remove_redundant_transposes(spec):
+    """
+    Removes layers from model specification that are back to back transposes
+    that compose to the identity.
+    """
+
+    def _delete_layers(nn_spec, layers_to_delete):
+        """
+        Given a neural network spec and pairs of transposes to remove, rewire
+        the network to bypass those transposes and remove them from the spec.
+        """
+        nn_layers = nn_spec.layers
+        # First pass: rewire layers to bypass those that will be deleted.
+        for _layer_pair in layers_to_delete:
+            for _nn_layer in nn_layers:
+                if _nn_layer in _layer_pair:
+                    # Skip the layers we're going to delete.
+                    continue
+                if _layer_pair[1].name in _nn_layer.input:
+                    # This layer has one of the deleted as an input. Replace it
+                    # with the deleted layer's input.
+                    idx = [i for i,n in enumerate(_nn_layer.input) if n == _layer_pair[1].name][0]
+                    _nn_layer.input[idx] = _layer_pair[0].input[0]
+        # Second pass: delete the layers.
+        for _layer_pair in layers_to_delete:
+            nn_layers.remove(_layer_pair[0])
+            nn_layers.remove(_layer_pair[1])
+
+    def _find_redundant_transposes(nn_spec):
+        """
+        Search the neural network spec for pairs of transposes that together
+        are the identity, and return a list of those pairs. This will only find
+        redundant pairs that are adjacent in the topologically sorted layer
+        list and will not find pairs in more complicated structure.
+        """
+        nn_layers = nn_spec.layers
+        layers_to_delete = []
+        # This holds the axes definition if the previous layer was a transpose,
+        # otherwise it is None.
+        previous_transpose = None
+        for _layer in nn_layers:
+            layer_type = _layer.WhichOneof('layer')
+            if layer_type != 'transpose' or len(_layer.output) != 1:
+                previous_transpose = None
+                continue
+
+            if not previous_transpose:
+                previous_transpose = {'layer': _layer, 'axes':_layer.transpose.axes}
+            else:
+                # Check if the layers are connected in the graph.
+                connected = (previous_transpose['layer'].output == _layer.input)
+                # Check if they're each other's inverses.
+                this_transpose = _layer.transpose.axes
+                composed = [previous_transpose['axes'][i] for i in this_transpose]
+                compose_to_identity = all([ax == i for i, ax in enumerate(composed)])
+                if connected and compose_to_identity:
+                    # These transpose ops are redundant, remove them.
+                    layers_to_delete.append((previous_transpose['layer'], _layer))
+                else:
+                    # Compare this transpose against the next layer.
+                    # TODO: Should we try to combine a sequence if transposes
+                    # into one op?
+                    previous_transpose = {'layer': _layer, 'axes':_layer.transpose.axes}
+        return layers_to_delete
+
+    nn_spec = _get_nn_spec(spec)
+    layers_to_delete = _find_redundant_transposes(nn_spec)
+    if len(layers_to_delete) > 0:
+        _delete_layers(nn_spec, layers_to_delete)
+        print('{} transpose pairs deleted'.format(len(layers_to_delete)))

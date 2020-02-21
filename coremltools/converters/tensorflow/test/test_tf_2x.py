@@ -48,7 +48,7 @@ class TestKerasFashionMnist(unittest.TestCase):
             inputs=inputs,
             outputs=outputs
         )
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
 
         # verify numeric correctness of predictions
         inputs = generate_data(shape=self.input_shape)
@@ -141,7 +141,7 @@ class TestModelFormats(unittest.TestCase):
             outputs=['Identity']
         )
 
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
 
     def test_control_flow(self):
         @tf.function(input_signature=[tf.TensorSpec([], tf.float32)])
@@ -165,7 +165,7 @@ class TestModelFormats(unittest.TestCase):
             outputs=['Identity']
         )
 
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
         input_data = generate_data(shape=[20])
         for data in input_data:
             tf_prediction = to_save.control_flow(data).numpy().flatten()
@@ -191,12 +191,13 @@ class TestModelFormats(unittest.TestCase):
         keras_model.save(self.saved_model_dir, save_format='tf')
         input_name = keras_model.inputs[0].name.split(':')[0]
         output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
+
         # convert and validate
         model = coremltools.converters.tensorflow.convert(
             self.saved_model_dir,
             inputs={input_name: (4, 4)},
             outputs=[output_name])
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
         self._test_prediction(keras_model=keras_model, core_ml_model=model, inputs=inputs)
 
 
@@ -228,9 +229,10 @@ class TestKerasApplications(unittest.TestCase):
         model = coremltools.converters.tensorflow.convert(
             model_path,
             inputs=inputs,
-            outputs=outputs,
+            outputs=outputs
         )
-        assert isinstance(model, coremltools.models.MLModel)
+
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
 
         if verbose:
             print('TensorFlow Keras model saved at {}'.format(model_path))
@@ -420,7 +422,17 @@ class TestCornerCases(unittest.TestCase):
         if os.path.exists(self.saved_model_dir):
             shutil.rmtree(self.saved_model_dir)
 
-    def _test_model(self, keras_model, model_path, inputs, outputs=None, use_cpu_only=False, decimal=4, verbose=False):
+    def _test_model(
+        self,
+        keras_model,
+        model_path,
+        inputs,
+        outputs=None,
+        decimal=4,
+        use_cpu_only=False,
+        verbose=False
+    ):
+
         keras_model.save(model_path)
 
         # convert and validate
@@ -429,7 +441,8 @@ class TestCornerCases(unittest.TestCase):
             inputs=inputs,
             outputs=outputs
         )
-        assert isinstance(model, coremltools.models.MLModel)
+        self.assertTrue(isinstance(model, coremltools.models.MLModel))
+
 
         if verbose:
             print('TensorFlow Keras model saved at {}'.format(model_path))
@@ -497,6 +510,28 @@ class TestCornerCases(unittest.TestCase):
             if layer.WhichOneof('layer') == 'batchnorm':
                 num_batch_norm += 1
         self.assertEqual(num_batch_norm, 1)
+
+
+    def test_conv_bias_fusion(self):
+        x = tf.keras.layers.Input(shape=[32, 32, 3], batch_size=1)
+        conv = tf.keras.layers.Conv2D(filters=3, kernel_size=1)(x)
+        conv = tf.keras.layers.DepthwiseConv2D(kernel_size=1)(conv)
+        keras_model = tf.keras.Model(x, conv)
+        input_name = keras_model.inputs[0].name.split(':')[0]
+        model = self._test_model(keras_model=keras_model,
+                                 model_path=self.model_path,
+                                 decimal=3,
+                                 inputs={input_name: (1, 32, 32, 3)})
+        add_broadcastables = 0
+        load_constants = 0
+        for layer in model.get_spec().neuralNetwork.layers:
+            if layer.WhichOneof('layer') == 'addBroadcastable':
+                add_broadcastables += 1
+            if layer.WhichOneof('layer') == 'loadConstantND':
+                load_constants += 1
+
+        self.assertEqual(add_broadcastables, 0)
+        self.assertEqual(load_constants, 0)
 
     def test_conv2d_with_activation(self):
         inputs = tf.keras.layers.Input(shape=[256, 256, 3], batch_size=1)
@@ -640,6 +675,34 @@ class TestCornerCases(unittest.TestCase):
                                  model_path=self.model_path,
                                  inputs={input_name: (1, 28, 28)},
                                  outputs=[output_name], decimal=3)
+
+    def test_redundant_transpose(self):
+        H = 224
+        W = 224
+        C = 3
+        inputs = tf.keras.layers.Input(shape=(H, W, C), batch_size=1)
+        out = tf.keras.layers.Conv2D(
+            filters=4,
+            kernel_size=3,
+        )(inputs)
+        model = tf.keras.Model(inputs, out)
+        input_name = model.inputs[0].name.split(":")[0]
+        input_shape = (1, H, W, C)
+        output_name = model.outputs[0].name.split(':')[0].split('/')[-1]
+
+        model.save(self.model_path, include_optimizer=False, save_format="h5")
+
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.model_path,
+            inputs={input_name: input_shape},
+            image_input_names=input_name,
+            outputs=[output_name],
+        )
+
+        spec = mlmodel.get_spec()
+        output_types = [layer.WhichOneof('layer') for layer in spec.neuralNetwork.layers]
+        expected_types = ['convolution', 'transpose']
+        np.testing.assert_array_equal(output_types, expected_types)
 
 
 if __name__ == '__main__':

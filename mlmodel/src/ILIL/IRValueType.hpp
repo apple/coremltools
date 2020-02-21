@@ -52,6 +52,9 @@ public:
     bool Is() const {
         return TryAs<DimensionT>() != nullptr;
     }
+    
+    /** If this operation has a variadic rank. */
+    virtual bool IsVariadicRank() const = 0;
 
 protected:
     IRDimension();
@@ -70,6 +73,9 @@ public:
 
     /** Get the length of this dimension. */
     uint64_t GetSize() const;
+    
+    /** If this operation has a variadic rank. */
+    bool IsVariadicRank() const override;
 
     bool operator==(const IRDimension& other) const override;
 
@@ -90,6 +96,9 @@ public:
 
     /** Get the name of this dimension. */
     const std::string& GetName() const;
+    
+    /** If this operation has a variadic rank. */
+    bool IsVariadicRank() const override;
 
     bool operator==(const IRDimension& other) const override;
 
@@ -266,6 +275,9 @@ public:
 
     /** If this tensor is rank 0. */
     bool IsScalar() const;
+    
+    /** If this tensor is variadic rank */
+    bool IsVariadicRank() const;
 
     uint64_t GetNumElements() const override;
         std::unique_ptr<const IRValue> ReadValue(const std::string& filePath, uint64_t offset) const override;
@@ -277,6 +289,7 @@ private:
 
     IRScalarValueTypeEnum m_scalarType;
     Shape m_shape;
+    bool m_isVariadicRank;
 };
 
 //-----------------------------------------------------------------

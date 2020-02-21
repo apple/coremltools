@@ -38,11 +38,11 @@ spec = coremltools.models.utils.load_spec('path/to/the/model.mlmodel')
 ```python
 import coremltools
 
-nn_mlmodel = coremltools.models.MLModel('path/to/the/model.mlmodel')
-nn_mlmodel.visualize_spec()
+mlmodel = coremltools.models.MLModel('path/to/the/model.mlmodel')
+mlmodel.visualize_spec()
 
 # To print a succinct description of the neural network
-spec = nn_mlmodel.get_spec()
+spec = mlmodel.get_spec()
 from coremltools.models.neural_network.printer import print_network_spec
 
 print_network_spec(spec, style='coding')
@@ -113,6 +113,7 @@ import coremltools
 import numpy as np
 import PIL.Image
 
+# load a model whose input type is "Image"
 model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
 
 Height = 20  # use the correct input image height
@@ -141,10 +142,53 @@ pil_img = PIL.Image.fromarray(data)
 out_dict = model.predict({'image': pil_img})
 ```
 
+Now, let us say the Core ML model has an input type of MultiArray, but it really represents an image.
+How can a jpeg image be used to call predict on such a model? For this, the loaded image should first
+be converted to a numpy array. Here is one way to do it:
+
+```python
+
+Height = 20  # use the correct input image height
+Width = 60  # use the correct input image width
+
+
+# assumption: the mlmodel's input is of type MultiArray and of shape (1, 3, Height, Width)
+model_expected_input_shape = (1, 3, Height, Width) # depending on the model description, this could be (3, Height, Width)
+
+# load the model
+model = coremltools.models.MLModel('path/to/the/saved/model.mlmodel')
+
+def load_image_as_numpy_array(path, resize_to=None):
+    # resize_to: (Width, Height)
+    img = PIL.Image.open(path)
+    if resize_to is not None:
+        img = img.resize(resize_to, PIL.Image.ANTIALIAS)
+    img_np = np.array(img).astype(np.float32) # shape of this numpy array is (Height, Width, 3)
+    return img_np
+
+# load the image and resize using PIL utilities
+img_as_np_array = load_image_as_numpy_array('/path/to/image.jpg', resize_to=(Width, Height)) # shape (Height, Width, 3)
+
+# note that PIL returns an image in the format in which the channel dimension is in the end,
+# which is different than CoreML's input format, so that needs to be modified
+img_as_np_array = np.transpose(img_as_np_array, (2,0,1)) # shape (3, Height, Width)
+
+# add the batch dimension if the model description has it
+img_as_np_array = np.reshape(img_as_np_array, model_expected_input_shape)
+
+# now call predict
+out_dict = model.predict({'image': img_as_np_array})
+```  
+
+
 ## Building an mlmodel from scratch using Neural Network Builder
 
-We can use the neural network builder class to construct a CoreML model. Lets look at an example of
+The neural network [builder class](https://github.com/apple/coremltools/blob/master/coremltools/models/neural_network/builder.py) can be used to programmatically construct a CoreML model.
+Lets look at an example of
 making a tiny 2 layer model with a convolution layer (with random weights) and an activation.
+
+To find the list of all the neural network layer types supported see [this](https://github.com/aseemw/coremltools/blob/f95f9b230f6a1bd8b0d9ee298b78d7786e3e7cfd/mlmodel/format/NeuralNetwork.proto#L472)
+portion of the NeuralNetwork.proto
 
 ```python
 import coremltools
@@ -152,10 +196,11 @@ import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
 import numpy as np
 
-input_features = [('data', datatypes.Array(*(3, 10, 10)))]
+input_features = [('data', datatypes.Array(*(1, 3, 10, 10)))]
 output_features = [('output', None)]
 
-builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                              disable_rank5_shape_mapping=True)
 
 builder.add_convolution(name='conv',
                         kernel_channels=3,
@@ -249,10 +294,10 @@ class MyLayerSelector(QuantizedLayerSelector):
     def do_quantize(self, layer, **kwargs):
         ret = super(MyLayerSelector, self).do_quantize(layer)
         if not ret or layer.name == 'dense_2':
-            return False
             return True
 
 
 selector = MyLayerSelector()
 quantized_model = quantize_weights(
     mlmodel, 8, quantization_mode='linear', selector=selector)
+```

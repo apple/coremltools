@@ -51,6 +51,10 @@ uint64_t IRConstantDimension::GetSize() const
     return m_size;
 }
 
+bool IRConstantDimension::IsVariadicRank() const {
+    return false;
+}
+
 bool IRConstantDimension::operator==(const IRDimension& other) const
 {
     const auto* otherDim = other.TryAs<IRConstantDimension>();
@@ -73,6 +77,10 @@ std::unique_ptr<IRSymbolicDimension> IRSymbolicDimension::Make(const std::string
 const std::string& IRSymbolicDimension::GetName() const
 {
     return m_name;
+}
+
+bool IRSymbolicDimension::IsVariadicRank() const {
+    return GetName().length() >= 1 && GetName()[0] == '*';
 }
 
 bool IRSymbolicDimension::operator==(const IRDimension& other) const
@@ -280,11 +288,21 @@ bool IRScalarValueType::operator==(const IRValueType& other) const
 
 //-----------------------------------------------------------------
 
+static bool ShapeIsVariadicRank(IRTensorValueType::Shape shape) {
+    for (const auto& dim : shape) {
+        if (dim->IsVariadicRank()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 IRTensorValueType::~IRTensorValueType() = default;
 
 IRTensorValueType::IRTensorValueType(IRScalarValueTypeEnum scalarType, Shape&& shape)
     : m_scalarType(scalarType)
     , m_shape(std::move(shape))
+    , m_isVariadicRank(ShapeIsVariadicRank(shape))
 { }
 
 /*static*/ std::shared_ptr<const IRTensorValueType>
@@ -365,6 +383,10 @@ const IRTensorValueType::Shape& IRTensorValueType::GetShape() const
 
 bool IRTensorValueType::IsScalar() const {
     return GetShape().size() == 0;
+}
+
+bool IRTensorValueType::IsVariadicRank() const {
+    return m_isVariadicRank;
 }
 
 template<typename ScalarT>

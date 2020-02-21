@@ -3,6 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 import logging
+import traceback
 
 from .graphdef_to_ssa import graphdef_to_ssa
 from .graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
@@ -13,7 +14,7 @@ from coremltools.converters.nnssa.commons.features import Features
 def load(tfgraph, resume_on_errors=False, **kwargs):
     """
     Loads a NetworkEnsemble from a TensorFlow frozen graph.
-    tfgraph should either be a TensorFlow Graph object, or a path to a 
+    tfgraph should either be a TensorFlow Graph object, or a path to a
     frozen graph.
 
     Parameters
@@ -59,11 +60,17 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
             graph[k].attr['_output_shapes'] = v
 
     passes = [
-        delete_asserts, functionalize_loops, constant_propagation, cond_to_where,
-        remove_variable_nodes, fusedbatchnorm_rewrite, lstmblockcell_rewrite, grublockcell_rewrite
+        delete_asserts,
+        functionalize_loops,
+        constant_propagation,
+        cond_to_where,
+        remove_variable_nodes,
+        fusedbatchnorm_rewrite,
+        lstmblockcell_rewrite,
+        grublockcell_rewrite,
     ]
 
-    if not resume_on_errors:
+    if resume_on_errors is False:
         for p in passes:
             p(ssa)
     else:
@@ -79,7 +86,7 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
     for f in ssa.functions.values():
         f.find_inputs_and_outputs()
     # check that type inference is complete
-    if not resume_on_errors:
+    if resume_on_errors is False:
         for f in ssa.functions.values():
             for n in f.graph.values():
                 assert n.datatype is not None

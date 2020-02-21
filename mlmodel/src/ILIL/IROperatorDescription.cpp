@@ -69,6 +69,42 @@ static bool ValidateEquivalentTypes(const IRValueType& t1, const IRValueType& t2
     return true;
 }
 
+
+IROperatorInputDescription::IROperatorInputDescription(bool isConst,
+                                                       bool isOptional,
+                                                       InputTypeSetPtr validTypeSet)
+    : m_isConst(isConst)
+    , m_isOptional(isOptional)
+    , m_validTypeSet(std::move(validTypeSet))
+{ }
+
+IROperatorInputDescription::IROperatorInputDescription(bool isConst, InputTypeSetPtr validTypeSet)
+    : IROperatorInputDescription(isConst, /*isOptional=*/ false, std::move(validTypeSet))
+{ }
+
+IROperatorInputDescription::IROperatorInputDescription(InputTypeSetPtr validTypeSet)
+    : IROperatorInputDescription(/*isConst=*/ false, /*isOptional=*/ false, std::move(validTypeSet))
+{ }
+
+bool IROperatorInputDescription::IsConst() const {
+    return m_isConst;
+}
+
+bool IROperatorInputDescription::IsOptional() const {
+    return m_isOptional;
+}
+
+bool IROperatorInputDescription::IsValidType(const IRValueType &type) const {
+    for (const auto& t : *m_validTypeSet) {
+        if (ValidateEquivalentTypes(*t, type)) return true;
+    }
+    return false;
+}
+
+/* static */ IROperatorInputDescription::InputTypeSetPtr IROperatorInputDescription::MakeTypeList(std::initializer_list<IROperatorInputDescription::InputTypeSet::value_type> iolist) {
+    return std::make_shared<IROperatorInputDescription::InputTypeSet>(iolist);
+}
+
 IROperatorDescription::IROperatorDescription(uint64_t minOutputs,
                                              uint64_t maxOutputs,
                                              InputMapPtr expectedInputs,
@@ -77,6 +113,15 @@ IROperatorDescription::IROperatorDescription(uint64_t minOutputs,
     , m_maxOutputs(maxOutputs)
     , m_expectedInputs(std::move(expectedInputs))
     , m_validationFunction(validationFunction)
+{ }
+
+IROperatorDescription::IROperatorDescription(uint64_t minOutputs,
+                                             uint64_t maxOutputs,
+                                             InputMapPtr expectedInputs)
+    : m_minOutputs(minOutputs)
+    , m_maxOutputs(maxOutputs)
+    , m_expectedInputs(std::move(expectedInputs))
+    , m_validationFunction(&ValidateNoOp)
 { }
 
 uint64_t IROperatorDescription::GetMinOutputs() const
@@ -97,20 +142,6 @@ uint64_t IROperatorDescription::GetMaxOutputs() const
 const IROperatorDescription::InputMap& IROperatorDescription::GetExpectedInputs() const
 {
     return *m_expectedInputs;
-}
-
-bool IROperatorDescription::IsValidType(const std::string& input, const IRValueType& type) const
-{
-    if (m_expectedInputs.get() == nullptr) return true;
-    auto& validTypeList = m_expectedInputs->find(input)->second;
-    for (auto t : *validTypeList) {
-        if (ValidateEquivalentTypes(*t, type)) return true;
-    }
-    return false;
-}
-
-/* static */ IROperatorDescription::InputTypeSetPtr IROperatorDescription::MakeTypeList(std::initializer_list<IROperatorDescription::InputTypeSet::value_type> iolist) {
-    return std::make_shared<IROperatorDescription::InputTypeSet>(iolist);
 }
 
 /* static */ IROperatorDescription::InputMapPtr IROperatorDescription::MakeInputMap(std::initializer_list<IROperatorDescription::InputMap::value_type> iolist) {

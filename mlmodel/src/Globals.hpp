@@ -27,9 +27,9 @@ namespace CoreML {
     // - New neural network layers (resizeBilinear, cropResize)
     // - <fill in as we develop> ..
     static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS12 = 3;
-    
+
     // Version 4 supports:
-    // - New NN layers, non rank 5 tensors 
+    // - New NN layers, non rank 5 tensors
     // - Updatable models
     // - Exact shape / general rank mapping for neural networks
     // - Large expansion of supported neural network layers

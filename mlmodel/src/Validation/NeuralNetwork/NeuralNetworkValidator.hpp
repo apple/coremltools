@@ -18,29 +18,29 @@
 #include "UpdatableNeuralNetworkValidator.hpp"
 
 namespace CoreML {
-    
+
     class NeuralNetworkSpecValidator {
-        
+
     public:
-        
+
         NeuralNetworkSpecValidator();
         NeuralNetworkSpecValidator(const std::map<std::string, std::set<std::string>> &blobsInitial,
                                    const std::map<std::string, int> &ioBlobNameToRank,
                                    bool ndArrayMode,
                                    int loopDepth,
                                    const std::map<std::string, int> &blobRanks);
-        
+
         template<typename T>
         Result validateNeuralNetwork(const T& nn);
-        
+
         bool ndArrayInterpretation;
-        
+
         // For Model inputs/outputs, map from name to rank
         std::map<std::string, int> ModelIOBlobNameToRank;
-        
+
         // For all model blobs, map from name to rank
         std::map<std::string, int> blobNameToRank;
-        
+
         // Collection of data blob names in the Neural Network.
         // The collection starts with the list of all Model inputs, and grows later.
         // As layers are iterated through, they add their output blobs to this map.
@@ -49,14 +49,14 @@ namespace CoreML {
         // (a data blob maybe produced by more than one layers if its a copy layer, or the layers
         //  are within if and else branches)
         std::map<std::string, std::set<std::string>> blobs;
-        
+
         int loopStackDepth;
-        
-        
+
+
     private:
-        
+
         Result validateLayer(const Specification::NeuralNetworkLayer& layer);
-        
+
         Result validateConvolutionLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateInnerProductLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateBatchnormLayer(const Specification::NeuralNetworkLayer& layer);
@@ -180,7 +180,6 @@ namespace CoreML {
         Result validateCumSumLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateClampedReluLayer(const Specification::NeuralNetworkLayer& layer);
 
-        
         Result validateFailUnknownType(const Specification::NeuralNetworkLayer& layer);
     };
 }

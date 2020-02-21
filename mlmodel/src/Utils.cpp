@@ -123,6 +123,7 @@ void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
     }
 
+
     if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS14 && !hasIOS14Features(*pModel)) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
     }
@@ -196,7 +197,7 @@ bool CoreML::hasWeightOfType(const Specification::NeuralNetworkLayer& layer,
         case Specification::NeuralNetworkLayer::LayerCase::kInnerProduct:
             return (isWeightParamOfType(layer.innerproduct().weights(),type) ||
                     isWeightParamOfType(layer.innerproduct().bias(), type));
-            
+
         case Specification::NeuralNetworkLayer::LayerCase::kBatchedMatmul:
             return (isWeightParamOfType(layer.batchedmatmul().weights(),type) ||
                     isWeightParamOfType(layer.batchedmatmul().bias(), type));
@@ -233,7 +234,7 @@ bool CoreML::hasWeightOfType(const Specification::NeuralNetworkLayer& layer,
         case Specification::NeuralNetworkLayer::LayerCase::kEmbedding:
             return (isWeightParamOfType(layer.embedding().weights(), type) ||
                     isWeightParamOfType(layer.embedding().bias(), type));
-            
+
         case Specification::NeuralNetworkLayer::LayerCase::kEmbeddingND:
             return (isWeightParamOfType(layer.embeddingnd().weights(), type) ||
                     isWeightParamOfType(layer.embeddingnd().bias(), type));
@@ -284,7 +285,7 @@ bool CoreML::hasWeightOfType(const Specification::Model& model, const WeightPara
 // if the old ones are also filled in with something plausible, then there is nothing
 // preventing us from running on older versions of Core ML.
 bool CoreML::hasFlexibleShapes(const Specification::Model& model) {
-    
+
     auto inputs = model.description().input();
     for (const auto& input: inputs) {
         if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
@@ -385,11 +386,11 @@ bool CoreML::hasIOS13Features(const Specification::Model& model) {
     // - model is of type Gazetteer
     // - model is of type WordEmbedding
     // - (... add others here ...)
-    
+
     if (model.isupdatable()) {
         return true;
     }
-    
+
     bool result = false;
     switch (model.Type_case()) {
         case Specification::Model::kPipeline:
@@ -574,10 +575,10 @@ bool CoreML::hasCategoricalSequences(const Specification::Model& model) {
 }
 
 bool CoreML::hasIOS12NewNeuralNetworkLayers(const Specification::Model& model) {
-    
+
     // Return True if the model has the two new NN layers added in iOS 12, which are
     // resizeBilinear and CropResize
-    
+
     auto layers = getNNSpec(model);
     if (layers) {
         for (int i=0; i< layers->size(); i++){
@@ -627,7 +628,7 @@ bool CoreML::hasModelOrSubModelProperty(const Specification::Model& model, const
 }
 
 bool CoreML::isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& layer) {
-    
+
     // Return True if the NN layer is from the set exposed in iOS 12
     switch (layer.layer_case()) {
         case Specification::NeuralNetworkLayer::LayerCase::kConvolution:
@@ -678,10 +679,10 @@ bool CoreML::isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& 
 
 
 bool CoreML::hasIOS13NeuralNetworkFeatures(const Specification::Model& model) {
-    
+
     /* check if any of the messages in NeuralNetwork.proto, that were added in iOS version 13, are being used.
       If they are, return True, otherwise return False.
-     
+
      In particular, check for the presence of the following messages:
      1. any new layer type, which was not in iOS 12.
      2. if the value of enums "NeuralNetworkMultiArrayShapeMapping" or "NeuralNetworkImageShapeMapping" is non 0
@@ -712,7 +713,7 @@ bool CoreML::hasIOS13NeuralNetworkFeatures(const Specification::Model& model) {
         default:
             break;
     }
-    
+
     // check for new layers: by checking if its NOT one of the layers supported in iOS 12
     auto layers = getNNSpec(model);
     if (layers) {
@@ -723,7 +724,7 @@ bool CoreML::hasIOS13NeuralNetworkFeatures(const Specification::Model& model) {
             }
         }
     }
-    
+
     return false;
 }
 

@@ -16,7 +16,7 @@ if HAS_KERAS2_TF:
     from keras.models import Sequential, Model
     from keras.layers import Dense, Activation, Conv2D, Conv1D, Flatten, BatchNormalization, Conv2DTranspose, SeparableConv2D
     from keras.layers import MaxPooling2D, AveragePooling2D, GlobalAveragePooling2D, GlobalMaxPooling2D
-    from keras.layers import MaxPooling1D, AveragePooling1D, GlobalAveragePooling1D, GlobalMaxPooling1D 
+    from keras.layers import MaxPooling1D, AveragePooling1D, GlobalAveragePooling1D, GlobalMaxPooling1D
     from keras.layers import Embedding, Input, Permute, Reshape, RepeatVector, Dropout
     from keras.layers import Add, Concatenate
     from keras.layers import add, multiply, concatenate, dot, maximum, average
@@ -54,7 +54,7 @@ def _keras_transpose(x, is_sequence=False):
     elif len(x.shape) == 1:
         if is_sequence: # (S) --> (S,N,1,1,1)
             return x.reshape((x.shape[0], 1, 1))
-        else: 
+        else:
             return x
     else:
         return x
@@ -193,7 +193,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
             # Cleanup files - models on disk no longer useful
             if use_tmp_folder and os.path.exists(model_dir):
                 shutil.rmtree(model_dir)
-        
+
 
 @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
@@ -214,7 +214,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Test all ones
         model.set_weights([np.ones(w.shape) for w in model.get_weights()])
         self._test_model(model, mode='ones', model_precision=model_precision)
-        
+
         # Test random
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_model(model, model_precision=model_precision)
@@ -395,7 +395,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
     def test_tiny_conv_dilated_rect_random_half_precision(self):
         return self.test_tiny_conv_dilated_rect_random(model_precision=_MLMODEL_HALF_PRECISION)
-        
+
     def test_tiny_conv_pseudo_1d_x(self, model_precision=_MLMODEL_FULL_PRECISION):
         np.random.seed(1988)
         input_dim = 2
@@ -611,7 +611,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Conv2D(input_shape = input_shape, 
+        model.add(Conv2D(input_shape = input_shape,
             filters = num_kernels, kernel_size = (kernel_height, kernel_width)))
         model.add(BatchNormalization(center=False, scale=False, epsilon=1e-5))
 
@@ -634,7 +634,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Conv2DTranspose(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
+        model.add(Conv2DTranspose(filters = num_kernels, kernel_size=(kernel_height, kernel_width),
             input_shape = input_shape, padding = 'valid', use_bias=False))
 
         # Set some random weights
@@ -653,7 +653,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Conv2DTranspose(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
+        model.add(Conv2DTranspose(filters = num_kernels, kernel_size=(kernel_height, kernel_width),
             input_shape = input_shape, padding = 'same', strides = (2,2), use_bias=True))
 
         # Set some random weights
@@ -672,7 +672,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width), 
+        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width),
             input_shape = input_shape, padding = 'same', strides = (1,1)))
 
         # Set some random weights
@@ -691,7 +691,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width), 
+        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width),
             input_shape = input_shape, padding = 'valid', strides = (1,1)))
 
         # Set some random weights
@@ -699,7 +699,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Test the keras model
         self._test_model(model)
-        
+
     def test_tiny_depthwise_conv_same_pad_depth_multiplier(self):
         np.random.seed(1988)
         input_dim = 16
@@ -710,7 +710,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width), 
+        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width),
             input_shape = input_shape, padding = 'same', strides = (1,1)))
 
         # Set some random weights
@@ -718,7 +718,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Test the keras model
         self._test_model(model)
-        
+
     def test_tiny_depthwise_conv_valid_pad_depth_multiplier(self):
         np.random.seed(1988)
         input_dim = 16
@@ -729,7 +729,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width), 
+        model.add(DepthwiseConv2D(depth_multiplier = depth_multiplier, kernel_size=(kernel_height, kernel_width),
             input_shape = input_shape, padding = 'valid', strides = (1,1)))
 
         # Set some random weights
@@ -737,7 +737,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Test the keras model
         self._test_model(model)
-        
+
     def test_tiny_separable_conv_valid(self):
         np.random.seed(1988)
         input_dim = 16
@@ -746,11 +746,11 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         kernel_height = 3
         kernel_width = 3
         num_kernels = 4
-        
+
         # Define a model
         model = Sequential()
-        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
-            padding = 'valid', strides = (1,1), depth_multiplier = depth_multiplier, 
+        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width),
+            padding = 'valid', strides = (1,1), depth_multiplier = depth_multiplier,
             input_shape = input_shape))
 
         # Set some random weights
@@ -767,11 +767,11 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         kernel_height = 3
         kernel_width = 3
         num_kernels = 4
-        
+
         # Define a model
         model = Sequential()
-        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
-            padding = 'same', strides = (2,2), activation='relu', depth_multiplier = depth_multiplier, 
+        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width),
+            padding = 'same', strides = (2,2), activation='relu', depth_multiplier = depth_multiplier,
             input_shape = input_shape))
 
         # Set some random weights
@@ -779,7 +779,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Test the keras model
         self._test_model(model)
-        
+
     def test_tiny_separable_conv_valid_depth_multiplier(self):
         np.random.seed(1988)
         input_dim = 16
@@ -788,11 +788,11 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         kernel_height = 3
         kernel_width = 3
         num_kernels = 40
-        
+
         # Define a model
         model = Sequential()
-        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
-            padding = 'valid', strides = (1,1), depth_multiplier = depth_multiplier, 
+        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width),
+            padding = 'valid', strides = (1,1), depth_multiplier = depth_multiplier,
             input_shape = input_shape))
 
         # Set some random weights
@@ -812,11 +812,11 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         kernel_height = 3
         kernel_width = 3
         num_kernels = 40
-        
+
         # Define a model
         model = Sequential()
-        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width), 
-            padding = 'same', strides = (2,2), activation='relu', depth_multiplier = depth_multiplier, 
+        model.add(SeparableConv2D(filters = num_kernels, kernel_size=(kernel_height, kernel_width),
+            padding = 'same', strides = (2,2), activation='relu', depth_multiplier = depth_multiplier,
             input_shape = input_shape))
 
         # Set some random weights
@@ -971,7 +971,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Conv2D(input_shape = input_shape, 
+        model.add(Conv2D(input_shape = input_shape,
             filters = num_kernels, kernel_size = (kernel_height, kernel_width)))
         model.add(UpSampling2D(size = 2))
 
@@ -1396,7 +1396,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Bidirectional(LSTM(num_channels, 
+        model.add(Bidirectional(LSTM(num_channels,
             implementation = 1, recurrent_activation = 'sigmoid'),
             input_shape=(input_length, input_dim)))
 
@@ -1420,7 +1420,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Bidirectional(LSTM(num_channels, 
+        model.add(Bidirectional(LSTM(num_channels,
                                      implementation = 2, recurrent_activation = 'sigmoid'),
                                 input_shape=(input_length, input_dim)))
 
@@ -1442,7 +1442,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Bidirectional(LSTM(num_channels, 
+        model.add(Bidirectional(LSTM(num_channels,
             implementation = 2, recurrent_activation = 'sigmoid'),
             input_shape=(input_length, input_dim)))
 
@@ -1460,7 +1460,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Bidirectional(LSTM(num_channels, 
+        model.add(Bidirectional(LSTM(num_channels,
             implementation = 2, recurrent_activation = 'sigmoid'),
             input_shape=(input_length, input_dim)))
 
@@ -1478,7 +1478,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Bidirectional(LSTM(num_channels, 
+        model.add(Bidirectional(LSTM(num_channels,
                                 return_sequences=False, implementation=2, recurrent_activation='sigmoid'),
                                 input_shape=(input_length, input_dim)))
 
@@ -1496,7 +1496,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(Bidirectional(LSTM(num_channels, 
+        model.add(Bidirectional(LSTM(num_channels,
                                 return_sequences = True, implementation = 2, recurrent_activation = 'sigmoid'),
                                 input_shape=(input_length, input_dim)))
 
@@ -1802,7 +1802,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Get the coreml model
         self._test_model(model)
-        
+
     def test_tiny_conv_dropout_random(self):
         np.random.seed(1988)
         num_samples = 1
@@ -1884,7 +1884,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(LSTM(num_channels, input_shape = (input_length, input_dim), 
+        model.add(LSTM(num_channels, input_shape = (input_length, input_dim),
             implementation = 1, recurrent_activation = 'sigmoid'))
 
         # Set some random weights
@@ -1904,22 +1904,22 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         model = Model(x_in, x)
 
         self._test_model(model, delta=1e-2)
-    
+
     def test_embedding_fixed_length(self):
         sequence_length = 5
         vocab_size = 10
         embed_channels = 4
-        
+
         dense_units = sequence_length * embed_channels
         model = Sequential()
         model.add(Embedding(vocab_size, embed_channels, input_length=sequence_length))
         model.add(Flatten())
         model.add(Dense(dense_units))
         model.add(Dense(20))
-        
+
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_model(model, one_dim_seq_flags=[True])
-    
+
     def test_conv1d_flatten(self, delta=1e-2):
         model = Sequential()
         model.add(AveragePooling1D(2,input_shape=(64,9)))
@@ -1965,7 +1965,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
         # Define a model
         model = Sequential()
-        model.add(SimpleRNN(num_channels, return_sequences=True, 
+        model.add(SimpleRNN(num_channels, return_sequences=True,
                 input_shape=(input_length, input_dim),))
         model.add(TimeDistributed(Dense(5)))
 
@@ -2072,48 +2072,48 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_model(model, mode='random', delta=1e-2)
-    
+
     def test_tiny_multiple_outputs(self):
         x = Input(shape=(3,))
         y1 = Dense(4)(x)
         y2 = Dense(5)(x)
         model = Model([x], [y1,y2])
-        
+
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_model(model, mode='random', delta=1e-2)
-        
+
     def test_intermediate_outputs_dense(self):
         x = Input(shape=(3,))
         y = Dense(4, name='intermediate_dense_y')(x)
         z = Dense(5, name='intermediate_dense_z')(y)
         model = Model([x], [y,z])
-        
+
         model.set_weights([np.random.rand(*w.shape) for w in \
                 model.get_weights()])
         self._test_model(model, mode='random', delta=1e-2)
-    
+
     def test_intermediate_outputs_conv2d(self):
         x = Input(shape=(8,8,3))
         y = Conv2D(4, (3,3), name='intermdiate_conv2d_1')(x)
         z = Conv2D(5, (3,3), name='intermdiate_conv2d_2')(y)
         model = Model([x], [y,z])
-        
+
         model.set_weights([np.random.rand(*w.shape) for w in \
                 model.get_weights()])
         self._test_model(model, mode='random', delta=1e-2)
-    
+
     def test_intermediate_outputs_conv2d_fused_act(self):
         x = Input(shape=(8,8,3))
-        y = Conv2D(4, (3,3), name='intermdiate_conv2d_1_fused', 
+        y = Conv2D(4, (3,3), name='intermdiate_conv2d_1_fused',
                 activation='relu')(x)
-        z = Conv2D(5, (3,3), name='intermdiate_conv2d_2_fused', 
+        z = Conv2D(5, (3,3), name='intermdiate_conv2d_2_fused',
                 activation='relu')(y)
         model = Model([x], [y,z])
-        
+
         model.set_weights([np.random.rand(*w.shape) - 0.5 for w in \
                 model.get_weights()])
         self._test_model(model, mode='random', delta=1e-2)
-    
+
     def test_intermediate_outputs_conv1d(self):
         x = Input(shape=(10,3))
         y = Conv1D(4, 3, name='intermdiate_conv1d_1')(x)
@@ -2122,18 +2122,18 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         model.set_weights([np.random.rand(*w.shape) for w in \
                 model.get_weights()])
         self._test_model(model, mode='random', delta=1e-2)
-    
+
     def test_intermediate_outputs_conv1d_fused_act(self):
         x = Input(shape=(10,3))
-        y = Conv1D(4, 3, name='intermdiate_conv1d_1_fused', 
+        y = Conv1D(4, 3, name='intermdiate_conv1d_1_fused',
                 activation='relu')(x)
-        z = Conv1D(5, 3, name='intermdiate_conv1d_2_fused', 
+        z = Conv1D(5, 3, name='intermdiate_conv1d_2_fused',
                 activation='relu')(y)
         model = Model([x], [y,z])
         model.set_weights([np.random.rand(*w.shape) - 0.5 for w in \
                 model.get_weights()])
         self._test_model(model, mode='random', delta=1e-2)
-    
+
     def test_intermediate_rcnn_1d(self):
 
         x_in = Input(shape=(10,2))
@@ -2142,7 +2142,7 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         x = BatchNormalization(axis=-1, name='interm_rcnn_bn1')(x)
         x = Activation('elu')(x)
         x = MaxPooling1D(pool_size=2, name='interm_rcnn_pool1')(x)
-        
+
         out1 = x # out1.shape = (5,3)
         x = GRU(6, name='gru1')(x)
         out2 = x
@@ -2188,7 +2188,7 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         self.test_tiny_mobilenet_arch(model_precision=_MLMODEL_HALF_PRECISION)
 
     def test_tiny_xception(self, model_precision=_MLMODEL_FULL_PRECISION):
-        img_input = Input(shape=(32,32,3))        
+        img_input = Input(shape=(32,32,3))
         x = Conv2D(2, (3, 3), strides=(2, 2), use_bias=False, name='block1_conv1')(img_input)
         x = BatchNormalization(name='block1_conv1_bn')(x)
         x = Activation('relu', name='block1_conv1_act')(x)
@@ -2212,14 +2212,14 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         residual = Conv2D(16, (1, 1), strides=(2, 2),
                           padding='same', use_bias=False)(x)
         residual = BatchNormalization()(residual)
-        
+
         model = Model(inputs=[img_input], outputs=[residual])
 
         self._test_model(model, delta=1e-2, model_precision=model_precision)
 
     def test_tiny_xception_half_precision(self):
         return self.test_tiny_xception(model_precision=_MLMODEL_HALF_PRECISION)
-        
+
     def test_nested_model_giving_output(self):
         base_model = Sequential()
         base_model.add(Conv2D(32, (1, 1), input_shape=(4, 4, 3)))
@@ -2378,7 +2378,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         def build_model(x):
             kwargs = dict(zip(options.keys(), x))
             model = Sequential()
-            model.add(Conv2D(filters=5, kernel_size=(7,7), 
+            model.add(Conv2D(filters=5, kernel_size=(7,7),
                       input_shape = input_shape))
             model.add(UpSampling2D(**kwargs))
             return x, model
@@ -2715,18 +2715,18 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         input_tensor_1 = Input(shape=(story_maxlen,))
         x1 = Embedding(vocab_size, embed_hidden_size)(input_tensor_1)
         x1 = Dropout(0.3)(x1)
-        
+
         input_tensor_2 = Input(shape=(query_maxlen,))
         x2 = Embedding(vocab_size, embed_hidden_size)(input_tensor_2)
         x2 = Dropout(0.3)(x2)
         x2 = LSTM(embed_hidden_size, return_sequences=False)(x2)
         x2 = RepeatVector(story_maxlen)(x2)
-        
+
         x3 = add([x1, x2])
         x3 = LSTM(embed_hidden_size, return_sequences=False)(x3)
         x3 = Dropout(0.3)(x3)
         x3 = Dense(vocab_size, activation='softmax')(x3)
-        
+
         model = Model(inputs=[input_tensor_1,input_tensor_2], outputs=[x3])
 
         self._test_model(model, one_dim_seq_flags=[True, True])
@@ -2736,7 +2736,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         vocabulary_size = 500
         embedding_dimension = 30
         input_length = 20
-        
+
         model = Sequential()
         model.add(Embedding(vocabulary_size, embedding_dimension, input_length=input_length, trainable=True))
 

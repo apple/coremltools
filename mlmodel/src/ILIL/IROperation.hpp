@@ -42,6 +42,12 @@ public:
      */
     virtual const IRValue& GetAttribute(const std::string& name) const = 0;
 
+    /**
+     Get an attribute value.
+     Returns null if an attribute by the given name does not exist.
+     */
+    virtual const IRValue* TryGetAttribute(const std::string& name) const = 0;
+    
     /** Get all attributes. */
     virtual const AttributesMap& GetAttributes() const = 0;
 
