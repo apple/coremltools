@@ -79,144 +79,6 @@ class FrontendTesterSample:
         """
         pass
 
-class TestAbs:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.abs(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.random.rand(1, 2, 4, 3)
-        v = cb.abs(x=x_val)
-        assert is_close(np.abs(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.abs(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=-1, rand_max=1)}, # Generate (-1, 1] random numbers
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestAcos:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-        itertools.product(
-            [True, False],
-            ['nnv2'],
-            ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, -0.5, 0],[0.4, 0.5, 0.8]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.acos(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[3.14159265, 2.0943951 , 1.57079633],
-                                    [1.15927948, 1.04719755, 0.64350111]],
-                                    dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-1, rand_max=1)
-        v = cb.acos(x=x_val)
-        assert is_close(np.arccos(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.acos(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=-1, rand_max=1)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestAsin:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, -0.5, 0],[0.4, 0.5, 0.8]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.asin(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-1.57079633, -0.52359878, 0.],
-                                     [0.41151685, 0.52359878, 0.92729522]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-1, rand_max=1)
-        v = cb.asin(x=x_val)
-        assert is_close(np.arcsin(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             ))
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.asin(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=-1, rand_max=1)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
 class TestCumsum():
 
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -333,53 +195,6 @@ class TestCumsum():
         with pytest.raises(TypeError):
             pred = cb.cumsum(x=x_val)
 
-class TestAtan:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.atan(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-0.78539816, 1.10714872, -1.24904577],
-                                     [1.32581766, -1.37340077, 1.40564765]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-100, rand_max=100)
-        v = cb.atan(x=x_val)
-        assert is_close(np.arctan(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             ))
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.atan(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=-100, rand_max=100)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-
 class TestAvgPool:
 
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -440,205 +255,6 @@ class TestAvgPool:
             run_compare_tf(graph, {x: _random_gen(shape, rand_min=-100, rand_max=100)},
                            res, use_cpu_only=use_cpu_only, backend=backend)
 
-
-class TestCeil:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.ceil(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = [np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)]
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-100, rand_max=100)
-        v = cb.ceil(x=x_val)
-        assert is_close(np.ceil(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        eps_from_int = 0.0
-        if not use_cpu_only:
-            eps_from_int = 0.1
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.ceil(x)
-            run_compare_tf(graph,
-                    {x: _random_gen(input_shape, rand_min=-100,
-                        rand_max=100, eps_from_int=eps_from_int)},
-                    res, use_cpu_only=use_cpu_only,
-                    frontend_only=False, backend=backend)
-
-class TestClip:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.clip(x=x, alpha=0.0, beta=5.0)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = [np.array([[0, 2, 0], [4.5, 0, 5]], dtype=np.float32)]
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-5, rand_max=10)
-        v = cb.clip(x=x_val, alpha=0.0, beta=5.0)
-        assert is_close(np.clip(x_val, 0.0, 5.0), v.val)
-
-    @pytest.mark.skip("TF decomposes clip_by_value into min and max <rdar://problem/59047747>")
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.clip_by_value(x, clip_value_min=0.0, clip_value_max=5.0)
-            run_compare_tf(graph, {x: _random_gen(input_shape,
-                rand_min=-5, rand_max=10)},
-                res, use_cpu_only=use_cpu_only,
-                frontend_only=False, backend=backend)
-
-class TestCos:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.cos(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[0.54030231, -0.41614684, -0.9899925 ],
-                                     [-0.65364362, 0.28366219, 0.96017029]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-1000, rand_max=1000)
-        v = cb.cos(x=x_val)
-        assert is_close(np.cos(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        rand_range = 1000
-        if not use_cpu_only:
-            rand_range = 10
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.cos(x)
-            run_compare_tf(graph,
-                    {x: _random_gen(input_shape, rand_min=-rand_range,
-                        rand_max=rand_range)},
-                    res, use_cpu_only=use_cpu_only,
-                    frontend_only=False, backend=backend)
-
-
-class TestCosh:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, -2, -3],[1, 2, 3]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.cosh(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[1.54308063, 3.76219569, 10.067662],
-                                     [1.54308063, 3.76219569, 10.067662]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-4, rand_max=4)
-        v = cb.cosh(x=x_val)
-        assert is_close(np.cosh(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.cosh(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=-4, rand_max=4)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-
 class TestDepthToSpace:
 
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -677,6 +293,667 @@ class TestDepthToSpace:
             ref = tf.depth_to_space(x, block_size)
             run_compare_tf(graph, {x: np.random.rand(*shape)}, ref,
                            use_cpu_only=use_cpu_only, backend=backend)
+
+class TestElementwiseUnary:
+
+    @pytest.mark.parametrize('use_cpu_only, backend, mode',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 ['abs', 'acos', 'asin', 'atan', 'atanh',
+                                  'ceil', 'clip', 'cos', 'cosh', 'exp', 'exp2',
+                                  'floor', 'log', 'round', 'rsqrt', 'sign',
+                                  'sin', 'sinh', 'sqrt', 'tan', 'threshold']
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, mode):
+        if mode == 'abs':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+
+            build = lambda x: cb.abs(x=x)
+        elif mode == 'acos':
+            val = np.array([[-1, -0.5, 0],[0.4, 0.5, 0.8]], dtype=np.float32)
+            expected_outputs = np.array([[3.14159265, 2.0943951 , 1.57079633],
+                                         [1.15927948, 1.04719755, 0.64350111]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.acos(x=x)
+        elif mode == 'asin':
+            val = np.array([[-1, -0.5, 0],[0.4, 0.5, 0.8]], dtype=np.float32)
+            expected_outputs = np.array([[-1.57079633, -0.52359878, 0.],
+                                         [0.41151685, 0.52359878, 0.92729522]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.asin(x=x)
+        elif mode == 'atan':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[-0.78539816, 1.10714872, -1.24904577],
+                                         [1.32581766, -1.37340077, 1.40564765]],
+                                         dtype=np.float32)
+            build = lambda x: cb.atan(x=x)
+        elif mode == 'atanh':
+            if backend == 'nnv2':
+                #TODO
+                return
+            val = np.array([[-0.8, -0.5, 0],[0.4, 0.5, 0.8]], dtype=np.float32)
+            expected_outputs = np.array([[-1.09861229, -0.54930614, 0.],
+                                         [0.42364893, 0.54930614, 1.09861229]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.atanh(x=x)
+        elif mode == 'ceil':
+            val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+            expected_outputs = np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)
+
+            build = lambda x: cb.ceil(x=x)
+        elif mode == 'clip':
+            val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+            expected_outputs = np.array([[0, 2, 0], [4.5, 0, 5]], dtype=np.float32)
+
+            build = lambda x: cb.clip(x=x, alpha=0.0, beta=5.0)
+        elif mode == 'cos':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[0.54030231, -0.41614684, -0.9899925 ],
+                                         [-0.65364362, 0.28366219, 0.96017029]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.cos(x=x)
+        elif mode == 'cosh':
+            val = np.array([[-1, -2, -3],[1, 2, 3]], dtype=np.float32)
+            expected_outputs = np.array([[1.54308063, 3.76219569, 10.067662],
+                                         [1.54308063, 3.76219569, 10.067662]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.cosh(x=x)
+        elif mode == 'exp':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[0.36787944, 7.3890561 , 0.04978707],
+                                         [54.5981500, 0.0067379, 403.428793]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.exp(x=x)
+        elif mode == 'exp2':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[0.5, 4., 0.125], [16, 0.03125, 64]], dtype=np.float32)
+
+            build = lambda x: cb.exp2(x=x)
+        elif mode == 'floor':
+            val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+            expected_outputs = np.array([[-2, 2, -4], [4, -5, 6]], dtype=np.float32)
+
+            build = lambda x: cb.floor(x=x)
+        elif mode == 'log':
+            val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[0., 0.69314718, 1.09861229],
+                                         [1.38629436, 1.60943791, 1.79175947]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.log(x=x)
+        elif mode == 'round':
+            val = np.array([[-1.2, 2, -3.4],[4.6, -5, 6.7]], dtype=np.float32)
+            expected_outputs = np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)
+
+            build = lambda x: cb.round(x=x)
+        elif mode == 'rsqrt':
+            val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[1., 0.70710678, 0.57735027],
+                                         [0.5, 0.4472136, 0.40824829]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.rsqrt(x=x)
+        elif mode == 'sign':
+            val = np.array([[-1, 2, 0],[0, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[-1, 1, 0], [0, -1, 1]], dtype=np.float32)
+
+            build = lambda x: cb.sign(x=x)
+        elif mode == 'sin':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[-0.84147098, 0.90929743, -0.14112001],
+                                         [-0.7568025 , 0.95892427, -0.2794155]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.sin(x=x)
+        elif mode == 'sinh':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[-1.1752, 3.62686, -10.017874],
+                                         [27.289917 , -74.20321, 201.71315]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.sinh(x=x)
+        elif mode == 'sqrt':
+            val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[1., 1.41421356, 1.73205081],
+                                         [2., 2.23606798, 2.44948974]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.sqrt(x=x)
+        elif mode == 'tan':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[-1.5574, -2.185, 0.1425],
+                                         [1.15782, 3.3805, -0.291]],
+                                         dtype=np.float32)
+
+            build = lambda x: cb.tan(x=x)
+        elif mode == 'threshold':
+            val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+            expected_outputs = np.array([[1.0, 2, 1.0],[4.5, 1.0, 6.7]], dtype=np.float32)
+
+            build = lambda x: cb.threshold(x=x, alpha=1.0)
+
+
+        input_placeholders = {'x': cb.placeholder(shape=val.shape)}
+        input_values = {'x': val}
+        expected_output_types = (2, 3, builtins.fp32)
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @ssa_fn
+    def test_builder_abs_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.abs(x=val)
+        expected_outputs = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_acos_eval(self):
+        val = np.array([[-1, -0.5, 0],[0.4, 0.5, 0.8]], dtype=np.float32)
+        v = cb.acos(x=val)
+        expected_outputs = np.array([[3.14159265, 2.0943951 , 1.57079633],
+                                     [1.15927948, 1.04719755, 0.64350111]],
+                                     dtype=np.float32)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_asin_eval(self):
+        val = np.array([[-1, -0.5, 0],[0.4, 0.5, 0.8]], dtype=np.float32)
+        v = cb.asin(x=val)
+        expected_outputs = np.array([[-1.57079633, -0.52359878, 0.],
+                                     [0.41151685, 0.52359878, 0.92729522]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_atan_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.atan(x=val)
+        expected_outputs = np.array([[-0.78539816, 1.10714872, -1.24904577],
+                                     [1.32581766, -1.37340077, 1.40564765]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_atanh_eval(self):
+        val = np.array([[-0.8, -0.5, 0],[0.4, 0.5, 0.8]], dtype=np.float32)
+        v = cb.atanh(x=val)
+        expected_outputs = np.array([[-1.09861229, -0.54930614, 0.],
+                                     [0.42364893, 0.54930614, 1.09861229]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_ceil_eval(self):
+        val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+        v = cb.ceil(x=val)
+        expected_outputs = np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_clip_eval(self):
+        val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+        v = cb.clip(x=val, alpha=0.0, beta=5.0)
+        expected_outputs = np.array([[0, 2, 0], [4.5, 0, 5]], dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_cos_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.cos(x=val)
+        expected_outputs = np.array([[0.54030231, -0.41614684, -0.9899925 ],
+                                     [-0.65364362, 0.28366219, 0.96017029]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_cosh_eval(self):
+        val = np.array([[-1, -2, -3],[1, 2, 3]], dtype=np.float32)
+        v = cb.cosh(x=val)
+        expected_outputs = np.array([[1.54308063, 3.76219569, 10.067662],
+                                     [1.54308063, 3.76219569, 10.067662]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_exp_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.exp(x=val)
+        expected_outputs = np.array([[0.36787944, 7.3890561 , 0.04978707],
+                                     [54.5981500, 0.0067379, 403.428793]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_exp2_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.exp2(x=val)
+        expected_outputs = np.array([[0.5, 4., 0.125], [16, 0.03125, 64]], dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_floor_eval(self):
+        val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+        v = cb.floor(x=val)
+        expected_outputs = np.array([[-2, 2, -4], [4, -5, 6]], dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_log_eval(self):
+        val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        v = cb.log(x=val)
+        expected_outputs = np.array([[0., 0.69314718, 1.09861229],
+                                     [1.38629436, 1.60943791, 1.79175947]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_round_eval(self):
+        val = np.array([[-1.2, 2, -3.4],[4.6, -5, 6.7]], dtype=np.float32)
+        v = cb.round(x=val)
+        expected_outputs = np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_rsqrt_eval(self):
+        val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        v = cb.rsqrt(x=val)
+        expected_outputs = np.array([[1., 0.70710678, 0.57735027],
+                                     [0.5, 0.4472136, 0.40824829]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_sign_eval(self):
+        val = np.array([[-1, 2, 0],[0, -5, 6]], dtype=np.float32)
+        v = cb.sign(x=val)
+        expected_outputs = np.array([[-1, 1, 0], [0, -1, 1]], dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_sin_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.sin(x=val)
+        expected_outputs = np.array([[-0.84147098, 0.90929743, -0.14112001],
+                                     [-0.7568025 , 0.95892427, -0.2794155]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_sinh_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.sinh(x=val)
+        expected_outputs = np.array([[-1.1752, 3.62686, -10.017874],
+                                     [27.289917 , -74.20321, 201.71315]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_sqrt_eval(self):
+        val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        v = cb.sqrt(x=val)
+        expected_outputs = np.array([[1., 1.41421356, 1.73205081],
+                                     [2., 2.23606798, 2.44948974]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_tan_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.tan(x=val)
+        expected_outputs = np.array([[-1.5574, -2.185, 0.1425],
+                                     [1.15782, 3.3805, -0.291]],
+                                     dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_threshold_eval(self):
+        val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+        v = cb.threshold(x=val, alpha=1.0)
+        expected_outputs = np.array([[1.0, 2, 1.0], [4.5, 1.0, 6.7]], dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+
+    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 [rank for rank in range(1, 6)],
+                                 ['abs', 'acos', 'asin', 'atan', 'atanh',
+                                  'ceil', 'clip', 'cos', 'cosh', 'exp',
+                                  'floor', 'log', 'round', 'rsqrt', 'sign',
+                                  'sin', 'sinh', 'sqrt', 'tan']
+                             )
+                             )
+    def test_tf(self, use_cpu_only, backend, rank, mode):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=input_shape)
+            if mode == 'abs':
+                res = tf.abs(x)
+                val = _random_gen(input_shape, rand_min=-1, rand_max=1)
+            elif mode == 'acos':
+                res = tf.acos(x)
+                val = _random_gen(input_shape, rand_min=-1, rand_max=1)
+            elif mode == 'asin':
+                res = tf.asin(x)
+                val = _random_gen(input_shape, rand_min=-1, rand_max=1)
+            elif mode == 'atan':
+                res = tf.atan(x)
+                val = _random_gen(input_shape, rand_min=-100, rand_max=100)
+            elif mode == 'atanh':
+                if backend == 'nnv2':
+                    #TODO
+                    return
+                res = tf.atanh(x)
+                val = _random_gen(input_shape, rand_min=-0.9, rand_max=0.9)
+            elif mode == 'ceil':
+                res = tf.ceil(x)
+                eps_from_int = 0.0
+                if not use_cpu_only:
+                    eps_from_int = 0.1
+                val = _random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int)
+            elif mode == 'clip':
+                if backend == 'nnv2':
+                    #TODO
+                    return
+                res = tf.clip_by_value(x, clip_value_min=0.0, clip_value_max=5.0)
+                val = _random_gen(input_shape, rand_min=-5, rand_max=10)
+            elif mode == 'cos':
+                res = tf.cos(x)
+                rand_range = 1000
+                if not use_cpu_only:
+                    rand_range = 10
+                val = _random_gen(input_shape, rand_min=-rand_range, rand_max=rand_range)
+            elif mode == 'cosh':
+                res = tf.cosh(x)
+                val = _random_gen(input_shape, rand_min=-4, rand_max=4)
+            elif mode == 'exp':
+                if not use_cpu_only:
+                    # We skip GPU here, since exp(1) already differs in Espresso.
+                    return
+                res = tf.exp(x)
+                val = _random_gen(input_shape, rand_min=-4, rand_max=20)
+            elif mode == 'floor':
+                res = tf.floor(x)
+                eps_from_int = 0.0
+                if not use_cpu_only:
+                    eps_from_int = 0.1
+                val = _random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int)
+            elif mode == 'log':
+                res = tf.log(x)
+                val = _random_gen(input_shape, rand_min=0.2, rand_max=1000)
+            elif mode == 'round':
+                res = tf.round(x)
+                val = _random_gen(input_shape, rand_min=-1000, rand_max=1000)
+            elif mode == 'rsqrt':
+                res = tf.rsqrt(x)
+                val = _random_gen(input_shape, rand_min=0.5, rand_max=1000)
+            elif mode == 'sign':
+                res = tf.sign(x)
+                val = _random_gen(input_shape, rand_min=-5, rand_max=5)
+            elif mode == 'sin':
+                res = tf.sin(x)
+                rand_range = 1000
+                if not use_cpu_only:
+                    rand_range = 10
+                val = _random_gen(input_shape, rand_min=-rand_range, rand_max=rand_range)
+            elif mode == 'sinh':
+                res = tf.sinh(x)
+                val = _random_gen(input_shape, rand_min=-10, rand_max=10)
+            elif mode == 'sqrt':
+                res = tf.sqrt(x)
+                val = _random_gen(input_shape, rand_min=0.5, rand_max=1000)
+            elif mode == 'tan':
+                res = tf.tan(x)
+                val = _random_gen(input_shape, rand_min=-1000, rand_max=1000)
+
+            run_compare_tf(graph, {x: val},
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
+
+class TestElementwiseBinary:
+
+    @pytest.mark.parametrize('use_cpu_only, backend, mode',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 ['add', 'floor_div', 'maximum', 'minimum', 
+                                  'mod', 'mul', 'pow', 'real_div', 'sub']
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, mode):
+        if mode == 'add':
+            x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[0, 4, 0], [8, 0, 12]], dtype=np.float32)
+
+            build = lambda x, y: cb.add(x=x, y=y)
+        elif mode == 'floor_div':
+            x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
+            y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
+            expected_outputs = np.array([[0, 1, 2], [2, 3, 3]], dtype=np.float32)
+
+            build = lambda x, y: cb.floor_div(x=x, y=y)
+        elif mode == 'maximum':
+            x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+
+            build = lambda x, y: cb.maximum(x=x, y=y)
+        elif mode == 'minimum':
+            x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
+
+            build = lambda x, y: cb.minimum(x=x, y=y)
+        elif mode == 'mod':
+            x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
+            y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
+            expected_outputs = np.array([[10, 8, 4], [12, 5, 12]], dtype=np.float32)
+
+            build = lambda x, y: cb.mod(x=x, y=y)
+        elif mode == 'mul':
+            x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[-1, 4, -9], [16, -25, 36]], dtype=np.float32)
+
+            build = lambda x, y: cb.mul(x=x, y=y)
+        elif mode == 'pow':
+            x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[1, 4, 0.037], [256, 0.00032, 46656]], dtype=np.float32)
+
+            build = lambda x, y: cb.pow(x=x, y=y)
+        elif mode == 'real_div':
+            x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
+            y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
+            expected_outputs = np.array([[0.90909091, 1.66666667, 2.30769231],
+                                         [2.85714286, 3.33333333, 3.75]],
+                                         dtype=np.float32)
+
+            build = lambda x, y: cb.real_div(x=x, y=y)
+        elif mode == 'sub':
+            x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+            y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[2, 0, 6], [0, 10, 0]], dtype=np.float32)
+
+            build = lambda x, y: cb.sub(x=x, y=y)
+
+        expected_output_types = (2, 3, builtins.fp32)
+        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
+        input_values = {"x": x, "y": y}
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @ssa_fn
+    def test_builder_add(self):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        expected_outputs = np.array([[0, 4, 0], [8, 0, 12]], dtype=np.float32)
+        v = cb.add(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_floor_div(self):
+        x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
+        y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
+        expected_outputs = np.array([[0, 1, 2], [2, 3, 3]], dtype=np.float32)
+        v = cb.floor_div(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_maximum(self):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        v = cb.maximum(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_minimum(self):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        expected_outputs = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
+        v = cb.minimum(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_mod(self):
+        x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
+        y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
+        expected_outputs = np.array([[10, 8, 4], [12, 5, 12]], dtype=np.float32)
+        v = cb.mod(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_mul(self):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        expected_outputs = np.array([[-1, 4, -9], [16, -25, 36]], dtype=np.float32)
+        v = cb.mul(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_pow(self):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        expected_outputs = np.array([[1, 4, 0.037], [256, 0.00032, 46656]], dtype=np.float32)
+        v = cb.pow(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_real_div(self):
+        x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
+        y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
+        expected_outputs = np.array([[0.90909091, 1.66666667, 2.30769231],
+                                     [2.85714286, 3.33333333, 3.75]],
+                                     dtype=np.float32)
+        v = cb.real_div(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_sub(self):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        expected_outputs = np.array([[2, 0, 6], [0, 10, 0]], dtype=np.float32)
+        v = cb.sub(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+
+    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1', 'nnv2'],
+                                 [rank for rank in range(1, 4)],
+                                 ['add', 'floor_div', 'maximum', 'minimum', 
+                                  'mod', 'mul', 'pow', 'real_div', 'sub']
+                             )
+                             )
+    def test_tf(self, use_cpu_only, backend, rank, mode):
+        x_shape = list(np.random.randint(low=2, high=6, size=rank))
+        y_shape = x_shape[:]
+        for i in range(rank):
+            if np.random.randint(4) == 0:
+                y_shape[i] = 1
+        if np.random.randint(2) == 0:
+            y_shape = [1] + y_shape
+
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=x_shape)
+            y = tf.placeholder(tf.float32, shape=y_shape)
+            if mode == 'add':
+                res = tf.add(x, y)
+                x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(np.float32)
+            elif mode == 'floor_div':
+                res = tf.floor_div(x, y)
+                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
+            elif mode == 'maximum':
+                res = tf.maximum(x, y)
+                x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(np.float32)
+            elif mode == 'minimum':
+                res = tf.minimum(x, y)
+                x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(np.float32)
+            elif mode == 'mod':
+                res = tf.mod(x, y)
+                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
+            elif mode == 'mul':
+                res = tf.multiply(x, y)
+                x_val = np.random.randint(low=-100, high=100, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=-100, high=100, size=y_shape).astype(np.float32)
+            elif mode == 'pow':
+                res = tf.pow(x, y)
+                x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(np.float32)
+            elif mode == 'real_div':
+                res = tf.truediv(x, y)
+                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
+            elif mode == 'sub':
+                res = tf.subtract(x, y)
+                x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(np.float32)
+
+            run_compare_tf(graph, {x: x_val, y: y_val},
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
 
 
 class TestEqual:
@@ -731,80 +1008,6 @@ class TestEqual:
                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
                            res, use_cpu_only=use_cpu_only, frontend_only=False)
 
-class TestExp:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.exp(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[0.36787944, 7.3890561 , 0.04978707],
-                                     [54.5981500, 0.0067379, 403.428793]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-4, rand_max=20)
-        v = cb.exp(x=x_val)
-        assert is_close(np.exp(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True], # Exp(1) in numpy already differs from Espresso.
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.exp(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=-4, rand_max=20)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestExp2:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.exp2(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[0.5, 4., 0.125], [16, 0.03125, 64]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-4, rand_max=20)
-        v = cb.exp2(x=x_val)
-        assert is_close(np.exp2(x_val), v.val)
 
 class TestConv:
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
@@ -983,112 +1186,6 @@ class TestFill:
             run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
-
-class TestFloor:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.floor(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-2, 2, -4], [4, -5, 6]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-100, rand_max=100)
-        v = cb.floor(x=x_val)
-        assert is_close(np.floor(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        eps_from_int = 0.0
-        if not use_cpu_only:
-            eps_from_int = 0.1
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.floor(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape,
-                rand_min=-100, rand_max=100, eps_from_int=eps_from_int)},
-                res, use_cpu_only=use_cpu_only,
-                frontend_only=False, backend=backend)
-
-class TestFloorDiv:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
-        y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
-        input_values = {"x": x, "y": y}
-
-        def build(x, y):
-            return cb.floor_div(x=x, y=y)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[0, 1, 2], [2, 3, 3]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
-        y_val = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
-        expected_outputs = np.array([[0, 1, 2], [2, 3, 3]], dtype=np.float32)
-        v = cb.floor_div(x=x_val, y=y_val)
-        assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 4)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
-        y_shape = x_shape[:]
-        for i in range(rank):
-            if np.random.randint(4) == 0:
-                y_shape[i] = 1
-        if np.random.randint(2) == 0:
-            y_shape = [1] + y_shape
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.floor_div(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=0, high=100, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
 
 class TestGreater:
 
@@ -1396,283 +1493,6 @@ class TestLessEqual:
                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
                            res, use_cpu_only=use_cpu_only, frontend_only=False)
 
-class TestLog:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.log(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[0., 0.69314718, 1.09861229],
-                                     [1.38629436, 1.60943791, 1.79175947]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=0.2, rand_max=1000)
-        v = cb.log(x=x_val)
-        assert is_close(np.log(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.log(x)
-            run_compare_tf(graph,
-                    {x: _random_gen(input_shape, rand_min=0.2,
-                        rand_max=1000)},
-                    res, use_cpu_only=use_cpu_only, frontend_only=False,
-                    backend=backend)
-
-class TestMaximum:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
-        input_values = {"x": x, "y": y}
-
-        def build(x, y):
-            return cb.maximum(x=x, y=y)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y_val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        v = cb.maximum(x=x_val, y=y_val)
-        assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 4)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
-        y_shape = x_shape[:]
-        for i in range(rank):
-            if np.random.randint(4) == 0:
-                y_shape[i] = 1
-        if np.random.randint(2) == 0:
-            y_shape = [1] + y_shape
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.maximum(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestMinimum:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
-        input_values = {"x": x, "y": y}
-
-        def build(x, y):
-            return cb.minimum(x=x, y=y)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y_val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        v = cb.minimum(x=x_val, y=y_val)
-        assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 4)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
-        y_shape = x_shape[:]
-        for i in range(rank):
-            if np.random.randint(4) == 0:
-                y_shape[i] = 1
-        if np.random.randint(2) == 0:
-            y_shape = [1] + y_shape
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.minimum(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestMod:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
-        y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
-        input_values = {"x": x, "y": y}
-
-        def build(x, y):
-            return cb.mod(x=x, y=y)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[10, 8, 4], [12, 5, 12]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
-        y_val = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
-        expected_outputs = np.array([[10, 8, 4], [12, 5, 12]], dtype=np.float32)
-        v = cb.mod(x=x_val, y=y_val)
-        assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 4)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
-        y_shape = x_shape[:]
-        for i in range(rank):
-            if np.random.randint(4) == 0:
-                y_shape[i] = 1
-        if np.random.randint(2) == 0:
-            y_shape = [1] + y_shape
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.mod(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=0, high=100, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestMul:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
-        input_values = {"x": x, "y": y}
-
-        def build(x, y):
-            return cb.mul(x=x, y=y)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-1, 4, -9], [16, -25, 36]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y_val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[-1, 4, -9], [16, -25, 36]], dtype=np.float32)
-        v = cb.mul(x=x_val, y=y_val)
-        assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 4)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
-        y_shape = x_shape[:]
-        for i in range(rank):
-            if np.random.randint(4) == 0:
-                y_shape[i] = 1
-        if np.random.randint(2) == 0:
-            y_shape = [1] + y_shape
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.multiply(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
 class TestNotEqual:
 
     @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
@@ -1732,124 +1552,6 @@ class TestNotEqual:
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
 
-
-class TestPow:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
-        input_values = {"x": x, "y": y}
-
-        def build(x, y):
-            return cb.pow(x=x, y=y)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[1, 4, 0.037], [256, 0.00032, 46656]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y_val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[1, 4, 0.037], [256, 0.00032, 46656]], dtype=np.float32)
-        v = cb.pow(x=x_val, y=y_val)
-        assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 4)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
-        y_shape = x_shape[:]
-        for i in range(rank):
-            if np.random.randint(4) == 0:
-                y_shape[i] = 1
-        if np.random.randint(2) == 0:
-            y_shape = [1] + y_shape
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.pow(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=5, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=5, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestRealDiv:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
-        y = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
-        input_values = {"x": x, "y": y}
-
-        def build(x, y):
-            return cb.real_div(x=x, y=y)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[0.90909091, 1.66666667, 2.30769231],
-                                     [2.85714286, 3.33333333, 3.75]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.array([[10, 20, 30],[40, 50, 60]], dtype=np.float32)
-        y_val = np.array([[11, 12, 13],[14, 15, 16]], dtype=np.float32)
-        expected_outputs = np.array([[0.90909091, 1.66666667, 2.30769231],
-                                     [2.85714286, 3.33333333, 3.75]],
-                                     dtype=np.float32)
-        v = cb.real_div(x=x_val, y=y_val)
-        assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 4)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
-        y_shape = x_shape[:]
-        for i in range(rank):
-            if np.random.randint(4) == 0:
-                y_shape[i] = 1
-        if np.random.randint(2) == 0:
-            y_shape = [1] + y_shape
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.truediv(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=0, high=100, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
 
 class TestMaxPool:
 
@@ -2865,349 +2567,6 @@ class TestRNN:
                     expected_output_types, expected_outputs,
                     use_cpu_only=use_cpu_only, frontend_only=False,
                     backend=backend)
-
-class TestRound:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1.2, 2, -3.4],[4.6, -5, 6.7]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.round(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-1000, rand_max=1000)
-        v = cb.round(x=x_val)
-        assert is_close(np.round(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.round(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=-1000, rand_max=1000)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestRsqrt:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.rsqrt(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[1., 0.70710678, 0.57735027],
-                                     [0.5, 0.4472136, 0.40824829]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=0.5, rand_max=1000)
-        v = cb.rsqrt(x=x_val)
-        assert is_close(1. / np.sqrt(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.rsqrt(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=0.5, rand_max=1000)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestSin:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.sin(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-0.84147098, 0.90929743, -0.14112001],
-                                     [-0.7568025 , 0.95892427, -0.2794155]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-1000, rand_max=1000)
-        v = cb.sin(x=x_val)
-        assert is_close(np.sin(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)],
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        rand_range = 1000
-        if not use_cpu_only:
-            rand_range = 10
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.sin(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape,
-                rand_min=-rand_range, rand_max=rand_range)},
-                res, use_cpu_only=use_cpu_only, frontend_only=False,
-                backend=backend)
-
-class TestSinh:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.sinh(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-1.1752, 3.62686, -10.017874],
-                                     [27.289917 , -74.20321, 201.71315]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-10, rand_max=10)
-        v = cb.sinh(x=x_val)
-        assert is_close(np.sinh(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.sinh(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape,
-                rand_min=-10, rand_max=10)},
-                res, use_cpu_only=use_cpu_only,
-                frontend_only=False, backend=backend)
-
-class TestSqrt:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.sqrt(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[1., 1.41421356, 1.73205081],
-                                     [2., 2.23606798, 2.44948974]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=0.5, rand_max=1000)
-        v = cb.sqrt(x=x_val)
-        assert is_close(np.sqrt(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.sqrt(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=0.5, rand_max=1000)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestSub:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
-        input_values = {"x": x, "y": y}
-
-        def build(x, y):
-            return cb.sub(x=x, y=y)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[2, 0, 6], [0, 10, 0]], dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-        y_val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[2, 0, 6], [0, 10, 0]], dtype=np.float32)
-        v = cb.sub(x=x_val, y=y_val)
-        assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 4)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
-        y_shape = x_shape[:]
-        for i in range(rank):
-            if np.random.randint(4) == 0:
-                y_shape[i] = 1
-        if np.random.randint(2) == 0:
-            y_shape = [1] + y_shape
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.subtract(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
-class TestTan:
-
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                ['nnv2'],
-                ))
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
-        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return cb.tan(x=x)
-        expected_output_types = (2, 3, builtins.fp32)
-        expected_outputs = np.array([[-1.5574, -2.185, 0.1425],
-                                     [1.15782, 3.3805, -0.291]],
-                                     dtype=np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False,
-                            backend=backend)
-
-    @ssa_fn
-    def test_builder_eval(self):
-        x_val = _random_gen(shape=(1, 2, 4, 3), rand_min=-1000, rand_max=1000)
-        v = cb.tan(x=x_val)
-        assert is_close(np.tan(x_val), v.val)
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(1, 6)]
-                             )
-                             )
-    def test_tf(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.tan(x)
-            run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=-1000, rand_max=1000)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
 
 class TestLSTM:
     @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")

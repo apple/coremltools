@@ -55,6 +55,13 @@ def Atan(context, node):
 
 
 @register_tf_op
+def Atanh(context, node):
+    x = context[node.inputs[0]]
+    x = cb.atanh(x=x, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
 def AvgPool(context, node):
     x = context[node.inputs[0]]
     in_shape = x.sym_type.get_shape()

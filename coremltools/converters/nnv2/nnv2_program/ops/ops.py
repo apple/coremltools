@@ -153,6 +153,14 @@ class atan(elementwise_unary):
         return np.arctan(self.x.val)
 
 @register_op(doc_str='TODO')
+class atanh(elementwise_unary):
+    def __init__(self, **kwargs):
+        super(atanh, self).__init__(**kwargs)
+
+    def eval(self):
+        return np.arctanh(self.x.val)
+
+@register_op(doc_str='TODO')
 class ceil(elementwise_unary):
     def __init__(self, **kwargs):
         super(ceil, self).__init__(**kwargs)
@@ -337,7 +345,7 @@ class logical_and(elementwise_binary):
         return builtins.bool
 
 @register_op(doc_str='TODO')
-class logical_not(elementwise_binary):
+class logical_not(elementwise_unary):
     def __init__(self, **kwargs):
         super(logical_not, self).__init__(**kwargs)
 
@@ -1121,7 +1129,7 @@ class tan(elementwise_unary):
 class threshold(Operation):
     input_types = InputSpec(
             x = ScalarOrTensorInputType(),
-            alpha = TensorInputType(const=True),
+            alpha = FloatInputType(const=True),
             )
 
     def __init__(self, **kwargs):

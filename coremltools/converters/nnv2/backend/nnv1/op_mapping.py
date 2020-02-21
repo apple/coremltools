@@ -19,12 +19,20 @@ def add_const(const_context, builder, name, val):
     No return values as `name` is the name of const in v1.
 
     Comment: we don't need to add scalar const as they are just fields in
-    layer proto message in NNv1.
+             layer proto message in NNv1.
+             If we really need a const scalar, we upcast it to rank-1.
+
     """
     if name in const_context:
         logging.warning('Const {} was already added.'.format(name))
     rank = len(val.shape)
-    if rank == 3:
+    if rank == 0:
+        builder.add_load_constant_nd(
+                name=name,
+                output_name=name,
+                constant_value=val.reshape([1]),
+                shape=[1])
+    elif rank == 3:
         builder.add_load_constant(
                 name=name,
                 output_name=name,
@@ -85,41 +93,6 @@ def _split_bias(b, sections):
     b = b[0] + b[1]
     b = _split(b, sections=sections, axis=0)
     return b
-
-@register_v2_op
-def add(const_context, builder, op):
-    if op.x.val is not None and op.x.rank > 0:
-        add_const(const_context, builder, op.x.name, op.x.val)
-    if op.y.val is not None and op.y.rank > 0:
-        add_const(const_context, builder, op.y.name, op.y.val)
-
-    if op.x.shape != op.y.shape:
-        # Use the braodcast version
-        builder.add_add_broadcastable(
-                name=op.name,
-                input_names=[op.x.name, op.y.name],
-                output_name=op.name)
-    elif op.x.rank == 0 and op.x.val is not None:
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.y.name],
-                output_name=op.name,
-                alpha=op.x.val,
-                mode='ADD')
-    elif op.y.rank == 0 and op.y.val is not None:
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.x.name],
-                output_name=op.name,
-                alpha=op.y.val,
-                mode='ADD')
-    else:
-        # x, y are same shape
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.x.name, op.y.name],
-                output_name=op.name,
-                mode='ADD')
 
 @register_v2_op
 def const(const_context, builder, op):
@@ -204,6 +177,282 @@ def conv(const_context, builder, op):
             output_name=op.name,
             dilation_factors=dilations,
             **pad)
+
+def _add_elementwise_unary(builder, op, mode, **kwargs):
+    if mode in ["sqrt", "rsqrt", "inverse", "power", "exp", "log", "abs", "threshold"]:
+        builder.add_unary(
+                name=op.name,
+                input_name=op.x.name,
+                output_name=op.name,
+                mode=mode,
+                **kwargs)
+    else:
+        add_func = getattr(builder, "add_"+mode, None)
+        if add_func is None:
+            logging.error('Elementwise unary method {} not found in builder.'.format(mode))
+        add_func(name=op.name,
+                 input_name=op.x.name,
+                 output_name=op.name,
+                 **kwargs)
+
+def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
+    if mode in ["add", "multiply"]:
+        params = {"name": op.name, "output_name": op.name, "mode": mode.upper()}
+        if op.x.val is not None and op.x.rank == 0:
+            params["input_names"] = [op.y.name]
+            params["alpha"] = op.x.val
+            builder.add_elementwise(**params)
+            return
+        elif op.y.val is not None and op.y.rank == 0:
+            params["input_names"] = [op.x.name]
+            params["alpha"] = op.y.val
+            builder.add_elementwise(**params)
+            return
+    elif mode in ["equal", "not_equal"]:
+        add_func = getattr(builder, "add_"+mode, None)
+        params = {"name": op.name, "output_name": op.name}
+        if op.x.val is not None and op.x.rank == 0:
+            params["input_names"] = [op.y.name]
+            params["alpha"] = op.x.val
+            add_func(**params)
+            return
+        elif op.y.val is not None and op.y.rank == 0:
+            params["input_names"] = [op.x.name]
+            params["alpha"] = op.y.val
+            add_func(**params)
+            return
+    elif mode in ["greater_than", "greater_equal", "less_than", "less_equal"]:
+        params = {"name": op.name, "output_name": op.name}
+        if op.x.val is not None and op.x.rank == 0:
+            params["input_names"] = [op.y.name]
+            params["alpha"] = op.x.val
+            if "less" in mode:
+                params["use_greater_than_equal"] = mode.endswith("_equal")
+                builder.add_greater_than(**params)
+            elif "greater" in mode:
+                params["use_less_than_equal"] = mode.endswith("_equal")
+                builder.add_less_than(**params)
+            return
+        elif op.y.val is not None and op.y.rank == 0:
+            params["input_names"] = [op.x.name]
+            params["alpha"] = op.y.val
+            if "greater" in mode:
+                params["use_greater_than_equal"] = mode.endswith("_equal")
+                builder.add_greater_than(**params)
+            elif "less" in mode:
+                params["use_less_than_equal"] = mode.endswith("_equal")
+            return
+
+    if op.x.val is not None:
+        add_const(const_context, builder, op.x.name, op.x.val)
+    if op.y.val is not None:
+        if mode == "pow":
+            _add_elementwise_unary(builder, "power", alpha=op.y.val)
+            return
+        add_const(const_context, builder, op.y.name, op.y.val)
+
+    if mode in ["add", "multiply", "max", "min", "ave"]:
+        if op.x.shape == op.y.shape:
+            builder.add_elementwise(
+                    name=op.name,
+                    input_names=[op.x.name, op.y.name],
+                    output_name=op.name,
+                    mode=mode.upper())
+        else:
+            add_func = getattr(builder, "add_"+mode+"_broadcastable", None)
+
+            if add_func is None:
+                logging.error('Elementwise binary broadcastable method {} not found in builder.'.format(mode))
+
+            add_func(name=op.name,
+                     input_names=[op.x.name, op.y.name],
+                     output_name=op.name,
+                     **kwargs)
+    else:
+        if mode in ["divide", "floor_div", "mod", "pow", "subtract"]:
+            add_func = getattr(builder, "add_"+mode+"_broadcastable", None)
+        else:
+            add_func = getattr(builder, "add_"+mode, None)
+
+        if add_func is None:
+            logging.error('Elementwise binary method {} not found in builder.'.format(mode))
+
+        add_func(name=op.name,
+                 input_names=[op.x.name, op.y.name],
+                 output_name=op.name,
+                 **kwargs)
+
+def _add_logical(builder, op, mode):
+    input_names = []
+    input_names.append(op.x.name)
+    if mode != "NOT":
+        input_names.append(op.y.name)
+
+    builder.add_logical(
+            name=op.name,
+            input_names=input_names,
+            output_name=op.name,
+            mode=mode)
+
+@register_v2_op
+def abs(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "abs")
+
+@register_v2_op
+def acos(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "acos")
+
+@register_v2_op
+def add(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "add")
+
+@register_v2_op
+def asin(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "asin")
+
+@register_v2_op
+def atan(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "atan")
+
+@register_v2_op
+def atanh(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "atanh")
+
+@register_v2_op
+def ceil(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "ceil")
+
+@register_v2_op
+def clip(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "clip", min_value=op.alpha.val, max_value=op.beta.val)
+
+@register_v2_op
+def cos(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "cos")
+
+@register_v2_op
+def cosh(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "cosh")
+
+@register_v2_op
+def equal(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "equal")
+
+@register_v2_op
+def exp(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "exp")
+
+@register_v2_op
+def exp2(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "exp2")
+
+@register_v2_op
+def floor(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "floor")
+
+@register_v2_op
+def floor_div(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "floor_div")
+
+@register_v2_op
+def greater(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "greater_than")
+
+@register_v2_op
+def greater_equal(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "greater_equal")
+
+@register_v2_op
+def less(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "less_than")
+
+@register_v2_op
+def less_equal(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "less_equal")
+
+@register_v2_op
+def log(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "log")
+
+@register_v2_op
+def logical_and(const_context, builder, op):
+    _add_logical(builder, op, "AND")
+
+@register_v2_op
+def logical_not(const_context, builder, op):
+    _add_logical(builder, op, "NOT")
+
+@register_v2_op
+def logical_or(const_context, builder, op):
+    _add_logical(builder, op, "OR")
+
+@register_v2_op
+def logical_xor(const_context, builder, op):
+    _add_logical(builder, op, "XOR")
+
+@register_v2_op
+def maximum(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "max")
+
+@register_v2_op
+def minimum(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "min")
+
+@register_v2_op
+def mod(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "mod")
+
+@register_v2_op
+def mul(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "multiply")
+
+@register_v2_op
+def not_equal(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "not_equal")
+
+@register_v2_op
+def pow(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "pow")
+
+@register_v2_op
+def real_div(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "divide")
+
+@register_v2_op
+def round(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "round")
+
+@register_v2_op
+def rsqrt(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "rsqrt")
+
+@register_v2_op
+def sign(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "sign")
+
+@register_v2_op
+def sin(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "sin")
+
+@register_v2_op
+def sinh(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "sinh")
+
+@register_v2_op
+def sqrt(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "sqrt")
+
+@register_v2_op
+def sub(const_context, builder, op):
+    _add_elementwise_binary(const_context, builder, op, "subtract")
+
+@register_v2_op
+def tan(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "tan")
+
+@register_v2_op
+def threshold(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "threshold", alpha=op.alpha.val)
 
 @register_v2_op
 def depth_to_space(const_context, builder, op):
