@@ -1526,6 +1526,7 @@ class squeeze(Operation):
             squeezed_shape = [s for s in squeezed_shape if s != 1]
         else:
             axes = self.axes.val
+            axes = [axis if axis >=0 else axis + self.x.rank for axis in axes]
             for i in sorted(axes)[::-1]: # descending order
                 if len(squeezed_shape) <= i:
                     raise ValueError("Cannot squeeze dim {} for shape"+
@@ -1618,7 +1619,7 @@ class ReductionAxes(Operation):
             for i in sorted(axes)[::-1]:
                 reduced_shape.pop(i)
         if len(reduced_shape) == 0:
-            return x_type  # scalars
+            return x_type  # scalar
 
         return builtins.tensor(x_type, tuple(reduced_shape))
 
@@ -2359,3 +2360,211 @@ class cumsum(Operation):
             raise ValueError("axis should be in the range [-1, {}]".format(self.x.rank - 1))
 
         return self.x.sym_type
+
+# rdar://59195036
+@register_op(doc_str="TODO")
+class gather(Operation):
+    input_types = InputSpec(
+            x = TensorInputType(),
+            indices = IntTensorInputType(),
+            axis = IntInputType(const=True, default=0)
+            )
+
+    def __init__(self, **kwargs):
+        super(gather, self).__init__(**kwargs)
+
+    def eval(self):
+        x = self.x.val
+        indices = self.indices.val
+        axis = self.axis.val
+        return np.take(x, indices, axis)
+
+    def type_inference(self):
+        out_type = self.x.dtype
+
+        if self.axis.val < -self.x.rank \
+                or self.axis.val >= self.x.rank:
+            raise IndexError(
+                'Axis value {} is out of bounds for {} node {}'.format(
+                    self.axis.val, self.op_type, self.name))
+
+        axis = self.axis.val
+        axis = axis if axis >= 0 else axis + self.x.rank
+        out_shape = self.x.shape[:axis] + self.indices.shape + self.x.shape[axis + 1:]
+        return builtins.tensor(out_type, out_shape)
+
+# rdar://59195036
+@register_op(doc_str="TODO")
+class scatter(Operation):
+    input_types = InputSpec(
+            data = TensorInputType(),
+            indices = IntTensorInputType(),
+            updates = TensorInputType(),
+            axis = IntInputType(const=True, default=0),
+            mode = StringInputType(const=True, default="add")
+            )
+
+    def __init__(self, **kwargs):
+        super(scatter, self).__init__(**kwargs)
+
+    def type_inference(self):
+        if self.axis.val < -self.data.rank \
+                or self.axis.val >= self.data.rank:
+            raise IndexError(
+                'Axis value {} is out of bounds for {} node {}'.format(
+                    self.axis.val, self.op_type, self.name))
+
+        axis = self.axis.val
+        axis = axis if axis >= 0 else axis + self.data.rank
+        expected_updates_shape = self.data.shape[:axis] + self.indices.shape + self.data.shape[axis + 1:]
+        np.testing.assert_equal(self.updates.shape, np.array(expected_updates_shape))
+
+        return self.data.sym_type
+
+# rdar://59195036
+@register_op(doc_str="TODO")
+class gather_along_axis(Operation):
+    input_types = InputSpec(
+            x = TensorInputType(),
+            indices = IntTensorInputType(),
+            axis = IntInputType(const=True, default=0)
+            )
+
+    def __init__(self, **kwargs):
+        super(gather_along_axis, self).__init__(**kwargs)
+
+    def eval(self):
+        x = self.x.val
+        indices = self.indices.val
+        axis = self.axis.val
+        return np.take_along_axis(x, indices, axis)
+
+    def type_inference(self):
+
+        if self.x.rank != self.indices.rank:
+            raise ValueError("Rank mismatch between input and indices. \
+                              Input rank: {}, indices rank: {}".format(self.x.rank, self.indices.rank))
+
+        if self.axis.val < -self.x.rank \
+                or self.axis.val >= self.x.rank:
+            raise IndexError(
+                'Axis value {} is out of bounds for {} node {}'.format(
+                    self.axis.val, self.op_type, self.name))
+
+        axis = self.axis.val
+        axis = axis if axis >= 0 else axis + self.x.rank
+
+        for i in range(self.x.rank):
+            if i != axis:
+                assert self.x.shape[i] == self.indices.shape[i]
+
+        return builtins.tensor(self.x.dtype, self.indices.shape)
+
+# rdar://59195036
+@register_op(doc_str="TODO")
+class scatter_along_axis(Operation):
+    input_types = InputSpec(
+            data = TensorInputType(),
+            indices = IntTensorInputType(),
+            updates = TensorInputType(),
+            axis = IntInputType(const=True, default=0),
+            mode = StringInputType(const=True, default="add")
+            )
+
+    def __init__(self, **kwargs):
+        super(scatter_along_axis, self).__init__(**kwargs)
+
+    def eval(self):
+        data = np.copy(self.data.val)
+        indices = self.indices.val
+        updates = self.updates.val
+        axis = self.axis.val
+        np_output = data
+        np.put_along_axis(np_output, indices, updates, axis=axis)
+        return np_output
+
+    def type_inference(self):
+        if self.axis.val < -self.data.rank \
+                or self.axis.val >= self.data.rank:
+            raise IndexError(
+                'Axis value {} is out of bounds for {} node {}'.format(
+                    self.axis.val, self.op_type, self.name))
+
+        axis = self.axis.val
+        axis = axis if axis >= 0 else axis + self.data.rank
+
+        assert self.indices.shape == self.updates.shape
+        assert self.data.rank == self.indices.rank
+        for i in range(self.data.rank):
+            if i != axis:
+                assert self.data.shape[i] == self.indices.shape[i]
+
+        return self.data.sym_type
+
+# rdar://59195036
+@register_op(doc_str="TODO")
+class gather_nd(Operation):
+    input_types = InputSpec(
+            x = TensorInputType(),
+            indices = IntTensorInputType(),
+            )
+
+    def __init__(self, **kwargs):
+        super(gather_nd, self).__init__(**kwargs)
+
+    def type_inference(self):
+        assert self.indices.shape[-1] <= self.x.rank
+        out_type = self.x.dtype
+        out_shape = self.indices.shape[:-1] + self.x.shape[self.indices.shape[-1]:]
+        return builtins.tensor(out_type, out_shape)
+
+# rdar://59195036
+@register_op(doc_str="TODO")
+class scatter_nd(Operation):
+    input_types = InputSpec(
+            data = TensorInputType(),
+            indices = IntTensorInputType(),
+            updates = TensorInputType(),
+            mode = StringInputType(const=True, default="add")
+            )
+
+    def __init__(self, **kwargs):
+        super(scatter_nd, self).__init__(**kwargs)
+
+    def type_inference(self):
+        assert self.indices.shape[-1] <= self.data.rank
+        expected_updates_shape = self.indices.shape[:-1] + self.data.shape[self.indices.shape[-1]:]
+        assert self.updates.shape == tuple(expected_updates_shape)
+        return self.data.sym_type
+
+# rdar://58622145
+@register_op(doc_str='TODO')
+class tile(Operation):
+    input_types = InputSpec(
+            x = TensorInputType(),
+            reps = IntTensorInputType(const=True),
+            )
+
+    def __init__(self, **kwargs):
+        super(tile, self).__init__(**kwargs)
+
+    def type_inference(self):
+        x_type = self.x.dtype
+        x_shape = np.array(self.x.shape)
+        reps = self.reps.val
+        if len(reps) == 0  or len(reps) > self.x.rank:
+            raise ValueError("Length of the reps parameter must be at least 1 and " \
+                                                 "not greater than the rank of the input, x")
+
+        if any(i <=0 for i in reps):
+            raise ValueError("All entries of reps paramerer must be greater than 0")
+
+        if len(reps) < self.x.rank:
+            reps = [1]*(self.x.rank - len(reps)) + list(reps)
+
+        out_shape =  tuple([reps[i] * x_shape[i] for i in range(len(reps))])
+
+        return builtins.tensor(x_type, out_shape)
+
+    def eval(self):
+        return np.tile(self.x.val, reps=self.reps.val)

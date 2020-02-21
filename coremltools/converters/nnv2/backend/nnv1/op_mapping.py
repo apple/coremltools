@@ -1206,6 +1206,63 @@ def transpose(const_context, builder, op):
             output_name=op.name)
 
 @register_v2_op
+def gather(const_context, builder, op):
+    builder.add_gather(
+            name=op.name,
+            input_names=[op.x.name, op.indices.name],
+            output_name=op.name,
+            axis=op.axis.val)
+
+@register_v2_op
+def scatter(const_context, builder, op):
+    builder.add_scatter(
+            name=op.name,
+            input_names=[op.data.name, op.indices.name, op.updates.name],
+            output_name=op.name,
+            axis=op.axis.val,
+            mode=op.mode.val.upper())
+
+@register_v2_op
+def gather_along_axis(const_context, builder, op):
+    builder.add_gather_along_axis(
+            name=op.name,
+            input_names=[op.x.name, op.indices.name],
+            output_name=op.name,
+            axis=op.axis.val)
+
+@register_v2_op
+def scatter_along_axis(const_context, builder, op):
+    builder.add_scatter_along_axis(
+            name=op.name,
+            input_names=[op.data.name, op.indices.name, op.updates.name],
+            output_name=op.name,
+            axis=op.axis.val,
+            mode=op.mode.val.upper())
+
+@register_v2_op
+def gather_nd(const_context, builder, op):
+    builder.add_gather_nd(
+            name=op.name,
+            input_names=[op.x.name, op.indices.name],
+            output_name=op.name)
+
+@register_v2_op
+def scatter_nd(const_context, builder, op):
+    builder.add_scatter_nd(
+            name=op.name,
+            input_names=[op.data.name, op.indices.name, op.updates.name],
+            output_name=op.name,
+            mode=op.mode.val.upper())
+
+@register_v2_op
+def tile(const_context, builder, op):
+    builder.add_tile(
+            name=op.name,
+            reps=op.reps.val,
+            input_name=op.x.name,
+            output_name=op.name)
+
+@register_v2_op
 def tanh(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1363,3 +1420,12 @@ def prelu(const_context, builder, op):
         output_name=op.name,
         params=op.alpha.val
     )
+
+@register_v2_op
+def squeeze(const_context, builder, op):
+    builder.add_squeeze(
+            name=op.name,
+            axes=op.axes.val if op.axes else None,
+            squeeze_all=True if op.axes is None else False,
+            input_name=op.x.name,
+            output_name=op.name)

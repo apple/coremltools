@@ -614,8 +614,12 @@ def Reshape(context, node):
 @register_tf_op
 def Squeeze(context, node):
     x = context[node.inputs[0]]
-    axes = node.attr.get('squeeze_dims', None)
-    x = cb.squeeze(x=x, axes=axes, name=node.name)
+    axes = node.attr.get('squeeze_dims', [])
+    axes = None if axes == [] else axes
+    if not axes:
+        x = cb.squeeze(x=x, name=node.name)
+    else:
+        x = cb.squeeze(x=x, axes=axes, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -691,4 +695,33 @@ def Cumsum(context, node):
     exclusive = node.attr.get('exclusive', False)
     reverse = node.attr.get('reverse', False)
     x = cb.cumsum(x=x, axis=axis, exclusive=exclusive, reverse=reverse, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def GatherV2(context, node):
+    x = context[node.inputs[0]]
+    indices = context[node.inputs[1]]
+    axis = context[node.inputs[2]]
+    x = cb.gather(x=x, indices=indices, axis=axis, name=node.name)
+    context.add(node.name,x)
+
+@register_tf_op
+def GatherNd(context, node):
+    x = context[node.inputs[0]]
+    indices = context[node.inputs[1]]
+    x = cb.gather_nd(x=x, indices=indices, name=node.name)
+    context.add(node.name,x)
+
+@register_tf_op
+def Transpose(context, node):
+    x = context[node.inputs[0]]
+    perm = context[node.inputs[1]]
+    x = cb.transpose(x=x, perm=perm, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def Tile(context, node):
+    x = context[node.inputs[0]]
+    reps = context[node.inputs[1]]
+    x = cb.tile(x=x, reps = reps, name=node.name)
     context.add(node.name, x)

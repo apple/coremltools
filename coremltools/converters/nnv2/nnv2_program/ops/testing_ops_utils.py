@@ -56,6 +56,7 @@ def is_close(expected, actual, atol=1e-04, rtol=1e-05):
     expected, actual: np.array or python primitive (scalar)
     rtol: relative tolerance. See numpy.isclose.
     """
+
     close = np.isclose(expected, actual, atol=atol, rtol=rtol)
     if not np.all(close):
         diff = expected - actual
@@ -174,25 +175,27 @@ def run_compare_builder(build, input_placeholders, input_values,
 
     # Validate type inference
     for out_var, s in zip(output_vars, expected_output_types):
-        msg = 'Output {} type: expect {}, got {}. Program:\n{}'.format(
-            out_var.name, s[-1], out_var.dtype, prog)
-        assert out_var.dtype == s[-1], msg
+        if out_var.dtype != s[-1]:
+            raise ValueError('Output {} type: expect {}, got {}. Program:\n{}'.format(
+                              out_var.name, s[-1], out_var.dtype, prog))
         if UNK_VARIADIC in s[:-1]:
             msg = 'Skip type checking for UNK_VARIADIC. Ouput_shape: {} vs expected shape: {}'
             logging.debug(msg.format(out_var.shape, s[:-1]))
             continue
         expected_shape = s[:-1]
         msg = 'Output {} shape: expect {}, got {}. Program:\n{}'.format(
-            out_var.name, expected_shape, out_var.shape, prog)
+              out_var.name, expected_shape, out_var.shape, prog)
         # No more variadic here.
-        assert len(out_var.shape) == len(expected_shape), msg
+        if len(out_var.shape) != len(expected_shape):   
+            raise ValueError(msg)
         # replace UNK_SYM in out_var.shape.
         output_shape = [0 if es == UNK_SYM else os for os, es in zip(out_var.shape, expected_shape)]
         expected_shape = [0 if es == UNK_SYM else es for es in expected_shape]
         # convert float etc to int.
         output_shape = [i if is_symbolic(i) else int(i) for i in output_shape]
         expected_shape = [i if is_symbolic(i) else int(i) for i in expected_shape]
-        assert output_shape == expected_shape, msg
+        if output_shape != expected_shape:
+            raise ValueError(msg)
 
     convert_target = backend_to_convert_targets[backend]
     proto = converter.convert(prog,
@@ -253,10 +256,5 @@ def run_compare_tf(graph, placeholder_vals, output_nodes,
     if validate_shapes_only:
         compare_shapes(proto, input_values, expected_outputs, use_cpu_only)
     else:
-        for k, v in input_values.items():
-            if isinstance(v, (np.ndarray, np.generic)) \
-                    and v.dtype not in [np.float32, np.float64]:
-                msg = 'Only float input/outputs are supported. Got input {}: {}'
-                raise ValueError(msg.format(k, v))
         compare_backend(proto, input_values, expected_outputs,
                         use_cpu_only, atol=atol, rtol=rtol)
