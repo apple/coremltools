@@ -356,6 +356,7 @@ class SSAConverter(object):
             'Abs': self._convert_unary_common,
             'Add': self._convert_binary,
             'AddV2': self._convert_binary,
+            'AddN': self._convert_addn,
             'All': self._convert_reduction,
             'Any': self._convert_reduction,
             'ArgMax': self._convert_argmax,
@@ -1410,6 +1411,26 @@ class SSAConverter(object):
             input_names=[array_name, index_name, values_name],
             output_name=node.name)
         shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+    def _convert_addn(self, node):
+
+        # TODO: Support single value addn
+        # Blocked by a bug in coremltools
+        if len(node.inputs) <= 1:
+            raise ValueError("Only supports two or more inputs for add_n operation.")
+        input_nodes, input_names, input_types = self._get_input_tensors(node)
+        prev_name = input_names[0]
+        for i in range(1,len(input_names)):
+
+            node_name = node.name + '_' + str(i)
+            output_name = node.name if i == len(input_names) -1 else node_name
+
+            layer = self._get_builder().add_elementwise(
+                name=node_name, input_names=[prev_name, input_names[i]],
+                output_name=output_name, mode='ADD')
+            shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+            prev_name = node_name
 
     def _convert_concat_nd(self, node):
         assert len(node.inputs) > 1
