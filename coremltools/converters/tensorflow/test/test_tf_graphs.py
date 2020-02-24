@@ -8,7 +8,7 @@ import tensorflow as tf
 import numpy as np
 import unittest
 
-from test_base import TFNetworkTest
+from . test_base import TFNetworkTest
 
 
 class TFSimpleNetworkTest(TFNetworkTest):

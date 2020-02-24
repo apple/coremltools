@@ -15,7 +15,7 @@ from tensorflow.tools.graph_transforms import TransformGraph
 import coremltools
 
 # local to pytest
-from test_utils import generate_data, tf_transpose
+from . test_utils import generate_data, tf_transpose
 
 DEBUG = False
 

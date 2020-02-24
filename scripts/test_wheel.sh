@@ -52,6 +52,6 @@ echo
 echo "Using python from $(which python)"
 echo
 
-$PIP_EXECUTABLE install ${WHEEL_PATH}
+$PIP_EXECUTABLE install ${WHEEL_PATH} --upgrade
 # Now run the tests
 $PYTEST_EXECUTABLE -ra -m "not slow" --durations=100 --pyargs ${TEST_PACKAGE} -p no:warnings --junitxml=${BUILD_DIR}/py-test-report.xml
