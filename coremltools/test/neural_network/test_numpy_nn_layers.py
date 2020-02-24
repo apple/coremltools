@@ -49,24 +49,36 @@ class CorrectnessTest(unittest.TestCase):
     def _compare_shapes(self, np_preds, coreml_preds):
         return np.squeeze(np_preds).shape == np.squeeze(coreml_preds).shape
 
-    def _compare_nd_shapes(self, np_preds, coreml_preds, shape=()):
+    def _test_shape_equality(self, np_preds, coreml_preds):
+        np.testing.assert_array_equal(np.squeeze(coreml_preds).shape,
+                                      np.squeeze(np_preds).shape)
+
+    def _test_nd_shape_equality(self, np_preds, coreml_preds, shape=()):
         if shape:
-            return coreml_preds.shape == shape
+            np.testing.assert_array_equal(coreml_preds.shape, shape)
         else:
             # check if shape has 0 valued dimension
             if np.prod(np_preds.shape) == 0 and np.prod(coreml_preds.shape) == 0:
-                return True
-            return coreml_preds.shape == np_preds.shape
+                return
+            np.testing.assert_array_equal(coreml_preds.shape, np_preds.shape)
 
     def _compare_predictions(self, np_preds, coreml_preds, delta=.01):
         np_preds = np_preds.flatten()
         coreml_preds = coreml_preds.flatten()
-        for i in range(len(np_preds)):
-            max_den = max(1.0, np_preds[i], coreml_preds[i])
-            if np.abs(
-                    np_preds[i] / max_den - coreml_preds[i] / max_den) > delta:
-                return False
+        max_arr = np.maximum(np.maximum(np_preds, coreml_preds), 1.0)
+        all_deltas = np.abs(np_preds / max_arr - coreml_preds / max_arr)
+        max_delta = np.amax(all_deltas)
+        if max_delta > delta:
+            return False
         return True
+
+    def _test_predictions(self, np_preds, coreml_preds, delta=.01):
+        np_preds = np_preds.flatten()
+        coreml_preds = coreml_preds.flatten()
+        max_arr = np.maximum(np.maximum(np_preds, coreml_preds), 1.0)
+        all_deltas = np.abs(np_preds / max_arr - coreml_preds / max_arr)
+        max_delta = np.amax(all_deltas)
+        self.assertLessEqual(max_delta, delta)
 
     @staticmethod
     def _compare_moments(model, inputs, expected, use_cpu_only=True, num_moments=10):
@@ -129,8 +141,8 @@ class CorrectnessTest(unittest.TestCase):
             prediction = model.predict(input, useCPUOnly=useCPUOnly)
             for output_name in expected:
                 if self.__class__.__name__ == "SimpleTest":
-                    assert (self._compare_shapes(expected[output_name],
-                                                 prediction[output_name]))
+                    self._test_shape_equality(expected[output_name],
+                                              prediction[output_name])
                 else:
                     if output_name in output_name_shape_dict:
                         output_shape = output_name_shape_dict[output_name]
@@ -139,13 +151,14 @@ class CorrectnessTest(unittest.TestCase):
 
                     if len(output_shape) == 0 and len(expected[output_name].shape) == 0:
                         output_shape = (1,)
-                    assert (self._compare_nd_shapes(expected[output_name],
-                                                    prediction[output_name],
-                                                    output_shape))
+
+                    self._test_nd_shape_equality(expected[output_name],
+                                            prediction[output_name],
+                                            output_shape)
 
                 if not validate_shapes_only:
-                    assert (self._compare_predictions(expected[output_name],
-                                                      prediction[output_name]))
+                    self._test_predictions(expected[output_name],
+                                           prediction[output_name])
         finally:
             # Remove the temporary directory if we created one
             if model_dir and os.path.exists(model_dir):
@@ -2296,8 +2309,8 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_nms_cpu(self, cpu_only=True):
         def _compute_iou_matrix(boxes):
             # input is (N,4), in order [center_w, center_h, width, height]
-            assert len(boxes.shape) == 2
-            assert boxes.shape[1] == 4
+            self.assertEqual(len(boxes.shape), 2)
+            self.assertEqual(boxes.shape[1], 4)
             boxes = boxes.astype(np.float)
             center_w, center_h, width, height = np.split(boxes, 4, axis=1)  # outs are all (N,1)
             top = center_h + 0.5 * height
@@ -2626,8 +2639,13 @@ class NewLayersSimpleTest(CorrectnessTest):
                             input = {'data': x}
                             expected = {'output': np_out}
 
+                            test_case = "test_argmax_argmin_input_shape_{}_axis_{}_keep_dims_{}_numpy_out_shape_{}".format(
+                                x.shape, axis_val, keep_dims, np_out.shape
+                            )
+
                             self._test_model(builder.spec, input, expected, useCPUOnly=True)
-                            self.assertEqual(len(np_out.shape), builder._get_rank('output'))
+                            if len(np_out.shape) != 0:
+                                self.assertEqual(len(np_out.shape), builder._get_rank('output'))
 
     def test_get_shape(self):
         dims = [1, 2, 3, 4, 5]
@@ -2669,7 +2687,6 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(builder.spec, feed, expected, useCPUOnly=True)
             self.assertEqual(rank, builder._get_rank('output'))
 
-    @unittest.skip('fix')
     def test_simple_array_alloc_scatter(self):
         alloc_shape = [2, 3, 4]
         value_shape = [1, 3, 4]
@@ -3185,13 +3202,13 @@ class NewLayersSimpleTest(CorrectnessTest):
             pre0 = np.bincount(np.array(pre0).astype(np.int), minlength=num_class)
             pre1 = np.bincount(np.array(pre1).astype(np.int), minlength=num_class)
 
-            assert np.allclose(np.true_divide(pre0, num_samples), probs[0], atol=1e-2)
-            assert np.allclose(np.true_divide(pre0, num_samples),
-                               np.true_divide(ref0, num_samples), atol=1e-2)
+            np.testing.assert_allclose(np.true_divide(pre0, num_samples), probs[0], atol=1e-2)
+            np.testing.assert_allclose(np.true_divide(pre0, num_samples),
+                                        np.true_divide(ref0, num_samples), atol=1e-2)
 
-            assert np.allclose(np.true_divide(pre1, num_samples), probs[1], atol=1e-2)
-            assert np.allclose(np.true_divide(pre1, num_samples),
-                               np.true_divide(ref1, num_samples), atol=1e-2)
+            np.testing.assert_allclose(np.true_divide(pre1, num_samples), probs[1], atol=1e-2)
+            np.testing.assert_allclose(np.true_divide(pre1, num_samples),
+                                        np.true_divide(ref1, num_samples), atol=1e-2)
 
             self._test_model(model, inputs, expected, useCPUOnly=True,
                              output_name_shape_dict={'output': prediction['output'].shape})
@@ -3250,13 +3267,13 @@ class NewLayersSimpleTest(CorrectnessTest):
             pre0 = np.bincount(np.array(pre0).astype(np.int), minlength=num_class)
             pre1 = np.bincount(np.array(pre1).astype(np.int), minlength=num_class)
 
-            assert np.allclose(np.true_divide(pre0, num_samples), probs[0], atol=1e-2)
-            assert np.allclose(np.true_divide(pre0, num_samples),
-                               np.true_divide(ref0, num_samples), atol=1e-2)
+            np.testing.assert_allclose(np.true_divide(pre0, num_samples), probs[0], atol=1e-2)
+            np.testing.assert_allclose(np.true_divide(pre0, num_samples),
+                                        np.true_divide(ref0, num_samples), atol=1e-2)
 
-            assert np.allclose(np.true_divide(pre1, num_samples), probs[1], atol=1e-2)
-            assert np.allclose(np.true_divide(pre1, num_samples),
-                               np.true_divide(ref1, num_samples), atol=1e-2)
+            np.testing.assert_allclose(np.true_divide(pre1, num_samples), probs[1], atol=1e-2)
+            np.testing.assert_allclose(np.true_divide(pre1, num_samples),
+                                       np.true_divide(ref1, num_samples), atol=1e-2)
 
             self._test_model(model, inputs, expected, useCPUOnly=True,
                              output_name_shape_dict={'output': prediction['output'].shape})
@@ -4026,6 +4043,8 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     ref = np.random.rand(*ref_shape)
                     updates = np.random.rand(*updates_shape)
+                    if accumulate_mode == "DIV":
+                        updates += 10.0
                     indices = np.random.randint(0, ref_shape[0], size=indices_shape)
                     input = {'ref': ref, 'indices': indices.astype(np.float), 'updates': updates}
 
@@ -4527,7 +4546,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
         loop_body_builder = neural_network.NeuralNetworkBuilder(nn_spec=loop_layer.loop.bodyNetwork)
         # output shape: (n,1)
         loop_body_builder.add_batched_mat_mul('bmm.1', input_names=['matrix', 'x'], output_name='y')
-        loop_body_builder.add_reduce_l2('reduce', input_name='y', output_name='norm', axes=0)
+        loop_body_builder.add_reduce_l2('reduce', input_name='y', output_name='norm', axes=[0])
         loop_body_builder.add_divide_broadcastable('divide', ['y', 'norm'], 'y_normalized')
         # find diff: 1- abs(cosine)
         loop_body_builder.add_batched_mat_mul('cosine', ['y_normalized', 'x'], 'cosine_diff', transpose_a=True)
