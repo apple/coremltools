@@ -489,6 +489,9 @@ class TypeInferenceVisitor(object):
     def visit_Add(self, node):
         return self._visit_broadcast(node)
 
+    def visit_AddN(self, node):
+        return self._get_type_from_attr(node)
+
     def visit_AddV2(self, node):
         return self._visit_broadcast(node)
 
