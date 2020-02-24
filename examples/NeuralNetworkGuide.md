@@ -455,7 +455,7 @@ in FP32 precision. These can be quantized to either FP16 or to 8 bits, 7 bits, u
 The lower the number of bits, more the chances of degrading the model accuracy. The loss in accuracy varies with
 the model.
 
-[Here](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#quantizing-a-neural-network-mlmodel)
+[Here](https://github.com/apple/coremltools/blob/master/examples/APIExamples.md#quantizing-a-neural-network-mlmodel)
 is a code snippet on using the quantization utilities.
 
 ## Model Predictions
