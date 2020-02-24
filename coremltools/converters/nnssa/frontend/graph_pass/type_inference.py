@@ -1125,8 +1125,18 @@ class TypeInferenceVisitor(object):
         if not len(output_shape) == 1:
             raise ValueError('Expect only one output for Einsum.')
 
-        print(output_shape)
-        quit()
+        assert(len(output_shape) == 1)
+        output_shape = output_shape[0]
+
+        inference_shape = []
+        for i, dim in enumerate(output_shape):
+            inference_shape.append(dim if dim != -1 else make_symbol(node.name + "_" + str(i)))
+
+        input_types = [self.visit(input).get_primitive() for input in node.inputs]
+        inference_type = input_types[0] if len(input_types) == 1 else promote_types(*input_types)
+
+        return builtins.tensor(inference_type, inference_shape)
+
     def visit_MatMul(self, node):
         """
         Inputs:
