@@ -198,6 +198,20 @@ class TFSingleLayerTest(TFNetworkBatchTest):
     """
     Small models from tensorflow.layers
     """
+    def test_add_n(self):
+
+        graph = tf.Graph()
+        with graph.as_default():
+            x = tf.placeholder(tf.float32, shape=[2,3])
+            y = tf.placeholder(tf.float32, shape=[2,3])
+            z = tf.placeholder(tf.float32, shape=[2,3])
+            dummpy = tf.Variable([1,2])
+            constant = tf.constant([[1,2,3],[4,5,6]], dtype=tf.float32)
+            output = [tf.add_n([x,x]), tf.add_n([x,y,2*z]), tf.add_n([x,constant])]
+        output_names = [n.op.name for n in output]
+        self._test_tf_model(
+            graph, {x.op.name: [2,3], y.op.name: [2,3], z.op.name: [2,3]},
+            output_names)
 
     def test_dense(self):
         # dense layer with some activation
