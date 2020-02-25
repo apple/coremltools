@@ -5,7 +5,7 @@ from coremltools._deps import HAS_TF_1_14
 from coremltools.models.utils import is_macos, macos_version
 import math
 
-from test_base import TFNetworkTest, TFNetworkBatchTest
+from .test_base import TFNetworkTest, TFNetworkBatchTest
 import itertools
 
 

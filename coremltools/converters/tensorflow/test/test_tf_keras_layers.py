@@ -9,7 +9,7 @@ import tensorflow as tf
 from tensorflow.keras import backend as _keras
 from tensorflow.keras import layers
 from coremltools._deps import HAS_TF_2
-from test_utils import generate_data, tf_transpose
+from . test_utils import generate_data, tf_transpose
 
 
 class TensorFlowKerasTests(unittest.TestCase):

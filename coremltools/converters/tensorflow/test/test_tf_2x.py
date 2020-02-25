@@ -5,7 +5,7 @@ import tensorflow as tf
 import coremltools
 import os
 import shutil
-from test_utils import generate_data
+from . test_utils import generate_data
 from coremltools._deps import HAS_TF_2
 import math
 import pytest

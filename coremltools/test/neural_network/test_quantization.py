@@ -32,7 +32,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         self.qbits = 8  # n-bit quantization for tests
         self.qmode = _QUANTIZATION_MODE_LINEAR_QUANTIZATION
         self.custom_lut = None
-        from test_keras2_numeric import KerasBasicNumericCorrectnessTest
+        from . test_keras2_numeric import KerasBasicNumericCorrectnessTest
         self.keras_tester = KerasBasicNumericCorrectnessTest()
         self.keras_tester._test_model = self._test_model
 
@@ -81,7 +81,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
             coreml_input
         ) = self.keras_tester._get_coreml_model_params_and_test_input(
             model, mode, one_dim_seq_flags)
-        from test_keras2_numeric import _get_coreml_model
+        from . test_keras2_numeric import _get_coreml_model
         coreml_model = _get_coreml_model(model, input_names, output_names,
                                          model_precision=model_precision)
 
