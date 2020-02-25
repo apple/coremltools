@@ -114,6 +114,7 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(soundAnalysisPreprocessing);
                 VALIDATE_MODEL_TYPE(linkedModel);
             case MLModelType_program:
+                return {};
             case MLModelType_NOT_SET:
                 return Result(ResultType::INVALID_MODEL_INTERFACE, "Model did not specify a valid model-parameter type.");
         }
@@ -133,6 +134,7 @@ namespace CoreML {
         Result r = loadSpecification(*(out.m_spec), in);
         if (!r.good()) { return r; }
         // validate on load
+        
         r = out.validate();
 
         return r;
