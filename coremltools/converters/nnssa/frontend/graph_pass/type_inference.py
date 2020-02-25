@@ -1128,7 +1128,6 @@ class TypeInferenceVisitor(object):
         if not len(output_shape) == 1:
             raise ValueError('Expect only one output for Einsum.')
 
-        assert(len(output_shape) == 1)
         output_shape = output_shape[0]
 
         inference_shape = []
