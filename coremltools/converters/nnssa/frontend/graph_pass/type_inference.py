@@ -489,6 +489,9 @@ class TypeInferenceVisitor(object):
     def visit_Add(self, node):
         return self._visit_broadcast(node)
 
+    def visit_AddN(self, node):
+        return self._get_type_from_attr(node)
+
     def visit_AddV2(self, node):
         return self._visit_broadcast(node)
 
@@ -1116,6 +1119,25 @@ class TypeInferenceVisitor(object):
         shape = list(shape)
         shape[-1], shape[-2] = shape[-2], shape[-1]
         return tuple(shape)
+
+    def visit_Einsum(self, node):
+
+        if len(node.inputs) > 2:
+            raise ValueError('No support for more than 2 inputs to {} node {} now.'.format(node.op, node.name))
+        output_shape = node.attr.get("_output_shapes")
+        if not len(output_shape) == 1:
+            raise ValueError('Expect only one output for Einsum.')
+
+        output_shape = output_shape[0]
+
+        inference_shape = []
+        for i, dim in enumerate(output_shape):
+            inference_shape.append(dim if dim != -1 else make_symbol(node.name + "_" + str(i)))
+
+        input_types = [self.visit(input).get_primitive() for input in node.inputs]
+        inference_type = input_types[0] if len(input_types) == 1 else promote_types(*input_types)
+
+        return builtins.tensor(inference_type, inference_shape)
 
     def visit_MatMul(self, node):
         """
