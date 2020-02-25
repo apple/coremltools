@@ -168,6 +168,26 @@ def band_part(const_context, builder, op):
 
 
 @register_v2_op
+def batch_norm(const_context, builder, op):
+    channels = op.x.shape[1]
+    gamma = np.array([1.] * channels) if op.gamma is None else op.gamma.val
+    beta = np.array([0.] * channels) if op.beta is None else op.beta.val
+    builder.add_batchnorm(
+        name=op.name,
+        channels=channels,
+        gamma=gamma,
+        beta=beta,
+        mean=op.mean.val,
+        variance=op.variance.val,
+        input_name=op.x.name,
+        output_name=op.name,
+        compute_mean_var=False,
+        instance_normalization=False,
+        epsilon=op.epsilon.val,
+    )
+
+
+@register_v2_op
 def const(const_context, builder, op):
     # const in V2 are added to V1 lazily.
     pass
@@ -784,6 +804,15 @@ def max_pool(const_context, builder, op):
 
 
 @register_v2_op
+def non_zero(const_context, builder, op):
+    builder.add_where_nonzero(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name
+    )
+
+
+@register_v2_op
 def lstm(const_context, builder, op):
     # Input shape [b, s, I]
     input_name = op.x.name
@@ -1221,6 +1250,14 @@ def rnn(const_context, builder, op):
     # Squeeze Output H and Output C
     # to output shape of [Batch Size, Hidden Size]
     _squeeze(builder, op.outputs[1].name, output_names[1], [0, 3, 4])
+
+@register_v2_op
+def select(const_context, builder, op):
+    builder.add_where_broadcastable(
+        name=op.name,
+        input_names=[op.cond.name, op.a.name, op.b.name],
+        output_name=op.name
+    )
 
 @register_v2_op
 def space_to_depth(const_context, builder, op):

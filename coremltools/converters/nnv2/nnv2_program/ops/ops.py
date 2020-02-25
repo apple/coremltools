@@ -524,6 +524,42 @@ class mul(elementwise_binary):
     def get_operator(self):
         return operator.mul
 
+
+@register_op(doc_str="""
+Returns the indices of the elements in the given tensor that are non-zero.
+
+Inputs
+
+* x <*, T>
+    * Tensor, values selected at indices where its values is not equal to 0.
+
+Outputs
+
+* <N, R, T>
+    * 2-dimensional tensor contains indices of elements that are non-zero. Each
+    row is the index for a non-zero value. N is the number of non-zero elements,
+    R is the rank of the input.
+
+Type Domains
+
+* T: f32
+""")
+class non_zero(Operation):
+    input_types = InputSpec(
+        x=TensorInputType()
+    )
+
+    def __init__(self, **kwargs):
+        super(non_zero, self).__init__(**kwargs)
+
+    def type_inference(self):
+        shape = tuple([get_new_symbol(), self.x.rank])
+        return builtins.tensor(self.x.dtype, shape)
+
+    def eval(self):
+        return np.transpose(np.nonzero(self.x.val))
+
+
 @register_op(doc_str='TODO')
 class not_equal(elementwise_binary):
     def __init__(self, **kwargs):
@@ -1072,18 +1108,18 @@ class rnn(Operation):
 
 # rdar://58622145
 @register_op(doc_str='TODO')
-class batchnorm(Operation):
+class batch_norm(Operation):
     input_types = InputSpec(
-            x = TensorInputType(),
-            mean = TensorInputType(const=True),
-            variance = TensorInputType(const=True),
-            gamma = TensorInputType(const=True, optional=True),
-            beta = TensorInputType(const=True, optional=True),
-            epsilon = FloatInputType(const=True, default=1e-5),
-            )
+        x=TensorInputType(),
+        mean=TensorInputType(const=True),
+        variance=TensorInputType(const=True),
+        gamma=TensorInputType(const=True, optional=True),
+        beta=TensorInputType(const=True, optional=True),
+        epsilon=FloatInputType(const=True, default=1e-5),
+    )
 
     def __init__(self, **kwargs):
-        super(batchnorm, self).__init__(**kwargs)
+        super(batch_norm, self).__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -1863,7 +1899,7 @@ Inputs
 * x: <*, T> Required
     * Input tensor.
 * lengths: const<L, i32> Required
-    * 1-dimensional tensor of length x.shape[batch_axis] specifying the length 
+    * 1-dimensional tensor of length x.shape[batch_axis] specifying the length
     of the sequence to reverse.
     * Values must be in range [0, x.shape[seq_axis]).
 * seq_axis: const<i32> Optional
@@ -2031,6 +2067,59 @@ class erf(elementwise_unary):
 
     def eval(self):
         return scipy.special.erf(self.x.val)
+
+
+@register_op(doc_str="""
+Returns the elements selected from either a or b, depending on the cond.
+Shape of cond, a, b must be broadcastable.
+
+Inputs
+
+* cond <*, T>
+    * Tensor, when True (non-zero), select element from x, otherwise, y
+* a <*, T> Optional
+    * Tensor, values selected at indices where condition is True
+    * Defaults to None.
+* b <*, T> Optional
+    * Tensor, values selected at indices where condition is False
+    * Defaults to None.
+
+Outputs
+
+* <*, T>
+    *  A tensor of shape equal to the broadcasted shape.
+
+Type Domains
+
+* T: f32
+""")
+class select(Operation):
+    input_types = InputSpec(
+        cond=TensorInputType(),
+        a=TensorInputType(),
+        b=TensorInputType()
+    )
+
+    def __init__(self, **kwargs):
+        super(select, self).__init__(**kwargs)
+
+    def type_inference(self):
+        a_type = self.a.sym_type
+        b_type = self.b.sym_type
+        if all([a_type, b_type]):
+            compatible, ret_type = builtins.is_tensor_and_is_compatible_general_shape(
+                a_type, b_type
+            )
+            if compatible:
+                return ret_type
+            elif a_type == b_type:
+                return a_type
+            else:
+                raise ValueError('Type mismatch {} vs. {}'.format(a_type, b_type))
+        return a_type if a_type is not None else b_type
+
+    def eval(self):
+        return np.where(self.cond.val, self.a.val, self.b.val)
 
 
 @register_op(doc_str="""

@@ -26,6 +26,24 @@ def Acos(context, node):
 
 
 @register_tf_op
+def All(context, node):
+    x = context[node.inputs[0]]
+    axis = context[node.inputs[1]]
+    keep_dims = node.attr.get('keep_dims', False)
+    x = cb.reduce_prod(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
+def Any(context, node):
+    x = context[node.inputs[0]]
+    axis = context[node.inputs[1]]
+    keep_dims = node.attr.get('keep_dims', False)
+    x = cb.reduce_sum(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
 def ArgMax(context, node):
     x = context[node.inputs[0]]
     axis = context[node.inputs[1]]
@@ -667,6 +685,16 @@ def LeakyReLU(context, node):
     x = cb.leaky_relu(x=x, alpha=alpha, name=node.name)
     context.add(node.name, x)
 
+
+@register_tf_op(tf_alias=['SelectV2'])
+def Select(context, node):
+    cond = context[node.inputs[0]]
+    a = context[node.inputs[1]]
+    b = context[node.inputs[2]]
+    x = cb.select(cond=cond, a=a, b=b, name=node.name)
+    context.add(node.name, x)
+
+
 @register_tf_op
 def Sigmoid(context, node):
     x = context[node.inputs[0]]
@@ -742,4 +770,11 @@ def Tile(context, node):
     x = context[node.inputs[0]]
     reps = context[node.inputs[1]]
     x = cb.tile(x=x, reps = reps, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
+def Where(context, node):
+    x = context[node.inputs[0]]
+    x = cb.non_zero(x=x, name=node.name)
     context.add(node.name, x)

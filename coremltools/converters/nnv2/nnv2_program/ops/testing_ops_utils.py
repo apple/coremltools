@@ -89,8 +89,8 @@ def compare_backend(proto, input_values, expected_outputs,
     mlmodel = coremltools.models.MLModel(proto, useCPUOnly=use_cpu_only)
     pred = mlmodel.predict(input_values, useCPUOnly=use_cpu_only)
     if not use_cpu_only:
-        atol = 1e-02
-        rtol = 1e-03
+        atol = min(atol * 100., 1e-1)
+        rtol = min(rtol * 100., 1e-2)
     for o, expected in expected_outputs.items():
         assert is_close(expected, pred[o], atol, rtol), \
             'Output {} differs. useCPUOnly={}.\nInput={}, Expected={}, Output={}\n'.format(o, use_cpu_only, input_values, expected, pred[o])

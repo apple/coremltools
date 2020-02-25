@@ -67,7 +67,7 @@ class FrontendTesterSample:
 
     def test_builder_to_backend_programmatic(self, use_cpu_only, **kwargs):
         """
-        More programatic tests to cover more corner cases.
+        More programmatic tests to cover more corner cases.
         """
         pass
 
@@ -1853,6 +1853,52 @@ class TestMatMul:
                            res, use_cpu_only=use_cpu_only, backend=backend)
 
 
+class TestNonZero:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1']
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        x_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+        input_values = {'x': x_val}
+
+        def build(x):
+            return [cb.non_zero(x=x)]
+
+        expected_output_types = [(UNK_SYM, 2, builtins.fp32)]
+        expected_outputs = [
+            np.array(np.transpose(np.nonzero(x_val)))
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @ssa_fn
+    def test_builder_eval(self):
+        x_val = np.random.randint(low=-1, high=2, size=(6, 1, 7))
+        res = cb.non_zero(x=x_val)
+        assert is_close(np.transpose(np.nonzero(x_val)), res.val)
+
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, rank',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                                 [rank for rank in range(1, 6)]
+                             ))
+    def test_tf(self, use_cpu_only, backend, rank):
+        with tf.Graph().as_default() as graph:
+            shape = np.random.randint(low=1, high=4, size=rank)
+            x_val = np.random.randint(low=-1, high=2, size=shape).astype(np.float32)
+            x = tf.placeholder(tf.float32, shape=shape)
+            run_compare_tf(graph, {x: x_val}, tf.where(x),
+                           use_cpu_only=use_cpu_only, backend=backend)
+
+
 class TestReshape:
 
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -2572,64 +2618,52 @@ class TestReduction:
                             backend=backend)
 
     @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
-    @pytest.mark.parametrize('use_cpu_only, backend, rank_and_axes, keep_dims, mode',
+    @pytest.mark.parametrize('use_cpu_only, backend, rank_and_axes, keep_dims, tf_op',
                              itertools.product(
                                  [True, False],
                                  ['nnv1'],
                                  [(1, (-1,)), (2, (0,)), (2, (-1, 0)), (3, (1, -3)), (3, (-2,)),
                                   (4, (0, 1, 2)), (4, (-2, -1, 0)), (4, (1, -2)), (5, (-3, -1)), (5, (0, -1, 1, -2))],
                                  [True, False],
-                                 ['l2', 'max', 'mean', 'min', 'prod', 'sum']
-                                 # TODO: add 'log_sum_exp' tests which requires IsFinate op conversion.
+                                 [tf.reduce_all, tf.math.reduce_euclidean_norm ,
+                                  tf.reduce_max, tf.reduce_mean, tf.reduce_min,
+                                  tf.reduce_prod, tf.reduce_sum]
+                                 # TODO: add 'log_sum_exp' tests which requires IsFinate op conversion. 'any' tests
                                  # rdar://59563732 (Add support for TensorFlow IsFinate op conversion.)
                              ))
-    def test_tf(self, use_cpu_only, backend, rank_and_axes, keep_dims, mode):
+    def test_tf(self, use_cpu_only, backend, rank_and_axes, keep_dims, tf_op):
         rank, axes = rank_and_axes
-        shape = np.random.randint(low=2, high=4, size=rank)
+        shape = np.random.randint(low=1, high=6, size=rank)
 
         def test_tf_argmax():
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=shape)
-                res = tf.math.argmax(x, axis=axes[0])
-                run_compare_tf(graph, {x: np.random.rand(*shape)}, res,
-                               use_cpu_only=use_cpu_only, frontend_only=False,
-                               backend=backend)
+                ref = tf.math.argmax(x, axis=axes[0])
+                run_compare_tf(graph, {x: _random_gen(shape=shape, rand_min=-5., rand_max=5.)},
+                               ref, use_cpu_only=use_cpu_only, backend=backend)
 
         def test_tf_argmin():
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=shape)
-                res = tf.math.argmin(x, axis=axes[0])
-                run_compare_tf(graph, {x: np.random.rand(*shape)}, res,
-                               use_cpu_only=use_cpu_only, frontend_only=False,
-                               backend=backend)
+                ref = tf.math.argmin(x, axis=axes[0])
+                run_compare_tf(graph, {x: _random_gen(shape=shape, rand_min=-5., rand_max=5.)},
+                               ref, use_cpu_only=use_cpu_only, backend=backend)
 
         def test_tf_reduction():
             if len(axes) == rank and not keep_dims:
                 return  # TODO <rdar://problem/59152311> NNV2: Add rank 0 and dim size 0 related tests for every op
 
-            if mode == 'l2':
-                tf_op = tf.math.reduce_euclidean_norm
-            elif mode == 'log_sum_exp':
-                tf_op = tf.math.reduce_logsumexp
-            elif mode == 'max':
-                tf_op = tf.reduce_max
-            elif mode == 'mean':
-                tf_op = tf.reduce_mean
-            elif mode == 'min':
-                tf_op = tf.reduce_min
-            elif mode == 'prod':
-                tf_op = tf.reduce_prod
-            elif mode == 'sum':
-                tf_op = tf.reduce_sum
-            else:
-                raise NotImplementedError()
-
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=shape)
-                res = tf_op(x, axis=axes, keepdims=keep_dims)
-                run_compare_tf(graph, {x: np.random.rand(*shape)}, res,
-                               use_cpu_only=use_cpu_only, frontend_only=False,
-                               backend=backend)
+                x_val = _random_gen(shape=shape, rand_min=-5., rand_max=5.)
+                if tf_op in {tf.reduce_all, tf.reduce_any}:
+                    x = tf.placeholder(tf.bool, shape=shape)
+                    x_val = np.random.randint(low=0, high=2, size=shape).astype(np.float32)
+                elif tf_op in {tf.math.reduce_euclidean_norm}:
+                    x_val = _random_gen(shape=shape, rand_min=0., rand_max=10.)
+                ref = tf_op(x, axis=axes, keepdims=keep_dims)
+                run_compare_tf(graph, {x: x_val}, ref,
+                               use_cpu_only=use_cpu_only, backend=backend)
 
         test_tf_argmax()
         test_tf_argmin()
@@ -3304,6 +3338,66 @@ class TestPad():
             run_compare_tf(graph, {x: input},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
+
+
+class TestSelect:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1']
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        cond_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
+        a_val = np.array([[3, 1, 1], [1, 4, 1], [5, 6, 1]], dtype=np.float32)
+        b_val = np.array([[3, 2, 2], [2, 4, 2], [5, 6, 2]], dtype=np.float32)
+        input_placeholders = {
+            'cond': cb.placeholder(shape=cond_val.shape),
+            'a': cb.placeholder(shape=a_val.shape),
+            'b': cb.placeholder(shape=b_val.shape),
+        }
+        input_values = {'cond': cond_val, 'a': a_val, 'b': b_val}
+
+        def build(cond, a, b):
+            return [cb.select(cond=cond, a=a, b=b)]
+
+        expected_output_types = [(3, 3, builtins.fp32)]
+        expected_outputs = [
+            np.array([[3., 2., 2.], [2., 4., 2.], [5., 6., 2.]], dtype=np.float32)
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @ssa_fn
+    def test_builder_eval(self):
+        cond = np.random.randint(low=0, high=2, size=(6, 1, 7))
+        a = _random_gen(shape=(6, 1, 7), rand_min=-1962., rand_max=0.)
+        b = _random_gen(shape=(6, 1, 7), rand_min=0., rand_max=1964.)
+        res = cb.select(cond=cond, a=a, b=b)
+        assert is_close(np.where(cond, a, b), res.val)
+
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, rank',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                                 [rank for rank in range(1, 6)]
+                             ))
+    def test_tf(self, use_cpu_only, backend, rank):
+        shape = np.random.randint(low=1, high=4, size=rank)
+        cond_val = np.random.randint(low=0, high=2, size=shape).astype(np.int32)
+        a_val = _random_gen(shape=shape, rand_min=-1962., rand_max=0.)
+        b_val = _random_gen(shape=shape, rand_min=0., rand_max=1964.)
+        with tf.Graph().as_default() as graph:
+            cond = tf.placeholder(tf.bool, shape=shape)
+            a = tf.placeholder(tf.float32, shape=shape)
+            b = tf.placeholder(tf.float32, shape=shape)
+            ref = tf.where(cond, a, b)
+            run_compare_tf(graph, {cond: cond_val, a: a_val, b: b_val}, ref,
+                           use_cpu_only=use_cpu_only, backend=backend)
+
 
 class TestSpaceToDepth:
 
@@ -4356,6 +4450,7 @@ class TestParametricSoftplus:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
+
 class TestGather:
 
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -5042,3 +5137,89 @@ class TestSqueeze:
                            {x: np.random.rand(*x_shape)},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
+
+
+class TestBatchNorm:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        x_val = np.array([[[[-16., 13.], [11., -16.]],
+                           [[13., -15.], [13., 9.]],
+                           [[-9., -4.], [-6., 3.]]]], dtype=np.float32)
+        mean_val = np.array([9., 6., 3.], dtype=np.float32)
+        variance_val = np.array([6., 1., 7.], dtype=np.float32)
+        gamma_val = np.array([1., 1., 1.], dtype=np.float32)
+        beta_val = np.array([1., 3., 0.], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+        input_values = {'x': x_val}
+
+        def build(x):
+            return [
+                cb.batch_norm(
+                    x=x, mean=mean_val, variance=variance_val),
+                cb.batch_norm(
+                    x=x, mean=mean_val, variance=variance_val,
+                    gamma=gamma_val, beta=beta_val, epsilon=1e-4)
+            ]
+
+        expected_output_types = [
+            (1, 3, 2, 2, builtins.fp32),
+            (1, 3, 2, 2, builtins.fp32),
+        ]
+        expected_outputs = [
+            np.array([[[[-10.206199, 1.6329918],
+                        [0.8164959, -10.206199]],
+                       [[6.999965, -20.999895],
+                        [6.999965, 2.9999852]],
+                       [[-4.53557, -2.6457493],
+                        [-3.4016776, 0.]]]], dtype=np.float32),
+            np.array([[[[-9.206122, 2.6329796],
+                        [1.8164899, -9.206122]],
+                       [[9.99965, -17.998951],
+                        [9.99965, 5.9998503]],
+                       [[-4.535541, -2.6457324],
+                        [-3.4016557, 0.]]]], dtype=np.float32)
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, shape_mode, epsilon',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                                 [rank for rank in range(3, 5)],
+                                 [True, False],
+                                 [1e-5, 1e-6]
+                             ))
+    def test_tf(self, use_cpu_only, backend, rank, shape_mode, epsilon):
+        shape = np.random.randint(low=1, high=6, size=rank)
+        if shape_mode:
+            # same shape with 1 for being normalized over
+            attr_shape = list(shape)
+            attr_shape[1] = 1
+            attr_shape[2] = 1
+        else:
+            # 1D tensor of the same size as channel dimension
+            attr_shape = list(shape)[-1]
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=shape)
+            m = tf.placeholder(tf.float32, shape=attr_shape)
+            v = tf.placeholder(tf.float32, shape=attr_shape)
+            o = tf.placeholder(tf.float32, shape=attr_shape)
+            s = tf.placeholder(tf.float32, shape=attr_shape)
+            ref = tf.nn.batch_normalization(
+                x, mean=m, variance=v, offset=o, scale=s, variance_epsilon=epsilon)
+            run_compare_tf(graph, {
+                x: _random_gen(shape=shape, rand_min=-100., rand_max=100.),
+                m: _random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
+                v: _random_gen(shape=attr_shape, rand_min=0., rand_max=10.),
+                o: _random_gen(shape=attr_shape, rand_min=1., rand_max=10.),
+                s: _random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
+            }, ref, use_cpu_only=use_cpu_only, backend=backend, atol=1e-2, rtol=1e-3)
