@@ -93,8 +93,8 @@ class ScalarOrTensorInputType(_InputType):
 
 class IntInputType(ScalarOrTensorInputType):
     """
-    Int32 input, with _sym_type == builtins.int32 or Int64 input, with
-    _sym_type == builtins.int64 predefined to be builtins.int32 by default.
+    Int input with _sym_type == builtins.int32 or _sym_type == builtins.int64
+    predefined to be builtins.int32 by default.
 
     Set with IntAttribute.val
     Raise error when value set is not integer.
@@ -156,11 +156,19 @@ class TensorInputType(ScalarOrTensorInputType):
 
 
 class IntTensorInputType(ScalarOrTensorInputType):
+    """
+    Tensor input with int values, _sym_type == builtins.int32 or
+    _sym_type == builtins.int64
+
+    Raise error when value set is not integer.
+    """
+
     def __init__(self, **kwargs):
         super(IntTensorInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return builtins.is_tensor(v.sym_type) and v.dtype == builtins.int32
+        return builtins.is_tensor(v.sym_type) and \
+               v.dtype in {builtins.int32, builtins.int64}
 
 
 class StringInputType(ScalarOrTensorInputType):

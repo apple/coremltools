@@ -2635,6 +2635,183 @@ class TestReduction:
         test_tf_argmin()
         test_tf_reduction()
 
+
+class TestReverse:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        val = np.array([[-1., 2., -3.], [4., -5., 6.]], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=val.shape)}
+        input_values = {'x': val}
+
+        def build(x):
+            return [
+                cb.reverse(x=x),
+                cb.reverse(x=x, axes=[0])
+            ]
+
+        expected_output_types = [
+            (2, 3, builtins.fp32),
+            (2, 3, builtins.fp32)
+        ]
+        expected_outputs = [
+            np.array([[6., -5., 4.], [-3., 2., -1.]], dtype=np.float32),
+            np.array([[4., -5., 6.], [-1., 2., -3.]], dtype=np.float32)
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @ssa_fn
+    def test_builder_eval(self):
+        val = np.array([[-1., 7., -3.], [4., -5., 8.]], dtype=np.float32)
+        res = cb.reverse(x=val, axes=[0])
+        assert is_close(np.flip(val, axis=0), res.val)
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                             ))
+    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+        s0 = get_new_symbol()
+
+        val = np.array([[1., 2., 3.], [4., 5., 6.]], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=(s0, 3))}
+        input_values = {'x': val}
+
+        def build(x):
+            return [
+                cb.reverse(x=x, axes=[1]),
+                cb.reverse(x=x, axes=[0]),
+            ]
+
+        expected_output_types = [
+            (s0, 3, builtins.fp32),
+            (s0, 3, builtins.fp32),
+        ]
+        expected_outputs = [
+            np.array([[3., 2., 1.], [6., 5., 4.]], dtype=np.float32),
+            np.array([[4., 5., 6.], [1., 2., 3.]], dtype=np.float32),
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, rank_and_axes',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                                 [(1, (-1,)), (2, (0,)), (2, (-1, 0)),
+                                  (3, (1, -3)), (3, (-2,)), (3, (0, 1, 2)),
+                                  (4, (-2, -1, 0)), (4, (-1, -2)), (4, []),
+                                  (5, (-3, -1, 3)), (5, (0, -1, 1, -2))],
+                             ))
+    def test_tf(self, use_cpu_only, backend, rank_and_axes):
+        rank, axes = rank_and_axes
+        shape = np.random.randint(low=1, high=4, size=rank)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=shape)
+            res = tf.reverse(x, axis=axes)
+            run_compare_tf(graph, {x: np.random.rand(*shape)}, res,
+                           use_cpu_only=use_cpu_only, backend=backend)
+
+
+class TestReverseSequence:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        x_val = np.array([[1, 2, 3, 4, 5, 0, 0, 0], [1, 2, 0, 0, 0, 0, 0, 0],
+                          [1, 2, 3, 4, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6, 7, 8]],
+                         dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+        input_values = {'x': x_val}
+
+        def build(x):
+            return [
+                cb.reverse_sequence(x=x, lengths=[7, 2, 3, 5], seq_axis=1, batch_axis=0),
+            ]
+
+        expected_output_types = [
+            (4, 8, builtins.fp32),
+        ]
+        expected_outputs = [
+            np.array([
+                [0, 0, 5, 4, 3, 2, 1, 0], [2, 1, 0, 0, 0, 0, 0, 0],
+                [3, 2, 1, 4, 0, 0, 0, 0], [5, 4, 3, 2, 1, 6, 7, 8]
+            ], dtype=np.float32)
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                             ))
+    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+        s0 = get_new_symbol()
+
+        x_val = np.array([[1, 2, 3, 4, 5, 0, 0, 0], [1, 2, 0, 0, 0, 0, 0, 0],
+                          [1, 2, 3, 4, 0, 0, 0, 0], [1, 2, 3, 4, 5, 6, 7, 8]],
+                         dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=(4, s0))}
+        input_values = {'x': x_val}
+
+        def build(x):
+            return [
+                cb.reverse_sequence(x=x, lengths=[7, 2, 3, 5], seq_axis=1, batch_axis=0),
+            ]
+
+        expected_output_types = [
+            (4, s0, builtins.fp32),
+        ]
+        expected_outputs = [
+            np.array([
+                [0, 0, 5, 4, 3, 2, 1, 0], [2, 1, 0, 0, 0, 0, 0, 0],
+                [3, 2, 1, 4, 0, 0, 0, 0], [5, 4, 3, 2, 1, 6, 7, 8]
+            ], dtype=np.float32)
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, rank',
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1'],
+                                 [rank for rank in range(2, 6)]
+                             ))
+    def test_tf(self, use_cpu_only, backend, rank):
+        shape = np.random.randint(low=1, high=6, size=rank)
+        seq_axis = np.random.randint(low=1, high=rank)
+        batch_axis = np.random.randint(low=0, high=seq_axis)
+        lengths = np.random.randint(
+            low=0, high=shape[seq_axis], size=shape[batch_axis])
+
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=shape)
+            res = tf.reverse_sequence(x, seq_lengths=lengths,
+                                      seq_axis=seq_axis, batch_axis=batch_axis)
+            run_compare_tf(graph, {x: np.random.rand(*shape)}, res,
+                           use_cpu_only=use_cpu_only, backend=backend)
+
+
 class TestRNN:
     @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",

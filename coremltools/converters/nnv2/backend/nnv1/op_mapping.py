@@ -1125,6 +1125,41 @@ def reduce_sum_square(const_context, builder, op):
         reduce_all=op.axes.val is None
     )
 
+
+@register_v2_op
+def reverse(const_context, builder, op):
+    reverse_dim = [False] * op.x.rank
+    if op.axes is None:
+        reverse_dim = [True] * op.x.rank
+    else:
+        for axis in op.axes.val:
+            reverse_dim[axis] = True
+    builder.add_reverse(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        reverse_dim=reverse_dim,
+    )
+
+
+@register_v2_op
+def reverse_sequence(const_context, builder, op):
+    input_lengths_name = op.lengths.name.replace('lengths', 'input_lengths')
+    builder.add_load_constant_nd(
+        name=input_lengths_name,
+        output_name=input_lengths_name,
+        constant_value=op.lengths.val,
+        shape=op.lengths.shape
+    )
+    builder.add_reverse_sequence(
+        name=op.name,
+        input_names=[op.x.name, input_lengths_name],
+        output_name=op.name,
+        batch_axis=op.batch_axis.val,
+        seq_axis=op.seq_axis.val
+    )
+
+
 @register_v2_op
 def rnn(const_context, builder, op):
     input_name = op.x.name # [b, s, I]

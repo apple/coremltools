@@ -612,6 +612,23 @@ def Reshape(context, node):
     x = cb.reshape(x=x, shape=new_shape, name=node.name)
     context.add(node.name, x)
 
+@register_tf_op(tf_alias=['ReverseV2'])
+def Reverse(context, node):
+    x = context[node.inputs[0]]
+    axes = context[node.inputs[1]]
+    x = cb.reverse(x=x, axes=axes, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def ReverseSequence(context, node):
+    x = context[node.inputs[0]]
+    lengths = context[node.inputs[1]]
+    seq_axis = node.attr.get('seq_dim')
+    batch_axis = node.attr.get('batch_dim')
+    x = cb.reverse_sequence(x=x, lengths=lengths, seq_axis=seq_axis,
+                            batch_axis=batch_axis, name=node.name)
+    context.add(node.name, x)
+
 @register_tf_op
 def Squeeze(context, node):
     x = context[node.inputs[0]]

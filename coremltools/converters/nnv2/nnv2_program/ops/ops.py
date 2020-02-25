@@ -1622,7 +1622,7 @@ class ReductionAxes(Operation):
         x_shape = self.x.shape
         axes = self.axes.val if self.axes is not None else None
         if axes is None:
-            axes = range(len(x_shape))
+            axes = range(self.x.rank)
         keep_dims = self.keep_dims.val
 
         reduced_shape = list(x_shape)
@@ -1811,6 +1811,92 @@ class reduce_sum_square(ReductionAxes):
             return np.sum(np.square(x), axis=axis, keepdims=keepdims)
 
         return sum_squre
+
+
+@register_op(doc_str="""
+Reverses the order of the input tensor along specified axes / dimensions.
+
+Inputs
+
+* x: <*, T> Required
+    * Input tensor.
+* axes: const<D, i32> Optional
+    * Dimension(s) to reverse. Each axis must be in the range [-rank(x), rank(x)).
+    * Defaults to None (reduce on all dimensions).
+
+Outputs
+
+* <*, T> same type as the input tensor.
+
+Type Domains
+
+* T: f32
+""")
+class reverse(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        axes=IntTensorInputType(const=True, optional=True),
+    )
+
+    def __init__(self, **kwargs):
+        super(reverse, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
+    def eval(self):
+        res = self.x.val
+        axes = self.axes.val if self.axes is not None else range(self.x.rank)
+        for axis in axes:
+            res = np.flip(res, axis=axis)
+        return res
+
+
+@register_op(doc_str="""
+Reverses variable length slices for specified axes / dimensions of the input
+tensor. This op first slice input tensor along the batch_axis dimension, then
+partially reverse the elements along the seq_axis for the first lengths[i]
+elements.
+
+Inputs
+
+* x: <*, T> Required
+    * Input tensor.
+* lengths: const<L, i32> Required
+    * 1-dimensional tensor of length x.shape[batch_axis] specifying the length 
+    of the sequence to reverse.
+    * Values must be in range [0, x.shape[seq_axis]).
+* seq_axis: const<i32> Optional
+    * The dimension to reverse.
+    * Defaults to 0.
+* batch_axis: const<i32> Optional
+    * Dimension for slicing.
+    * Defaults to 0.
+
+Outputs
+
+* <*, T> same type as the input tensor.
+
+Type Domains
+
+* T: f32
+""")
+class reverse_sequence(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        lengths=IntTensorInputType(),
+        seq_axis=IntInputType(const=True, default=0),
+        batch_axis=IntInputType(const=True, default=0)
+    )
+
+    def __init__(self, **kwargs):
+        super(reverse_sequence, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
+    def eval(self):
+        raise NotImplementedError('TODO')
 
 
 # rdar://58622145
