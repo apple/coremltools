@@ -140,7 +140,6 @@ add_library(mlmodel
     src/Validation/OneHotEncoderValidator.cpp
     src/Validation/ParameterValidator.cpp
     src/Validation/PipelineValidator.cpp
-    src/Validation/ProgramValidator.cpp
     src/Validation/QuantizationValidationUtils.cpp
     src/Validation/ScalarValidator.cpp
     src/Validation/SoundAnalysisPreprocessingValidator.cpp

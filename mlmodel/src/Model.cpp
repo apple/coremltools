@@ -92,7 +92,6 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(neuralNetworkClassifier);
                 VALIDATE_MODEL_TYPE(neuralNetworkRegressor);
                 VALIDATE_MODEL_TYPE(neuralNetwork);
-                VALIDATE_MODEL_TYPE(program);
                 VALIDATE_MODEL_TYPE(oneHotEncoder);
                 VALIDATE_MODEL_TYPE(arrayFeatureExtractor);
                 VALIDATE_MODEL_TYPE(featureVectorizer);
@@ -114,6 +113,7 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(itemSimilarityRecommender);
                 VALIDATE_MODEL_TYPE(soundAnalysisPreprocessing);
                 VALIDATE_MODEL_TYPE(linkedModel);
+            case MLModelType_program:
             case MLModelType_NOT_SET:
                 return Result(ResultType::INVALID_MODEL_INTERFACE, "Model did not specify a valid model-parameter type.");
         }
