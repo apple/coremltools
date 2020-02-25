@@ -2305,7 +2305,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_const_pad_mode2_gpu(self):
         self.test_const_pad_mode2_cpu(cpu_only=False)
 
-
+    @pytest.mark.xfail(reason='rdar://problem/59486372')
     def test_nms_cpu(self, cpu_only=True):
         def _compute_iou_matrix(boxes):
             # input is (N,4), in order [center_w, center_h, width, height]
@@ -3403,6 +3403,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
                 self.assertEqual(target_rank, builder._get_rank('output'))
 
+    @pytest.mark.xfail(reason='Fixed in https://github.com/apple/coremltools/pull/634')
     def test_reshape_like_gpu(self):
         self.test_reshape_like_cpu(cpu_only=False)
 
@@ -3905,6 +3906,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {'output': np.transpose(np.nonzero(x)).astype(np.float)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/59765162')
     def test_where_nonzero_gpu(self):
         self.test_where_nonzero_cpu(cpu_only=False)
 
@@ -4774,11 +4776,3 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
     def test_argsort_gpu(self):
         self.test_argsort_cpu(cpu_only=False)
-
-
-if __name__ == '__main__':
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(NewLayersSimpleTest("test_softmax_nan_bug_cpu"))
-    # #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
-    # unittest.TextTestRunner().run(suite)
