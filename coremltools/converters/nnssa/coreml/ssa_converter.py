@@ -181,10 +181,10 @@ def ssa_convert(ssa,
                 with open(classes_in, 'r') as f:
                     classes = f.read()
                 classes = classes.splitlines()
-            elif type(classes_in) is list:  # list[int or str]
-                classes = classes_in
-            else:
-                raise ValueError('Class labels must be a list of integers / strings,' \
+        elif type(classes_in) is list:  # list[int or str]
+            classes = classes_in
+        else:
+            raise ValueError('Class labels must be a list of integers / strings,' \
                                  ' or a file path')
 
             if predicted_feature_name is not None:
