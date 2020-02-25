@@ -9,6 +9,7 @@ from test_utils import generate_data
 from coremltools._deps import HAS_TF_2
 import math
 import pytest
+from itertools import *
 
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
@@ -133,6 +134,110 @@ class TestSingleOp(unittest.TestCase):
 
         self._test_coreml(model())
 
+
+class TestEinsum(TestSingleOp):
+
+    def test_einsum_transpose(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[7,3,5,2], dtype=tf.float32)])
+
+            def __call__(self, x):
+                return (tf.einsum('ijkt->jtki', x),
+                       tf.einsum('ijkt->ijkt', x))
+        self._test_coreml(model())
+
+    def test_einsum_inner_product(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,2,2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[4,2,2,3], dtype=tf.float32)])
+
+            def __call__(self, x, y):
+                return (tf.einsum('ijkt,ijkt->', x, y),
+                        tf.einsum('ijkt,ikjt->', x, y))
+
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication_rank2(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,5], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return (tf.einsum('ij,jk->ki', x, y),
+                        tf.einsum('ij,jk->ik',x ,y))
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication_rank2_transpose_case(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[5,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return (tf.einsum('ij,kj->ki', x, y),
+                        tf.einsum('ij,kj->ik',x ,y))
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication_rank3(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,8,4], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('ijk,jti->'+''.join(suffix), x, y) for suffix in list(permutations('kit'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication_rank4(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7,9], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[10,4,9,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('ijkt,zitj->'+''.join(suffix), x, y) for suffix in list(permutations('itzk'))])
+        self._test_coreml(model())
+
+
+    def test_einsum_matrix_multiplication_rank5(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7,9,6], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[10,6,4,9,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('ijktp,zpitj->'+''.join(suffix), x, y) for suffix in list(permutations('iptzk'))])
+        self._test_coreml(model())
+
+    def test_einsum_with_dynamic_shape_matrix_multiplication(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None,None,None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None,None,None,None], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('ijktp,zpitj->'+''.join(suffix), x, y) for suffix in list(permutations('iptzk'))])
+        self._test_coreml(model(), input_dic=[('x', [4,3,7,9,6]), ('y', [10,6,4,9,3])])
+
+    def test_einsum_with_dynamic_shape_inner_product(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None,None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None,None,None], dtype=tf.float32)])
+
+            def __call__(self, x, y):
+                return (tf.einsum('ijkt,ijkt->', x, y),
+                        tf.einsum('ijkt,ikjt->', x, y))
+
+        self._test_coreml(model(), input_dic=[('x', [4,2,2,3]), ('y', [4,2,2,3])])
+
+    def test_einsum_with_dynamic_shape_transpose(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None,None,None], dtype=tf.float32)])
+
+            def __call__(self, x):
+                return (tf.einsum('ijkt->jtki', x),
+                       tf.einsum('ijkt->ijkt', x))
+        self._test_coreml(model(), input_dic=[('x', [7,3,5,2])])
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
