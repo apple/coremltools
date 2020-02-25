@@ -736,7 +736,7 @@ class SSAConverter(object):
 
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         if len(input_names) > 2:
-            raise ValueError('current einsum only supports inputs tensors number <= 2.')
+            raise ValueError("currently, 'einsum' operation is only supported when it has less than equal to 2 inputs.")
         equation = node.attr.get('equation')
         if not '->' in equation:
             raise ValueError('current einsum does not support matrix diagonal operations.')
@@ -765,7 +765,7 @@ class SSAConverter(object):
         else:
             a, b = prefix.split(',')
             if not len(a) == len(b):
-                raise ValueError('current einsum only support input matrices with same rank.')
+                raise ValueError("currently 'einsum' operation is only supported when both inputs have the same rank.")
             if suffix == '':
                 # Inner Product
                 axes = get_transpose_map(a, b)
