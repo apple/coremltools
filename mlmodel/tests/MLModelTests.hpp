@@ -158,6 +158,7 @@ MLMODEL_TEST(testInvalidLayerNormalizationNoNormalizedShape)
 MLMODEL_TEST(testInvalidLayerNormalizationNoGammaOrBeta)
 MLMODEL_TEST(testInvalidLayerNormalizationWrongGammaOrBeta)
 MLMODEL_TEST(testInvalidConstantPad)
+MLMODEL_TEST(testInvalidArgsortWrongAxis)
 
 // Updatable model tests
 MLMODEL_TEST(testUpdatableModelSpecVersion)

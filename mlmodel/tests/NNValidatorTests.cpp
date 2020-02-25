@@ -4067,5 +4067,53 @@ int testInvalidLayerNormalizationWrongGammaOrBeta() {
     return 0;
 }
 
+int testInvalidArgsortWrongAxis() {
+
+    // axis can't be negative or larger than equal to input rank
+
+    Specification::Model m;
+
+    auto *in = m.mutable_description()->add_input();
+    in->set_name("input");
+    auto *inShape = in->mutable_type()->mutable_multiarraytype();
+    inShape->add_shape(3);
+    inShape->add_shape(5);
+    inShape->add_shape(2);
+
+    auto *out = m.mutable_description()->add_output();
+    out->set_name("output");
+    auto *outShape = out->mutable_type()->mutable_multiarraytype();
+    outShape->add_shape(3);
+    outShape->add_shape(5);
+    outShape->add_shape(2);
+
+    const auto nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    auto *layers = nn->add_layers();
+    layers->set_name("argsort");
+    layers->add_input("input");
+    layers->add_output("output");
+    layers->add_inputtensor()->set_rank(3);
+
+    auto *params = layers->mutable_argsort();
+
+    // CASE 1: negative axis
+    params->set_axis(-1);
+
+    // axis should be in range [0, rank)
+    Result res = validate<MLModelType_neuralNetwork>(m);
+    ML_ASSERT_BAD(res);
+    ML_ASSERT(res.message().find("axis") != std::string::npos);
+
+    // CASE 2: axis greater than equal to input rank
+    params->set_axis(3);
+    res = validate<MLModelType_neuralNetwork>(m);
+    ML_ASSERT_BAD(res);
+    ML_ASSERT(res.message().find("axis") != std::string::npos);
+
+    return 0;
+
+}
 
 #pragma clang diagnostic pop

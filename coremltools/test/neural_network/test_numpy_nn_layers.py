@@ -4748,6 +4748,34 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self.test_clamped_relu_cpu(cpu_only=False)
 
 
+    def test_argsort_cpu(self, cpu_only = True):
+
+        shapes = [(4,), (3,4), (2,5,6), (3,5,2,4), (4,5,3,6,7)]
+
+        for shape in shapes:
+            for descending in [False, True]:
+                for axis in range(len(shape)):
+
+                    input_features = [('data', datatypes.Array(*shape))]
+                    output_features = [('output', None)]
+                    builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                                  disable_rank5_shape_mapping=True)
+                    builder.add_argsort("argsort", "data", "output",
+                                        axis=axis, descending=descending)
+
+                    x = np.random.rand(*shape)
+                    if descending:
+                        expected = {"output": np.argsort(-x, axis)}
+                    else:
+                        expected = {"output": np.argsort(x, axis)}
+
+                    input = {'data': x}
+                    self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+    def test_argsort_gpu(self):
+        self.test_argsort_cpu(cpu_only=False)
+
+
 if __name__ == '__main__':
     unittest.main()
     # suite = unittest.TestSuite()

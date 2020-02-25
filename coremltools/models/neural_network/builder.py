@@ -7005,3 +7005,39 @@ class NeuralNetworkBuilder(object):
         spec_params.beta = float(beta)
 
         return spec_layer
+
+
+    def add_argsort(self, name, input_name, output_name, axis=0, descending=False):
+        """
+        Add an argsort layer to the model.
+        Refer to the **ArgsortLayerParams** message in the specification (NeuralNetwork.proto) for more details.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        axis: int, optional
+             axis along which to compute the sorting indices
+        descending: bool, optional
+            order of sorting
+
+        See Also
+        --------
+        add_topk
+        """
+
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+
+        spec_layer = self._add_generic_layer(name, [input_name], [output_name])
+        spec_layer.argSort.MergeFromString(b'')
+        spec_params = spec_layer.argSort
+
+        spec_params.axis = int(axis)
+        spec_params.descending = descending
+
+        return spec_layer

@@ -3282,6 +3282,33 @@ Result NeuralNetworkSpecValidator::validateCumSumLayer(const Specification::Neur
     return r;
 }
 
+Result NeuralNetworkSpecValidator::validateArgsortLayer(const Specification::NeuralNetworkLayer& layer) {
+    Result r;
+    if (!(r = validateInputCount(layer, 1, 1)).good()) return r;
+    if (!(r = validateOutputCount(layer, 1, 1)).good()) return r;
+    if (!(r = validateInputOutputRankEquality(layer, "Argsort", blobNameToRank)).good()) return r;
+
+    const auto& params = layer.argsort();
+
+    if (params.axis() < 0) {
+        const std::string err = "Value of 'axis' is negative for layer of type 'ArgSort' and name '" + layer.name() + "', which is not supported. It must be positive.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    if (layer.inputtensor_size() > 0) {
+        const int rank = static_cast<int>(layer.inputtensor(0).rank());
+        if (params.axis() < 0 || params.axis() >= rank) {
+            const std::string err = "Value of 'axis' is " + std::to_string(params.axis()) + \
+                                    ", but it must be in the range [0," \
+                                    + std::to_string(rank) + ") for layer of type 'ArgSort' and name '" + layer.name() + "'.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+    }
+    return r;
+}
+
+
+
 Result NeuralNetworkSpecValidator::validateFailUnknownType(const Specification::NeuralNetworkLayer& layer) {
     return Result(ResultType::INVALID_MODEL_PARAMETERS, "Unsupported layer type (" + layer.GetTypeName() + ") for layer '" + layer.name() + "'.");
 }

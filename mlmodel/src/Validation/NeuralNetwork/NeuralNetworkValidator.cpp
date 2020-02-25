@@ -321,6 +321,8 @@ Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetw
             return validateOneHotLayer(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kCumSum:
             return validateCumSumLayer(layer);
+        case Specification::NeuralNetworkLayer::LayerCase::kArgSort:
+            return validateArgsortLayer(layer);
         default:
             return validateFailUnknownType(layer);
     }

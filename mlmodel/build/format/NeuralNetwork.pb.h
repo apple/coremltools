@@ -99,6 +99,9 @@ extern ArgMaxLayerParamsDefaultTypeInternal _ArgMaxLayerParams_default_instance_
 class ArgMinLayerParams;
 class ArgMinLayerParamsDefaultTypeInternal;
 extern ArgMinLayerParamsDefaultTypeInternal _ArgMinLayerParams_default_instance_;
+class ArgSortLayerParams;
+class ArgSortLayerParamsDefaultTypeInternal;
+extern ArgSortLayerParamsDefaultTypeInternal _ArgSortLayerParams_default_instance_;
 class ArrayFeatureType;
 class ArrayFeatureTypeDefaultTypeInternal;
 extern ArrayFeatureTypeDefaultTypeInternal _ArrayFeatureType_default_instance_;
@@ -2915,6 +2918,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     kOneHot = 1450,
     kCumSum = 1455,
     kClampedReLU = 1460,
+    kArgSort = 1461,
     LAYER_NOT_SET = 0,
   };
 
@@ -4431,6 +4435,15 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   ::CoreML::Specification::ClampedReLU* release_clampedrelu();
   void set_allocated_clampedrelu(::CoreML::Specification::ClampedReLU* clampedrelu);
 
+  // .CoreML.Specification.ArgSortLayerParams argSort = 1461;
+  bool has_argsort() const;
+  void clear_argsort();
+  static const int kArgSortFieldNumber = 1461;
+  const ::CoreML::Specification::ArgSortLayerParams& argsort() const;
+  ::CoreML::Specification::ArgSortLayerParams* mutable_argsort();
+  ::CoreML::Specification::ArgSortLayerParams* release_argsort();
+  void set_allocated_argsort(::CoreML::Specification::ArgSortLayerParams* argsort);
+
   LayerCase layer_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.NeuralNetworkLayer)
  private:
@@ -4587,6 +4600,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   void set_has_onehot();
   void set_has_cumsum();
   void set_has_clampedrelu();
+  void set_has_argsort();
 
   inline bool has_layer() const;
   void clear_layer();
@@ -4754,6 +4768,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     ::CoreML::Specification::OneHotLayerParams* onehot_;
     ::CoreML::Specification::CumSumLayerParams* cumsum_;
     ::CoreML::Specification::ClampedReLU* clampedrelu_;
+    ::CoreML::Specification::ArgSortLayerParams* argsort_;
   } layer_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -20101,6 +20116,91 @@ class ClampedReLU : public ::google::protobuf::MessageLite /* @@protoc_insertion
 };
 // -------------------------------------------------------------------
 
+class ArgSortLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ArgSortLayerParams) */ {
+ public:
+  ArgSortLayerParams();
+  virtual ~ArgSortLayerParams();
+
+  ArgSortLayerParams(const ArgSortLayerParams& from);
+
+  inline ArgSortLayerParams& operator=(const ArgSortLayerParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const ArgSortLayerParams& default_instance();
+
+  static inline const ArgSortLayerParams* internal_default_instance() {
+    return reinterpret_cast<const ArgSortLayerParams*>(
+               &_ArgSortLayerParams_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    188;
+
+  void Swap(ArgSortLayerParams* other);
+
+  // implements Message ----------------------------------------------
+
+  inline ArgSortLayerParams* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  ArgSortLayerParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const ArgSortLayerParams& from);
+  void MergeFrom(const ArgSortLayerParams& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(ArgSortLayerParams* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // int64 axis = 1;
+  void clear_axis();
+  static const int kAxisFieldNumber = 1;
+  ::google::protobuf::int64 axis() const;
+  void set_axis(::google::protobuf::int64 value);
+
+  // bool descending = 2;
+  void clear_descending();
+  static const int kDescendingFieldNumber = 2;
+  bool descending() const;
+  void set_descending(bool value);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.ArgSortLayerParams)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::int64 axis_;
+  bool descending_;
+  mutable int _cached_size_;
+  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class NeuralNetworkClassifier : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.NeuralNetworkClassifier) */ {
  public:
   NeuralNetworkClassifier();
@@ -20126,7 +20226,7 @@ class NeuralNetworkClassifier : public ::google::protobuf::MessageLite /* @@prot
                &_NeuralNetworkClassifier_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    188;
+    189;
 
   void Swap(NeuralNetworkClassifier* other);
 
@@ -20294,7 +20394,7 @@ class OneHotLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_OneHotLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    189;
+    190;
 
   void Swap(OneHotLayerParams* other);
 
@@ -20393,7 +20493,7 @@ class CumSumLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_CumSumLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    190;
+    191;
 
   void Swap(CumSumLayerParams* other);
 
@@ -20485,7 +20585,7 @@ class NeuralNetworkRegressor : public ::google::protobuf::MessageLite /* @@proto
                &_NeuralNetworkRegressor_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    191;
+    192;
 
   void Swap(NeuralNetworkRegressor* other);
 
@@ -20606,7 +20706,7 @@ class NetworkUpdateParameters : public ::google::protobuf::MessageLite /* @@prot
                &_NetworkUpdateParameters_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    192;
+    193;
 
   void Swap(NetworkUpdateParameters* other);
 
@@ -20736,7 +20836,7 @@ class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_LossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    193;
+    194;
 
   void Swap(LossLayer* other);
 
@@ -20854,7 +20954,7 @@ class CategoricalCrossEntropyLossLayer : public ::google::protobuf::MessageLite 
                &_CategoricalCrossEntropyLossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    194;
+    195;
 
   void Swap(CategoricalCrossEntropyLossLayer* other);
 
@@ -20955,7 +21055,7 @@ class MeanSquaredErrorLossLayer : public ::google::protobuf::MessageLite /* @@pr
                &_MeanSquaredErrorLossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    195;
+    196;
 
   void Swap(MeanSquaredErrorLossLayer* other);
 
@@ -21062,7 +21162,7 @@ class Optimizer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_Optimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    196;
+    197;
 
   void Swap(Optimizer* other);
 
@@ -21165,7 +21265,7 @@ class SGDOptimizer : public ::google::protobuf::MessageLite /* @@protoc_insertio
                &_SGDOptimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    197;
+    198;
 
   void Swap(SGDOptimizer* other);
 
@@ -21266,7 +21366,7 @@ class AdamOptimizer : public ::google::protobuf::MessageLite /* @@protoc_inserti
                &_AdamOptimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    198;
+    199;
 
   void Swap(AdamOptimizer* other);
 
@@ -30364,6 +30464,54 @@ inline void NeuralNetworkLayer::set_allocated_clampedrelu(::CoreML::Specificatio
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
 }
 
+// .CoreML.Specification.ArgSortLayerParams argSort = 1461;
+inline bool NeuralNetworkLayer::has_argsort() const {
+  return layer_case() == kArgSort;
+}
+inline void NeuralNetworkLayer::set_has_argsort() {
+  _oneof_case_[0] = kArgSort;
+}
+inline void NeuralNetworkLayer::clear_argsort() {
+  if (has_argsort()) {
+    delete layer_.argsort_;
+    clear_has_layer();
+  }
+}
+inline  const ::CoreML::Specification::ArgSortLayerParams& NeuralNetworkLayer::argsort() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.argSort)
+  return has_argsort()
+      ? *layer_.argsort_
+      : ::CoreML::Specification::ArgSortLayerParams::default_instance();
+}
+inline ::CoreML::Specification::ArgSortLayerParams* NeuralNetworkLayer::mutable_argsort() {
+  if (!has_argsort()) {
+    clear_layer();
+    set_has_argsort();
+    layer_.argsort_ = new ::CoreML::Specification::ArgSortLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.argSort)
+  return layer_.argsort_;
+}
+inline ::CoreML::Specification::ArgSortLayerParams* NeuralNetworkLayer::release_argsort() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.argSort)
+  if (has_argsort()) {
+    clear_has_layer();
+    ::CoreML::Specification::ArgSortLayerParams* temp = layer_.argsort_;
+    layer_.argsort_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void NeuralNetworkLayer::set_allocated_argsort(::CoreML::Specification::ArgSortLayerParams* argsort) {
+  clear_layer();
+  if (argsort) {
+    set_has_argsort();
+    layer_.argsort_ = argsort;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.argSort)
+}
+
 inline bool NeuralNetworkLayer::has_layer() const {
   return layer_case() != LAYER_NOT_SET;
 }
@@ -39141,6 +39289,38 @@ inline void ClampedReLU::set_beta(float value) {
 
 // -------------------------------------------------------------------
 
+// ArgSortLayerParams
+
+// int64 axis = 1;
+inline void ArgSortLayerParams::clear_axis() {
+  axis_ = GOOGLE_LONGLONG(0);
+}
+inline ::google::protobuf::int64 ArgSortLayerParams::axis() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ArgSortLayerParams.axis)
+  return axis_;
+}
+inline void ArgSortLayerParams::set_axis(::google::protobuf::int64 value) {
+  
+  axis_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ArgSortLayerParams.axis)
+}
+
+// bool descending = 2;
+inline void ArgSortLayerParams::clear_descending() {
+  descending_ = false;
+}
+inline bool ArgSortLayerParams::descending() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ArgSortLayerParams.descending)
+  return descending_;
+}
+inline void ArgSortLayerParams::set_descending(bool value) {
+  
+  descending_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ArgSortLayerParams.descending)
+}
+
+// -------------------------------------------------------------------
+
 // NeuralNetworkClassifier
 
 // repeated .CoreML.Specification.NeuralNetworkLayer layers = 1;
@@ -40667,6 +40847,8 @@ inline void AdamOptimizer::set_allocated_eps(::CoreML::Specification::DoublePara
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

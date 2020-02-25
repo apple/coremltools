@@ -693,6 +693,7 @@ message NeuralNetworkLayer {
         OneHotLayerParams oneHot = 1450;
         CumSumLayerParams cumSum = 1455;
         ClampedReLU clampedReLU = 1460;
+        ArgSortLayerParams argSort = 1461;
 
     }
 
@@ -5698,6 +5699,39 @@ message ClampedReLU {
 
     float alpha = 1;
     float beta = 2;
+
+}
+
+/**
+* A layer that returns the indices that would sort the input tensor, along a specified axis.
+*
+* Requires 1 input and produces 1 output.
+*
+* Output has the same rank and shape as the input.
+*
+* Value of "axis" must be positive and less than the rank of the input.
+*
+* e.g.:
+*
+* input shape = (5,)
+* axis = 0
+* input values = [3.1, 5.4, 32.9, 3.2, 77.0]
+* output shape = (5,)
+* output values = [0, 3, 1, 2, 4], descending = False
+* output values = [4, 2, 1, 3, 0], descending = True
+*
+* input shape = (2,3)
+* axis = 1
+* input values = [[3, 5, 32], [3, 77, 6]]
+* output shape = (2,3)
+* output values = [[0, 1, 2], [0, 2, 1]], descending = False
+* output values = [[2, 1, 0], [1, 2, 0]], descending = True
+*
+*/
+message ArgSortLayerParams {
+
+    int64 axis = 1; /// must be between [0, input_rank - 1]
+    bool descending = 2;
 
 }
 

@@ -745,6 +745,7 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
                 case Specification::NeuralNetworkLayer::kCumSum:
                 case Specification::NeuralNetworkLayer::kOneHot:
                 case Specification::NeuralNetworkLayer::kClampedReLU:
+                case Specification::NeuralNetworkLayer::kArgSort:
                     return true;
                 default:
                     continue;
