@@ -764,8 +764,7 @@ class SSAConverter(object):
 
         else:
             a, b = prefix.split(',')
-            if not len(a) == len(b):
-                raise ValueError("currently 'einsum' operation is only supported when both inputs have the same rank.")
+
             if suffix == '':
                 # Inner Product
                 axes = get_transpose_map(a, b)
@@ -791,8 +790,8 @@ class SSAConverter(object):
                         output_name = node.name,
                         reduce_all = True)
                 shapes.propagate_single_layer(layer, self.tensor_shapes)
-            elif len(suffix) == len(a):
-                # matrix or batch matric multiplication
+            else:
+                # matrix or batch matrix multiplication
                 # Find the dimension not in suffix but in both prefices,
                 # that's the dimension is reduced when matrix multiplication
                 prefix_set = set(a).union(set(b))
@@ -806,11 +805,22 @@ class SSAConverter(object):
                 dim_a = [dim for dim in a if dim not in b][0]
                 dim_b = [dim for dim in b if dim not in a][0]
 
-                # Re-order a and b
-                a_sorted = sorted([dim for dim in a if dim not in [dim_a, dim_reduce]]) + [dim_a, dim_reduce]
-                b_sorted = sorted([dim for dim in b if dim not in [dim_b, dim_reduce]]) + [dim_reduce, dim_b]
-                assert(a_sorted[:-2] == b_sorted[:-2])
-                assert(a_sorted[-1] == b_sorted[-2])
+                a_sorted = []
+                b_sorted = []
+                if len(suffix) == len(a) and len(suffix) == len(b):
+                    #Do the batch mat mul
+                    # Re-order a and b
+                    a_sorted = sorted([dim for dim in a if dim not in [dim_a, dim_reduce]]) + [dim_a, dim_reduce]
+                    b_sorted = sorted([dim for dim in b if dim not in [dim_b, dim_reduce]]) + [dim_reduce, dim_b]
+                    assert(a_sorted[-1] == b_sorted[-2])
+                    assert(a_sorted[:-2] == b_sorted[:-2])
+
+                else:
+                    a_sorted = sorted([dim for dim in a if dim != dim_reduce]) + [dim_reduce]
+                    b_sorted = [dim_reduce] + sorted([dim for dim in b if dim != dim_reduce])
+                    assert(a_sorted[-1] == b_sorted[0])
+                    if not len(a_sorted)+len(b_sorted)-2 == len(suffix):
+                        raise ValueError('equation pattern not supported currently.')
 
                 # Transpose inputs
                 transpose_name_a = node.name + '_transpose_input_1'
@@ -831,26 +841,93 @@ class SSAConverter(object):
                         output_name = transpose_name_b)
                 shapes.propagate_single_layer(layer, self.tensor_shapes)
 
-                # Do the batch mat mul
-                batch_mat_mul_name = node.name + '_batch_mat_mul'
-                layer = builder.add_batched_mat_mul(
-                        name = batch_mat_mul_name,
-                        input_names = [transpose_name_a, transpose_name_b],
-                        output_name = batch_mat_mul_name)
-                shapes.propagate_single_layer(layer, self.tensor_shapes)
+                if len(suffix) == len(a) and len(suffix) == len(b):
 
-                # Transpose the output back
-                final_transpose_name = node.name + '_final_transpose'
-                mat_mul_result_shape = a_sorted[:-2] + [dim_a, dim_b]
-                axes = get_transpose_map(mat_mul_result_shape, suffix)
-                layer = builder.add_transpose(
-                        name = final_transpose_name,
-                        axes = axes,
-                        input_name = batch_mat_mul_name,
-                        output_name = node.name)
-                shapes.propagate_single_layer(layer, self.tensor_shapes)
-            else:
-                raise ValueError('equation pattern not suported currently.')
+                    batch_mat_mul_name = node.name + '_batch_mat_mul'
+                    layer = builder.add_batched_mat_mul(
+                            name = batch_mat_mul_name,
+                            input_names = [transpose_name_a, transpose_name_b],
+                            output_name = batch_mat_mul_name)
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+                    # Transpose the output back
+                    final_transpose_name = node.name + '_final_transpose'
+                    mat_mul_result_shape = a_sorted[:-2] + [dim_a, dim_b]
+                    axes = get_transpose_map(mat_mul_result_shape, suffix)
+                    layer = builder.add_transpose(
+                            name = final_transpose_name,
+                            axes = axes,
+                            input_name = batch_mat_mul_name,
+                            output_name = node.name)
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
+                else:
+                    a_shape = self._get_tensor_shape_from_type(input_types[0])
+                    b_shape = self._get_tensor_shape_from_type(input_types[1])
+                    a_map = dict(zip(a, a_shape))
+                    b_map = dict(zip(b, b_shape))
+
+                    # Compute reshape output shape
+                    a_output_shape = []
+                    b_output_shape = []
+                    if len(a_sorted) > 1:
+                        product = 1
+                        for num in a_sorted[:-1]:
+                            product *= a_map[num]
+                        a_output_shape = [product, a_map[dim_reduce]]
+                    else:
+                        a_output_shape = [product]
+
+                    if len(b_sorted) > 1:
+                        product = 1
+                        for num in b_sorted[1:]:
+                            product *= b_map[num]
+                        b_output_shape = [b_map[dim_reduce], product]
+
+                    # Reshape inputs
+                    reshape_name_a = node.name + '_reshape_input_1'
+                    layer = builder.add_reshape_static(
+                            name = reshape_name_a,
+                            input_name = transpose_name_a,
+                            output_name = reshape_name_a,
+                            output_shape = tuple(a_output_shape))
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+                    reshape_name_b = node.name + '_reshape_input_2'
+                    layer = builder.add_reshape_static(
+                            name = reshape_name_b,
+                            input_name = transpose_name_b,
+                            output_name = reshape_name_b,
+                            output_shape = tuple(b_output_shape))
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+                    # Matrix multiplication
+                    mat_mul_name = node.name + '_reshape_mat_mul'
+                    layer = builder.add_batched_mat_mul(
+                            name = mat_mul_name,
+                            input_names = [reshape_name_a, reshape_name_b],
+                            output_name = mat_mul_name)
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+                    # Reshape back
+                    reshape_back_name = node.name + '_reshape_back'
+                    output_shape = [a_map[x] for x in a_sorted[:-1]] + [b_map[x] for x in b_sorted[1:]]
+                    layer = builder.add_reshape_static(
+                            name = reshape_back_name,
+                            input_name = mat_mul_name,
+                            output_name = reshape_back_name,
+                            output_shape = tuple(output_shape))
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
+
+                    #Final transpose
+                    transpose_back_name = node.name + '_transpose_back'
+                    transpose_result_shape = a_sorted[:-1] + b_sorted[1:]
+                    axes = get_transpose_map(transpose_result_shape, suffix)
+                    layer = builder.add_transpose(
+                            name = transpose_back_name,
+                            axes = axes,
+                            input_name = reshape_back_name,
+                            output_name = node.name)
+                    shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_transpose(self, node):
         """ Convert a transpose op.

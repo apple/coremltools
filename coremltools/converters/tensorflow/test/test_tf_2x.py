@@ -208,6 +208,47 @@ class TestEinsum(TestSingleOp):
                 return tuple([tf.einsum('ijktp,zpitj->'+''.join(suffix), x, y) for suffix in list(permutations('iptzk'))])
         self._test_coreml(model())
 
+    def test_einsum_high_rank_matrix_multiplication_tasecase_1(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[9,2,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('bia,cdi->'+''.join(suffix), x, y) for suffix in list(permutations('abcd'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_high_rank_matrix_multiplication_tasecase_2(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,7,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[9,2,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('bai,cdi->'+''.join(suffix), x, y) for suffix in list(permutations('abcd'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_high_rank_matrix_multiplication_tasecase_3(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7,5], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[9,2,3,], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('bitk,cdi->'+''.join(suffix), x, y) for suffix in list(permutations('btkcd'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_high_rank_matrix_multiplication_tasecase_3(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7,5], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('bitk,di->'+''.join(suffix), x, y) for suffix in list(permutations('btkd'))])
+
+        self._test_coreml(model())
+
+
     def test_einsum_with_dynamic_shape_matrix_multiplication(self):
 
         class model(tf.Module):
