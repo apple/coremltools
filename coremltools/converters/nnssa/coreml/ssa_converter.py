@@ -794,7 +794,7 @@ class SSAConverter(object):
                 prefix_set = set(a).union(set(b))
                 dims_reduce = [dim for dim in prefix_set if dim not in suffix]
                 if len(dims_reduce) > 1:
-                    raise ValueError('equation pattern not supported currently.')
+                    raise ValueError('tensor contraction is not supported currently.')
                 else:
                     # Find the dimension not in suffix but in both prefices,
                     # that's the dimension is reduced in matrix multiplication
