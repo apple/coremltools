@@ -59,11 +59,11 @@ namespace NNBuffer {
         }
 
         // Get offset
-        uint64_t offset = bufferStream.tellp();
+        auto offset = bufferStream.tellp();
 
         // Write length, size of data type and buffer
-        uint64_t lenOfBuffer = buffer.size();
-        uint64_t sizeOfBlock = sizeof(T);
+        auto lenOfBuffer = buffer.size();
+        auto sizeOfBlock = sizeof(T);
 
         bufferStream.write((char*)&lenOfBuffer, sizeof(lenOfBuffer));
         if (bufferStream.fail()) {
@@ -75,12 +75,12 @@ namespace NNBuffer {
             throw std::runtime_error(std::string("Could not write size of data block: ") + std::strerror(errno) + '.');
         }
 
-        bufferStream.write((char*)&buffer[0], sizeOfBlock * lenOfBuffer);
+        bufferStream.write((char*)&buffer[0], static_cast<std::streamsize>(sizeOfBlock * lenOfBuffer));
         if (bufferStream.fail()) {
             throw std::runtime_error(std::string("Could not write data to data file: ") + std::strerror(errno) + '.');
         }
 
-        return offset;
+        return static_cast<uint64_t>(offset);
     }
 
     /*
@@ -89,10 +89,10 @@ namespace NNBuffer {
      */
     template<class T>
     void NeuralNetworkBuffer::getBuffer(const uint64_t offset, std::vector<T>& buffer) {
-        uint64_t lenOfBuffer = 0;
-        uint64_t sizeOfBlock = 0;
+        auto lenOfBuffer = 0;
+        auto sizeOfBlock = 0;
 
-        bufferStream.seekg(offset, std::ios::beg);
+        bufferStream.seekg(static_cast<std::istream::off_type>(offset), std::ios::beg);
         if (!bufferStream.good()) {
             throw std::runtime_error(std::string("Could not seek to beginning of data file: ") + std::strerror(errno) + '.');
         }
@@ -110,10 +110,10 @@ namespace NNBuffer {
 
         // TODO: assert if sizeOfBlock != sizeof(T) or resize accordingly.
         // Resize buffer to fit buffer
-        buffer.resize(lenOfBuffer);
+        buffer.resize(static_cast<typename std::vector<T>::size_type>(lenOfBuffer));
 
         // Read buffer
-        bufferStream.read((char*)&buffer[0], sizeOfBlock * lenOfBuffer);
+        bufferStream.read((char*)&buffer[0], static_cast<std::streamsize>(sizeOfBlock * lenOfBuffer));
         if (bufferStream.fail()) {
             throw std::runtime_error(std::string("Could not read data from data file: ") + std::strerror(errno) + '.');
         }
