@@ -980,25 +980,41 @@ class pad(Operation):
     def __init__(self, **kwargs):
         super(pad, self).__init__(**kwargs)
 
-    def type_inference(self):
-        inshape = self.x.shape
-        pad = self.pad.val
-        if pad.shape[0] != len(inshape) or pad.shape[1] != 2:
-            raise ValueError("pad must be of shape [rank(x), 2]")
-        ret_shape = list(inshape)
-        for i in range(len(inshape)):
-            ret_shape[i] = ret_shape[i] + pad[i][0] + pad[i][1]
+        if self.pad.shape[0] % 2 != 0:
+            raise ValueError("Padding must be even! Provided {}".format(self.pad.shape[0]))
+        
+        mode = self.mode.val
+        if mode in {"reflect", "replicate"}:
+            # Reflect and Replicate mode only support padding to last two dimensions
+            if self.pad.shape[0] != 4:
+                msg = "For {} mode, padding is only supported on last two dimension, provided" + \
+                      " {}".format(mode, self.pad.val)
+                raise ValueError("Incorrect Pad configuration! {}".format(msg))
 
+    def type_inference(self):
+        in_shape = self.x.shape
+        pad = self.pad.val
+        ret_shape = list(in_shape)
+        pad_index = 0
+        for i in range(len(ret_shape) - pad.shape[0] // 2, len(ret_shape)):
+            ret_shape[i] = in_shape[i] + pad[2*pad_index] + pad[2*pad_index + 1]
+            pad_index += 1
         return builtins.tensor(self.x.dtype, ret_shape)
 
     def eval(self):
         # NumPy `edge` mode is equivalent to `replicate` mode of PyTorch and CoreML
         mode = 'edge' if self.mode.val == 'replicate' else self.mode.val
+        pad_val = self.pad.val
+        if len(self.x.val.shape) > (pad_val.shape[0] // 2):
+            updated_pad = np.zeros(len(self.x.val.shape)*2)
+            updated_pad[-pad_val.shape[0]:] = pad_val
+            pad_val = updated_pad
+        pad_val = pad_val.reshape(-1, 2).astype(np.int32)
         if mode == 'constant':
-            return np.pad(self.x.val, self.pad.val, mode,
+            return np.pad(self.x.val, pad_val, mode,
                           constant_values=self.constant_val.val)
         # NumPy does not support non-constant mode and constant_values argument
-        return np.pad(self.x.val, self.pad.val, mode)
+        return np.pad(self.x.val, pad_val, mode)
 
 
 # rdar://58622145

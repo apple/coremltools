@@ -417,7 +417,7 @@ Result NeuralNetworkSpecValidator::validatePaddingLayer(const Specification::Neu
     if (ndArrayInterpretation) {
         r = validateInputOutputRankEquality(layer, "Padding", blobNameToRank);
         if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Padding", 3, -1, blobNameToRank);
+        r = validateRankCount(layer, "Padding", 2, -1, blobNameToRank);
         if (!r.good()) {return r;}
     }
 

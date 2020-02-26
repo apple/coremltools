@@ -1769,13 +1769,14 @@ message PoolingLayerParams {
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     A blob with rank at least 3.
- *     e.g.: blob with shape ``[C, H_in, W_in]``.
- *     For ranks greater than 3, the leading dimensions, starting from 0 to -4 (inclusive), are all treated as batch.
+ *     A blob with rank at least 2.
+ *     e.g.: blob with shape ``[H_in, W_in]``.
+ *     For ranks greater than 2, the leading dimensions, starting from 0 to -4 (inclusive), are all treated as batch
+ *     i.e. Padding is applied on last two dimensions.
  *
  * Output
  *     Same rank as the input.
- *     e.g.: blob with shape ``[C, H_out, W_out]``.
+ *     e.g.: blob with shape ``[H_out, W_out]``.
  *
  * Output dimensions are calculated as follows:
  *

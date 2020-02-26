@@ -11,5 +11,5 @@ scikit-learn==0.19.2
 scipy
 sympy
 tensorflow==1.14.0
-torch
+torch==1.4.0
 xgboost

@@ -1429,3 +1429,40 @@ def squeeze(const_context, builder, op):
             squeeze_all=True if op.axes is None else False,
             input_name=op.x.name,
             output_name=op.name)
+
+@register_v2_op
+def pad(const_context, builder, op):
+    pad   = op.pad.val
+    mode  = op.mode.val
+    constant_val = op.constant_val.val
+
+    nnv1_mode_mapping = {"reflect" : "reflection", "replicate" : "replication"}
+    mode = nnv1_mode_mapping.get(mode, mode)
+    # If all pad values are zeros for for first rank(x) - 2 dimensions
+    # Use generic padding instead.
+    if op.x.rank > 1 and np.all(pad[:-4] == 0):
+        # TODO: <rdar://problem/59771971> [NNv2] Padding layer handling NHWC input
+        builder.add_padding(
+            name=op.x.name,
+            top=pad[-4],
+            bottom=pad[-3],
+            left=pad[-2],
+            right=pad[-1],
+            value=constant_val,
+            input_name=op.x.name,
+            output_name=op.name,
+            padding_type=mode
+        )
+    elif mode == "constant":
+        builder.add_constant_pad(
+            name=op.x.name,
+            input_names=[op.x.name],
+            output_name=op.name,
+            value=constant_val,
+            pad_to_given_output_size_mode=False,
+            pad_amounts=pad
+        )
+    else:
+        message = "Expecting either rank 4 with padding last two dimensions (H and W) or general padding with `constant` mode " + \
+                   "Provided rank {} input with padding {} and mode {}".format(op.x.rank, pad, mode)
+        raise ValueError("Unsupported configuration for Pad layer! {}".format(message))

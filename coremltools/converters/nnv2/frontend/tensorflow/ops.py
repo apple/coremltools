@@ -560,11 +560,16 @@ def MirrorPad(context, node):
     constant_val = node.attr.get('constant_val', 0.0)
     in_shape = x.sym_type.get_shape()
     in_rank = len(in_shape)
-    # Padding is supposed to be on last two dimensions
-    if len(pad.shape) != 2:
-        raise ValueError("Padding must be of shape (input_rank x 2), but provided {}".format(pad.shape))
     # Reflect mode requires padding to be provided for all dimensions
-    if pad.shape[0] == 2 and in_rank <= 5 and mode == 'reflect':
+    if in_rank <= 5 and mode == 'reflect':
+        pad = pad.val.reshape(-1)
+        # Reflect mode is supported only on last two dimension
+        # If possible, pass padding of size 4
+        if pad.shape[0] > 4:
+            if np.all(pad[:-4] == 0):
+                pad = pad[-4:]
+            else:
+                raise ValueError("Padding must be applied for last 2 dimensions in reflect mode! Applied for {}".format(pad.shape[0]))
         x = cb.pad(x=x, pad=pad, name=node.name, mode=mode, constant_val=constant_val)
     else:
         raise ValueError('Unsupported Pad configuration!')
@@ -581,12 +586,8 @@ def Pad(context, node):
     constant_val = node.attr.get('constant_val', 0.0)
     in_shape = x.sym_type.get_shape()
     in_rank = len(in_shape)
-    # Padding is supposed to be on last two dimensions
-    if len(pad.shape) != 2:
-        raise ValueError("Padding must be of shape (input_rank x 2), but provided {}".format(pad.shape))
-    # If padding is two dimensions, dispatch to Pad layer
-    # otherwise, constant pad
-    if (pad.shape[0] == 2 and in_rank <= 5) or mode == 'constant':
+    if in_rank <= 5 or mode == 'constant':
+        pad = pad.val.reshape(-1)
         x = cb.pad(x=x, pad=pad, name=node.name, mode=mode, constant_val=constant_val)
     else:
         raise ValueError('Unsupported Pad configuration!')

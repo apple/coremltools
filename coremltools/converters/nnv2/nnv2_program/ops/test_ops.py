@@ -2946,13 +2946,13 @@ class TestLSTM:
 class TestPad():
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
-                [True, False],
-                ['nnv2'],
+                [True , False],
+                ['nnv1', 'nnv2'],
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         def test_constant_mode():
             t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-            pad = np.array([[1, 1], [2, 2]], dtype=np.int32)
+            pad = np.array([1, 1, 2, 2], dtype=np.int32)
             input_placeholders = {"x": cb.placeholder(shape=t.shape)}
             input_values = {"x": t}
 
@@ -2972,7 +2972,7 @@ class TestPad():
 
         def test_constant_mode_constant_val():
             t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-            pad = np.array([[1, 1], [2, 2]], dtype=np.int32)
+            pad = np.array([1, 1, 2, 2], dtype=np.int32)
             input_placeholders = {"x": cb.placeholder(shape=t.shape)}
             input_values = {"x": t}
 
@@ -2992,7 +2992,7 @@ class TestPad():
 
         def test_reflect_mode():
             t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-            pad = np.array([[1, 1], [2, 2]], dtype=np.int32)
+            pad = np.array([1, 1, 2, 2], dtype=np.int32)
             input_placeholders = {"x": cb.placeholder(shape=t.shape)}
             input_values = {"x": t}
 
@@ -3012,7 +3012,7 @@ class TestPad():
 
         def test_replicate_mode():
             t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-            pad = np.array([[1, 1], [2, 2]], dtype=np.int32)
+            pad = np.array([1, 1, 2, 2], dtype=np.int32)
             input_placeholders = {"x": cb.placeholder(shape=t.shape)}
             input_values = {"x": t}
 
@@ -3037,7 +3037,7 @@ class TestPad():
             input_values = {"x": t}
 
             def build(x):
-                return cb.pad(x=x, pad=pad, mode="constant", constant_val=0.0)
+                return cb.pad(x=x, pad=pad.reshape(-1), mode="constant", constant_val=0.0)
             expected_output_types = (4, 6, 5, builtins.fp32)
             expected_outputs = np.pad(t, pad, mode="constant")
 
@@ -3056,7 +3056,7 @@ class TestPad():
     def test_builder_eval(self):
         def test_constant_mode():
             x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-            v = cb.pad(x=x_val, pad=np.array([[1, 1], [2, 2]], dtype=np.int32), mode="constant", constant_val=0.0)
+            v = cb.pad(x=x_val, pad=np.array([1, 1, 2, 2], dtype=np.int32), mode="constant", constant_val=0.0)
             expected_outputs = np.array([[0., 0., 0., 0., 0., 0., 0.],
                                          [0., 0., 1., 2., 3., 0., 0.],
                                          [0., 0., 4., 5., 6., 0., 0.],
@@ -3066,7 +3066,7 @@ class TestPad():
 
         def test_reflect_mode():
             x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-            v = cb.pad(x=x_val, pad=np.array([[1, 1], [2, 2]], dtype=np.int32), mode="reflect")
+            v = cb.pad(x=x_val, pad=np.array([1, 1, 2, 2], dtype=np.int32), mode="reflect")
             expected_outputs = np.array([[6., 5., 4., 5., 6., 5., 4.],
                                          [3., 2., 1., 2., 3., 2., 1.],
                                          [6., 5., 4., 5., 6., 5., 4.],
@@ -3075,8 +3075,8 @@ class TestPad():
             assert is_close(expected_outputs, v.val)
 
         def test_replicate_mode():
-            x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
-            v = cb.pad(x=x_val, pad=np.array([[1, 1], [2, 2]], dtype=np.int32), mode="replicate")
+            x_val = np.array([[[1, 2, 3],[4, 5, 6]]], dtype=np.float32)
+            v = cb.pad(x=x_val, pad=np.array([1, 1, 2, 2], dtype=np.int32), mode="replicate")
             expected_outputs = np.array([[1., 1., 1., 2., 3., 3., 3.],
                                          [1., 1., 1., 2., 3., 3., 3.],
                                          [4., 4., 4., 5., 6., 6., 6.],
@@ -3087,7 +3087,7 @@ class TestPad():
         def test_constant_general():
             x_val = np.arange(12, dtype=np.float32).reshape([2, 2, 3])
             pad = np.array([[1, 1], [2, 2], [1, 1]], dtype=np.int32)
-            v = cb.pad(x=x_val, pad=pad, mode="constant", constant_val=0.0)
+            v = cb.pad(x=x_val, pad=pad.reshape(-1), mode="constant", constant_val=0.0)
             expected_outputs = np.pad(x_val, pad, mode="constant")
             assert is_close(expected_outputs, v.val)
 
@@ -3098,50 +3098,35 @@ class TestPad():
         test_constant_general()
 
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
                              itertools.product(
                                  [True, False],
-                                 ['nnv2'],
-                                 [rank for rank in range(2, 3)]
+                                 ['nnv2', 'nnv1'],
+                                 [2, 3, 4],
+                                 # rdar://59854962 ([Pad Precision issue] Rank 5 Pad precision dropped on GPU comparing to CPU) 
+                                 ['reflect', 'constant']
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank):
-        def test_constant_mode():
-            input_shape = np.random.randint(low=2, high=10, size=rank)
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                paddings = tf.constant([[1, 1,], [2, 2]])
-                res = tf.pad(x, paddings=paddings)
-                run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=0.2, rand_max=1000)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
+    def test_tf(self, use_cpu_only, backend, rank, mode):
+        input_shape = np.random.randint(low=2, high=10, size=rank)
+        min_input_dim_size = input_shape.min()
+        padding_val = np.random.randint(low=0, high=min_input_dim_size, size=(rank, 2), dtype=np.int32)
 
-        def test_reflect_mode():
-            input_shape = np.random.randint(low=3, high=10, size=rank)
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                paddings = tf.constant([[1, 1], [2, 2]])
-                res = tf.pad(x, paddings=paddings, mode="REFLECT")
-                run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=0.2, rand_max=1000)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
+        # Only constant mode supports padding across all dimensions
+        # All other padding modes are only applied on last two dimensions.
+        if mode != "constant":
+            padding_val[:-2] = 0
 
-        def test_constant_general():
-            input_shape = np.random.randint(low=2, high=10, size=rank)
-            padding_val = np.random.randint(low=0, high=rank, size=(rank, 2), dtype=np.int32)
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                paddings = tf.constant(padding_val)
-                res = tf.pad(x, paddings=paddings, mode="CONSTANT")
-                run_compare_tf(graph, {x: _random_gen(input_shape, rand_min=0.2, rand_max=1000)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
-        # Test different modes
-        test_constant_mode()
-        test_reflect_mode()
-        test_constant_general()
-        # Tensorflow does not support replicate mode, hence skipping replicate test on tf
+        tf_mode = mode.upper()
+        tf.reset_default_graph()
+        input = _random_gen(input_shape, rand_min=0.2, rand_max=1000)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=input_shape)
+            paddings = tf.constant(padding_val)
+            res = tf.pad(x, paddings=paddings, mode=tf_mode)
+            run_compare_tf(graph, {x: input},
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
 
 class TestSpaceToDepth:
 
@@ -4550,7 +4535,6 @@ class TestGatherNd:
             return cb.gather_nd(x=x, indices=indices),
 
         expected_output_types = (2, builtins.fp32)
-
         expected_outputs = np.array([4, 3], dtype=np.float32)
 
         run_compare_builder(build, input_placeholders, input_values,
