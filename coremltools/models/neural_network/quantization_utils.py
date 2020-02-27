@@ -58,7 +58,7 @@ class QuantizedLayerSelector(object):
     """
     def __init__(self):
         self.quantizable_layer_types = {
-            'convolution', 'innerProduct', 'embedding',
+            'convolution', 'innerProduct', 'embedding', 'embeddingND',
             'batchnorm', 'scale', 'bias', 'loadConstant',
             'simpleRecurrent', 'gru', 'uniDirectionalLSTM',
             'biDirectionalLSTM', 'batchedMatmul', 'depthwiseConv',
@@ -640,6 +640,15 @@ def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
             _quantize_wp_field(layer.embedding.weights, nbits, qm, shape=(output_channels, input_channels), **kwargs)
             if layer.embedding.hasBias:
                 _quantize_wp_field(layer.embedding.bias, nbits, qm, shape=(output_channels,), **kwargs)
+
+
+        # Embedding ND layer
+        elif layer_type == 'embeddingND':
+            output_channels = layer.embeddingND.embeddingSize
+            input_channels = layer.embeddingND.vocabSize
+            _quantize_wp_field(layer.embeddingND.weights, nbits, qm, shape=(output_channels, input_channels), **kwargs)
+            if layer.embeddingND.hasBias:
+                _quantize_wp_field(layer.embeddingND.bias, nbits, qm, shape=(output_channels,), **kwargs)
 
         # Scale layer
         elif layer_type == 'scale':
