@@ -81,7 +81,7 @@ class Array(_DatatypeBase):
         >>> multi_arr = coremltools.models.datatypes.Array(5, 2, 10)
         """
         assert len(dimensions) >= 1
-        assert all(isinstance(d, _integer_types + (_np.int64,)) for d in dimensions), \
+        assert all(isinstance(d, _integer_types + (_np.int64, _np.int32)) for d in dimensions), \
             "Dimensions must be ints, not {}".format(str(dimensions))
         self.dimensions = dimensions
 
