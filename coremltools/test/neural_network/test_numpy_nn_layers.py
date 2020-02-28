@@ -2113,7 +2113,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
     def test_linear_activation_different_ranks_cpu(self, cpu_only=True):
         for input_dim in [(10, 15), (10, 15, 2, 3),
-                          (10, 2, 4, 15, 1, 4), (6,)]:
+                          (10, 2, 4, 15, 1), (6,)]:
             input_features = [('data', datatypes.Array(*input_dim))]
             output_features = [('output', datatypes.Array(*input_dim))]
 
@@ -4552,7 +4552,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
         input_features = [('matrix', datatypes.Array(*(2, 2))),
                           ('starting_vector', datatypes.Array(*(2,)))]
 
-        output_features = [('maximum_eigen_value', datatypes.Array(*(1,))),
+        output_features = [('maximum_eigen_value', datatypes.Array(*(1,1))),
                            ('eigen_vector', None),
                            ('iteration_count', datatypes.Array(*(1,)))]
 
@@ -4616,7 +4616,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
         e, v = LA.eig(A)
         idx = np.argmax(abs(e))
         input = {'starting_vector': starting_vector, 'matrix': A.astype(np.float)}
-        expected = {'maximum_eigen_value': e[idx]}
+        expected = {'maximum_eigen_value': np.array([[e[idx]]])}
         self._test_model(spec, input, expected, useCPUOnly=True)
 
         # try on 2x2 matrix
@@ -4628,7 +4628,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
         idx = np.argmax(abs(e))
 
         input = {'starting_vector': starting_vector, 'matrix': A.astype(np.float)}
-        expected = {'maximum_eigen_value': e[idx]}
+        expected = {'maximum_eigen_value': np.array([[e[idx]]])}
         self._test_model(spec, input, expected, useCPUOnly=True)
 
 @unittest.skipIf(macos_version() < LAYERS_10_16_MACOS_VERSION,
