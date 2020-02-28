@@ -8,6 +8,7 @@ import numpy as np
 import sympy as sm
 
 from coremltools.converters.nnv2.builtin_types import builtins
+from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic
 from .var import Var, TupleVar, InternalVar
 
 # BLOCK_STACK[-1] is the current block
@@ -26,6 +27,63 @@ def curr_block():
 def is_internal_input(arg_name):
     return arg_name[0] == "_"
 
+VALUE = 1
+SYMBOL = 2
+NONE = 4
+ALL = 7
+def precondition(allow=ALL):
+    """
+    A helper decorator for value_inference method.
+    Decorate value_inference with parameter VALUE/SYMBOL/NONE or ALL.
+    For VALUE/SYMBOL/NONE use logical or ( | ) for multiple allowance. 
+    Note that:
+        1. ALL == VALUE | SYMBOL | NONE
+        2. Chosen flag (some or all VALUE/SYMBOL/NONE) must be satisfied
+           by EVERY INPUTS for the precondition to be satisfied.
+    
+    The meaning for each flag is:
+    VALUE: value that can be materialized during compile time
+    SYMBOL: value that cannot be materialized by exist as a symbol value
+    NONE: a None value
+
+    Usage:
+    @precondition(allow=VALUE|SYMBOL)
+    def value_inference(self):
+        '''some value_inference implementation'''
+    """
+    ALLOW_VALUE = allow & VALUE
+    ALLOW_SYMBOL = allow & SYMBOL
+    ALLOW_NONE = allow & NONE
+    def decorator(func):
+        def wrapper(self):
+            HAS_VALUE = False
+            HAS_SYMBOL = False
+            HAS_NONE = False
+            for in_name, in_type in self._input_types.items():
+                if in_type.optional:
+                    # Optional inputs are not required to invoke value_inference()
+                    continue
+
+                if self._input_vars[in_name].val is None:
+                    HAS_NONE = True
+                elif any_symbolic(self._input_vars[in_name].val):
+                    HAS_SYMBOL = True
+                else:
+                    HAS_VALUE = True
+            if HAS_VALUE and not ALLOW_VALUE:
+                msg = "Implementation of value_inference() for op {} doesn't support input with VALUE"
+                raise NotImplementedError(msg.format(self.op_type))
+            elif HAS_SYMBOL and not ALLOW_SYMBOL:
+                msg = "Implementation of value_inference() for op {} doesn't support input with SYMBOL"
+                raise NotImplementedError(msg.format(self.op_type))
+            elif HAS_NONE and not ALLOW_NONE:
+                msg = "Implementation of value_inference() for op {} doesn't support input with NONE"
+                raise NotImplementedError(msg.format(self.op_type))
+            else:
+                return func(self)
+
+        return wrapper
+    return decorator
 
 class Operation(object):
     """
@@ -46,6 +104,7 @@ class Operation(object):
     outputs [_output_vars] (list of Var):
         List of output var based on type inference. Read-only
     """
+
     def __init__(self, **kwargs):
         """
         kwargs:
@@ -121,23 +180,20 @@ class Operation(object):
         """
         # Evaluation is two stage:
         #
-        # Stage 1: Attempt to evaluate non-symbolic value. This succeeds if
+        # Stage 1: Check whether the method value_inference() is implemented
+        # 
+        # Stage 2: Check if there's an value_inference() implementation 
+        #          for given input types.
         #
-        #   - all required inputs can be materialized (in_var.val is not None
-        #     for all required in_var).
-        #   - eval() is implemented.
+        # Suppose input are all SYMBOL:
+        # Case 1: No value_inference() implemented => fail at stage 1
+        # Case 2: If value_inference() implemented, but requires all VALUE not
+        #         SYMBOL => fail at stage 2
+        # Case 3: If value_inference() implemented, and has no restriction on
+        #         input types => Success
         #
-        # Stage 2: If Stage 1 fails, attempt to evaluate symbolic_value. This
-        #          succeeds if:
-        #
-        #   - all required inputs have symbolic value (in_var.sym_val is not
-        #     None for all required in_var).
-        #   - sym_eval() is implemented.
-        #
-        # If stage 1 succeeds, outputs[i].val is not None. If only stage 2
-        # succeeds, outputs[i].sym_val is not none but outputs[i].val is None.
-        # If neither stage succeeds, outputs[i].val and outputs[i].sym_val is
-        # None
+        # If either stage fails, outputs[i].val is None. 
+        # Otherwise, output[i].sym_val is not None.
 
         output_types: tuple of builtin types
 
@@ -145,41 +201,21 @@ class Operation(object):
             output_vals: tuple of builtin type with value, or tuple of None
         """
         do_auto_val = True
-        do_auto_sym_val = True
-        # Determine if AUTO_VAL is possible
-        for in_name, in_type in self._input_types.items():
-            if in_type.optional:
-                # Optional inputs are not required to invoke eval() or
-                # sym_eval()
-                continue
-
-            if self._input_vars[in_name].val is None:
-                do_auto_val = False
-            if self._input_vars[in_name].sym_val is None:
-                do_auto_sym_val = False
 
         if do_auto_val:
-            # Is eval implemented?
+            # Is self.value_inference implemented for corresponding input?
             try:
-                self.eval()
+                self.value_inference()
             except NotImplementedError as e:
                 do_auto_val = False
-        if not do_auto_val and do_auto_sym_val:
-            # Is ref_impl_sym implemented?
-            try:
-                self.sym_eval()
-            except NotImplementedError as e:
-                do_auto_sym_val = False
 
-        if not do_auto_val and not do_auto_sym_val:
-            # No sym_val or val possible.
+        if not do_auto_val:
+            # No auto_val possible.
             return tuple(None for _ in output_types)
 
         # perform auto val
         if do_auto_val:
-            vals = self.eval()
-        else:
-            vals = self.sym_eval()
+            vals = self.value_inference()
         if not isinstance(vals, (tuple, list)):
             vals = (vals, )
         auto_val = []
@@ -189,24 +225,14 @@ class Operation(object):
             auto_val.append(builtin_val)
         return auto_val
 
-    def eval(self):
+    def value_inference(self):
         """
         Optional Python implementation of the op based on (materialized) values
         in `self.input_var`. Return a builtin value (single output) or a tuple of
         builtin values (multi-outputs) of the same length as returned by `
         type_inference`
         """
-        msg = "eval() is not implemented by op {}"
-        raise NotImplementedError(msg.format(self.op_type))
-
-    def sym_eval(self):
-        """
-        Optional Python implementation of the op based on (symbolic) values
-        in `self.input_var`. Return a builtin value (single output) or a tuple of
-        builtin values (multi-outputs) of the same length as returned by `
-        type_inference`
-        """
-        msg = "sym_eval() is not implemented by op {}"
+        msg = "value_inference() is not implemented by op {}"
         raise NotImplementedError(msg.format(self.op_type))
 
     def output_names(self):

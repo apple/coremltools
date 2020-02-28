@@ -13,7 +13,7 @@ from coremltools.converters.nnv2.builtin_types.builtins.type_mapping import nump
 from coremltools.converters.nnv2.builtin_types import builtins
 from ..program.program import (
         Operation, SsaBlock, Symbol,
-        get_new_variadic_symbol, get_new_symbol)
+        get_new_variadic_symbol, get_new_symbol, precondition, VALUE, SYMBOL, NONE, ALL)
 from ..program.input_type import *
 from .op_registry import register_op
 
@@ -117,7 +117,8 @@ class elementwise_binary(Operation):
         ret_shape = _broadcast_shapes(shapea, shapeb)
         return builtins.tensor(primitive_type, ret_shape)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return self.get_operator()(self.x.val, self.y.val)
 
     def get_operator(self):
@@ -194,7 +195,8 @@ class abs(elementwise_unary):
     def __init__(self, **kwargs):
         super(abs, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.abs(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -202,7 +204,8 @@ class acos(elementwise_unary):
     def __init__(self, **kwargs):
         super(acos, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.arccos(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -210,7 +213,8 @@ class asin(elementwise_unary):
     def __init__(self, **kwargs):
         super(asin, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.arcsin(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -218,7 +222,8 @@ class atan(elementwise_unary):
     def __init__(self, **kwargs):
         super(atan, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.arctan(self.x.val)
 
 
@@ -267,7 +272,8 @@ class atanh(elementwise_unary):
     def __init__(self, **kwargs):
         super(atanh, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.arctanh(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -275,7 +281,8 @@ class ceil(elementwise_unary):
     def __init__(self, **kwargs):
         super(ceil, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.ceil(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -292,7 +299,8 @@ class clip(Operation):
     def type_inference(self):
         return self.x.sym_type
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.minimum(np.maximum(self.x.val, self.alpha.val), self.beta.val)
 
 @register_op(doc_str='TODO')
@@ -300,7 +308,8 @@ class cos(elementwise_unary):
     def __init__(self, **kwargs):
         super(cos, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.cos(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -308,7 +317,8 @@ class cosh(elementwise_unary):
     def __init__(self, **kwargs):
         super(cosh, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.cosh(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -327,7 +337,8 @@ class exp(elementwise_unary):
     def __init__(self, **kwargs):
         super(exp, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.exp(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -335,7 +346,8 @@ class exp2(elementwise_unary):
     def __init__(self, **kwargs):
         super(exp2, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.exp2(self.x.val)
 
 
@@ -375,7 +387,8 @@ class fill(Operation):
 
         return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.full(shape=self.shape.val, fill_value=self.value.val)
 
 
@@ -384,7 +397,8 @@ class floor(elementwise_unary):
     def __init__(self, **kwargs):
         super(floor, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.floor(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -444,7 +458,8 @@ class log(elementwise_unary):
     def __init__(self, **kwargs):
         super(log, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.log(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -555,7 +570,8 @@ class non_zero(Operation):
         shape = tuple([get_new_symbol(), self.x.rank])
         return builtins.tensor(self.x.dtype, shape)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.transpose(np.nonzero(self.x.val))
 
 
@@ -583,7 +599,8 @@ class round(elementwise_unary):
     def __init__(self, **kwargs):
         super(round, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.round(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -591,7 +608,8 @@ class rsqrt(elementwise_unary):
     def __init__(self, **kwargs):
         super(rsqrt, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return 1. / np.sqrt(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -599,7 +617,8 @@ class sign(elementwise_unary):
     def __init__(self, **kwargs):
         super(sign, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.sign(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -607,7 +626,8 @@ class sin(elementwise_unary):
     def __init__(self, **kwargs):
         super(sin, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.sin(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -615,7 +635,8 @@ class sinh(elementwise_unary):
     def __init__(self, **kwargs):
         super(sinh, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.sinh(self.x.val)
 
 
@@ -649,7 +670,8 @@ class softmax(Operation):
     def type_inference(self):
         return self.logit.sym_type
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         x = self.logit.val
         axis = self.axis.val
         e_x = np.exp(x - np.amax(x, axis=axis))
@@ -679,7 +701,7 @@ class const(Operation):
         builtin_type, _ = self._get_type_val(self.val.val)
         return builtin_type
 
-    def eval(self):
+    def value_inference(self):
         _, val = self._get_type_val(self.val.val)
         return val
 
@@ -715,7 +737,7 @@ class _const_symbolic(const):
         builtin_type, _ = self._get_type_val(self.val.sym_val)
         return builtin_type
 
-    def sym_eval(self):
+    def value_inference(self):
         # We allow symbolic values in _const_symbolic
         _, val = self._get_type_val(self.val.sym_val)
         return val
@@ -796,7 +818,8 @@ class linear(Operation):
         shape[-1] = weight_shape[0]
         return builtins.tensor(x_type, tuple(shape))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         res = np.matmul(self.x.val, np.transpose(self.weight.val))
         if self.bias is not None:
             res += self.bias.val
@@ -840,7 +863,8 @@ class matmul(Operation):
         ret_shape += [x_shape[-2], y_shape[-1]]
         return builtins.tensor(x_type, tuple(ret_shape))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         x = self.x.val
         if self.transpose_x.val:
             x = np.transpose(x)
@@ -1036,7 +1060,8 @@ class pad(Operation):
             pad_index += 1
         return builtins.tensor(self.x.dtype, ret_shape)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         # NumPy `edge` mode is equivalent to `replicate` mode of PyTorch and CoreML
         mode = 'edge' if self.mode.val == 'replicate' else self.mode.val
         pad_val = self.pad.val
@@ -1138,7 +1163,8 @@ class sqrt(elementwise_unary):
     def __init__(self, **kwargs):
         super(sqrt, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.sqrt(self.x.val)
 
 @register_op(doc_str='TODO')
@@ -1146,7 +1172,8 @@ class square(elementwise_unary):
     def __init__(self, **kwargs):
         super(square, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.square(self.x.val)
 
 # rdar://58622145
@@ -1174,7 +1201,8 @@ class relu(elementwise_unary):
     def __init__(self, **kwargs):
         super(relu, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.maximum(self.x.val, 0)
 
 
@@ -1193,7 +1221,8 @@ class relu6(elementwise_unary):
     def __init__(self, **kwargs):
         super(relu6, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.minimum(np.maximum(self.x.val, 0), 6)
 
 
@@ -1212,7 +1241,8 @@ class gelu(elementwise_unary):
     def __init__(self, **kwargs):
       super(gelu, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return 0.5 * self.x.val * (1 + scipy.special.erf(self.x.val / np.sqrt(2)))
 
 
@@ -1240,7 +1270,8 @@ class thresholded_relu(Operation):
     def type_inference(self):
         return self.x.sym_type
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.maximum(self.x.val - self.alpha.val, 0)
 
 
@@ -1249,7 +1280,8 @@ class tan(elementwise_unary):
     def __init__(self, **kwargs):
         super(tan, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.tan(self.x.val)
 
 
@@ -1266,7 +1298,8 @@ class threshold(Operation):
     def type_inference(self):
         return self.x.sym_type
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.maximum(self.x.val, self.alpha.val)
 
 
@@ -1452,7 +1485,8 @@ class transpose(Operation):
         new_shape = x_shape[perm]
         return builtins.tensor(x_type, tuple(new_shape))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.transpose(self.x.val, axes=self.perm.val)
 
 
@@ -1489,7 +1523,8 @@ class reshape(Operation):
         t, _ = self._get_type_val()
         return t
 
-    def eval(self):
+    @precondition(allow=VALUE|SYMBOL)
+    def value_inference(self):
         _, val = self._get_type_val()
         return val
 
@@ -1586,7 +1621,8 @@ class squeeze(Operation):
 
         return builtins.tensor(x_type, tuple(squeezed_shape))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.squeeze(self.x.val, axis=tuple(self.axes.val))
 
 
@@ -1637,7 +1673,8 @@ class expand_dims(Operation):
 
         return builtins.tensor(x_type, tuple(ret_shape))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.expand_dims(self.x.val, axis=self.axis.val)
 
 
@@ -1674,7 +1711,8 @@ class ReductionAxes(Operation):
 
         return builtins.tensor(x_type, tuple(reduced_shape))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         axes = tuple(self.axes.val) if self.axes is not None else None
         return self.get_operator()(self.x.val, axis=axes, keepdims=self.keep_dims.val)
 
@@ -1707,7 +1745,8 @@ class ReductionAxis(Operation):
 
         return builtins.tensor(x_type, tuple(reduced_shape))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return self.get_operator()(self.x.val, axis=self.axis.val)
 
     def get_operator(self):
@@ -1879,7 +1918,8 @@ class reverse(Operation):
     def type_inference(self):
         return self.x.sym_type
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         res = self.x.val
         axes = self.axes.val if self.axes is not None else range(self.x.rank)
         for axis in axes:
@@ -1930,7 +1970,8 @@ class reverse_sequence(Operation):
     def type_inference(self):
         return self.x.sym_type
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         raise NotImplementedError('TODO')
 
 
@@ -1948,7 +1989,8 @@ class _make_tuple(Operation):
         # Tuple's type and value are derived directly from element values.
         return builtins.tuple(tuple(e.sym_type for e in self.elems.val))
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         # self.elems.val is python tuple[Var]
         return self.elems.val
 
@@ -2064,7 +2106,8 @@ class erf(elementwise_unary):
     def __init__(self, **kwargs):
         super(erf, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return scipy.special.erf(self.x.val)
 
 
@@ -2117,7 +2160,8 @@ class select(Operation):
                 raise ValueError('Type mismatch {} vs. {}'.format(a_type, b_type))
         return a_type if a_type is not None else b_type
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.where(self.cond.val, self.a.val, self.b.val)
 
 
@@ -2136,7 +2180,8 @@ class sigmoid(elementwise_unary):
     def __init__(self, **kwargs):
         super(sigmoid, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return 1/(1 + np.exp(-self.x.val))
 
 
@@ -2152,11 +2197,12 @@ Returns
 <*, f32>, a tensor of the same shape as x.
 """)
 class softplus(elementwise_unary):
-     def __init__(self, **kwargs):
-         super(softplus, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        super(softplus, self).__init__(**kwargs)
 
-     def eval(self):
-         return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
 
 
 @register_op(doc_str="""
@@ -2174,7 +2220,8 @@ class softsign(elementwise_unary):
     def __init__(self, **kwargs):
         super(softsign, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return self.x.val / (1 + np.abs(self.x.val))
 
 
@@ -2193,7 +2240,8 @@ class tanh(elementwise_unary):
     def __init__(self, **kwargs):
         super(tanh, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.tanh(self.x.val)
 
 
@@ -2220,7 +2268,8 @@ class clamped_relu(Operation):
     def __init__(self, **kwargs):
         super(clamped_relu, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         x = np.minimum(np.maximum(self.x.val, 0), self.beta.val)
         y = np.minimum(np.minimum(self.x.val, 0) * self.alpha.val, self.beta.val)
         return x + y
@@ -2250,7 +2299,8 @@ class elu(Operation):
     def __init__(self, **kwargs):
         super(elu, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         b = np.copy(self.x.val)
         b[b < 0] = self.alpha.val * (np.exp(b[b < 0]) - 1)
         return b
@@ -2294,7 +2344,8 @@ class leaky_relu(Operation):
     def __init__(self, **kwargs):
         super(leaky_relu, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         b = np.copy(self.x.val)
         b[b < 0] *= self.alpha.val
         return b
@@ -2326,7 +2377,8 @@ class linear_activation(Operation):
     def __init__(self, **kwargs):
         super(linear_activation, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return self.alpha.val * self.x.val + self.beta.val
 
     def type_inference(self):
@@ -2356,7 +2408,8 @@ class scaled_tanh(Operation):
     def __init__(self, **kwargs):
         super(scaled_tanh, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return self.alpha.val * np.tanh(self.x.val * self.beta.val)
 
     def type_inference(self):
@@ -2386,7 +2439,8 @@ class sigmoid_hard(Operation):
     def __init__(self, **kwargs):
         super(sigmoid_hard, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.minimum(np.maximum((self.alpha.val * self.x.val) + self.beta.val, 0), 1)
 
     def type_inference(self):
@@ -2414,7 +2468,8 @@ class prelu(Operation):
     def __init__(self, **kwargs):
         super(prelu, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         alpha_br = self.alpha.val
         for i in range(1, len(self.x.shape)):
             alpha_br = np.expand_dims(alpha_br, i)
@@ -2456,7 +2511,8 @@ class softplus_parametric(Operation):
     def __init__(self, **kwargs):
         super(softplus_parametric, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         alpha_br = np.copy(self.alpha.val)
         beta_br = np.copy(self.beta.val)
         for i in range(1, len(self.x.val.shape)):
@@ -2528,7 +2584,8 @@ class cumsum(Operation):
     def __init__(self, **kwargs):
         super(cumsum, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         data = np.copy(self.x.val)
         axis = self.axis.val
         reverse = self.reverse.val
@@ -2563,7 +2620,8 @@ class gather(Operation):
     def __init__(self, **kwargs):
         super(gather, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         x = self.x.val
         indices = self.indices.val
         axis = self.axis.val
@@ -2623,7 +2681,8 @@ class gather_along_axis(Operation):
     def __init__(self, **kwargs):
         super(gather_along_axis, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         x = self.x.val
         indices = self.indices.val
         axis = self.axis.val
@@ -2664,7 +2723,8 @@ class scatter_along_axis(Operation):
     def __init__(self, **kwargs):
         super(scatter_along_axis, self).__init__(**kwargs)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         data = np.copy(self.data.val)
         indices = self.indices.val
         updates = self.updates.val
@@ -2756,7 +2816,8 @@ class tile(Operation):
 
         return builtins.tensor(x_type, out_shape)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         return np.tile(self.x.val, reps=self.reps.val)
 
 @register_op(doc_str='TODO')
@@ -2806,7 +2867,8 @@ class layer_norm(Operation):
     def type_inference(self):
         return self.x.sym_type
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         def np_layer_norm(x, axes, gamma, beta, epsilon=1e-5):
             normalized_shape = x.shape[-len(axes):]
             gamma = np.ones(shape=normalized_shape) if gamma is None else gamma
@@ -2891,7 +2953,8 @@ class topk(Operation):
         ret_shape[axis] = k
         return builtins.tensor(x_type, ret_shape), builtins.tensor(builtins.int32, ret_shape)
 
-    def eval(self):
+    @precondition(allow=VALUE)
+    def value_inference(self):
         indices = np.argsort(self.x.val, axis=self.axis.val)
         if not self.ascending.val:
             indices = np.argsort(-self.x.val, axis=self.axis.val)
