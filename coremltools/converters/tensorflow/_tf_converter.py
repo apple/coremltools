@@ -211,11 +211,14 @@ def _graph_def_from_saved_model_or_keras_model(filename):
         import tensorflow as tf
         from tensorflow.python.keras.saving import saving_utils as _saving_utils
         from tensorflow.python.framework import convert_to_constants as _convert_to_constants
-        model = tf.keras.models.load_model(filename)
-        tf.keras.backend.set_learning_phase(False)
-        func = _saving_utils.trace_model_call(model)
-        concrete_func = func.get_concrete_function()
-        # concrete_func = model.signatures[tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+        if filename.endswith('.h5'):
+            model = tf.keras.models.load_model(filename)
+            tf.keras.backend.set_learning_phase(False)
+            func = _saving_utils.trace_model_call(model)
+            concrete_func = func.get_concrete_function()
+        else:
+            model = tf.saved_model.load(filename)
+            concrete_func = model.signatures[tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
         frozen_func = _convert_to_constants.convert_variables_to_constants_v2(concrete_func)
         graph_def = frozen_func.graph.as_graph_def(add_shapes=True)
     except ImportError as e:
