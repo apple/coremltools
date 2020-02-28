@@ -31,10 +31,33 @@ def memoize(f):
 
     return helper
 
+def canonical_shape(shape):
+    """ Return shape as tuple of int or Symbol.
+
+    This utility function ensures the shape tuple
+    using a single integer type (to its best effort).
+
+    Args:
+        shape: tuple(int|long|np.int*|Symbol|SymbolExpr...)
+    """
+    def try_cast(x):
+        try:
+            # In python2.7, long and int are different types.
+            # If we cast a long int whose value is out of the range of int, 
+            # the result is still long, avoiding overflow:
+            #
+            #     `type(2<<64) == long        # true`
+            #     `type(int(2<<64)) == long   # true`
+            x = int(x)
+        except TypeError:
+            # ignore symbolic value (sm.Symbol or sm.Expr)
+            pass
+        return x
+    return tuple(try_cast(x) for x in shape)
 
 @memoize
 def tensor(primitive, shape):
-    shape = tuple(shape)
+    shape = canonical_shape(shape)
 
     class tensor:
         T = [primitive, shape]
