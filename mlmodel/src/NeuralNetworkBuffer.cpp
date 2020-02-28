@@ -62,8 +62,8 @@ namespace NNBuffer {
         auto offset = bufferStream.tellp();
 
         // Write length, size of data type and buffer
-        auto lenOfBuffer = buffer.size();
-        auto sizeOfBlock = sizeof(T);
+        int64_t lenOfBuffer = static_cast<int64_t>(buffer.size());
+        int64_t sizeOfBlock = sizeof(T);
 
         bufferStream.write((char*)&lenOfBuffer, sizeof(lenOfBuffer));
         if (bufferStream.fail()) {
@@ -89,8 +89,8 @@ namespace NNBuffer {
      */
     template<class T>
     void NeuralNetworkBuffer::getBuffer(const uint64_t offset, std::vector<T>& buffer) {
-        auto lenOfBuffer = 0;
-        auto sizeOfBlock = 0;
+        int64_t lenOfBuffer = 0;
+        int64_t sizeOfBlock = 0;
 
         bufferStream.seekg(static_cast<std::istream::off_type>(offset), std::ios::beg);
         if (!bufferStream.good()) {
