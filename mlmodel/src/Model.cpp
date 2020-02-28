@@ -116,6 +116,7 @@ namespace CoreML {
             case MLModelType_serializedModel:
                 return {};
             case MLModelType_NOT_SET:
+            default:
                 return Result(ResultType::INVALID_MODEL_INTERFACE, "Model did not specify a valid model-parameter type.");
         }
     }
