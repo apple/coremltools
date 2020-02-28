@@ -54,8 +54,9 @@ namespace CoreML {
                     return a.neuralnetworkclassifier() == b.neuralnetworkclassifier();
                 case Model::kNeuralNetwork:
                     return a.neuralnetwork() == b.neuralnetwork();
-                case Model::kProgram:
-                    return a.has_program() == b.has_program();
+                case Model::kSerializedModel:
+                    return a.serializedmodel().identifier() == b.serializedmodel().identifier() &&
+                           a.serializedmodel().model() == b.serializedmodel().model();
                 case Model::kBayesianProbitRegressor:
                     return a.bayesianprobitregressor() == b.bayesianprobitregressor();
                 case Model::kOneHotEncoder:

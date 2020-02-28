@@ -151,7 +151,9 @@ def load(prog, resume_on_errors=False, **kwargs):
                                output=output_features)
     # Create ML Model
     # TODO: <rdar://problem/57402360> specificationVersion invalidated
-    model = ml.Model(description=desc, program=proto, specificationVersion=5)
+    model = ml.Model(description=desc, specificationVersion=5)
+    model.serializedModel.identifier = "program"
+    model.serializedModel.model = proto.SerializeToString()
 
     # Set symbolic input shapes
     for input_name, shape in symbolic_inputs:

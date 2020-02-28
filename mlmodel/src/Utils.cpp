@@ -494,7 +494,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
                 }
             }
             break;
-        case Specification::Model::kProgram:
+        case Specification::Model::kSerializedModel:
             return true;
         default:
             return hasIOS14NeuralNetworkFeatures(model);
