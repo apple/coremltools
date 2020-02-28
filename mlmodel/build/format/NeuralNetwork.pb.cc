@@ -1558,6 +1558,25 @@ const UpsampleLayerParams_InterpolationMode UpsampleLayerParams::InterpolationMo
 const UpsampleLayerParams_InterpolationMode UpsampleLayerParams::InterpolationMode_MAX;
 const int UpsampleLayerParams::InterpolationMode_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+bool UpsampleLayerParams_LinearUpsampleMode_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams::DEFAULT;
+const UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams::ALIGN_CORNERS_TRUE;
+const UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams::ALIGN_CORNERS_FALSE;
+const UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams::LinearUpsampleMode_MIN;
+const UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams::LinearUpsampleMode_MAX;
+const int UpsampleLayerParams::LinearUpsampleMode_ARRAYSIZE;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 bool FlattenLayerParams_FlattenOrder_IsValid(int value) {
   switch (value) {
     case 0:
@@ -33681,6 +33700,7 @@ void UnaryFunctionLayerParams::set_scale(float value) {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int UpsampleLayerParams::kScalingFactorFieldNumber;
 const int UpsampleLayerParams::kModeFieldNumber;
+const int UpsampleLayerParams::kLinearUpsampleModeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 UpsampleLayerParams::UpsampleLayerParams()
@@ -33697,12 +33717,15 @@ UpsampleLayerParams::UpsampleLayerParams(const UpsampleLayerParams& from)
       scalingfactor_(from.scalingfactor_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  mode_ = from.mode_;
+  ::memcpy(&mode_, &from.mode_,
+    reinterpret_cast<char*>(&linearupsamplemode_) -
+    reinterpret_cast<char*>(&mode_) + sizeof(linearupsamplemode_));
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.UpsampleLayerParams)
 }
 
 void UpsampleLayerParams::SharedCtor() {
-  mode_ = 0;
+  ::memset(&mode_, 0, reinterpret_cast<char*>(&linearupsamplemode_) -
+    reinterpret_cast<char*>(&mode_) + sizeof(linearupsamplemode_));
   _cached_size_ = 0;
 }
 
@@ -33735,7 +33758,8 @@ UpsampleLayerParams* UpsampleLayerParams::New(::google::protobuf::Arena* arena) 
 void UpsampleLayerParams::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.UpsampleLayerParams)
   scalingfactor_.Clear();
-  mode_ = 0;
+  ::memset(&mode_, 0, reinterpret_cast<char*>(&linearupsamplemode_) -
+    reinterpret_cast<char*>(&mode_) + sizeof(linearupsamplemode_));
 }
 
 bool UpsampleLayerParams::MergePartialFromCodedStream(
@@ -33775,6 +33799,21 @@ bool UpsampleLayerParams::MergePartialFromCodedStream(
                    int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
                  input, &value)));
           set_mode(static_cast< ::CoreML::Specification::UpsampleLayerParams_InterpolationMode >(value));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.UpsampleLayerParams.LinearUpsampleMode linearUpsampleMode = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(48u)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          set_linearupsamplemode(static_cast< ::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode >(value));
         } else {
           goto handle_unusual;
         }
@@ -33824,6 +33863,12 @@ void UpsampleLayerParams::SerializeWithCachedSizes(
       5, this->mode(), output);
   }
 
+  // .CoreML.Specification.UpsampleLayerParams.LinearUpsampleMode linearUpsampleMode = 6;
+  if (this->linearupsamplemode() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      6, this->linearupsamplemode(), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.UpsampleLayerParams)
 }
 
@@ -33852,6 +33897,12 @@ size_t UpsampleLayerParams::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormatLite::EnumSize(this->mode());
   }
 
+  // .CoreML.Specification.UpsampleLayerParams.LinearUpsampleMode linearUpsampleMode = 6;
+  if (this->linearupsamplemode() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::EnumSize(this->linearupsamplemode());
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -33875,6 +33926,9 @@ void UpsampleLayerParams::MergeFrom(const UpsampleLayerParams& from) {
   if (from.mode() != 0) {
     set_mode(from.mode());
   }
+  if (from.linearupsamplemode() != 0) {
+    set_linearupsamplemode(from.linearupsamplemode());
+  }
 }
 
 void UpsampleLayerParams::CopyFrom(const UpsampleLayerParams& from) {
@@ -33895,6 +33949,7 @@ void UpsampleLayerParams::Swap(UpsampleLayerParams* other) {
 void UpsampleLayerParams::InternalSwap(UpsampleLayerParams* other) {
   scalingfactor_.InternalSwap(&other->scalingfactor_);
   std::swap(mode_, other->mode_);
+  std::swap(linearupsamplemode_, other->linearupsamplemode_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -33947,6 +34002,20 @@ void UpsampleLayerParams::set_mode(::CoreML::Specification::UpsampleLayerParams_
   
   mode_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.UpsampleLayerParams.mode)
+}
+
+// .CoreML.Specification.UpsampleLayerParams.LinearUpsampleMode linearUpsampleMode = 6;
+void UpsampleLayerParams::clear_linearupsamplemode() {
+  linearupsamplemode_ = 0;
+}
+::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams::linearupsamplemode() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.UpsampleLayerParams.linearUpsampleMode)
+  return static_cast< ::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode >(linearupsamplemode_);
+}
+void UpsampleLayerParams::set_linearupsamplemode(::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode value) {
+  
+  linearupsamplemode_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.UpsampleLayerParams.linearUpsampleMode)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

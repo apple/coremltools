@@ -564,6 +564,12 @@ Result NeuralNetworkSpecValidator::validateUpsampleLayer(const Specification::Ne
         return r;
     }
 
+    if(params.linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT
+       && params.mode() == Specification::UpsampleLayerParams_InterpolationMode_NN) {
+        std::string err = "Layer '" + layer.name() + "' of type Upsample uses Nearest Neighbors but uses linear upsampling mode other than DEFAULT.";
+        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
     return r;
 }
 

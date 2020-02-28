@@ -747,6 +747,10 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
                 case Specification::NeuralNetworkLayer::kClampedReLU:
                 case Specification::NeuralNetworkLayer::kArgSort:
                     return true;
+                case Specification::NeuralNetworkLayer::kUpsample:
+                    if (layer.upsample().linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT) {
+                        return true;
+                    }
                 default:
                     continue;
             }

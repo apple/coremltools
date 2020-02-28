@@ -835,6 +835,18 @@ const UpsampleLayerParams_InterpolationMode UpsampleLayerParams_InterpolationMod
 const UpsampleLayerParams_InterpolationMode UpsampleLayerParams_InterpolationMode_InterpolationMode_MAX = UpsampleLayerParams_InterpolationMode_BILINEAR;
 const int UpsampleLayerParams_InterpolationMode_InterpolationMode_ARRAYSIZE = UpsampleLayerParams_InterpolationMode_InterpolationMode_MAX + 1;
 
+enum UpsampleLayerParams_LinearUpsampleMode {
+  UpsampleLayerParams_LinearUpsampleMode_DEFAULT = 0,
+  UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_TRUE = 1,
+  UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_FALSE = 2,
+  UpsampleLayerParams_LinearUpsampleMode_UpsampleLayerParams_LinearUpsampleMode_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  UpsampleLayerParams_LinearUpsampleMode_UpsampleLayerParams_LinearUpsampleMode_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+};
+bool UpsampleLayerParams_LinearUpsampleMode_IsValid(int value);
+const UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams_LinearUpsampleMode_LinearUpsampleMode_MIN = UpsampleLayerParams_LinearUpsampleMode_DEFAULT;
+const UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams_LinearUpsampleMode_LinearUpsampleMode_MAX = UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_FALSE;
+const int UpsampleLayerParams_LinearUpsampleMode_LinearUpsampleMode_ARRAYSIZE = UpsampleLayerParams_LinearUpsampleMode_LinearUpsampleMode_MAX + 1;
+
 enum FlattenLayerParams_FlattenOrder {
   FlattenLayerParams_FlattenOrder_CHANNEL_FIRST = 0,
   FlattenLayerParams_FlattenOrder_CHANNEL_LAST = 1,
@@ -8931,6 +8943,23 @@ class UpsampleLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
   static const int InterpolationMode_ARRAYSIZE =
     UpsampleLayerParams_InterpolationMode_InterpolationMode_ARRAYSIZE;
 
+  typedef UpsampleLayerParams_LinearUpsampleMode LinearUpsampleMode;
+  static const LinearUpsampleMode DEFAULT =
+    UpsampleLayerParams_LinearUpsampleMode_DEFAULT;
+  static const LinearUpsampleMode ALIGN_CORNERS_TRUE =
+    UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_TRUE;
+  static const LinearUpsampleMode ALIGN_CORNERS_FALSE =
+    UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_FALSE;
+  static inline bool LinearUpsampleMode_IsValid(int value) {
+    return UpsampleLayerParams_LinearUpsampleMode_IsValid(value);
+  }
+  static const LinearUpsampleMode LinearUpsampleMode_MIN =
+    UpsampleLayerParams_LinearUpsampleMode_LinearUpsampleMode_MIN;
+  static const LinearUpsampleMode LinearUpsampleMode_MAX =
+    UpsampleLayerParams_LinearUpsampleMode_LinearUpsampleMode_MAX;
+  static const int LinearUpsampleMode_ARRAYSIZE =
+    UpsampleLayerParams_LinearUpsampleMode_LinearUpsampleMode_ARRAYSIZE;
+
   // accessors -------------------------------------------------------
 
   // repeated uint64 scalingFactor = 1;
@@ -8951,6 +8980,12 @@ class UpsampleLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
   ::CoreML::Specification::UpsampleLayerParams_InterpolationMode mode() const;
   void set_mode(::CoreML::Specification::UpsampleLayerParams_InterpolationMode value);
 
+  // .CoreML.Specification.UpsampleLayerParams.LinearUpsampleMode linearUpsampleMode = 6;
+  void clear_linearupsamplemode();
+  static const int kLinearUpsampleModeFieldNumber = 6;
+  ::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode linearupsamplemode() const;
+  void set_linearupsamplemode(::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode value);
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.UpsampleLayerParams)
  private:
 
@@ -8958,6 +8993,7 @@ class UpsampleLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
   ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > scalingfactor_;
   mutable int _scalingfactor_cached_byte_size_;
   int mode_;
+  int linearupsamplemode_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -33203,6 +33239,20 @@ inline void UpsampleLayerParams::set_mode(::CoreML::Specification::UpsampleLayer
   // @@protoc_insertion_point(field_set:CoreML.Specification.UpsampleLayerParams.mode)
 }
 
+// .CoreML.Specification.UpsampleLayerParams.LinearUpsampleMode linearUpsampleMode = 6;
+inline void UpsampleLayerParams::clear_linearupsamplemode() {
+  linearupsamplemode_ = 0;
+}
+inline ::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode UpsampleLayerParams::linearupsamplemode() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.UpsampleLayerParams.linearUpsampleMode)
+  return static_cast< ::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode >(linearupsamplemode_);
+}
+inline void UpsampleLayerParams::set_linearupsamplemode(::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode value) {
+  
+  linearupsamplemode_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.UpsampleLayerParams.linearUpsampleMode)
+}
+
 // -------------------------------------------------------------------
 
 // ResizeBilinearLayerParams
@@ -41262,6 +41312,7 @@ template <> struct is_proto_enum< ::CoreML::Specification::BoxCoordinatesMode_Co
 template <> struct is_proto_enum< ::CoreML::Specification::PoolingLayerParams_PoolingType> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::UnaryFunctionLayerParams_Operation> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::UpsampleLayerParams_InterpolationMode> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::FlattenLayerParams_FlattenOrder> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::ReshapeLayerParams_ReshapeOrder> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::ReorganizeDataLayerParams_ReorganizationType> : ::google::protobuf::internal::true_type {};

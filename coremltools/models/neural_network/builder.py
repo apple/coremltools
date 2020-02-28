@@ -1417,7 +1417,8 @@ class NeuralNetworkBuilder(object):
             raise ValueError('Unsupported elementwise mode %s' % mode)
         return spec_layer
 
-    def add_upsample(self, name, scaling_factor_h, scaling_factor_w, input_name, output_name, mode='NN'):
+    def add_upsample(self, name, scaling_factor_h, scaling_factor_w, input_name, output_name, mode='NN',
+                     linear_upsample_mode='DEFAULT'):
         """
         Add an upsample layer to the model.
         Refer to the **UpsampleLayerParams** message in specification (NeuralNetwork.proto) for more details.
@@ -1435,25 +1436,39 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
         mode: str
-            Following values are supported:
+            Overall interpolation mode. The following values are supported:
             'NN': nearest neighbour
             'BILINEAR': bilinear interpolation
+        linear_upsample_mode: str
+            Specifies the behavior for linear upsampling. Only valid when Interpolation Mode is BILINEAR.
+            Takes value one of 'DEFAULT', 'ALIGN_CORNERS_TRUE' and 'ALIGN_CORNERS_FALSE'
+            For details please see the message "UpsampleLayerParams" in NeuralNetwork.proto
 
         See Also
         --------
-        add_sequence_repeat, add_elementwise
+        add_resize_bilinear
+
         """
+
+        mode = mode.upper() if isinstance(mode, str) else mode
+        linear_upsample_mode = linear_upsample_mode.upper() if isinstance(linear_upsample_mode, str) else linear_upsample_mode
+        if not mode in ['NN', 'BILINEAR']:
+            raise ValueError('Unsupported upsampling mode %s' % mode)
+        if not linear_upsample_mode in ['DEFAULT', 'ALIGN_CORNERS_TRUE', 'ALIGN_CORNERS_FALSE']:
+            raise ValueError('Unsupported linear upsampling mode %s' % linear_upsample_mode)
+
+        # Default linear upsample mode is backwards compatible, else set spec to iOS14
+        if linear_upsample_mode is not 'DEFAULT' and self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.upsample
         spec_layer_params.scalingFactor.append(scaling_factor_h)
         spec_layer_params.scalingFactor.append(scaling_factor_w)
-        mode = mode.upper() if isinstance(mode, str) else mode
-        if mode == 'NN':
-            spec_layer_params.mode = _NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value('NN')
-        elif mode == 'BILINEAR':
-            spec_layer_params.mode = _NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value('BILINEAR')
-        else:
-            raise ValueError('Unsupported upsampling mode %s' % mode)
+
+        spec_layer_params.mode = _NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value(mode)
+        spec_layer_params.linearUpsampleMode = _NeuralNetwork_pb2.UpsampleLayerParams.LinearUpsampleMode.Value(linear_upsample_mode)
+
         return spec_layer
 
     def add_scale(self, name, W, b, has_bias, input_name, output_name, shape_scale=None, shape_bias=None):
@@ -3126,6 +3141,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.targetSize.append(target_width)
         mode = mode.upper() if isinstance(mode, str) else mode
         if mode == 'ALIGN_ENDPOINTS_MODE':
+
             spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('ALIGN_ENDPOINTS_MODE')
         elif mode == 'STRICT_ALIGN_ENDPOINTS_MODE':
             spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(

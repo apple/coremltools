@@ -2161,6 +2161,11 @@ message UpsampleLayerParams {
      */
     repeated uint64 scalingFactor = 1;
 
+    /*
+     * Overall mode for interpolating new elements when upsampling.
+     * NN - Nearest Neighbors - simply pick the nearest true value for interpolated values.
+     * BILINEAR - Use bilinear interpolation. See LinearUpsamplingMode for behavior.
+     */
     enum InterpolationMode {
 
         NN = 0; /// Nearest Neighbour
@@ -2169,6 +2174,30 @@ message UpsampleLayerParams {
     }
 
     InterpolationMode mode = 5;
+
+    /**
+     * LinearUpsampleMode specifies the behavior for linear upsampling. Only valid when Interpolation Mode is BILINEAR.
+     * If input grid is [0, Xin-1] (corresponding to an input size of Xin), and if the output size is Xout,
+     * then the grid points are sampled in the following manner:
+     * DEFAULT:
+     *   spacing = (Xin-Xin/Xout) / (Xout-1)
+     *   grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,….,Xout-1
+     * ALIGN_CORNERS_TRUE:
+     *   spacing = (Xin-1) / (Xout-1)
+     *   grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,….,Xout-1
+     * ALIGN_CORNERS_FALSE:
+     *   spacing = Xin / Xout
+     *   grid_point[i] = min(Xin-1, max(0, i * spacing + 0.5 * spacing - 0.5)), for i = 0,1,2,….,Xout-1
+     */
+    enum LinearUpsampleMode {
+
+        DEFAULT = 0;
+        ALIGN_CORNERS_TRUE = 1;
+        ALIGN_CORNERS_FALSE = 2;
+
+    }
+
+    LinearUpsampleMode linearUpsampleMode = 6;
 
 }
 

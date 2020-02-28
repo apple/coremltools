@@ -1312,6 +1312,7 @@ int testValidPadding() {
     return 0;
 }
 
+
 int testInvalidUpsample() {
 
     Specification::Model m1;
@@ -1336,6 +1337,40 @@ int testInvalidUpsample() {
     params->add_scalingfactor(1.0);
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    return 0;
+}
+
+int testInvalidUpsampleNearestNeighborsModeWithAlignCorners() {
+
+    Specification::Model m1;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(5);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+
+    Specification::NeuralNetworkLayer *upsampleLayer = nn->add_layers();
+    upsampleLayer->add_input("input");
+    upsampleLayer->add_output("probs");
+    auto *params = upsampleLayer->mutable_upsample();
+
+    params->set_mode(Specification::UpsampleLayerParams_InterpolationMode::UpsampleLayerParams_InterpolationMode_NN);
+    params->set_linearupsamplemode(Specification::UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_FALSE);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+
+    params->set_mode(Specification::UpsampleLayerParams_InterpolationMode::UpsampleLayerParams_InterpolationMode_NN);
+    params->set_linearupsamplemode(Specification::UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_TRUE);
+    
+    res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_BAD(res);
     return 0;
 }
@@ -1366,6 +1401,98 @@ int testValidUpsample() {
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_GOOD(res);
+    return 0;
+}
+
+int testValidUpsampleAlignCorners() {
+
+    Specification::Model m1;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(5);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+
+    Specification::NeuralNetworkLayer *upsampleLayer = nn->add_layers();
+    upsampleLayer->add_input("input");
+    upsampleLayer->add_output("probs");
+    auto *params = upsampleLayer->mutable_upsample();
+
+    // Scaling factor needs to be 2D
+    params->add_scalingfactor(1.0);
+    params->add_scalingfactor(1.0);
+
+    params->set_mode(Specification::UpsampleLayerParams_InterpolationMode_BILINEAR);
+    params->set_linearupsamplemode(Specification::UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_FALSE);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+
+    params->set_linearupsamplemode(Specification::UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_TRUE);
+    
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+
+    // Check that the new field sets spec version to ios 14
+    Model mlmodel = Model(m1);
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS14);
+    return 0;
+}
+
+int testUpsampleArgsortSpec() {
+    /* Ensure that the model is treated as the iOS 14 specification
+       when new layers are included and upsample only includes
+       legacy params.
+    */
+    Specification::Model m;
+
+    auto *in = m.mutable_description()->add_input();
+    in->set_name("input");
+    auto *inShape = in->mutable_type()->mutable_multiarraytype();
+    inShape->add_shape(1);
+    inShape->add_shape(3);
+    inShape->add_shape(3);
+
+    auto *out = m.mutable_description()->add_output();
+    out->set_name("output");
+    auto *outShape = out->mutable_type()->mutable_multiarraytype();
+    outShape->add_shape(1);
+    outShape->add_shape(3);
+    outShape->add_shape(3);
+
+    const auto nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    auto *upsampleLayer = nn->add_layers();
+    upsampleLayer->set_name("upsample");
+    upsampleLayer->add_input("input");
+    upsampleLayer->add_output("A");
+    auto *upsampleParams = upsampleLayer->mutable_upsample();
+
+    // Scaling factor needs to be 2D
+    upsampleParams->add_scalingfactor(1.0);
+    upsampleParams->add_scalingfactor(1.0);
+
+    upsampleParams->set_mode(Specification::UpsampleLayerParams_InterpolationMode_BILINEAR);
+    
+    auto *argsortLayer = nn->add_layers();
+    argsortLayer->set_name("argsort");
+    argsortLayer->add_input("A");
+    argsortLayer->add_output("output");
+    auto *argsortParams = argsortLayer->mutable_argsort();
+    argsortParams->set_axis(1);
+
+    Result res = validate<MLModelType_neuralNetwork>(m);
+    ML_ASSERT_GOOD(res);
+    Model mlmodel = Model(m);
+    ML_ASSERT(mlmodel.getProto().specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS14);
+
     return 0;
 }
 

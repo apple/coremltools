@@ -689,6 +689,12 @@ enum MLInterpolationMode: int {
     MLInterpolationModeBILINEAR = 1,
 };
 
+enum MLLinearUpsampleMode: int {
+    MLLinearUpsampleModeDEFAULT = 0,
+    MLLinearUpsampleModeALIGN_CORNERS_TRUE = 1,
+    MLLinearUpsampleModeALIGN_CORNERS_FALSE = 2,
+};
+
 enum MLFlattenOrder: int {
     MLFlattenOrderCHANNEL_FIRST = 0,
     MLFlattenOrderCHANNEL_LAST = 1,

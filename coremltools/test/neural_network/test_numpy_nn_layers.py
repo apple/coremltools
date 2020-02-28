@@ -14,6 +14,8 @@ from packaging import version
 import numpy as np
 import pytest
 import tensorflow as tf
+import torch
+from torch import nn
 
 import coremltools
 import coremltools.models.datatypes as datatypes
@@ -4444,7 +4446,6 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_shape, [])
         self.assertEqual(failed_tests_numerical, [])
 
-
 @unittest.skipIf(not is_macos() or macos_version() < LAYERS_10_15_MACOS_VERSION,
                  'macOS 10.15+ required. Skipping tests.')
 class CoreML3NetworkStressTest(CorrectnessTest):
@@ -4776,3 +4777,61 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
     def test_argsort_gpu(self):
         self.test_argsort_cpu(cpu_only=False)
+
+    def upsample_pytorch_test(self, h, w, scale_h, scale_w, align_corners, cpu_only=True):
+        input_dim = (1, h, w)
+        if align_corners:
+            linear_upsample_mode = 'ALIGN_CORNERS_TRUE'
+        else:
+            linear_upsample_mode = 'ALIGN_CORNERS_FALSE'
+
+        input_features = [('data', datatypes.Array(*input_dim))]
+        output_features = [('output', None)]
+
+        builder = neural_network.NeuralNetworkBuilder(input_features,
+                                                      output_features)
+        builder.add_upsample(name='upsample',
+                             scaling_factor_h=scale_h, scaling_factor_w=scale_w,
+                             linear_upsample_mode=linear_upsample_mode,
+                             input_name='data', output_name='output',
+                             mode='BILINEAR')
+
+        input_tensor = np.reshape(np.arange(1.0, 1.0 + (h * w), 1.0), input_dim)
+        input = { 'data': input_tensor }
+
+        # Get result from PyTorch
+        x = torch.from_numpy(np.reshape(input_tensor, (1, 1, h, w)))
+        m = nn.Upsample(scale_factor=(scale_h, scale_w), mode='bilinear', align_corners=align_corners)
+        pytorch_output = m(x)
+
+        # Expect PyTorch output matches CoreML output
+        expected = {
+            'output': np.array([pytorch_output.numpy()])
+        }
+
+        self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+        self.assertEquals(len(input_dim), builder._get_rank('output'))
+
+    def test_upsample_pytorch_cpu(self):
+        for align_corners in [False, True]:
+            for scale_h in range(1, 3):
+                for scale_w in range(1, 3):
+                    for input_h in range(2, 6):
+                        for input_w in range(2, 6):
+                            self.upsample_pytorch_test(input_h, input_w, scale_h, scale_w, align_corners, cpu_only=True)
+
+    def test_upsample_pytorch_gpu(self):
+        for align_corners in [False, True]:
+            for scale_h in range(1, 3):
+                for scale_w in range(1, 3):
+                    for input_h in range(2, 6):
+                        for input_w in range(2, 6):
+                            self.upsample_pytorch_test(input_h, input_w, scale_h, scale_w, align_corners, cpu_only=False)
+
+
+if __name__ == '__main__':
+    unittest.main()
+    # suite = unittest.TestSuite()
+    # suite.addTest(NewLayersSimpleTest("test_softmax_nan_bug_cpu"))
+    # #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
+    # unittest.TextTestRunner().run(suite)
