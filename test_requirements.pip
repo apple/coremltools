@@ -1,3 +1,4 @@
+boto3
 Keras==2.1.6
 Pillow
 h5py
