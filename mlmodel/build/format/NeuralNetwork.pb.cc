@@ -1615,6 +1615,7 @@ bool ReorganizeDataLayerParams_ReorganizationType_IsValid(int value) {
   switch (value) {
     case 0:
     case 1:
+    case 2:
       return true;
     default:
       return false;
@@ -1624,6 +1625,7 @@ bool ReorganizeDataLayerParams_ReorganizationType_IsValid(int value) {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const ReorganizeDataLayerParams_ReorganizationType ReorganizeDataLayerParams::SPACE_TO_DEPTH;
 const ReorganizeDataLayerParams_ReorganizationType ReorganizeDataLayerParams::DEPTH_TO_SPACE;
+const ReorganizeDataLayerParams_ReorganizationType ReorganizeDataLayerParams::PIXEL_SHUFFLE;
 const ReorganizeDataLayerParams_ReorganizationType ReorganizeDataLayerParams::ReorganizationType_MIN;
 const ReorganizeDataLayerParams_ReorganizationType ReorganizeDataLayerParams::ReorganizationType_MAX;
 const int ReorganizeDataLayerParams::ReorganizationType_ARRAYSIZE;
@@ -25560,6 +25562,7 @@ void BoxCoordinatesMode::set_boxmode(::CoreML::Specification::BoxCoordinatesMode
 const int WeightParams::kFloatValueFieldNumber;
 const int WeightParams::kFloat16ValueFieldNumber;
 const int WeightParams::kRawValueFieldNumber;
+const int WeightParams::kInt8RawValueFieldNumber;
 const int WeightParams::kQuantizationFieldNumber;
 const int WeightParams::kIsUpdatableFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
@@ -25586,6 +25589,10 @@ WeightParams::WeightParams(const WeightParams& from)
   if (from.rawvalue().size() > 0) {
     rawvalue_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.rawvalue_);
   }
+  int8rawvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.int8rawvalue().size() > 0) {
+    int8rawvalue_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.int8rawvalue_);
+  }
   if (from.has_quantization()) {
     quantization_ = new ::CoreML::Specification::QuantizationParams(*from.quantization_);
   } else {
@@ -25598,6 +25605,7 @@ WeightParams::WeightParams(const WeightParams& from)
 void WeightParams::SharedCtor() {
   float16value_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   rawvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  int8rawvalue_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&quantization_, 0, reinterpret_cast<char*>(&isupdatable_) -
     reinterpret_cast<char*>(&quantization_) + sizeof(isupdatable_));
   _cached_size_ = 0;
@@ -25611,6 +25619,7 @@ WeightParams::~WeightParams() {
 void WeightParams::SharedDtor() {
   float16value_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   rawvalue_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  int8rawvalue_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) {
     delete quantization_;
   }
@@ -25639,6 +25648,7 @@ void WeightParams::Clear() {
   floatvalue_.Clear();
   float16value_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   rawvalue_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  int8rawvalue_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (GetArenaNoVirtual() == NULL && quantization_ != NULL) {
     delete quantization_;
   }
@@ -25692,6 +25702,18 @@ bool WeightParams::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(242u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
                 input, this->mutable_rawvalue()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bytes int8RawValue = 31;
+      case 31: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(250u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_int8rawvalue()));
         } else {
           goto handle_unusual;
         }
@@ -25771,6 +25793,12 @@ void WeightParams::SerializeWithCachedSizes(
       30, this->rawvalue(), output);
   }
 
+  // bytes int8RawValue = 31;
+  if (this->int8rawvalue().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      31, this->int8rawvalue(), output);
+  }
+
   // .CoreML.Specification.QuantizationParams quantization = 40;
   if (this->has_quantization()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
@@ -25818,6 +25846,13 @@ size_t WeightParams::ByteSizeLong() const {
         this->rawvalue());
   }
 
+  // bytes int8RawValue = 31;
+  if (this->int8rawvalue().size() > 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
+        this->int8rawvalue());
+  }
+
   // .CoreML.Specification.QuantizationParams quantization = 40;
   if (this->has_quantization()) {
     total_size += 2 +
@@ -25858,6 +25893,10 @@ void WeightParams::MergeFrom(const WeightParams& from) {
 
     rawvalue_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.rawvalue_);
   }
+  if (from.int8rawvalue().size() > 0) {
+
+    int8rawvalue_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.int8rawvalue_);
+  }
   if (from.has_quantization()) {
     mutable_quantization()->::CoreML::Specification::QuantizationParams::MergeFrom(from.quantization());
   }
@@ -25885,6 +25924,7 @@ void WeightParams::InternalSwap(WeightParams* other) {
   floatvalue_.InternalSwap(&other->floatvalue_);
   float16value_.Swap(&other->float16value_);
   rawvalue_.Swap(&other->rawvalue_);
+  int8rawvalue_.Swap(&other->int8rawvalue_);
   std::swap(quantization_, other->quantization_);
   std::swap(isupdatable_, other->isupdatable_);
   std::swap(_cached_size_, other->_cached_size_);
@@ -26031,6 +26071,59 @@ void WeightParams::set_allocated_rawvalue(::std::string* rawvalue) {
   }
   rawvalue_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), rawvalue);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.rawValue)
+}
+
+// bytes int8RawValue = 31;
+void WeightParams::clear_int8rawvalue() {
+  int8rawvalue_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& WeightParams::int8rawvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.WeightParams.int8RawValue)
+  return int8rawvalue_.GetNoArena();
+}
+void WeightParams::set_int8rawvalue(const ::std::string& value) {
+  
+  int8rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.WeightParams.int8RawValue)
+}
+#if LANG_CXX11
+void WeightParams::set_int8rawvalue(::std::string&& value) {
+  
+  int8rawvalue_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.WeightParams.int8RawValue)
+}
+#endif
+void WeightParams::set_int8rawvalue(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  int8rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.WeightParams.int8RawValue)
+}
+void WeightParams::set_int8rawvalue(const void* value, size_t size) {
+  
+  int8rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.WeightParams.int8RawValue)
+}
+::std::string* WeightParams::mutable_int8rawvalue() {
+  
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.WeightParams.int8RawValue)
+  return int8rawvalue_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* WeightParams::release_int8rawvalue() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.WeightParams.int8RawValue)
+  
+  return int8rawvalue_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void WeightParams::set_allocated_int8rawvalue(::std::string* int8rawvalue) {
+  if (int8rawvalue != NULL) {
+    
+  } else {
+    
+  }
+  int8rawvalue_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), int8rawvalue);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.int8RawValue)
 }
 
 // .CoreML.Specification.QuantizationParams quantization = 40;
@@ -28096,6 +28189,7 @@ const int InnerProductLayerParams::kOutputChannelsFieldNumber;
 const int InnerProductLayerParams::kHasBiasFieldNumber;
 const int InnerProductLayerParams::kWeightsFieldNumber;
 const int InnerProductLayerParams::kBiasFieldNumber;
+const int InnerProductLayerParams::kInt8DynamicQuantizeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 InnerProductLayerParams::InnerProductLayerParams()
@@ -28122,14 +28216,14 @@ InnerProductLayerParams::InnerProductLayerParams(const InnerProductLayerParams& 
     bias_ = NULL;
   }
   ::memcpy(&inputchannels_, &from.inputchannels_,
-    reinterpret_cast<char*>(&hasbias_) -
-    reinterpret_cast<char*>(&inputchannels_) + sizeof(hasbias_));
+    reinterpret_cast<char*>(&int8dynamicquantize_) -
+    reinterpret_cast<char*>(&inputchannels_) + sizeof(int8dynamicquantize_));
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.InnerProductLayerParams)
 }
 
 void InnerProductLayerParams::SharedCtor() {
-  ::memset(&weights_, 0, reinterpret_cast<char*>(&hasbias_) -
-    reinterpret_cast<char*>(&weights_) + sizeof(hasbias_));
+  ::memset(&weights_, 0, reinterpret_cast<char*>(&int8dynamicquantize_) -
+    reinterpret_cast<char*>(&weights_) + sizeof(int8dynamicquantize_));
   _cached_size_ = 0;
 }
 
@@ -28175,8 +28269,8 @@ void InnerProductLayerParams::Clear() {
     delete bias_;
   }
   bias_ = NULL;
-  ::memset(&inputchannels_, 0, reinterpret_cast<char*>(&hasbias_) -
-    reinterpret_cast<char*>(&inputchannels_) + sizeof(hasbias_));
+  ::memset(&inputchannels_, 0, reinterpret_cast<char*>(&int8dynamicquantize_) -
+    reinterpret_cast<char*>(&inputchannels_) + sizeof(int8dynamicquantize_));
 }
 
 bool InnerProductLayerParams::MergePartialFromCodedStream(
@@ -28255,6 +28349,20 @@ bool InnerProductLayerParams::MergePartialFromCodedStream(
         break;
       }
 
+      // bool int8DynamicQuantize = 22;
+      case 22: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(176u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &int8dynamicquantize_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -28309,6 +28417,11 @@ void InnerProductLayerParams::SerializeWithCachedSizes(
       21, *this->bias_, output);
   }
 
+  // bool int8DynamicQuantize = 22;
+  if (this->int8dynamicquantize() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(22, this->int8dynamicquantize(), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.InnerProductLayerParams)
 }
 
@@ -28349,6 +28462,11 @@ size_t InnerProductLayerParams::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
+  // bool int8DynamicQuantize = 22;
+  if (this->int8dynamicquantize() != 0) {
+    total_size += 2 + 1;
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -28383,6 +28501,9 @@ void InnerProductLayerParams::MergeFrom(const InnerProductLayerParams& from) {
   if (from.hasbias() != 0) {
     set_hasbias(from.hasbias());
   }
+  if (from.int8dynamicquantize() != 0) {
+    set_int8dynamicquantize(from.int8dynamicquantize());
+  }
 }
 
 void InnerProductLayerParams::CopyFrom(const InnerProductLayerParams& from) {
@@ -28406,6 +28527,7 @@ void InnerProductLayerParams::InternalSwap(InnerProductLayerParams* other) {
   std::swap(inputchannels_, other->inputchannels_);
   std::swap(outputchannels_, other->outputchannels_);
   std::swap(hasbias_, other->hasbias_);
+  std::swap(int8dynamicquantize_, other->int8dynamicquantize_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -28534,6 +28656,20 @@ void InnerProductLayerParams::set_allocated_bias(::CoreML::Specification::Weight
     
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.InnerProductLayerParams.bias)
+}
+
+// bool int8DynamicQuantize = 22;
+void InnerProductLayerParams::clear_int8dynamicquantize() {
+  int8dynamicquantize_ = false;
+}
+bool InnerProductLayerParams::int8dynamicquantize() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.InnerProductLayerParams.int8DynamicQuantize)
+  return int8dynamicquantize_;
+}
+void InnerProductLayerParams::set_int8dynamicquantize(bool value) {
+  
+  int8dynamicquantize_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.InnerProductLayerParams.int8DynamicQuantize)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -45152,6 +45288,7 @@ const int BatchedMatMulLayerParams::kWeightMatrixSecondDimensionFieldNumber;
 const int BatchedMatMulLayerParams::kHasBiasFieldNumber;
 const int BatchedMatMulLayerParams::kWeightsFieldNumber;
 const int BatchedMatMulLayerParams::kBiasFieldNumber;
+const int BatchedMatMulLayerParams::kInt8DynamicQuantizeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 BatchedMatMulLayerParams::BatchedMatMulLayerParams()
@@ -45178,14 +45315,14 @@ BatchedMatMulLayerParams::BatchedMatMulLayerParams(const BatchedMatMulLayerParam
     bias_ = NULL;
   }
   ::memcpy(&weightmatrixfirstdimension_, &from.weightmatrixfirstdimension_,
-    reinterpret_cast<char*>(&hasbias_) -
-    reinterpret_cast<char*>(&weightmatrixfirstdimension_) + sizeof(hasbias_));
+    reinterpret_cast<char*>(&int8dynamicquantize_) -
+    reinterpret_cast<char*>(&weightmatrixfirstdimension_) + sizeof(int8dynamicquantize_));
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.BatchedMatMulLayerParams)
 }
 
 void BatchedMatMulLayerParams::SharedCtor() {
-  ::memset(&weights_, 0, reinterpret_cast<char*>(&hasbias_) -
-    reinterpret_cast<char*>(&weights_) + sizeof(hasbias_));
+  ::memset(&weights_, 0, reinterpret_cast<char*>(&int8dynamicquantize_) -
+    reinterpret_cast<char*>(&weights_) + sizeof(int8dynamicquantize_));
   _cached_size_ = 0;
 }
 
@@ -45231,8 +45368,8 @@ void BatchedMatMulLayerParams::Clear() {
     delete bias_;
   }
   bias_ = NULL;
-  ::memset(&weightmatrixfirstdimension_, 0, reinterpret_cast<char*>(&hasbias_) -
-    reinterpret_cast<char*>(&weightmatrixfirstdimension_) + sizeof(hasbias_));
+  ::memset(&weightmatrixfirstdimension_, 0, reinterpret_cast<char*>(&int8dynamicquantize_) -
+    reinterpret_cast<char*>(&weightmatrixfirstdimension_) + sizeof(int8dynamicquantize_));
 }
 
 bool BatchedMatMulLayerParams::MergePartialFromCodedStream(
@@ -45339,6 +45476,20 @@ bool BatchedMatMulLayerParams::MergePartialFromCodedStream(
         break;
       }
 
+      // bool int8DynamicQuantize = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(80u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &int8dynamicquantize_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -45403,6 +45554,11 @@ void BatchedMatMulLayerParams::SerializeWithCachedSizes(
       9, *this->bias_, output);
   }
 
+  // bool int8DynamicQuantize = 10;
+  if (this->int8dynamicquantize() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(10, this->int8dynamicquantize(), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.BatchedMatMulLayerParams)
 }
 
@@ -45453,6 +45609,11 @@ size_t BatchedMatMulLayerParams::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
+  // bool int8DynamicQuantize = 10;
+  if (this->int8dynamicquantize() != 0) {
+    total_size += 1 + 1;
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -45493,6 +45654,9 @@ void BatchedMatMulLayerParams::MergeFrom(const BatchedMatMulLayerParams& from) {
   if (from.hasbias() != 0) {
     set_hasbias(from.hasbias());
   }
+  if (from.int8dynamicquantize() != 0) {
+    set_int8dynamicquantize(from.int8dynamicquantize());
+  }
 }
 
 void BatchedMatMulLayerParams::CopyFrom(const BatchedMatMulLayerParams& from) {
@@ -45518,6 +45682,7 @@ void BatchedMatMulLayerParams::InternalSwap(BatchedMatMulLayerParams* other) {
   std::swap(transposea_, other->transposea_);
   std::swap(transposeb_, other->transposeb_);
   std::swap(hasbias_, other->hasbias_);
+  std::swap(int8dynamicquantize_, other->int8dynamicquantize_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -45674,6 +45839,20 @@ void BatchedMatMulLayerParams::set_allocated_bias(::CoreML::Specification::Weigh
     
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.BatchedMatMulLayerParams.bias)
+}
+
+// bool int8DynamicQuantize = 10;
+void BatchedMatMulLayerParams::clear_int8dynamicquantize() {
+  int8dynamicquantize_ = false;
+}
+bool BatchedMatMulLayerParams::int8dynamicquantize() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.BatchedMatMulLayerParams.int8DynamicQuantize)
+  return int8dynamicquantize_;
+}
+void BatchedMatMulLayerParams::set_int8dynamicquantize(bool value) {
+  
+  int8dynamicquantize_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.BatchedMatMulLayerParams.int8DynamicQuantize)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

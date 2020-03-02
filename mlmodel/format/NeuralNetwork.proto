@@ -1337,9 +1337,25 @@ message WeightParams {
     bytes float16Value = 2;
 
     /**
-     * Raw value specification for custom layers and quantized lower precisions.
+     * Raw value specification for quantized lower precisions.
+     *
+     * This field is interpreted as uintN, where N is the number of bits in quantization.
+     * E.g. if n=8, the field is interpreted as an array of UINT8.
+     * Use this field for quantized parameters unless specifically noted to use
+     * int8RawValue.
      */
     bytes rawValue = 30;
+
+    /**
+     * Field to be used if int8DynamicQuantize is set in the parent layer.
+     * Cannot be set if rawValue is also set.
+     * The values in this field are interpreted as INT8.
+     *
+     * If this field is set, following conditions must hold true:
+     * * QuantizationType == LinearQuantizationParams, such that
+     *   * size of the "scale" field is 1 and "bias" field is empty in "LinearQuantizationParams"
+     */
+    bytes int8RawValue = 31;
 
     /**
      * Quantization related parameters.
@@ -1370,6 +1386,11 @@ message LinearQuantizationParams {
      * Must be an array of 1 element, or an array of C elements, where C
      * is number of output channels. For recurrent layers it is equal to
      * the output vector size.
+     *
+     * Relationship between quantized weights, unquantized weights, scale and bias:
+     *
+     * W_unquantized = W_quantized * scale + bias
+     *
      */
     repeated float scale = 1;
     repeated float bias = 2;
@@ -1547,6 +1568,19 @@ message InnerProductLayerParams {
 
     WeightParams weights = 20; /// Weight matrix [C_out, C_in].
     WeightParams bias = 21; /// Bias vector [C_out].
+
+    /**
+     * If set, this layer, at runtime, quantizes the floating point input blob to int8 before applying an
+     * inner product using INT8 weight matrix parameters, as provided in weights->int8RawValue. The
+     * result is then dequantized.
+     * Requires:
+     * * hasBias == false
+     * * QuantizationType == LinearQuantizationParams, such that
+     *   * size of the "scale" field is 1 and "bias" field is empty in "LinearQuantizationParams"
+     * * numberOfBits == 8
+     * * weights->rawValue_size to be empty
+     */
+    bool int8DynamicQuantize = 22;
 
 }
 
@@ -2614,6 +2648,50 @@ message PermuteLayerParams {
  *  Square of blockSize must divide C.
  *  Reverse of SPACE_TO_DEPTH. Data is moved from the channel dimension to the spatial dimensions.
  *
+ * mode == PIXEL_SHUFFLE
+ *  ``[C_out, H_out, W_out]`` : ``[C/(blockSize * blockSize), H * blockSize, W *  blockSize]``.
+ *  Square of blockSize must divide C.
+ *  Similar to DEPTH_TO_SPACE, but using the pixel-shuffle semantics for channel order in the output space.
+ *  In both modes, elements along the channel dimension are collapsed into
+ *  blocks in the spatial dimensions. The difference is in the arrangement of
+ *  the input-channels' data in the output space. See below example for more
+ *  detail.
+ *  (Only available in Core ML Specification >= 5 (iOS >= 14, macOS >= 10.16)
+ *
+ *
+ * Examples:
+ *
+ * Assume input is the following [C = 8, H = 1, W = 2] tensor:
+ *
+ * .. code::
+ *
+ *    [[[1 2]] [[3 4]] [[5 6]] [[7 8]] [[9 10]] [[11 12]] [[13 14]] [[15 16]]]
+ *
+ * If block_size == 2 and mode == DEPTH_TO_SPACE, output will be the following
+ * [C = 2, H = 2, W = 4] tensor:
+ *
+ * .. code::
+ *
+ *    [[[ 1  5  2  6]
+ *      [ 9 13 10 14]]
+ *
+ *     [[ 3  7  4  8]
+ *      [11 15 12 16]]]
+ *
+ * For mode == SPACE_TO_DEPTH, the behavior is the same as mode ==
+ * DEPTH_TO_SPACE, but with the input and output swapped.
+ *
+ * If block_size == 2 and mode == PIXEL_SHUFFLE, output will be the following
+ * [C = 2, H = 2, W = 4] tensor:
+ *
+ * .. code::
+ *
+ *    [[[ 1  3  2  4]
+ *      [ 5  7  6  8]]
+ *
+ *     [[ 9 11 10 12]
+ *      [13 15 14 16]]]
+ *
  */
 message ReorganizeDataLayerParams {
 
@@ -2621,6 +2699,7 @@ message ReorganizeDataLayerParams {
 
         SPACE_TO_DEPTH = 0;
         DEPTH_TO_SPACE = 1;
+        PIXEL_SHUFFLE = 2;
 
     }
     ReorganizationType mode = 1;
@@ -3544,6 +3623,20 @@ message BatchedMatMulLayerParams {
      */
     WeightParams weights = 8;
     WeightParams bias = 9; /// Bias vector [X2]. Supported only when there is one input.
+
+    /**
+     * If set, this layer, at runtime, quantizes the floating point input blob to int8 before applying the
+     * matrix multiplication using the INT8 weight parameters provided in weights->int8RawValue. The
+     * result is then dequantized.
+     * Requires:
+     * * number of inputs to be 1
+     * * hasBias == false
+     * * QuantizationType == LinearQuantizationParams, such that
+     *   * size of the "scale" field is 1 and "bias" field is empty in "LinearQuantizationParams"
+     * * numberOfBits == 8
+     * * weights->rawValue_size to be empty
+     */
+    bool int8DynamicQuantize = 10;
 
 }
 

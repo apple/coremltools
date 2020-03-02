@@ -22,6 +22,7 @@ namespace CoreML {
         FLOAT32, // float32 weights
         FLOAT16, // float16 weights
         QUINT,   // smaller or equal to 8-bit unsigned integer
+        QINT,    // int8 quantized weights
         UNSPECIFIED, // More then one type specified
         EMPTY // No populated fields
     };
@@ -35,7 +36,8 @@ namespace CoreML {
             numFilledIn++;
         if (param.rawvalue().size() > 0)
             numFilledIn++;
-        
+        if (param.int8rawvalue().size() > 0)
+            numFilledIn++;
         return (numFilledIn == 1);
     }
     
@@ -47,7 +49,8 @@ namespace CoreML {
             numFilledIn++;
         if (param.rawvalue().size() > 0)
             numFilledIn++;
-        
+        if (param.int8rawvalue().size() > 0)
+            numFilledIn++;
         return numFilledIn;
     }
 
@@ -64,8 +67,10 @@ namespace CoreML {
             return FLOAT32;
         } else if (param.float16value().size() > 0) {
             return FLOAT16;
-        } else if (param.rawvalue().size() > 0 && param.has_quantization()){
+        } else if (param.rawvalue().size() > 0 && param.has_quantization()) {
             return QUINT;
+        } else if (param.int8rawvalue().size() > 0 && param.has_quantization()) {
+            return QINT;
         }
         return EMPTY;
     }
@@ -195,12 +200,49 @@ namespace CoreML {
                 return (static_cast<int>(weights.float16value().size()));
             case QUINT:
                 return static_cast<int>(weights.rawvalue().size());
+            case QINT:
+                return static_cast<int>(weights.int8rawvalue().size());
             case EMPTY:
             case UNSPECIFIED:
             default:
                 break;
         }
         return 0;
+    };
+
+    /*
+     * Validates that other parameters are appropriate for using int8 quantization, including:
+     *      The weight type is int8
+     *      The number of quantization bits must be 8
+     *      The quantization type must be linear
+     *      The lineqrQuantization scale must have one element
+     *      The linearQuantization bias must be empty
+     *
+     */
+    inline Result validateInt8Requirements(const Specification::WeightParams& weights,
+                                           const std::string &layerType,
+                                           const std::string &layerName) {
+        if (CoreML::valueType(weights) != CoreML::QINT) {
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layerName + "' of type '" + layerType + " :  \
+                          when flag 'int8DynamicQuantize' is set to true, weights must be stored in the int8 format.");
+        }
+
+        if (weights.quantization().numberofbits() != 8) {
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layerName + "' of type '" + layerType + " : \
+                          Number of bits must equal 8 when flag 'int8DynamicQuantize' is set to true.");
+        } else if (!weights.quantization().has_linearquantization()) {
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layerName + "' of type '" + layerType + " : \
+                          Linear quantization must be used when flag 'int8DynamicQuantize' is set to true.");
+        } else if (weights.quantization().linearquantization().scale_size() != 1) {
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layerName + "' of type '" + layerType + " : \
+                          Linear quantization scale must be size 1 when flag 'int8DynamicQuantize' is set to true.");
+        } else if (weights.quantization().linearquantization().bias_size() != 0) {
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layerName + "' of type '" + layerType + " : \
+                          Linear quantization bias must be empty when flag 'int8DynamicQuantize' is set to true.");
+        } else {
+            return Result();
+        }
+        
     };
 
     Result validateSizeRange(const Specification::SizeRange & range);

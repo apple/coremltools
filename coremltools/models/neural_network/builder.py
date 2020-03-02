@@ -43,22 +43,35 @@ def _set_recurrent_activation(param, activation):
 
 def _verify_quantization_arguments(weight=bytes(),
                                    output_channels=1, **kwargs):
+
     quantization_type = kwargs.get('quantization_type', '').lower()
     nbits = kwargs.get('nbits', 8)
     quant_scale = kwargs.get('quant_scale', None)
     quant_bias = kwargs.get('quant_bias', None)
     quant_lut = kwargs.get('quant_lut', None)
+    int_8_dynamic_quantize = kwargs.get('int_8_dynamic_quantize', False)
+
+    if int_8_dynamic_quantize and nbits != 8:
+        raise ValueError('nbits must be 8 when \'int_8_dynamic_quantize\' is true ')
+
+    if int_8_dynamic_quantize and quant_bias is not None:
+        raise ValueError('quant_bias must be empty when \'int_8_dynamic_quantize\' is true ')
+
+    if int_8_dynamic_quantize and quant_scale.size != 1:
+        raise ValueError('quant_scale must be of size 1 when \'int_8_dynamic_quantize\' is true ')
 
     if not isinstance(weight, bytes):
         raise ValueError('Weight must be of type bytes() for quantization')
 
     if quantization_type == 'linear':
-        if quant_scale is None or quant_bias is None:
-            raise ValueError("quant_scale and quant_bias parameters must be provided for linear quantization type")
+        if not int_8_dynamic_quantize:
+            if quant_scale is None or quant_bias is None:
+                raise ValueError("quant_scale and quant_bias parameters must be provided for linear quantization type")
         if len(quant_scale) != 1 and len(quant_scale) != output_channels:
             raise ValueError("quant_scale should be of type float or an array of length outputChannels")
-        if len(quant_bias) != 1 and len(quant_bias) != output_channels:
-            raise ValueError("quant_bias should be of type float or an array of length outputChannels")
+        if not int_8_dynamic_quantize:
+            if len(quant_bias) != 1 and len(quant_bias) != output_channels:
+                raise ValueError("quant_bias should be of type float or an array of length outputChannels")
     elif quantization_type == 'lut':
         if quant_lut is None:
             raise ValueError("quant_lut must be provided for look up table quantization type")
@@ -73,9 +86,13 @@ def _verify_quantization_arguments(weight=bytes(),
 
 
 def _fill_quantized_weights(weights_message=None,
-                            W=bytes(), **kwargs):
-    weights_message.rawValue = bytes()
-    weights_message.rawValue += W
+                            W=bytes(), use_int_8=False, **kwargs):
+    if use_int_8:
+        weights_message.int8RawValue = bytes()
+        weights_message.int8RawValue += W
+    else:
+        weights_message.rawValue = bytes()
+        weights_message.rawValue += W
     nbits = kwargs.get('nbits', 8)
     weights_message.quantization.numberOfBits = nbits
     quantization_type = kwargs.get('quantization_type', '').lower()
@@ -83,7 +100,8 @@ def _fill_quantized_weights(weights_message=None,
         quant_scale = kwargs.get('quant_scale', [1.0])
         quant_bias = kwargs.get('quant_bias', [0.0])
         weights_message.quantization.linearQuantization.scale.extend(map(float, quant_scale))
-        weights_message.quantization.linearQuantization.bias.extend(map(float, quant_bias))
+        if not use_int_8:
+            weights_message.quantization.linearQuantization.bias.extend(map(float, quant_bias))
     else:
         quant_lut = kwargs.get('quant_lut', [0.0, 1.0])
         weights_message.quantization.lookupTableQuantization.floatValue.extend(map(float, quant_lut))
@@ -1006,7 +1024,9 @@ class NeuralNetworkBuilder(object):
                 raise ValueError('Reduce Ops must provide axes to reduce on if reduce_all is False')
 
     def add_inner_product(self, name, W, b, input_channels, output_channels, has_bias,
-                          input_name, output_name, **kwargs):
+                          input_name, output_name, int_8_dynamic_quantize=False,
+                          is_quantized_weight=False, quantization_type='linear',
+                          nbits=8, quant_scale=None, quant_bias=None, quant_lut=None):
         """
         Add an inner product layer to the model.
         Refer to the **InnerProductLayerParams** message in specification (NeuralNetwork.proto) for more details.
@@ -1029,13 +1049,19 @@ class NeuralNetworkBuilder(object):
 
             - If True, the bias vector of this layer is not ignored.
             - If False, the bias vector is ignored.
-
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
 
-        Quantization arguments expected in kwargs, when W is of type bytes():
+        Quantization arguments, used when W is of type bytes():
+
+            int_8_dynamic_quantize: boolean
+                Whether to quantize and dequantize before and after inner product, respectively.
+                Expects byte weights, representing int8 values, if True. See NeuralNetwork.proto for other validation conditions.
+
+            is_quantized_weight: bool, optional
+                Set it to true when W is of type bytes(), representing quantized weights, default: false.
 
             quantization_type: str
                 When weights are quantized (i.e. W is of type bytes()), this should be either "linear" or "lut".
@@ -1055,7 +1081,7 @@ class NeuralNetworkBuilder(object):
 
         See Also
         --------
-        add_embedding, add_convolution
+        add_embedding, add_convolution, add_batched_mat_mul
         """
 
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
@@ -1065,17 +1091,28 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.inputChannels = input_channels
         spec_layer_params.outputChannels = output_channels
         spec_layer_params.hasBias = has_bias
+        spec_layer_params.int8DynamicQuantize = int_8_dynamic_quantize
 
         weights = spec_layer_params.weights
-        if len(kwargs) == 0:
+        if not is_quantized_weight and isinstance(W, np.ndarray):
             weights.floatValue.extend(map(float, W.flatten()))
         else:
-            _verify_quantization_arguments(weight=W, output_channels=output_channels, **kwargs)
-            _fill_quantized_weights(weights_message=weights, W=W, **kwargs)
+
+            _verify_quantization_arguments(weight=W, output_channels=output_channels,
+                                           quantization_type=quantization_type,
+                                           nbits=nbits, quant_scale=quant_scale,
+                                           quant_bias=quant_bias, quant_lut=quant_lut,
+                                           int_8_dynamic_quantize=int_8_dynamic_quantize)
+
+            _fill_quantized_weights(weights_message=weights, W=W,
+                                    use_int_8=int_8_dynamic_quantize,
+                                    quantization_type=quantization_type, nbits=nbits,
+                                    quant_scale=quant_scale, quant_bias=quant_bias, quant_lut=quant_lut)
 
         if has_bias:
             bias = spec_layer_params.bias
             bias.floatValue.extend(map(float, b.flatten()))
+
         return spec_layer
 
     def add_embedding(self, name, W, b, input_dim, output_channels, has_bias,
@@ -1441,8 +1478,17 @@ class NeuralNetworkBuilder(object):
             'BILINEAR': bilinear interpolation
         linear_upsample_mode: str
             Specifies the behavior for linear upsampling. Only valid when Interpolation Mode is BILINEAR.
-            Takes value one of 'DEFAULT', 'ALIGN_CORNERS_TRUE' and 'ALIGN_CORNERS_FALSE'
-            For details please see the message "UpsampleLayerParams" in NeuralNetwork.proto
+            If input grid is [0, Xin-1] (corresponding to an input size of Xin), and if the output size is Xout,
+            then the grid points are sampled in the following manner:
+            'DEFAULT':
+                spacing = (Xin-Xin/Xout) / (Xout-1)
+                grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1
+            'ALIGN_CORNERS_TRUE':
+                spacing = (Xin-1) / (Xout-1)
+                grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1
+            'ALIGN_CORNERS_FALSE':
+                spacing = Xin / Xout
+                grid_point[i] = min(Xin-1, max(0, i * spacing + 0.5 * spacing - 0.5)), for i = 0,1,2,..,Xout-1
 
         See Also
         --------
@@ -2615,6 +2661,11 @@ class NeuralNetworkBuilder(object):
         elif mode == 'DEPTH_TO_SPACE':
             spec_layer_params.mode = \
                 _NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value('DEPTH_TO_SPACE')
+        elif mode == 'PIXEL_SHUFFLE':
+            if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+                self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+            spec_layer_params.mode = \
+                _NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value('PIXEL_SHUFFLE')
         else:
             raise NotImplementedError('Unknown reorganization mode %s.' % mode)
         return spec_layer
@@ -5339,6 +5390,7 @@ class NeuralNetworkBuilder(object):
                             transpose_a=False, transpose_b=False,
                             weight_matrix_rows=0, weight_matrix_columns=0,
                             W=None, bias=None,
+                            int_8_dynamic_quantize=False,
                             is_quantized_weight=False,
                             quantization_type='linear',
                             nbits=8,
@@ -5381,7 +5433,7 @@ class NeuralNetworkBuilder(object):
         bias: float32 numpy.array, optional
             Bias vector of shape (weight_matrix_columns,).
 
-        Quantization arguments expected in kwargs, when W is of type bytes():
+        Quantization arguments, used when W is of type bytes():
 
         is_quantized_weight: bool, optional
             Set it to true when W is of type bytes(), representing quantized weights, default: false.
@@ -5401,6 +5453,10 @@ class NeuralNetworkBuilder(object):
         quant_lut: numpy.array(dtype=numpy.float32), optional
             The LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits, default: None.
 
+        int_8_dynamic_quantize: bool
+            Whether to quantize and dequantize before and after batched matmul, respectively.
+            Expects byte weights, representing int8 values, if True. See NeuralNetwork.proto for other validation conditions.
+
         See Also
         --------
         add_inner_product
@@ -5411,6 +5467,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.batchedMatmul
         spec_layer_params.transposeA = transpose_a
         spec_layer_params.transposeB = transpose_b
+        spec_layer_params.int8DynamicQuantize = int_8_dynamic_quantize
 
         if ((W is not None) or (bias is not None)) and len(input_names) == 2:
             raise ValueError("batched_mat_mul: Weight and/or bias are ignored when there are two inputs")
@@ -5432,14 +5489,18 @@ class NeuralNetworkBuilder(object):
             if not is_quantized_weight:
                 weights.floatValue.extend(map(float, np.transpose(W).flatten()))
             else:
+
                 _verify_quantization_arguments(weight=W, output_channels=weight_matrix_columns,
                                                quantization_type=quantization_type, nbits=nbits,
-                                               quant_scale=quant_scale, quant_bias=quant_bias, quant_lut=quant_lut)
+                                               quant_scale=quant_scale, quant_bias=quant_bias, quant_lut=quant_lut,
+                                               int_8_dynamic_quantize=int_8_dynamic_quantize)
 
-                num_weights = weight_matrix_rows * weight_matrix_columns
                 if nbits < 8:
+                    num_weights = weight_matrix_rows * weight_matrix_columns
                     byte_arr = np.frombuffer(W, dtype=np.uint8)
                     W = unpack_to_bytes(byte_arr, num_weights, nbits)
+                elif int_8_dynamic_quantize:
+                    W = np.frombuffer(W, dtype=np.int8)
                 else:
                     W = np.frombuffer(W, dtype=np.uint8)
 
@@ -5453,6 +5514,7 @@ class NeuralNetworkBuilder(object):
                     W_bytes += _convert_array_to_nbit_quantized_bytes(W.flatten(), nbits).tobytes()
 
                 _fill_quantized_weights(weights_message=weights, W=W_bytes,
+                                        use_int_8=int_8_dynamic_quantize,
                                         quantization_type=quantization_type, nbits=nbits,
                                         quant_scale=quant_scale, quant_bias=quant_bias, quant_lut=quant_lut)
 

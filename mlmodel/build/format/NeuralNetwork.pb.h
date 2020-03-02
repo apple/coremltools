@@ -872,12 +872,13 @@ const int ReshapeLayerParams_ReshapeOrder_ReshapeOrder_ARRAYSIZE = ReshapeLayerP
 enum ReorganizeDataLayerParams_ReorganizationType {
   ReorganizeDataLayerParams_ReorganizationType_SPACE_TO_DEPTH = 0,
   ReorganizeDataLayerParams_ReorganizationType_DEPTH_TO_SPACE = 1,
+  ReorganizeDataLayerParams_ReorganizationType_PIXEL_SHUFFLE = 2,
   ReorganizeDataLayerParams_ReorganizationType_ReorganizeDataLayerParams_ReorganizationType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   ReorganizeDataLayerParams_ReorganizationType_ReorganizeDataLayerParams_ReorganizationType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
 bool ReorganizeDataLayerParams_ReorganizationType_IsValid(int value);
 const ReorganizeDataLayerParams_ReorganizationType ReorganizeDataLayerParams_ReorganizationType_ReorganizationType_MIN = ReorganizeDataLayerParams_ReorganizationType_SPACE_TO_DEPTH;
-const ReorganizeDataLayerParams_ReorganizationType ReorganizeDataLayerParams_ReorganizationType_ReorganizationType_MAX = ReorganizeDataLayerParams_ReorganizationType_DEPTH_TO_SPACE;
+const ReorganizeDataLayerParams_ReorganizationType ReorganizeDataLayerParams_ReorganizationType_ReorganizationType_MAX = ReorganizeDataLayerParams_ReorganizationType_PIXEL_SHUFFLE;
 const int ReorganizeDataLayerParams_ReorganizationType_ReorganizationType_ARRAYSIZE = ReorganizeDataLayerParams_ReorganizationType_ReorganizationType_MAX + 1;
 
 enum SliceLayerParams_SliceAxis {
@@ -6599,6 +6600,20 @@ class WeightParams : public ::google::protobuf::MessageLite /* @@protoc_insertio
   ::std::string* release_rawvalue();
   void set_allocated_rawvalue(::std::string* rawvalue);
 
+  // bytes int8RawValue = 31;
+  void clear_int8rawvalue();
+  static const int kInt8RawValueFieldNumber = 31;
+  const ::std::string& int8rawvalue() const;
+  void set_int8rawvalue(const ::std::string& value);
+  #if LANG_CXX11
+  void set_int8rawvalue(::std::string&& value);
+  #endif
+  void set_int8rawvalue(const char* value);
+  void set_int8rawvalue(const void* value, size_t size);
+  ::std::string* mutable_int8rawvalue();
+  ::std::string* release_int8rawvalue();
+  void set_allocated_int8rawvalue(::std::string* int8rawvalue);
+
   // .CoreML.Specification.QuantizationParams quantization = 40;
   bool has_quantization() const;
   void clear_quantization();
@@ -6622,6 +6637,7 @@ class WeightParams : public ::google::protobuf::MessageLite /* @@protoc_insertio
   mutable int _floatvalue_cached_byte_size_;
   ::google::protobuf::internal::ArenaStringPtr float16value_;
   ::google::protobuf::internal::ArenaStringPtr rawvalue_;
+  ::google::protobuf::internal::ArenaStringPtr int8rawvalue_;
   ::CoreML::Specification::QuantizationParams* quantization_;
   bool isupdatable_;
   mutable int _cached_size_;
@@ -7247,6 +7263,12 @@ class InnerProductLayerParams : public ::google::protobuf::MessageLite /* @@prot
   bool hasbias() const;
   void set_hasbias(bool value);
 
+  // bool int8DynamicQuantize = 22;
+  void clear_int8dynamicquantize();
+  static const int kInt8DynamicQuantizeFieldNumber = 22;
+  bool int8dynamicquantize() const;
+  void set_int8dynamicquantize(bool value);
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.InnerProductLayerParams)
  private:
 
@@ -7256,6 +7278,7 @@ class InnerProductLayerParams : public ::google::protobuf::MessageLite /* @@prot
   ::google::protobuf::uint64 inputchannels_;
   ::google::protobuf::uint64 outputchannels_;
   bool hasbias_;
+  bool int8dynamicquantize_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -9957,6 +9980,8 @@ class ReorganizeDataLayerParams : public ::google::protobuf::MessageLite /* @@pr
     ReorganizeDataLayerParams_ReorganizationType_SPACE_TO_DEPTH;
   static const ReorganizationType DEPTH_TO_SPACE =
     ReorganizeDataLayerParams_ReorganizationType_DEPTH_TO_SPACE;
+  static const ReorganizationType PIXEL_SHUFFLE =
+    ReorganizeDataLayerParams_ReorganizationType_PIXEL_SHUFFLE;
   static inline bool ReorganizationType_IsValid(int value) {
     return ReorganizeDataLayerParams_ReorganizationType_IsValid(value);
   }
@@ -12246,6 +12271,12 @@ class BatchedMatMulLayerParams : public ::google::protobuf::MessageLite /* @@pro
   bool hasbias() const;
   void set_hasbias(bool value);
 
+  // bool int8DynamicQuantize = 10;
+  void clear_int8dynamicquantize();
+  static const int kInt8DynamicQuantizeFieldNumber = 10;
+  bool int8dynamicquantize() const;
+  void set_int8dynamicquantize(bool value);
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.BatchedMatMulLayerParams)
  private:
 
@@ -12257,6 +12288,7 @@ class BatchedMatMulLayerParams : public ::google::protobuf::MessageLite /* @@pro
   bool transposea_;
   bool transposeb_;
   bool hasbias_;
+  bool int8dynamicquantize_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -31227,6 +31259,59 @@ inline void WeightParams::set_allocated_rawvalue(::std::string* rawvalue) {
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.rawValue)
 }
 
+// bytes int8RawValue = 31;
+inline void WeightParams::clear_int8rawvalue() {
+  int8rawvalue_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline const ::std::string& WeightParams::int8rawvalue() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.WeightParams.int8RawValue)
+  return int8rawvalue_.GetNoArena();
+}
+inline void WeightParams::set_int8rawvalue(const ::std::string& value) {
+  
+  int8rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.WeightParams.int8RawValue)
+}
+#if LANG_CXX11
+inline void WeightParams::set_int8rawvalue(::std::string&& value) {
+  
+  int8rawvalue_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.WeightParams.int8RawValue)
+}
+#endif
+inline void WeightParams::set_int8rawvalue(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+  
+  int8rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.WeightParams.int8RawValue)
+}
+inline void WeightParams::set_int8rawvalue(const void* value, size_t size) {
+  
+  int8rawvalue_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.WeightParams.int8RawValue)
+}
+inline ::std::string* WeightParams::mutable_int8rawvalue() {
+  
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.WeightParams.int8RawValue)
+  return int8rawvalue_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline ::std::string* WeightParams::release_int8rawvalue() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.WeightParams.int8RawValue)
+  
+  return int8rawvalue_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+inline void WeightParams::set_allocated_int8rawvalue(::std::string* int8rawvalue) {
+  if (int8rawvalue != NULL) {
+    
+  } else {
+    
+  }
+  int8rawvalue_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), int8rawvalue);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.WeightParams.int8RawValue)
+}
+
 // .CoreML.Specification.QuantizationParams quantization = 40;
 inline bool WeightParams::has_quantization() const {
   return this != internal_default_instance() && quantization_ != NULL;
@@ -32000,6 +32085,20 @@ inline void InnerProductLayerParams::set_allocated_bias(::CoreML::Specification:
     
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.InnerProductLayerParams.bias)
+}
+
+// bool int8DynamicQuantize = 22;
+inline void InnerProductLayerParams::clear_int8dynamicquantize() {
+  int8dynamicquantize_ = false;
+}
+inline bool InnerProductLayerParams::int8dynamicquantize() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.InnerProductLayerParams.int8DynamicQuantize)
+  return int8dynamicquantize_;
+}
+inline void InnerProductLayerParams::set_int8dynamicquantize(bool value) {
+  
+  int8dynamicquantize_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.InnerProductLayerParams.int8DynamicQuantize)
 }
 
 // -------------------------------------------------------------------
@@ -36436,6 +36535,20 @@ inline void BatchedMatMulLayerParams::set_allocated_bias(::CoreML::Specification
     
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.BatchedMatMulLayerParams.bias)
+}
+
+// bool int8DynamicQuantize = 10;
+inline void BatchedMatMulLayerParams::clear_int8dynamicquantize() {
+  int8dynamicquantize_ = false;
+}
+inline bool BatchedMatMulLayerParams::int8dynamicquantize() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.BatchedMatMulLayerParams.int8DynamicQuantize)
+  return int8dynamicquantize_;
+}
+inline void BatchedMatMulLayerParams::set_int8dynamicquantize(bool value) {
+  
+  int8dynamicquantize_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.BatchedMatMulLayerParams.int8DynamicQuantize)
 }
 
 // -------------------------------------------------------------------

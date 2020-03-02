@@ -708,6 +708,7 @@ enum MLReshapeOrder: int {
 enum MLReorganizationType: int {
     MLReorganizationTypeSPACE_TO_DEPTH = 0,
     MLReorganizationTypeDEPTH_TO_SPACE = 1,
+    MLReorganizationTypePIXEL_SHUFFLE = 2,
 };
 
 enum MLSliceAxis: int {

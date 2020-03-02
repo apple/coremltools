@@ -751,6 +751,16 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
                     if (layer.upsample().linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT) {
                         return true;
                     }
+                case Specification::NeuralNetworkLayer::kReorganizeData:
+                    if (layer.reorganizedata().mode() == Specification::ReorganizeDataLayerParams::PIXEL_SHUFFLE) {
+                      return true;
+                    }
+                case Specification::NeuralNetworkLayer::kInnerProduct:
+                    if (layer.innerproduct().int8dynamicquantize())
+                        return true;
+                case Specification::NeuralNetworkLayer::kBatchedMatmul:
+                    if (layer.batchedmatmul().int8dynamicquantize())
+                        return true;
                 default:
                     continue;
             }

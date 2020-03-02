@@ -19,7 +19,6 @@
 
 using namespace CoreML;
 
-
 int testNNValidatorSimple() {
 
     Specification::Model m1;
@@ -441,7 +440,173 @@ int testNNMissingLayer() {
     ML_ASSERT_BAD(res);
 
     return 0;
+}
 
+int testInnerProductDynamicQuantizationConversionParameterValidation() {
+
+    // Setup
+    Specification::Model m1;
+    Specification::NeuralNetwork *nnWrite = m1.mutable_neuralnetwork();
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("A");
+    topIn->mutable_type()->mutable_multiarraytype();
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("B");
+    out->mutable_type()->mutable_multiarraytype();
+
+    Specification::NeuralNetworkLayer* layer1 = nnWrite->add_layers();
+    layer1->set_name("inner_product");
+    layer1->add_input("A");
+    layer1->add_output("B");
+    Specification::InnerProductLayerParams* inner_product_params = layer1->mutable_innerproduct();
+    inner_product_params->set_inputchannels(4);
+    inner_product_params->set_outputchannels(2);
+    inner_product_params->set_hasbias(false);
+    inner_product_params->set_int8dynamicquantize(true);
+
+    auto* weights = inner_product_params->mutable_weights();
+    weights->set_int8rawvalue("11111111");
+    weights->mutable_quantization()->set_numberofbits(8);
+    weights->mutable_quantization()->mutable_linearquantization()->add_scale(4);
+
+    // Setup: Correct model
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+
+    // Case 1: has bias
+    inner_product_params->set_hasbias(true);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    inner_product_params->set_hasbias(false);
+
+    // Case 2: Non empty linear quantization bias
+    weights->mutable_quantization()->mutable_linearquantization()->add_bias(1);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->mutable_quantization()->mutable_linearquantization()->clear_bias();
+
+    // Case 3: numberofbits != 8
+    weights->mutable_quantization()->set_numberofbits(7);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->mutable_quantization()->set_numberofbits(8);
+
+    // Case 4: Lookup table mode is on
+    weights->mutable_quantization()->mutable_lookuptablequantization()->add_floatvalue(1);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->mutable_quantization()->mutable_linearquantization()->add_scale(4);
+
+    // Case 5: uint8 weights
+    weights->clear_int8rawvalue();
+    weights->set_rawvalue("11111111");
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->clear_rawvalue();
+
+    // Case 6: float16 weights
+    weights->set_float16value("0101010101010101");
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->clear_float16value();
+
+    // Case 7: float weights
+    for (int i = 0; i < 8; ++i){
+        weights->add_floatvalue(1);
+    }
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->clear_floatvalue();
+
+    return 0;
+}
+
+int testBatchedMatMulDynamicQuantizationConversionParameterValidation() {
+
+    Specification::Model m1;
+    Specification::NeuralNetwork* nnMain = m1.mutable_neuralnetwork();
+    // Required for spec v4 and onwards
+    nnMain->set_arrayinputshapemapping(Specification::EXACT_ARRAY_MAPPING);
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("A");
+    topIn->mutable_type()->mutable_multiarraytype();
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+
+    auto *out = m1.mutable_description()->add_output();
+    out->set_name("B");
+    out->mutable_type()->mutable_multiarraytype();
+
+    Specification::NeuralNetworkLayer* layer1 = nnMain->add_layers();
+    layer1->set_name("batched_mat_mul");
+    layer1->add_input("A");
+    layer1->add_output("B");
+    Specification::BatchedMatMulLayerParams* batch_mat_mul_params = layer1->mutable_batchedmatmul();
+    batch_mat_mul_params->set_weightmatrixfirstdimension(4);
+    batch_mat_mul_params->set_weightmatrixseconddimension(2);
+    batch_mat_mul_params->set_hasbias(false);
+    batch_mat_mul_params->set_int8dynamicquantize(true);
+
+    auto* weights = batch_mat_mul_params->mutable_weights();
+    weights->set_int8rawvalue("11111111");
+    weights->mutable_quantization()->set_numberofbits(8);
+    weights->mutable_quantization()->mutable_linearquantization()->add_scale(4);
+
+    // Setup: Correct validation
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+
+    // Case 1: has bias
+    batch_mat_mul_params->set_hasbias(true);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    batch_mat_mul_params->set_hasbias(false);
+
+    // Case 2: Non empty linear quantization bias
+    weights->mutable_quantization()->mutable_linearquantization()->add_bias(0);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->mutable_quantization()->mutable_linearquantization()->clear_bias();
+
+    // Case 3: numberofbits != 8
+    weights->mutable_quantization()->set_numberofbits(7);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->mutable_quantization()->set_numberofbits(8);
+
+    // Case 4: Lookup table mode is on
+    weights->mutable_quantization()->mutable_lookuptablequantization()->add_floatvalue(1);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->mutable_quantization()->mutable_linearquantization()->add_scale(4);
+
+    // Case 5: uint8 weights
+    weights->clear_int8rawvalue();
+    weights->set_rawvalue("11111111");
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->clear_rawvalue();
+
+    // Case 6: float16 weights
+    weights->set_float16value("0101010101010101");
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->clear_float16value();
+
+    // Case 7: float weights
+    for (int i = 0; i < 8; ++i){
+        weights->add_floatvalue(1);
+    }
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    weights->clear_floatvalue();
+
+    return 0;
 }
 
 int testRNNLayer() {
@@ -4240,7 +4405,111 @@ int testInvalidArgsortWrongAxis() {
     ML_ASSERT(res.message().find("axis") != std::string::npos);
 
     return 0;
+}
 
+int testValidReorganizeData() {
+    Specification::Model m;
+    Specification::FeatureDescription* input = m.mutable_description()->add_input();
+    input->set_name("input");
+    Specification::ArrayFeatureType* shape = input->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(18);
+    shape->add_shape(5);
+    shape->add_shape(7);
+
+    Specification::FeatureDescription* output = m.mutable_description()->add_output();
+    output->set_name("output");
+    output->mutable_type()->mutable_multiarraytype();
+    Specification::ArrayFeatureType* outShape = output->mutable_type()->mutable_multiarraytype();
+    outShape->add_shape(1);
+    outShape->add_shape(2);
+    outShape->add_shape(15);
+    outShape->add_shape(21);
+
+    Specification::NeuralNetwork* nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer* layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("output");
+    layer->mutable_reorganizedata()->set_mode(Specification::ReorganizeDataLayerParams::DEPTH_TO_SPACE);
+    layer->mutable_reorganizedata()->set_blocksize(3);
+
+    Result res = validate<MLModelType_neuralNetwork>(m);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testInvalidReorganizeDataInputRank() {
+    // Tests that the validator rejects layers with an input rank that doesn't
+    // match the output rank.
+    Specification::Model m;
+    Specification::FeatureDescription* input = m.mutable_description()->add_input();
+    input->set_name("input");
+    Specification::ArrayFeatureType* shape = input->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(18);
+    shape->add_shape(5);
+    shape->add_shape(7);
+
+    Specification::FeatureDescription* output = m.mutable_description()->add_output();
+    output->set_name("output");
+    output->mutable_type()->mutable_multiarraytype();
+    Specification::ArrayFeatureType* outShape = output->mutable_type()->mutable_multiarraytype();
+    outShape->add_shape(1);
+    outShape->add_shape(2);
+    outShape->add_shape(15);
+    outShape->add_shape(21);
+
+    Specification::NeuralNetwork* nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer* layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("output");
+    layer->mutable_reorganizedata()->set_mode(Specification::ReorganizeDataLayerParams::DEPTH_TO_SPACE);
+    layer->mutable_reorganizedata()->set_blocksize(3);
+
+    Result res = validate<MLModelType_neuralNetwork>(m);
+    ML_ASSERT_BAD(res);
+
+    return 0;
+}
+
+int testInvalidReorganizeDataBlockSize() {
+    // Tests that the validator rejects layers with an impossible block size.
+    // (Block size for a reorganizeData layer must be greater than 1).
+    Specification::Model m;
+    Specification::FeatureDescription* input = m.mutable_description()->add_input();
+    input->set_name("input");
+    Specification::ArrayFeatureType* shape = input->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(18);
+    shape->add_shape(5);
+    shape->add_shape(7);
+
+    Specification::FeatureDescription* output = m.mutable_description()->add_output();
+    output->set_name("output");
+    output->mutable_type()->mutable_multiarraytype();
+    Specification::ArrayFeatureType* outShape = output->mutable_type()->mutable_multiarraytype();
+    outShape->add_shape(1);
+    outShape->add_shape(2);
+    outShape->add_shape(15);
+    outShape->add_shape(21);
+
+    Specification::NeuralNetwork* nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer* layer = nn->add_layers();
+    layer->add_input("input");
+    layer->add_output("output");
+    layer->mutable_reorganizedata()->set_mode(Specification::ReorganizeDataLayerParams::DEPTH_TO_SPACE);
+    layer->mutable_reorganizedata()->set_blocksize(1);
+
+    Result res = validate<MLModelType_neuralNetwork>(m);
+    ML_ASSERT_BAD(res);
+
+    return 0;
 }
 
 #pragma clang diagnostic pop

@@ -297,6 +297,15 @@ Result NeuralNetworkSpecValidator::validateInnerProductLayer(const Specification
     }
 
     const auto& params = layer.innerproduct();
+    if (params.int8dynamicquantize()) {
+        if (params.hasbias()) {
+            std::string err = "InnerProduct layer '" + layer.name() + "' cannot have bias "
+            "and dynamic quantization.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+        r = validateInt8Requirements(params.weights(), "InnerProduct", layer.name());
+        if (!r.good()) {return r;}
+    }
 
     r = validateInnerProductWeightsBias(layer, params.weights(), params.bias());
 
@@ -1911,6 +1920,21 @@ Result NeuralNetworkSpecValidator::validateBatchedMatmulLayer(const Specificatio
         std::string err = "BatchedMatMul layer '" + layer.name() + "': has two inputs and 'hasBias' flag is set to True."
                                 "However, bias is only supported when the layer has 1 input.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    
+    if (layer.input_size() > 1 && layer.batchedmatmul().int8dynamicquantize()) {
+        std::string err = "BatchedMatMul layer '" + layer.name() + "': cannot use dynamic quantization with 2 inputs.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    if (layer.batchedmatmul().int8dynamicquantize()) {
+        if (layer.batchedmatmul().hasbias()) {
+            std::string err = "BatchedMatMul layer '" + layer.name() + "' cannot have bias "
+            "and dynamic quantization.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+        r = validateInt8Requirements(layer.batchedmatmul().weights(), "BatchedMatMul", layer.name());
+        if (!r.good()) {return r;}
     }
 
     if (layer.input_size() == 1) {

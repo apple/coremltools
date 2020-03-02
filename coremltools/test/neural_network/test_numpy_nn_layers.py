@@ -15,7 +15,6 @@ import numpy as np
 import pytest
 import tensorflow as tf
 import torch
-from torch import nn
 
 import coremltools
 import coremltools.models.datatypes as datatypes
@@ -74,13 +73,26 @@ class CorrectnessTest(unittest.TestCase):
             return False
         return True
 
-    def _test_predictions(self, np_preds, coreml_preds, delta=.01):
+    def _test_predictions(self, np_preds, coreml_preds, delta=.01, test_metric='rel_error', SNR=30, PSNR=40):
         np_preds = np_preds.flatten()
         coreml_preds = coreml_preds.flatten()
-        max_arr = np.maximum(np.maximum(np_preds, coreml_preds), 1.0)
-        all_deltas = np.abs(np_preds / max_arr - coreml_preds / max_arr)
-        max_delta = np.amax(all_deltas)
-        self.assertLessEqual(max_delta, delta)
+        if test_metric == 'rel_error':
+            max_arr = np.maximum(np.maximum(np_preds, coreml_preds), 1.0)
+            all_deltas = np.abs(np_preds / max_arr - coreml_preds / max_arr)
+            max_delta = np.amax(all_deltas)
+            self.assertLessEqual(max_delta, delta)
+        elif test_metric == 'SNR':
+            noise = np_preds - coreml_preds
+            noise_var = np.sum(noise ** 2) / len(noise) + 1e-7
+            signal_energy = np.sum(np_preds ** 2) / len(np_preds)
+            max_signal_energy = np.amax(np_preds ** 2)
+            snr = 10 * np.log10(signal_energy / noise_var)
+            psnr = 10 * np.log10(max_signal_energy / noise_var)
+            self.assertGreaterEqual(snr, SNR)
+            self.assertGreaterEqual(psnr, PSNR)
+        else:
+            raise ValueError('Test metric not supported')
+
 
     @staticmethod
     def _compare_moments(model, inputs, expected, use_cpu_only=True, num_moments=10):
@@ -118,7 +130,10 @@ class CorrectnessTest(unittest.TestCase):
                     model_precision=_MLMODEL_FULL_PRECISION,
                     useCPUOnly=False,
                     output_name_shape_dict={},
-                    validate_shapes_only=False):
+                    validate_shapes_only=False,
+                    test_metric='rel_error',
+                    delta=.01,
+                    SNR=30):
 
         model_dir = None
         # if we're given a path to a model
@@ -160,7 +175,8 @@ class CorrectnessTest(unittest.TestCase):
 
                 if not validate_shapes_only:
                     self._test_predictions(expected[output_name],
-                                           prediction[output_name])
+                                           prediction[output_name], delta=delta, test_metric=test_metric,
+                                           SNR=SNR)
         finally:
             # Remove the temporary directory if we created one
             if model_dir and os.path.exists(model_dir):
@@ -4666,6 +4682,107 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 input = {'data' : x.astype(np.float)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+
+    def test_batched_mat_mul_dynamic_quantization_cpu(self, cpu_only=True):
+        X1 = 11
+        X2 = 23
+        W = np.random.rand(X1, X2) * 20 - 10  # uniform between [-10, 10]
+        input_shapes = [(X1,), (5, X1), (2, 3, X1), (4, 1, X1), (12, 5, 8, X1),
+                        (2, 3, 1, 5, X1)]
+
+        W_max = max(np.abs(np.min(W)), np.abs(np.max(W)))
+        W_normalized = W / W_max # [-1,1]
+        W_quantized_int8 = 127.0 * W_normalized # [-127, 127]
+        W_quantized_int8 = W_quantized_int8.astype(np.int8)
+        quant_scale =  W_max / 127.0
+
+        for input_shape in input_shapes:
+            x = np.random.rand(*input_shape) * 10
+
+            input_features = [('data', datatypes.Array(*input_shape))]
+            output_features = [('output', None)]
+            builder = neural_network.NeuralNetworkBuilder(
+                input_features, output_features,
+                disable_rank5_shape_mapping=True)
+
+            builder.add_batched_mat_mul(name='batched_mat_mul',
+                                        input_names=['data'],
+                                        output_name='output',
+                                        weight_matrix_rows=X1,
+                                        weight_matrix_columns=X2,
+                                        int_8_dynamic_quantize=True,
+                                        is_quantized_weight=True,
+                                        quantization_type="linear",
+                                        nbits=8,
+                                        W=W_quantized_int8.tobytes(),
+                                        quant_scale=np.array([quant_scale])
+                                        )
+            inputs = {'data': x}
+            expected = {'output': np.matmul(x, W_quantized_int8.astype(np.float) * quant_scale)}
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
+
+    def test_batched_mat_mul_dynamic_quantization_gpu(self):
+        self.test_batched_mat_mul_dynamic_quantization_cpu(cpu_only=False)
+
+    def test_inner_product_dynamic_quantization_cpu(self, cpu_only=True):
+        Xin = 24
+        Xout = 23
+        W = np.random.rand(Xout, Xin)
+        # For rank 4 and 5, the product of the last 3 dimensions must equal Xin
+        input_shapes = [(Xin,), (5, Xin), (2, 3, Xin), (4, 1, Xin), (5, 2, 3, 4),
+                        (5, 6, 2, 3, 4)]
+
+        W_max = max(np.abs(np.min(W)), np.abs(np.max(W)))
+        W_normalized = W / W_max # [-1,1]
+        W_quantized_int8 = 127.0 * W_normalized # [-127, 127]
+        W_quantized_int8 = W_quantized_int8.astype(np.int8)
+        quant_scale =  W_max / 127.0
+
+        for input_shape in input_shapes:
+            rank = len(input_shape)
+            x = np.random.rand(*input_shape) * 5
+
+            W_for_numpy = W_quantized_int8.astype(np.float) * quant_scale
+
+            if rank == 1 or rank == 2 or rank == 3:
+                np_out = np.matmul(x, np.transpose(W_for_numpy))
+                expected = {'output': np_out}
+            elif rank == 4:
+                x_shaped = np.reshape(x, (x.shape[0], np.product(x.shape[1:])))
+                np_out = np.matmul(x_shaped, np.transpose(W_for_numpy))
+                expected = {'output': np.reshape(np_out, np_out.shape + (1,1))}
+            elif rank == 5:
+                x_shaped = np.reshape(x, x.shape[0:2] + (np.product(x.shape[2:]),))
+                np_out = np.matmul(x_shaped, np.transpose(W_for_numpy))
+                expected = {'output': np.reshape(np_out, x.shape[0:2] + (np_out.shape[-1],) + (1, 1))}
+
+            input_features = [('data', datatypes.Array(*input_shape))]
+            output_features = [('output', None)]
+            builder = neural_network.NeuralNetworkBuilder(
+                input_features, output_features,
+                disable_rank5_shape_mapping=True)
+
+            builder.add_inner_product(name='batched_mat_mul',
+                                      W=W_quantized_int8.tobytes(),
+                                      b=None,
+                                      input_channels=Xin,
+                                      output_channels=Xout,
+                                      has_bias=False,
+                                      input_name='data',
+                                      output_name='output',
+                                      int_8_dynamic_quantize=True,
+                                      is_quantized_weight=True,
+                                      quantization_type="linear",
+                                      nbits=8,
+                                      quant_scale=np.array([quant_scale])
+                                      )
+            inputs = {'data': x}
+            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
+
+    def test_inner_product_dynamic_quantization_gpu(self):
+        self.test_inner_product_dynamic_quantization_cpu(cpu_only=False)
+
+
     def test_onehot_layer_gpu(self):
         self.test_onehot_layer_cpu(cpu_only=False)
 
@@ -4778,7 +4895,16 @@ class IOS14SingleLayerTests(CorrectnessTest):
     def test_argsort_gpu(self):
         self.test_argsort_cpu(cpu_only=False)
 
-    def upsample_pytorch_test(self, h, w, scale_h, scale_w, align_corners, cpu_only=True):
+    def test_upsample_pytorch(self):
+        for cpu_only in [False, True]:
+            for align_corners in [False, True]:
+                for scale_h in range(1, 3):
+                    for scale_w in range(1, 3):
+                        for input_h in range(2, 6):
+                            for input_w in range(2, 6):
+                                self.upsample_pytorch_test(input_h, input_w, scale_h, scale_w, align_corners, cpu_only)
+
+    def upsample_pytorch_test(self, h, w, scale_h, scale_w, align_corners, cpu_only):
         input_dim = (1, h, w)
         if align_corners:
             linear_upsample_mode = 'ALIGN_CORNERS_TRUE'
@@ -4801,7 +4927,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
         # Get result from PyTorch
         x = torch.from_numpy(np.reshape(input_tensor, (1, 1, h, w)))
-        m = nn.Upsample(scale_factor=(scale_h, scale_w), mode='bilinear', align_corners=align_corners)
+        m = torch.nn.Upsample(scale_factor=(scale_h, scale_w), mode='bilinear', align_corners=align_corners)
         pytorch_output = m(x)
 
         # Expect PyTorch output matches CoreML output
@@ -4812,21 +4938,125 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
         self.assertEquals(len(input_dim), builder._get_rank('output'))
 
-    def test_upsample_pytorch_cpu(self):
-        for align_corners in [False, True]:
-            for scale_h in range(1, 3):
-                for scale_w in range(1, 3):
-                    for input_h in range(2, 6):
-                        for input_w in range(2, 6):
-                            self.upsample_pytorch_test(input_h, input_w, scale_h, scale_w, align_corners, cpu_only=True)
 
-    def test_upsample_pytorch_gpu(self):
-        for align_corners in [False, True]:
-            for scale_h in range(1, 3):
-                for scale_w in range(1, 3):
-                    for input_h in range(2, 6):
-                        for input_w in range(2, 6):
-                            self.upsample_pytorch_test(input_h, input_w, scale_h, scale_w, align_corners, cpu_only=False)
+class ReorganizeDataTests(CorrectnessTest):
+
+    def _to_rank_4(self, x):
+        from_rank = len(x.shape)
+        if from_rank == 3:
+            return np.reshape(x, [1] + list(x.shape))
+        elif from_rank == 4:
+            return x
+        elif from_rank == 5:
+            return np.squeeze(x, axis=0)
+
+    def _from_rank_4(self, x, to_rank):
+        if to_rank == 3:
+            return np.squeeze(x, axis=0)
+        elif to_rank == 4:
+            return x
+        elif to_rank == 5:
+            return np.reshape(x, [1] + list(x.shape))
+
+    def test_depth_to_space_cpu(self, cpu_only=True):
+
+        params_dict = {
+            "block_size": [2, 3, 4],
+            "channels_div_bsq": [1, 2, 3, 7],
+            "spatial": [[2, 3], [4, 4], [1, 1]],
+            "batch_size": [None, 1, 2],
+            "seq_length": [None, 1],
+        }
+        params_product = list(itertools.product(*params_dict.values()))
+        for param in params_product:
+            param = dict(zip(params_dict.keys(), param))
+            # Create input based on params
+            block_size = param["block_size"]
+            bsq = block_size * block_size
+            input_shape = [bsq * param["channels_div_bsq"]] + param["spatial"]
+            if (param["batch_size"] is not None):
+                input_shape = [param["batch_size"]] + input_shape
+            if (param["seq_length"] is not None):
+                input_shape = [param["seq_length"]] + input_shape
+            rank = len(input_shape)
+            x = np.random.random(input_shape)
+            input = {"data": x}
+
+            # Set up network
+            input_features = [("data", datatypes.Array(*input_shape))]
+            output_features = [("output", None)]
+            builder = neural_network.NeuralNetworkBuilder(
+                input_features, output_features,
+                disable_rank5_shape_mapping=True)
+            builder.add_reorganize_data(
+                "reorganize_data", "data", "output", mode="DEPTH_TO_SPACE",
+                block_size=block_size)
+
+            # Run tensorflow to calculate expected values
+            with tf.Session() as sess:
+                # TensorFlow requires rank 4, NHWC order on CPU
+                x_tf = self._to_rank_4(x).transpose(0, 2, 3, 1)
+                out_tf = sess.run(tf.nn.depth_to_space(
+                    x_tf, block_size, data_format="NHWC"))
+                out = self._from_rank_4(out_tf.transpose(0, 3, 1, 2), to_rank=rank)
+                expected = {"output": out}
+
+            # Run model to calculate CoreML values and compare with expected
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+    def test_depth_to_space_gpu(self):
+        self.test_depth_to_space_cpu(cpu_only=False)
+
+    @unittest.skipIf(macos_version() < LAYERS_10_16_MACOS_VERSION,
+                     'macOS 10.16+ required. Skipping tests.')
+    def test_pixel_shuffle_cpu(self, cpu_only=True):
+
+        params_dict = {
+            "block_size": [2, 3, 4],
+            "channels_div_bsq": [1, 2, 3, 7],
+            "spatial": [[2, 3], [4, 4], [1, 1]],
+            "batch_size": [None, 1, 2],
+            "seq_length": [None, 1],
+        }
+        params_product = list(itertools.product(*params_dict.values()))
+        for param in params_product:
+            param = dict(zip(params_dict.keys(), param))
+            # Create input based on params
+            block_size = param["block_size"]
+            bsq = block_size * block_size
+            input_shape = [bsq * param["channels_div_bsq"]] + param["spatial"]
+            if (param["batch_size"] is not None):
+                input_shape = [param["batch_size"]] + input_shape
+            if (param["seq_length"] is not None):
+                input_shape = [param["seq_length"]] + input_shape
+            rank = len(input_shape)
+            x = np.random.random(input_shape)
+            input = {"data": x}
+
+            # Set up network
+            input_features = [("data", datatypes.Array(*input_shape))]
+            output_features = [("output", None)]
+            builder = neural_network.NeuralNetworkBuilder(
+                input_features, output_features,
+                disable_rank5_shape_mapping=True)
+            builder.add_reorganize_data(
+                "reorganize_data", "data", "output", mode="PIXEL_SHUFFLE",
+                block_size=block_size)
+
+            # Run pytorch to calculate expected values
+            x_torch = torch.from_numpy(self._to_rank_4(x))
+            out_torch = torch.pixel_shuffle(
+                    x_torch, upscale_factor=block_size)
+            out = self._from_rank_4(out_torch.numpy(), to_rank=rank)
+            expected = {"output": out}
+
+            # Run model to calculate CoreML values and compare with expected
+            self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
+    @unittest.skipIf(macos_version() < LAYERS_10_16_MACOS_VERSION,
+                     'macOS 10.16+ required. Skipping tests.')
+    def test_pixel_shuffle_gpu(self):
+        self.test_pixel_shuffle_cpu(cpu_only=False)
 
 
 if __name__ == '__main__':
