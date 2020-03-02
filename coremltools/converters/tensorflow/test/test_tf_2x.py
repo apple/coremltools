@@ -379,6 +379,27 @@ class TestTensorflow2Model(unittest.TestCase):
                 outputs=['Identity']
             )
 
+    def test_save_and_load_low_level_model_with_no_signatures(self):
+        class model(tf.Module):
+            def __init__(self, in_features, output_features, name=None):
+                super(model, self).__init__(name=name)
+                self.in_features = in_features
+                self.w = tf.Variable(tf.random.normal([in_features, output_features]), name='w')
+
+            @tf.function()
+            def __call__(self, x):
+                return tf.matmul(x, self.w)
+
+        in_features = 20
+        output_features = 30
+        model = model(in_features, output_features)
+        tf.saved_model.save(model, self.saved_model_dir)
+        with pytest.raises(ValueError):
+            mlmodel = coremltools.converters.tensorflow.convert(
+                self.saved_model_dir,
+                inputs={'x':[1,20]},
+                outputs=['Identity']
+            )
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
