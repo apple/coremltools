@@ -207,7 +207,6 @@ def _graph_def_from_saved_model_or_keras_model(filename):
     :param filename: TensorFlow SavedModel directory or Keras HDF5 model (.h5) file.
     :return: TensorFlow GraphDef object.
     """
-
     try:
       import tensorflow as tf
       from tensorflow.python.keras.saving import saving_utils as _saving_utils
@@ -233,7 +232,6 @@ def _graph_def_from_saved_model_or_keras_model(filename):
         raise ValueError('Failed to load SavedModel or .h5 model. {}.'.format(e))
     except Exception as e:
         raise RuntimeError('Failed to load SavedModel or .h5 model. {}.'.format(e))
-
     return graph_def
 
 
