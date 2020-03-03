@@ -3,6 +3,7 @@ Keras==2.1.6
 Pillow
 h5py
 ipython
+future
 numpy
 olefile==0.44
 pandas
