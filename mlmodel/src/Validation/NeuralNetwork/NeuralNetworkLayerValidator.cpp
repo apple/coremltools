@@ -414,6 +414,107 @@ Result NeuralNetworkSpecValidator::validatePoolingLayer(const Specification::Neu
     return r;
 }
 
+Result NeuralNetworkSpecValidator::validatePooling3dLayer(const Specification::NeuralNetworkLayer& layer) {
+    Result r;
+    r = validateInputCount(layer, 1, 1);
+    if (!r.good()) {return r;}
+    
+    r = validateOutputCount(layer, 1, 1);
+    if (!r.good()) {return r;}
+    
+    if (ndArrayInterpretation) {
+        r = validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank);
+        if (!r.good()) {return r;}
+        // Rank 5 for 2 spacial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
+        r = validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank);
+        if (!r.good()) {return r;}
+    }
+    
+    // Kernel
+    int kernelDepth = layer.pooling3d().kerneldepth();
+    if (kernelDepth <= 0) {
+        std::string err = "Kernel Depth must be positive, got " + std::to_string(kernelDepth) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int kernelHeight = layer.pooling3d().kernelheight();
+    if (kernelHeight <= 0) {
+        std::string err = "Kernel Height must be positive, got " + std::to_string(kernelHeight) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int kernelWidth = layer.pooling3d().kernelwidth();
+    if (kernelWidth <= 0) {
+        std::string err = "Kernel Width must be positive, got " + std::to_string(kernelWidth) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // Stride
+    int strideDepth = layer.pooling3d().stridedepth();
+    if (strideDepth <= 0) {
+        std::string err = "Stride Depth must be positive, got " + std::to_string(strideDepth) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int strideHeight = layer.pooling3d().strideheight();
+    if (strideHeight <= 0) {
+        std::string err = "Stride Height must be positive, got " + std::to_string(strideHeight) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int strideWidth = layer.pooling3d().stridewidth();
+    if (strideWidth <= 0) {
+        std::string err = "Stride Width must be positive, got " + std::to_string(strideWidth) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // Custom Padding
+    int paddingFront = layer.pooling3d().custompaddingfront();
+    if (paddingFront < 0) {
+        std::string err = "Custom Padding Front must be non-negative, got " + std::to_string(paddingFront) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int paddingBack = layer.pooling3d().custompaddingback();
+    if (paddingBack < 0) {
+        std::string err = "Custom Padding Back must be non-negative, got " + std::to_string(paddingBack) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int paddingTop = layer.pooling3d().custompaddingtop();
+    if (paddingTop < 0) {
+        std::string err = "Custom Padding Top must be non-negative, got " + std::to_string(paddingTop) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int paddingBottom = layer.pooling3d().custompaddingbottom();
+    if (paddingBottom < 0) {
+        std::string err = "Custom Padding Bottom must be non-negative, got " + std::to_string(paddingBottom) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int paddingLeft = layer.pooling3d().custompaddingleft();
+    if (paddingLeft < 0) {
+        std::string err = "Custom Padding Left must be non-negative, got " + std::to_string(paddingLeft) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    int paddingRight = layer.pooling3d().custompaddingright();
+    if (paddingRight < 0) {
+        std::string err = "Custom Padding Right must be non-negative, got " + std::to_string(paddingRight) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // CountExcludePadding should only be set if we are using AVERAGE pooling, otherwise it should be left to the default value of False.
+    if (layer.pooling3d().type() != Specification::Pooling3DLayerParams_PoolingType3D_AVERAGE && layer.pooling3d().countexcludepadding()) {
+        std::string err = "Including or excluding the zeros in padding only makes sense for AVERAGE pooling types, but it was explicitly excluded for " + std::to_string(layer.pooling3d().type()) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    
+    
+    return r;
+}
+
 //    PaddingLayerParams padding = 9;
 Result NeuralNetworkSpecValidator::validatePaddingLayer(const Specification::NeuralNetworkLayer& layer) {
     Result r;

@@ -48,6 +48,8 @@ Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetw
             return validateActivation(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kPooling:
             return validatePoolingLayer(layer);
+        case Specification::NeuralNetworkLayer::LayerCase::kPooling3D:
+            return validatePooling3dLayer(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kPadding:
             return validatePaddingLayer(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kConcat:

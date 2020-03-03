@@ -4866,7 +4866,80 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
     def test_clamped_relu_gpu(self):
         self.test_clamped_relu_cpu(cpu_only=False)
+    
+    def _test_pool3d(self, cpu_only):
+        pool_types = ('MAX', 'AVERAGE')
+        shapes = ((1,1,1,2,2), (1,1,3,3,3), (3,4,10,17,90))
+        kernels = ((2,2,2), (1,3,4), (2,3,4), (5,1,6), (8,9,1), (7,11,13))
+        strides = ((1,1,1), (1,2,3), (2,3,2), (4,1,2), (3,4,1), (7,11,13))
+        paddings = ((0,0,0,0,0,0), (1,2,3,4,5,6))
+        
+        for pool_type in pool_types:
+            for shape in shapes:
+                for kernel in kernels:
+                    for stride in strides:
+                        for padding in paddings:
+                            for average_pooling_count_excludes_padding in (False, True):
+                                if pool_type != 'AVERAGE' and average_pooling_count_excludes_padding:
+                                    continue
+                                input_features = [('data', datatypes.Array(*shape))]
+                                output_features = [('output', None)]
+                                builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                                builder.add_pooling3d(name='pooling3d',
+                                                        input_name='data',
+                                                        output_name='output',
+                                                        pooling_type=pool_type,
+                                                        kernel_depth=kernel[0],
+                                                        kernel_height=kernel[1],
+                                                        kernel_width=kernel[2],
+                                                        stride_depth=stride[0],
+                                                        stride_height=stride[1],
+                                                        stride_width=stride[2],
+                                                        custom_padding_front=padding[0],
+                                                        custom_padding_back=padding[1],
+                                                        custom_padding_top=padding[2],
+                                                        custom_padding_bottom=padding[3],
+                                                        custom_padding_left=padding[4],
+                                                        custom_padding_right=padding[5],
+                                                        average_pooling_count_excludes_padding=average_pooling_count_excludes_padding)
+                                input = np.random.rand(*shape)
+                                expected_batch = shape[0]
+                                expected_channel = shape[1]
+                                try:
+                                    expected_depth = IOS14SingleLayerTests._compute_dimension(shape[2], kernel[0], stride[0], padding[0], padding[1])
+                                except ValueError as e:
+                                    print(str(e) + ', skipping')
+                                    continue
+                                    
+                                try:
+                                    expected_height = IOS14SingleLayerTests._compute_dimension(shape[3], kernel[1], stride[1], padding[2], padding[3])
+                                except ValueError as e:
+                                    print(str(e) + ', skipping')
+                                    continue
+                                
+                                try:
+                                    expected_width = IOS14SingleLayerTests._compute_dimension(shape[4], kernel[2], stride[2], padding[4], padding[5])
+                                except ValueError as e:
+                                    print(str(e) + ', skipping')
+                                    continue
+                                expected = {'output': np.random.rand(expected_batch, expected_channel, expected_depth, expected_height, expected_width)}
+                                self._test_model(builder.spec, {'data':input}, expected, validate_shapes_only=True, useCPUOnly=cpu_only)
+    
+    @staticmethod
+    def _compute_dimension(input_size, kernel_size, stride, start_padding, end_padding):
+        output_size =  (input_size + start_padding + end_padding - kernel_size)/stride + 1
+        if output_size < 1:
+            raise ValueError('dimension with input_size: %s, kernel_size: %s, stride: %s, start_padding: %s, end_padding: %s '
+            'has output size of %s, but must be >= 1' %
+                (input_size, kernel_size, stride, start_padding, end_padding, output_size))
+        # Intentionally rounding down.
+        return int(output_size)
 
+    def test_pool3d_cpu(self):
+        self._test_pool3d(cpu_only=True)
+    
+    def test_pool3d_gpu(self):
+        self._test_pool3d(cpu_only=False)
 
     def test_argsort_cpu(self, cpu_only = True):
 

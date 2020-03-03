@@ -985,6 +985,157 @@ int testInvalidPooling() {
 
 }
 
+int testValidPooling3d() {
+    Specification::Model m1;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    // Adding 5 shapes for a rank 5 input.
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    shape->add_shape(13);
+    shape->add_shape(14);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(CoreML::Specification::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *pooling3dLayer = nn->add_layers();
+    pooling3dLayer->add_input("input");
+    pooling3dLayer->add_output("probs");
+    auto *mutablePooling3d = pooling3dLayer->mutable_pooling3d();
+    
+    // Add Kernel sizes
+    mutablePooling3d->set_kerneldepth(2);
+    mutablePooling3d->set_kernelheight(2);
+    mutablePooling3d->set_kernelwidth(2);
+
+    // Add Strides
+    mutablePooling3d->set_stridedepth(5);
+    mutablePooling3d->set_strideheight(5);
+    mutablePooling3d->set_stridewidth(5);
+
+    // Add 6 Custom Paddings
+    mutablePooling3d->set_custompaddingfront(7);
+    mutablePooling3d->set_custompaddingback(7);
+    mutablePooling3d->set_custompaddingtop(7);
+    mutablePooling3d->set_custompaddingbottom(7);
+    mutablePooling3d->set_custompaddingleft(7);
+    mutablePooling3d->set_custompaddingright(7);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+    
+    return 0;
+}
+
+int testInvalidPooling3dNegativeKernelSize() {
+    Specification::Model m1;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    // Adding 5 shapes for a rank 5 input.
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    shape->add_shape(13);
+    shape->add_shape(14);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(CoreML::Specification::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *pooling3dLayer = nn->add_layers();
+    pooling3dLayer->add_input("input");
+    pooling3dLayer->add_output("probs");
+    auto *mutablePooling3d = pooling3dLayer->mutable_pooling3d();
+    
+    // Add Kernel sizes
+    mutablePooling3d->set_kerneldepth(2);
+    mutablePooling3d->set_kernelheight(2);
+    mutablePooling3d->set_kernelwidth(-1);
+
+    // Add Strides
+    mutablePooling3d->set_stridedepth(5);
+    mutablePooling3d->set_strideheight(5);
+    mutablePooling3d->set_stridewidth(5);
+
+    // Add 6 Custom Paddings
+    mutablePooling3d->set_custompaddingfront(7);
+    mutablePooling3d->set_custompaddingback(7);
+    mutablePooling3d->set_custompaddingtop(7);
+    mutablePooling3d->set_custompaddingbottom(7);
+    mutablePooling3d->set_custompaddingleft(7);
+    mutablePooling3d->set_custompaddingright(7);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    
+    return 0;
+}
+
+int testInvalidPooling3dCountExcludePaddingUsedWithMAXPooling() {
+    Specification::Model m1;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    // Adding 5 shapes for a rank 5 input.
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    shape->add_shape(13);
+    shape->add_shape(14);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(CoreML::Specification::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *pooling3dLayer = nn->add_layers();
+    pooling3dLayer->add_input("input");
+    pooling3dLayer->add_output("probs");
+    auto *mutablePooling3d = pooling3dLayer->mutable_pooling3d();
+    
+    // Add Kernel sizes
+    mutablePooling3d->set_kerneldepth(2);
+    mutablePooling3d->set_kernelheight(2);
+    mutablePooling3d->set_kernelwidth(2);
+
+    // Add Strides
+    mutablePooling3d->set_stridedepth(5);
+    mutablePooling3d->set_strideheight(5);
+    mutablePooling3d->set_stridewidth(5);
+
+    // Add 6 Custom Paddings
+    mutablePooling3d->set_custompaddingfront(7);
+    mutablePooling3d->set_custompaddingback(7);
+    mutablePooling3d->set_custompaddingtop(7);
+    mutablePooling3d->set_custompaddingbottom(7);
+    mutablePooling3d->set_custompaddingleft(7);
+    mutablePooling3d->set_custompaddingright(7);
+    
+    // Set padding type to MAX
+    mutablePooling3d->set_type(CoreML::Specification::Pooling3DLayerParams_PoolingType3D_MAX);
+    mutablePooling3d->set_countexcludepadding(true);
+    
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    
+    return 0;
+}
+
 int testInvalidConvolutionNoPadding() {
 
     Specification::Model m1;

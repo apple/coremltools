@@ -227,6 +227,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::CumSumLayerParams* cumsum_;
   const ::CoreML::Specification::ClampedReLU* clampedrelu_;
   const ::CoreML::Specification::ArgSortLayerParams* argsort_;
+  const ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
 } _NeuralNetworkLayer_default_instance_;
 class BranchLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BranchLayerParams> {
 } _BranchLayerParams_default_instance_;
@@ -302,6 +303,8 @@ class PoolingLayerParamsDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::SamePadding* same_;
   const ::CoreML::Specification::PoolingLayerParams_ValidCompletePadding* includelastpixel_;
 } _PoolingLayerParams_default_instance_;
+class Pooling3DLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Pooling3DLayerParams> {
+} _Pooling3DLayerParams_default_instance_;
 class PaddingLayerParams_PaddingConstantDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<PaddingLayerParams_PaddingConstant> {
 } _PaddingLayerParams_PaddingConstant_default_instance_;
 class PaddingLayerParams_PaddingReflectionDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<PaddingLayerParams_PaddingReflection> {
@@ -831,6 +834,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
 };
 
 
@@ -887,6 +891,7 @@ void TableStruct::Shutdown() {
   _BatchnormLayerParams_default_instance_.Shutdown();
   _PoolingLayerParams_ValidCompletePadding_default_instance_.Shutdown();
   _PoolingLayerParams_default_instance_.Shutdown();
+  _Pooling3DLayerParams_default_instance_.Shutdown();
   _PaddingLayerParams_PaddingConstant_default_instance_.Shutdown();
   _PaddingLayerParams_PaddingReflection_default_instance_.Shutdown();
   _PaddingLayerParams_PaddingReplication_default_instance_.Shutdown();
@@ -1094,6 +1099,7 @@ void TableStruct::InitDefaultsImpl() {
   _BatchnormLayerParams_default_instance_.DefaultConstruct();
   _PoolingLayerParams_ValidCompletePadding_default_instance_.DefaultConstruct();
   _PoolingLayerParams_default_instance_.DefaultConstruct();
+  _Pooling3DLayerParams_default_instance_.DefaultConstruct();
   _PaddingLayerParams_PaddingConstant_default_instance_.DefaultConstruct();
   _PaddingLayerParams_PaddingReflection_default_instance_.DefaultConstruct();
   _PaddingLayerParams_PaddingReplication_default_instance_.DefaultConstruct();
@@ -1511,6 +1517,23 @@ const PoolingLayerParams_PoolingType PoolingLayerParams::L2;
 const PoolingLayerParams_PoolingType PoolingLayerParams::PoolingType_MIN;
 const PoolingLayerParams_PoolingType PoolingLayerParams::PoolingType_MAX;
 const int PoolingLayerParams::PoolingType_ARRAYSIZE;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+bool Pooling3DLayerParams_PoolingType3D_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams::MAX;
+const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams::AVERAGE;
+const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams::PoolingType3D_MIN;
+const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams::PoolingType3D_MAX;
+const int Pooling3DLayerParams::PoolingType3D_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 bool UnaryFunctionLayerParams_Operation_IsValid(int value) {
   switch (value) {
@@ -7580,6 +7603,7 @@ const int NeuralNetworkLayer::kOneHotFieldNumber;
 const int NeuralNetworkLayer::kCumSumFieldNumber;
 const int NeuralNetworkLayer::kClampedReLUFieldNumber;
 const int NeuralNetworkLayer::kArgSortFieldNumber;
+const int NeuralNetworkLayer::kPooling3DFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NeuralNetworkLayer::NeuralNetworkLayer()
@@ -8220,6 +8244,10 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
     }
     case kArgSort: {
       mutable_argsort()->::CoreML::Specification::ArgSortLayerParams::MergeFrom(from.argsort());
+      break;
+    }
+    case kPooling3D: {
+      mutable_pooling3d()->::CoreML::Specification::Pooling3DLayerParams::MergeFrom(from.pooling3d());
       break;
     }
     case LAYER_NOT_SET: {
@@ -8883,6 +8911,10 @@ void NeuralNetworkLayer::clear_layer() {
     }
     case kArgSort: {
       delete layer_.argsort_;
+      break;
+    }
+    case kPooling3D: {
+      delete layer_.pooling3d_;
       break;
     }
     case LAYER_NOT_SET: {
@@ -10850,6 +10882,18 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.Pooling3DLayerParams pooling3d = 1465;
+      case 1465: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(11722u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_pooling3d()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -11846,6 +11890,12 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
   if (has_argsort()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1461, *layer_.argsort_, output);
+  }
+
+  // .CoreML.Specification.Pooling3DLayerParams pooling3d = 1465;
+  if (has_pooling3d()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1465, *layer_.pooling3d_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NeuralNetworkLayer)
@@ -12984,6 +13034,13 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.argsort_);
       break;
     }
+    // .CoreML.Specification.Pooling3DLayerParams pooling3d = 1465;
+    case kPooling3D: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.pooling3d_);
+      break;
+    }
     case LAYER_NOT_SET: {
       break;
     }
@@ -13633,6 +13690,10 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
     }
     case kArgSort: {
       mutable_argsort()->::CoreML::Specification::ArgSortLayerParams::MergeFrom(from.argsort());
+      break;
+    }
+    case kPooling3D: {
+      mutable_pooling3d()->::CoreML::Specification::Pooling3DLayerParams::MergeFrom(from.pooling3d());
       break;
     }
     case LAYER_NOT_SET: {
@@ -21330,6 +21391,54 @@ void NeuralNetworkLayer::set_allocated_argsort(::CoreML::Specification::ArgSortL
     layer_.argsort_ = argsort;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.argSort)
+}
+
+// .CoreML.Specification.Pooling3DLayerParams pooling3d = 1465;
+bool NeuralNetworkLayer::has_pooling3d() const {
+  return layer_case() == kPooling3D;
+}
+void NeuralNetworkLayer::set_has_pooling3d() {
+  _oneof_case_[0] = kPooling3D;
+}
+void NeuralNetworkLayer::clear_pooling3d() {
+  if (has_pooling3d()) {
+    delete layer_.pooling3d_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::Pooling3DLayerParams& NeuralNetworkLayer::pooling3d() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.pooling3d)
+  return has_pooling3d()
+      ? *layer_.pooling3d_
+      : ::CoreML::Specification::Pooling3DLayerParams::default_instance();
+}
+::CoreML::Specification::Pooling3DLayerParams* NeuralNetworkLayer::mutable_pooling3d() {
+  if (!has_pooling3d()) {
+    clear_layer();
+    set_has_pooling3d();
+    layer_.pooling3d_ = new ::CoreML::Specification::Pooling3DLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.pooling3d)
+  return layer_.pooling3d_;
+}
+::CoreML::Specification::Pooling3DLayerParams* NeuralNetworkLayer::release_pooling3d() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.pooling3d)
+  if (has_pooling3d()) {
+    clear_has_layer();
+    ::CoreML::Specification::Pooling3DLayerParams* temp = layer_.pooling3d_;
+    layer_.pooling3d_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_pooling3d(::CoreML::Specification::Pooling3DLayerParams* pooling3d) {
+  clear_layer();
+  if (pooling3d) {
+    set_has_pooling3d();
+    layer_.pooling3d_ = pooling3d;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.pooling3d)
 }
 
 bool NeuralNetworkLayer::has_layer() const {
@@ -31195,6 +31304,790 @@ void PoolingLayerParams::clear_has_PoolingPaddingType() {
 PoolingLayerParams::PoolingPaddingTypeCase PoolingLayerParams::PoolingPaddingType_case() const {
   return PoolingLayerParams::PoolingPaddingTypeCase(_oneof_case_[0]);
 }
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int Pooling3DLayerParams::kTypeFieldNumber;
+const int Pooling3DLayerParams::kKernelDepthFieldNumber;
+const int Pooling3DLayerParams::kKernelHeightFieldNumber;
+const int Pooling3DLayerParams::kKernelWidthFieldNumber;
+const int Pooling3DLayerParams::kStrideDepthFieldNumber;
+const int Pooling3DLayerParams::kStrideHeightFieldNumber;
+const int Pooling3DLayerParams::kStrideWidthFieldNumber;
+const int Pooling3DLayerParams::kCustomPaddingFrontFieldNumber;
+const int Pooling3DLayerParams::kCustomPaddingBackFieldNumber;
+const int Pooling3DLayerParams::kCustomPaddingTopFieldNumber;
+const int Pooling3DLayerParams::kCustomPaddingBottomFieldNumber;
+const int Pooling3DLayerParams::kCustomPaddingLeftFieldNumber;
+const int Pooling3DLayerParams::kCustomPaddingRightFieldNumber;
+const int Pooling3DLayerParams::kCountExcludePaddingFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+Pooling3DLayerParams::Pooling3DLayerParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.Pooling3DLayerParams)
+}
+Pooling3DLayerParams::Pooling3DLayerParams(const Pooling3DLayerParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::memcpy(&type_, &from.type_,
+    reinterpret_cast<char*>(&countexcludepadding_) -
+    reinterpret_cast<char*>(&type_) + sizeof(countexcludepadding_));
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.Pooling3DLayerParams)
+}
+
+void Pooling3DLayerParams::SharedCtor() {
+  ::memset(&type_, 0, reinterpret_cast<char*>(&countexcludepadding_) -
+    reinterpret_cast<char*>(&type_) + sizeof(countexcludepadding_));
+  _cached_size_ = 0;
+}
+
+Pooling3DLayerParams::~Pooling3DLayerParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.Pooling3DLayerParams)
+  SharedDtor();
+}
+
+void Pooling3DLayerParams::SharedDtor() {
+}
+
+void Pooling3DLayerParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const Pooling3DLayerParams& Pooling3DLayerParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+Pooling3DLayerParams* Pooling3DLayerParams::New(::google::protobuf::Arena* arena) const {
+  Pooling3DLayerParams* n = new Pooling3DLayerParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void Pooling3DLayerParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.Pooling3DLayerParams)
+  ::memset(&type_, 0, reinterpret_cast<char*>(&countexcludepadding_) -
+    reinterpret_cast<char*>(&type_) + sizeof(countexcludepadding_));
+}
+
+bool Pooling3DLayerParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.Pooling3DLayerParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // .CoreML.Specification.Pooling3DLayerParams.PoolingType3D type = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          set_type(static_cast< ::CoreML::Specification::Pooling3DLayerParams_PoolingType3D >(value));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 kernelDepth = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &kerneldepth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 kernelHeight = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &kernelheight_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 kernelWidth = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(32u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &kernelwidth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 strideDepth = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &stridedepth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 strideHeight = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(48u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &strideheight_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 strideWidth = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(56u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &stridewidth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingFront = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(64u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingfront_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingBack = 9;
+      case 9: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(72u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingback_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingTop = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(80u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingtop_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingBottom = 11;
+      case 11: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(88u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingbottom_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingLeft = 12;
+      case 12: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(96u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingleft_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingRight = 13;
+      case 13: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(104u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingright_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool countExcludePadding = 14;
+      case 14: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(112u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &countexcludepadding_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.Pooling3DLayerParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.Pooling3DLayerParams)
+  return false;
+#undef DO_
+}
+
+void Pooling3DLayerParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.Pooling3DLayerParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .CoreML.Specification.Pooling3DLayerParams.PoolingType3D type = 1;
+  if (this->type() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      1, this->type(), output);
+  }
+
+  // int32 kernelDepth = 2;
+  if (this->kerneldepth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->kerneldepth(), output);
+  }
+
+  // int32 kernelHeight = 3;
+  if (this->kernelheight() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->kernelheight(), output);
+  }
+
+  // int32 kernelWidth = 4;
+  if (this->kernelwidth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->kernelwidth(), output);
+  }
+
+  // int32 strideDepth = 5;
+  if (this->stridedepth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->stridedepth(), output);
+  }
+
+  // int32 strideHeight = 6;
+  if (this->strideheight() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(6, this->strideheight(), output);
+  }
+
+  // int32 strideWidth = 7;
+  if (this->stridewidth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(7, this->stridewidth(), output);
+  }
+
+  // int32 customPaddingFront = 8;
+  if (this->custompaddingfront() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(8, this->custompaddingfront(), output);
+  }
+
+  // int32 customPaddingBack = 9;
+  if (this->custompaddingback() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(9, this->custompaddingback(), output);
+  }
+
+  // int32 customPaddingTop = 10;
+  if (this->custompaddingtop() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(10, this->custompaddingtop(), output);
+  }
+
+  // int32 customPaddingBottom = 11;
+  if (this->custompaddingbottom() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(11, this->custompaddingbottom(), output);
+  }
+
+  // int32 customPaddingLeft = 12;
+  if (this->custompaddingleft() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(12, this->custompaddingleft(), output);
+  }
+
+  // int32 customPaddingRight = 13;
+  if (this->custompaddingright() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(13, this->custompaddingright(), output);
+  }
+
+  // bool countExcludePadding = 14;
+  if (this->countexcludepadding() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(14, this->countexcludepadding(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.Pooling3DLayerParams)
+}
+
+size_t Pooling3DLayerParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.Pooling3DLayerParams)
+  size_t total_size = 0;
+
+  // .CoreML.Specification.Pooling3DLayerParams.PoolingType3D type = 1;
+  if (this->type() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+  }
+
+  // int32 kernelDepth = 2;
+  if (this->kerneldepth() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->kerneldepth());
+  }
+
+  // int32 kernelHeight = 3;
+  if (this->kernelheight() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->kernelheight());
+  }
+
+  // int32 kernelWidth = 4;
+  if (this->kernelwidth() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->kernelwidth());
+  }
+
+  // int32 strideDepth = 5;
+  if (this->stridedepth() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->stridedepth());
+  }
+
+  // int32 strideHeight = 6;
+  if (this->strideheight() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->strideheight());
+  }
+
+  // int32 strideWidth = 7;
+  if (this->stridewidth() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->stridewidth());
+  }
+
+  // int32 customPaddingFront = 8;
+  if (this->custompaddingfront() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingfront());
+  }
+
+  // int32 customPaddingBack = 9;
+  if (this->custompaddingback() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingback());
+  }
+
+  // int32 customPaddingTop = 10;
+  if (this->custompaddingtop() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingtop());
+  }
+
+  // int32 customPaddingBottom = 11;
+  if (this->custompaddingbottom() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingbottom());
+  }
+
+  // int32 customPaddingLeft = 12;
+  if (this->custompaddingleft() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingleft());
+  }
+
+  // int32 customPaddingRight = 13;
+  if (this->custompaddingright() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingright());
+  }
+
+  // bool countExcludePadding = 14;
+  if (this->countexcludepadding() != 0) {
+    total_size += 1 + 1;
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Pooling3DLayerParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const Pooling3DLayerParams*>(&from));
+}
+
+void Pooling3DLayerParams::MergeFrom(const Pooling3DLayerParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.Pooling3DLayerParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.type() != 0) {
+    set_type(from.type());
+  }
+  if (from.kerneldepth() != 0) {
+    set_kerneldepth(from.kerneldepth());
+  }
+  if (from.kernelheight() != 0) {
+    set_kernelheight(from.kernelheight());
+  }
+  if (from.kernelwidth() != 0) {
+    set_kernelwidth(from.kernelwidth());
+  }
+  if (from.stridedepth() != 0) {
+    set_stridedepth(from.stridedepth());
+  }
+  if (from.strideheight() != 0) {
+    set_strideheight(from.strideheight());
+  }
+  if (from.stridewidth() != 0) {
+    set_stridewidth(from.stridewidth());
+  }
+  if (from.custompaddingfront() != 0) {
+    set_custompaddingfront(from.custompaddingfront());
+  }
+  if (from.custompaddingback() != 0) {
+    set_custompaddingback(from.custompaddingback());
+  }
+  if (from.custompaddingtop() != 0) {
+    set_custompaddingtop(from.custompaddingtop());
+  }
+  if (from.custompaddingbottom() != 0) {
+    set_custompaddingbottom(from.custompaddingbottom());
+  }
+  if (from.custompaddingleft() != 0) {
+    set_custompaddingleft(from.custompaddingleft());
+  }
+  if (from.custompaddingright() != 0) {
+    set_custompaddingright(from.custompaddingright());
+  }
+  if (from.countexcludepadding() != 0) {
+    set_countexcludepadding(from.countexcludepadding());
+  }
+}
+
+void Pooling3DLayerParams::CopyFrom(const Pooling3DLayerParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.Pooling3DLayerParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Pooling3DLayerParams::IsInitialized() const {
+  return true;
+}
+
+void Pooling3DLayerParams::Swap(Pooling3DLayerParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void Pooling3DLayerParams::InternalSwap(Pooling3DLayerParams* other) {
+  std::swap(type_, other->type_);
+  std::swap(kerneldepth_, other->kerneldepth_);
+  std::swap(kernelheight_, other->kernelheight_);
+  std::swap(kernelwidth_, other->kernelwidth_);
+  std::swap(stridedepth_, other->stridedepth_);
+  std::swap(strideheight_, other->strideheight_);
+  std::swap(stridewidth_, other->stridewidth_);
+  std::swap(custompaddingfront_, other->custompaddingfront_);
+  std::swap(custompaddingback_, other->custompaddingback_);
+  std::swap(custompaddingtop_, other->custompaddingtop_);
+  std::swap(custompaddingbottom_, other->custompaddingbottom_);
+  std::swap(custompaddingleft_, other->custompaddingleft_);
+  std::swap(custompaddingright_, other->custompaddingright_);
+  std::swap(countexcludepadding_, other->countexcludepadding_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string Pooling3DLayerParams::GetTypeName() const {
+  return "CoreML.Specification.Pooling3DLayerParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// Pooling3DLayerParams
+
+// .CoreML.Specification.Pooling3DLayerParams.PoolingType3D type = 1;
+void Pooling3DLayerParams::clear_type() {
+  type_ = 0;
+}
+::CoreML::Specification::Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams::type() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.type)
+  return static_cast< ::CoreML::Specification::Pooling3DLayerParams_PoolingType3D >(type_);
+}
+void Pooling3DLayerParams::set_type(::CoreML::Specification::Pooling3DLayerParams_PoolingType3D value) {
+  
+  type_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.type)
+}
+
+// int32 kernelDepth = 2;
+void Pooling3DLayerParams::clear_kerneldepth() {
+  kerneldepth_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::kerneldepth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.kernelDepth)
+  return kerneldepth_;
+}
+void Pooling3DLayerParams::set_kerneldepth(::google::protobuf::int32 value) {
+  
+  kerneldepth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.kernelDepth)
+}
+
+// int32 kernelHeight = 3;
+void Pooling3DLayerParams::clear_kernelheight() {
+  kernelheight_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::kernelheight() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.kernelHeight)
+  return kernelheight_;
+}
+void Pooling3DLayerParams::set_kernelheight(::google::protobuf::int32 value) {
+  
+  kernelheight_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.kernelHeight)
+}
+
+// int32 kernelWidth = 4;
+void Pooling3DLayerParams::clear_kernelwidth() {
+  kernelwidth_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::kernelwidth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.kernelWidth)
+  return kernelwidth_;
+}
+void Pooling3DLayerParams::set_kernelwidth(::google::protobuf::int32 value) {
+  
+  kernelwidth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.kernelWidth)
+}
+
+// int32 strideDepth = 5;
+void Pooling3DLayerParams::clear_stridedepth() {
+  stridedepth_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::stridedepth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.strideDepth)
+  return stridedepth_;
+}
+void Pooling3DLayerParams::set_stridedepth(::google::protobuf::int32 value) {
+  
+  stridedepth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.strideDepth)
+}
+
+// int32 strideHeight = 6;
+void Pooling3DLayerParams::clear_strideheight() {
+  strideheight_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::strideheight() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.strideHeight)
+  return strideheight_;
+}
+void Pooling3DLayerParams::set_strideheight(::google::protobuf::int32 value) {
+  
+  strideheight_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.strideHeight)
+}
+
+// int32 strideWidth = 7;
+void Pooling3DLayerParams::clear_stridewidth() {
+  stridewidth_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::stridewidth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.strideWidth)
+  return stridewidth_;
+}
+void Pooling3DLayerParams::set_stridewidth(::google::protobuf::int32 value) {
+  
+  stridewidth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.strideWidth)
+}
+
+// int32 customPaddingFront = 8;
+void Pooling3DLayerParams::clear_custompaddingfront() {
+  custompaddingfront_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::custompaddingfront() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.customPaddingFront)
+  return custompaddingfront_;
+}
+void Pooling3DLayerParams::set_custompaddingfront(::google::protobuf::int32 value) {
+  
+  custompaddingfront_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.customPaddingFront)
+}
+
+// int32 customPaddingBack = 9;
+void Pooling3DLayerParams::clear_custompaddingback() {
+  custompaddingback_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::custompaddingback() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.customPaddingBack)
+  return custompaddingback_;
+}
+void Pooling3DLayerParams::set_custompaddingback(::google::protobuf::int32 value) {
+  
+  custompaddingback_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.customPaddingBack)
+}
+
+// int32 customPaddingTop = 10;
+void Pooling3DLayerParams::clear_custompaddingtop() {
+  custompaddingtop_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::custompaddingtop() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.customPaddingTop)
+  return custompaddingtop_;
+}
+void Pooling3DLayerParams::set_custompaddingtop(::google::protobuf::int32 value) {
+  
+  custompaddingtop_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.customPaddingTop)
+}
+
+// int32 customPaddingBottom = 11;
+void Pooling3DLayerParams::clear_custompaddingbottom() {
+  custompaddingbottom_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::custompaddingbottom() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.customPaddingBottom)
+  return custompaddingbottom_;
+}
+void Pooling3DLayerParams::set_custompaddingbottom(::google::protobuf::int32 value) {
+  
+  custompaddingbottom_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.customPaddingBottom)
+}
+
+// int32 customPaddingLeft = 12;
+void Pooling3DLayerParams::clear_custompaddingleft() {
+  custompaddingleft_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::custompaddingleft() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.customPaddingLeft)
+  return custompaddingleft_;
+}
+void Pooling3DLayerParams::set_custompaddingleft(::google::protobuf::int32 value) {
+  
+  custompaddingleft_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.customPaddingLeft)
+}
+
+// int32 customPaddingRight = 13;
+void Pooling3DLayerParams::clear_custompaddingright() {
+  custompaddingright_ = 0;
+}
+::google::protobuf::int32 Pooling3DLayerParams::custompaddingright() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.customPaddingRight)
+  return custompaddingright_;
+}
+void Pooling3DLayerParams::set_custompaddingright(::google::protobuf::int32 value) {
+  
+  custompaddingright_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.customPaddingRight)
+}
+
+// bool countExcludePadding = 14;
+void Pooling3DLayerParams::clear_countexcludepadding() {
+  countexcludepadding_ = false;
+}
+bool Pooling3DLayerParams::countexcludepadding() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.countExcludePadding)
+  return countexcludepadding_;
+}
+void Pooling3DLayerParams::set_countexcludepadding(bool value) {
+  
+  countexcludepadding_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.countExcludePadding)
+}
+
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
 
 // ===================================================================

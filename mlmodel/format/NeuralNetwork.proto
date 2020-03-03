@@ -694,6 +694,7 @@ message NeuralNetworkLayer {
         CumSumLayerParams cumSum = 1455;
         ClampedReLU clampedReLU = 1460;
         ArgSortLayerParams argSort = 1461;
+        Pooling3DLayerParams pooling3d = 1465;
 
     }
 
@@ -1791,6 +1792,94 @@ message PoolingLayerParams {
      */
     bool globalPooling = 60;
 
+}
+
+/*
+ * A layer to pool three spacial dimensions
+ *
+ * Input
+ *      A blob with rank equal to 5, representing [Batch, channels, depth, height, width].
+ *
+ * Output
+ *      Rank is same as the input: A blob with rank equal to 5, representing [Batch, channels, depth, height, width].
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ * For example, given an input of shape (1,1,2,3,3):
+ *        +----+----+----+
+ *      / | 10 | 11 | 12 |
+ *     /  +----+----+----+
+ *    /   | 13 | 14 | 15 |
+ *   /    +----+----+----+
+ *  /     | 16 | 17 | 18 |
+ * /      +----+----+----+
+ * +----+----+----+      /
+ * |  1 |  2 |  3 |     /
+ * +----+----+----+    /
+ * |  4 |  5 |  6 |   /
+ * +----+----+----+  /
+ * |  7 |  8 |  9 | /
+ * +----+----+----+
+ *
+ * And applying MAX pooling using:
+ *      Kernel: 2x2x2
+ *      Stride: 1x1x1
+ *      No padding
+ * We expect to get an output with shape: (1,1,1,2,2) and value:
+ * +----+----+
+ * | 14 | 15 |
+ * +----+----+
+ * | 17 | 18 |
+ * +----+----+
+ */
+message Pooling3DLayerParams {
+    
+    enum PoolingType3D {
+        MAX = 0;
+        AVERAGE = 1;
+    }
+    
+    // Whether to use Max or Average
+    PoolingType3D type = 1;
+    
+    // Depth of the pooling region.
+    int32 kernelDepth = 2;
+    
+    // Height of the pooling region.
+    int32 kernelHeight = 3;
+    
+    // Width of the pooling region.
+    int32 kernelWidth = 4;
+    
+    // Stride along the depth direction
+    int32 strideDepth = 5;
+    
+    // Stride along the height direction
+    int32 strideHeight = 6;
+    
+    // Stride along the width direction
+    int32 strideWidth = 7;
+    
+    // Padding before the input in the depth direction.
+    int32 customPaddingFront = 8;
+    
+    // Padding after the input in the depth direction.
+    int32 customPaddingBack = 9;
+    
+    // Padding before the input in the height direction.
+    int32 customPaddingTop = 10;
+    
+    // Padding after the input in the height direction.
+    int32 customPaddingBottom = 11;
+    
+    // Padding before the input in the width direction.
+    int32 customPaddingLeft = 12;
+    
+    // Padding after the input in the width direction.
+    int32 customPaddingRight = 13;
+    
+    // If true, exclude zeros from padding in average pooling.  Can only be true for AVERAGE padding.
+    bool countExcludePadding = 14;
 }
 
 /**

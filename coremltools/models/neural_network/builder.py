@@ -1905,8 +1905,13 @@ class NeuralNetworkBuilder(object):
 
         See Also
         --------
-        add_convolution, add_activation
+        add_pooling3d, add_convolution, add_activation
         """
+        # Update spec version if necessary
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+        
+        # Create spec layer
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.pooling
 
@@ -1947,11 +1952,93 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.avgPoolExcludePadding = exclude_pad_area
         spec_layer_params.globalPooling = is_global
         return spec_layer
+    
+    
+    def add_pooling3d(self, name, input_name, output_name, pooling_type,
+                        kernel_depth, kernel_height, kernel_width,
+                        stride_depth, stride_height, stride_width,
+                        custom_padding_front=0, custom_padding_back=0,
+                        custom_padding_top=0, custom_padding_bottom=0,
+                        custom_padding_left=0, custom_padding_right=0,
+                        average_pooling_count_excludes_padding=False):
+        """
+        Add a pooling layer to the model that performs spatial pooling across three dimensions.
+        Refer to the **Pooling3DLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        pooling_type: str
+            Type of pooling performed. Can either be 'MAX' OR 'AVERAGE'.
+        kernel_depth: int
+            Depth of the pooling region.
+        kernel_height: int
+            Height of pooling region.
+        kernel_width: int
+            Width of pooling region.
+        stride_depth: int
+            Stride along the depth direction
+        stride_height: int
+            Stride along the height direction.
+        stride_width: int
+            Stride along the width direction.
+        custom_padding_front: int
+            Padding before the input in the depth direction.
+        custom_padding_back: int
+            Padding after the input in the depth direction.
+        custom_padding_top: int
+            Padding before the input in the height direction.
+        custom_padding_bottom: int
+            Padding after the input in the height direction.
+        custom_padding_left: int
+            Padding before the input in the width direction.
+        custom_padding_right: int
+            Padding after the input in the width direction.
+        average_pooling_count_excludes_padding: boolean
+            If true, exclude zeros from padding in average pooling.  Can only be true for AVERAGE padding.
+        
+        See Also
+        --------
+        add_pooling
+        """
+        spec_layer = self._add_generic_layer(name, [input_name], [output_name])
+        self.nn_spec.arrayInputShapeMapping = _NeuralNetwork_pb2.NeuralNetworkMultiArrayShapeMapping.Value(
+        'EXACT_ARRAY_MAPPING')
+        spec_layer_params = spec_layer.pooling3d
+        
+        spec_layer_params.type = _NeuralNetwork_pb2.Pooling3DLayerParams.PoolingType3D.Value(pooling_type.upper())
+        
+        spec_layer_params.kernelDepth = kernel_depth
+        spec_layer_params.kernelHeight = kernel_height
+        spec_layer_params.kernelWidth = kernel_width
+        
+        spec_layer_params.strideDepth = stride_depth
+        spec_layer_params.strideHeight = stride_height
+        spec_layer_params.strideWidth = stride_width
+        
+        spec_layer_params.customPaddingFront = custom_padding_front
+        spec_layer_params.customPaddingBack = custom_padding_back
+        spec_layer_params.customPaddingTop = custom_padding_top
+        spec_layer_params.customPaddingBottom = custom_padding_bottom
+        spec_layer_params.customPaddingLeft = custom_padding_left
+        spec_layer_params.customPaddingRight = custom_padding_right
+        
+        spec_layer_params.countExcludePadding = average_pooling_count_excludes_padding
+        
+        return spec_layer
+        
 
     def add_padding(self, name, left=0, right=0, top=0, bottom=0,
                     value=0, input_name='data', output_name='out',
                     padding_type='constant'):
         """
+        
+        
         Add a padding layer to the model that performs padding along spatial dimensions.
         Refer to the **PaddingLayerParams** message in specification (NeuralNetwork.proto) for more details.
 
