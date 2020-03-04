@@ -4968,14 +4968,21 @@ class IOS14SingleLayerTests(CorrectnessTest):
     def test_argsort_gpu(self):
         self.test_argsort_cpu(cpu_only=False)
 
-    def test_upsample_pytorch(self):
-        for cpu_only in [False, True]:
-            for align_corners in [False, True]:
-                for scale_h in range(1, 3):
-                    for scale_w in range(1, 3):
-                        for input_h in range(2, 6):
-                            for input_w in range(2, 6):
-                                self.upsample_pytorch_test(input_h, input_w, scale_h, scale_w, align_corners, cpu_only)
+    def test_upsample_pytorch_cpu(self):
+        self.upsample_pytorch_test_iter(np.arange(1, 4), True)
+        self.upsample_pytorch_test_iter(np.arange(1.0, 3.0, 0.66), True)
+
+    def test_upsample_pytorch_gpu(self):
+        self.upsample_pytorch_test_iter(np.arange(1, 4), False)
+        self.upsample_pytorch_test_iter(np.arange(1.0, 3.0, 0.66), False)
+
+    def upsample_pytorch_test_iter(self, scale_range, cpu_only):
+        for align_corners in [False, True]:
+            for scale_h in scale_range:
+                for scale_w in scale_range:
+                    for input_h in range(2, 6):
+                        for input_w in range(2, 6):
+                            self.upsample_pytorch_test(input_h, input_w, scale_h, scale_w, align_corners, cpu_only)
 
     def upsample_pytorch_test(self, h, w, scale_h, scale_w, align_corners, cpu_only):
         input_dim = (1, h, w)

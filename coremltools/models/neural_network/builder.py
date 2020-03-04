@@ -1464,10 +1464,10 @@ class NeuralNetworkBuilder(object):
         ----------
         name: str
             The name of this layer.
-        scaling_factor_h: int
-            Scaling factor on the vertical direction.
-        scaling_factor_w: int
-            Scaling factor on the horizontal direction.
+        scaling_factor_h: int or float
+            Scaling factor on the vertical direction. Float values only supported with BILINEAR and ALIGN_CORNERS_*
+        scaling_factor_w: int or float
+            Scaling factor on the horizontal direction. Float values only supported with BILINEAR and ALIGN_CORNERS_*
         input_name: str
             The input blob name of this layer.
         output_name: str
@@ -1509,8 +1509,14 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.upsample
-        spec_layer_params.scalingFactor.append(scaling_factor_h)
-        spec_layer_params.scalingFactor.append(scaling_factor_w)
+        if isinstance(scaling_factor_h, float) or isinstance(scaling_factor_w, float):
+            if mode != 'BILINEAR' or linear_upsample_mode not in ['ALIGN_CORNERS_TRUE', 'ALIGN_CORNERS_FALSE']:
+                raise ValueError('Fractional upsampling only compatible with BILINEAR and ALIGN_CORNERS_TRUE or ALIGN_CORNERS_FALSE')
+            spec_layer_params.fractionalScalingFactor.append(float(scaling_factor_h))
+            spec_layer_params.fractionalScalingFactor.append(float(scaling_factor_w))
+        else:
+            spec_layer_params.scalingFactor.append(scaling_factor_h)
+            spec_layer_params.scalingFactor.append(scaling_factor_w)
 
         spec_layer_params.mode = _NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value(mode)
         spec_layer_params.linearUpsampleMode = _NeuralNetwork_pb2.UpsampleLayerParams.LinearUpsampleMode.Value(linear_upsample_mode)

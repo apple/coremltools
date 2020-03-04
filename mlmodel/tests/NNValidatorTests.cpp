@@ -1720,6 +1720,61 @@ int testValidUpsample() {
     return 0;
 }
 
+int testFractionalUpsample() {
+
+    Specification::Model m1;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(5);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+
+    Specification::NeuralNetworkLayer *upsampleLayer = nn->add_layers();
+    upsampleLayer->add_input("input");
+    upsampleLayer->add_output("probs");
+    auto *params = upsampleLayer->mutable_upsample();
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+
+    // No scaling factor still valid (1x scaling)
+    ML_ASSERT_GOOD(res);
+
+    // Fractional scaling factor valid
+    params->add_fractionalscalingfactor(2.5);
+    params->add_fractionalscalingfactor(3.5);
+    
+    // Requires "align corners" bilinear mode
+    params->set_mode(Specification::UpsampleLayerParams_InterpolationMode_NN);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+
+    params->set_mode(Specification::UpsampleLayerParams_InterpolationMode_BILINEAR);
+    params->set_linearupsamplemode(Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+
+    params->set_linearupsamplemode(Specification::UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_TRUE);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+
+    params->set_linearupsamplemode(Specification::UpsampleLayerParams_LinearUpsampleMode_ALIGN_CORNERS_FALSE);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+
+    // Invalid to provide both
+    params->add_scalingfactor(1);
+    params->add_scalingfactor(1);
+    res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+    return 0;
+}
+
 int testValidUpsampleAlignCorners() {
 
     Specification::Model m1;

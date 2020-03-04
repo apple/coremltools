@@ -752,6 +752,9 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
                     if (layer.upsample().linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT) {
                         return true;
                     }
+                    if (layer.upsample().fractionalscalingfactor_size() > 0) {
+                        return true;
+                    }
                 case Specification::NeuralNetworkLayer::kReorganizeData:
                     if (layer.reorganizedata().mode() == Specification::ReorganizeDataLayerParams::PIXEL_SHUFFLE) {
                       return true;

@@ -34728,6 +34728,7 @@ void UnaryFunctionLayerParams::set_scale(float value) {
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int UpsampleLayerParams::kScalingFactorFieldNumber;
+const int UpsampleLayerParams::kFractionalScalingFactorFieldNumber;
 const int UpsampleLayerParams::kModeFieldNumber;
 const int UpsampleLayerParams::kLinearUpsampleModeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
@@ -34744,6 +34745,7 @@ UpsampleLayerParams::UpsampleLayerParams(const UpsampleLayerParams& from)
   : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       scalingfactor_(from.scalingfactor_),
+      fractionalscalingfactor_(from.fractionalscalingfactor_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::memcpy(&mode_, &from.mode_,
@@ -34787,6 +34789,7 @@ UpsampleLayerParams* UpsampleLayerParams::New(::google::protobuf::Arena* arena) 
 void UpsampleLayerParams::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.UpsampleLayerParams)
   scalingfactor_.Clear();
+  fractionalscalingfactor_.Clear();
   ::memset(&mode_, 0, reinterpret_cast<char*>(&linearupsamplemode_) -
     reinterpret_cast<char*>(&mode_) + sizeof(linearupsamplemode_));
 }
@@ -34849,6 +34852,24 @@ bool UpsampleLayerParams::MergePartialFromCodedStream(
         break;
       }
 
+      // repeated float fractionalScalingFactor = 7;
+      case 7: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(58u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 input, this->mutable_fractionalscalingfactor())));
+        } else if (static_cast< ::google::protobuf::uint8>(tag) ==
+                   static_cast< ::google::protobuf::uint8>(61u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   float, ::google::protobuf::internal::WireFormatLite::TYPE_FLOAT>(
+                 1, 58u, input, this->mutable_fractionalscalingfactor())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -34898,6 +34919,14 @@ void UpsampleLayerParams::SerializeWithCachedSizes(
       6, this->linearupsamplemode(), output);
   }
 
+  // repeated float fractionalScalingFactor = 7;
+  if (this->fractionalscalingfactor_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(7, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_fractionalscalingfactor_cached_byte_size_);
+    ::google::protobuf::internal::WireFormatLite::WriteFloatArray(
+      this->fractionalscalingfactor().data(), this->fractionalscalingfactor_size(), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.UpsampleLayerParams)
 }
 
@@ -34916,6 +34945,21 @@ size_t UpsampleLayerParams::ByteSizeLong() const {
     int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
     GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
     _scalingfactor_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
+  // repeated float fractionalScalingFactor = 7;
+  {
+    unsigned int count = this->fractionalscalingfactor_size();
+    size_t data_size = 4UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _fractionalscalingfactor_cached_byte_size_ = cached_size;
     GOOGLE_SAFE_CONCURRENT_WRITES_END();
     total_size += data_size;
   }
@@ -34952,6 +34996,7 @@ void UpsampleLayerParams::MergeFrom(const UpsampleLayerParams& from) {
   (void) cached_has_bits;
 
   scalingfactor_.MergeFrom(from.scalingfactor_);
+  fractionalscalingfactor_.MergeFrom(from.fractionalscalingfactor_);
   if (from.mode() != 0) {
     set_mode(from.mode());
   }
@@ -34977,6 +35022,7 @@ void UpsampleLayerParams::Swap(UpsampleLayerParams* other) {
 }
 void UpsampleLayerParams::InternalSwap(UpsampleLayerParams* other) {
   scalingfactor_.InternalSwap(&other->scalingfactor_);
+  fractionalscalingfactor_.InternalSwap(&other->fractionalscalingfactor_);
   std::swap(mode_, other->mode_);
   std::swap(linearupsamplemode_, other->linearupsamplemode_);
   std::swap(_cached_size_, other->_cached_size_);
@@ -35017,6 +35063,36 @@ UpsampleLayerParams::scalingfactor() const {
 UpsampleLayerParams::mutable_scalingfactor() {
   // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.UpsampleLayerParams.scalingFactor)
   return &scalingfactor_;
+}
+
+// repeated float fractionalScalingFactor = 7;
+int UpsampleLayerParams::fractionalscalingfactor_size() const {
+  return fractionalscalingfactor_.size();
+}
+void UpsampleLayerParams::clear_fractionalscalingfactor() {
+  fractionalscalingfactor_.Clear();
+}
+float UpsampleLayerParams::fractionalscalingfactor(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.UpsampleLayerParams.fractionalScalingFactor)
+  return fractionalscalingfactor_.Get(index);
+}
+void UpsampleLayerParams::set_fractionalscalingfactor(int index, float value) {
+  fractionalscalingfactor_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.UpsampleLayerParams.fractionalScalingFactor)
+}
+void UpsampleLayerParams::add_fractionalscalingfactor(float value) {
+  fractionalscalingfactor_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.UpsampleLayerParams.fractionalScalingFactor)
+}
+const ::google::protobuf::RepeatedField< float >&
+UpsampleLayerParams::fractionalscalingfactor() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.UpsampleLayerParams.fractionalScalingFactor)
+  return fractionalscalingfactor_;
+}
+::google::protobuf::RepeatedField< float >*
+UpsampleLayerParams::mutable_fractionalscalingfactor() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.UpsampleLayerParams.fractionalScalingFactor)
+  return &fractionalscalingfactor_;
 }
 
 // .CoreML.Specification.UpsampleLayerParams.InterpolationMode mode = 5;

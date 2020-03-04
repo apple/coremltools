@@ -2278,11 +2278,18 @@ message UnaryFunctionLayerParams {
 message UpsampleLayerParams {
 
     /**
-     * Scaling Factor.
+     * Scaling Factor. Mutually exclusive with fractionalScalingFactor.
      * Must be length 2 in order ``[H, W]``.
      * If not set, default value ``[1, 1]`` is used.
      */
     repeated uint64 scalingFactor = 1;
+
+    /**
+     * Fractional scaling factor. Mutually exclusive with scalingFactor.
+     * Must be length 2 in order ``[H, W]``.
+     * If not set, default value ``[1.0, 1.0]`` is used.
+     */
+    repeated float fractionalScalingFactor = 7;
 
     /*
      * Overall mode for interpolating new elements when upsampling.

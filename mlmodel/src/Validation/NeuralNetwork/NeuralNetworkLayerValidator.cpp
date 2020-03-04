@@ -667,9 +667,30 @@ Result NeuralNetworkSpecValidator::validateUpsampleLayer(const Specification::Ne
     }
 
     const auto& params = layer.upsample();
-    // scaling factor must be 2D if provided
-    if (!(params.scalingfactor_size() == 0 || params.scalingfactor_size() == 2)) {
-        std::string err = "Scaling factor in the upsampling layer '" + layer.name() + "' must be a vector of size 2 (i.e height, width) but is a vector of size " + std::to_string(params.scalingfactor_size()) + ".";
+    /* If scalingFactor or fractionalScalingFactor are provided, they must be mutually exclusive and of size 2.
+                             scalingFactor
+                             0 | 2 | Other
+                      0      V   V   I
+       fractionalSF   2      V   I   I
+                      Other  I   I   I
+     */
+    bool validScalingFactors;
+    if (params.scalingfactor_size() == 0) {
+        validScalingFactors = params.fractionalscalingfactor_size() == 0 || params.fractionalscalingfactor_size() == 2;
+    } else {
+        validScalingFactors = params.fractionalscalingfactor_size() == 0 && params.scalingfactor_size() == 2;
+    }
+    if (!validScalingFactors) {
+        std::string err = "Invalid scaling factor in upsampling layer '" + layer.name()
+            + "'. Only one of scalingFactor and fractionalScalingFactor can be set, and if set, must be of size 2. Found scalingFactor of size "
+            + std::to_string(params.scalingfactor_size()) + " and fractionalScalingFactor of size " + std::to_string(params.fractionalscalingfactor_size());
+        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        return r;
+    }
+    if (params.fractionalscalingfactor_size() == 2
+        && (params.mode() == Specification::UpsampleLayerParams_InterpolationMode_NN
+            || params.linearupsamplemode() == Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT)) {
+        std::string err = "Invalid upsample layer '" + layer.name() + "'. Fractional upsample only compatible with align_corners=true or align_corners=false";
         r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         return r;
     }
