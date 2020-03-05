@@ -100,18 +100,18 @@ def _get_proxy_and_spec(filename, use_cpu_only=False):
         if specification.specificationVersion > engine_version:
             # in this case the specification is a newer kind of .mlmodel than this
             # version of the engine can support so we'll not try to have a proxy object
-            return None, specification
+            return (None, specification, None)
 
         try:
-            return _MLModelProxy(filename, use_cpu_only), specification
+            return (_MLModelProxy(filename, use_cpu_only), specification, None)
         except RuntimeError as e:
             warnings.warn(
                 "You will not be able to run predict() on this Core ML model." +
                 " Underlying exception message was: " + str(e),
                 RuntimeWarning)
-            return None, specification
+            return (None, specification, e)
 
-    return None, specification
+    return (None, specification, None)
 
 
 class NeuralNetworkShaper(object):
@@ -212,11 +212,11 @@ class MLModel(object):
         """
 
         if isinstance(model, str):
-            self.__proxy__, self._spec = _get_proxy_and_spec(model, useCPUOnly)
+            self.__proxy__, self._spec, self.framework_error = _get_proxy_and_spec(model, useCPUOnly)
         elif isinstance(model, _Model_pb2.Model):
             filename = _tempfile.mktemp(suffix='.mlmodel')
             _save_spec(model, filename)
-            self.__proxy__, self._spec = _get_proxy_and_spec(filename, useCPUOnly)
+            self.__proxy__, self._spec, self.framework_error = _get_proxy_and_spec(filename, useCPUOnly)
             try:
                 os.remove(filename)
             except OSError:
@@ -355,7 +355,10 @@ class MLModel(object):
             elif _has_custom_layer(self._spec):
                 raise Exception('This model contains a custom neural network layer, so predict is not supported.')
             else:
-                raise Exception('Unable to load CoreML.framework. Cannot make predictions.')
+                if self.framework_error:
+                    raise self.framework_error
+                else:
+                    raise Exception('Unable to load CoreML.framework. Cannot make predictions.')
 
     def visualize_spec(self, port=None, input_shape_dict=None, title='CoreML Graph Visualization'):
         """
