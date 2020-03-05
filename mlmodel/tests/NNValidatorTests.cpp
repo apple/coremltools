@@ -1136,6 +1136,83 @@ int testInvalidPooling3dCountExcludePaddingUsedWithMAXPooling() {
     return 0;
 }
 
+int testValidGlobalPooling3d() {
+    Specification::Model m1;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    // Adding 5 shapes for a rank 5 input.
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    shape->add_shape(13);
+    shape->add_shape(14);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(CoreML::Specification::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *globalPooling3dLayer = nn->add_layers();
+    globalPooling3dLayer->add_input("input");
+    globalPooling3dLayer->add_output("probs");
+    auto *mutablePooling3d = globalPooling3dLayer->mutable_globalpooling3d();
+
+    mutablePooling3d->set_type(CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D_AVERAGE);
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_GOOD(res);
+
+    return 0;
+}
+
+int testInvalidGlobalPooling3dWrongNumberOfInputs() {
+    Specification::Model m1;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    // Adding 5 shapes for a rank 5 input.
+    shape->add_shape(10);
+    shape->add_shape(11);
+    shape->add_shape(12);
+    shape->add_shape(13);
+    shape->add_shape(14);
+
+    auto *topIn2 = m1.mutable_description()->add_input();
+    topIn2->set_name("input 2");
+    auto *shape2 = topIn2->mutable_type()->mutable_multiarraytype();
+    // Adding 5 shapes for a rank 5 input.
+    shape2->add_shape(10);
+    shape2->add_shape(11);
+    shape2->add_shape(12);
+    shape2->add_shape(13);
+    shape2->add_shape(14);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(CoreML::Specification::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *globalPooling3dLayer = nn->add_layers();
+    globalPooling3dLayer->add_input("input");
+    globalPooling3dLayer->add_input("input 2");
+    globalPooling3dLayer->add_output("probs");
+    auto *mutablePooling3d = globalPooling3dLayer->mutable_globalpooling3d();
+
+    mutablePooling3d->set_type(CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D_AVERAGE);
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    ML_ASSERT_BAD(res);
+
+    return 0;
+}
+
 int testInvalidConvolutionNoPadding() {
 
     Specification::Model m1;

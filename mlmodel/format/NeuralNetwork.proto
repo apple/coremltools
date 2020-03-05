@@ -695,6 +695,7 @@ message NeuralNetworkLayer {
         ClampedReLULayerParams clampedReLU = 1460;
         ArgSortLayerParams argSort = 1461;
         Pooling3DLayerParams pooling3d = 1465;
+        GlobalPooling3DLayerParams globalPooling3d = 1466;
 
     }
 
@@ -1880,6 +1881,52 @@ message Pooling3DLayerParams {
     
     // If true, exclude zeros from padding in average pooling.  Can only be true for AVERAGE padding.
     bool countExcludePadding = 14;
+}
+
+/*
+ * A layer to pool three spacial dimensions down to one value.
+ * This behaves like a special case of Pooling3DLayerParams in which
+ * the Kernel is the size of the input and there is no padding.
+ *
+ * Input
+ *      A blob with rank equal to 5, representing [Batch, channels, depth, height, width].
+ *
+ * Output
+ *      Rank is same as the input: A blob with rank equal to 5, representing [Batch, channels, depth, height, width].
+ *      Depth, height, and width of the output will always be 1.
+ *
+ * Requires 1 input and produces 1 output.
+ *
+ * For example, given an input of shape (1,1,2,3,3):
+ *        +----+----+----+
+ *      / | 10 | 11 | 12 |
+ *     /  +----+----+----+
+ *    /   | 13 | 14 | 15 |
+ *   /    +----+----+----+
+ *  /     | 16 | 17 | 18 |
+ * /      +----+----+----+
+ * +----+----+----+      /
+ * |  1 |  2 |  3 |     /
+ * +----+----+----+    /
+ * |  4 |  5 |  6 |   /
+ * +----+----+----+  /
+ * |  7 |  8 |  9 | /
+ * +----+----+----+
+ *
+ * And applying MAX global 3d pooling, we expect to get an output with shape: (1,1,1,1,1) and value:
+ * +----+
+ * | 18 |
+ * +----+
+ */
+message GlobalPooling3DLayerParams {
+    
+    enum GlobalPoolingType3D {
+        MAX = 0;
+        AVERAGE = 1;
+    }
+    
+    // Whether to use Max or Average
+    GlobalPoolingType3D type = 1;
 }
 
 /**

@@ -515,6 +515,25 @@ Result NeuralNetworkSpecValidator::validatePooling3dLayer(const Specification::N
     return r;
 }
 
+Result NeuralNetworkSpecValidator::validateGlobalPooling3dLayer(const Specification::NeuralNetworkLayer& layer) {
+    Result r;
+    r = validateInputCount(layer, 1, 1);
+    if (!r.good()) {return r;}
+
+    r = validateOutputCount(layer, 1, 1);
+    if (!r.good()) {return r;}
+
+    if (ndArrayInterpretation) {
+        r = validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank);
+        if (!r.good()) {return r;}
+        // Rank 5 for 2 spacial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
+        r = validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank);
+        if (!r.good()) {return r;}
+    }
+
+    return r;
+}
+
 //    PaddingLayerParams padding = 9;
 Result NeuralNetworkSpecValidator::validatePaddingLayer(const Specification::NeuralNetworkLayer& layer) {
     Result r;

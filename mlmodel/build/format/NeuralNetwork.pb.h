@@ -303,6 +303,9 @@ extern GeluLayerParamsDefaultTypeInternal _GeluLayerParams_default_instance_;
 class GetShapeLayerParams;
 class GetShapeLayerParamsDefaultTypeInternal;
 extern GetShapeLayerParamsDefaultTypeInternal _GetShapeLayerParams_default_instance_;
+class GlobalPooling3DLayerParams;
+class GlobalPooling3DLayerParamsDefaultTypeInternal;
+extern GlobalPooling3DLayerParamsDefaultTypeInternal _GlobalPooling3DLayerParams_default_instance_;
 class GreaterEqualLayerParams;
 class GreaterEqualLayerParamsDefaultTypeInternal;
 extern GreaterEqualLayerParamsDefaultTypeInternal _GreaterEqualLayerParams_default_instance_;
@@ -820,6 +823,17 @@ bool Pooling3DLayerParams_PoolingType3D_IsValid(int value);
 const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams_PoolingType3D_PoolingType3D_MIN = Pooling3DLayerParams_PoolingType3D_MAX;
 const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams_PoolingType3D_PoolingType3D_MAX = Pooling3DLayerParams_PoolingType3D_AVERAGE;
 const int Pooling3DLayerParams_PoolingType3D_PoolingType3D_ARRAYSIZE = Pooling3DLayerParams_PoolingType3D_PoolingType3D_MAX + 1;
+
+enum GlobalPooling3DLayerParams_GlobalPoolingType3D {
+  GlobalPooling3DLayerParams_GlobalPoolingType3D_MAX = 0,
+  GlobalPooling3DLayerParams_GlobalPoolingType3D_AVERAGE = 1,
+  GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPooling3DLayerParams_GlobalPoolingType3D_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPooling3DLayerParams_GlobalPoolingType3D_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+};
+bool GlobalPooling3DLayerParams_GlobalPoolingType3D_IsValid(int value);
+const GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPoolingType3D_MIN = GlobalPooling3DLayerParams_GlobalPoolingType3D_MAX;
+const GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPoolingType3D_MAX = GlobalPooling3DLayerParams_GlobalPoolingType3D_AVERAGE;
+const int GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPoolingType3D_ARRAYSIZE = GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPoolingType3D_MAX + 1;
 
 enum UnaryFunctionLayerParams_Operation {
   UnaryFunctionLayerParams_Operation_SQRT = 0,
@@ -2947,6 +2961,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     kClampedReLU = 1460,
     kArgSort = 1461,
     kPooling3D = 1465,
+    kGlobalPooling3D = 1466,
     LAYER_NOT_SET = 0,
   };
 
@@ -4481,6 +4496,15 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   ::CoreML::Specification::Pooling3DLayerParams* release_pooling3d();
   void set_allocated_pooling3d(::CoreML::Specification::Pooling3DLayerParams* pooling3d);
 
+  // .CoreML.Specification.GlobalPooling3DLayerParams globalPooling3d = 1466;
+  bool has_globalpooling3d() const;
+  void clear_globalpooling3d();
+  static const int kGlobalPooling3DFieldNumber = 1466;
+  const ::CoreML::Specification::GlobalPooling3DLayerParams& globalpooling3d() const;
+  ::CoreML::Specification::GlobalPooling3DLayerParams* mutable_globalpooling3d();
+  ::CoreML::Specification::GlobalPooling3DLayerParams* release_globalpooling3d();
+  void set_allocated_globalpooling3d(::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d);
+
   LayerCase layer_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.NeuralNetworkLayer)
  private:
@@ -4639,6 +4663,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   void set_has_clampedrelu();
   void set_has_argsort();
   void set_has_pooling3d();
+  void set_has_globalpooling3d();
 
   inline bool has_layer() const;
   void clear_layer();
@@ -4808,6 +4833,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     ::CoreML::Specification::ClampedReLULayerParams* clampedrelu_;
     ::CoreML::Specification::ArgSortLayerParams* argsort_;
     ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
+    ::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d_;
   } layer_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -8131,6 +8157,99 @@ class Pooling3DLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
 };
 // -------------------------------------------------------------------
 
+class GlobalPooling3DLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.GlobalPooling3DLayerParams) */ {
+ public:
+  GlobalPooling3DLayerParams();
+  virtual ~GlobalPooling3DLayerParams();
+
+  GlobalPooling3DLayerParams(const GlobalPooling3DLayerParams& from);
+
+  inline GlobalPooling3DLayerParams& operator=(const GlobalPooling3DLayerParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const GlobalPooling3DLayerParams& default_instance();
+
+  static inline const GlobalPooling3DLayerParams* internal_default_instance() {
+    return reinterpret_cast<const GlobalPooling3DLayerParams*>(
+               &_GlobalPooling3DLayerParams_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    53;
+
+  void Swap(GlobalPooling3DLayerParams* other);
+
+  // implements Message ----------------------------------------------
+
+  inline GlobalPooling3DLayerParams* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  GlobalPooling3DLayerParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const GlobalPooling3DLayerParams& from);
+  void MergeFrom(const GlobalPooling3DLayerParams& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(GlobalPooling3DLayerParams* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  typedef GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPoolingType3D;
+  static const GlobalPoolingType3D MAX =
+    GlobalPooling3DLayerParams_GlobalPoolingType3D_MAX;
+  static const GlobalPoolingType3D AVERAGE =
+    GlobalPooling3DLayerParams_GlobalPoolingType3D_AVERAGE;
+  static inline bool GlobalPoolingType3D_IsValid(int value) {
+    return GlobalPooling3DLayerParams_GlobalPoolingType3D_IsValid(value);
+  }
+  static const GlobalPoolingType3D GlobalPoolingType3D_MIN =
+    GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPoolingType3D_MIN;
+  static const GlobalPoolingType3D GlobalPoolingType3D_MAX =
+    GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPoolingType3D_MAX;
+  static const int GlobalPoolingType3D_ARRAYSIZE =
+    GlobalPooling3DLayerParams_GlobalPoolingType3D_GlobalPoolingType3D_ARRAYSIZE;
+
+  // accessors -------------------------------------------------------
+
+  // .CoreML.Specification.GlobalPooling3DLayerParams.GlobalPoolingType3D type = 1;
+  void clear_type();
+  static const int kTypeFieldNumber = 1;
+  ::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D type() const;
+  void set_type(::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D value);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.GlobalPooling3DLayerParams)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  int type_;
+  mutable int _cached_size_;
+  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class PaddingLayerParams_PaddingConstant : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.PaddingLayerParams.PaddingConstant) */ {
  public:
   PaddingLayerParams_PaddingConstant();
@@ -8150,7 +8269,7 @@ class PaddingLayerParams_PaddingConstant : public ::google::protobuf::MessageLit
                &_PaddingLayerParams_PaddingConstant_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    53;
+    54;
 
   void Swap(PaddingLayerParams_PaddingConstant* other);
 
@@ -8228,7 +8347,7 @@ class PaddingLayerParams_PaddingReflection : public ::google::protobuf::MessageL
                &_PaddingLayerParams_PaddingReflection_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    54;
+    55;
 
   void Swap(PaddingLayerParams_PaddingReflection* other);
 
@@ -8299,7 +8418,7 @@ class PaddingLayerParams_PaddingReplication : public ::google::protobuf::Message
                &_PaddingLayerParams_PaddingReplication_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    55;
+    56;
 
   void Swap(PaddingLayerParams_PaddingReplication* other);
 
@@ -8377,7 +8496,7 @@ class PaddingLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_PaddingLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    56;
+    57;
 
   void Swap(PaddingLayerParams* other);
 
@@ -8505,7 +8624,7 @@ class ConcatLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_ConcatLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    57;
+    58;
 
   void Swap(ConcatLayerParams* other);
 
@@ -8583,7 +8702,7 @@ class LRNLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_LRNLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    58;
+    59;
 
   void Swap(LRNLayerParams* other);
 
@@ -8682,7 +8801,7 @@ class SoftmaxLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_SoftmaxLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    59;
+    60;
 
   void Swap(SoftmaxLayerParams* other);
 
@@ -8753,7 +8872,7 @@ class SplitLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_SplitLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    60;
+    61;
 
   void Swap(SplitLayerParams* other);
 
@@ -8831,7 +8950,7 @@ class AddLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_AddLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    61;
+    62;
 
   void Swap(AddLayerParams* other);
 
@@ -8909,7 +9028,7 @@ class MultiplyLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_MultiplyLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    62;
+    63;
 
   void Swap(MultiplyLayerParams* other);
 
@@ -8987,7 +9106,7 @@ class UnaryFunctionLayerParams : public ::google::protobuf::MessageLite /* @@pro
                &_UnaryFunctionLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    63;
+    64;
 
   void Swap(UnaryFunctionLayerParams* other);
 
@@ -9120,7 +9239,7 @@ class UpsampleLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_UpsampleLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    64;
+    65;
 
   void Swap(UpsampleLayerParams* other);
 
@@ -9265,7 +9384,7 @@ class ResizeBilinearLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_ResizeBilinearLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    65;
+    66;
 
   void Swap(ResizeBilinearLayerParams* other);
 
@@ -9360,7 +9479,7 @@ class CropResizeLayerParams : public ::google::protobuf::MessageLite /* @@protoc
                &_CropResizeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    66;
+    67;
 
   void Swap(CropResizeLayerParams* other);
 
@@ -9479,7 +9598,7 @@ class BiasLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_BiasLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    67;
+    68;
 
   void Swap(BiasLayerParams* other);
 
@@ -9574,7 +9693,7 @@ class ScaleLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_ScaleLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    68;
+    69;
 
   void Swap(ScaleLayerParams* other);
 
@@ -9700,7 +9819,7 @@ class LoadConstantLayerParams : public ::google::protobuf::MessageLite /* @@prot
                &_LoadConstantLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    69;
+    70;
 
   void Swap(LoadConstantLayerParams* other);
 
@@ -9795,7 +9914,7 @@ class L2NormalizeLayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_L2NormalizeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    70;
+    71;
 
   void Swap(L2NormalizeLayerParams* other);
 
@@ -9873,7 +9992,7 @@ class FlattenLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_FlattenLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    71;
+    72;
 
   void Swap(FlattenLayerParams* other);
 
@@ -9966,7 +10085,7 @@ class ReshapeLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_ReshapeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    72;
+    73;
 
   void Swap(ReshapeLayerParams* other);
 
@@ -10073,7 +10192,7 @@ class PermuteLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_PermuteLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    73;
+    74;
 
   void Swap(PermuteLayerParams* other);
 
@@ -10158,7 +10277,7 @@ class ReorganizeDataLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_ReorganizeDataLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    74;
+    75;
 
   void Swap(ReorganizeDataLayerParams* other);
 
@@ -10260,7 +10379,7 @@ class SliceLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_SliceLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    75;
+    76;
 
   void Swap(SliceLayerParams* other);
 
@@ -10376,7 +10495,7 @@ class ReduceLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_ReduceLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    76;
+    77;
 
   void Swap(ReduceLayerParams* other);
 
@@ -10520,7 +10639,7 @@ class CropLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_CropLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    77;
+    78;
 
   void Swap(CropLayerParams* other);
 
@@ -10615,7 +10734,7 @@ class AverageLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_AverageLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    78;
+    79;
 
   void Swap(AverageLayerParams* other);
 
@@ -10686,7 +10805,7 @@ class MaxLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_MaxLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    79;
+    80;
 
   void Swap(MaxLayerParams* other);
 
@@ -10757,7 +10876,7 @@ class MinLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_MinLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    80;
+    81;
 
   void Swap(MinLayerParams* other);
 
@@ -10828,7 +10947,7 @@ class DotProductLayerParams : public ::google::protobuf::MessageLite /* @@protoc
                &_DotProductLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    81;
+    82;
 
   void Swap(DotProductLayerParams* other);
 
@@ -10906,7 +11025,7 @@ class MeanVarianceNormalizeLayerParams : public ::google::protobuf::MessageLite 
                &_MeanVarianceNormalizeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    82;
+    83;
 
   void Swap(MeanVarianceNormalizeLayerParams* other);
 
@@ -10998,7 +11117,7 @@ class SequenceRepeatLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_SequenceRepeatLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    83;
+    84;
 
   void Swap(SequenceRepeatLayerParams* other);
 
@@ -11076,7 +11195,7 @@ class SimpleRecurrentLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_SimpleRecurrentLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    84;
+    85;
 
   void Swap(SimpleRecurrentLayerParams* other);
 
@@ -11222,7 +11341,7 @@ class GRULayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_GRULayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    85;
+    86;
 
   void Swap(GRULayerParams* other);
 
@@ -11431,7 +11550,7 @@ class LSTMParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_
                &_LSTMParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    86;
+    87;
 
   void Swap(LSTMParams* other);
 
@@ -11544,7 +11663,7 @@ class LSTMWeightParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_LSTMWeightParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    87;
+    88;
 
   void Swap(LSTMWeightParams* other);
 
@@ -11765,7 +11884,7 @@ class UniDirectionalLSTMLayerParams : public ::google::protobuf::MessageLite /* 
                &_UniDirectionalLSTMLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    88;
+    89;
 
   void Swap(UniDirectionalLSTMLayerParams* other);
 
@@ -11890,7 +12009,7 @@ class BiDirectionalLSTMLayerParams : public ::google::protobuf::MessageLite /* @
                &_BiDirectionalLSTMLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    89;
+    90;
 
   void Swap(BiDirectionalLSTMLayerParams* other);
 
@@ -12033,7 +12152,7 @@ class CustomLayerParams_CustomLayerParamValue : public ::google::protobuf::Messa
                &_CustomLayerParams_CustomLayerParamValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    90;
+    91;
 
   void Swap(CustomLayerParams_CustomLayerParamValue* other);
 
@@ -12180,7 +12299,7 @@ class CustomLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_CustomLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    92;
+    93;
 
   void Swap(CustomLayerParams* other);
 
@@ -12319,7 +12438,7 @@ class TransposeLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
                &_TransposeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    93;
+    94;
 
   void Swap(TransposeLayerParams* other);
 
@@ -12404,7 +12523,7 @@ class BatchedMatMulLayerParams : public ::google::protobuf::MessageLite /* @@pro
                &_BatchedMatMulLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    94;
+    95;
 
   void Swap(BatchedMatMulLayerParams* other);
 
@@ -12537,7 +12656,7 @@ class ConcatNDLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_ConcatNDLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    95;
+    96;
 
   void Swap(ConcatNDLayerParams* other);
 
@@ -12615,7 +12734,7 @@ class SoftmaxNDLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
                &_SoftmaxNDLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    96;
+    97;
 
   void Swap(SoftmaxNDLayerParams* other);
 
@@ -12693,7 +12812,7 @@ class ReverseLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_ReverseLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    97;
+    98;
 
   void Swap(ReverseLayerParams* other);
 
@@ -12778,7 +12897,7 @@ class ReverseSeqLayerParams : public ::google::protobuf::MessageLite /* @@protoc
                &_ReverseSeqLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    98;
+    99;
 
   void Swap(ReverseSeqLayerParams* other);
 
@@ -12863,7 +12982,7 @@ class LoadConstantNDLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_LoadConstantNDLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    99;
+    100;
 
   void Swap(LoadConstantNDLayerParams* other);
 
@@ -12958,7 +13077,7 @@ class FillLikeLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_FillLikeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    100;
+    101;
 
   void Swap(FillLikeLayerParams* other);
 
@@ -13036,7 +13155,7 @@ class FillStaticLayerParams : public ::google::protobuf::MessageLite /* @@protoc
                &_FillStaticLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    101;
+    102;
 
   void Swap(FillStaticLayerParams* other);
 
@@ -13128,7 +13247,7 @@ class FillDynamicLayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_FillDynamicLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    102;
+    103;
 
   void Swap(FillDynamicLayerParams* other);
 
@@ -13206,7 +13325,7 @@ class WhereBroadcastableLayerParams : public ::google::protobuf::MessageLite /* 
                &_WhereBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    103;
+    104;
 
   void Swap(WhereBroadcastableLayerParams* other);
 
@@ -13277,7 +13396,7 @@ class SinLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_SinLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    104;
+    105;
 
   void Swap(SinLayerParams* other);
 
@@ -13348,7 +13467,7 @@ class CosLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_CosLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    105;
+    106;
 
   void Swap(CosLayerParams* other);
 
@@ -13419,7 +13538,7 @@ class TanLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_TanLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    106;
+    107;
 
   void Swap(TanLayerParams* other);
 
@@ -13490,7 +13609,7 @@ class AsinLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_AsinLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    107;
+    108;
 
   void Swap(AsinLayerParams* other);
 
@@ -13561,7 +13680,7 @@ class AcosLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_AcosLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    108;
+    109;
 
   void Swap(AcosLayerParams* other);
 
@@ -13632,7 +13751,7 @@ class AtanLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_AtanLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    109;
+    110;
 
   void Swap(AtanLayerParams* other);
 
@@ -13703,7 +13822,7 @@ class SinhLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_SinhLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    110;
+    111;
 
   void Swap(SinhLayerParams* other);
 
@@ -13774,7 +13893,7 @@ class CoshLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_CoshLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    111;
+    112;
 
   void Swap(CoshLayerParams* other);
 
@@ -13845,7 +13964,7 @@ class TanhLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_TanhLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    112;
+    113;
 
   void Swap(TanhLayerParams* other);
 
@@ -13916,7 +14035,7 @@ class AsinhLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_AsinhLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    113;
+    114;
 
   void Swap(AsinhLayerParams* other);
 
@@ -13987,7 +14106,7 @@ class AcoshLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_AcoshLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    114;
+    115;
 
   void Swap(AcoshLayerParams* other);
 
@@ -14058,7 +14177,7 @@ class AtanhLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_AtanhLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    115;
+    116;
 
   void Swap(AtanhLayerParams* other);
 
@@ -14129,7 +14248,7 @@ class PowBroadcastableLayerParams : public ::google::protobuf::MessageLite /* @@
                &_PowBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    116;
+    117;
 
   void Swap(PowBroadcastableLayerParams* other);
 
@@ -14200,7 +14319,7 @@ class Exp2LayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_Exp2LayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    117;
+    118;
 
   void Swap(Exp2LayerParams* other);
 
@@ -14271,7 +14390,7 @@ class WhereNonZeroLayerParams : public ::google::protobuf::MessageLite /* @@prot
                &_WhereNonZeroLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    118;
+    119;
 
   void Swap(WhereNonZeroLayerParams* other);
 
@@ -14342,7 +14461,7 @@ class MatrixBandPartLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_MatrixBandPartLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    119;
+    120;
 
   void Swap(MatrixBandPartLayerParams* other);
 
@@ -14427,7 +14546,7 @@ class UpperTriangularLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_UpperTriangularLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    120;
+    121;
 
   void Swap(UpperTriangularLayerParams* other);
 
@@ -14505,7 +14624,7 @@ class LowerTriangularLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_LowerTriangularLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    121;
+    122;
 
   void Swap(LowerTriangularLayerParams* other);
 
@@ -14583,7 +14702,7 @@ class BroadcastToLikeLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_BroadcastToLikeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    122;
+    123;
 
   void Swap(BroadcastToLikeLayerParams* other);
 
@@ -14654,7 +14773,7 @@ class BroadcastToStaticLayerParams : public ::google::protobuf::MessageLite /* @
                &_BroadcastToStaticLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    123;
+    124;
 
   void Swap(BroadcastToStaticLayerParams* other);
 
@@ -14739,7 +14858,7 @@ class BroadcastToDynamicLayerParams : public ::google::protobuf::MessageLite /* 
                &_BroadcastToDynamicLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    124;
+    125;
 
   void Swap(BroadcastToDynamicLayerParams* other);
 
@@ -14810,7 +14929,7 @@ class AddBroadcastableLayerParams : public ::google::protobuf::MessageLite /* @@
                &_AddBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    125;
+    126;
 
   void Swap(AddBroadcastableLayerParams* other);
 
@@ -14881,7 +15000,7 @@ class MaxBroadcastableLayerParams : public ::google::protobuf::MessageLite /* @@
                &_MaxBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    126;
+    127;
 
   void Swap(MaxBroadcastableLayerParams* other);
 
@@ -14952,7 +15071,7 @@ class MinBroadcastableLayerParams : public ::google::protobuf::MessageLite /* @@
                &_MinBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    127;
+    128;
 
   void Swap(MinBroadcastableLayerParams* other);
 
@@ -15023,7 +15142,7 @@ class ModBroadcastableLayerParams : public ::google::protobuf::MessageLite /* @@
                &_ModBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    128;
+    129;
 
   void Swap(ModBroadcastableLayerParams* other);
 
@@ -15094,7 +15213,7 @@ class FloorDivBroadcastableLayerParams : public ::google::protobuf::MessageLite 
                &_FloorDivBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    129;
+    130;
 
   void Swap(FloorDivBroadcastableLayerParams* other);
 
@@ -15165,7 +15284,7 @@ class SubtractBroadcastableLayerParams : public ::google::protobuf::MessageLite 
                &_SubtractBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    130;
+    131;
 
   void Swap(SubtractBroadcastableLayerParams* other);
 
@@ -15236,7 +15355,7 @@ class MultiplyBroadcastableLayerParams : public ::google::protobuf::MessageLite 
                &_MultiplyBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    131;
+    132;
 
   void Swap(MultiplyBroadcastableLayerParams* other);
 
@@ -15307,7 +15426,7 @@ class DivideBroadcastableLayerParams : public ::google::protobuf::MessageLite /*
                &_DivideBroadcastableLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    132;
+    133;
 
   void Swap(DivideBroadcastableLayerParams* other);
 
@@ -15378,7 +15497,7 @@ class GatherLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_GatherLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    133;
+    134;
 
   void Swap(GatherLayerParams* other);
 
@@ -15456,7 +15575,7 @@ class ScatterLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_ScatterLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    134;
+    135;
 
   void Swap(ScatterLayerParams* other);
 
@@ -15541,7 +15660,7 @@ class GatherNDLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_GatherNDLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    135;
+    136;
 
   void Swap(GatherNDLayerParams* other);
 
@@ -15612,7 +15731,7 @@ class ScatterNDLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
                &_ScatterNDLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    136;
+    137;
 
   void Swap(ScatterNDLayerParams* other);
 
@@ -15690,7 +15809,7 @@ class GatherAlongAxisLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_GatherAlongAxisLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    137;
+    138;
 
   void Swap(GatherAlongAxisLayerParams* other);
 
@@ -15768,7 +15887,7 @@ class ScatterAlongAxisLayerParams : public ::google::protobuf::MessageLite /* @@
                &_ScatterAlongAxisLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    138;
+    139;
 
   void Swap(ScatterAlongAxisLayerParams* other);
 
@@ -15853,7 +15972,7 @@ class StackLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_StackLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    139;
+    140;
 
   void Swap(StackLayerParams* other);
 
@@ -15931,7 +16050,7 @@ class RankPreservingReshapeLayerParams : public ::google::protobuf::MessageLite 
                &_RankPreservingReshapeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    140;
+    141;
 
   void Swap(RankPreservingReshapeLayerParams* other);
 
@@ -16016,7 +16135,7 @@ class ConstantPaddingLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_ConstantPaddingLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    141;
+    142;
 
   void Swap(ConstantPaddingLayerParams* other);
 
@@ -16115,7 +16234,7 @@ class RandomNormalLikeLayerParams : public ::google::protobuf::MessageLite /* @@
                &_RandomNormalLikeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    142;
+    143;
 
   void Swap(RandomNormalLikeLayerParams* other);
 
@@ -16207,7 +16326,7 @@ class RandomNormalStaticLayerParams : public ::google::protobuf::MessageLite /* 
                &_RandomNormalStaticLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    143;
+    144;
 
   void Swap(RandomNormalStaticLayerParams* other);
 
@@ -16313,7 +16432,7 @@ class RandomNormalDynamicLayerParams : public ::google::protobuf::MessageLite /*
                &_RandomNormalDynamicLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    144;
+    145;
 
   void Swap(RandomNormalDynamicLayerParams* other);
 
@@ -16405,7 +16524,7 @@ class RandomUniformLikeLayerParams : public ::google::protobuf::MessageLite /* @
                &_RandomUniformLikeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    145;
+    146;
 
   void Swap(RandomUniformLikeLayerParams* other);
 
@@ -16497,7 +16616,7 @@ class RandomUniformStaticLayerParams : public ::google::protobuf::MessageLite /*
                &_RandomUniformStaticLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    146;
+    147;
 
   void Swap(RandomUniformStaticLayerParams* other);
 
@@ -16603,7 +16722,7 @@ class RandomUniformDynamicLayerParams : public ::google::protobuf::MessageLite /
                &_RandomUniformDynamicLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    147;
+    148;
 
   void Swap(RandomUniformDynamicLayerParams* other);
 
@@ -16695,7 +16814,7 @@ class RandomBernoulliLikeLayerParams : public ::google::protobuf::MessageLite /*
                &_RandomBernoulliLikeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    148;
+    149;
 
   void Swap(RandomBernoulliLikeLayerParams* other);
 
@@ -16780,7 +16899,7 @@ class RandomBernoulliStaticLayerParams : public ::google::protobuf::MessageLite 
                &_RandomBernoulliStaticLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    149;
+    150;
 
   void Swap(RandomBernoulliStaticLayerParams* other);
 
@@ -16879,7 +16998,7 @@ class RandomBernoulliDynamicLayerParams : public ::google::protobuf::MessageLite
                &_RandomBernoulliDynamicLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    150;
+    151;
 
   void Swap(RandomBernoulliDynamicLayerParams* other);
 
@@ -16964,7 +17083,7 @@ class CategoricalDistributionLayerParams : public ::google::protobuf::MessageLit
                &_CategoricalDistributionLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    151;
+    152;
 
   void Swap(CategoricalDistributionLayerParams* other);
 
@@ -17070,7 +17189,7 @@ class ReduceL1LayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_ReduceL1LayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    152;
+    153;
 
   void Swap(ReduceL1LayerParams* other);
 
@@ -17169,7 +17288,7 @@ class ReduceL2LayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_ReduceL2LayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    153;
+    154;
 
   void Swap(ReduceL2LayerParams* other);
 
@@ -17268,7 +17387,7 @@ class ReduceMaxLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
                &_ReduceMaxLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    154;
+    155;
 
   void Swap(ReduceMaxLayerParams* other);
 
@@ -17367,7 +17486,7 @@ class ReduceMinLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
                &_ReduceMinLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    155;
+    156;
 
   void Swap(ReduceMinLayerParams* other);
 
@@ -17466,7 +17585,7 @@ class ReduceSumLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
                &_ReduceSumLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    156;
+    157;
 
   void Swap(ReduceSumLayerParams* other);
 
@@ -17565,7 +17684,7 @@ class ReduceProdLayerParams : public ::google::protobuf::MessageLite /* @@protoc
                &_ReduceProdLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    157;
+    158;
 
   void Swap(ReduceProdLayerParams* other);
 
@@ -17664,7 +17783,7 @@ class ReduceMeanLayerParams : public ::google::protobuf::MessageLite /* @@protoc
                &_ReduceMeanLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    158;
+    159;
 
   void Swap(ReduceMeanLayerParams* other);
 
@@ -17763,7 +17882,7 @@ class ReduceLogSumLayerParams : public ::google::protobuf::MessageLite /* @@prot
                &_ReduceLogSumLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    159;
+    160;
 
   void Swap(ReduceLogSumLayerParams* other);
 
@@ -17862,7 +17981,7 @@ class ReduceSumSquareLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_ReduceSumSquareLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    160;
+    161;
 
   void Swap(ReduceSumSquareLayerParams* other);
 
@@ -17961,7 +18080,7 @@ class ReduceLogSumExpLayerParams : public ::google::protobuf::MessageLite /* @@p
                &_ReduceLogSumExpLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    161;
+    162;
 
   void Swap(ReduceLogSumExpLayerParams* other);
 
@@ -18060,7 +18179,7 @@ class ExpandDimsLayerParams : public ::google::protobuf::MessageLite /* @@protoc
                &_ExpandDimsLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    162;
+    163;
 
   void Swap(ExpandDimsLayerParams* other);
 
@@ -18145,7 +18264,7 @@ class FlattenTo2DLayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_FlattenTo2DLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    163;
+    164;
 
   void Swap(FlattenTo2DLayerParams* other);
 
@@ -18223,7 +18342,7 @@ class ReshapeStaticLayerParams : public ::google::protobuf::MessageLite /* @@pro
                &_ReshapeStaticLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    164;
+    165;
 
   void Swap(ReshapeStaticLayerParams* other);
 
@@ -18308,7 +18427,7 @@ class ReshapeLikeLayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_ReshapeLikeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    165;
+    166;
 
   void Swap(ReshapeLikeLayerParams* other);
 
@@ -18379,7 +18498,7 @@ class ReshapeDynamicLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_ReshapeDynamicLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    166;
+    167;
 
   void Swap(ReshapeDynamicLayerParams* other);
 
@@ -18450,7 +18569,7 @@ class SqueezeLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_SqueezeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    167;
+    168;
 
   void Swap(SqueezeLayerParams* other);
 
@@ -18542,7 +18661,7 @@ class TopKLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_TopKLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    168;
+    169;
 
   void Swap(TopKLayerParams* other);
 
@@ -18634,7 +18753,7 @@ class ArgMaxLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_ArgMaxLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    169;
+    170;
 
   void Swap(ArgMaxLayerParams* other);
 
@@ -18719,7 +18838,7 @@ class ArgMinLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_ArgMinLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    170;
+    171;
 
   void Swap(ArgMinLayerParams* other);
 
@@ -18804,7 +18923,7 @@ class SplitNDLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_SplitNDLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    171;
+    172;
 
   void Swap(SplitNDLayerParams* other);
 
@@ -18903,7 +19022,7 @@ class CeilLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_CeilLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    172;
+    173;
 
   void Swap(CeilLayerParams* other);
 
@@ -18974,7 +19093,7 @@ class RoundLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_RoundLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    173;
+    174;
 
   void Swap(RoundLayerParams* other);
 
@@ -19045,7 +19164,7 @@ class FloorLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inse
                &_FloorLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    174;
+    175;
 
   void Swap(FloorLayerParams* other);
 
@@ -19116,7 +19235,7 @@ class SignLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_SignLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    175;
+    176;
 
   void Swap(SignLayerParams* other);
 
@@ -19187,7 +19306,7 @@ class ClipLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_ClipLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    176;
+    177;
 
   void Swap(ClipLayerParams* other);
 
@@ -19272,7 +19391,7 @@ class SliceStaticLayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_SliceStaticLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    177;
+    178;
 
   void Swap(SliceStaticLayerParams* other);
 
@@ -19413,7 +19532,7 @@ class SliceDynamicLayerParams : public ::google::protobuf::MessageLite /* @@prot
                &_SliceDynamicLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    178;
+    179;
 
   void Swap(SliceDynamicLayerParams* other);
 
@@ -19540,7 +19659,7 @@ class TileLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_TileLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    179;
+    180;
 
   void Swap(TileLayerParams* other);
 
@@ -19625,7 +19744,7 @@ class GetShapeLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
                &_GetShapeLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    180;
+    181;
 
   void Swap(GetShapeLayerParams* other);
 
@@ -19696,7 +19815,7 @@ class ErfLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insert
                &_ErfLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    181;
+    182;
 
   void Swap(ErfLayerParams* other);
 
@@ -19767,7 +19886,7 @@ class GeluLayerParams : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_GeluLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    182;
+    183;
 
   void Swap(GeluLayerParams* other);
 
@@ -19862,7 +19981,7 @@ class RangeStaticLayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_RangeStaticLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    183;
+    184;
 
   void Swap(RangeStaticLayerParams* other);
 
@@ -19954,7 +20073,7 @@ class RangeDynamicLayerParams : public ::google::protobuf::MessageLite /* @@prot
                &_RangeDynamicLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    184;
+    185;
 
   void Swap(RangeDynamicLayerParams* other);
 
@@ -20039,7 +20158,7 @@ class SlidingWindowsLayerParams : public ::google::protobuf::MessageLite /* @@pr
                &_SlidingWindowsLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    185;
+    186;
 
   void Swap(SlidingWindowsLayerParams* other);
 
@@ -20131,7 +20250,7 @@ class LayerNormalizationLayerParams : public ::google::protobuf::MessageLite /* 
                &_LayerNormalizationLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    186;
+    187;
 
   void Swap(LayerNormalizationLayerParams* other);
 
@@ -20243,7 +20362,7 @@ class NonMaximumSuppressionLayerParams : public ::google::protobuf::MessageLite 
                &_NonMaximumSuppressionLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    187;
+    188;
 
   void Swap(NonMaximumSuppressionLayerParams* other);
 
@@ -20342,7 +20461,7 @@ class ClampedReLULayerParams : public ::google::protobuf::MessageLite /* @@proto
                &_ClampedReLULayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    188;
+    189;
 
   void Swap(ClampedReLULayerParams* other);
 
@@ -20427,7 +20546,7 @@ class ArgSortLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
                &_ArgSortLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    189;
+    190;
 
   void Swap(ArgSortLayerParams* other);
 
@@ -20518,7 +20637,7 @@ class NeuralNetworkClassifier : public ::google::protobuf::MessageLite /* @@prot
                &_NeuralNetworkClassifier_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    190;
+    191;
 
   void Swap(NeuralNetworkClassifier* other);
 
@@ -20686,7 +20805,7 @@ class OneHotLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_OneHotLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    191;
+    192;
 
   void Swap(OneHotLayerParams* other);
 
@@ -20785,7 +20904,7 @@ class CumSumLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_CumSumLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    192;
+    193;
 
   void Swap(CumSumLayerParams* other);
 
@@ -20877,7 +20996,7 @@ class NeuralNetworkRegressor : public ::google::protobuf::MessageLite /* @@proto
                &_NeuralNetworkRegressor_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    193;
+    194;
 
   void Swap(NeuralNetworkRegressor* other);
 
@@ -20998,7 +21117,7 @@ class NetworkUpdateParameters : public ::google::protobuf::MessageLite /* @@prot
                &_NetworkUpdateParameters_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    194;
+    195;
 
   void Swap(NetworkUpdateParameters* other);
 
@@ -21128,7 +21247,7 @@ class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_LossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    195;
+    196;
 
   void Swap(LossLayer* other);
 
@@ -21246,7 +21365,7 @@ class CategoricalCrossEntropyLossLayer : public ::google::protobuf::MessageLite 
                &_CategoricalCrossEntropyLossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    196;
+    197;
 
   void Swap(CategoricalCrossEntropyLossLayer* other);
 
@@ -21347,7 +21466,7 @@ class MeanSquaredErrorLossLayer : public ::google::protobuf::MessageLite /* @@pr
                &_MeanSquaredErrorLossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    197;
+    198;
 
   void Swap(MeanSquaredErrorLossLayer* other);
 
@@ -21454,7 +21573,7 @@ class Optimizer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_Optimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    198;
+    199;
 
   void Swap(Optimizer* other);
 
@@ -21557,7 +21676,7 @@ class SGDOptimizer : public ::google::protobuf::MessageLite /* @@protoc_insertio
                &_SGDOptimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    199;
+    200;
 
   void Swap(SGDOptimizer* other);
 
@@ -21658,7 +21777,7 @@ class AdamOptimizer : public ::google::protobuf::MessageLite /* @@protoc_inserti
                &_AdamOptimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    200;
+    201;
 
   void Swap(AdamOptimizer* other);
 
@@ -30852,6 +30971,54 @@ inline void NeuralNetworkLayer::set_allocated_pooling3d(::CoreML::Specification:
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.pooling3d)
 }
 
+// .CoreML.Specification.GlobalPooling3DLayerParams globalPooling3d = 1466;
+inline bool NeuralNetworkLayer::has_globalpooling3d() const {
+  return layer_case() == kGlobalPooling3D;
+}
+inline void NeuralNetworkLayer::set_has_globalpooling3d() {
+  _oneof_case_[0] = kGlobalPooling3D;
+}
+inline void NeuralNetworkLayer::clear_globalpooling3d() {
+  if (has_globalpooling3d()) {
+    delete layer_.globalpooling3d_;
+    clear_has_layer();
+  }
+}
+inline  const ::CoreML::Specification::GlobalPooling3DLayerParams& NeuralNetworkLayer::globalpooling3d() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
+  return has_globalpooling3d()
+      ? *layer_.globalpooling3d_
+      : ::CoreML::Specification::GlobalPooling3DLayerParams::default_instance();
+}
+inline ::CoreML::Specification::GlobalPooling3DLayerParams* NeuralNetworkLayer::mutable_globalpooling3d() {
+  if (!has_globalpooling3d()) {
+    clear_layer();
+    set_has_globalpooling3d();
+    layer_.globalpooling3d_ = new ::CoreML::Specification::GlobalPooling3DLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
+  return layer_.globalpooling3d_;
+}
+inline ::CoreML::Specification::GlobalPooling3DLayerParams* NeuralNetworkLayer::release_globalpooling3d() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
+  if (has_globalpooling3d()) {
+    clear_has_layer();
+    ::CoreML::Specification::GlobalPooling3DLayerParams* temp = layer_.globalpooling3d_;
+    layer_.globalpooling3d_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void NeuralNetworkLayer::set_allocated_globalpooling3d(::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d) {
+  clear_layer();
+  if (globalpooling3d) {
+    set_has_globalpooling3d();
+    layer_.globalpooling3d_ = globalpooling3d;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
+}
+
 inline bool NeuralNetworkLayer::has_layer() const {
   return layer_case() != LAYER_NOT_SET;
 }
@@ -33328,6 +33495,24 @@ inline void Pooling3DLayerParams::set_countexcludepadding(bool value) {
   
   countexcludepadding_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.countExcludePadding)
+}
+
+// -------------------------------------------------------------------
+
+// GlobalPooling3DLayerParams
+
+// .CoreML.Specification.GlobalPooling3DLayerParams.GlobalPoolingType3D type = 1;
+inline void GlobalPooling3DLayerParams::clear_type() {
+  type_ = 0;
+}
+inline ::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPooling3DLayerParams::type() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.GlobalPooling3DLayerParams.type)
+  return static_cast< ::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D >(type_);
+}
+inline void GlobalPooling3DLayerParams::set_type(::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D value) {
+  
+  type_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.GlobalPooling3DLayerParams.type)
 }
 
 // -------------------------------------------------------------------
@@ -41912,6 +42097,8 @@ inline void AdamOptimizer::set_allocated_eps(::CoreML::Specification::DoublePara
 
 // -------------------------------------------------------------------
 
+// -------------------------------------------------------------------
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -41928,6 +42115,7 @@ template <> struct is_proto_enum< ::CoreML::Specification::SamplingMode_Method> 
 template <> struct is_proto_enum< ::CoreML::Specification::BoxCoordinatesMode_Coordinates> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::PoolingLayerParams_PoolingType> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::Pooling3DLayerParams_PoolingType3D> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::UnaryFunctionLayerParams_Operation> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::UpsampleLayerParams_InterpolationMode> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::UpsampleLayerParams_LinearUpsampleMode> : ::google::protobuf::internal::true_type {};

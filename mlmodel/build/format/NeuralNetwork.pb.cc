@@ -228,6 +228,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::ClampedReLULayerParams* clampedrelu_;
   const ::CoreML::Specification::ArgSortLayerParams* argsort_;
   const ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
+  const ::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d_;
 } _NeuralNetworkLayer_default_instance_;
 class BranchLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BranchLayerParams> {
 } _BranchLayerParams_default_instance_;
@@ -305,6 +306,8 @@ class PoolingLayerParamsDefaultTypeInternal : public ::google::protobuf::interna
 } _PoolingLayerParams_default_instance_;
 class Pooling3DLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Pooling3DLayerParams> {
 } _Pooling3DLayerParams_default_instance_;
+class GlobalPooling3DLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<GlobalPooling3DLayerParams> {
+} _GlobalPooling3DLayerParams_default_instance_;
 class PaddingLayerParams_PaddingConstantDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<PaddingLayerParams_PaddingConstant> {
 } _PaddingLayerParams_PaddingConstant_default_instance_;
 class PaddingLayerParams_PaddingReflectionDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<PaddingLayerParams_PaddingReflection> {
@@ -835,6 +838,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
 };
 
 
@@ -892,6 +896,7 @@ void TableStruct::Shutdown() {
   _PoolingLayerParams_ValidCompletePadding_default_instance_.Shutdown();
   _PoolingLayerParams_default_instance_.Shutdown();
   _Pooling3DLayerParams_default_instance_.Shutdown();
+  _GlobalPooling3DLayerParams_default_instance_.Shutdown();
   _PaddingLayerParams_PaddingConstant_default_instance_.Shutdown();
   _PaddingLayerParams_PaddingReflection_default_instance_.Shutdown();
   _PaddingLayerParams_PaddingReplication_default_instance_.Shutdown();
@@ -1100,6 +1105,7 @@ void TableStruct::InitDefaultsImpl() {
   _PoolingLayerParams_ValidCompletePadding_default_instance_.DefaultConstruct();
   _PoolingLayerParams_default_instance_.DefaultConstruct();
   _Pooling3DLayerParams_default_instance_.DefaultConstruct();
+  _GlobalPooling3DLayerParams_default_instance_.DefaultConstruct();
   _PaddingLayerParams_PaddingConstant_default_instance_.DefaultConstruct();
   _PaddingLayerParams_PaddingReflection_default_instance_.DefaultConstruct();
   _PaddingLayerParams_PaddingReplication_default_instance_.DefaultConstruct();
@@ -1534,6 +1540,23 @@ const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams::AVERAGE;
 const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams::PoolingType3D_MIN;
 const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams::PoolingType3D_MAX;
 const int Pooling3DLayerParams::PoolingType3D_ARRAYSIZE;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+bool GlobalPooling3DLayerParams_GlobalPoolingType3D_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPooling3DLayerParams::MAX;
+const GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPooling3DLayerParams::AVERAGE;
+const GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPooling3DLayerParams::GlobalPoolingType3D_MIN;
+const GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPooling3DLayerParams::GlobalPoolingType3D_MAX;
+const int GlobalPooling3DLayerParams::GlobalPoolingType3D_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 bool UnaryFunctionLayerParams_Operation_IsValid(int value) {
   switch (value) {
@@ -7604,6 +7627,7 @@ const int NeuralNetworkLayer::kCumSumFieldNumber;
 const int NeuralNetworkLayer::kClampedReLUFieldNumber;
 const int NeuralNetworkLayer::kArgSortFieldNumber;
 const int NeuralNetworkLayer::kPooling3DFieldNumber;
+const int NeuralNetworkLayer::kGlobalPooling3DFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NeuralNetworkLayer::NeuralNetworkLayer()
@@ -8248,6 +8272,10 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
     }
     case kPooling3D: {
       mutable_pooling3d()->::CoreML::Specification::Pooling3DLayerParams::MergeFrom(from.pooling3d());
+      break;
+    }
+    case kGlobalPooling3D: {
+      mutable_globalpooling3d()->::CoreML::Specification::GlobalPooling3DLayerParams::MergeFrom(from.globalpooling3d());
       break;
     }
     case LAYER_NOT_SET: {
@@ -8915,6 +8943,10 @@ void NeuralNetworkLayer::clear_layer() {
     }
     case kPooling3D: {
       delete layer_.pooling3d_;
+      break;
+    }
+    case kGlobalPooling3D: {
+      delete layer_.globalpooling3d_;
       break;
     }
     case LAYER_NOT_SET: {
@@ -10894,6 +10926,18 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.GlobalPooling3DLayerParams globalPooling3d = 1466;
+      case 1466: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(11730u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_globalpooling3d()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -11896,6 +11940,12 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
   if (has_pooling3d()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1465, *layer_.pooling3d_, output);
+  }
+
+  // .CoreML.Specification.GlobalPooling3DLayerParams globalPooling3d = 1466;
+  if (has_globalpooling3d()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1466, *layer_.globalpooling3d_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NeuralNetworkLayer)
@@ -13041,6 +13091,13 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.pooling3d_);
       break;
     }
+    // .CoreML.Specification.GlobalPooling3DLayerParams globalPooling3d = 1466;
+    case kGlobalPooling3D: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.globalpooling3d_);
+      break;
+    }
     case LAYER_NOT_SET: {
       break;
     }
@@ -13694,6 +13751,10 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
     }
     case kPooling3D: {
       mutable_pooling3d()->::CoreML::Specification::Pooling3DLayerParams::MergeFrom(from.pooling3d());
+      break;
+    }
+    case kGlobalPooling3D: {
+      mutable_globalpooling3d()->::CoreML::Specification::GlobalPooling3DLayerParams::MergeFrom(from.globalpooling3d());
       break;
     }
     case LAYER_NOT_SET: {
@@ -21439,6 +21500,54 @@ void NeuralNetworkLayer::set_allocated_pooling3d(::CoreML::Specification::Poolin
     layer_.pooling3d_ = pooling3d;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.pooling3d)
+}
+
+// .CoreML.Specification.GlobalPooling3DLayerParams globalPooling3d = 1466;
+bool NeuralNetworkLayer::has_globalpooling3d() const {
+  return layer_case() == kGlobalPooling3D;
+}
+void NeuralNetworkLayer::set_has_globalpooling3d() {
+  _oneof_case_[0] = kGlobalPooling3D;
+}
+void NeuralNetworkLayer::clear_globalpooling3d() {
+  if (has_globalpooling3d()) {
+    delete layer_.globalpooling3d_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::GlobalPooling3DLayerParams& NeuralNetworkLayer::globalpooling3d() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
+  return has_globalpooling3d()
+      ? *layer_.globalpooling3d_
+      : ::CoreML::Specification::GlobalPooling3DLayerParams::default_instance();
+}
+::CoreML::Specification::GlobalPooling3DLayerParams* NeuralNetworkLayer::mutable_globalpooling3d() {
+  if (!has_globalpooling3d()) {
+    clear_layer();
+    set_has_globalpooling3d();
+    layer_.globalpooling3d_ = new ::CoreML::Specification::GlobalPooling3DLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
+  return layer_.globalpooling3d_;
+}
+::CoreML::Specification::GlobalPooling3DLayerParams* NeuralNetworkLayer::release_globalpooling3d() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
+  if (has_globalpooling3d()) {
+    clear_has_layer();
+    ::CoreML::Specification::GlobalPooling3DLayerParams* temp = layer_.globalpooling3d_;
+    layer_.globalpooling3d_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_globalpooling3d(::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d) {
+  clear_layer();
+  if (globalpooling3d) {
+    set_has_globalpooling3d();
+    layer_.globalpooling3d_ = globalpooling3d;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
 }
 
 bool NeuralNetworkLayer::has_layer() const {
@@ -32086,6 +32195,203 @@ void Pooling3DLayerParams::set_countexcludepadding(bool value) {
   
   countexcludepadding_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.countExcludePadding)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int GlobalPooling3DLayerParams::kTypeFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+GlobalPooling3DLayerParams::GlobalPooling3DLayerParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.GlobalPooling3DLayerParams)
+}
+GlobalPooling3DLayerParams::GlobalPooling3DLayerParams(const GlobalPooling3DLayerParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  type_ = from.type_;
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.GlobalPooling3DLayerParams)
+}
+
+void GlobalPooling3DLayerParams::SharedCtor() {
+  type_ = 0;
+  _cached_size_ = 0;
+}
+
+GlobalPooling3DLayerParams::~GlobalPooling3DLayerParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.GlobalPooling3DLayerParams)
+  SharedDtor();
+}
+
+void GlobalPooling3DLayerParams::SharedDtor() {
+}
+
+void GlobalPooling3DLayerParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const GlobalPooling3DLayerParams& GlobalPooling3DLayerParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+GlobalPooling3DLayerParams* GlobalPooling3DLayerParams::New(::google::protobuf::Arena* arena) const {
+  GlobalPooling3DLayerParams* n = new GlobalPooling3DLayerParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void GlobalPooling3DLayerParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.GlobalPooling3DLayerParams)
+  type_ = 0;
+}
+
+bool GlobalPooling3DLayerParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.GlobalPooling3DLayerParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // .CoreML.Specification.GlobalPooling3DLayerParams.GlobalPoolingType3D type = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          set_type(static_cast< ::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D >(value));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.GlobalPooling3DLayerParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.GlobalPooling3DLayerParams)
+  return false;
+#undef DO_
+}
+
+void GlobalPooling3DLayerParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.GlobalPooling3DLayerParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .CoreML.Specification.GlobalPooling3DLayerParams.GlobalPoolingType3D type = 1;
+  if (this->type() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      1, this->type(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.GlobalPooling3DLayerParams)
+}
+
+size_t GlobalPooling3DLayerParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.GlobalPooling3DLayerParams)
+  size_t total_size = 0;
+
+  // .CoreML.Specification.GlobalPooling3DLayerParams.GlobalPoolingType3D type = 1;
+  if (this->type() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void GlobalPooling3DLayerParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const GlobalPooling3DLayerParams*>(&from));
+}
+
+void GlobalPooling3DLayerParams::MergeFrom(const GlobalPooling3DLayerParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.GlobalPooling3DLayerParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.type() != 0) {
+    set_type(from.type());
+  }
+}
+
+void GlobalPooling3DLayerParams::CopyFrom(const GlobalPooling3DLayerParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.GlobalPooling3DLayerParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool GlobalPooling3DLayerParams::IsInitialized() const {
+  return true;
+}
+
+void GlobalPooling3DLayerParams::Swap(GlobalPooling3DLayerParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void GlobalPooling3DLayerParams::InternalSwap(GlobalPooling3DLayerParams* other) {
+  std::swap(type_, other->type_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string GlobalPooling3DLayerParams::GetTypeName() const {
+  return "CoreML.Specification.GlobalPooling3DLayerParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// GlobalPooling3DLayerParams
+
+// .CoreML.Specification.GlobalPooling3DLayerParams.GlobalPoolingType3D type = 1;
+void GlobalPooling3DLayerParams::clear_type() {
+  type_ = 0;
+}
+::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D GlobalPooling3DLayerParams::type() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.GlobalPooling3DLayerParams.type)
+  return static_cast< ::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D >(type_);
+}
+void GlobalPooling3DLayerParams::set_type(::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D value) {
+  
+  type_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.GlobalPooling3DLayerParams.type)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

@@ -80,7 +80,7 @@ class CorrectnessTest(unittest.TestCase):
             max_arr = np.maximum(np.maximum(np_preds, coreml_preds), 1.0)
             all_deltas = np.abs(np_preds / max_arr - coreml_preds / max_arr)
             max_delta = np.amax(all_deltas)
-            self.assertLessEqual(max_delta, delta)
+            self.assertLessEqual(max_delta, delta, 'Expected %s to be within %s of %s' % (coreml_preds, delta, np_preds))
         elif test_metric == 'SNR':
             noise = np_preds - coreml_preds
             noise_var = np.sum(noise ** 2) / len(noise) + 1e-7
@@ -4873,7 +4873,16 @@ class IOS14SingleLayerTests(CorrectnessTest):
         shapes = ((1,1,1,2,2), (1,1,3,3,3), (3,4,10,17,90))
         kernels = ((2,2,2), (1,3,4), (2,3,4), (5,1,6), (8,9,1), (7,11,13))
         strides = ((1,1,1), (1,2,3), (2,3,2), (4,1,2), (3,4,1), (7,11,13))
-        paddings = ((0,0,0,0,0,0), (1,2,3,4,5,6))
+        # Because Torch takes paddings in tuples of length 3 (one entry for each dimension), the start and end
+        # of each dimension must add up to an even number so that they can be converted into an integer value
+        # for Torch without discrepancy.
+        paddings = ((0,0,0,0,0,0), (2,2,2,2,2,2), (2,2,4,6,8,10))
+        
+        # Structure to collect failures so
+        # we can run all tests, even if one fails.
+        # This should be able to go away when we can parameterize
+        # our tests: <rdar://problem/59966164> Enable parameterized tests in test_numpy_nn_layers.py
+        failures = []
         
         for pool_type in pool_types:
             for shape in shapes:
@@ -4883,9 +4892,13 @@ class IOS14SingleLayerTests(CorrectnessTest):
                             for average_pooling_count_excludes_padding in (False, True):
                                 if pool_type != 'AVERAGE' and average_pooling_count_excludes_padding:
                                     continue
+                                test_case = 'Test case:: pool_type: %s, shape: %s, kernel: %s, stride: %s, padding: %s, average_pooling_count_excludes_padding: %s' \
+                                    % (pool_type, shape, kernel, stride, padding, average_pooling_count_excludes_padding)
+                                print(test_case)
                                 input_features = [('data', datatypes.Array(*shape))]
                                 output_features = [('output', None)]
-                                builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+                                builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                                                disable_rank5_shape_mapping=True)
                                 builder.add_pooling3d(name='pooling3d',
                                                         input_name='data',
                                                         output_name='output',
@@ -4907,32 +4920,66 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                 expected_batch = shape[0]
                                 expected_channel = shape[1]
                                 try:
-                                    expected_depth = IOS14SingleLayerTests._compute_dimension(shape[2], kernel[0], stride[0], padding[0], padding[1])
+                                    expected_depth = IOS14SingleLayerTests._compute_and_validate_pooling_dimension(shape[2], kernel[0], stride[0], padding[0], padding[1])
                                 except ValueError as e:
                                     print(str(e) + ', skipping')
                                     continue
                                     
                                 try:
-                                    expected_height = IOS14SingleLayerTests._compute_dimension(shape[3], kernel[1], stride[1], padding[2], padding[3])
+                                    expected_height = IOS14SingleLayerTests._compute_and_validate_pooling_dimension(shape[3], kernel[1], stride[1], padding[2], padding[3])
                                 except ValueError as e:
                                     print(str(e) + ', skipping')
                                     continue
                                 
                                 try:
-                                    expected_width = IOS14SingleLayerTests._compute_dimension(shape[4], kernel[2], stride[2], padding[4], padding[5])
+                                    expected_width = IOS14SingleLayerTests._compute_and_validate_pooling_dimension(shape[4], kernel[2], stride[2], padding[4], padding[5])
                                 except ValueError as e:
                                     print(str(e) + ', skipping')
                                     continue
-                                expected = {'output': np.random.rand(expected_batch, expected_channel, expected_depth, expected_height, expected_width)}
-                                self._test_model(builder.spec, {'data':input}, expected, validate_shapes_only=True, useCPUOnly=cpu_only)
+                                
+                                # Expected output
+                                validate_shapes_only = False
+                                torch_input = torch.from_numpy(np.reshape(input, shape))
+                                # Average pooling
+                                if pool_type == 'AVERAGE':
+                                    is_padding_homogeneous = all(p == padding[0] for p in padding)
+                                    # Torch can only apply average 3d pooling with
+                                    # homogeneous padding
+                                    if is_padding_homogeneous:
+                                        torch_pool = torch.nn.AvgPool3d(kernel, stride=stride, padding=padding[0],
+                                                                        count_include_pad=not average_pooling_count_excludes_padding)
+                                        expected = torch_pool(torch_input).numpy()
+                                    else:
+                                        validate_shapes_only = True
+                                        expected = np.random.rand(expected_batch, expected_channel, expected_depth, expected_height, expected_width)
+                                        print('Non-homogeneous padding for average pooling, only validating shape')
+                                # Max pooling
+                                else:
+                                    # Torch's max pooling takes a length-3 vector of padding, one entry for each dimension
+                                    # which gets applied to BOTH sides of the dimension.
+                                    torch_padding = (int((padding[0] + padding[1])/2), int((padding[2] + padding[3])/2), int((padding[4] + padding[5])/2))
+                                    torch_pool = torch.nn.MaxPool3d(kernel, stride=stride, padding=torch_padding)
+                                    expected = torch_pool(torch_input).numpy()
+                                
+                                try:
+                                    self._test_model(builder.spec, {'data':input}, {'output': expected}, validate_shapes_only=validate_shapes_only, useCPUOnly=cpu_only)
+                                except AssertionError as e:
+                                    print(e)
+                                    failures.append('test_case: %s, error: %s' % (test_case, e))
+        self.assertEqual(len(failures), 0, 'Got %s failures: %s' % (len(failures), failures))
     
     @staticmethod
-    def _compute_dimension(input_size, kernel_size, stride, start_padding, end_padding):
+    def _compute_and_validate_pooling_dimension(input_size, kernel_size, stride, start_padding, end_padding):
         output_size =  (input_size + start_padding + end_padding - kernel_size)/stride + 1
         if output_size < 1:
-            raise ValueError('dimension with input_size: %s, kernel_size: %s, stride: %s, start_padding: %s, end_padding: %s '
+            raise ValueError('Dimension with input_size: %s, kernel_size: %s, stride: %s, start_padding: %s, end_padding: %s '
             'has output size of %s, but must be >= 1' %
                 (input_size, kernel_size, stride, start_padding, end_padding, output_size))
+        if input_size < kernel_size:
+            raise ValueError('Dimension has input_size (%s) less than kernel_size (%s)' % (input_size, kernel_size))
+        if (start_padding + end_padding) / 2 >= kernel_size/2:
+            raise ValueError('The average of the start (%s) and end (%s) padding must be less than half the kernel size (%s / 2 = %s)'
+                % (start_padding, end_padding, kernel_size, kernel_size / 2))
         # Intentionally rounding down.
         return int(output_size)
 
@@ -4941,6 +4988,44 @@ class IOS14SingleLayerTests(CorrectnessTest):
     
     def test_pool3d_gpu(self):
         self._test_pool3d(cpu_only=False)
+    
+    def  _test_global_pool3d(self, cpu_only):
+        shapes = ((1,1,1,2,2), (1,1,3,3,3), (3,4,10,17,90))
+        pool_types = ('MAX', 'AVERAGE')
+        
+        for shape in shapes:
+            for pool_type in pool_types:
+                test_case = 'test_case:: shape: %s, pool_type: %s' % (shape, pool_type)
+                print(test_case)
+                input_features = [('data', datatypes.Array(*shape))]
+                output_features = [('output', None)]
+                builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                                disable_rank5_shape_mapping=True)
+                builder.add_global_pooling3d(name='pooling3d',
+                                        input_name='data',
+                                        output_name='output',
+                                        pooling_type=pool_type)
+                input = np.random.rand(*shape)
+                expected_batch = shape[0]
+                expected_channel = shape[1]
+                
+                # Expected output from Torch
+                torch_input = torch.from_numpy(np.reshape(input, shape))
+                if pool_type == 'AVERAGE':
+                    torch_pool = torch.nn.AvgPool3d(shape[-3:])
+                else:
+                    torch_pool = torch.nn.MaxPool3d(shape[-3:])
+                exptected = torch_pool(torch_input).numpy()
+                
+                self._test_model(builder.spec, {'data': input}, {'output': exptected}, useCPUOnly=cpu_only)
+    
+    # These are disabled because global pooling is not yet supported in espresso
+    # see <rdar://problem/60049667> Espresso pooling 3d is_global requires kernel size to be specified
+    def disabled_test_global_pool3d_cpu(self):
+        self._test_global_pool3d(cpu_only=True)
+    
+    def disabled_test_global_pool3d_gpu(self):
+        self._test_global_pool3d(cpu_only=False)
 
     def test_argsort_cpu(self, cpu_only = True):
 

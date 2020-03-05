@@ -2010,11 +2010,11 @@ class NeuralNetworkBuilder(object):
         
         See Also
         --------
-        add_pooling
+        add_pooling, add_global_pooling3d
         """
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
-        self.nn_spec.arrayInputShapeMapping = _NeuralNetwork_pb2.NeuralNetworkMultiArrayShapeMapping.Value(
-        'EXACT_ARRAY_MAPPING')
         spec_layer_params = spec_layer.pooling3d
         
         spec_layer_params.type = _NeuralNetwork_pb2.Pooling3DLayerParams.PoolingType3D.Value(pooling_type.upper())
@@ -2037,7 +2037,38 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.countExcludePadding = average_pooling_count_excludes_padding
         
         return spec_layer
+    
+    def add_global_pooling3d(self, name, input_name, output_name, pooling_type):
+        """
+        Add a layer to pool three spacial dimensions down to one value.
+        This behaves like a special case of Pooling3DLayerParams in which
+        the Kernel is the size of the input and there is no padding.
+        Refer to the **GlobalPooling3DLayerParams** message in specification (NeuralNetwork.proto) for more details.
         
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_name: str
+            The input blob name of this layer.
+        output_name: str
+            The output blob name of this layer.
+        pooling_type: str
+            Type of pooling performed. Can either be 'MAX' OR 'AVERAGE'.
+        
+        See Also
+        --------
+        add_pooling, add_pooling3d
+        """
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+        
+        spec_layer = self._add_generic_layer(name, [input_name], [output_name])
+        spec_layer_params = spec_layer.globalPooling3d
+        
+        spec_layer_params.type = _NeuralNetwork_pb2.GlobalPooling3DLayerParams.GlobalPoolingType3D.Value(pooling_type.upper())
+        
+        return spec_layer
 
     def add_padding(self, name, left=0, right=0, top=0, bottom=0,
                     value=0, input_name='data', output_name='out',

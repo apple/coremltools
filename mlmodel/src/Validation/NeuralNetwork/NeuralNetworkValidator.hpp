@@ -63,6 +63,7 @@ namespace CoreML {
         Result validateActivation(const Specification::NeuralNetworkLayer& layer);
         Result validatePoolingLayer(const Specification::NeuralNetworkLayer& layer);
         Result validatePooling3dLayer(const Specification::NeuralNetworkLayer& layer);
+        Result validateGlobalPooling3dLayer(const Specification::NeuralNetworkLayer& layer);
         Result validatePaddingLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateLRNLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateSplitLayer(const Specification::NeuralNetworkLayer& layer);
