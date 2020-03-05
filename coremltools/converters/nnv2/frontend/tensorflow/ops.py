@@ -246,6 +246,21 @@ def LogicalXor(context, node):
     x = cb.logical_xor(x=x, y=y, name=node.name)
     context.add(node.name, x)
 
+
+@register_tf_op
+def LRN(context, node):
+    x = context[node.inputs[0]]
+    depth_radius = node.attr.get('depth_radius')
+    size = (depth_radius * 2) + 1
+    alpha = node.attr.get('alpha') * size
+    beta = node.attr.get('beta')
+    bias = node.attr.get('bias')
+    x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+    x = cb.local_response_norm(x=x, size=size, alpha=alpha, beta=beta, k=bias)
+    x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    context.add(node.name, x)
+
+
 @register_tf_op
 def Maximum(context, node):
     x = context[node.inputs[0]]
@@ -273,6 +288,14 @@ def Mul(context, node):
     y = context[node.inputs[1]]
     x = cb.mul(x=x, y=y, name=node.name)
     context.add(node.name, x)
+
+
+@register_tf_op
+def Neg(context, node):
+    x = context[node.inputs[0]]
+    x = cb.mul(x=x, y=-1, name=node.name)
+    context.add(node.name, x)
+
 
 @register_tf_op
 def NotEqual(context, node):
@@ -346,7 +369,7 @@ def ExpandDims(context, node):
     context.add(node.name, x)
 
 
-@register_tf_op
+@register_tf_op(tf_alias=['FusedBatchNormV2'])
 def FusedBatchNorm(context, node):
     # Get attributes
     data_format = node.attr.get('data_format', 'NHWC')
@@ -358,16 +381,18 @@ def FusedBatchNorm(context, node):
     offset = context[node.inputs[2]]
     mean = context[node.inputs[3]]
     variance = context[node.inputs[4]]
-    if data_format == "NHWC":
+    if data_format == 'NHWC':
         # TF's FusedBatchNorm is only for 4D inputs
         x = cb.transpose(x=x, perm=[0, 3, 1, 2])
-    x = cb.batchnorm(x=x, mean=mean, variance=variance, gamma=scale,
-            beta=offset, epsilon=epsilon, name=node.name)
-    if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1])
+        x = cb.batch_norm(x=x, mean=mean, variance=variance, gamma=scale,
+                          beta=offset, epsilon=epsilon)
+        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    else:
+        x = cb.batch_norm(x=x, mean=mean, variance=variance, gamma=scale,
+                          beta=offset, epsilon=epsilon, name=node.name)
     # Inference only batch norm does not have meaningful outputs for
     # batch_mean, batch_variance etc.
-    context.add(node.name, [x, None, None, None, None])
+    context.add(node.name, x)
 
 
 @register_tf_op
@@ -734,6 +759,17 @@ def Tanh(context, node):
     x = cb.tanh(x=x, name=node.name)
     context.add(node.name, x)
 
+
+@register_tf_op(tf_alias=['TopKV2'])
+def TopK(context, node):
+    x = context[node.inputs[0]]
+    k = context[node.inputs[1]]
+    x, indices = cb.topk(x=x, k=k.val, axis=-1, name=node.name)
+    context.add(x.name, x)
+    context.add(indices.name, indices)
+    context.add(node.name, [x, indices])
+
+
 @register_tf_op
 def Cumsum(context, node):
     x = context[node.inputs[0]]
@@ -777,4 +813,13 @@ def Tile(context, node):
 def Where(context, node):
     x = context[node.inputs[0]]
     x = cb.non_zero(x=x, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
+def SquaredDifference(context, node):
+    x = context[node.inputs[0]]
+    y = context[node.inputs[1]]
+    x = cb.sub(x=x, y=y)
+    x = cb.square(x=x, name=node.name)
     context.add(node.name, x)

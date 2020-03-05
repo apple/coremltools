@@ -8,11 +8,7 @@ import numpy as np
 import sympy as sm
 
 from coremltools.converters.nnv2.builtin_types import builtins
-from coremltools.converters.nnv2.nnv2_program.program.type_utils import proto_to_builtin_types
 from .var import Var, TupleVar, InternalVar
-
-# TODO: remove explicit dependency on pb
-import coremltools.proto.Program_pb2 as pm
 
 # BLOCK_STACK[-1] is the current block
 BLOCK_STACK = []
@@ -398,7 +394,7 @@ class SsaBlock(object):
         else:
             self._block_inputs = tuple()
 
-        # list[Operation]. Topolotically sorted.
+        # list[Operation]. Topologically sorted.
         self.operations = []
 
         # list[Var]. This is converted to str when generating NNv2 proto.
@@ -786,7 +782,7 @@ class Placeholder(object):
         sym_shape: () or [] for scalar. list, tuple, np.ndarray for tensor. May
         contain Symbol as symbolic shape (but not string).
 
-        dtype: pm.FLOAT32 etc from the proto definition.
+        dtype: builtins.float or other scalar builtin types.
         """
         if not isinstance(sym_shape, (list, tuple, np.generic, np.ndarray)):
             raise ValueError(
@@ -794,7 +790,7 @@ class Placeholder(object):
         self.sym_shape = sym_shape
         self.dtype = dtype
         if self.dtype is None:
-            self.dtype = pm.FLOAT32
+            self.dtype = builtins.float
         sym_type = self.type_inference()
 
         # Globally unique var name for placeholders
@@ -810,9 +806,8 @@ class Placeholder(object):
 
     def type_inference(self):
         if len(self.sym_shape) == 0:
-            return proto_to_builtin_types[self.dtype]
-        return builtins.tensor(proto_to_builtin_types[self.dtype],
-                               self.sym_shape)
+            return self.dtype
+        return builtins.tensor(self.dtype, self.sym_shape)
 
     def __str__(self):
         return str(self.outputs[0])

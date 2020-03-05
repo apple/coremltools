@@ -14,17 +14,12 @@ UNK_SYM = 's_unk'
 if HAS_TF:
     import tensorflow as tf
 
-# backend --> target in convert function.
-backend_to_convert_targets = {
-        'nnv2': 'nnv2_proto',
-        'nnv1': 'nnv1_proto',
-        }
-
-def _random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0):
+def _random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0, dtype=np.float32):
     """
-        This helper function generates a random array of shape `shape`
-        The range of generated numbers will be between (rand_min, rand_max].
-        The value of generated numbers will be at least `eps_from_int` apart from integers.
+    This helper function generates a random array of shape `shape`
+    The range of generated numbers will be between (rand_min, rand_max].
+    The value of generated numbers will be at least `eps_from_int` apart from integers.
+    Default data type is np.float32.
     """
 
     elem = np.prod(shape)
@@ -32,11 +27,11 @@ def _random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0):
     for _ in range(elem):
         while True:
             r = (rand_max - rand_min) * np.random.random() + rand_min
-            if np.fabs(np.round(r)-r) > eps_from_int:
+            if np.fabs(np.round(r) - r) > eps_from_int:
                 ret.append(r)
                 break
     ret = np.array(ret).reshape(shape)
-    return ret
+    return ret.astype(dtype)
 
 
 def ssa_fn(func):
@@ -62,7 +57,7 @@ def is_close(expected, actual, atol=1e-04, rtol=1e-05):
         diff = expected - actual
         num_not_close = np.sum(~close)
         msg = "Values differ by L1 norm: {}. Num entries not close: {}/{}"
-        logging.error(msg.format(np.linalg.norm(diff, ord=1), num_not_close,
+        logging.error(msg.format(np.sum(np.abs(diff)), num_not_close,
             expected.size))
         if num_not_close < 30:
             logging.error("Differing entries:")
@@ -114,7 +109,7 @@ def compare_shapes(proto, input_values, expected_outputs, use_cpu_only=False):
 
 
 def get_core_ml_prediction(build, input_placeholders, input_values,
-        use_cpu_only=False, backend='nnv1'):
+        use_cpu_only=False, backend='nnv1_proto'):
     """
     Return predictions of the given model.
     """
@@ -128,7 +123,7 @@ def get_core_ml_prediction(build, input_placeholders, input_values,
         ssa_func.set_outputs(output_vars)
         program.add_function('main', ssa_func)
 
-    convert_target = backend_to_convert_targets[backend]
+    convert_target = backend
     proto = converter.convert(program, convert_from='NitroSSA',
             convert_to=convert_target)
     model = coremltools.models.MLModel(proto, use_cpu_only)
@@ -137,7 +132,7 @@ def get_core_ml_prediction(build, input_placeholders, input_values,
 
 def run_compare_builder(build, input_placeholders, input_values,
         expected_output_types=None, expected_outputs=None,
-        use_cpu_only=False, frontend_only=False, backend='nnv1',
+        use_cpu_only=False, frontend_only=False, backend='nnv1_proto',
         atol=1e-04, rtol=1e-05):
     """
     Inputs:
@@ -197,7 +192,7 @@ def run_compare_builder(build, input_placeholders, input_values,
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    convert_target = backend_to_convert_targets[backend]
+    convert_target = backend
     proto = converter.convert(prog,
                               convert_from="NitroSSA",
                               convert_to=convert_target)
@@ -215,13 +210,29 @@ def run_compare_builder(build, input_placeholders, input_values,
                     use_cpu_only=use_cpu_only,
                     atol=atol, rtol=rtol)
 
-def tf_get_name(tfnode):
-    if isinstance(tfnode, six.string_types):
-        return tfnode.split(':')[0]
-    return tfnode.name.split(':')[0]
+
+def get_tf_node_names(tf_nodes):
+    """
+    Return a list of names from given list of TensorFlow nodes. Tensor name's
+    postfix is eliminated if there's no ambiguity. Otherwise, postfix is kept
+    """
+    if not isinstance(tf_nodes, list):
+        tf_nodes = [tf_nodes]
+    names = list()
+    for n in tf_nodes:
+        tensor_name = n if isinstance(n, six.string_types) else n.name
+        name = tensor_name.split(':')[0]
+        if name in names:
+            # keep postfix notation for multiple inputs/outputs
+            names[names.index(name)] = name + ':' + str(names.count(name) - 1)
+            names.append(tensor_name)
+        else:
+            names.append(name)
+    return names
+
 
 def run_compare_tf(graph, placeholder_vals, output_nodes,
-        use_cpu_only=False, frontend_only=False, backend='nnv1',
+        use_cpu_only=False, frontend_only=False, backend='nnv1_proto',
         atol=1e-04, rtol=1e-05, validate_shapes_only=False):
     """
     Inputs:
@@ -233,25 +244,26 @@ def run_compare_tf(graph, placeholder_vals, output_nodes,
         - output_nodes: tf.node or list[tf.node] representing outputs of
           `graph`.
     """
+    if isinstance(output_nodes, tuple):
+        output_nodes = list(output_nodes)
     if not isinstance(output_nodes, list):
         output_nodes = [output_nodes]
 
     # Convert TF graph.
-    ph_list = [(k, v) for k, v in placeholder_vals.items()]
-    input_values = {tf_get_name(k): v for k, v in placeholder_vals.items()}
-    convert_target = backend_to_convert_targets[backend]
-    proto = converter.convert(graph, convert_from="tensorflow",
-            convert_to=convert_target,
-            inputs=[tf_get_name(ph) for ph, _ in ph_list],
-            outputs=[tf_get_name(node) for node in output_nodes])
+    input_names = get_tf_node_names(list(placeholder_vals.keys()))
+    output_names = get_tf_node_names(output_nodes)
+    input_values = {name: val for name, val in zip(input_names, placeholder_vals.values())}
+
+    proto = converter.convert(graph, convert_from='tensorflow',
+                              convert_to=backend,
+                              inputs=input_names,
+                              outputs=output_names)
 
     if frontend_only:
         return
 
-    # Run TF
     output_vals_tf = tf.Session().run(output_nodes, feed_dict=placeholder_vals)
-    expected_outputs = {tf_get_name(node): val for node, val in
-            zip(output_nodes, output_vals_tf)}
+    expected_outputs = {name: val for name, val in zip(output_names, output_vals_tf)}
 
     if validate_shapes_only:
         compare_shapes(proto, input_values, expected_outputs, use_cpu_only)

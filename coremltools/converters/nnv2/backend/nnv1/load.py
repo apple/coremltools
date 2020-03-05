@@ -60,8 +60,9 @@ def load(prog, **kwargs):
 
     for op in prog.functions['main'].operations:
         if op.op_type not in V2_TO_V1_OP_REGISTRY:
-            msg = '{} is not implemented for nnv1 backend. prog: {}'
-            raise ValueError(msg.format(op.op_type, prog))
+            msg = "Op '{}' is not implemented for nnv1 backend."
+            logging.error(msg=msg.format(op.op_type) + '\n' + str(prog))
+            raise NotImplementedError(msg.format(op.op_type))
         mapper = V2_TO_V1_OP_REGISTRY[op.op_type]
         mapper(const_context, builder, op)
 

@@ -77,7 +77,6 @@ import public "NearestNeighbors.proto";
 import public "Identity.proto";
 import public "Imputer.proto";
 import public "NeuralNetwork.proto";
-import public "Program.proto";
 import public "Normalizer.proto";
 import public "OneHotEncoder.proto";
 import public "Scaler.proto";

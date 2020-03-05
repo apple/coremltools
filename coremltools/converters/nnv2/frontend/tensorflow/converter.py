@@ -11,7 +11,6 @@ from .ops import *
 
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
-from coremltools.converters.nnv2.nnv2_program.program.type_utils import builtin_to_proto_types
 
 
 def check_output_shapes(context, node):
@@ -23,7 +22,7 @@ def check_output_shapes(context, node):
     if tf_shapes is None:
         return
     x = context[node.name]
-    if not isinstance(x, list):
+    if not isinstance(x, (tuple, list)):
         x = [x]
     inf_shapes = [list(y.sym_type.get_shape()) \
             if y is not None and builtins.is_tensor(y.sym_type) else None for y in x]
@@ -112,7 +111,7 @@ class TFConverter:
     def _create_placeholder(node):
         node.parse_from_attr()
         shape = []
-        dtype = builtin_to_proto_types[node.attr['dtype']]
+        dtype = node.attr['dtype']
         if builtins.is_tensor(node.datatype):
             shape = node.datatype.get_shape()
         return cb.placeholder(shape, dtype=dtype)
@@ -120,8 +119,8 @@ class TFConverter:
     def convert_graph(self, prog, graph, gname):
         nodes = topsort(graph)
         graph_inputs = {}
-        for nodename in nodes:
-            node = graph[nodename]
+        for node_name in nodes:
+            node = graph[node_name]
             if node.op == 'Placeholder':
                 graph_inputs[node.name] = \
                     TFConverter._create_placeholder(node)
@@ -132,12 +131,12 @@ class TFConverter:
                 self.context.add(name, ssa_func.inputs[name])
 
             # Translate the non-placeholder ops.
-            for nodename in nodes:
-                node = graph[nodename]
+            for node_name in nodes:
+                node = graph[node_name]
                 if node.op == 'Placeholder':
                     continue
                 _add_op = _OPS_REGISTRY.get(node.op, None)
-                logging.debug("Converting op {}".format(node.op))
+                logging.info("Converting op {} ({})".format(node.op, node_name))
 
                 if _add_op is None:
                     raise RuntimeError(
@@ -147,7 +146,6 @@ class TFConverter:
             outputs = [self.context[o] for o in self.outputs]
             ssa_func.set_outputs(outputs)
             prog.add_function(gname, ssa_func)
-
 
     def convert(self):
         prog = SsaProgram()

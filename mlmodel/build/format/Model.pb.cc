@@ -128,7 +128,6 @@ void TableStruct::InitDefaultsImpl() {
   ::CoreML::Specification::protobuf_Identity_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Imputer_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_NeuralNetwork_2eproto::InitDefaults();
-  ::CoreML::Specification::V5::protobuf_Program_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Normalizer_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_OneHotEncoder_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_Scaler_2eproto::InitDefaults();
@@ -186,7 +185,6 @@ void AddDescriptorsImpl() {
   ::CoreML::Specification::protobuf_Identity_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Imputer_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_NeuralNetwork_2eproto::AddDescriptors();
-  ::CoreML::Specification::V5::protobuf_Program_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Normalizer_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_OneHotEncoder_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_Scaler_2eproto::AddDescriptors();

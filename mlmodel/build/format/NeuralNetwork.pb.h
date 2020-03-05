@@ -174,9 +174,9 @@ extern CategoricalDistributionLayerParamsDefaultTypeInternal _CategoricalDistrib
 class CeilLayerParams;
 class CeilLayerParamsDefaultTypeInternal;
 extern CeilLayerParamsDefaultTypeInternal _CeilLayerParams_default_instance_;
-class ClampedReLU;
-class ClampedReLUDefaultTypeInternal;
-extern ClampedReLUDefaultTypeInternal _ClampedReLU_default_instance_;
+class ClampedReLULayerParams;
+class ClampedReLULayerParamsDefaultTypeInternal;
+extern ClampedReLULayerParamsDefaultTypeInternal _ClampedReLULayerParams_default_instance_;
 class ClipLayerParams;
 class ClipLayerParamsDefaultTypeInternal;
 extern ClipLayerParamsDefaultTypeInternal _ClipLayerParams_default_instance_;
@@ -4454,14 +4454,14 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   ::CoreML::Specification::CumSumLayerParams* release_cumsum();
   void set_allocated_cumsum(::CoreML::Specification::CumSumLayerParams* cumsum);
 
-  // .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+  // .CoreML.Specification.ClampedReLULayerParams clampedReLU = 1460;
   bool has_clampedrelu() const;
   void clear_clampedrelu();
   static const int kClampedReLUFieldNumber = 1460;
-  const ::CoreML::Specification::ClampedReLU& clampedrelu() const;
-  ::CoreML::Specification::ClampedReLU* mutable_clampedrelu();
-  ::CoreML::Specification::ClampedReLU* release_clampedrelu();
-  void set_allocated_clampedrelu(::CoreML::Specification::ClampedReLU* clampedrelu);
+  const ::CoreML::Specification::ClampedReLULayerParams& clampedrelu() const;
+  ::CoreML::Specification::ClampedReLULayerParams* mutable_clampedrelu();
+  ::CoreML::Specification::ClampedReLULayerParams* release_clampedrelu();
+  void set_allocated_clampedrelu(::CoreML::Specification::ClampedReLULayerParams* clampedrelu);
 
   // .CoreML.Specification.ArgSortLayerParams argSort = 1461;
   bool has_argsort() const;
@@ -4805,7 +4805,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     ::CoreML::Specification::NonMaximumSuppressionLayerParams* nonmaximumsuppression_;
     ::CoreML::Specification::OneHotLayerParams* onehot_;
     ::CoreML::Specification::CumSumLayerParams* cumsum_;
-    ::CoreML::Specification::ClampedReLU* clampedrelu_;
+    ::CoreML::Specification::ClampedReLULayerParams* clampedrelu_;
     ::CoreML::Specification::ArgSortLayerParams* argsort_;
     ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
   } layer_;
@@ -20323,38 +20323,38 @@ class NonMaximumSuppressionLayerParams : public ::google::protobuf::MessageLite 
 };
 // -------------------------------------------------------------------
 
-class ClampedReLU : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ClampedReLU) */ {
+class ClampedReLULayerParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.ClampedReLULayerParams) */ {
  public:
-  ClampedReLU();
-  virtual ~ClampedReLU();
+  ClampedReLULayerParams();
+  virtual ~ClampedReLULayerParams();
 
-  ClampedReLU(const ClampedReLU& from);
+  ClampedReLULayerParams(const ClampedReLULayerParams& from);
 
-  inline ClampedReLU& operator=(const ClampedReLU& from) {
+  inline ClampedReLULayerParams& operator=(const ClampedReLULayerParams& from) {
     CopyFrom(from);
     return *this;
   }
 
-  static const ClampedReLU& default_instance();
+  static const ClampedReLULayerParams& default_instance();
 
-  static inline const ClampedReLU* internal_default_instance() {
-    return reinterpret_cast<const ClampedReLU*>(
-               &_ClampedReLU_default_instance_);
+  static inline const ClampedReLULayerParams* internal_default_instance() {
+    return reinterpret_cast<const ClampedReLULayerParams*>(
+               &_ClampedReLULayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
     188;
 
-  void Swap(ClampedReLU* other);
+  void Swap(ClampedReLULayerParams* other);
 
   // implements Message ----------------------------------------------
 
-  inline ClampedReLU* New() const PROTOBUF_FINAL { return New(NULL); }
+  inline ClampedReLULayerParams* New() const PROTOBUF_FINAL { return New(NULL); }
 
-  ClampedReLU* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  ClampedReLULayerParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
   void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
     PROTOBUF_FINAL;
-  void CopyFrom(const ClampedReLU& from);
-  void MergeFrom(const ClampedReLU& from);
+  void CopyFrom(const ClampedReLULayerParams& from);
+  void MergeFrom(const ClampedReLULayerParams& from);
   void Clear() PROTOBUF_FINAL;
   bool IsInitialized() const PROTOBUF_FINAL;
 
@@ -20369,7 +20369,7 @@ class ClampedReLU : public ::google::protobuf::MessageLite /* @@protoc_insertion
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(ClampedReLU* other);
+  void InternalSwap(ClampedReLULayerParams* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -20397,7 +20397,7 @@ class ClampedReLU : public ::google::protobuf::MessageLite /* @@protoc_insertion
   float beta() const;
   void set_beta(float value);
 
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.ClampedReLU)
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.ClampedReLULayerParams)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
@@ -30708,7 +30708,7 @@ inline void NeuralNetworkLayer::set_allocated_cumsum(::CoreML::Specification::Cu
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.cumSum)
 }
 
-// .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+// .CoreML.Specification.ClampedReLULayerParams clampedReLU = 1460;
 inline bool NeuralNetworkLayer::has_clampedrelu() const {
   return layer_case() == kClampedReLU;
 }
@@ -30721,33 +30721,33 @@ inline void NeuralNetworkLayer::clear_clampedrelu() {
     clear_has_layer();
   }
 }
-inline  const ::CoreML::Specification::ClampedReLU& NeuralNetworkLayer::clampedrelu() const {
+inline  const ::CoreML::Specification::ClampedReLULayerParams& NeuralNetworkLayer::clampedrelu() const {
   // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
   return has_clampedrelu()
       ? *layer_.clampedrelu_
-      : ::CoreML::Specification::ClampedReLU::default_instance();
+      : ::CoreML::Specification::ClampedReLULayerParams::default_instance();
 }
-inline ::CoreML::Specification::ClampedReLU* NeuralNetworkLayer::mutable_clampedrelu() {
+inline ::CoreML::Specification::ClampedReLULayerParams* NeuralNetworkLayer::mutable_clampedrelu() {
   if (!has_clampedrelu()) {
     clear_layer();
     set_has_clampedrelu();
-    layer_.clampedrelu_ = new ::CoreML::Specification::ClampedReLU;
+    layer_.clampedrelu_ = new ::CoreML::Specification::ClampedReLULayerParams;
   }
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
   return layer_.clampedrelu_;
 }
-inline ::CoreML::Specification::ClampedReLU* NeuralNetworkLayer::release_clampedrelu() {
+inline ::CoreML::Specification::ClampedReLULayerParams* NeuralNetworkLayer::release_clampedrelu() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
   if (has_clampedrelu()) {
     clear_has_layer();
-    ::CoreML::Specification::ClampedReLU* temp = layer_.clampedrelu_;
+    ::CoreML::Specification::ClampedReLULayerParams* temp = layer_.clampedrelu_;
     layer_.clampedrelu_ = NULL;
     return temp;
   } else {
     return NULL;
   }
 }
-inline void NeuralNetworkLayer::set_allocated_clampedrelu(::CoreML::Specification::ClampedReLU* clampedrelu) {
+inline void NeuralNetworkLayer::set_allocated_clampedrelu(::CoreML::Specification::ClampedReLULayerParams* clampedrelu) {
   clear_layer();
   if (clampedrelu) {
     set_has_clampedrelu();
@@ -39922,34 +39922,34 @@ inline void NonMaximumSuppressionLayerParams::set_perclasssuppression(bool value
 
 // -------------------------------------------------------------------
 
-// ClampedReLU
+// ClampedReLULayerParams
 
 // float alpha = 1;
-inline void ClampedReLU::clear_alpha() {
+inline void ClampedReLULayerParams::clear_alpha() {
   alpha_ = 0;
 }
-inline float ClampedReLU::alpha() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLU.alpha)
+inline float ClampedReLULayerParams::alpha() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLULayerParams.alpha)
   return alpha_;
 }
-inline void ClampedReLU::set_alpha(float value) {
+inline void ClampedReLULayerParams::set_alpha(float value) {
   
   alpha_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLU.alpha)
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLULayerParams.alpha)
 }
 
 // float beta = 2;
-inline void ClampedReLU::clear_beta() {
+inline void ClampedReLULayerParams::clear_beta() {
   beta_ = 0;
 }
-inline float ClampedReLU::beta() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLU.beta)
+inline float ClampedReLULayerParams::beta() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLULayerParams.beta)
   return beta_;
 }
-inline void ClampedReLU::set_beta(float value) {
+inline void ClampedReLULayerParams::set_beta(float value) {
   
   beta_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLU.beta)
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLULayerParams.beta)
 }
 
 // -------------------------------------------------------------------

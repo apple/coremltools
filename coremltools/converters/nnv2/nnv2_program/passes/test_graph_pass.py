@@ -4,7 +4,6 @@ from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic
 from coremltools.converters.nnv2.testing_utils import build_main_program, assert_op_count_match, assert_model_is_valid
 from coremltools.converters.nnv2.nnv2_program.program import Symbol
 from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import PASS_REGISTRY
-import coremltools.proto.Program_pb2 as pm
 
 import numpy as np
 

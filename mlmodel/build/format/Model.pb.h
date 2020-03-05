@@ -48,7 +48,6 @@
 #include "Identity.pb.h"  // IWYU pragma: export
 #include "Imputer.pb.h"  // IWYU pragma: export
 #include "NeuralNetwork.pb.h"  // IWYU pragma: export
-#include "Program.pb.h"  // IWYU pragma: export
 #include "Normalizer.pb.h"  // IWYU pragma: export
 #include "OneHotEncoder.pb.h"  // IWYU pragma: export
 #include "Scaler.pb.h"  // IWYU pragma: export
@@ -218,9 +217,9 @@ extern CategoricalMappingDefaultTypeInternal _CategoricalMapping_default_instanc
 class CeilLayerParams;
 class CeilLayerParamsDefaultTypeInternal;
 extern CeilLayerParamsDefaultTypeInternal _CeilLayerParams_default_instance_;
-class ClampedReLU;
-class ClampedReLUDefaultTypeInternal;
-extern ClampedReLUDefaultTypeInternal _ClampedReLU_default_instance_;
+class ClampedReLULayerParams;
+class ClampedReLULayerParamsDefaultTypeInternal;
+extern ClampedReLULayerParamsDefaultTypeInternal _ClampedReLULayerParams_default_instance_;
 class ClipLayerParams;
 class ClipLayerParamsDefaultTypeInternal;
 extern ClipLayerParamsDefaultTypeInternal _ClipLayerParams_default_instance_;
@@ -979,68 +978,6 @@ class WordTagger;
 class WordTaggerDefaultTypeInternal;
 extern WordTaggerDefaultTypeInternal _WordTagger_default_instance_;
 }  // namespace CoreMLModels
-namespace V5 {
-class Block;
-class BlockDefaultTypeInternal;
-extern BlockDefaultTypeInternal _Block_default_instance_;
-class Block_InputsEntry;
-class Block_InputsEntryDefaultTypeInternal;
-extern Block_InputsEntryDefaultTypeInternal _Block_InputsEntry_default_instance_;
-class Dimension;
-class DimensionDefaultTypeInternal;
-extern DimensionDefaultTypeInternal _Dimension_default_instance_;
-class Function;
-class FunctionDefaultTypeInternal;
-extern FunctionDefaultTypeInternal _Function_default_instance_;
-class ListType;
-class ListTypeDefaultTypeInternal;
-extern ListTypeDefaultTypeInternal _ListType_default_instance_;
-class NamedValueType;
-class NamedValueTypeDefaultTypeInternal;
-extern NamedValueTypeDefaultTypeInternal _NamedValueType_default_instance_;
-class Operation;
-class OperationDefaultTypeInternal;
-extern OperationDefaultTypeInternal _Operation_default_instance_;
-class Operation_AttributesEntry;
-class Operation_AttributesEntryDefaultTypeInternal;
-extern Operation_AttributesEntryDefaultTypeInternal _Operation_AttributesEntry_default_instance_;
-class Operation_InputsEntry;
-class Operation_InputsEntryDefaultTypeInternal;
-extern Operation_InputsEntryDefaultTypeInternal _Operation_InputsEntry_default_instance_;
-class Program;
-class ProgramDefaultTypeInternal;
-extern ProgramDefaultTypeInternal _Program_default_instance_;
-class Program_FunctionsEntry;
-class Program_FunctionsEntryDefaultTypeInternal;
-extern Program_FunctionsEntryDefaultTypeInternal _Program_FunctionsEntry_default_instance_;
-class Program_ParametersEntry;
-class Program_ParametersEntryDefaultTypeInternal;
-extern Program_ParametersEntryDefaultTypeInternal _Program_ParametersEntry_default_instance_;
-class TensorType;
-class TensorTypeDefaultTypeInternal;
-extern TensorTypeDefaultTypeInternal _TensorType_default_instance_;
-class TensorValue;
-class TensorValueDefaultTypeInternal;
-extern TensorValueDefaultTypeInternal _TensorValue_default_instance_;
-class TupleType;
-class TupleTypeDefaultTypeInternal;
-extern TupleTypeDefaultTypeInternal _TupleType_default_instance_;
-class TupleValue;
-class TupleValueDefaultTypeInternal;
-extern TupleValueDefaultTypeInternal _TupleValue_default_instance_;
-class Value;
-class ValueDefaultTypeInternal;
-extern ValueDefaultTypeInternal _Value_default_instance_;
-class ValueType;
-class ValueTypeDefaultTypeInternal;
-extern ValueTypeDefaultTypeInternal _ValueType_default_instance_;
-class Value_FileValue;
-class Value_FileValueDefaultTypeInternal;
-extern Value_FileValueDefaultTypeInternal _Value_FileValue_default_instance_;
-class Value_ImmediateValue;
-class Value_ImmediateValueDefaultTypeInternal;
-extern Value_ImmediateValueDefaultTypeInternal _Value_ImmediateValue_default_instance_;
-}  // namespace V5
 }  // namespace Specification
 }  // namespace CoreML
 

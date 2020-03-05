@@ -225,7 +225,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::NonMaximumSuppressionLayerParams* nonmaximumsuppression_;
   const ::CoreML::Specification::OneHotLayerParams* onehot_;
   const ::CoreML::Specification::CumSumLayerParams* cumsum_;
-  const ::CoreML::Specification::ClampedReLU* clampedrelu_;
+  const ::CoreML::Specification::ClampedReLULayerParams* clampedrelu_;
   const ::CoreML::Specification::ArgSortLayerParams* argsort_;
   const ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
 } _NeuralNetworkLayer_default_instance_;
@@ -585,8 +585,8 @@ class LayerNormalizationLayerParamsDefaultTypeInternal : public ::google::protob
 } _LayerNormalizationLayerParams_default_instance_;
 class NonMaximumSuppressionLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NonMaximumSuppressionLayerParams> {
 } _NonMaximumSuppressionLayerParams_default_instance_;
-class ClampedReLUDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ClampedReLU> {
-} _ClampedReLU_default_instance_;
+class ClampedReLULayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ClampedReLULayerParams> {
+} _ClampedReLULayerParams_default_instance_;
 class ArgSortLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ArgSortLayerParams> {
 } _ArgSortLayerParams_default_instance_;
 class NeuralNetworkClassifierDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NeuralNetworkClassifier> {
@@ -1026,7 +1026,7 @@ void TableStruct::Shutdown() {
   _SlidingWindowsLayerParams_default_instance_.Shutdown();
   _LayerNormalizationLayerParams_default_instance_.Shutdown();
   _NonMaximumSuppressionLayerParams_default_instance_.Shutdown();
-  _ClampedReLU_default_instance_.Shutdown();
+  _ClampedReLULayerParams_default_instance_.Shutdown();
   _ArgSortLayerParams_default_instance_.Shutdown();
   _NeuralNetworkClassifier_default_instance_.Shutdown();
   _OneHotLayerParams_default_instance_.Shutdown();
@@ -1235,7 +1235,7 @@ void TableStruct::InitDefaultsImpl() {
   _SlidingWindowsLayerParams_default_instance_.DefaultConstruct();
   _LayerNormalizationLayerParams_default_instance_.DefaultConstruct();
   _NonMaximumSuppressionLayerParams_default_instance_.DefaultConstruct();
-  _ClampedReLU_default_instance_.DefaultConstruct();
+  _ClampedReLULayerParams_default_instance_.DefaultConstruct();
   _ArgSortLayerParams_default_instance_.DefaultConstruct();
   _NeuralNetworkClassifier_default_instance_.DefaultConstruct();
   _OneHotLayerParams_default_instance_.DefaultConstruct();
@@ -8239,7 +8239,7 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
       break;
     }
     case kClampedReLU: {
-      mutable_clampedrelu()->::CoreML::Specification::ClampedReLU::MergeFrom(from.clampedrelu());
+      mutable_clampedrelu()->::CoreML::Specification::ClampedReLULayerParams::MergeFrom(from.clampedrelu());
       break;
     }
     case kArgSort: {
@@ -10858,7 +10858,7 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
-      // .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+      // .CoreML.Specification.ClampedReLULayerParams clampedReLU = 1460;
       case 1460: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(11682u)) {
@@ -11880,7 +11880,7 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
       1455, *layer_.cumsum_, output);
   }
 
-  // .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+  // .CoreML.Specification.ClampedReLULayerParams clampedReLU = 1460;
   if (has_clampedrelu()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1460, *layer_.clampedrelu_, output);
@@ -13020,7 +13020,7 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.cumsum_);
       break;
     }
-    // .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+    // .CoreML.Specification.ClampedReLULayerParams clampedReLU = 1460;
     case kClampedReLU: {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
@@ -13685,7 +13685,7 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
       break;
     }
     case kClampedReLU: {
-      mutable_clampedrelu()->::CoreML::Specification::ClampedReLU::MergeFrom(from.clampedrelu());
+      mutable_clampedrelu()->::CoreML::Specification::ClampedReLULayerParams::MergeFrom(from.clampedrelu());
       break;
     }
     case kArgSort: {
@@ -21297,7 +21297,7 @@ void NeuralNetworkLayer::set_allocated_cumsum(::CoreML::Specification::CumSumLay
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.cumSum)
 }
 
-// .CoreML.Specification.ClampedReLU clampedReLU = 1460;
+// .CoreML.Specification.ClampedReLULayerParams clampedReLU = 1460;
 bool NeuralNetworkLayer::has_clampedrelu() const {
   return layer_case() == kClampedReLU;
 }
@@ -21310,33 +21310,33 @@ void NeuralNetworkLayer::clear_clampedrelu() {
     clear_has_layer();
   }
 }
- const ::CoreML::Specification::ClampedReLU& NeuralNetworkLayer::clampedrelu() const {
+ const ::CoreML::Specification::ClampedReLULayerParams& NeuralNetworkLayer::clampedrelu() const {
   // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
   return has_clampedrelu()
       ? *layer_.clampedrelu_
-      : ::CoreML::Specification::ClampedReLU::default_instance();
+      : ::CoreML::Specification::ClampedReLULayerParams::default_instance();
 }
-::CoreML::Specification::ClampedReLU* NeuralNetworkLayer::mutable_clampedrelu() {
+::CoreML::Specification::ClampedReLULayerParams* NeuralNetworkLayer::mutable_clampedrelu() {
   if (!has_clampedrelu()) {
     clear_layer();
     set_has_clampedrelu();
-    layer_.clampedrelu_ = new ::CoreML::Specification::ClampedReLU;
+    layer_.clampedrelu_ = new ::CoreML::Specification::ClampedReLULayerParams;
   }
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
   return layer_.clampedrelu_;
 }
-::CoreML::Specification::ClampedReLU* NeuralNetworkLayer::release_clampedrelu() {
+::CoreML::Specification::ClampedReLULayerParams* NeuralNetworkLayer::release_clampedrelu() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.clampedReLU)
   if (has_clampedrelu()) {
     clear_has_layer();
-    ::CoreML::Specification::ClampedReLU* temp = layer_.clampedrelu_;
+    ::CoreML::Specification::ClampedReLULayerParams* temp = layer_.clampedrelu_;
     layer_.clampedrelu_ = NULL;
     return temp;
   } else {
     return NULL;
   }
 }
-void NeuralNetworkLayer::set_allocated_clampedrelu(::CoreML::Specification::ClampedReLU* clampedrelu) {
+void NeuralNetworkLayer::set_allocated_clampedrelu(::CoreML::Specification::ClampedReLULayerParams* clampedrelu) {
   clear_layer();
   if (clampedrelu) {
     set_has_clampedrelu();
@@ -67841,19 +67841,19 @@ void NonMaximumSuppressionLayerParams::set_perclasssuppression(bool value) {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int ClampedReLU::kAlphaFieldNumber;
-const int ClampedReLU::kBetaFieldNumber;
+const int ClampedReLULayerParams::kAlphaFieldNumber;
+const int ClampedReLULayerParams::kBetaFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
-ClampedReLU::ClampedReLU()
+ClampedReLULayerParams::ClampedReLULayerParams()
   : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
   if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
     protobuf_NeuralNetwork_2eproto::InitDefaults();
   }
   SharedCtor();
-  // @@protoc_insertion_point(constructor:CoreML.Specification.ClampedReLU)
+  // @@protoc_insertion_point(constructor:CoreML.Specification.ClampedReLULayerParams)
 }
-ClampedReLU::ClampedReLU(const ClampedReLU& from)
+ClampedReLULayerParams::ClampedReLULayerParams(const ClampedReLULayerParams& from)
   : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
       _cached_size_(0) {
@@ -67861,52 +67861,52 @@ ClampedReLU::ClampedReLU(const ClampedReLU& from)
   ::memcpy(&alpha_, &from.alpha_,
     reinterpret_cast<char*>(&beta_) -
     reinterpret_cast<char*>(&alpha_) + sizeof(beta_));
-  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.ClampedReLU)
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.ClampedReLULayerParams)
 }
 
-void ClampedReLU::SharedCtor() {
+void ClampedReLULayerParams::SharedCtor() {
   ::memset(&alpha_, 0, reinterpret_cast<char*>(&beta_) -
     reinterpret_cast<char*>(&alpha_) + sizeof(beta_));
   _cached_size_ = 0;
 }
 
-ClampedReLU::~ClampedReLU() {
-  // @@protoc_insertion_point(destructor:CoreML.Specification.ClampedReLU)
+ClampedReLULayerParams::~ClampedReLULayerParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.ClampedReLULayerParams)
   SharedDtor();
 }
 
-void ClampedReLU::SharedDtor() {
+void ClampedReLULayerParams::SharedDtor() {
 }
 
-void ClampedReLU::SetCachedSize(int size) const {
+void ClampedReLULayerParams::SetCachedSize(int size) const {
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = size;
   GOOGLE_SAFE_CONCURRENT_WRITES_END();
 }
-const ClampedReLU& ClampedReLU::default_instance() {
+const ClampedReLULayerParams& ClampedReLULayerParams::default_instance() {
   protobuf_NeuralNetwork_2eproto::InitDefaults();
   return *internal_default_instance();
 }
 
-ClampedReLU* ClampedReLU::New(::google::protobuf::Arena* arena) const {
-  ClampedReLU* n = new ClampedReLU;
+ClampedReLULayerParams* ClampedReLULayerParams::New(::google::protobuf::Arena* arena) const {
+  ClampedReLULayerParams* n = new ClampedReLULayerParams;
   if (arena != NULL) {
     arena->Own(n);
   }
   return n;
 }
 
-void ClampedReLU::Clear() {
-// @@protoc_insertion_point(message_clear_start:CoreML.Specification.ClampedReLU)
+void ClampedReLULayerParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.ClampedReLULayerParams)
   ::memset(&alpha_, 0, reinterpret_cast<char*>(&beta_) -
     reinterpret_cast<char*>(&alpha_) + sizeof(beta_));
 }
 
-bool ClampedReLU::MergePartialFromCodedStream(
+bool ClampedReLULayerParams::MergePartialFromCodedStream(
     ::google::protobuf::io::CodedInputStream* input) {
 #define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
   ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:CoreML.Specification.ClampedReLU)
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.ClampedReLULayerParams)
   for (;;) {
     ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
@@ -67953,17 +67953,17 @@ bool ClampedReLU::MergePartialFromCodedStream(
     }
   }
 success:
-  // @@protoc_insertion_point(parse_success:CoreML.Specification.ClampedReLU)
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.ClampedReLULayerParams)
   return true;
 failure:
-  // @@protoc_insertion_point(parse_failure:CoreML.Specification.ClampedReLU)
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.ClampedReLULayerParams)
   return false;
 #undef DO_
 }
 
-void ClampedReLU::SerializeWithCachedSizes(
+void ClampedReLULayerParams::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:CoreML.Specification.ClampedReLU)
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.ClampedReLULayerParams)
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
@@ -67977,11 +67977,11 @@ void ClampedReLU::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteFloat(2, this->beta(), output);
   }
 
-  // @@protoc_insertion_point(serialize_end:CoreML.Specification.ClampedReLU)
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.ClampedReLULayerParams)
 }
 
-size_t ClampedReLU::ByteSizeLong() const {
-// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.ClampedReLU)
+size_t ClampedReLULayerParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.ClampedReLULayerParams)
   size_t total_size = 0;
 
   // float alpha = 1;
@@ -68001,13 +68001,13 @@ size_t ClampedReLU::ByteSizeLong() const {
   return total_size;
 }
 
-void ClampedReLU::CheckTypeAndMergeFrom(
+void ClampedReLULayerParams::CheckTypeAndMergeFrom(
     const ::google::protobuf::MessageLite& from) {
-  MergeFrom(*::google::protobuf::down_cast<const ClampedReLU*>(&from));
+  MergeFrom(*::google::protobuf::down_cast<const ClampedReLULayerParams*>(&from));
 }
 
-void ClampedReLU::MergeFrom(const ClampedReLU& from) {
-// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.ClampedReLU)
+void ClampedReLULayerParams::MergeFrom(const ClampedReLULayerParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.ClampedReLULayerParams)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   ::google::protobuf::uint32 cached_has_bits = 0;
@@ -68021,60 +68021,60 @@ void ClampedReLU::MergeFrom(const ClampedReLU& from) {
   }
 }
 
-void ClampedReLU::CopyFrom(const ClampedReLU& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.ClampedReLU)
+void ClampedReLULayerParams::CopyFrom(const ClampedReLULayerParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.ClampedReLULayerParams)
   if (&from == this) return;
   Clear();
   MergeFrom(from);
 }
 
-bool ClampedReLU::IsInitialized() const {
+bool ClampedReLULayerParams::IsInitialized() const {
   return true;
 }
 
-void ClampedReLU::Swap(ClampedReLU* other) {
+void ClampedReLULayerParams::Swap(ClampedReLULayerParams* other) {
   if (other == this) return;
   InternalSwap(other);
 }
-void ClampedReLU::InternalSwap(ClampedReLU* other) {
+void ClampedReLULayerParams::InternalSwap(ClampedReLULayerParams* other) {
   std::swap(alpha_, other->alpha_);
   std::swap(beta_, other->beta_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
-::std::string ClampedReLU::GetTypeName() const {
-  return "CoreML.Specification.ClampedReLU";
+::std::string ClampedReLULayerParams::GetTypeName() const {
+  return "CoreML.Specification.ClampedReLULayerParams";
 }
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
-// ClampedReLU
+// ClampedReLULayerParams
 
 // float alpha = 1;
-void ClampedReLU::clear_alpha() {
+void ClampedReLULayerParams::clear_alpha() {
   alpha_ = 0;
 }
-float ClampedReLU::alpha() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLU.alpha)
+float ClampedReLULayerParams::alpha() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLULayerParams.alpha)
   return alpha_;
 }
-void ClampedReLU::set_alpha(float value) {
+void ClampedReLULayerParams::set_alpha(float value) {
   
   alpha_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLU.alpha)
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLULayerParams.alpha)
 }
 
 // float beta = 2;
-void ClampedReLU::clear_beta() {
+void ClampedReLULayerParams::clear_beta() {
   beta_ = 0;
 }
-float ClampedReLU::beta() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLU.beta)
+float ClampedReLULayerParams::beta() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ClampedReLULayerParams.beta)
   return beta_;
 }
-void ClampedReLU::set_beta(float value) {
+void ClampedReLULayerParams::set_beta(float value) {
   
   beta_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLU.beta)
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ClampedReLULayerParams.beta)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

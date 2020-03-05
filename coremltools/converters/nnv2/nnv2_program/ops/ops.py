@@ -3,7 +3,6 @@ import math
 import numpy as np
 import sympy as sm
 import scipy
-from coremltools.converters.nnv2.nnv2_program.program.type_utils import proto_to_builtin_types
 import operator
 import functools
 
@@ -1018,7 +1017,7 @@ class pad(Operation):
 
         if self.pad.shape[0] % 2 != 0:
             raise ValueError("Padding must be even! Provided {}".format(self.pad.shape[0]))
-        
+
         mode = self.mode.val
         if mode in {"reflect", "replicate"}:
             # Reflect and Replicate mode only support padding to last two dimensions
@@ -2759,3 +2758,145 @@ class tile(Operation):
 
     def eval(self):
         return np.tile(self.x.val, reps=self.reps.val)
+
+@register_op(doc_str='TODO')
+class instance_norm(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        gamma=TensorInputType(const=True, optional=True),
+        beta=TensorInputType(const=True, optional=True),
+        epsilon=FloatInputType(const=True, default=1e-5),
+    )
+
+    def __init__(self, **kwargs):
+        super(instance_norm, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
+
+@register_op(doc_str='TODO')
+class l2_norm(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        axes=IntTensorInputType(),
+        epsilon=FloatInputType(const=True, default=1e-12)
+    )
+
+    def __init__(self, **kwargs):
+        super(l2_norm, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
+
+@register_op(doc_str='TODO')
+class layer_norm(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        axes=IntTensorInputType(const=True, optional=True),
+        gamma=TensorInputType(const=True, optional=True),
+        beta=TensorInputType(const=True, optional=True),
+        epsilon=FloatInputType(const=True, default=1e-5),
+    )
+
+    def __init__(self, **kwargs):
+        super(layer_norm, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
+    def eval(self):
+        def np_layer_norm(x, axes, gamma, beta, epsilon=1e-5):
+            normalized_shape = x.shape[-len(axes):]
+            gamma = np.ones(shape=normalized_shape) if gamma is None else gamma
+            beta = np.zeros(shape=normalized_shape) if beta is None else beta
+            num = x - np.mean(x, axis=tuple(axes), keepdims=True)
+            dem = np.sqrt(
+                np.sum(np.square(num), axis=tuple(axes), keepdims=True) /
+                np.prod(normalized_shape) + epsilon)
+            return num / dem * gamma + beta
+
+        _axes = self.x.shape if self.axes is None else self.axes.val
+        _gamma = None if self.gamma is None else self.gamma.val
+        _beta = None if self.beta is None else self.beta.val
+        return np_layer_norm(self.x.val, _axes, _gamma, _beta, self.epsilon.val)
+
+
+@register_op(doc_str='TODO')
+class local_response_norm(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        size=IntInputType(const=True),
+        alpha=FloatInputType(const=True, default=1e-4),
+        beta=FloatInputType(const=True, default=0.75),
+        k=FloatInputType(const=True, default=1.0),
+    )
+
+    def __init__(self, **kwargs):
+        super(local_response_norm, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
+
+@register_op(doc_str="""
+Returns a tensor containing top or bottom k values and the corresponding
+indices of the input tensor along a given axis.
+
+Inputs
+
+* x: <*, T> Required
+    * Input tensor.
+* k: const<i32>  (Optional. Default to 1)
+    * Number of values/indices to be computed along each axis.
+* axis: const<i32> Optional
+    * Axis to perform the operation. Defaults to 1 (channel dimension).
+* ascending: const<bool> Optional
+    * Whether or not to sort in ascending order, defaults to false, sort in descending order.
+
+Outputs
+
+* <*, T>
+    * Values of top/bottom k elements
+* <*, T>
+    * Indices of the top/bottom k elements along axis
+
+Type Domains
+
+* T: f32
+""")
+class topk(Operation):
+    input_types = InputSpec(
+        x=TensorInputType(),
+        k=IntInputType(const=True, default=1),
+        axis=IntInputType(const=True, default=-1),
+        ascending=BoolInputType(const=True, default=False)
+    )
+
+    def __init__(self, **kwargs):
+        super(topk, self).__init__(**kwargs)
+
+    def type_inference(self):
+        x_type = self.x.dtype
+        x_shape = self.x.shape
+        k = self.k.val
+        axis = self.axis.val
+
+        if not is_symbolic(x_shape[axis]) and k > x_shape[axis]:
+            msg = 'K={} is greater than size of the given axis={}'
+            raise ValueError(msg.format(k, axis))
+
+        ret_shape = list(x_shape)
+        ret_shape[axis] = k
+        return builtins.tensor(x_type, ret_shape), builtins.tensor(builtins.int32, ret_shape)
+
+    def eval(self):
+        indices = np.argsort(self.x.val, axis=self.axis.val)
+        if not self.ascending.val:
+            indices = np.argsort(-self.x.val, axis=self.axis.val)
+        slc = [slice(None)] * self.x.rank
+        slc[self.axis.val] = slice(0, self.k.val)
+        indices = indices[tuple(slc)]
+        values = np.take_along_axis(self.x.val, indices, axis=self.axis.val)
+        return values, indices

@@ -3,7 +3,6 @@ import numpy as np
 from coremltools import models
 from .nnv2_program.program import SsaProgram, SsaFunction
 from coremltools.converters.nnv2 import converter
-from .nnv2_program.ops.testing_ops_utils import backend_to_convert_targets
 
 
 def build_main_program(inputs):
@@ -35,7 +34,7 @@ def assert_op_count_match(program, expect, op=None, verbose=False):
         np.testing.assert_equal(count, expect)
 
 
-def assert_model_is_valid(program, inputs, backend='nnv1',
+def assert_model_is_valid(program, inputs, backend='nnv1_proto',
         verbose=True):
     """
     Assert Core ML model is valid.
@@ -48,7 +47,7 @@ def assert_model_is_valid(program, inputs, backend='nnv1',
     input_dict = dict()
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
-    convert_target = backend_to_convert_targets[backend]
+    convert_target = backend
     proto = converter.convert(program, convert_from='NitroSSA',
             convert_to=convert_target)
     model = models.MLModel(proto)

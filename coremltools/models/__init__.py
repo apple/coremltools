@@ -30,4 +30,4 @@ from .model import (
 
 from .model import NeuralNetworkShaper
 
-from . import neural_network, program
+from . import neural_network

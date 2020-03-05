@@ -2147,11 +2147,11 @@ class SSAConverter(object):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
         builder = self._get_builder()
 
-        layer = builder.add_clamped_relu(
-            name=node.name,
-            input_name=input_names[0],
-            output_name=node.name,
-        )
+        layer = builder.add_clip(name=node.name,
+                                 input_name=input_names[0],
+                                 output_name=node.name,
+                                 min_value=0.0, max_value=6.0)
+
         shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_gelu(self, node):

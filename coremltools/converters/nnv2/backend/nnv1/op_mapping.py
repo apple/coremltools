@@ -536,6 +536,10 @@ def sqrt(const_context, builder, op):
     _add_elementwise_unary(builder, op, "sqrt")
 
 @register_v2_op
+def square(const_context, builder, op):
+    _add_elementwise_unary(builder, op, "power", alpha=2.)
+
+@register_v2_op
 def sub(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "subtract")
 
@@ -757,6 +761,18 @@ def transpose(const_context, builder, op):
             axes=op.perm.val,
             input_name=op.x.name,
             output_name=op.name)
+
+
+@register_v2_op
+def topk(const_context, builder, op):
+    builder.add_topk(
+        name=op.name,
+        input_names=[op.x.name],
+        output_names=[op.name + ':0', op.name + ':1'],
+        k=op.k.val,
+        axis=op.axis.val,
+        use_bottom_k=op.ascending.val
+    )
 
 
 @register_v2_op
@@ -1477,11 +1493,10 @@ def clamped_relu(const_context, builder, op):
 
 @register_v2_op
 def relu6(const_context, builder, op):
-    builder.add_clamped_relu(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name
-    )
+    builder.add_clip(name=op.name,
+                     input_name=op.x.name,
+                     output_name=op.name,
+                     min_value=0.0, max_value=6.0)
 
 @register_v2_op
 def prelu(const_context, builder, op):
@@ -1538,3 +1553,84 @@ def pad(const_context, builder, op):
         message = "Expecting either rank 4 with padding last two dimensions (H and W) or general padding with `constant` mode " + \
                    "Provided rank {} input with padding {} and mode {}".format(op.x.rank, pad, mode)
         raise ValueError("Unsupported configuration for Pad layer! {}".format(message))
+
+
+@register_v2_op
+def instance_norm(const_context, builder, op):
+    channels = op.x.shape[1]
+    gamma = np.array([1.] * channels) if op.gamma is None else op.gamma.val
+    beta = np.array([0.] * channels) if op.beta is None else op.beta.val
+    builder.add_batchnorm(
+        name=op.name,
+        channels=channels,
+        gamma=gamma,
+        beta=beta,
+        input_name=op.x.name,
+        output_name=op.name,
+        compute_mean_var=True,
+        instance_normalization=True,
+        epsilon=op.epsilon.val,
+    )
+
+
+@register_v2_op
+def l2_norm(const_context, builder, op):
+    builder.add_l2_normalize(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        epsilon=op.epsilon.val,
+    )
+
+
+@register_v2_op
+def layer_norm(const_context, builder, op):
+    input_shape = list(op.x.shape)
+    axes = None if op.axes is None else op.axes.val
+    normalized_shape = input_shape[-len(axes):]
+    gamma = np.ones(normalized_shape) if op.gamma is None else op.gamma.val
+    beta = np.zeros(normalized_shape) if op.beta is None else op.beta.val
+    if len(input_shape) in [2, 3] and len(axes) == 1 and axes[0] == len(input_shape) - 1:
+        # Performance enhancement for some models with layer-norm
+        builder.add_reshape_static(name=op.name + '_reshape',
+                                   input_name=op.x.name,
+                                   output_name=op.x.name + '_reshape',
+                                   output_shape=input_shape + [1, 1])
+
+        builder.add_mvn(name=op.x.name + '_mvn',
+                        input_name=op.x.name + '_reshape',
+                        output_name=op.x.name + '_mvn', across_channels=True,
+                        normalize_variance=True, epsilon=op.epsilon.val)
+
+        builder.add_scale(name=op.x.name + '_5d',
+                          input_name=op.x.name + '_mvn',
+                          output_name=op.x.name + '_5d', W=gamma, b=beta, has_bias=True,
+                          shape_scale=[len(gamma)], shape_bias=[len(beta)])
+
+        builder.add_reshape_static(name=op.name,
+                                   input_name=op.x.name + '_5d',
+                                   output_name=op.name,
+                                   output_shape=input_shape)
+    else:
+        builder.add_layer_normalization(
+            name=op.name,
+            input_name=op.x.name,
+            output_name=op.name,
+            normalized_shape=normalized_shape,
+            gamma=gamma,
+            beta=beta,
+            eps=op.epsilon.val
+        )
+
+
+@register_v2_op
+def local_response_norm(const_context, builder, op):
+    builder.add_lrn(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        alpha=op.alpha.val,
+        beta=op.beta.val,
+        local_size=op.size.val,
+        k=op.k.val
+    )

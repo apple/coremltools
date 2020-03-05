@@ -35,15 +35,6 @@ class TensorflowFrontend:
         from .frontend.tensorflow import load
         return load(*args, **kwargs)
 
-
-@ConverterRegistry.backend
-class NNv2ProtoBackend:
-    NAME = "nnv2_proto"
-
-    def __call__(self, *args, **kwargs):
-        from .backend.nnv2 import load as backend_load
-        return backend_load(*args, **kwargs)
-
 @ConverterRegistry.backend
 class NNv1ProtoBackend:
     NAME = "nnv1_proto"
@@ -82,7 +73,7 @@ class NNv2DummyFrontend:
         return program
 
 
-def convert(model, convert_from='tensorflow', convert_to='proto', **kwargs):
+def convert(model, convert_from='tensorflow', convert_to='proto', ConverterRegistry=ConverterRegistry, **kwargs):
     """
     Convert from an external representation.
 

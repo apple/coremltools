@@ -3902,6 +3902,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reverse_sequence_gpu(self):
         self.test_reverse_sequence_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problems/59861128')
     def test_where_nonzero_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
