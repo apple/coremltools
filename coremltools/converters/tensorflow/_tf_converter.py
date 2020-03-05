@@ -208,24 +208,24 @@ def _graph_def_from_saved_model_or_keras_model(filename):
     :return: TensorFlow GraphDef object.
     """
     try:
-       import tensorflow as tf
-       from tensorflow.python.keras.saving import saving_utils as _saving_utils
-       from tensorflow.python.framework import convert_to_constants as _convert_to_constants
-       if filename.endswith('.h5'):
-           model = tf.keras.models.load_model(filename)
-           tf.keras.backend.set_learning_phase(False)
-           func = _saving_utils.trace_model_call(model)
-           concrete_func = func.get_concrete_function()
-       else:
-           model = tf.saved_model.load(filename)
-           signatures = model.signatures
-           if len(signatures) == 0:
-             raise ValueError('Unable to load a model with no signatures provided.')
-           if len(signatures) >= 2:
-             raise ValueError('Unable to load a model with multiple signatures')
-           concrete_func = signatures.values()[0]
-       frozen_func = _convert_to_constants.convert_variables_to_constants_v2(concrete_func)
-       graph_def = frozen_func.graph.as_graph_def(add_shapes=True)
+        import tensorflow as tf
+        from tensorflow.python.keras.saving import saving_utils as _saving_utils
+        from tensorflow.python.framework import convert_to_constants as _convert_to_constants
+        if filename.endswith('.h5'):
+            model = tf.keras.models.load_model(filename)
+            tf.keras.backend.set_learning_phase(False)
+            func = _saving_utils.trace_model_call(model)
+            concrete_func = func.get_concrete_function()
+        else:
+            model = tf.saved_model.load(filename)
+            signatures = model.signatures
+            if len(signatures) == 0:
+              raise ValueError('Unable to load a model with no signatures provided.')
+            if len(signatures) >= 2:
+              raise ValueError('Unable to load a model with multiple signatures')
+            concrete_func = signatures.values()[0]
+        frozen_func = _convert_to_constants.convert_variables_to_constants_v2(concrete_func)
+        graph_def = frozen_func.graph.as_graph_def(add_shapes=True)
     except ImportError as e:
         raise ImportError('Failed to import TensorFlow utilities. {}.'.format(e))
     except ValueError as e:
