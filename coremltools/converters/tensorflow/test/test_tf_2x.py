@@ -134,7 +134,7 @@ class TestSingleOp(unittest.TestCase):
 
         self._test_coreml(model())
 
-
+@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestEinsum(TestSingleOp):
 
     def test_einsum_transpose(self):
@@ -318,6 +318,88 @@ class TestEinsum(TestSingleOp):
                 return (tf.einsum('ijkt->jtki', x),
                        tf.einsum('ijkt->ijkt', x))
         self._test_coreml(model(), input_dic=[('x', [7,3,5,2])])
+
+@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+class TestTensorflow2Model(unittest.TestCase):
+
+    def setUp(self):
+        self.saved_model_dir = tempfile.mkdtemp()
+
+    def test_save_and_load_low_level_model(self):
+        class model(tf.Module):
+            def __init__(self, in_features, output_features, name=None):
+                super(model, self).__init__(name=name)
+                self.in_features = in_features
+                self.w = tf.Variable(tf.random.normal([in_features, output_features]), name='w')
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None, 20], dtype=tf.float32)])
+            def __call__(self, x):
+                return tf.matmul(x, self.w)
+        in_features = 20
+        output_features = 30
+        model = model(in_features, output_features)
+        tf.saved_model.save(model, self.saved_model_dir)
+
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            inputs={'x':[1,20]},
+            outputs=['Identity']
+        )
+
+        input = np.random.rand(1,20)
+        tf_output = model(input).numpy()
+        ml_output = mlmodel.predict({'x':input})['Identity']
+
+        np.testing.assert_almost_equal(tf_output, ml_output, decimal=3)
+
+    def test_save_and_load_low_level_model_with_multiple_signatures(self):
+        class model(tf.Module):
+            def __init__(self, in_features, output_features, name=None):
+                super(model, self).__init__(name=name)
+                self.in_features = in_features
+                self.w = tf.Variable(tf.random.normal([in_features, output_features]), name='w')
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None, 20], dtype=tf.float32)])
+            def __call__(self, x):
+                return tf.matmul(x, self.w)
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None, 20], dtype=tf.float32)])
+            def predict(self, x):
+                return 2*tf.matmul(x, self.w)
+
+        in_features = 20
+        output_features = 30
+        model = model(in_features, output_features)
+        signatures = {'a':model.__call__, 'b':model.predict}
+        tf.saved_model.save(model, self.saved_model_dir, signatures)
+        with pytest.raises(ValueError):
+            mlmodel = coremltools.converters.tensorflow.convert(
+                self.saved_model_dir,
+                inputs={'x':[1,20]},
+                outputs=['Identity']
+            )
+
+    def test_save_and_load_low_level_model_with_no_signatures(self):
+        class model(tf.Module):
+            def __init__(self, in_features, output_features, name=None):
+                super(model, self).__init__(name=name)
+                self.in_features = in_features
+                self.w = tf.Variable(tf.random.normal([in_features, output_features]), name='w')
+
+            @tf.function()
+            def __call__(self, x):
+                return tf.matmul(x, self.w)
+
+        in_features = 20
+        output_features = 30
+        model = model(in_features, output_features)
+        tf.saved_model.save(model, self.saved_model_dir)
+        with pytest.raises(ValueError):
+            mlmodel = coremltools.converters.tensorflow.convert(
+                self.saved_model_dir,
+                inputs={'x':[1,20]},
+                outputs=['Identity']
+            )
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestKerasFashionMnist(unittest.TestCase):
