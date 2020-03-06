@@ -1,17 +1,14 @@
 dist: trusty
-cache:
-  directories:
-    - $HOME/.ccache
-
+cache: pip
 language: python
 
 matrix:
   include:
     - python: 2.7
     - python: 3.6
+      dist: xenial
     - python: 3.7
       dist: xenial
-      sudo: true
 
 env:
   global:
@@ -65,6 +62,3 @@ script:
   # Make wheel using default python
   - bash -e scripts/make_wheel.sh
   - bash -e scripts/test_wheel.sh --wheel-path=build/dist/*.whl 
-
-  # See the changes in ccache
-  - ccache -s
