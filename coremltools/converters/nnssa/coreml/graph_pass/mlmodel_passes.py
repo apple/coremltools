@@ -273,6 +273,7 @@ def remove_redundant_transposes(spec):
         redundant pairs that are adjacent in the topologically sorted layer
         list and will not find pairs in more complicated structure.
         """
+        return []
         nn_layers = nn_spec.layers
         layers_to_delete = []
         # This holds the axes definition if the previous layer was a transpose,
@@ -291,12 +292,13 @@ def remove_redundant_transposes(spec):
                 connected = (previous_transpose['layer'].output == _layer.input)
 
                 # Check if they're each other's inverses.
+                compose_to_identity = False
                 if connected:
                     this_transpose = _layer.transpose.axes
                     composed = [previous_transpose['axes'][i] for i in this_transpose]
                     compose_to_identity = all([ax == i for i, ax in enumerate(composed)])
 
-                if connected and compose_to_identity:
+                if compose_to_identity:
                     # These transpose ops are redundant, remove them.
                     layers_to_delete.append((previous_transpose['layer'], _layer))
                 else:
