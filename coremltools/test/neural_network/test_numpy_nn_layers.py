@@ -2567,6 +2567,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
             self.assertEqual(len(output_shapes[i]), builder._get_rank('output'))
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_squeeze(self):
         input_shapes = [(1, 1, 10, 5), (1, 10, 1, 5), (10, 5, 1, 1),
                         (10, 5, 1, 1), (1,), (10, 5, 1, 1), (3, 1, 7)]
@@ -2591,6 +2592,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
             self.assertEqual(len(output_shapes[i]), builder._get_rank('output'))
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_squeeze_all(self):
         input_shapes = [
             (1, 1, 10, 5), (1, 10, 1, 5), (10, 5, 1, 1), (10, 5, 1, 1), (1,),
@@ -2617,6 +2619,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(builder.spec, input, expected, useCPUOnly=True)
             self.assertEqual(-1, builder._get_rank('output'))
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_argmax_argmin(self):
         test_input_shapes = [(9,), (8, 6), (9, 8, 10), (5, 9, 7, 9), (12, 8, 6, 6, 7)]
 
@@ -3503,6 +3506,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reshape_dynamic_gpu(self):
         self.test_reshape_dynamic_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_sum_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
@@ -3538,10 +3542,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                     if expected_rank == 0:
                         expected_rank = 1
                     self.assertEqual(expected_rank, builder._get_rank('output'))
-    
+
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_sum_gpu(self):
         self.test_reduce_sum_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_prod_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
@@ -3579,9 +3585,11 @@ class NewLayersSimpleTest(CorrectnessTest):
                         expected_rank = 1
                     self.assertEqual(expected_rank, builder._get_rank('output'))
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_prod_gpu(self):
         self.test_reduce_prod_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_mean_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
@@ -3614,9 +3622,11 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_mean_gpu(self):
         self.test_reduce_mean_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_max_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
@@ -3648,9 +3658,11 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_max_gpu(self):
         self.test_reduce_max_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_min_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
@@ -3682,9 +3694,11 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_min_gpu(self):
         self.test_reduce_min_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_l2_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
@@ -3716,9 +3730,11 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_l2_gpu(self):
         self.test_reduce_l2_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_l1_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
@@ -3750,9 +3766,11 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_l1_gpu(self):
         self.test_reduce_l1_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_sumsquare_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
@@ -3785,9 +3803,11 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_sumsquare_gpu(self):
         self.test_reduce_sumsquare_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_logsum_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
@@ -3820,9 +3840,11 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_logsum_gpu(self):
         self.test_reduce_logsum_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_logsumexp_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             axes_list = [axes for length in range(1, rank + 1) for axes in itertools.combinations(range(rank), length)]
@@ -3855,6 +3877,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason='rdar://problem/60070935')
     def test_reduce_logsumexp_gpu(self):
         self.test_reduce_logsumexp_cpu(cpu_only=False)
 
