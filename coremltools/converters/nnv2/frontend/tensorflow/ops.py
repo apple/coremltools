@@ -815,11 +815,50 @@ def Where(context, node):
     x = cb.non_zero(x=x, name=node.name)
     context.add(node.name, x)
 
-
 @register_tf_op
 def SquaredDifference(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
     x = cb.sub(x=x, y=y)
     x = cb.square(x=x, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def Conv2DBackpropInput(context, node):
+    # Output shape: [N, H_out, W_out, C_out]
+    output_shape = context[node.inputs[0]].val
+    # Weight shape: [H, W, C_out, C_in]
+    weight = context[node.inputs[1]]
+    # Input shape: [N, H_in, W_in, C_in]
+    x = context[node.inputs[2]]
+
+    data_format = node.attr.get('data_format', 'NHWC')
+    HW_dilations = _conv2d_strides_or_dilations(
+                        'dilations', node.attr.get('dilations'), data_format)
+    HW_strides = _conv2d_strides_or_dilations(
+                        'strides', node.attr.get('strides'), data_format)
+    pad_type = node.attr.get('padding')
+
+    if not isinstance(pad_type, six.string_types):
+        pad_type = "custom"
+        raise NotImplementedError("Custom padding not implemented for TF")
+
+    pad_type = pad_type.lower()
+    # CoreML expects input to be in NCHW format
+    # Transpose input to NCHW format
+    if data_format == "NHWC":
+        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        output_shape = [output_shape[1], output_shape[2]]
+    else:
+        output_shape = [output_shape[2], output_shape[3]]
+
+    # Only the last op should have the same name as node.name
+    conv_name = node.name + 'x' if data_format == 'NHWC' else node.name
+    # add Conv Tranpose
+    x = cb.conv_transpose(x=x, weight=weight, pad_type=pad_type, output_shape=output_shape, strides=HW_strides,
+                          dilations=HW_dilations, name=conv_name)
+
+    # Convert NCHW output back to NHWC format
+    if data_format == "NHWC":
+        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
     context.add(node.name, x)

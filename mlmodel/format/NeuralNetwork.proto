@@ -1430,8 +1430,10 @@ message LookUpTableQuantizationParams {
  *     convolution layer can have 2 inputs, in which case the second input is
  *     the blob representing the weights. This is allowed when "isDeconvolution" = False.
  *     The weight blob should have shape
- *     ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``,
- *     where kernelChannels == inputChannels / nGroups.
+ *     If convolution (``isDeconvolution == false``), weights have the shape
+ *     ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels / nGroups
+ *     If deconvolution (``isDeconvolution == true``) weights have the shape
+ *     ``[kernelChannels, outputChannels / nGroups, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels
  *
  * Output
  *   Rank is same as the input. e.g.: for rank 4 input, output shape is [B, C_out, H_out, W_out]
@@ -1516,9 +1518,9 @@ message ConvolutionLayerParams {
     /**
      * Weights associated with this layer.
      * If convolution (``isDeconvolution == false``), weights have the shape
-     * ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels / nGroups
+     * ``[kernelHeight, kernelWidth, kernelChannels, outputChannels]``, where kernelChannels == inputChannels / nGroups
      * If deconvolution (``isDeconvolution == true``) weights have the shape
-     * ``[kernelChannels, outputChannels / nGroups, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels
+     * ``[kernelHeight, kernelWidth, outputChannels / nGroups, kernelChannels]``, where kernelChannels == inputChannels
      */
     WeightParams weights = 90;
     WeightParams bias = 91; /// Must be of size [outputChannels].

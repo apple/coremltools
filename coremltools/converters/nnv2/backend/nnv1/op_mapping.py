@@ -1634,3 +1634,81 @@ def local_response_norm(const_context, builder, op):
         local_size=op.size.val,
         k=op.k.val
     )
+
+@register_v2_op
+def conv_transpose(const_context, builder, op):
+    x_name = op.x.name
+    out_name = op.name
+
+    # Special handling for 1d conv transpose
+    is_conv_transpose_1d = op.x.rank == 3
+    if is_conv_transpose_1d:
+        x_name = op.name + '_expand_dim'
+        out_name = op.name + '_expanded'
+        builder.add_expand_dims(
+                name=x_name,
+                input_name=op.x.name,
+                output_name=x_name,
+                axes=[3])
+
+    # Input names to be used
+    input_names = [x_name]
+
+    # Kernel shape
+    # 2D: [H, W, C_out, C_in]
+    # 1D: [H, C_out, C_in]
+    weight = op.weight.val
+
+    if is_conv_transpose_1d:
+        weight = np.expand_dims(op.weight.val, 1)
+
+    # padding
+    border_mode = 'valid' if op.pad_type is None else op.pad_type.val
+    pad = [0] * 4
+    if border_mode == 'custom' or op.pad is not None:
+        border_mode = 'valid'
+        pad[0] = op.pad.val[0] # Top
+        pad[1] = op.pad.val[1] # Bottom
+        if not is_conv_transpose_1d:
+            pad[2] = op.pad.val[2] # Left
+            pad[3] = op.pad.val[3] # Right
+
+    strides = [op.strides.val[0], 1 if is_conv_transpose_1d else op.strides.val[1]]
+    group = op.group.val
+    has_bias = op.bias is not None
+    dilations = [op.dilations.val[0], 1 if is_conv_transpose_1d else op.dilations.val[1]]
+    # Get H and W from output shape
+    output_shape = None if op.output_shape is None else tuple(op.output_shape.val)
+
+    builder.add_convolution(
+            name=out_name,
+            kernel_channels=weight.shape[3],
+            output_channels=weight.shape[2],
+            height=weight.shape[0],
+            width=weight.shape[1],
+            stride_height=strides[0],
+            stride_width=strides[1],
+            border_mode=border_mode,
+            groups=group,
+            W=weight,
+            b=op.bias.val if has_bias else None,
+            has_bias=has_bias,
+            is_deconv=True,
+            output_shape=output_shape,
+            input_name=input_names,
+            output_name=out_name,
+            dilation_factors=dilations,
+            padding_top=pad[0],
+            padding_bottom=pad[1],
+            padding_left=pad[2],
+            padding_right=pad[3],
+            )
+
+    # Squeeze added `Width` dimension for 1d case
+    if is_conv_transpose_1d:
+        x_name = op.name+'expand_dim'
+        builder.add_squeeze(
+                name=op.name,
+                input_name=out_name,
+                output_name=op.name,
+                axes=[3])

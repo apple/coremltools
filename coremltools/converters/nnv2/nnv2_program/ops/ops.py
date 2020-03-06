@@ -2900,3 +2900,52 @@ class topk(Operation):
         indices = indices[tuple(slc)]
         values = np.take_along_axis(self.x.val, indices, axis=self.axis.val)
         return values, indices
+
+@register_op(doc_str='TODO')
+class conv_transpose(Operation):
+    input_types = InputSpec(
+        x = TensorInputType(),
+        weight = TensorInputType(const=True),
+        bias = TensorInputType(const=True, optional=True),
+        pad = IntTensorInputType(const=True, optional=True),
+        output_shape = IntTensorInputType(const=True, optional=True),
+        pad_type = StringInputType(const=True, default='valid'),
+        strides = TensorInputType(const=True, default=[1, 1]),
+        dilations = TensorInputType(const=True, default=[1, 1]),
+        group = IntInputType(const=True, default=1),
+        )
+
+    def __init__(self, **kwargs):
+        super(conv_transpose, self).__init__(**kwargs)
+
+    def type_inference(self):
+        # Input shape is [N, C_in, H, W]
+        in_shape = self.x.shape
+        # Weight shape is [H, W, C_out, C_in]
+        f_shape = self.weight.shape
+        kernel_shape = f_shape[:2]
+        spatial_dim_rank = len(in_shape) - 2
+        N = in_shape[0]
+        C_in = self.x.shape[1]
+        C_out = f_shape[-2]
+        group = self.group.val
+        if C_out % group != 0:
+            msg = '# of input channels {} not divisible by group {}'
+            raise ValueError(msg.format(C_in, group))
+
+        # If output shape is given, return it
+        if self.output_shape is not None:
+            output_shape = self.output_shape.val
+            return builtins.tensor(self.x.dtype, tuple([N, C_out, output_shape[0], output_shape[1]]))
+
+        strides = [1] * spatial_dim_rank if self.strides is None else self.strides.val
+        dilations = [1] * spatial_dim_rank if self.dilations is None else self.dilations.val
+        pad = None if self.pad is None else self.pad.val
+
+        D_in = in_shape[2:]  # spatial dimensions
+        if pad is None:
+            pad = [0] * spatial_dim_rank
+        d_out_shape = [ strides[r] * (D_in[r] - 1) + ((kernel_shape[r] - 1) * dilations[r]) - pad[2*r] - pad[2*r+1] + 1
+                        for r in range(spatial_dim_rank) ]
+        retshape = [N, C_out] + d_out_shape
+        return builtins.tensor(self.x.dtype, tuple(retshape))
