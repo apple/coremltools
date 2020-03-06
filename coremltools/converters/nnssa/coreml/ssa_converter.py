@@ -2643,7 +2643,7 @@ class SSAConverter(object):
                     raise ValueError("Incorrect configuration!! Alpha not provided for Elementwise Div operator")
                 alpha = 1 / float(alpha)
             elif op == 'sub':
-                if alpha and inputs[0] == input_names[0]:
+                if alpha is not None and inputs[0] == input_names[0]:
                     alpha = -alpha
                 else:
                     neg_index = 1
