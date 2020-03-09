@@ -1759,7 +1759,7 @@ class NeuralNetworkBuilder(object):
 
         See Also
         --------
-        add_pooling, add_activation, add_batchnorm
+        add_convolution3d, add_pooling, add_activation, add_batchnorm
 
         """
 
@@ -1856,6 +1856,153 @@ class NeuralNetworkBuilder(object):
             else:
                 W_bytes += _convert_array_to_nbit_quantized_bytes(Wt.flatten(), nbits).tobytes()
             _fill_quantized_weights(weights_message=weights, W=W_bytes, **kwargs)
+
+        # Assign biases
+        if has_bias:
+            bias = spec_layer_params.bias
+            for f in range(output_channels):
+                bias.floatValue.append(float(b[f]))
+
+        return spec_layer
+
+    def add_convolution3d(self, name, input_channels, output_channels, depth, height, width,
+                            W, b, has_bias, groups=1,
+                            stride_depth=1, stride_height=1, stride_width=1,
+                            dilation_width=1, dilation_height=1, dilation_depth=1,
+                            padding_mode='valid', same_padding_asymmetry_mode='BOTTOM_RIGHT_HEAVY',
+                            padding_front=0, padding_back=0,
+                            padding_top=0, padding_bottom=0,
+                            padding_left=0, padding_right=0,
+                            input_name='data', output_name='out'):
+        """
+        Add a 3 dimensional convolution layer to the network.
+        Refer to the **Convolution3DLayerParams** message in specification (NeuralNetwork.proto) for
+        more details.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+        input_channels: int
+            Number of input channels.
+        output_channels: int
+            Number of filter kernels. This is equal to the number of channels in the output blob.
+        depth: int
+            Depth of each kernel.
+        height: int
+            Height of each kernel.
+        width: int
+            Width of each kernel.
+        W: numpy.array or bytes() or None
+            Weight of the convolution kernels.
+            - W should have shape (height, width, kernel_channels, output_channels), where
+              kernel_channel = input_channels / groups
+            For Core ML specification version >=4, W can be None. In this case,
+            the convolution layer takes 2 inputs, where the 1st input represents the input feature map,
+            the 2nd input represents the weight blob.
+        b: numpy.array
+            Biases of the convolution kernels. b should have shape (outputChannels, ).
+        has_bias: boolean
+            Whether bias is ignored.
+            - If True, bias is not ignored.
+            - If False, bias is ignored.
+        groups: int
+            Number of kernel groups. Input is divided into groups along the channel axis. Each kernel
+            group share the same weights. Defaults to 1.
+        stride_depth, stride_height, stride_width: int
+            Stride along the depth, height, and width directions, respectively. Must all be positive
+            integers. Defaults to 1.
+        dilation_depth, dilation_width, dilation_height: int
+            Dilation factors across depth, height, and width directions. Must all be positive integers.
+            Defaults to 1 in each dimension.
+        padding_mode: str
+            Option for the padding type and output blob shape. Can be 'valid', 'same', or 'custom'.
+        same_padding_asymmetry_mode: str.
+            Type of asymmetric padding to be used when  border_mode is 'same'.
+            Can be either 'BOTTOM_RIGHT_HEAVY' or  'TOP_LEFT_HEAVY'.
+        padding_front, padding_back, padding_top, padding_bottom, padding_left, padding_right: int
+            Values of depth (front, back), height (top, bottom), and width (left, right) padding to be
+            used. Must all be positive integers. All default to 0.
+        input_name: str or list of str
+            The input blob name(s) of this layer.
+        output_name: str
+            The output blob name of this layer.
+
+        Depthwise convolution is a special case of convolution, where we have:
+            kernel_channels = 1 (== input_channels / groups)
+            output_channels = channel_multiplier * input_channels
+            groups = input_channels
+            W: [Kernel_depth, Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]
+
+
+        See Also
+        --------
+        add_convolution, add_pooling, add_activation, add_batchnorm
+
+        """
+        # Update spec version if necessary
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+
+        if isinstance(input_name, tuple):
+            input_names = list(input_name)
+        elif isinstance(input_name, list):
+            input_names = input_name
+        else:
+            input_names = [input_name]
+        spec_layer = self._add_generic_layer(name, input_names, [output_name])
+
+        # Set the layer params
+        spec_layer_params = spec_layer.convolution3d
+        spec_layer_params.nGroups = groups
+        spec_layer_params.hasBias = has_bias
+
+        spec_layer_params.outputChannels = output_channels
+        spec_layer_params.inputChannels = input_channels
+
+        spec_layer_params.kernelDepth = depth
+        spec_layer_params.kernelHeight = height
+        spec_layer_params.kernelWidth = width
+
+        spec_layer_params.strideDepth = stride_depth
+        spec_layer_params.strideHeight = stride_height
+        spec_layer_params.strideWidth = stride_width
+
+        if padding_mode == 'valid' or padding_mode == 'custom':
+            spec_layer_params.customPaddingFront = padding_front
+            spec_layer_params.customPaddingBack = padding_back
+            spec_layer_params.customPaddingTop = padding_top
+            spec_layer_params.customPaddingBottom = padding_bottom
+            spec_layer_params.customPaddingLeft = padding_left
+            spec_layer_params.customPaddingRight = padding_right
+        elif padding_mode == 'same':
+            if not (same_padding_asymmetry_mode == 'BOTTOM_RIGHT_HEAVY' or
+                    same_padding_asymmetry_mode == 'TOP_LEFT_HEAVY'):
+                raise ValueError("Invalid value %d of same_padding_asymmetry_mode parameter" %
+                                    same_padding_asymmetry_mode)
+            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(
+                same_padding_asymmetry_mode)
+        else:
+            raise NotImplementedError(
+                'Border mode %s is not implemented.' % padding_mode)
+
+        spec_layer_params.dilationDepth = dilation_depth
+        spec_layer_params.dilationHeight = dilation_height
+        spec_layer_params.dilationWidth = dilation_width
+
+        # If weight comes from another tensor just return
+        if len(input_names) > 1:
+            return
+
+        # Weight alignment: MLModel Spec requires following weight arrangement:
+        # Convolution ==> (output_channels, kernel_channels, depth, height, width), where
+        # kernel_channel = input_channels / groups
+        Wt = W.transpose((4, 3, 0, 1, 2))
+        Wt = Wt.flatten()
+
+        # Assign weights
+        weights = spec_layer_params.weights
+        weights.floatValue.extend(map(float, Wt.flatten()))
 
         # Assign biases
         if has_bias:

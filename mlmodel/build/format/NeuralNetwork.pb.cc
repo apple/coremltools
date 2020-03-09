@@ -229,6 +229,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::ArgSortLayerParams* argsort_;
   const ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
   const ::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d_;
+  const ::CoreML::Specification::Convolution3DLayerParams* convolution3d_;
 } _NeuralNetworkLayer_default_instance_;
 class BranchLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BranchLayerParams> {
 } _BranchLayerParams_default_instance_;
@@ -288,6 +289,8 @@ class ConvolutionLayerParamsDefaultTypeInternal : public ::google::protobuf::int
   const ::CoreML::Specification::ValidPadding* valid_;
   const ::CoreML::Specification::SamePadding* same_;
 } _ConvolutionLayerParams_default_instance_;
+class Convolution3DLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Convolution3DLayerParams> {
+} _Convolution3DLayerParams_default_instance_;
 class InnerProductLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<InnerProductLayerParams> {
 } _InnerProductLayerParams_default_instance_;
 class EmbeddingLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<EmbeddingLayerParams> {
@@ -839,6 +842,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
 };
 
 
@@ -889,6 +893,7 @@ void TableStruct::Shutdown() {
   _LinearQuantizationParams_default_instance_.Shutdown();
   _LookUpTableQuantizationParams_default_instance_.Shutdown();
   _ConvolutionLayerParams_default_instance_.Shutdown();
+  _Convolution3DLayerParams_default_instance_.Shutdown();
   _InnerProductLayerParams_default_instance_.Shutdown();
   _EmbeddingLayerParams_default_instance_.Shutdown();
   _EmbeddingNDLayerParams_default_instance_.Shutdown();
@@ -1098,6 +1103,7 @@ void TableStruct::InitDefaultsImpl() {
   _LinearQuantizationParams_default_instance_.DefaultConstruct();
   _LookUpTableQuantizationParams_default_instance_.DefaultConstruct();
   _ConvolutionLayerParams_default_instance_.DefaultConstruct();
+  _Convolution3DLayerParams_default_instance_.DefaultConstruct();
   _InnerProductLayerParams_default_instance_.DefaultConstruct();
   _EmbeddingLayerParams_default_instance_.DefaultConstruct();
   _EmbeddingNDLayerParams_default_instance_.DefaultConstruct();
@@ -1277,6 +1283,10 @@ void TableStruct::InitDefaultsImpl() {
   _ConvolutionLayerParams_default_instance_.get_mutable()->weights_ = const_cast< ::CoreML::Specification::WeightParams*>(
       ::CoreML::Specification::WeightParams::internal_default_instance());
   _ConvolutionLayerParams_default_instance_.get_mutable()->bias_ = const_cast< ::CoreML::Specification::WeightParams*>(
+      ::CoreML::Specification::WeightParams::internal_default_instance());
+  _Convolution3DLayerParams_default_instance_.get_mutable()->weights_ = const_cast< ::CoreML::Specification::WeightParams*>(
+      ::CoreML::Specification::WeightParams::internal_default_instance());
+  _Convolution3DLayerParams_default_instance_.get_mutable()->bias_ = const_cast< ::CoreML::Specification::WeightParams*>(
       ::CoreML::Specification::WeightParams::internal_default_instance());
   _InnerProductLayerParams_default_instance_.get_mutable()->weights_ = const_cast< ::CoreML::Specification::WeightParams*>(
       ::CoreML::Specification::WeightParams::internal_default_instance());
@@ -1504,6 +1514,27 @@ const BoxCoordinatesMode_Coordinates BoxCoordinatesMode::CENTER_SIZE_WIDTH_FIRST
 const BoxCoordinatesMode_Coordinates BoxCoordinatesMode::Coordinates_MIN;
 const BoxCoordinatesMode_Coordinates BoxCoordinatesMode::Coordinates_MAX;
 const int BoxCoordinatesMode::Coordinates_ARRAYSIZE;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+bool Convolution3DLayerParams_PaddingType_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const Convolution3DLayerParams_PaddingType Convolution3DLayerParams::CUSTOM;
+const Convolution3DLayerParams_PaddingType Convolution3DLayerParams::VALID;
+const Convolution3DLayerParams_PaddingType Convolution3DLayerParams::SAME_LEFT;
+const Convolution3DLayerParams_PaddingType Convolution3DLayerParams::SAME_RIGHT;
+const Convolution3DLayerParams_PaddingType Convolution3DLayerParams::PaddingType_MIN;
+const Convolution3DLayerParams_PaddingType Convolution3DLayerParams::PaddingType_MAX;
+const int Convolution3DLayerParams::PaddingType_ARRAYSIZE;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 bool PoolingLayerParams_PoolingType_IsValid(int value) {
   switch (value) {
@@ -7628,6 +7659,7 @@ const int NeuralNetworkLayer::kClampedReLUFieldNumber;
 const int NeuralNetworkLayer::kArgSortFieldNumber;
 const int NeuralNetworkLayer::kPooling3DFieldNumber;
 const int NeuralNetworkLayer::kGlobalPooling3DFieldNumber;
+const int NeuralNetworkLayer::kConvolution3DFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NeuralNetworkLayer::NeuralNetworkLayer()
@@ -8276,6 +8308,10 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
     }
     case kGlobalPooling3D: {
       mutable_globalpooling3d()->::CoreML::Specification::GlobalPooling3DLayerParams::MergeFrom(from.globalpooling3d());
+      break;
+    }
+    case kConvolution3D: {
+      mutable_convolution3d()->::CoreML::Specification::Convolution3DLayerParams::MergeFrom(from.convolution3d());
       break;
     }
     case LAYER_NOT_SET: {
@@ -8947,6 +8983,10 @@ void NeuralNetworkLayer::clear_layer() {
     }
     case kGlobalPooling3D: {
       delete layer_.globalpooling3d_;
+      break;
+    }
+    case kConvolution3D: {
+      delete layer_.convolution3d_;
       break;
     }
     case LAYER_NOT_SET: {
@@ -10938,6 +10978,18 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
+      case 1470: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(11762u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_convolution3d()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -11946,6 +11998,12 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
   if (has_globalpooling3d()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1466, *layer_.globalpooling3d_, output);
+  }
+
+  // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
+  if (has_convolution3d()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1470, *layer_.convolution3d_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NeuralNetworkLayer)
@@ -13098,6 +13156,13 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.globalpooling3d_);
       break;
     }
+    // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
+    case kConvolution3D: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.convolution3d_);
+      break;
+    }
     case LAYER_NOT_SET: {
       break;
     }
@@ -13755,6 +13820,10 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
     }
     case kGlobalPooling3D: {
       mutable_globalpooling3d()->::CoreML::Specification::GlobalPooling3DLayerParams::MergeFrom(from.globalpooling3d());
+      break;
+    }
+    case kConvolution3D: {
+      mutable_convolution3d()->::CoreML::Specification::Convolution3DLayerParams::MergeFrom(from.convolution3d());
       break;
     }
     case LAYER_NOT_SET: {
@@ -21550,6 +21619,54 @@ void NeuralNetworkLayer::set_allocated_globalpooling3d(::CoreML::Specification::
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
 }
 
+// .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
+bool NeuralNetworkLayer::has_convolution3d() const {
+  return layer_case() == kConvolution3D;
+}
+void NeuralNetworkLayer::set_has_convolution3d() {
+  _oneof_case_[0] = kConvolution3D;
+}
+void NeuralNetworkLayer::clear_convolution3d() {
+  if (has_convolution3d()) {
+    delete layer_.convolution3d_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::Convolution3DLayerParams& NeuralNetworkLayer::convolution3d() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  return has_convolution3d()
+      ? *layer_.convolution3d_
+      : ::CoreML::Specification::Convolution3DLayerParams::default_instance();
+}
+::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::mutable_convolution3d() {
+  if (!has_convolution3d()) {
+    clear_layer();
+    set_has_convolution3d();
+    layer_.convolution3d_ = new ::CoreML::Specification::Convolution3DLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  return layer_.convolution3d_;
+}
+::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::release_convolution3d() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  if (has_convolution3d()) {
+    clear_has_layer();
+    ::CoreML::Specification::Convolution3DLayerParams* temp = layer_.convolution3d_;
+    layer_.convolution3d_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_convolution3d(::CoreML::Specification::Convolution3DLayerParams* convolution3d) {
+  clear_layer();
+  if (convolution3d) {
+    set_has_convolution3d();
+    layer_.convolution3d_ = convolution3d;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+}
+
 bool NeuralNetworkLayer::has_layer() const {
   return layer_case() != LAYER_NOT_SET;
 }
@@ -28397,6 +28514,1222 @@ void ConvolutionLayerParams::clear_has_ConvolutionPaddingType() {
 ConvolutionLayerParams::ConvolutionPaddingTypeCase ConvolutionLayerParams::ConvolutionPaddingType_case() const {
   return ConvolutionLayerParams::ConvolutionPaddingTypeCase(_oneof_case_[0]);
 }
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int Convolution3DLayerParams::kOutputChannelsFieldNumber;
+const int Convolution3DLayerParams::kInputChannelsFieldNumber;
+const int Convolution3DLayerParams::kNGroupsFieldNumber;
+const int Convolution3DLayerParams::kKernelDepthFieldNumber;
+const int Convolution3DLayerParams::kKernelHeightFieldNumber;
+const int Convolution3DLayerParams::kKernelWidthFieldNumber;
+const int Convolution3DLayerParams::kStrideDepthFieldNumber;
+const int Convolution3DLayerParams::kStrideHeightFieldNumber;
+const int Convolution3DLayerParams::kStrideWidthFieldNumber;
+const int Convolution3DLayerParams::kDilationDepthFieldNumber;
+const int Convolution3DLayerParams::kDilationHeightFieldNumber;
+const int Convolution3DLayerParams::kDilationWidthFieldNumber;
+const int Convolution3DLayerParams::kHasBiasFieldNumber;
+const int Convolution3DLayerParams::kWeightsFieldNumber;
+const int Convolution3DLayerParams::kBiasFieldNumber;
+const int Convolution3DLayerParams::kPaddingTypeFieldNumber;
+const int Convolution3DLayerParams::kCustomPaddingFrontFieldNumber;
+const int Convolution3DLayerParams::kCustomPaddingBackFieldNumber;
+const int Convolution3DLayerParams::kCustomPaddingTopFieldNumber;
+const int Convolution3DLayerParams::kCustomPaddingBottomFieldNumber;
+const int Convolution3DLayerParams::kCustomPaddingLeftFieldNumber;
+const int Convolution3DLayerParams::kCustomPaddingRightFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+Convolution3DLayerParams::Convolution3DLayerParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.Convolution3DLayerParams)
+}
+Convolution3DLayerParams::Convolution3DLayerParams(const Convolution3DLayerParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  if (from.has_weights()) {
+    weights_ = new ::CoreML::Specification::WeightParams(*from.weights_);
+  } else {
+    weights_ = NULL;
+  }
+  if (from.has_bias()) {
+    bias_ = new ::CoreML::Specification::WeightParams(*from.bias_);
+  } else {
+    bias_ = NULL;
+  }
+  ::memcpy(&outputchannels_, &from.outputchannels_,
+    reinterpret_cast<char*>(&custompaddingright_) -
+    reinterpret_cast<char*>(&outputchannels_) + sizeof(custompaddingright_));
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.Convolution3DLayerParams)
+}
+
+void Convolution3DLayerParams::SharedCtor() {
+  ::memset(&weights_, 0, reinterpret_cast<char*>(&custompaddingright_) -
+    reinterpret_cast<char*>(&weights_) + sizeof(custompaddingright_));
+  _cached_size_ = 0;
+}
+
+Convolution3DLayerParams::~Convolution3DLayerParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.Convolution3DLayerParams)
+  SharedDtor();
+}
+
+void Convolution3DLayerParams::SharedDtor() {
+  if (this != internal_default_instance()) {
+    delete weights_;
+  }
+  if (this != internal_default_instance()) {
+    delete bias_;
+  }
+}
+
+void Convolution3DLayerParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const Convolution3DLayerParams& Convolution3DLayerParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+Convolution3DLayerParams* Convolution3DLayerParams::New(::google::protobuf::Arena* arena) const {
+  Convolution3DLayerParams* n = new Convolution3DLayerParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void Convolution3DLayerParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.Convolution3DLayerParams)
+  if (GetArenaNoVirtual() == NULL && weights_ != NULL) {
+    delete weights_;
+  }
+  weights_ = NULL;
+  if (GetArenaNoVirtual() == NULL && bias_ != NULL) {
+    delete bias_;
+  }
+  bias_ = NULL;
+  ::memset(&outputchannels_, 0, reinterpret_cast<char*>(&custompaddingright_) -
+    reinterpret_cast<char*>(&outputchannels_) + sizeof(custompaddingright_));
+}
+
+bool Convolution3DLayerParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.Convolution3DLayerParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(16383u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // int32 outputChannels = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(8u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &outputchannels_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 inputChannels = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &inputchannels_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 nGroups = 10;
+      case 10: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(80u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &ngroups_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 kernelDepth = 20;
+      case 20: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(160u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &kerneldepth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 kernelHeight = 21;
+      case 21: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(168u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &kernelheight_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 kernelWidth = 22;
+      case 22: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(176u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &kernelwidth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 strideDepth = 31;
+      case 31: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(248u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &stridedepth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 strideHeight = 32;
+      case 32: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(256u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &strideheight_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 strideWidth = 33;
+      case 33: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(264u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &stridewidth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 dilationDepth = 40;
+      case 40: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(320u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &dilationdepth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 dilationHeight = 41;
+      case 41: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(328u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &dilationheight_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 dilationWidth = 42;
+      case 42: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(336u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &dilationwidth_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool hasBias = 50;
+      case 50: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(400u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &hasbias_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.WeightParams weights = 60;
+      case 60: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(482u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_weights()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.WeightParams bias = 61;
+      case 61: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(490u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_bias()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.Convolution3DLayerParams.PaddingType paddingType = 70;
+      case 70: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(560u)) {
+          int value;
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
+                 input, &value)));
+          set_paddingtype(static_cast< ::CoreML::Specification::Convolution3DLayerParams_PaddingType >(value));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingFront = 80;
+      case 80: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(640u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingfront_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingBack = 81;
+      case 81: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(648u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingback_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingTop = 82;
+      case 82: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(656u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingtop_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingBottom = 83;
+      case 83: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(664u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingbottom_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingLeft = 84;
+      case 84: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(672u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingleft_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int32 customPaddingRight = 85;
+      case 85: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(680u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                 input, &custompaddingright_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.Convolution3DLayerParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.Convolution3DLayerParams)
+  return false;
+#undef DO_
+}
+
+void Convolution3DLayerParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.Convolution3DLayerParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int32 outputChannels = 1;
+  if (this->outputchannels() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(1, this->outputchannels(), output);
+  }
+
+  // int32 inputChannels = 2;
+  if (this->inputchannels() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->inputchannels(), output);
+  }
+
+  // int32 nGroups = 10;
+  if (this->ngroups() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(10, this->ngroups(), output);
+  }
+
+  // int32 kernelDepth = 20;
+  if (this->kerneldepth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(20, this->kerneldepth(), output);
+  }
+
+  // int32 kernelHeight = 21;
+  if (this->kernelheight() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(21, this->kernelheight(), output);
+  }
+
+  // int32 kernelWidth = 22;
+  if (this->kernelwidth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(22, this->kernelwidth(), output);
+  }
+
+  // int32 strideDepth = 31;
+  if (this->stridedepth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(31, this->stridedepth(), output);
+  }
+
+  // int32 strideHeight = 32;
+  if (this->strideheight() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(32, this->strideheight(), output);
+  }
+
+  // int32 strideWidth = 33;
+  if (this->stridewidth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(33, this->stridewidth(), output);
+  }
+
+  // int32 dilationDepth = 40;
+  if (this->dilationdepth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(40, this->dilationdepth(), output);
+  }
+
+  // int32 dilationHeight = 41;
+  if (this->dilationheight() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(41, this->dilationheight(), output);
+  }
+
+  // int32 dilationWidth = 42;
+  if (this->dilationwidth() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(42, this->dilationwidth(), output);
+  }
+
+  // bool hasBias = 50;
+  if (this->hasbias() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(50, this->hasbias(), output);
+  }
+
+  // .CoreML.Specification.WeightParams weights = 60;
+  if (this->has_weights()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      60, *this->weights_, output);
+  }
+
+  // .CoreML.Specification.WeightParams bias = 61;
+  if (this->has_bias()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      61, *this->bias_, output);
+  }
+
+  // .CoreML.Specification.Convolution3DLayerParams.PaddingType paddingType = 70;
+  if (this->paddingtype() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteEnum(
+      70, this->paddingtype(), output);
+  }
+
+  // int32 customPaddingFront = 80;
+  if (this->custompaddingfront() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(80, this->custompaddingfront(), output);
+  }
+
+  // int32 customPaddingBack = 81;
+  if (this->custompaddingback() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(81, this->custompaddingback(), output);
+  }
+
+  // int32 customPaddingTop = 82;
+  if (this->custompaddingtop() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(82, this->custompaddingtop(), output);
+  }
+
+  // int32 customPaddingBottom = 83;
+  if (this->custompaddingbottom() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(83, this->custompaddingbottom(), output);
+  }
+
+  // int32 customPaddingLeft = 84;
+  if (this->custompaddingleft() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(84, this->custompaddingleft(), output);
+  }
+
+  // int32 customPaddingRight = 85;
+  if (this->custompaddingright() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(85, this->custompaddingright(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.Convolution3DLayerParams)
+}
+
+size_t Convolution3DLayerParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.Convolution3DLayerParams)
+  size_t total_size = 0;
+
+  // .CoreML.Specification.WeightParams weights = 60;
+  if (this->has_weights()) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->weights_);
+  }
+
+  // .CoreML.Specification.WeightParams bias = 61;
+  if (this->has_bias()) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->bias_);
+  }
+
+  // int32 outputChannels = 1;
+  if (this->outputchannels() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->outputchannels());
+  }
+
+  // int32 inputChannels = 2;
+  if (this->inputchannels() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->inputchannels());
+  }
+
+  // int32 nGroups = 10;
+  if (this->ngroups() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->ngroups());
+  }
+
+  // int32 kernelDepth = 20;
+  if (this->kerneldepth() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->kerneldepth());
+  }
+
+  // int32 kernelHeight = 21;
+  if (this->kernelheight() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->kernelheight());
+  }
+
+  // int32 kernelWidth = 22;
+  if (this->kernelwidth() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->kernelwidth());
+  }
+
+  // int32 strideDepth = 31;
+  if (this->stridedepth() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->stridedepth());
+  }
+
+  // int32 strideHeight = 32;
+  if (this->strideheight() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->strideheight());
+  }
+
+  // int32 strideWidth = 33;
+  if (this->stridewidth() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->stridewidth());
+  }
+
+  // int32 dilationDepth = 40;
+  if (this->dilationdepth() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->dilationdepth());
+  }
+
+  // int32 dilationHeight = 41;
+  if (this->dilationheight() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->dilationheight());
+  }
+
+  // int32 dilationWidth = 42;
+  if (this->dilationwidth() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->dilationwidth());
+  }
+
+  // bool hasBias = 50;
+  if (this->hasbias() != 0) {
+    total_size += 2 + 1;
+  }
+
+  // .CoreML.Specification.Convolution3DLayerParams.PaddingType paddingType = 70;
+  if (this->paddingtype() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::EnumSize(this->paddingtype());
+  }
+
+  // int32 customPaddingFront = 80;
+  if (this->custompaddingfront() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingfront());
+  }
+
+  // int32 customPaddingBack = 81;
+  if (this->custompaddingback() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingback());
+  }
+
+  // int32 customPaddingTop = 82;
+  if (this->custompaddingtop() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingtop());
+  }
+
+  // int32 customPaddingBottom = 83;
+  if (this->custompaddingbottom() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingbottom());
+  }
+
+  // int32 customPaddingLeft = 84;
+  if (this->custompaddingleft() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingleft());
+  }
+
+  // int32 customPaddingRight = 85;
+  if (this->custompaddingright() != 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int32Size(
+        this->custompaddingright());
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void Convolution3DLayerParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const Convolution3DLayerParams*>(&from));
+}
+
+void Convolution3DLayerParams::MergeFrom(const Convolution3DLayerParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.Convolution3DLayerParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.has_weights()) {
+    mutable_weights()->::CoreML::Specification::WeightParams::MergeFrom(from.weights());
+  }
+  if (from.has_bias()) {
+    mutable_bias()->::CoreML::Specification::WeightParams::MergeFrom(from.bias());
+  }
+  if (from.outputchannels() != 0) {
+    set_outputchannels(from.outputchannels());
+  }
+  if (from.inputchannels() != 0) {
+    set_inputchannels(from.inputchannels());
+  }
+  if (from.ngroups() != 0) {
+    set_ngroups(from.ngroups());
+  }
+  if (from.kerneldepth() != 0) {
+    set_kerneldepth(from.kerneldepth());
+  }
+  if (from.kernelheight() != 0) {
+    set_kernelheight(from.kernelheight());
+  }
+  if (from.kernelwidth() != 0) {
+    set_kernelwidth(from.kernelwidth());
+  }
+  if (from.stridedepth() != 0) {
+    set_stridedepth(from.stridedepth());
+  }
+  if (from.strideheight() != 0) {
+    set_strideheight(from.strideheight());
+  }
+  if (from.stridewidth() != 0) {
+    set_stridewidth(from.stridewidth());
+  }
+  if (from.dilationdepth() != 0) {
+    set_dilationdepth(from.dilationdepth());
+  }
+  if (from.dilationheight() != 0) {
+    set_dilationheight(from.dilationheight());
+  }
+  if (from.dilationwidth() != 0) {
+    set_dilationwidth(from.dilationwidth());
+  }
+  if (from.hasbias() != 0) {
+    set_hasbias(from.hasbias());
+  }
+  if (from.paddingtype() != 0) {
+    set_paddingtype(from.paddingtype());
+  }
+  if (from.custompaddingfront() != 0) {
+    set_custompaddingfront(from.custompaddingfront());
+  }
+  if (from.custompaddingback() != 0) {
+    set_custompaddingback(from.custompaddingback());
+  }
+  if (from.custompaddingtop() != 0) {
+    set_custompaddingtop(from.custompaddingtop());
+  }
+  if (from.custompaddingbottom() != 0) {
+    set_custompaddingbottom(from.custompaddingbottom());
+  }
+  if (from.custompaddingleft() != 0) {
+    set_custompaddingleft(from.custompaddingleft());
+  }
+  if (from.custompaddingright() != 0) {
+    set_custompaddingright(from.custompaddingright());
+  }
+}
+
+void Convolution3DLayerParams::CopyFrom(const Convolution3DLayerParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.Convolution3DLayerParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Convolution3DLayerParams::IsInitialized() const {
+  return true;
+}
+
+void Convolution3DLayerParams::Swap(Convolution3DLayerParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void Convolution3DLayerParams::InternalSwap(Convolution3DLayerParams* other) {
+  std::swap(weights_, other->weights_);
+  std::swap(bias_, other->bias_);
+  std::swap(outputchannels_, other->outputchannels_);
+  std::swap(inputchannels_, other->inputchannels_);
+  std::swap(ngroups_, other->ngroups_);
+  std::swap(kerneldepth_, other->kerneldepth_);
+  std::swap(kernelheight_, other->kernelheight_);
+  std::swap(kernelwidth_, other->kernelwidth_);
+  std::swap(stridedepth_, other->stridedepth_);
+  std::swap(strideheight_, other->strideheight_);
+  std::swap(stridewidth_, other->stridewidth_);
+  std::swap(dilationdepth_, other->dilationdepth_);
+  std::swap(dilationheight_, other->dilationheight_);
+  std::swap(dilationwidth_, other->dilationwidth_);
+  std::swap(hasbias_, other->hasbias_);
+  std::swap(paddingtype_, other->paddingtype_);
+  std::swap(custompaddingfront_, other->custompaddingfront_);
+  std::swap(custompaddingback_, other->custompaddingback_);
+  std::swap(custompaddingtop_, other->custompaddingtop_);
+  std::swap(custompaddingbottom_, other->custompaddingbottom_);
+  std::swap(custompaddingleft_, other->custompaddingleft_);
+  std::swap(custompaddingright_, other->custompaddingright_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string Convolution3DLayerParams::GetTypeName() const {
+  return "CoreML.Specification.Convolution3DLayerParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// Convolution3DLayerParams
+
+// int32 outputChannels = 1;
+void Convolution3DLayerParams::clear_outputchannels() {
+  outputchannels_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::outputchannels() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.outputChannels)
+  return outputchannels_;
+}
+void Convolution3DLayerParams::set_outputchannels(::google::protobuf::int32 value) {
+  
+  outputchannels_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.outputChannels)
+}
+
+// int32 inputChannels = 2;
+void Convolution3DLayerParams::clear_inputchannels() {
+  inputchannels_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::inputchannels() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.inputChannels)
+  return inputchannels_;
+}
+void Convolution3DLayerParams::set_inputchannels(::google::protobuf::int32 value) {
+  
+  inputchannels_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.inputChannels)
+}
+
+// int32 nGroups = 10;
+void Convolution3DLayerParams::clear_ngroups() {
+  ngroups_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::ngroups() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.nGroups)
+  return ngroups_;
+}
+void Convolution3DLayerParams::set_ngroups(::google::protobuf::int32 value) {
+  
+  ngroups_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.nGroups)
+}
+
+// int32 kernelDepth = 20;
+void Convolution3DLayerParams::clear_kerneldepth() {
+  kerneldepth_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::kerneldepth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.kernelDepth)
+  return kerneldepth_;
+}
+void Convolution3DLayerParams::set_kerneldepth(::google::protobuf::int32 value) {
+  
+  kerneldepth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.kernelDepth)
+}
+
+// int32 kernelHeight = 21;
+void Convolution3DLayerParams::clear_kernelheight() {
+  kernelheight_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::kernelheight() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.kernelHeight)
+  return kernelheight_;
+}
+void Convolution3DLayerParams::set_kernelheight(::google::protobuf::int32 value) {
+  
+  kernelheight_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.kernelHeight)
+}
+
+// int32 kernelWidth = 22;
+void Convolution3DLayerParams::clear_kernelwidth() {
+  kernelwidth_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::kernelwidth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.kernelWidth)
+  return kernelwidth_;
+}
+void Convolution3DLayerParams::set_kernelwidth(::google::protobuf::int32 value) {
+  
+  kernelwidth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.kernelWidth)
+}
+
+// int32 strideDepth = 31;
+void Convolution3DLayerParams::clear_stridedepth() {
+  stridedepth_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::stridedepth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.strideDepth)
+  return stridedepth_;
+}
+void Convolution3DLayerParams::set_stridedepth(::google::protobuf::int32 value) {
+  
+  stridedepth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.strideDepth)
+}
+
+// int32 strideHeight = 32;
+void Convolution3DLayerParams::clear_strideheight() {
+  strideheight_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::strideheight() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.strideHeight)
+  return strideheight_;
+}
+void Convolution3DLayerParams::set_strideheight(::google::protobuf::int32 value) {
+  
+  strideheight_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.strideHeight)
+}
+
+// int32 strideWidth = 33;
+void Convolution3DLayerParams::clear_stridewidth() {
+  stridewidth_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::stridewidth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.strideWidth)
+  return stridewidth_;
+}
+void Convolution3DLayerParams::set_stridewidth(::google::protobuf::int32 value) {
+  
+  stridewidth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.strideWidth)
+}
+
+// int32 dilationDepth = 40;
+void Convolution3DLayerParams::clear_dilationdepth() {
+  dilationdepth_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::dilationdepth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.dilationDepth)
+  return dilationdepth_;
+}
+void Convolution3DLayerParams::set_dilationdepth(::google::protobuf::int32 value) {
+  
+  dilationdepth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.dilationDepth)
+}
+
+// int32 dilationHeight = 41;
+void Convolution3DLayerParams::clear_dilationheight() {
+  dilationheight_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::dilationheight() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.dilationHeight)
+  return dilationheight_;
+}
+void Convolution3DLayerParams::set_dilationheight(::google::protobuf::int32 value) {
+  
+  dilationheight_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.dilationHeight)
+}
+
+// int32 dilationWidth = 42;
+void Convolution3DLayerParams::clear_dilationwidth() {
+  dilationwidth_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::dilationwidth() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.dilationWidth)
+  return dilationwidth_;
+}
+void Convolution3DLayerParams::set_dilationwidth(::google::protobuf::int32 value) {
+  
+  dilationwidth_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.dilationWidth)
+}
+
+// bool hasBias = 50;
+void Convolution3DLayerParams::clear_hasbias() {
+  hasbias_ = false;
+}
+bool Convolution3DLayerParams::hasbias() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.hasBias)
+  return hasbias_;
+}
+void Convolution3DLayerParams::set_hasbias(bool value) {
+  
+  hasbias_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.hasBias)
+}
+
+// .CoreML.Specification.WeightParams weights = 60;
+bool Convolution3DLayerParams::has_weights() const {
+  return this != internal_default_instance() && weights_ != NULL;
+}
+void Convolution3DLayerParams::clear_weights() {
+  if (GetArenaNoVirtual() == NULL && weights_ != NULL) delete weights_;
+  weights_ = NULL;
+}
+const ::CoreML::Specification::WeightParams& Convolution3DLayerParams::weights() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.weights)
+  return weights_ != NULL ? *weights_
+                         : *::CoreML::Specification::WeightParams::internal_default_instance();
+}
+::CoreML::Specification::WeightParams* Convolution3DLayerParams::mutable_weights() {
+  
+  if (weights_ == NULL) {
+    weights_ = new ::CoreML::Specification::WeightParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Convolution3DLayerParams.weights)
+  return weights_;
+}
+::CoreML::Specification::WeightParams* Convolution3DLayerParams::release_weights() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Convolution3DLayerParams.weights)
+  
+  ::CoreML::Specification::WeightParams* temp = weights_;
+  weights_ = NULL;
+  return temp;
+}
+void Convolution3DLayerParams::set_allocated_weights(::CoreML::Specification::WeightParams* weights) {
+  delete weights_;
+  weights_ = weights;
+  if (weights) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Convolution3DLayerParams.weights)
+}
+
+// .CoreML.Specification.WeightParams bias = 61;
+bool Convolution3DLayerParams::has_bias() const {
+  return this != internal_default_instance() && bias_ != NULL;
+}
+void Convolution3DLayerParams::clear_bias() {
+  if (GetArenaNoVirtual() == NULL && bias_ != NULL) delete bias_;
+  bias_ = NULL;
+}
+const ::CoreML::Specification::WeightParams& Convolution3DLayerParams::bias() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.bias)
+  return bias_ != NULL ? *bias_
+                         : *::CoreML::Specification::WeightParams::internal_default_instance();
+}
+::CoreML::Specification::WeightParams* Convolution3DLayerParams::mutable_bias() {
+  
+  if (bias_ == NULL) {
+    bias_ = new ::CoreML::Specification::WeightParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Convolution3DLayerParams.bias)
+  return bias_;
+}
+::CoreML::Specification::WeightParams* Convolution3DLayerParams::release_bias() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Convolution3DLayerParams.bias)
+  
+  ::CoreML::Specification::WeightParams* temp = bias_;
+  bias_ = NULL;
+  return temp;
+}
+void Convolution3DLayerParams::set_allocated_bias(::CoreML::Specification::WeightParams* bias) {
+  delete bias_;
+  bias_ = bias;
+  if (bias) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Convolution3DLayerParams.bias)
+}
+
+// .CoreML.Specification.Convolution3DLayerParams.PaddingType paddingType = 70;
+void Convolution3DLayerParams::clear_paddingtype() {
+  paddingtype_ = 0;
+}
+::CoreML::Specification::Convolution3DLayerParams_PaddingType Convolution3DLayerParams::paddingtype() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.paddingType)
+  return static_cast< ::CoreML::Specification::Convolution3DLayerParams_PaddingType >(paddingtype_);
+}
+void Convolution3DLayerParams::set_paddingtype(::CoreML::Specification::Convolution3DLayerParams_PaddingType value) {
+  
+  paddingtype_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.paddingType)
+}
+
+// int32 customPaddingFront = 80;
+void Convolution3DLayerParams::clear_custompaddingfront() {
+  custompaddingfront_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::custompaddingfront() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.customPaddingFront)
+  return custompaddingfront_;
+}
+void Convolution3DLayerParams::set_custompaddingfront(::google::protobuf::int32 value) {
+  
+  custompaddingfront_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.customPaddingFront)
+}
+
+// int32 customPaddingBack = 81;
+void Convolution3DLayerParams::clear_custompaddingback() {
+  custompaddingback_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::custompaddingback() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.customPaddingBack)
+  return custompaddingback_;
+}
+void Convolution3DLayerParams::set_custompaddingback(::google::protobuf::int32 value) {
+  
+  custompaddingback_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.customPaddingBack)
+}
+
+// int32 customPaddingTop = 82;
+void Convolution3DLayerParams::clear_custompaddingtop() {
+  custompaddingtop_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::custompaddingtop() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.customPaddingTop)
+  return custompaddingtop_;
+}
+void Convolution3DLayerParams::set_custompaddingtop(::google::protobuf::int32 value) {
+  
+  custompaddingtop_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.customPaddingTop)
+}
+
+// int32 customPaddingBottom = 83;
+void Convolution3DLayerParams::clear_custompaddingbottom() {
+  custompaddingbottom_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::custompaddingbottom() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.customPaddingBottom)
+  return custompaddingbottom_;
+}
+void Convolution3DLayerParams::set_custompaddingbottom(::google::protobuf::int32 value) {
+  
+  custompaddingbottom_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.customPaddingBottom)
+}
+
+// int32 customPaddingLeft = 84;
+void Convolution3DLayerParams::clear_custompaddingleft() {
+  custompaddingleft_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::custompaddingleft() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.customPaddingLeft)
+  return custompaddingleft_;
+}
+void Convolution3DLayerParams::set_custompaddingleft(::google::protobuf::int32 value) {
+  
+  custompaddingleft_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.customPaddingLeft)
+}
+
+// int32 customPaddingRight = 85;
+void Convolution3DLayerParams::clear_custompaddingright() {
+  custompaddingright_ = 0;
+}
+::google::protobuf::int32 Convolution3DLayerParams::custompaddingright() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.customPaddingRight)
+  return custompaddingright_;
+}
+void Convolution3DLayerParams::set_custompaddingright(::google::protobuf::int32 value) {
+  
+  custompaddingright_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.customPaddingRight)
+}
+
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
 
 // ===================================================================

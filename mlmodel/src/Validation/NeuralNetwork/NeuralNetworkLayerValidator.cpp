@@ -177,6 +177,244 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
     return r;
 }
 
+Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specification::NeuralNetworkLayer& layer) {
+
+    Result r;
+    r = validateInputCount(layer, 1, 1);
+    if (!r.good()) {return r;}
+
+    r = validateOutputCount(layer, 1, 1);
+    if (!r.good()) {return r;}
+
+    if (ndArrayInterpretation) {
+        r = validateInputOutputRankEquality(layer, "Convolution3D", blobNameToRank);
+        if (!r.good()) {return r;}
+        r = validateRankCount(layer, "Convolution3D", 5, -1, blobNameToRank);
+        if (!r.good()) {return r;}
+    }
+
+    const auto& params = layer.convolution3d();
+
+    if (layer.input_size() != 1) {
+        std::string err = "Convolution3D layer: '" + layer.name() +
+            "', convolution3D does not support weight as input tensor.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // Validate input and output channels and number of convolution groups
+    int inputChannels = params.inputchannels();
+    int outputChannels = params.outputchannels();
+    int nGroups = params.ngroups();
+    if (inputChannels <= 0) {
+        std::string err = "Input Channels must be positive, got '" +
+            std::to_string(inputChannels) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (outputChannels <= 0) {
+        std::string err = "Output Channels must be positive, got '" +
+            std::to_string(outputChannels) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (nGroups == 0) {
+        std::string err = "Number of convolution filter groups must be positive, got '" +
+            std::to_string(nGroups) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // Validate kernel
+    int kernelDepth = params.kerneldepth();
+    int kernelHeight = params.kernelheight();
+    int kernelWidth = params.kernelwidth();
+    if (kernelDepth <= 0) {
+        std::string err = "Kernel Depth must be positive, got '" +
+            std::to_string(kernelDepth) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (kernelHeight <= 0) {
+        std::string err = "Kernel Height must be positive, got '" +
+            std::to_string(kernelHeight) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (kernelWidth <= 0) {
+        std::string err = "Kernel Width must be positive, got '" +
+            std::to_string(kernelWidth) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // Validate stride
+    int strideDepth = params.stridedepth();
+    int strideHeight = params.strideheight();
+    int strideWidth = params.stridewidth();
+    if (strideDepth <= 0) {
+        std::string err = "Stride Depth must be positive, got '" +
+            std::to_string(strideDepth) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (strideHeight <= 0) {
+        std::string err = "Stride Height must be positive, got '" +
+            std::to_string(strideHeight) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (strideWidth <= 0) {
+        std::string err = "Stride Width must be positive, got '" +
+            std::to_string(strideWidth) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // Validate dilation
+    int dilationDepth = params.dilationdepth();
+    int dilationHeight = params.dilationheight();
+    int dilationWidth = params.dilationwidth();
+    if (dilationDepth <= 0) {
+        std::string err = "Dilation Depth must be positive, got '" +
+            std::to_string(dilationDepth) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (dilationHeight <= 0) {
+        std::string err = "Dilation Height must be positive, got '" +
+            std::to_string(dilationHeight) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (dilationWidth <= 0) {
+        std::string err = "Dilation Width must be positive, got '" +
+            std::to_string(dilationWidth) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    // Validate padding
+    int customPaddingFront = params.custompaddingfront();
+    int customPaddingBack = params.custompaddingback();
+    int customPaddingTop = params.custompaddingtop();
+    int customPaddingBottom = params.custompaddingbottom();
+    int customPaddingLeft = params.custompaddingleft();
+    int customPaddingRight = params.custompaddingright();
+    if (customPaddingFront < 0) {
+        std::string err = "Custom Padding Front must be non-negative, got '" +
+            std::to_string(customPaddingFront) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (customPaddingBack < 0) {
+        std::string err = "Custom Padding Back must be non-negative, got '" +
+            std::to_string(customPaddingBack) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (customPaddingTop < 0) {
+        std::string err = "Custom Padding Top must be non-negative, got '" +
+            std::to_string(customPaddingTop) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (customPaddingBottom < 0) {
+        std::string err = "Custom Padding Bottom must be non-negative, got '" +
+            std::to_string(customPaddingBottom) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (customPaddingLeft < 0) {
+        std::string err = "customPadding Left must be non-negative, got '" +
+            std::to_string(customPaddingLeft) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    if (customPaddingRight < 0) {
+        std::string err = "customPadding Right must be non-negative, got '" +
+            std::to_string(customPaddingRight) + "'.";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    if (layer.input_size() > 1) {
+        return r;
+    }
+
+    bool has_bias = params.hasbias();
+    if (has_bias && layer.input_size() != 1) {
+        std::string err = "Convolution3D layer: '" + layer.name() +
+            "' with dynamic weight does not support static bias.";
+        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+
+    WeightParamType weightsValueType, biasValueType;
+    weightsValueType = valueType(params.weights());
+    biasValueType = valueType(params.bias());
+
+    // Check weight/bias value types. Only float32 or float16 parameters can be populated at any time
+    if ((weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
+        std::string err = "Convolution3D layer '" + layer.name() +
+            "'  has invalid weights/bias fields.";
+        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        return r;
+    }
+    if (has_bias){
+        if ((weightsValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
+            (weightsValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)) {
+            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Convolution3D layer '" + layer.name() +
+                "' has unmatched precisions of weights/bias They should either be half or full precision.");
+            return r;
+        }
+    }
+
+    // Get populated weight and bias sizes
+    // Check weights
+    // conv: outputChannels, kernelChannels, kernelDepth, kernelHeight, kernelWidth -- kernelChannels = inputChannels / nGroups
+    int expected_weight_size = outputChannels * (inputChannels / nGroups) * kernelDepth * kernelHeight * kernelWidth;
+    int weight_size = 0;
+    if (weightsValueType == FLOAT32 || weightsValueType == FLOAT16) {
+        if (weightsValueType == FLOAT32) {
+            weight_size = static_cast<int>(params.weights().floatvalue().size());
+        } else {
+            weight_size = static_cast<int>(params.weights().float16value().size() / 2);
+        }
+        if (weight_size != expected_weight_size) {
+            std::string err = "Convolution3D layer '" + layer.name() +
+                "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " +
+                std::to_string(outputChannels) + " x " + std::to_string((inputChannels / nGroups)) +
+                " x " + std::to_string(kernelDepth) + " x " + std::to_string(kernelHeight) +
+                " x " + std::to_string(kernelWidth) +
+                " convolution3D.";
+            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            return r;
+        }
+    } // if (weightsValueType == FLOAT32 || weightsValueType == FLOAT16)
+    else if (weightsValueType == QUINT) {
+        // We don't currently support quantized parameters.
+        std::string err = "Layer '" + layer.name() + "' has invalid weights field. Quantized " +
+            "weights are not supported.";
+        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        return r;
+    } else { // EMPTY
+        r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layer.name() +
+            "' has not specified weights.");
+        return r;
+    }
+
+    // Check the bias
+    int bias_size = 0;
+    if (has_bias) {
+        if (biasValueType == FLOAT32 || biasValueType == FLOAT16){
+            if (biasValueType == FLOAT32){
+                bias_size = params.bias().floatvalue().size();
+            } else {
+                bias_size = int(params.bias().float16value().size() / 2);
+            }
+            if (bias_size != outputChannels) {
+                std::string err = "Convolution3D layer '" + layer.name() +
+                    "' has a bias vector of size " + std::to_string(bias_size) + " but should be " +
+                    std::to_string(outputChannels) + ".";
+                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+                return r;
+            }
+        } else if (biasValueType == QUINT){
+            // We don't currently support quantized parameters.
+            std::string err = "Layer '" + layer.name() + "' has invalid bias field. Quantized " +
+                "bias is not supported.";
+            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            return r;
+        } else { // EMPTY
+            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() +
+                "has not specified bias.");
+            return r;
+        }
+    }
+    return r;
+}
+
 static Result validateInnerProductWeightsBias(const Specification::NeuralNetworkLayer& layer,
                                               const Specification::WeightParams& weights,
                                               const Specification::WeightParams& bias) {

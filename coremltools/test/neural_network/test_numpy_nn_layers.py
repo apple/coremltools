@@ -5128,6 +5128,90 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self.assertEquals(len(input_dim), builder._get_rank('output'))
 
 
+    def _test_conv3d(self, cpu_only):
+        input_shapes = [(1,1,10,20,20), (1,1,3,3,3), (3,4,10,17,90)]
+        kernels = [(2,2,2), (1,3,4), (2,3,4), (5,1,6), (8,9,1), (7,11,13)]
+        has_biases = [True, False]
+        strides = [(1,1,1), (1,2,3), (2,3,2), (4,1,2), (3,4,1), (7,11,13)]
+        dilations = [(1,1,1), (1,2,3), (0,1,0), (2,0,2), (3,5,7)]
+        #padding_types = ['same_left', 'same_right', 'valid', 'custom']
+        paddings = [(0,0,0), (1,2,3)]
+        group_sizes = [1]
+
+        output_channels = 2
+
+        for input_shape in input_shapes:
+            for kernel in kernels:
+                for has_bias in has_biases:
+                    for stride in strides:
+                        for dilation in dilations:
+                            for padding in paddings:
+                                for groups in group_sizes:
+                                    input_features = [('data', datatypes.Array(*input_shape))]
+                                    output_features = [('output', None)]
+
+                                    input_channels = input_shape[1]
+
+                                    builder = neural_network.NeuralNetworkBuilder(input_features,
+                                                                                  output_features,
+                                                                                  disable_rank5_shape_mapping=True
+                                                                                  )
+                                    # Init random weights
+                                    weights = np.random.rand(output_channels, int(input_channels / groups), *kernel)
+                                    # Init random bias if applicable
+                                    if has_bias:
+                                        bias = np.random.rand(output_channels)
+                                    else:
+                                        bias = None
+
+                                    builder.add_convolution3d(name='conv3d',
+                                                                input_name='data',
+                                                                output_name='output',
+                                                                input_channels=input_channels,
+                                                                output_channels=output_channels,
+                                                                depth=kernel[0],
+                                                                height=kernel[1],
+                                                                width=kernel[2],
+                                                                stride_depth=stride[0],
+                                                                stride_height=stride[1],
+                                                                stride_width=stride[2],
+                                                                dilation_depth=dilation[0],
+                                                                dilation_height=dilation[1],
+                                                                dilation_width=dilation[2],
+                                                                groups=groups,
+                                                                W=weights,
+                                                                b=bias,
+                                                                has_bias=has_bias,
+                                                                padding_front=padding[0],
+                                                                padding_back=padding[0],
+                                                                padding_top=padding[1],
+                                                                padding_bottom=padding[1],
+                                                                padding_left=padding[2],
+                                                                padding_right=padding[2])
+                                    # Init random input
+                                    input = np.random.rand(*input_shape)
+
+                                    # Get PyTorch output to compare ours to
+                                    torch_out = torch.nn.functional.conv3d(torch.from_numpy(input),
+                                                                            torch.from_numpy(weights),
+                                                                            bias=torch.from_numpy(bias),
+                                                                            stride=stride,
+                                                                            padding=padding,
+                                                                            dilation=dilation,
+                                                                            groups=groups)
+
+                                    self._test_model(builder.spec,
+                                                        {'data': input},
+                                                        {'output': torch_out.numpy()},
+                                                        useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
+
+    def test_conv3d_cpu(self):
+        self._test_conv3d(cpu_only=True)
+
+    def test_conv3d_gpu(self):
+        self._test_conv3d(cpu_only=False)
+
+
 class ReorganizeDataTests(CorrectnessTest):
 
     def _to_rank_4(self, x):
@@ -5250,7 +5334,7 @@ class ReorganizeDataTests(CorrectnessTest):
 
 if __name__ == '__main__':
     unittest.main()
-    # suite = unittest.TestSuite()
+    #suite = unittest.TestSuite()
     # suite.addTest(NewLayersSimpleTest("test_softmax_nan_bug_cpu"))
     # #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
-    # unittest.TextTestRunner().run(suite)
+    #unittest.TextTestRunner().run(suite)

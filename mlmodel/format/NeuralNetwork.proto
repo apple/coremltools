@@ -696,6 +696,7 @@ message NeuralNetworkLayer {
         ArgSortLayerParams argSort = 1461;
         Pooling3DLayerParams pooling3d = 1465;
         GlobalPooling3DLayerParams globalPooling3d = 1466;
+        Convolution3DLayerParams convolution3d = 1470;
 
     }
 
@@ -1536,6 +1537,167 @@ message ConvolutionLayerParams {
 }
 
 /**
+ * A layer that performs a 3-dimensional convolution.
+ *
+ * .. code::
+ *
+ *      y = Convolution3DLayer(x)
+ *
+ * Input
+ *    A blob of rank 5.
+ *    The input blob's shape should be ``[batch, channels, depth, height, width]``.
+ *
+ * Fields
+ *   The bias field, if set, should have shape of ``[channelsOut]``.
+ *
+ * Output
+ *   A blob of rank 5.
+ *   The output blob's shape is ``[batch, channelsOut, depthOut, heightOut, widthOut]``.
+ *
+ *
+ * Type of padding can be `custom``, ``valid``, ``same_left``, or ``same_right`` . Padded values
+ * are all zeros.
+ * Output spatial dimensions depend on the the type of padding. For details, refer to the
+ * descriptions of the "PaddingType" field of this ``Convolution3DLayerParams`` message.
+ *
+ */
+message Convolution3DLayerParams {
+
+    /**
+     * The number of channels in the output (channelsOut). Must be a positive integer.
+     */
+    int32 outputChannels = 1;
+
+    /**
+     * The number of channels in the input (channels). Must be a positive integer.
+     */
+    int32 inputChannels = 2;
+
+    /**
+    * Group convolution, i.e., weight reuse along the channel axis.
+    * It must evenly divide both the number of input and output channels and be at most the number
+    * of input channels (a depthwise convolution).
+    * Input and kernels are divided into g groups and convolution is applied within the groups
+    * independently.
+    */
+    int32 nGroups = 10;
+
+    /* Depth of the convolution kernel. Must be a positive integer.
+     */
+    int32 kernelDepth = 20;
+
+    /* Height of the convolution kernel. Must be a positive integer.
+     */
+    int32 kernelHeight = 21;
+
+    /* Width of the convolution kernel. Must be a positive integer.
+     */
+    int32 kernelWidth = 22;
+
+    /* Stride along the depth direction. Must be a positive integer.
+     */
+    int32 strideDepth = 31;
+
+    /* Stride along the height direction. Must be a positive integer.
+     */
+    int32 strideHeight = 32;
+
+    /* Stride along the width direction. Must be a positive integer.
+     */
+    int32 strideWidth = 33;
+
+    /* Dilation along the depth direction. Must be a positive integer.
+     */
+    int32 dilationDepth = 40;
+
+    /* Dilation along the height direction. Must be a positive integer.
+     */
+    int32 dilationHeight = 41;
+
+    /* Dilation along the width direction. Must be a positive integer.
+     */
+    int32 dilationWidth = 42;
+
+    /**
+     * Flag to specify whether a bias is to be added or not.
+     * If false, then no bias is added.
+     */
+    bool hasBias = 50;
+
+    /**
+     * Weights associated with this layer.
+     * Weights have the shape
+     * ``[outputChannels, kernelChannels, kernelDepth, kernelHeight, kernelWidth]``, where
+     * kernelChannels == inputChannels / nGroups
+     */
+    WeightParams weights = 60;
+
+    /**
+     * Must be of size ``[outputChannels]``.
+     */
+    WeightParams bias = 61;
+
+
+    /**
+     * The type of padding.
+     * All padding types pad the input shape with zeros.
+     * CUSTOM padding will add the custom padding values specified below to their respective
+     * dimensions, e.g., `customPaddingFront` number of zeros will be added to one side of the
+     * input's depth dimension and `customPaddingBack` number of zeros will be added to the other
+     * side of the input's depth dimension.
+     * VALID padding adds no padding to any dimension. In this case, the last convolution along
+     * each dimension will be dropped if the input dimension and the kernel size, stride, and
+     * dilation do not match.
+     * SAME_LEFT padding adds enough padding to each dimension such that the output of the
+     * convolution has the same spatial dimensions as the input. Padding is added evenly to both
+     * sides of each dimension unless the total padding to add is odd, in which case it is added to
+     * the front/top/left side of the respective dimension.
+     * SAME_RIGHT padding adds enough padding to each dimension such that the output of the
+     * convolution has the same spatial dimensions as the input. Padding is added evenly to both
+     * sides of each dimension unless the total padding to add is odd, in which case it is added to
+     * the back/bottom/right side of the respective dimension.
+     */
+    enum PaddingType {
+        CUSTOM = 0;
+        VALID = 1;
+        SAME_LEFT = 2;
+        SAME_RIGHT = 3;
+    }
+    PaddingType paddingType = 70;
+
+    /* Padding before the input in the depth direction. Must be zero or a positive integer.
+     * Used when the `PaddingType` is `CustomPadding`, otherwise ignored by other padding types.
+     */
+    int32 customPaddingFront = 80;
+
+    /* Padding after the input in the depth direction. Must be zero or a positive integer.
+     * Used when the `PaddingType` is `CustomPadding`, otherwise ignored by other padding types.
+     */
+    int32 customPaddingBack = 81;
+
+    /* Padding before the input in the height direction. Must be zero or a positive integer.
+     * Used when the `PaddingType` is `CustomPadding`, otherwise ignored by other padding types.
+     */
+    int32 customPaddingTop = 82;
+
+    /* Padding after the input in the height direction. Must be zero or a positive integer.
+     * Used when the `PaddingType` is `CustomPadding`, otherwise ignored by other padding types.
+     */
+    int32 customPaddingBottom = 83;
+
+    /* Padding before the input in the width direction. Must be zero or a positive integer.
+     * Used when the `PaddingType` is `CustomPadding`, otherwise ignored by other padding types.
+     */
+    int32 customPaddingLeft = 84;
+
+    /* Padding after the input in the width direction. Must be zero or a positive integer.
+     * Used when the `PaddingType` is `CustomPadding`, otherwise ignored by other padding types.
+     */
+    int32 customPaddingRight = 85;
+
+}
+
+/**
  * A layer that performs a matrix-vector or matrix-matrix product.
  * This is equivalent to a fully-connected, or dense layer.
  * The weight parameters correspond to a matrix of dimensions (inputChannels, outputChannels) i.e. (C_in, C_out)
@@ -1941,14 +2103,13 @@ message GlobalPooling3DLayerParams {
  * Requires 1 input and produces 1 output.
  *
  * Input
- *     A blob with rank at least 2.
- *     e.g.: blob with shape ``[H_in, W_in]``.
- *     For ranks greater than 2, the leading dimensions, starting from 0 to -4 (inclusive), are all treated as batch
- *     i.e. Padding is applied on last two dimensions.
+ *     A blob with rank at least 3.
+ *     e.g.: blob with shape ``[C, H_in, W_in]``.
+ *     For ranks greater than 3, the leading dimensions, starting from 0 to -4 (inclusive), are all treated as batch.
  *
  * Output
  *     Same rank as the input.
- *     e.g.: blob with shape ``[H_out, W_out]``.
+ *     e.g.: blob with shape ``[C, H_out, W_out]``.
  *
  * Output dimensions are calculated as follows:
  *

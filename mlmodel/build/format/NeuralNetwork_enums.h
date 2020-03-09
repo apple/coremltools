@@ -248,6 +248,7 @@ enum MLNeuralNetworkLayerlayer: int {
     MLNeuralNetworkLayerlayer_argSort = 1461,
     MLNeuralNetworkLayerlayer_pooling3d = 1465,
     MLNeuralNetworkLayerlayer_globalPooling3d = 1466,
+    MLNeuralNetworkLayerlayer_convolution3d = 1470,
     MLNeuralNetworkLayerlayer_NOT_SET = 0,
 };
 
@@ -566,6 +567,8 @@ static const char * MLNeuralNetworkLayerlayer_Name(MLNeuralNetworkLayerlayer x) 
             return "MLNeuralNetworkLayerlayer_pooling3d";
         case MLNeuralNetworkLayerlayer_globalPooling3d:
             return "MLNeuralNetworkLayerlayer_globalPooling3d";
+        case MLNeuralNetworkLayerlayer_convolution3d:
+            return "MLNeuralNetworkLayerlayer_convolution3d";
         case MLNeuralNetworkLayerlayer_NOT_SET:
             return "INVALID";
     }
@@ -628,6 +631,13 @@ static const char * MLConvolutionLayerParamsConvolutionPaddingType_Name(MLConvol
     }
     return "INVALID";
 }
+
+enum MLPaddingType: int {
+    MLPaddingTypeCUSTOM = 0,
+    MLPaddingTypeVALID = 1,
+    MLPaddingTypeSAME_LEFT = 2,
+    MLPaddingTypeSAME_RIGHT = 3,
+};
 
 enum MLPoolingType: int {
     MLPoolingTypeMAX = 0,

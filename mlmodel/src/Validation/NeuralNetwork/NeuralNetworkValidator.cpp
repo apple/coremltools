@@ -40,6 +40,8 @@ Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetw
     switch(layer.layer_case()) {
         case Specification::NeuralNetworkLayer::LayerCase::kConvolution:
             return validateConvolutionLayer(layer);
+        case Specification::NeuralNetworkLayer::LayerCase::kConvolution3D:
+            return validateConvolution3DLayer(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kInnerProduct:
             return validateInnerProductLayer(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kBatchnorm:

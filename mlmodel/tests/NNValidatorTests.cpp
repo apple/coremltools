@@ -1435,6 +1435,894 @@ int testValidDeconvolution() {
     return 0;
 }
 
+int testInvalidConvolution3DNegativePadding() {
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = -3;
+    int pad_left = 0;
+    int pad_right = -2;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DNoBias() {
+
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill Weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Not specifying any biases should be invalid
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DNoInputChannels() {
+
+    Specification::Model m1;
+
+    int input_channels = 0;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DNoOutputChannels() {
+
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 0;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DNoWeights() {
+
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(false);
+
+    // Not specifying any weights should be invalid
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DNonPositiveDilation() {
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = -1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DNonPositiveGroups() {
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 0;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = -1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    // Since nGroups is 0, pretend it's 1 to fill weights
+    for (int i = 0; i < output_channels * (input_channels / 1) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DNonPositiveKernelSize() {
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 0;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DNonPositiveStride() {
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = -2;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testInvalidConvolution3DTwoInputs() {
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = -3;
+    int pad_left = 0;
+    int pad_right = -2;
+
+    auto *topIn0 = m1.mutable_description()->add_input();
+    topIn0->set_name("input0");
+    auto *shape0 = topIn0->mutable_type()->mutable_multiarraytype();
+    shape0->add_shape(1);
+    shape0->add_shape(3);
+    shape0->add_shape(32);
+    shape0->add_shape(100);
+    shape0->add_shape(100);
+
+    auto *topIn1 = m1.mutable_description()->add_input();
+    topIn1->set_name("input1");
+    auto *shape1 = topIn1->mutable_type()->mutable_multiarraytype();
+    shape1->add_shape(1);
+    shape1->add_shape(3);
+    shape1->add_shape(3);
+    shape1->add_shape(3);
+    shape1->add_shape(3);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input0");
+    convLayer->add_input("input1");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_BAD(res);
+    return 0;
+
+}
+
+int testValidConvolution3D() {
+
+    Specification::Model m1;
+
+    int input_channels = 3;
+    int output_channels = 3;
+    int kernel_depth = 3;
+    int kernel_height = 3;
+    int kernel_width = 3;
+    int nGroups = 1;
+    int stride_depth = 1;
+    int stride_height = 1;
+    int stride_width = 1;
+    int dilation_depth = 1;
+    int dilation_height = 1;
+    int dilation_width = 1;
+    int pad_front = 0;
+    int pad_back = 0;
+    int pad_top = 0;
+    int pad_bottom = 0;
+    int pad_left = 0;
+    int pad_right = 0;
+
+    auto *topIn = m1.mutable_description()->add_input();
+    topIn->set_name("input");
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(1);
+    shape->add_shape(3);
+    shape->add_shape(32);
+    shape->add_shape(100);
+    shape->add_shape(100);
+
+    auto *out3 = m1.mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_multiarraytype();
+
+    const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    Specification::NeuralNetworkLayer *convLayer = nn->add_layers();
+    convLayer->add_input("input");
+    convLayer->add_output("probs");
+    auto *params = convLayer->mutable_convolution3d();
+    params->set_inputchannels(input_channels);
+    params->set_outputchannels(output_channels);
+    params->set_kerneldepth(kernel_depth);
+    params->set_kernelheight(kernel_height);
+    params->set_kernelwidth(kernel_width);
+    params->set_ngroups(nGroups);
+    params->set_stridedepth(stride_depth);
+    params->set_strideheight(stride_height);
+    params->set_stridewidth(stride_width);
+    params->set_dilationdepth(dilation_depth);
+    params->set_dilationheight(dilation_height);
+    params->set_dilationwidth(dilation_width);
+    params->set_custompaddingfront(pad_front);
+    params->set_custompaddingback(pad_back);
+    params->set_custompaddingtop(pad_top);
+    params->set_custompaddingbottom(pad_bottom);
+    params->set_custompaddingleft(pad_left);
+    params->set_custompaddingright(pad_right);
+
+    params->set_hasbias(true);
+
+    // Fill weights
+    for (int i = 0; i < output_channels * (input_channels / nGroups) * kernel_depth * kernel_height * kernel_width; i++) {
+        params->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    // Fill bias
+    for (int i = 0; i < output_channels; i++) {
+        params->mutable_bias()->add_floatvalue(1.0);
+    }
+
+    Result res = validate<MLModelType_neuralNetwork>(m1);
+    std::cout << res.message() << std::endl;
+    ML_ASSERT_GOOD(res);
+    return 0;
+
+}
+
 int testInvalidEmbedding() {
 
     Specification::Model m1;

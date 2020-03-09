@@ -58,6 +58,7 @@ namespace CoreML {
         Result validateLayer(const Specification::NeuralNetworkLayer& layer);
 
         Result validateConvolutionLayer(const Specification::NeuralNetworkLayer& layer);
+        Result validateConvolution3DLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateInnerProductLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateBatchnormLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateActivation(const Specification::NeuralNetworkLayer& layer);
