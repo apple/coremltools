@@ -5205,9 +5205,11 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                                         {'output': torch_out.numpy()},
                                                         useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
 
+    @pytest.mark.xfail(reason='rdar://60252451')
     def test_conv3d_cpu(self):
         self._test_conv3d(cpu_only=True)
 
+    @pytest.mark.xfail(reason='rdar://60252451')
     def test_conv3d_gpu(self):
         self._test_conv3d(cpu_only=False)
 
