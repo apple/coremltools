@@ -325,6 +325,92 @@ class TestTensorflow2Model(unittest.TestCase):
     def setUp(self):
         self.saved_model_dir = tempfile.mkdtemp()
 
+    def test_two_layers_control_dependency(self):
+
+        class model(tf.Module):
+
+            def __init__(self, name=None):
+                super(model, self).__init__(name=name)
+                self.w = tf.constant(tf.random.normal(shape=[1, 10]), name='bias', dtype=tf.float32)
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                with tf.control_dependencies([x]):
+                    with tf.control_dependencies([y]):
+                        return self.w + z
+        model = model()
+        tf.saved_model.save(model, self.saved_model_dir)
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            input={'x':[1,10], 'y':[1,10], 'z':[1,10]},
+            outputs=['Identity']
+        )
+
+        x, y, z = np.random.rand(1,10), np.random.rand(1, 10), np.random.rand(1, 10)
+        tf_output = model(x, y, z).numpy()
+        ml_output = mlmodel.predict({'x':x, 'y':y, 'z':z})['Identity']
+
+        np.testing.assert_almost_equal(tf_output, ml_output, decimal=3)
+
+
+    def test_two_control_inputs(self):
+
+        class model(tf.Module):
+
+            def __init__(self, name=None):
+                super(model, self).__init__(name=name)
+                self.w = tf.constant(tf.random.normal(shape=[1, 10]), name='bias', dtype=tf.float32)
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                with tf.control_dependencies([x, y]):
+                    return self.w + z
+        model = model()
+        tf.saved_model.save(model, self.saved_model_dir)
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            input={'x':[1,10], 'y':[1,10], 'z':[1,10]},
+            outputs=['Identity']
+        )
+
+        x, y, z = np.random.rand(1,10), np.random.rand(1, 10), np.random.rand(1, 10)
+        tf_output = model(x, y, z).numpy()
+        ml_output = mlmodel.predict({'x':x, 'y':y, 'z':z})['Identity']
+
+        np.testing.assert_almost_equal(tf_output, ml_output, decimal=3)
+
+
+    def test_control_inputs_with_node_with_no_outputs(self):
+
+        class model(tf.Module):
+
+            def __init__(self, name=None):
+                super(model, self).__init__(name=name)
+                self.w = tf.constant(tf.random.normal(shape=[1, 10]), name='bias', dtype=tf.float32)
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32)])
+            def __call__(self, x, y):
+                with tf.control_dependencies([x]):
+                    return self.w + y
+        model = model()
+        tf.saved_model.save(model, self.saved_model_dir)
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            input={'x':[1,10], 'y':[1,10]},
+            outputs=['Identity']
+        )
+
+        x, y = np.random.rand(1,10), np.random.rand(1, 10)
+        tf_output = model(x, y).numpy()
+        ml_output = mlmodel.predict({'x':x, 'y':y})['Identity']
+
+        np.testing.assert_almost_equal(tf_output, ml_output, decimal=3)
+
     def test_save_and_load_low_level_model(self):
         class model(tf.Module):
             def __init__(self, in_features, output_features, name=None):

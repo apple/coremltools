@@ -70,23 +70,28 @@ def _remove_internal_identity_nodes(nnssa):
     delete_count = 0
     for fn_key in list(nnssa.functions.keys()):
         f = nnssa.functions[fn_key]
-        keys = list(f.graph.keys())
-        for k in keys:
-            if k not in f.graph:
+        for name in list(f.graph.keys()):
+            if name not in f.graph:
                 continue
-            node = f.graph[k]
-            if len(node.inputs) != 1 or len(node.outputs) != 1:
+            node = f.graph[name]
+
+            # Check if the node is in graph outputs
+            if len(node.inputs) != 1:
                 continue
+            if len(node.outputs) == 0 and len(node.control_outputs) == 0:
+                continue
+
+            # Remove identity node
             inp_node = f.graph[node.inputs[0]]
             if node.op == 'Identity' and inp_node.op != 'get_tuple':
                 delete_count += 1
-                parent_name = f.graph[k].inputs[0]
-                disconnect_edge(f.graph, parent_name, k)
-                for control_input in f.graph[k].control_inputs:
-                    replace_control_dest(f.graph, control_input, k, parent_name)
+                parent_name = f.graph[name].inputs[0]
+                disconnect_edge(f.graph, parent_name, name)
+                for control_input in f.graph[name].control_inputs:
+                    replace_control_dest(f.graph, control_input, name, parent_name)
 
-                replace_node(f.graph, k, parent_name)  # join parent to children
-                delete_node(f.graph, k)
+                replace_node(f.graph, name, parent_name)  # join parent to children
+                delete_node(f.graph, name)
 
     return delete_count
 
