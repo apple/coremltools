@@ -688,6 +688,16 @@ class TFSingleLayerTest(TFNetworkBatchTest):
         output_name = [output.op.name]
         self._test_tf_model_constant(graph, {y.op.name: input_shape}, output_name)
 
+    def test_sub_v3(self):
+        graph = tf.Graph()
+        input_shape = [1]
+        with graph.as_default():
+            x = tf.constant(0, shape=[])
+            y = tf.placeholder(tf.int32, shape=input_shape)
+            output = tf.math.subtract(y, x)
+        output_name = [output.op.name]
+        self._test_tf_model_constant(graph, {y.op.name: input_shape}, output_name)
+
     def test_mul(self):
         shape = [3, 4, 5]
         graph = tf.Graph()
