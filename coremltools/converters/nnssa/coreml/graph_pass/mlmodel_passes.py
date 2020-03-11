@@ -324,13 +324,6 @@ def remove_redundant_transposes(spec):
                     break
             layers = layers[::-1]
 
-            # Sanity checking
-            for i, layer in enumerate(layers[:-1]):
-                assert(layer.WhichOneof('layer') == 'transpose')
-                assert(len(output_to_layers[layer.output[0]]) == 1)
-                assert(output_to_layers[layer.output[0]][0] == layers[i+1])
-                assert(layer.output[0] == layers[i+1].input[0])
-
             # Optimize for the number of layers which can be merged using dynamic programming
             def solve_dp(layers):
                 dim = len(layers[0].transpose.axes)
