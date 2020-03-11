@@ -332,44 +332,25 @@ def remove_redundant_transposes(spec):
                 assert(layer.output[0] == layers[i+1].input[0])
 
             # Optimize for the number of layers which can be merged using dynamic programming
-            # O(n) solution
-            # O(#layers) * O(#dim !)
-            def solve_dp_linear(layers):
+            def solve_dp(layers):
                 dim = len(layers[0].transpose.axes)
-                dp = [{} for _ in range(len(layers))]
-                for i in range(len(layers)-1,-1,-1):
-                    for permu in list(permutations(list(range(dim)))):
-                        axes = [permu[k] for k in layers[i].transpose.axes]
-                        if i == len(layers)-1:
-                            dp[i][tuple(permu)] = int(axes == list(range(dim)))
-                        else:
-                            if axes == list(range(dim)):
-                                dp[i][tuple(permu)] = 1 + dp[i+1][tuple(axes)]
-                            else:
-                                dp[i][tuple(permu)] = int(dp[i+1][tuple(axes)] != 0) * (1 + dp[i+1][tuple(axes)])
-                return [dp[i][tuple(range(dim))] for i in range(len(dp))]
-
-            # O(n^2) solution
-            # O(#layers^2)
-            def solve_dp_quadratic(layers):
                 dp = [0]*len(layers)
+                dic = {}
+                axes = list(range(dim))
+                dic[tuple(axes)] = 0
                 for i in range(len(layers)):
-                    axes = list(range(dim))
-                    max_num = 0
-                    for j in range(i, len(layers)):
-                        axes = [axes[k] for k in layers[j].transpose.axes]
-                        if axes == list(range(dim)):
-                            max_num = max(max_num, j-i+1)
-                    dp[i] = max_num
+                    axes = [axes[k] for k in layers[i].transpose.axes]
+                    key = tuple(axes)
+                    if key in dic:
+                        dp[dic[key]] = i-dic[key]+1
+                    dic[key] = i+1
+                for i in range(len(layers)-1,-1,-1):
+                    j = i + dp[i]
+                    if j < len(layers):
+                        dp[i] = dp[i] + dp[j]
                 return dp
 
-            num_layers = len(layers)
-            dim = len(layers[0].transpose.axes)
-            num_dim = len(list(permutations(range(dim))))
-            if num_layers <= num_dim:
-                dp = solve_dp_quadratic(layers)
-            else:
-                dp = solve_dp_linear(layers)
+            dp = solve_dp(layers)
 
             # Solve and backtrack for the maximum number which can be merged
             sol_num = [0]*len(dp)
