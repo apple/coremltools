@@ -301,7 +301,7 @@ def remove_redundant_transposes(spec):
         input_to_layer, output_to_layers = _get_input_output_hashmap(nn_layers)
 
         for layer in nn_layers:
-            # Only start with the last element of the transpose layers chain
+            # Only start with the last element of the transpose layers sequence
             if not layer.WhichOneof('layer') == 'transpose':
                 continue
             if layer.output[0] in output_to_layers and \
@@ -309,7 +309,7 @@ def remove_redundant_transposes(spec):
                output_to_layers[layer.output[0]][0].WhichOneof('layer') == 'transpose':
                continue
 
-            # Get the transpose layers chain
+            # Get the transpose layers sequence
             layers = []
             cursor = layer
             while True:
@@ -326,6 +326,13 @@ def remove_redundant_transposes(spec):
 
             # Optimize for the number of layers which can be merged using dynamic programming
             def solve_dp(layers):
+                '''
+                The resulting dp[i] means the maximum length of transpose sequence resulting
+                in identity starting at index i
+                For example, dp[0] = 0 means there is no sequence starting at 0 results in identity
+                dp[10] = 5 means the longest identity sequence starts at 10 is 5,
+                so [layers[10],layer[11],..,layer[14]] is an identity sequence.
+                '''
                 dim = len(layers[0].transpose.axes)
                 dp = [0]*len(layers)
                 dic = {}
@@ -345,7 +352,18 @@ def remove_redundant_transposes(spec):
 
             dp = solve_dp(layers)
 
-            # Solve and backtrack for the maximum number which can be merged
+            '''
+            Once we know the maximum identity sequence starts at each index, we solve
+            for the maximum total node we can remove.
+            sol_num[i] keeps track of the maximum number of nodes can be remove after index i
+            For example, if sol_num[10] = 5, this means after index 10, we can at most remove 5 nodes.
+            sol_bt[i] keeps the first starting point of identity sequence which results in the
+            optimal solution after index i.
+            For example, if sol_num[10] = 12, means that in order to get rid of the maxium number of
+            nodes after 10, the first starting point is index 12.
+            After construct sol_num and sol_bt by dynamic programming, we backtrack for the optimal
+            solution using sol_bt.
+            '''
             sol_num = [0]*len(dp)
             sol_bt = [None]*len(dp)
             if dp[-1] != 0:
@@ -367,7 +385,7 @@ def remove_redundant_transposes(spec):
                         sol_num[i] = sol_num[i+1]
                         sol_bt[i] = sol_bt[i+1]
 
-            # Get layers to delete
+            # Get layers to delete using sol_bt
             cursor = 0
             while cursor < len(dp):
                 if sol_bt[cursor] == None:
