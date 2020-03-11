@@ -2,6 +2,7 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
+from itertools import permutations
 
 
 def _get_nn_spec(spec):
@@ -244,27 +245,49 @@ def remove_redundant_transposes(spec):
     that compose to the identity.
     """
 
+    def _get_input_output_hashmap(nn_layers):
+        # Hashmap for layers
+        output_to_layers = {}
+        for layer in nn_layers:
+            for input in layer.input:
+                if not input in output_to_layers:
+                    output_to_layers[input] = [layer]
+                else:
+                    output_to_layers[input].append(layer)
+
+        input_to_layer = {}
+        for layer in nn_layers:
+            for output in layer.output:
+                assert(output not in input_to_layer)
+                input_to_layer[output] = layer
+
+        return input_to_layer, output_to_layers
+
     def _delete_layers(nn_spec, layers_to_delete):
         """
         Given a neural network spec and pairs of transposes to remove, rewire
         the network to bypass those transposes and remove them from the spec.
         """
         nn_layers = nn_spec.layers
+        input_to_layer, output_to_layers = _get_input_output_hashmap(nn_layers)
+
         # First pass: rewire layers to bypass those that will be deleted.
-        for _layer_pair in layers_to_delete:
-            for _nn_layer in nn_layers:
-                if _nn_layer in _layer_pair:
-                    # Skip the layers we're going to delete.
-                    continue
-                if _layer_pair[1].name in _nn_layer.input:
-                    # This layer has one of the deleted as an input. Replace it
-                    # with the deleted layer's input.
-                    idx = [i for i,n in enumerate(_nn_layer.input) if n == _layer_pair[1].name][0]
-                    _nn_layer.input[idx] = _layer_pair[0].input[0]
+        for layers in layers_to_delete:
+            start_layer = layers[0]
+            end_layer = layers[-1]
+
+            # Replace children's input by layer_start's input
+            children = output_to_layers[end_layer.output[0]]
+            for child in children:
+                idx = [i for i, input in enumerate(child.input) if input == end_layer.output[0]]
+                assert(len(idx) == 1)
+                idx = idx[0]
+                child.input[idx] = start_layer.input[0]
+
         # Second pass: delete the layers.
-        for _layer_pair in layers_to_delete:
-            nn_layers.remove(_layer_pair[0])
-            nn_layers.remove(_layer_pair[1])
+        for layers in layers_to_delete:
+            for layer in layers:
+                nn_layers.remove(layer)
 
     def _find_redundant_transposes(nn_spec):
         """
@@ -273,39 +296,113 @@ def remove_redundant_transposes(spec):
         redundant pairs that are adjacent in the topologically sorted layer
         list and will not find pairs in more complicated structure.
         """
-        return []
         nn_layers = nn_spec.layers
         layers_to_delete = []
-        # This holds the axes definition if the previous layer was a transpose,
-        # otherwise it is None.
-        previous_transpose = None
-        for _layer in nn_layers:
-            layer_type = _layer.WhichOneof('layer')
-            if layer_type != 'transpose' or len(_layer.output) != 1:
-                previous_transpose = None
+        input_to_layer, output_to_layers = _get_input_output_hashmap(nn_layers)
+
+        for layer in nn_layers:
+            # Only start with the last element of the transpose layers chain
+            if not layer.WhichOneof('layer') == 'transpose':
                 continue
+            if layer.output[0] in output_to_layers and \
+               len(output_to_layers[layer.output[0]]) == 1 and \
+               output_to_layers[layer.output[0]][0].WhichOneof('layer') == 'transpose':
+               continue
 
-            if not previous_transpose:
-                previous_transpose = {'layer': _layer, 'axes':_layer.transpose.axes}
+            # Get the transpose layers chain
+            layers = []
+            cursor = layer
+            while True:
+                if cursor.output[0] in output_to_layers:
+                    layers.append(cursor)
+                if not cursor.input[0] in input_to_layer:
+                    break
+                cursor = input_to_layer[cursor.input[0]]
+                if cursor.WhichOneof('layer') != 'transpose':
+                    break
+                if len(output_to_layers[cursor.output[0]]) != 1:
+                    break
+            layers = layers[::-1]
+
+            # Sanity checking
+            for i, layer in enumerate(layers[:-1]):
+                assert(layer.WhichOneof('layer') == 'transpose')
+                assert(len(output_to_layers[layer.output[0]]) == 1)
+                assert(output_to_layers[layer.output[0]][0] == layers[i+1])
+                assert(layer.output[0] == layers[i+1].input[0])
+
+            # Optimize for the number of layers which can be merged using dynamic programming
+            # O(n) solution
+            # O(#layers) * O(#dim !)
+            def solve_dp_linear(layers):
+                dim = len(layers[0].transpose.axes)
+                dp = [{} for _ in range(len(layers))]
+                for i in range(len(layers)-1,-1,-1):
+                    for permu in list(permutations(list(range(dim)))):
+                        axes = [permu[k] for k in layers[i].transpose.axes]
+                        if i == len(layers)-1:
+                            dp[i][tuple(permu)] = int(axes == list(range(dim)))
+                        else:
+                            if axes == list(range(dim)):
+                                dp[i][tuple(permu)] = 1 + dp[i+1][tuple(axes)]
+                            else:
+                                dp[i][tuple(permu)] = int(dp[i+1][tuple(axes)] != 0) * (1 + dp[i+1][tuple(axes)])
+                return [dp[i][tuple(range(dim))] for i in range(len(dp))]
+
+            # O(n^2) solution
+            # O(#layers^2)
+            def solve_dp_quadratic(layers):
+                dp = [0]*len(layers)
+                for i in range(len(layers)):
+                    axes = list(range(dim))
+                    max_num = 0
+                    for j in range(i, len(layers)):
+                        axes = [axes[k] for k in layers[j].transpose.axes]
+                        if axes == list(range(dim)):
+                            max_num = max(max_num, j-i+1)
+                    dp[i] = max_num
+                return dp
+
+            num_layers = len(layers)
+            dim = len(layers[0].transpose.axes)
+            num_dim = len(list(permutations(range(dim))))
+            if num_layers <= num_dim:
+                dp = solve_dp_quadratic(layers)
             else:
-                # Check if the layers are connected in the graph.
-                connected = (previous_transpose['layer'].output == _layer.input)
+                dp = solve_dp_linear(layers)
 
-                # Check if they're each other's inverses.
-                compose_to_identity = False
-                if connected:
-                    this_transpose = _layer.transpose.axes
-                    composed = [previous_transpose['axes'][i] for i in this_transpose]
-                    compose_to_identity = all([ax == i for i, ax in enumerate(composed)])
-
-                if compose_to_identity:
-                    # These transpose ops are redundant, remove them.
-                    layers_to_delete.append((previous_transpose['layer'], _layer))
+            # Solve and backtrack for the maximum number which can be merged
+            sol_num = [0]*len(dp)
+            sol_bt = [None]*len(dp)
+            if dp[-1] != 0:
+                sol_num[-1] = dp[-1]
+                sol_bt[-1] = len(dp)-1
+            for i in range(len(sol_num)-2,-1,-1):
+                if dp[i] == 0:
+                    sol_num[i] = sol_num[i+1]
+                    sol_bt[i] = sol_bt[i+1]
                 else:
-                    # Compare this transpose against the next layer.
-                    # TODO: Should we try to combine a sequence if transposes
-                    # into one op?
-                    previous_transpose = {'layer': _layer, 'axes':_layer.transpose.axes}
+                    num = dp[i]
+                    j = i + dp[i]
+                    if j < len(sol_num):
+                        num += sol_num[j]
+                    if num > sol_num[i+1]:
+                        sol_num[i] = num
+                        sol_bt[i] = i
+                    else:
+                        sol_num[i] = sol_num[i+1]
+                        sol_bt[i] = sol_bt[i+1]
+
+            # Get layers to delete
+            cursor = 0
+            while cursor < len(dp):
+                if sol_bt[cursor] == None:
+                    break
+                cursor = sol_bt[cursor]
+                tmp = [layers[i] for i in range(cursor, cursor + dp[cursor])]
+                layers_to_delete.append(tmp)
+                cursor += dp[cursor]
+
         return layers_to_delete
 
     nn_spec = _get_nn_spec(spec)

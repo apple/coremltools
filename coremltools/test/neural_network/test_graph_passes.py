@@ -203,7 +203,550 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal('activation', spec.layers[2].WhichOneof('layer'))
         np.testing.assert_equal('crop', spec.layers[3].WhichOneof('layer'))
 
-    def test_redundant_transposes(self):
+
+class Redundant_Transposees_Test(unittest.TestCase):
+
+    def test_output_edge_case(self):
+        # For now for safety purpose, the node which are output should't be merged
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_transpose(name='first_transpose',
+                              axes=[2,0,1],
+                              input_name='data',
+                              output_name='first_transpose_out')
+        builder.add_transpose(name='second_transpose',
+                              axes=[1,2,0],
+                              input_name='first_transpose_out',
+                              output_name='out')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        # Shouldn't do anything here
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 2)
+
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=5)
+
+    def test_remove_single_identity_transpose(self):
+
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_transpose(name='uselss_transpose',
+                              axes=[0,1,2],
+                              input_name='data',
+                              output_name='useless_transpose_out')
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name='useless_transpose_out',
+                               output_name='out')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 1)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=5)
+
+    def test_remove_three_transpose(self):
+
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        transpose = [[2,1,0],[1,0,2],[2,0,1]]
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 1)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=5)
+
+    def test_remove_thousands_identity_transpose(self):
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+
+        num_layers = 1000
+        input_name = 'data'
+        for i in range(num_layers):
+            output_name = 'layer_'+str(i)+'_output'
+            name = 'layer_'+str(i)
+            builder.add_transpose(name=name,
+                                  axes=[0,1,2],
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name=output_name
+
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 1)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=5)
+
+    def test_remove_thousands_identity_transpose_with_activation_between(self):
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+
+        num_layers = 1000
+        input_name = 'data'
+        for i in range(num_layers):
+            output_name = 'layer_'+str(i)+'_output'
+            name = 'layer_'+str(i)
+            builder.add_transpose(name=name,
+                                  axes=[0,1,2],
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name=output_name
+            if i == num_layers/2:
+                builder.add_activation(name='relu_inter',
+                                       non_linearity='ReLU',
+                                       input_name=input_name,
+                                       output_name='relu_out')
+                input_name = 'relu_out'
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 2)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=3)
+
+    def test_remove_thousands_random_transpose_layers(self):
+        from itertools import permutations
+        import random
+        input_features = [('data', datatypes.Array(3,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+
+        num_layers = 1000
+        dim = 3
+        input_name = 'data'
+        for i in range(num_layers):
+            axes = list(permutations(range(dim)))
+            random.shuffle(axes)
+            output_name = 'layer_'+str(i)+'_output'
+            name = 'layer_'+str(i)
+            builder.add_transpose(name=name,
+                                  axes=axes[0],
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name=output_name
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+
+        data = np.random.rand(3,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=3)
+
+    def test_remove_thousands_random_transpose_layers_case_2(self):
+        from itertools import permutations
+        import random
+        input_features = [('data', datatypes.Array(3,10,5,2,4))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+
+        num_layers = 5000
+        dim = 5
+        input_name = 'data'
+        for i in range(num_layers):
+            axes = list(permutations(range(dim)))
+            random.shuffle(axes)
+            output_name = 'layer_'+str(i)+'_output'
+            name = 'layer_'+str(i)
+            builder.add_transpose(name=name,
+                                  axes=axes[0],
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name=output_name
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+
+        data = np.random.rand(3,10,5,2,4)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=3)
+
+    def test_fork_structure(self):
+
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        transpose = [[2,1,0],[2,1,0],[0,1,2,],[2,0,1],[1,2,0]]
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+        builder.add_activation(name='dumpy',
+                               non_linearity='RELU',
+                               input_name='transpose_2_out',
+                               output_name='dumpy')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 2)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=5)
+
+    def test_fork_structure_case_2(self):
+
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        transpose = [[2,1,0],[2,1,0],[2,0,1],[0,2,1],[1,2,0]]
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+        builder.add_activation(name='dumpy',
+                               non_linearity='RELU',
+                               input_name='transpose_2_out',
+                               output_name='dumpy')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 5)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=5)
+
+    def test_fork_structure_case_3(self):
+
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        transpose = [[2,1,0],[2,1,0]]
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+        builder.add_activation(name='dumpy',
+                               non_linearity='RELU',
+                               input_name='transpose_0_out',
+                               output_name='dumpy')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 4)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=5)
+
+    def test_fork_structure_case_4(self):
+
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        transpose = [[2,1,0],[2,1,0],[0,1,2],[2,1,0],[2,1,0]]
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+        builder.add_activation(name='dumpy_1',
+                               non_linearity='RELU',
+                               input_name='transpose_1_out',
+                               output_name='dumpy_1')
+        builder.add_activation(name='dumpy_2',
+                               non_linearity='RELU',
+                               input_name='transpose_2_out',
+                               output_name='dumpy_2')
+        builder.add_activation(name='dumpy_4',
+                               non_linearity='RELU',
+                               input_name='transpose_4_out',
+                               output_name='dumpy_4')
+
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 4)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=5)
+
+    def test_two_branch(self):
+
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        transpose = [[2,1,0],[2,1,0]]
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        builder.add_activation(name='relu',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out')
+
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_branch_2_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        builder.add_activation(name='relu_branch_2',
+                               non_linearity='RELU',
+                               input_name=input_name,
+                               output_name='out_branch_2')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 2)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=3)
+
+    def test_two_branch_and_add(self):
+
+        input_features = [('data', datatypes.Array(1,10,5))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        transpose = [[2,1,0],[2,1,0]]
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        input_1 = input_name
+
+        input_name = 'data'
+        for i, axes in enumerate(transpose):
+            name = 'transpose_branch_2_'+str(i)
+            output_name = name + '_out'
+            builder.add_transpose(name=name,
+                                  axes=axes,
+                                  input_name=input_name,
+                                  output_name=output_name)
+            input_name = output_name
+
+        input_2 = input_name
+
+        builder.add_add_broadcastable(name='add',
+                                      input_names=[input_1,input_2],
+                                      output_name='out')
+
+        data = np.random.rand(1,10,5)
+        # Mlmodel before
+        mlmodel = MLModel(builder.spec)
+        output_before = mlmodel.predict({'data':data})['out']
+
+        remove_redundant_transposes(builder.spec)
+
+        layers = builder.spec.neuralNetwork.layers
+        self.assertEqual(len(layers), 1)
+
+        # Run test case
+        # Mlmodel after
+        mlmodel = MLModel(builder.spec)
+        output_after = mlmodel.predict({'data':data})['out']
+
+        np.testing.assert_almost_equal(output_before, output_after, decimal=4)
+
+    def test_transpose(self):
 
         def _build_and_test_network(input_size, transpose_layers, expected_layers):
             """
@@ -219,6 +762,9 @@ class MLModelPassesTest(unittest.TestCase):
             input_features = [('data', datatypes.Array(*input_size))]
             output_features = [('out', None)]
             builder = neural_network.NeuralNetworkBuilder(input_features, output_features)
+            spec = builder.spec.neuralNetwork.layers
+
+
             last_layer = 'data'
             for idx, axes in enumerate(transpose_layers):
                 name = 't{}'.format(idx)
@@ -252,13 +798,6 @@ class MLModelPassesTest(unittest.TestCase):
 
         _build_and_test_network(
             input_size=[1, 10, 10],
-            # These transposes together are the identity.
-            transpose_layers=[[2, 0, 1], [1, 2, 0]],
-            expected_layers=[],
-        )
-
-        _build_and_test_network(
-            input_size=[1, 10, 10],
             # These transposes are not inverses.
             transpose_layers=[[2, 0, 1], [2, 0, 1]],
             expected_layers=[0, 1],
@@ -269,13 +808,6 @@ class MLModelPassesTest(unittest.TestCase):
             # First two are the identity, then an extra.
             transpose_layers=[[2, 4, 1, 0, 3], [3, 2, 0, 4, 1], [1, 0, 2, 3, 4]],
             expected_layers=[2],
-        )
-
-        _build_and_test_network(
-            input_size=[1, 1, 10, 10, 3],
-            # First is okay, next two are the identity.
-            transpose_layers=[[1, 0, 2, 3, 4], [2, 4, 1, 0, 3], [3, 2, 0, 4, 1]],
-            expected_layers=[0],
         )
 
         # A slightly more complicated test case where there are two transposes
