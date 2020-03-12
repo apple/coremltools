@@ -1127,14 +1127,39 @@ class TypeInferenceVisitor(object):
         output_shape = node.attr.get("_output_shapes")
         if not len(output_shape) == 1:
             raise ValueError('Expect only one output for Einsum.')
+        equation = node.attr.get('equation')
+        if not '->' in equation:
+            raise ValueError('current einsum does not support matrix diagonal operations.')
 
-        output_shape = output_shape[0]
+        input_tensor_types = [self.visit(input) for input in node.inputs]
+        input_shapes = [input.get_shape() for input in input_tensor_types]
+        input_types = [input.get_primitive() for input in input_tensor_types]
 
+        # Parse equation
+        prefix = equation.split('->')[0]
+        suffix = equation.split('->')[1]
+
+        # Pattern matching
         inference_shape = []
-        for i, dim in enumerate(output_shape):
-            inference_shape.append(dim if dim != -1 else make_symbol(node.name + "_" + str(i)))
+        if not ',' in prefix:
+            assert(len(input_shapes) == 1)
+            input_shape = input_shapes[0]
+            map = dict(zip(prefix, input_shape))
+            inference_shape = [map[axis] for axis in suffix]
+        else:
+            a_shape = input_shapes[0]
+            b_shape = input_shapes[1]
+            map = {}
+            a, b = prefix.split(',')
+            for i, axis in enumerate(a):
+                map[axis] = a_shape[i]
+            for i, axis in enumerate(b):
+                map[axis] = b_shape[i]
+            inference_shape = [map[axis] for axis in suffix]
 
-        input_types = [self.visit(input).get_primitive() for input in node.inputs]
+        # Make inference type symbolic if it contains symbol
+        inference_shape = [axis if axis != -1 else make_symbol(node.name + "_" + str(i))
+                           for i, axis in enumerate(inference_shape)]
         inference_type = input_types[0] if len(input_types) == 1 else promote_types(*input_types)
 
         return builtins.tensor(inference_type, inference_shape)
