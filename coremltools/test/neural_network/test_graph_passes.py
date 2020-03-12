@@ -207,18 +207,22 @@ class MLModelPassesTest(unittest.TestCase):
 
 class Redundant_Transposees_Test(unittest.TestCase):
 
-    def _test_builder(self, builder, input_shape, expected_layer_num):
+    def _test_builder(self, builder, input_shape, expected_layer_num=None):
 
         data = np.random.rand(*input_shape)
 
         # Mlmodel before
         mlmodel = MLModel(builder.spec)
         output_before = mlmodel.predict({'data':data})['out']
+        num_layers_before = len(builder.spec.neuralNetwork.layers)
 
         remove_redundant_transposes(builder.spec)
 
         layers = builder.spec.neuralNetwork.layers
-        self.assertEqual(len(layers), expected_layer_num)
+        if expected_layer_num == None:
+            self.assertTrue(len(layers) < num_layers_before)
+        else:
+            self.assertEqual(len(layers), expected_layer_num)
 
         # Mlmodel after
         mlmodel = MLModel(builder.spec)
@@ -466,7 +470,7 @@ class Redundant_Transposees_Test(unittest.TestCase):
                                non_linearity='RELU',
                                input_name=input_name,
                                output_name='out')
-        self._test_builder(builder, input_shape, 3)
+        self._test_builder(builder, input_shape, None)
 
     @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_remove_thousands_random_transpose_layers_case_2(self):
@@ -498,7 +502,7 @@ class Redundant_Transposees_Test(unittest.TestCase):
                                non_linearity='RELU',
                                input_name=input_name,
                                output_name='out')
-        self._test_builder(builder, input_shape, 7)
+        self._test_builder(builder, input_shape, None)
 
     @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_branch_structure(self):
