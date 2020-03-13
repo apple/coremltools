@@ -76,7 +76,7 @@ static Result validateLossLayer(const Specification::LossLayer *lossLayer, const
             break;
         }
         default:
-            err = "Loss function is not supported in the loss layer named '" + lossLayer->name() + "'.";
+            err = "Loss function is not recognized in the loss layer named '" + lossLayer->name() + "', only cross entropy loss and MSE are supported.";
             return Result(ResultType::INVALID_UPDATABLE_MODEL_CONFIGURATION, err);
     }
     
@@ -125,25 +125,10 @@ template<typename T> Result validateTrainingInputs(const Specification::ModelDes
 
     std::string target;
     const Specification::NetworkUpdateParameters& updateParams = nn.updateparams();
-
-    for (int i = 0; i < updateParams.losslayers_size(); i++) {
-        const Specification::LossLayer &lossLayer = updateParams.losslayers(i);
-
-        switch (lossLayer.LossLayerType_case()) {
-
-            case Specification::LossLayer::kCategoricalCrossEntropyLossLayer:
-            {
-                target = updateParams.losslayers(0).categoricalcrossentropylosslayer().target();
-                break;
-            }
-            case Specification::LossLayer::kMeanSquaredErrorLossLayer:
-            {
-                target = updateParams.losslayers(0).meansquarederrorlosslayer().target();
-                break;
-            }
-            default:
-                break;
-        }
+    if (updateParams.losslayers(0).has_categoricalcrossentropylosslayer()) {
+        target = updateParams.losslayers(0).categoricalcrossentropylosslayer().target();
+    } else if (updateParams.losslayers(0).has_meansquarederrorlosslayer()) {
+        target = updateParams.losslayers(0).meansquarederrorlosslayer().target();
     }
 
     bool isClassifier = true;
@@ -429,15 +414,6 @@ static Result validateWeightParamsUpdatable(const Specification::NeuralNetworkLa
             }
             weight_update_flag = layer.innerproduct().weights().isupdatable();
             break;
-        case Specification::NeuralNetworkLayer::kBatchnorm:
-            if ((layer.batchnorm().has_beta() && !layer.batchnorm().beta().isupdatable()) ||
-                (layer.batchnorm().has_mean() && !layer.batchnorm().mean().isupdatable()) ||
-                (layer.batchnorm().has_gamma() && !layer.batchnorm().gamma().isupdatable()) ||
-                (layer.batchnorm().has_variance() && !layer.batchnorm().variance().isupdatable())) {
-                err = "An updatable layer, named '" + layer.name() + "', has a beta/mean/gamma or variance param which is not marked as updatable.";
-                return Result(ResultType::INVALID_UPDATABLE_MODEL_PARAMETERS, err);
-            }
-            return r;
         default:
             return r;
     }
@@ -497,7 +473,6 @@ template<typename T> static Result validateUpdatableLayerSupport(const T& nn) {
             switch (layer.layer_case()) {
                 case Specification::NeuralNetworkLayer::kConvolution:
                 case Specification::NeuralNetworkLayer::kInnerProduct:
-                case Specification::NeuralNetworkLayer::kBatchnorm:
                     r = validateWeightParamsUpdatable(layer);
                     if (!r.good()) {return r;}
                     break;

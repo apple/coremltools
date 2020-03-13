@@ -153,15 +153,6 @@ class RangeParam:
         return self._max
 
 
-class BooleanParam:
-    def __init__(self, value):
-        self._value = value
-
-    @property
-    def value(self):
-        return self._value
-
-
 class Batch:
     def __init__(self, value, allowed_set=None):
         self._value = value

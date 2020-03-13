@@ -6326,14 +6326,17 @@ message NetworkUpdateParameters {
     Int64Parameter seed = 20;
 }
 
+/**
+ * Loss layer - categorical cross entropy and mean squared error are the only supported loss functions currently
+ */
 message LossLayer {
 
     string name = 1;
-
     oneof LossLayerType {
 
         CategoricalCrossEntropyLossLayer categoricalCrossEntropyLossLayer = 10;
         MeanSquaredErrorLossLayer meanSquaredErrorLossLayer = 11;
+
     }
 
 }
@@ -6346,8 +6349,6 @@ message LossLayer {
  *
  * The target is a single value representing the true category or class label. If the target is the predictedFeatureName of a neural network classifier it will be inverse mapped to the corresponding categorical index for you.
  *
- * The label smoothing parameter is an optional float value. The default value is 0.0f.
- *
  * math:
  * Loss_{CCE}(input, target) = -\sum_{i=1}^{N} (target == i) log( input[i] ) = - log (input[target])
  */
@@ -6355,6 +6356,7 @@ message CategoricalCrossEntropyLossLayer {
 
     string input = 1;
     string target = 2;
+
 }
 
 /**
@@ -6365,6 +6367,7 @@ message MeanSquaredErrorLossLayer {
 
     string input = 1;
     string target = 2;
+
 }
 
 /**
@@ -6378,6 +6381,7 @@ message Optimizer {
         AdamOptimizer adamOptimizer = 11;
 
     }
+
 }
 
 /**
@@ -6389,6 +6393,7 @@ message SGDOptimizer {
     DoubleParameter learningRate = 1;
     Int64Parameter miniBatchSize = 2;
     DoubleParameter momentum = 3;
+
 }
 
 /**
@@ -6402,4 +6407,5 @@ message AdamOptimizer {
     DoubleParameter beta1 = 3;
     DoubleParameter beta2 = 4;
     DoubleParameter eps = 5;
+
 }

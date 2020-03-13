@@ -71,6 +71,7 @@ class MLModelUpdatableTest(unittest.TestCase):
 
         mlmodel = MLModel(model_path)
         self.assertTrue(mlmodel is not None)
+
         spec = mlmodel.get_spec()
         self.assertTrue(spec.isUpdatable)
         self.assertTrue(spec.neuralNetwork.layers[0].isUpdatable)
@@ -257,7 +258,6 @@ class MLModelUpdatableTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             nn_builder.set_categorical_cross_entropy_loss(name='cross_entropy', input='output')
 
-    @pytest.mark.xfail(reason='rdar://58976914')
     def test_nn_set_softmax_updatable_invalid(self):
         nn_builder = self.create_base_builder()
         nn_builder.add_softmax(name='softmax', input_name='output', output_name='softmax_output')

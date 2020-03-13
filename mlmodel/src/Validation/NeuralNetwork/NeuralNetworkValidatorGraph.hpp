@@ -32,9 +32,9 @@ static bool isLayerSupportedForBackprop(const Specification::NeuralNetworkLayer*
 }
 
 struct LayerNode {
-    
+
     public:
-    
+
     std::vector<LayerNode *> parents; // list of nodes that are parent to this node
     std::vector<LayerNode *> children;
     Specification::NeuralNetworkLayer::LayerCase layerType;
@@ -44,14 +44,13 @@ struct LayerNode {
     std::vector<std::string> outputNames;
     bool isUpdatable;
     bool isBackPropagable;
-    bool sigmoidActivation;
-    
+
     LayerNode () {}
-    
+
     LayerNode(const Specification::LossLayer *lossLayer)
     {
         name = lossLayer->name();
-        
+
         switch (lossLayer->LossLayerType_case()) {
             case CoreML::Specification::LossLayer::kCategoricalCrossEntropyLossLayer:
                 inputNames.push_back(lossLayer->categoricalcrossentropylosslayer().input());
@@ -67,9 +66,8 @@ struct LayerNode {
         layerType = Specification::NeuralNetworkLayer::LAYER_NOT_SET;
         isUpdatable = false;
         isBackPropagable = false;
-        sigmoidActivation = false;
     }
-    
+
     LayerNode(const Specification::NeuralNetworkLayer *layer)
     {
         std::vector<std::string> inNames;
@@ -87,22 +85,18 @@ struct LayerNode {
         name = layer->name();
         isUpdatable = layer->isupdatable();
         isBackPropagable = isLayerSupportedForBackprop(layer);
-        sigmoidActivation = false;
-        if (layer->layer_case() == Specification::NeuralNetworkLayer::kActivation && layer->activation().NonlinearityType_case() == Specification::ActivationParams::kSigmoid) {
-            sigmoidActivation = true;
-        }
     }
 };
 
 struct NeuralNetworkValidatorGraph {
-    
+
     public:
-    
+
     std::map<std::string, LayerNode *> nodeNameToNode;
     std::map<std::string, LayerNode *> blobNameToProducingNode;
-    
+
     NeuralNetworkValidatorGraph() {}
-    
+
     void insertNode(LayerNode *node)
     {
         for (const auto& name: node->inputNames) {
@@ -117,7 +111,7 @@ struct NeuralNetworkValidatorGraph {
         }
         nodeNameToNode[node->name] = node;
     }
-    
+
     LayerNode *getNodeFromName(std::string name) const
     {
         if (nodeNameToNode.find(name) == nodeNameToNode.end()) {

@@ -22,6 +22,8 @@ from .quantization_utils import unpack_to_bytes, _convert_array_to_nbit_quantize
 from .spec_inspection_utils import *
 from .update_optimizer_utils import AdamParams, SgdParams
 
+_SUPPORTED_UPDATABLE_LAYERS = ['innerProduct', 'convolution']
+
 
 def _set_recurrent_activation(param, activation):
     activation = activation.upper() if isinstance(activation, str) else activation
@@ -615,6 +617,10 @@ class NeuralNetworkBuilder(object):
             if trainable not in self.layer_specs:
                 raise ValueError('Layer %s does not exist.' % trainable)
             spec_layer = self.layer_specs[trainable]
+            spec_layer_type = spec_layer.WhichOneof('layer')
+            if spec_layer_type not in _SUPPORTED_UPDATABLE_LAYERS:
+                raise ValueError('Layer %s is not supported to be marked as updatable. Only %s layers '
+                                 'are supported to be marked updatable.' % (trainable, _SUPPORTED_UPDATABLE_LAYERS))
             spec_layer.isUpdatable = True
             typed_layer = getattr(spec_layer, spec_layer.WhichOneof('layer'))
             for fd in typed_layer.DESCRIPTOR.fields:
@@ -631,11 +637,14 @@ class NeuralNetworkBuilder(object):
     def set_categorical_cross_entropy_loss(self, name, input):
         """
         Categorical Cross Entropy is used for single label categorization (only one category is applicable for each data point).
+
         Parameters
         ----------
         name: The name of the loss layer
         input: The name of the input, which should be a vector of length N representing the distribution over N categories. This must be the output of a softmax.
-        .. math::
+
+        Math
+        ----------
         Loss_ {CCE}(input, target) = -\sum_{i = 1} ^ {N}(target == i) log(input[i]) = - log(input[target])
         """
         if self.spec is None:
@@ -683,8 +692,6 @@ class NeuralNetworkBuilder(object):
         loss_layer.name = name
         loss_layer.categoricalCrossEntropyLossLayer.input = input
         loss_layer.categoricalCrossEntropyLossLayer.target = target
-
-        classifier_output = self.spec.description.predictedFeatureName
 
         training_inputs = self.spec.description.trainingInput
         training_inputs.extend(self.spec.description.input)
