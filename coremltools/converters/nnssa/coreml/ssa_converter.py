@@ -1653,16 +1653,17 @@ class SSAConverter(object):
                 self.op_tensor_map[node.name] = input_names
             else:
                 layer = self._get_builder().add_expand_dims(
-                    name=node.name, input_name=input_names[0], output_name=node.name, axes=[0])
+                    name=node.name, input_name=input_names[0], output_name=node.name, axes=[axis])
         else:
             if all([_is_scalar(input_type) for input_type in input_types]):
                 layer = self._get_builder().add_concat_nd(
                     name=node.name, input_names=input_names, output_name=node.name, axis=axis)
             else:
+                if axis == -1:
+                    axis = len(input_types[0].get_shape())
                 layer = self._get_builder().add_stack(
                     name=node.name, input_names=input_names, output_name=node.name, axis=axis)
-
-        self.tensor_shapes[node.name] = self._get_tensor_shape_from_type(node.datatype)
+        shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_unpack(self, node):
         input_nodes, input_names, input_types = self._get_input_tensors(node)
