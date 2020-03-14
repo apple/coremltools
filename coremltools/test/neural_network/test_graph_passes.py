@@ -249,6 +249,20 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         self._test_builder(builder, input_shape, 2)
 
+    def test_output_edge_case_2(self):
+
+        # For now for safety purpose, the node which are output should't be merged
+        input_shape = (1,10,5)
+        input_features = [('data', datatypes.Array(*input_shape))]
+        output_features = [('out', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_transpose(name='ranspose',
+                              axes=[1,2,0],
+                              input_name='data',
+                              output_name='out')
+
+        self._test_builder(builder, input_shape, 1)
+
     @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_remove_single_identity_transpose(self):
 
