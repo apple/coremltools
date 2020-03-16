@@ -133,6 +133,75 @@ class TestSingleOp(unittest.TestCase):
                         self.test_variable_and_constant(x))
 
         self._test_coreml(model())
+@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+class TestStack(TestSingleOp):
+
+    def test_stack_simple(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.stack([x,y,z], axis=0),
+                        tf.stack([x,y,z], axis=1),
+                        tf.stack([x,y,z], axis=-1))
+
+        self._test_coreml(model())
+
+    def test_stack_simple_with_relu(self):
+
+        # Sometime even a single layer can be compiled but it fail after connects
+        # it with other layer...
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.nn.relu(tf.stack([x,y,z], axis=0)))
+
+        self._test_coreml(model())
+
+    @pytest.mark.xfail(reason="There are still issues with scalar inputs in coremltools...")
+    def test_stack_simple_scalar(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.stack([x,y,z], axis=0),
+                        tf.stack([x,y,z], axis=-1))
+
+        self._test_coreml(model())
+
+    def test_stack_dynamic(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.stack([x,y,z], axis=0),
+                        tf.stack([x,y,z], axis=1),
+                        tf.stack([x,y,z], axis=-1))
+
+        self._test_coreml(model(),input_dic=[('x', [2,3]),('y', [2,3]), ('z', [2,3])])
+
+    def test_stack_dynamic_with_relu(self):
+
+        # Sometime even a single layer can be compiled but it fail after connects
+        # it with other layer...
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.nn.relu(tf.stack([x,y,z], axis=0)))
+
+        self._test_coreml(model(),input_dic=[('x', [2,3]),('y', [2,3]), ('z', [2,3])])
 
 @unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
 class TestEinsum(TestSingleOp):

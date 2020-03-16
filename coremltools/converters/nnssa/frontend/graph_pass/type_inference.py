@@ -1303,7 +1303,14 @@ class TypeInferenceVisitor(object):
         else:
             output_shapes = node.attr['_output_shapes']
             if len(output_shapes[0]) > 0:
-                return builtins.tensor(node.attr['T'], tuple(output_shapes[0]))
+                inference_shape = []
+                if builtins.is_tensor(intype):
+                    inference_shape = list(intype.get_shape())
+                else:
+                    inference_type = []
+                axis = node.attr['axis'] if node.attr['axis'] != -1 else len(inference_shape)
+                inference_shape.insert(axis, len(node.inputs))
+                return builtins.tensor(node.attr['T'], tuple(inference_shape))
             elif 'N' in node.attr:
                 return builtins.tensor(node.attr['T'], (node.attr['N'], ))
         return None
