@@ -8,8 +8,10 @@
 
 #include "Caffe/CaffeConverter.hpp"
 #include "CaffeConverterLib.hpp"
-#include "MLModelSpecification.hpp"
+#include "Format.hpp"
+#include "Utils.hpp"
 
+#include <sstream>
 #include <sys/stat.h>
 
 using namespace CoreML;

@@ -20,7 +20,8 @@
 #include <google/protobuf/text_format.h>
 #include <fcntl.h>
 
-#include "MLModelSpecification.hpp"
+#include "Format.hpp"
+#include "Globals.hpp"
 
 using namespace CoreML;
 
