@@ -302,12 +302,6 @@ def remove_redundant_transposes(spec):
         nn_layers = nn_spec.layers
         layers_to_delete = []
 
-        # Check no branch or loop in the network...
-        for layer in nn_layers:
-            layer_type = layer.WhichOneof('layer')
-            if layer_type == 'loop' or layer_type == 'branch':
-                return layers_to_delete
-
         input_to_parent_layers, output_to_layers = blob_name_to_layers(nn_layers)
 
         for layer in nn_layers:

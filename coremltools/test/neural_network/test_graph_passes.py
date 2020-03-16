@@ -249,6 +249,7 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         self._test_builder(builder, input_shape, 2)
 
+    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_output_edge_case_2(self):
 
         # For now for safety purpose, the node which are output should't be merged
