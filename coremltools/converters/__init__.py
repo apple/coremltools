@@ -10,4 +10,5 @@ from . import xgboost
 from . import keras
 from . import caffe
 from . import tensorflow
+from . import torch
 from . import nnssa

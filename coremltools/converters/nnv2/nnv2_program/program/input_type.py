@@ -1,5 +1,5 @@
 from coremltools.converters.nnv2.builtin_types import builtins
-from .var import TupleVar
+from .var import InternalVar
 from collections import OrderedDict
 
 
@@ -12,16 +12,65 @@ class InputSpec(object):
         for k, v in self._input_types:
             self._ordered_dict[k] = v
 
-    def update(self, input_types):
-        if not isinstance(input_types, InputSpec):
-            raise ValueError("Can only add InputSpec to InputTypes")
-        self._input_types.extend(input_types._input_types)
-        for k, v in input_types._input_types:
+    def __add__(self, input_spec):
+        self._input_types.extend(input_spec._input_types)
+        for k, v in input_spec._input_types:
             self._ordered_dict[k] = v
+        return self
 
     @property
     def input_types(self):
+        """
+        Ordered dict[str, _InputType] (name, input_type)
+        """
         return self._ordered_dict
+
+    def parse_inputs(self, kwargs):
+        """ Parse and extract (name, value) pairs from kwargs according to the spec.
+
+        Args:
+            kwargs: must contain a Var compatible with
+                    compatible type for each
+                    1) required _InputType
+                    2) optional _InputType with default value
+
+        Return:
+            out: List[(name, Var or None)]
+                The list has the same length as the `input_types`.
+                `(k, None)` is in the list iff input_type of `k`
+                is optional, has no default value, and
+                `k` is not specified in the input.
+
+        Raise:
+            TypeError if value type is incompatible
+            ValueError if a require input is missing
+        """
+        ret = []
+        no_check = kwargs.get('no_check', False)
+        for name, input_type in self.input_types.items():
+            if name in kwargs:
+                var = kwargs[name]
+                # TODO (jay): we should remove this internal var later as we
+                # further cleanup the interface
+                if isinstance(var, InternalVar) or \
+                        input_type.is_compatible(var):
+                    ret.append((name, var))
+                else:
+                    msg = "Input {} has type {} not compatible with \
+                           expected type {}".format(name, var.sym_type,
+                                                    input_type)
+                    raise TypeError(msg)
+            else:
+                # if input is not found in kwargs, it must be optional has no
+                # default value
+                if not input_type.optional or input_type.default:
+                    if no_check:
+                        continue
+                    raise ValueError("Input {} is required".format(name))
+                else:
+                    assert input_type.default is None
+                    ret.append((name, None))
+        return ret
 
 
 class _InputType(object):
@@ -78,8 +127,7 @@ class _InputType(object):
         """
         return None
 
-    @property
-    def input_type(self):
+    def __str__(self):
         return type(self).__name__
 
 
@@ -142,6 +190,20 @@ class FloatInputType(ScalarOrTensorInputType):
     def _get_predefined_datatype(self):
         return builtins.fp32
 
+class IntOrFloatInputType(ScalarOrTensorInputType):
+    """
+    input with _sym_type == builtins.int32 or _sym_type == builtins.int64 or _sym_type == builtins.fp32
+    predefined to be builtins.fp32 by default.
+    """
+    def __init__(self, **kwargs):
+        super(IntOrFloatInputType, self).__init__(**kwargs)
+
+    def _is_compatible(self, v):
+        return v.dtype in {builtins.int32, builtins.int64, builtins.fp32}
+
+    def _get_predefined_datatype(self):
+        return builtins.fp32
+
 
 class TensorInputType(ScalarOrTensorInputType):
     """
@@ -184,7 +246,8 @@ class TupleInputType(_InputType):
         super(TupleInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return isinstance(v, TupleVar)
+        # We don't check the detail types within the tuple.
+        return isinstance(v, (tuple, list))
 
 
 class InternalInputType(_InputType):
@@ -209,17 +272,6 @@ class PyFunctionInputType(InternalInputType):
 
     #def _is_compatible(self, v):
     #    return callable(v.val)
-
-
-class PyTupleInputType(InternalInputType):
-    """
-    python tuple of Var
-    """
-    def __init__(self, **kwargs):
-        super(PyTupleInputType, self).__init__(**kwargs)
-
-    #def _is_compatible(self, v):
-    #    return isinstance(v.val, tuple) and all(isinstance(e, (Var, TupleVar)) for e in v.val)
 
 
 class InternalStringInputType(InternalInputType):

@@ -11,7 +11,7 @@ from . import _libsvm_util
 from ..._deps import HAS_LIBSVM as _HAS_LIBSVM
 
 if _HAS_LIBSVM:
-    import svm as _libsvm
+    from libsvm import svmutil as _svmutil
 
 
 def convert(model, input_names='input', target_name='target',
@@ -75,8 +75,8 @@ def convert(model, input_names='input', target_name='target',
         libsvm_model = _libsvm_util.load_model(model)
     else:
         libsvm_model = model
-    if not isinstance(libsvm_model, _libsvm.svm_model):
-        raise TypeError("Expected 'model' of type '%s' (got %s)" % (_libsvm.svm_model, type(libsvm_model)))
+    if not isinstance(libsvm_model, _svmutil.svm_model):
+        raise TypeError("Expected 'model' of type '%s' (got %s)" % (_svmutil.svm_model, type(libsvm_model)))
 
     if not isinstance(target_name, _string_types):
         raise TypeError("Expected 'target_name' of type str (got %s)" % type(libsvm_model))

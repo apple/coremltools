@@ -3,7 +3,6 @@ from coremltools.converters.nnv2.builtin_types.symbolic import (
         is_symbolic,
         any_symbolic,
         )
-from .type_utils import builtin_to_str
 
 class Var(object):
     """
@@ -13,6 +12,8 @@ class Var(object):
     Example Usage:
 
     from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
+    from coremltools.converters.nnv2.nnv2_program.program import SsaFunction
+    from coremltools.converters.nnv2.builtin_types import builtins
 
     func_inputs = {"a": cb.placeholder(shape=(1,2)),
                    "b": cb.placeholder(shape=(1,2)) }
@@ -130,8 +131,10 @@ class Var(object):
     def add_child_op(self, new_op):
         self._child_ops.add(new_op)
 
-    def remove_child_op(self, target_op):
+    def remove_child_op(self, target_op, no_check=False):
         if target_op not in self._child_ops:
+            if no_check:
+                return # no-op
             msg = "Op {} does not takes Var {} as input"
             raise ValueError(msg.format(target_op.name, self.name))
         self._child_ops.remove(target_op)
@@ -145,62 +148,12 @@ class Var(object):
         shape_str = str(self.shape)[:-1]  # trim the ")"
         if self.rank > 1:
             shape_str += ", "
-        shape_str += builtin_to_str[self.dtype] + ")" + annotation
+        shape_str += builtins.builtin_to_string(self.dtype) + ")" + annotation
         return shape_str
 
     def __str__(self):
         return "%" + self.name + ": " + self.shape_str()
 
-
-class TupleVar(Var):
-    """
-    self._elems: python tuple[Var]
-    """
-    __slots__ = ["_elems"]
-
-    def __init__(self, name, elems, op=None, op_output_idx=None):
-        """
-        elems: python tuple[Var]
-        """
-        sym_type = builtins.tuple(tuple(e.sym_type for e in elems))
-        super(TupleVar, self).__init__(name=name,
-                                       sym_type=sym_type,
-                                       sym_val=None)
-        self._elems = elems
-
-    @property
-    def val(self):
-        return tuple(e.val for e in self._elems)
-
-    @property
-    def shape(self):
-        raise ValueError("shape not applicable to TupleVar {}".format(
-            self.name))
-
-    @property
-    def rank(self):
-        raise ValueError("rank not applicable to TupleVar {}".format(
-            self.name))
-
-    @property
-    def dtype(self):
-        raise ValueError("dtype not applicable to TupleVar {}".format(
-            self.name))
-
-    def __getitem__(self, index):
-        if index >= len(self._elems):
-            msg = "Index {} out of bound (TupleVar len: {})"
-            raise ValueError(msg.format(index, len(self._elems)))
-        return self._elems[index]
-
-    def py_tuple(self):
-        return self._elems
-
-    def shape_str(self):
-        return "(" + ", ".join(e.shape_str() for e in self._elems) + ")"
-
-    def __str__(self):
-        return "%" + self.name + ": " + self.shape_str()
 
 
 class ListVar(Var):

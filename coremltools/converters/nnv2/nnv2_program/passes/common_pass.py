@@ -4,15 +4,18 @@ import logging
 
 def common_pass(prog):
     passes = [
-        'const_elimination',
-        'matmul_to_linear',
-        'const_elimination',
-        'remove_symbolic_reshape',
-        'dead_code_elimination',
+        'common::const_elimination',
+        'common::matmul_to_linear',
+        'common::const_elimination',
+        'common::loop_invariant_elimination',
+        'common::remove_symbolic_reshape',
+        'common::dead_code_elimination', # always end with dce
     ]
 
+    logging.debug('Program before common passes:\n{}'.format(prog))
+
     for p in passes:
-        logging.info('Performing common graph pass: "{}"'.format(p))
+        logging.info('Performing pass: "{}"'.format(p))
         PASS_REGISTRY[p](prog)
 
-    logging.debug('SSA after common graph passes:\n{}'.format(prog))
+    logging.debug('Program after common passes:\n{}'.format(prog))

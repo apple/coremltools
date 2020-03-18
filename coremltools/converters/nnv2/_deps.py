@@ -17,12 +17,6 @@ try:
 except:
     HAS_ONNX = False
 
-HAS_PYESPRESSO = True
-try:
-    import pyespresso
-except:
-    HAS_PYESPRESSO = False
-
 HAS_TF = True
 try:
     import tensorflow

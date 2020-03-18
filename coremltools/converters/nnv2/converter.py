@@ -1,7 +1,4 @@
-from ._deps import HAS_PYESPRESSO
-
 from .nnv2_program.passes.common_pass import common_pass
-
 
 class ConverterRegistry:
     frontends = {}
@@ -22,6 +19,7 @@ class ConverterRegistry:
 
 @ConverterRegistry.frontend
 class NitroSSAConverter:
+    """Deprecated and use NNv2DummyFrontend"""
     NAME = "NitroSSA"
 
     def __call__(self, model, *args, **kwargs):
@@ -42,18 +40,6 @@ class NNv1ProtoBackend:
     def __call__(self, *args, **kwargs):
         from .backend.nnv1 import load as backend_load
         return backend_load(*args, **kwargs)
-
-if HAS_PYESPRESSO:
-
-    @ConverterRegistry.backend
-    class NespressoBackend:
-        NAME = "nespresso"
-
-        def __call__(self, *args, **kwargs):
-            raise NotImplemented("Nespresso backend is not implemented")
-            from .backend.nespresso import load as backend_load
-            return backend_load(*args, **kwargs)
-
 
 @ConverterRegistry.frontend
 class CustomFrontend:
@@ -96,8 +82,8 @@ def convert(model, convert_from='tensorflow', convert_to='proto', ConverterRegis
             'Backend converter "{}" not implemented'.format(convert_to))
     backend_conv = backend_conv_type()
 
-    ir = frontend_conv(model, **kwargs)
-    common_pass(ir)
-    out = backend_conv(ir, **kwargs)
+    prog = frontend_conv(model, **kwargs)
+    common_pass(prog)
+    out = backend_conv(prog, **kwargs)
 
     return out

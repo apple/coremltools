@@ -447,6 +447,7 @@ int testInnerProductDynamicQuantizationConversionParameterValidation() {
     // Setup
     Specification::Model m1;
     Specification::NeuralNetwork *nnWrite = m1.mutable_neuralnetwork();
+    nnWrite->set_arrayinputshapemapping(Specification::EXACT_ARRAY_MAPPING);
 
     auto *topIn = m1.mutable_description()->add_input();
     topIn->set_name("A");
@@ -2602,12 +2603,15 @@ int testInvalidUpsample() {
     topIn->set_name("input");
     auto *shape = topIn->mutable_type()->mutable_multiarraytype();
     shape->add_shape(5);
+    shape->add_shape(5);
+    shape->add_shape(5);
 
     auto *out3 = m1.mutable_description()->add_output();
     out3->set_name("probs");
     out3->mutable_type()->mutable_multiarraytype();
 
     const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
 
     Specification::NeuralNetworkLayer *upsampleLayer = nn->add_layers();
     upsampleLayer->add_input("input");
@@ -2630,12 +2634,15 @@ int testInvalidUpsampleNearestNeighborsModeWithAlignCorners() {
     topIn->set_name("input");
     auto *shape = topIn->mutable_type()->mutable_multiarraytype();
     shape->add_shape(5);
+    shape->add_shape(5);
+    shape->add_shape(5);
 
     auto *out3 = m1.mutable_description()->add_output();
     out3->set_name("probs");
     out3->mutable_type()->mutable_multiarraytype();
 
     const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
 
     Specification::NeuralNetworkLayer *upsampleLayer = nn->add_layers();
     upsampleLayer->add_input("input");
@@ -2693,12 +2700,15 @@ int testFractionalUpsample() {
     topIn->set_name("input");
     auto *shape = topIn->mutable_type()->mutable_multiarraytype();
     shape->add_shape(5);
+    shape->add_shape(5);
+    shape->add_shape(5);
 
     auto *out3 = m1.mutable_description()->add_output();
     out3->set_name("probs");
     out3->mutable_type()->mutable_multiarraytype();
 
     const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
 
     Specification::NeuralNetworkLayer *upsampleLayer = nn->add_layers();
     upsampleLayer->add_input("input");
@@ -2748,12 +2758,15 @@ int testValidUpsampleAlignCorners() {
     topIn->set_name("input");
     auto *shape = topIn->mutable_type()->mutable_multiarraytype();
     shape->add_shape(5);
+    shape->add_shape(5);
+    shape->add_shape(5);
 
     auto *out3 = m1.mutable_description()->add_output();
     out3->set_name("probs");
     out3->mutable_type()->mutable_multiarraytype();
 
     const auto nn = m1.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
 
     Specification::NeuralNetworkLayer *upsampleLayer = nn->add_layers();
     upsampleLayer->add_input("input");

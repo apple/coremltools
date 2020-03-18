@@ -15,9 +15,9 @@ from coremltools.models.utils import evaluate_classifier,\
 from coremltools._deps import HAS_LIBSVM, HAS_SKLEARN
 
 if HAS_LIBSVM:
-    from svm import svm_parameter, svm_problem
+    from libsvm import svm, svmutil
     from svmutil import svm_train, svm_predict
-    import svmutil
+    from libsvm import svmutil
     from coremltools.converters import libsvm
 
 if HAS_SKLEARN:
@@ -135,7 +135,7 @@ class NuSvcScikitTest(unittest.TestCase):
 @unittest.skipIf(not HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
 class NuSVCLibSVMTest(unittest.TestCase):
     # Model parameters for testing
-    base_param = '-s 1 -q ' # model type C-SVC and quiet mode
+    base_param = '-s 1 -q' # model type C-SVC and quiet mode
     non_kernel_parameters = ['', '-n 0.6 -p 0.5 -h 1', '-c 0.5 -p 0.5 -h 0']
     kernel_parameters = [
         '-t 0', # linear kernel
@@ -185,8 +185,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
         df = self.df
 
         param_str = ' '.join([self.base_param, param1, param2, probability_param])
-        param = svm_parameter(param_str)
-
+        param = svmutil.svm_parameter(param_str)
         model = svm_train(self.prob, param)
 
         # Get predictions with probabilities as dictionaries
@@ -231,7 +230,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
         for param1 in self.non_kernel_parameters:
             for param2 in self.kernel_parameters:
                 param_str = ' '.join([self.base_param, param1, param2])
-                param = svm_parameter(param_str)
+                param = svmutil.svm_parameter(param_str)
 
                 model = svm_train(prob, param)
 

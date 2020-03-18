@@ -36,7 +36,6 @@ enum MLModelType: int {
     MLModelType_wordEmbedding = 2005,
     MLModelType_serializedModel = 3000,
     MLModelType_NOT_SET = 0,
-    MLModelType_reservedForENML = 0x454e4d4c,
 };
 
 __attribute__((__unused__))
@@ -111,9 +110,9 @@ static const char * MLModelType_Name(MLModelType x) {
         case MLModelType_serializedModel:
             return "MLModelType_serializedModel";
         case MLModelType_NOT_SET:
-        default:
             return "INVALID";
     }
+    return "INVALID";
 }
 
 #endif

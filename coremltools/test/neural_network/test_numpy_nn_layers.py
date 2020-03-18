@@ -2441,7 +2441,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
         number_of_test = 0
         for N_M in N_M_pairs_to_test:
-            for B in [1, 5]:
+            for B in [1]:  # [1, 5] TODO Re-enable when rdar://60280745 is fixed
                 for C in [1, 7]:
                     N, M = N_M
 
@@ -4496,11 +4496,12 @@ class CoreML3NetworkStressTest(CorrectnessTest):
             kernel_size = [1,3,5], # square kernels
             strides = [1,2],
             dilation_rate = [1],
+            batch_size = [1, 64, 512, 1024, 2048]
         )
 
         input_size = 16
         input_channels = 3
-        input_dim = (1, input_channels, input_size, input_size)
+        input_dim = [1, input_channels, input_size, input_size]
 
         def conv_spatial_size(image_size, kernel_size, stride, dilation,
                 padding):
@@ -4520,6 +4521,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
             weight_dim = (kwargs['filters'], input_channels,
                 kwargs['kernel_size'], kwargs['kernel_size'])
 
+            input_dim[0] = kwargs['batch_size']
             input_features = [
                 ('input', datatypes.Array(*input_dim)),
                 ('weight', datatypes.Array(*weight_dim))]
@@ -4558,7 +4560,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
 
             input_val = np.ones(input_dim)
             weight_val = np.ones(weight_dim)
-            output_dim = (1, kwargs['filters'], out_spatial_size, out_spatial_size)
+            output_dim = (kwargs['batch_size'], kwargs['filters'], out_spatial_size, out_spatial_size)
             expected = np.ones(output_dim) * (kwargs['kernel_size'] * kwargs['kernel_size'] * input_channels)
 
             feed_dict = {'input': input_val, 'weight': weight_val}
@@ -4653,7 +4655,6 @@ class CoreML3NetworkStressTest(CorrectnessTest):
         input = {'starting_vector': starting_vector, 'matrix': A.astype(np.float)}
         expected = {'maximum_eigen_value': e[idx]}
         self._test_model(spec, input, expected, useCPUOnly=True)
-
 
 @unittest.skipIf(macos_version() < LAYERS_10_16_MACOS_VERSION,
                  'macOS 10.16+ required. Skipping tests.')
@@ -5094,7 +5095,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
                             self.upsample_pytorch_test(input_h, input_w, scale_h, scale_w, align_corners, cpu_only)
 
     def upsample_pytorch_test(self, h, w, scale_h, scale_w, align_corners, cpu_only):
-        input_dim = (1, h, w)
+        input_dim = (1, 1, h, w)
         if align_corners:
             linear_upsample_mode = 'ALIGN_CORNERS_TRUE'
         else:
@@ -5104,7 +5105,8 @@ class IOS14SingleLayerTests(CorrectnessTest):
         output_features = [('output', None)]
 
         builder = neural_network.NeuralNetworkBuilder(input_features,
-                                                      output_features)
+                                                      output_features,
+                                                      disable_rank5_shape_mapping=True)
         builder.add_upsample(name='upsample',
                              scaling_factor_h=scale_h, scaling_factor_w=scale_w,
                              linear_upsample_mode=linear_upsample_mode,
@@ -5120,13 +5122,40 @@ class IOS14SingleLayerTests(CorrectnessTest):
         pytorch_output = m(x)
 
         # Expect PyTorch output matches CoreML output
-        expected = {
-            'output': np.array([pytorch_output.numpy()])
-        }
+        expected = {'output': pytorch_output.numpy()}
 
         self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
         self.assertEquals(len(input_dim), builder._get_rank('output'))
 
+    def test_slice_by_size_cpu(self, cpu_only = True):
+
+        shapes = [(4,), (3,4), (2,5,6), (3,5,2,4), (4,5,3,6,7)]
+
+        for shape in shapes:
+            for axis in range(len(shape)):
+                begin = np.random.randint(shape[axis])
+                begin_input = np.array([begin]).astype(np.float32)
+                size = np.random.randint(shape[axis]-begin)+1
+
+                x = np.random.rand(*shape)
+                slices = []
+                for i in range(len(shape)):
+                    if i != axis:
+                        slices.append(slice(None, None, None))
+                    else:
+                        slices.append(slice(begin, begin+size, 1))
+                expected = {"output": x[slices]}
+
+
+                input_features = [('data', datatypes.Array(*shape)), ('begin', datatypes.Array(1))]
+                output_features = [('output', datatypes.Array(*x[slices].shape))]
+                builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                              disable_rank5_shape_mapping=True)
+                builder.add_slice_by_size("slice_by_size", ["data", "begin"], "output",
+                                          axis=axis, size=size)
+
+                input = {'data': x, 'begin': begin_input}
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
     def _test_conv3d(self, cpu_only):
         input_shapes = [(1,1,10,20,20), (1,1,3,3,3), (3,4,10,17,90)]

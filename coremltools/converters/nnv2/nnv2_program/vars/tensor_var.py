@@ -8,7 +8,6 @@ from attr import attrs, attrib
 
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.nnv2_program.program import Operation
-from coremltools.converters.nnv2.nnv2_program.program.type_utils import builtin_to_str
 from coremltools.converters.nnv2.nnv2_program.var import Var, _SymbolicMixin
 from coremltools.converters.nnv2.builtin_types.symbolic import (is_symbolic,\
                                                                 any_symbolic,
@@ -88,7 +87,7 @@ class TensorVar(Var, _SymbolicMixin):
         type_str = str(self.shape)[:-1]  # trim the ")"
         if len(self.shape) > 1:
             type_str += ", "
-        type_str += builtin_to_str[self.dtype] + ")" + annotation
+        type_str += builtins.builtin_to_string(self.dtype) + ")" + annotation
         return type_str
 
     def get_value(self, allow_symbolic=False):

@@ -51,7 +51,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     if not(HAS_LIBSVM):
         raise RuntimeError('libsvm not found. libsvm conversion API is disabled.')
     
-    import svm as libsvm
+    from libsvm import svm as _svm
     from ...proto import SVM_pb2
     from ...proto import Model_pb2
     from ...proto import FeatureTypes_pb2
@@ -63,7 +63,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     export_spec = Model_pb2.Model()
     export_spec.specificationVersion = SPECIFICATION_VERSION
 
-    if(svm_type_enum == libsvm.EPSILON_SVR or svm_type_enum == libsvm.NU_SVR):
+    if(svm_type_enum == _svm.EPSILON_SVR or svm_type_enum == _svm.NU_SVR):
         svm = export_spec.supportVectorRegressor
     else:
         svm = export_spec.supportVectorClassifier
@@ -100,12 +100,12 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     output.name = target
 
     # Set the interface types
-    if(svm_type_enum == libsvm.EPSILON_SVR or svm_type_enum == libsvm.NU_SVR):
+    if(svm_type_enum == _svm.EPSILON_SVR or svm_type_enum == _svm.NU_SVR):
         export_spec.description.predictedFeatureName = target
         output.type.doubleType.MergeFromString(b'')
         nr_class = 2
 
-    elif(svm_type_enum == libsvm.C_SVC or svm_type_enum == libsvm.NU_SVC):
+    elif(svm_type_enum == _svm.C_SVC or svm_type_enum == _svm.NU_SVC):
         export_spec.description.predictedFeatureName = target
         output.type.int64Type.MergeFromString(b'')
 
@@ -125,15 +125,15 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     else:
         raise ValueError('Only the following SVM types are supported: C_SVC, NU_SVC, EPSILON_SVR, NU_SVR')
 
-    if(libsvm_model.param.kernel_type == libsvm.LINEAR):
+    if(libsvm_model.param.kernel_type == _svm.LINEAR):
         svm.kernel.linearKernel.MergeFromString(b'')  # Hack to set kernel to an empty type
-    elif(libsvm_model.param.kernel_type == libsvm.RBF):
+    elif(libsvm_model.param.kernel_type == _svm.RBF):
         svm.kernel.rbfKernel.gamma = libsvm_model.param.gamma
-    elif(libsvm_model.param.kernel_type == libsvm.POLY):
+    elif(libsvm_model.param.kernel_type == _svm.POLY):
         svm.kernel.polyKernel.degree = libsvm_model.param.degree
         svm.kernel.polyKernel.c = libsvm_model.param.coef0
         svm.kernel.polyKernel.gamma = libsvm_model.param.gamma
-    elif(libsvm_model.param.kernel_type == libsvm.SIGMOID):
+    elif(libsvm_model.param.kernel_type == _svm.SIGMOID):
         svm.kernel.sigmoidKernel.c = libsvm_model.param.coef0
         svm.kernel.sigmoidKernel.gamma = libsvm_model.param.gamma
     else:
@@ -141,7 +141,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
 
     # set rho
     # also set probA/ProbB only for SVC
-    if(svm_type_enum == libsvm.C_SVC or svm_type_enum == libsvm.NU_SVC):
+    if(svm_type_enum == _svm.C_SVC or svm_type_enum == _svm.NU_SVC):
         num_class_pairs = nr_class * (nr_class-1)//2
         for i in range(num_class_pairs):
             svm.rho.append(libsvm_model.rho[i])
@@ -153,7 +153,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
         svm.rho = libsvm_model.rho[0]
 
     # set coefficents
-    if(svm_type_enum == libsvm.C_SVC or svm_type_enum == libsvm.NU_SVC):
+    if(svm_type_enum == _svm.C_SVC or svm_type_enum == _svm.NU_SVC):
         for _ in range(nr_class - 1):
             svm.coefficients.add()
         for i in range(libsvm_model.l):

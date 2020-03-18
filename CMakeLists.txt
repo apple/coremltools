@@ -16,6 +16,10 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   ")
 endif()
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 find_program(HAS_CCACHE ccache)
 if(HAS_CCACHE)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
@@ -42,27 +46,9 @@ include_directories(
   ${PYTHON_INCLUDE_DIRS}
   )
 
-set(CMAKE_CXX_FLAGS " \
-${CMAKE_CXX_FLAGS} \
---std=c++14 \
-")
-
 if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc ")
 endif()
-
-set(CMAKE_EXE_LINKER_FLAGS " \
-${CMAKE_EXE_LINKER_FLAGS} \
---std=c++14 \
-")
-set(CMAKE_MODULE_LINKER_FLAGS " \
-${CMAKE_MODULE_LINKER_FLAGS} \
---std=c++14 \
-")
-set(CMAKE_SHARED_LINKER_FLAGS " \
-${CMAKE_SHARED_LINKER_FLAGS} \
---std=c++14 \
-")
 
 add_library(caffeconverter
   SHARED

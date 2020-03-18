@@ -3,7 +3,9 @@ import six
 import numpy as np
 
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
+from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
+
 
 @register_tf_op(tf_alias=['BiasAdd'])
 def Add(context, node):
@@ -430,13 +432,18 @@ def get_tuple(context, node):
         raise ValueError("Op type {} should return multiple output.".format(
             node.inputs[0].op))
     idx = node.attr['index']
-    context.add(node.name, x[idx])
+    context.add(node.name, x[idx], is_new_var=False)
 
 @register_tf_op
 def Identity(context, node):
     # Don't change tfssa. Just make downstream ops reference the pre-identity op.
     x = context[node.inputs[0]]
-    context.add(node.name, x)
+    context.add(node.name, x, is_new_var=False)
+
+@register_tf_op
+def Placeholder(context, node):
+    # no-op as we add Placeholder separately.
+    pass
 
 def _pool_pads_or_strides(tf_spec, data_format, d_rank):
     if tf_spec is None:
@@ -548,6 +555,14 @@ def Sinh(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def Slice(context, node):
+    x = context[node.inputs[0]]
+    begin = context[node.inputs[1]]
+    size = context[node.inputs[2]]
+    res = cb.slice_by_size(x=x, begin=begin, size=size, name=node.name)
+    context.add(node.name, res)
+
+@register_tf_op
 def Sqrt(context, node):
     x = context[node.inputs[0]]
     x = cb.sqrt(x=x, name=node.name)
@@ -558,7 +573,6 @@ def Square(context, node):
     x = context[node.inputs[0]]
     x = cb.square(x=x, name=node.name)
     context.add(node.name, x)
-
 
 @register_tf_op
 def Sum(context, node):
@@ -578,11 +592,11 @@ def Tan(context, node):
 @register_tf_op
 def get_tuple(context, node):
     x = context[node.inputs[0]]
-    if not isinstance(x, list):
-        raise ValueError("Op type {} should return multiple output.".format(
-            node.inputs[0].op))
+    if not isinstance(x, (list, tuple)):
+        raise ValueError("Op {} should return multiple output.".format(
+            node.inputs[0]))
     idx = node.attr['index']
-    context.add(node.name, x[idx])
+    context.add(node.name, x[idx], is_new_var=False)
 
 @register_tf_op
 def Mean(context, node):
@@ -808,7 +822,6 @@ def Tile(context, node):
     x = cb.tile(x=x, reps = reps, name=node.name)
     context.add(node.name, x)
 
-
 @register_tf_op
 def Where(context, node):
     x = context[node.inputs[0]]
@@ -822,6 +835,7 @@ def SquaredDifference(context, node):
     x = cb.sub(x=x, y=y)
     x = cb.square(x=x, name=node.name)
     context.add(node.name, x)
+
 
 @register_tf_op
 def Conv2DBackpropInput(context, node):
@@ -862,3 +876,325 @@ def Conv2DBackpropInput(context, node):
     if data_format == "NHWC":
         x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
     context.add(node.name, x)
+
+
+@register_tf_op
+def Range(context,node):
+    start = context[node.inputs[0]]
+    end = context[node.inputs[1]]
+    step = context[node.inputs[2]]
+    x = cb.range_1d(start=start, end=end, step=step, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
+def OneHot(context,node):
+    indices = context[node.inputs[0]]
+    depth = context[node.inputs[1]]
+    on_value = context[node.inputs[2]]
+    off_value = context[node.inputs[3]]
+    axis = node.attr.get('axis', -1)
+    x = cb.one_hot(indices=indices,one_hot_vector_size=depth, axis = axis,
+                  on_value = on_value, off_value = off_value, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op(tf_alias=['NonMaxSuppressionV3'])
+def NonMaxSuppression(context, node):
+    boxes = context[node.inputs[0]]
+    scores = context[node.inputs[1]]
+    max_boxes = context[node.inputs[2]]
+    iou_threshold = context[node.inputs[3]]
+    score_threshold = context[node.inputs[4]]
+    if score_threshold.val == float('-inf'):
+        # TensorFlow's default value for score_threshold, Core ML does not
+        # have float('-inf') support, converted to minimum float32 instead
+        score_threshold = -3.4e38
+    boxes = cb.expand_dims(x=boxes, axis=0)
+    scores = cb.expand_dims(x=scores, axis=0)
+    scores = cb.expand_dims(x=scores, axis=-1)
+    _, _, x, _ = cb.non_maximum_suppression(
+        boxes=boxes,
+        scores=scores,
+        max_boxes=max_boxes,
+        iou_threshold=iou_threshold,
+        score_threshold=score_threshold)
+    x = cb.squeeze(x=x, axes=[0], name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
+def Shape(context, node):
+    x = context[node.inputs[0]]
+    x = cb.shape(x=x, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
+def ResizeNearestNeighbor(context, node):
+    # "ResizeNearestNeighbor" op in TF is always in the channel last mode
+    # instead of upsample factor, it uses output size, which is the second input
+    x = context[node.inputs[0]]
+
+    input_shape = x.shape # (N,Hin,Win,C)
+    if len(input_shape) != 4:
+        raise ValueError('\"ResizeNearestNeighbor\" op: input rank is not 4')
+    Hin, Win = input_shape[1:3]
+
+    if context[node.inputs[1]].val is None:
+        raise ValueError(
+            '\"ResizeNearestNeighbor\" op: the second input, which is the output size, must be known statically')
+
+    if len(context[node.inputs[1]].val) != 2:
+        raise ValueError(
+            '\"ResizeNearestNeighbor\" op: the second input, which is the output size, must have 2 elements')
+
+    Hout, Wout = context[node.inputs[1]].val
+
+    if not (isinstance(Hout, np.int32) and isinstance(Wout, np.int32)):
+        raise ValueError(
+            '\"ResizeNearestNeighbor\" op: the second input, which is the output size, must have elements of type int32')
+
+    if (Hout % Hin > 0 or Wout % Win > 0):
+        raise ValueError('\"ResizeNearestNeighbor\" op: fractional upsampling factors not supported')
+
+    scaling_factor_h = int(Hout / Hin)
+    scaling_factor_w = int(Wout / Win)
+
+    # first transpose to from channel last to channel first format for coreml
+    x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+    # add the upsample layer
+    x = cb.upsample_nearest_neighbor(x=x,
+                                     upscale_factor_height=scaling_factor_h,
+                                     upscale_factor_width=scaling_factor_w,
+                                     name=node.name + '_channel_first_upsample')
+    # transpose again
+    x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+
+    context.add(node.name, x)
+
+
+@register_tf_op
+def ResizeBilinear(context, node):
+    # "ResizeBilinear" op in TF is always in the channel last mode
+    # second input is the output size
+
+    x = context[node.inputs[0]]
+    input_shape = x.shape  # (N,Hin,Win,C)
+    if len(input_shape) != 4:
+        raise ValueError('\"ResizeBilinear\" op: input rank is not 4')
+    Hin, Win = input_shape[1:3]
+
+    if context[node.inputs[1]].val is None:
+        raise ValueError(
+            '\"ResizeBilinear\" op: the second input, which is the output size, must be known statically')
+
+    if len(context[node.inputs[1]].val) != 2:
+        raise ValueError(
+            '\"ResizeBilinear\" op: the second input, which is the output size, must have 2 elements')
+
+    Hout, Wout = context[node.inputs[1]].val
+
+    if not (isinstance(Hout, np.int32) and isinstance(Wout, np.int32)):
+        raise ValueError(
+            '\"ResizeBilinear\" op: the second input, which is the output size, must have elements of type int32')
+
+    align_corners = node.attr.get('align_corners', False)
+    half_pixel_centers = node.attr.get('half_pixel_centers', False)
+
+    # first transpose to from channel last to channel first format for coreml
+    x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+
+    # add either the resize_bilinear layer or the upsample layer
+
+    # [align_corners = True, half_pixel_centers = False]
+    if align_corners and not half_pixel_centers:
+        x = cb.resize_bilinear(x=x,
+                               target_size_height=Hout,
+                               target_size_width=Wout,
+                               sampling_mode = "STRICT_ALIGN_CORNERS",
+                               name=node.name + '_channel_first_resize_bilinear')
+
+    # [align_corners = False, half_pixel_centers = False]
+    elif not align_corners and not half_pixel_centers:
+        x = cb.resize_bilinear(x=x,
+                               target_size_height=Hout,
+                               target_size_width=Wout,
+                               sampling_mode = "DEFAULT",
+                               name=node.name + '_channel_first_resize_bilinear')
+
+    # [align_corners = False, half_pixel_centers = True]
+    elif not align_corners and half_pixel_centers:
+        x = cb.upsample_bilinear(x=x,
+                                 scale_factor_height= (float(Hout) + 1e-2) / float(Hin),
+                                 scale_factor_width= (float(Wout) + 1e-2) / float(Win),
+                                 align_corners=False,
+                                 name=node.name + '_channel_first_upsample_bilinear')
+
+    else:
+        # we should not come here since TF does not support align_corners=True and half_pixel_centers=True
+        raise ValueError(
+            '\"ResizeBilinear\" op: \"align_corners\" and \"half_pixel_centers\" are both True and this mode is not supported')
+
+
+    # transpose again
+    x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
+def make_tuple(context, node):
+    res = tuple([context[in_name] for in_name in node.inputs])
+    context.add(node.name, res)
+
+@register_tf_op
+def function_entry(context, node):
+    if context.get_func_inputs() is None:
+        msg = 'function_entry requires function inputs stored in ' + \
+                'context.curr_func_inputs'
+        raise ValueError(msg)
+    context.add(node.name, context.get_func_inputs())
+
+@register_tf_op(tf_alias=['while'])
+def While(context, node):
+    # TODO(rdar://60331615): Add/fix TensorFlow 2 control flow
+    #
+    # TF while will never have break statement, because break can always be
+    # transformed into while and condition. Example:
+    #
+    #   while pred:
+    #    a = op1(...)
+    #    if a == 0:
+    #      break
+    #    b = op2(...)
+    #
+    # is equivalent to
+    #
+    #   while pred and not break_a:
+    #    a = op1(...)
+    #    break_a = a == 0
+    #    if not break_a:
+    #      b = op2(...)
+
+    # node.inputs[0] == 'make_tuple_X' (always a make_tuple)
+    loop_vars = context[node.inputs[0]]  # python tuple of Vars
+    cond_graph = context.get_graph(node.attr['cond_function'])
+    body_graph = context.get_graph(node.attr['body_function'])
+    def cond(*loop_vars):
+        context.stack_func_inputs(loop_vars)
+
+        # convert_graph uses context to convert cond_graph. During conversion
+        # it constructs operations (cb.some_op). Note that cond(*loop_vars) is
+        # only evaluated inside while_loop's type_inference(), not here. In
+        # other words, we use python's deferred function evaluation to defer
+        # the SSA block construction until inside while_loop Operation.
+        res = convert_graph(context, cond_graph)
+        # Done with translating the function
+        context.unstack_func_inputs()
+        return res
+    def body(*loop_vars):
+        context.stack_func_inputs(loop_vars)
+        res = convert_graph(context, body_graph)
+        # Done with translating the function
+        context.unstack_func_inputs()
+        return res
+    x = cb.while_loop(_cond=cond, _body=body, loop_vars=loop_vars,
+            name=node.name)
+    # wraps x as tuple for get_tuple that always follow the while node.
+    if not isinstance(x, (tuple, list)):
+        x = (x,)
+    context.add(node.name, x)
+
+@register_tf_op
+def iff(context, node):
+    pred = context[node.inputs[0]]
+
+    # this is always a tensor, as TF uses one iff op for each returned value.
+    #
+    # Example TF program:
+    #
+    #  x = tf.placeholder(tf.float32, shape=(1,))
+    #  y = tf.placeholder(tf.float32, shape=(1,))
+    #  z = tf.multiply(x, y)
+    #  pred = tf.less(tf.math.reduce_mean(x), tf.math.reduce_mean(y))
+    #  def true_fn(): return tf.add(x, z), x
+    #  def false_fn(): return tf.square(y), z
+    #  res = tf.cond(pred, true_fn, false_fn)
+    #
+    # There will be 2 iffs:
+    #
+    # iff('cond/pred_id', 'cond/Add', 'cond/Square')
+    # iff('cond/pred_id', 'cond/Add/Switch', 'cond/Switch_1')
+    #
+    # where
+    #   'cond/pred_id': pred
+    #   'cond/Add': tf.add(x, z)
+    #   'cond/Square': tf.square(y)
+    #   'cond/Add/Switch': x
+    #   'cond/Switch_1': z
+    #
+    # And both branches are executed, and one of the results will be
+    # discarded at iff nodes.
+    #
+    # Note that the above program would translate to two cond ops, each with
+    # two blocks.
+    true_output_var = context[node.inputs[1]]
+    false_output_var = context[node.inputs[2]]
+
+    def true_fn():
+        return cb.identity(x=true_output_var)
+    def false_fn():
+        return cb.identity(x=false_output_var)
+
+    x = cb.cond(pred=pred, _true_fn=true_fn, _false_fn=false_fn,
+            name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def ConcatV2(context, node):
+    values = [context[input] for input in node.inputs[:-1]]
+    axis = context[node.inputs[-1]]
+    x = cb.concat(values=values, axis=axis, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def Pack(context, node):
+    values = [context[name] for name in node.inputs]
+    axis = node.attr['axis']
+    if axis < 0:
+        # TF axis = -1 creates new dim at the end
+        axis += values[0].rank + 1
+    x = cb.stack(values=values, axis=axis, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def SplitV(context, node):
+    x = context[node.inputs[0]]
+    split_sizes = context[node.inputs[1]]
+    axis = context[node.inputs[2]]
+    if 'num_split' not in node.attr:
+        raise ValueError('num_splits not found in TF op {}'.format(node.name))
+    num_splits = node.attr['num_split']
+    x = cb.split(x=x, num_splits=num_splits, split_sizes=split_sizes,
+            axis=axis, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def Split(context, node):
+    axis = context[node.inputs[0]]
+    x = context[node.inputs[1]]
+    node.attr
+    if 'num_split' not in node.attr:
+        raise ValueError('num_splits not found in TF op {}'.format(node.name))
+    num_splits = node.attr['num_split']
+    x = cb.split(x=x, num_splits=num_splits, axis=axis, name=node.name)
+    context.add(node.name, x)
+    # TODO (rdar://60358242) If tf.split output is returned, there's no
+    # get_tuple nodes. Some graph pass is needed. Example:
+    #
+    #    x = tf.placeholder(tf.float32, shape=input_shape1)
+    #    res = tf.split(x, 3, axis=0)
+    #
+    # res are ['split:0', 'split:1', 'split']
+    #
+    # but node.outputs == ['gto_1', 'gto_2', 'gto_3']

@@ -329,6 +329,8 @@ Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetw
             return validateCumSumLayer(layer);
         case Specification::NeuralNetworkLayer::LayerCase::kArgSort:
             return validateArgsortLayer(layer);
+        case Specification::NeuralNetworkLayer::LayerCase::kSliceBySize:
+            return validateSliceBySizeLayer(layer);
         default:
             return validateFailUnknownType(layer);
     }

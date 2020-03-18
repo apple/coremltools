@@ -5,17 +5,6 @@ from .nnv2_program.program import SsaProgram, SsaFunction
 from coremltools.converters.nnv2 import converter
 
 
-def build_main_program(inputs):
-    def wrapper(main_block):
-        program = SsaProgram()
-        with SsaFunction(inputs) as func:
-            func.set_outputs([main_block(*func.inputs.values())])
-            program.add_function('main', func)
-        return program
-
-    return wrapper
-
-
 def assert_op_count_match(program, expect, op=None, verbose=False):
     """
     Assert number of ops match expected number. If op is not specified,
@@ -59,3 +48,8 @@ def assert_model_is_valid(program, inputs, backend='nnv1_proto',
     assert prediction is not None
     if verbose:
         print(prediction)
+
+def assert_same_output_names(prog1, prog2, func_name='main'):
+    prog1_outputs = [o.name for o in prog1[func_name].outputs]
+    prog2_outputs = [o.name for o in prog2[func_name].outputs]
+    assert prog1_outputs == prog2_outputs

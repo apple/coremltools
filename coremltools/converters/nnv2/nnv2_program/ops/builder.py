@@ -2,13 +2,13 @@ from collections import defaultdict
 import logging
 import copy
 
-from ..program.program import (curr_block, Placeholder, is_internal_input)
+from ..program.program import (curr_block,
+        SsaProgram, SsaFunction, Placeholder, is_internal_input)
 from ..program.input_type import (_InputType, InternalStringInputType,
                                  InternalScalarOrTensorInputType,
                                  ScalarOrTensorInputType, TupleInputType,
                                  InputSpec, InternalInputType,
-                                 PyFunctionInputType,
-                                 PyTupleInputType)
+                                 PyFunctionInputType)
 from ..program.var import InternalVar, Var
 
 
@@ -19,17 +19,16 @@ class CoremlBuilder:
     Example:
 
     from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
-    from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction, SsaValue
+    from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
 
     prog = SsaProgram()
-    prog.add_parameters({"w1": SsaValue(...)})
-    func_inputs = {"x": cm.placeholder(_shape=[2,3]),
-                   "y": cm.placeholder(_shape=[2,3])}
+    func_inputs = {"x": cb.placeholder(_shape=[2,3]),
+                   "y": cb.placeholder(_shape=[2,3])}
     with SsaFunction(func_inputs) as ssa_fun:
-      a, b = ssa_func.inputs['x'], ssa_func.inputs['x']
-      res_var = cb.add(a, b) # created within ssa_fun block
-      ssa_func.set_outputs([res_var])
-      prog.add_function("main", ssa_func)
+      x, y = ssa_fun.inputs['x'], ssa_fun.inputs['x']
+      res_var = cb.add(x=x, y=y) # created within ssa_fun block
+      ssa_fun.set_outputs([res_var])
+    prog.add_function("main", ssa_fun)
     """
     name_count = defaultdict(int)
 
@@ -48,43 +47,15 @@ class CoremlBuilder:
     @classmethod
     def _add_const_immediate_value(cls, val, name, before_op):
         const_name = cls._get_free_name(name)
-        const_input_types = InputSpec(
-            mode=InternalStringInputType(const=True,
-                                         default="immediate_value"),
-            val=InternalScalarOrTensorInputType(const=True),
-        )
         logging.debug("Adding immediate value op {}".format(const_name))
         output_var = cls.const(mode="immediate_value",
                                val=val,
                                name=const_name,
-                               input_types=const_input_types,
                                before_op=before_op)
         return output_var
 
-    @staticmethod
-    def _collect_input_types(op_cls):
-        """
-        Return input_name (str) --> input type (_InputType) mapping.
-
-        If Op1 subclasses Op2, which subclass Operation,
-        CoremlBuilder._collect_input_types(Op1) return input types from both
-        Op1 and Op2
-        """
-        input_types = InputSpec()
-        for x in op_cls.mro()[:-2]:  # excluding Operation and object
-            op_input_types = getattr(x, "input_types", None)
-            if op_input_types is not None:
-                input_types.update(copy.deepcopy(op_input_types))
-        input_types = input_types.input_types
-
-        for k, v in input_types.items():
-            if not isinstance(v, _InputType):
-                raise RuntimeError(
-                    "Input {} should be an _InputType".format(k))
-        return input_types
-
     @classmethod
-    def _create_input_vars(cls, input_types, op_name, op_cls, before_op,
+    def _create_input_vars(cls, input_spec, op_name, op_cls, before_op,
                            kwargs):
         """
         1. Create Var for optional input types with default values that's not
@@ -94,13 +65,14 @@ class CoremlBuilder:
 
         Inputs:
 
-        input_types (dict of str --> _InputType)
+        input_spec (InputSpec)
         op_name (str): op name.
         before_op: created all vars / const op will come right before
                    `before_op` in the block's order. None to append at the end.
         """
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
         update_dict = {}
-        for in_name, in_type in input_types.items():
+        for in_name, in_type in input_spec.input_types.items():
             new_var_name = op_name + "_" + in_name
             if not in_type.optional and in_name not in kwargs:
                 raise ValueError("Input {} is required for op {}.".format(\
@@ -123,7 +95,13 @@ class CoremlBuilder:
                     curr_block().add_internal_var(var)
                 else:
                     if isinstance(in_type, TupleInputType):
-                        var = cls._make_tuple(elems=val)
+                        var = []
+                        for i, v in enumerate(val):
+                            if isinstance(v, Var):
+                                var.append(v)
+                                continue
+                            var.append(cls._add_const_immediate_value(
+                                v, new_var_name+str(i), before_op))
                     elif isinstance(in_type, ScalarOrTensorInputType):
                         var = cls._add_const_immediate_value(
                             val, new_var_name, before_op)
@@ -135,14 +113,17 @@ class CoremlBuilder:
                 update_dict[in_name] = var
 
             elif in_name not in kwargs and in_type.default is not None:
-                if isinstance(in_type, (PyFunctionInputType, TupleInputType)):
-                    msg = "Default value is not allowed for PyFunctionInputType " +\
-                        "and TupleInputType"
+                if isinstance(in_type, PyFunctionInputType):
+                    msg = "Default value is not allowed for PyFunctionInputType"
                     raise ValueError(msg)
                 # Create a Var from the default value.
                 if is_internal_input(in_name):
                     var = InternalVar(in_type.default, name=new_var_name)
                     curr_block().add_internal_var(var)
+                elif isinstance(in_type, TupleInputType):
+                    var = tuple(cls._add_const_immediate_value(
+                        v, new_var_name+str(i), before_op) \
+                                for i, v in enumerate(in_type.default))
                 else:
                     var = cls._add_const_immediate_value(
                         in_type.default, new_var_name, before_op)
@@ -160,13 +141,13 @@ class CoremlBuilder:
         kwargs = cls._maybe_set_name(kwargs, op_cls.__name__)
         logging.info("Adding op {} of type {}".format(kwargs["name"],
                                                       op_cls.__name__))
-        input_types = CoremlBuilder._collect_input_types(op_cls)
         before_op = kwargs.get('before_op', None)
-        kwargs = cls._create_input_vars(input_types, kwargs['name'], op_cls,
+        kwargs = cls._create_input_vars(op_cls.input_spec, kwargs['name'], op_cls,
                                         before_op, kwargs)
-        kwargs['input_types'] = input_types
         new_op = op_cls(**kwargs)
         curr_block().insert_op_before(new_op, before_op=before_op)
+        new_op.build_nested_blocks()
+        new_op.type_value_inference()
         if len(new_op.outputs) == 1:
             return new_op.outputs[0]
         return new_op.outputs
@@ -174,3 +155,40 @@ class CoremlBuilder:
     @staticmethod
     def placeholder(shape, dtype=None):
         return Placeholder(shape, dtype)
+
+    @staticmethod
+    def TensorSpec(shape, dtype=None):
+        return Placeholder(shape, dtype)
+
+    @staticmethod
+    def program(input_specs=None):
+        """
+        Usage:
+
+        @cb.program(input_specs=[cb.TensorSpec(shape=(1,2))])
+        def prog(a):
+            return cb.add(x=a, y=2)
+        """
+        if input_specs is None:
+            input_specs = []
+        def wrapper(main_block):
+            program = SsaProgram()
+            num_args = main_block.__code__.co_argcount
+            arg_names = list(main_block.__code__.co_varnames)[:num_args]
+            if len(input_specs) != num_args:
+                msg = '{} expects {} inputs: {}. Got {} input_specs.'
+                raise ValueError(msg.format(main_block.__name__,
+                    num_args, arg_names, len(input_specs)))
+            input_spec_dict = {k: v for k, v in \
+                    zip(arg_names, input_specs)}
+            with SsaFunction(input_spec_dict) as func:
+                input_vars = [func.inputs[a] for a in arg_names]
+                outputs = main_block(*input_vars)
+                if isinstance(outputs, tuple):
+                    outputs = list(outputs)
+                elif not isinstance(outputs, list):
+                    outputs = [outputs]
+                func.set_outputs(outputs)
+                program.add_function('main', func)
+            return program
+        return wrapper

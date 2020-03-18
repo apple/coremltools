@@ -697,6 +697,7 @@ message NeuralNetworkLayer {
         Pooling3DLayerParams pooling3d = 1465;
         GlobalPooling3DLayerParams globalPooling3d = 1466;
         Convolution3DLayerParams convolution3d = 1470;
+        SliceBySizeLayerParams sliceBySize = 1475;
 
     }
 
@@ -1431,10 +1432,8 @@ message LookUpTableQuantizationParams {
  *     convolution layer can have 2 inputs, in which case the second input is
  *     the blob representing the weights. This is allowed when "isDeconvolution" = False.
  *     The weight blob should have shape
- *     If convolution (``isDeconvolution == false``), weights have the shape
- *     ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels / nGroups
- *     If deconvolution (``isDeconvolution == true``) weights have the shape
- *     ``[kernelChannels, outputChannels / nGroups, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels
+ *     ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``,
+ *     where kernelChannels == inputChannels / nGroups.
  *
  * Output
  *   Rank is same as the input. e.g.: for rank 4 input, output shape is [B, C_out, H_out, W_out]
@@ -1519,9 +1518,9 @@ message ConvolutionLayerParams {
     /**
      * Weights associated with this layer.
      * If convolution (``isDeconvolution == false``), weights have the shape
-     * ``[kernelHeight, kernelWidth, kernelChannels, outputChannels]``, where kernelChannels == inputChannels / nGroups
+     * ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels / nGroups
      * If deconvolution (``isDeconvolution == true``) weights have the shape
-     * ``[kernelHeight, kernelWidth, outputChannels / nGroups, kernelChannels]``, where kernelChannels == inputChannels
+     * ``[kernelChannels, outputChannels / nGroups, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels
      */
     WeightParams weights = 90;
     WeightParams bias = 91; /// Must be of size [outputChannels].
@@ -5814,6 +5813,7 @@ message SliceStaticLayerParams {
     repeated bool endMasks = 4;
     repeated int64 strides = 5;
 
+
 }
 
 /**
@@ -6162,6 +6162,32 @@ message ArgSortLayerParams {
 
     int64 axis = 1; /// must be between [0, input_rank - 1]
     bool descending = 2;
+
+}
+
+/**
+ * A layer that does slice operation by providing size to be extracted 
+ * from the given input tensor.
+ *
+ * Requires 2 inputs and produces 1 output.
+ * Rank of the output is same as the rank of the first input.
+ *
+ * The 1st input represents the tensor to be sliced.
+ * The 2nd input represents the beginning index to be sliced from.
+ *
+ * Example:
+ * Input 1: x (x.shape = (2, 3, 4))
+ * Input 2: begin
+ * size: 2
+ * axis: 1
+ *
+ * Output: x[:, begin:begin+2, :]
+ *
+ */
+message SliceBySizeLayerParams {
+
+    int64 size = 2;
+    int64 axis = 3;
 
 }
 

@@ -8,7 +8,6 @@ from attr import attrs, attrib
 
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.nnv2_program.program import Operation
-from coremltools.converters.nnv2.nnv2_program.program.type_utils import builtin_to_str
 from coremltools.converters.nnv2.nnv2_program.var import Var, _SymbolicMixin
 from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic
 
@@ -60,7 +59,7 @@ class ScalarVar(Var, _SymbolicMixin):
             annotation = "*"
         else:
             annotation = ""
-        return "({}){}".format(builtin_to_str[self.type], annotation)
+        return "({}){}".format(builtins.builtin_to_string(self.type), annotation)
 
     def get_value(self, allow_symbolic=False):
         if self.val is None:

@@ -16,7 +16,11 @@ def dead_code_elimination_block(block):
             continue
 
         # mark all op's inputs to used
-        used_vars.update([input_var for _, input_var in op.inputs.items()])
+        for _, input_var in op.inputs.items():
+            if isinstance(input_var, (tuple, list)):
+                used_vars.update(list(input_var))
+            else:
+                used_vars.update([input_var])
 
         for b in op.blocks:
             used_in_block = dead_code_elimination_block(b)
@@ -29,7 +33,7 @@ def dead_code_elimination_block(block):
     return used_vars
 
 
-@register_pass
+@register_pass(namespace='common')
 def dead_code_elimination(program):
     """
     Eliminate unused ops in program.

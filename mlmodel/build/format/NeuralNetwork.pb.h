@@ -651,6 +651,9 @@ extern SinhLayerParamsDefaultTypeInternal _SinhLayerParams_default_instance_;
 class SizeRange;
 class SizeRangeDefaultTypeInternal;
 extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
+class SliceBySizeLayerParams;
+class SliceBySizeLayerParamsDefaultTypeInternal;
+extern SliceBySizeLayerParamsDefaultTypeInternal _SliceBySizeLayerParams_default_instance_;
 class SliceDynamicLayerParams;
 class SliceDynamicLayerParamsDefaultTypeInternal;
 extern SliceDynamicLayerParamsDefaultTypeInternal _SliceDynamicLayerParams_default_instance_;
@@ -2979,6 +2982,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     kPooling3D = 1465,
     kGlobalPooling3D = 1466,
     kConvolution3D = 1470,
+    kSliceBySize = 1475,
     LAYER_NOT_SET = 0,
   };
 
@@ -4531,6 +4535,15 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   ::CoreML::Specification::Convolution3DLayerParams* release_convolution3d();
   void set_allocated_convolution3d(::CoreML::Specification::Convolution3DLayerParams* convolution3d);
 
+  // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+  bool has_slicebysize() const;
+  void clear_slicebysize();
+  static const int kSliceBySizeFieldNumber = 1475;
+  const ::CoreML::Specification::SliceBySizeLayerParams& slicebysize() const;
+  ::CoreML::Specification::SliceBySizeLayerParams* mutable_slicebysize();
+  ::CoreML::Specification::SliceBySizeLayerParams* release_slicebysize();
+  void set_allocated_slicebysize(::CoreML::Specification::SliceBySizeLayerParams* slicebysize);
+
   LayerCase layer_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.NeuralNetworkLayer)
  private:
@@ -4691,6 +4704,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   void set_has_pooling3d();
   void set_has_globalpooling3d();
   void set_has_convolution3d();
+  void set_has_slicebysize();
 
   inline bool has_layer() const;
   void clear_layer();
@@ -4862,6 +4876,7 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
     ::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d_;
     ::CoreML::Specification::Convolution3DLayerParams* convolution3d_;
+    ::CoreML::Specification::SliceBySizeLayerParams* slicebysize_;
   } layer_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -20890,6 +20905,91 @@ class ArgSortLayerParams : public ::google::protobuf::MessageLite /* @@protoc_in
 };
 // -------------------------------------------------------------------
 
+class SliceBySizeLayerParams : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.SliceBySizeLayerParams) */ {
+ public:
+  SliceBySizeLayerParams();
+  virtual ~SliceBySizeLayerParams();
+
+  SliceBySizeLayerParams(const SliceBySizeLayerParams& from);
+
+  inline SliceBySizeLayerParams& operator=(const SliceBySizeLayerParams& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const SliceBySizeLayerParams& default_instance();
+
+  static inline const SliceBySizeLayerParams* internal_default_instance() {
+    return reinterpret_cast<const SliceBySizeLayerParams*>(
+               &_SliceBySizeLayerParams_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    192;
+
+  void Swap(SliceBySizeLayerParams* other);
+
+  // implements Message ----------------------------------------------
+
+  inline SliceBySizeLayerParams* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  SliceBySizeLayerParams* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const SliceBySizeLayerParams& from);
+  void MergeFrom(const SliceBySizeLayerParams& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(SliceBySizeLayerParams* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // int64 size = 2;
+  void clear_size();
+  static const int kSizeFieldNumber = 2;
+  ::google::protobuf::int64 size() const;
+  void set_size(::google::protobuf::int64 value);
+
+  // int64 axis = 3;
+  void clear_axis();
+  static const int kAxisFieldNumber = 3;
+  ::google::protobuf::int64 axis() const;
+  void set_axis(::google::protobuf::int64 value);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.SliceBySizeLayerParams)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::int64 size_;
+  ::google::protobuf::int64 axis_;
+  mutable int _cached_size_;
+  friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class NeuralNetworkClassifier : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.NeuralNetworkClassifier) */ {
  public:
   NeuralNetworkClassifier();
@@ -20915,7 +21015,7 @@ class NeuralNetworkClassifier : public ::google::protobuf::MessageLite /* @@prot
                &_NeuralNetworkClassifier_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    192;
+    193;
 
   void Swap(NeuralNetworkClassifier* other);
 
@@ -21083,7 +21183,7 @@ class OneHotLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_OneHotLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    193;
+    194;
 
   void Swap(OneHotLayerParams* other);
 
@@ -21182,7 +21282,7 @@ class CumSumLayerParams : public ::google::protobuf::MessageLite /* @@protoc_ins
                &_CumSumLayerParams_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    194;
+    195;
 
   void Swap(CumSumLayerParams* other);
 
@@ -21274,7 +21374,7 @@ class NeuralNetworkRegressor : public ::google::protobuf::MessageLite /* @@proto
                &_NeuralNetworkRegressor_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    195;
+    196;
 
   void Swap(NeuralNetworkRegressor* other);
 
@@ -21395,7 +21495,7 @@ class NetworkUpdateParameters : public ::google::protobuf::MessageLite /* @@prot
                &_NetworkUpdateParameters_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    196;
+    197;
 
   void Swap(NetworkUpdateParameters* other);
 
@@ -21525,7 +21625,7 @@ class LossLayer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_LossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    197;
+    198;
 
   void Swap(LossLayer* other);
 
@@ -21643,7 +21743,7 @@ class CategoricalCrossEntropyLossLayer : public ::google::protobuf::MessageLite 
                &_CategoricalCrossEntropyLossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    198;
+    199;
 
   void Swap(CategoricalCrossEntropyLossLayer* other);
 
@@ -21744,7 +21844,7 @@ class MeanSquaredErrorLossLayer : public ::google::protobuf::MessageLite /* @@pr
                &_MeanSquaredErrorLossLayer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    199;
+    200;
 
   void Swap(MeanSquaredErrorLossLayer* other);
 
@@ -21851,7 +21951,7 @@ class Optimizer : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_Optimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    200;
+    201;
 
   void Swap(Optimizer* other);
 
@@ -21954,7 +22054,7 @@ class SGDOptimizer : public ::google::protobuf::MessageLite /* @@protoc_insertio
                &_SGDOptimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    201;
+    202;
 
   void Swap(SGDOptimizer* other);
 
@@ -22055,7 +22155,7 @@ class AdamOptimizer : public ::google::protobuf::MessageLite /* @@protoc_inserti
                &_AdamOptimizer_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    202;
+    203;
 
   void Swap(AdamOptimizer* other);
 
@@ -31343,6 +31443,54 @@ inline void NeuralNetworkLayer::set_allocated_convolution3d(::CoreML::Specificat
     layer_.convolution3d_ = convolution3d;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+}
+
+// .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+inline bool NeuralNetworkLayer::has_slicebysize() const {
+  return layer_case() == kSliceBySize;
+}
+inline void NeuralNetworkLayer::set_has_slicebysize() {
+  _oneof_case_[0] = kSliceBySize;
+}
+inline void NeuralNetworkLayer::clear_slicebysize() {
+  if (has_slicebysize()) {
+    delete layer_.slicebysize_;
+    clear_has_layer();
+  }
+}
+inline  const ::CoreML::Specification::SliceBySizeLayerParams& NeuralNetworkLayer::slicebysize() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
+  return has_slicebysize()
+      ? *layer_.slicebysize_
+      : ::CoreML::Specification::SliceBySizeLayerParams::default_instance();
+}
+inline ::CoreML::Specification::SliceBySizeLayerParams* NeuralNetworkLayer::mutable_slicebysize() {
+  if (!has_slicebysize()) {
+    clear_layer();
+    set_has_slicebysize();
+    layer_.slicebysize_ = new ::CoreML::Specification::SliceBySizeLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
+  return layer_.slicebysize_;
+}
+inline ::CoreML::Specification::SliceBySizeLayerParams* NeuralNetworkLayer::release_slicebysize() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
+  if (has_slicebysize()) {
+    clear_has_layer();
+    ::CoreML::Specification::SliceBySizeLayerParams* temp = layer_.slicebysize_;
+    layer_.slicebysize_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void NeuralNetworkLayer::set_allocated_slicebysize(::CoreML::Specification::SliceBySizeLayerParams* slicebysize) {
+  clear_layer();
+  if (slicebysize) {
+    set_has_slicebysize();
+    layer_.slicebysize_ = slicebysize;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
 }
 
 inline bool NeuralNetworkLayer::has_layer() const {
@@ -40859,6 +41007,38 @@ inline void ArgSortLayerParams::set_descending(bool value) {
 
 // -------------------------------------------------------------------
 
+// SliceBySizeLayerParams
+
+// int64 size = 2;
+inline void SliceBySizeLayerParams::clear_size() {
+  size_ = GOOGLE_LONGLONG(0);
+}
+inline ::google::protobuf::int64 SliceBySizeLayerParams::size() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SliceBySizeLayerParams.size)
+  return size_;
+}
+inline void SliceBySizeLayerParams::set_size(::google::protobuf::int64 value) {
+  
+  size_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SliceBySizeLayerParams.size)
+}
+
+// int64 axis = 3;
+inline void SliceBySizeLayerParams::clear_axis() {
+  axis_ = GOOGLE_LONGLONG(0);
+}
+inline ::google::protobuf::int64 SliceBySizeLayerParams::axis() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SliceBySizeLayerParams.axis)
+  return axis_;
+}
+inline void SliceBySizeLayerParams::set_axis(::google::protobuf::int64 value) {
+  
+  axis_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SliceBySizeLayerParams.axis)
+}
+
+// -------------------------------------------------------------------
+
 // NeuralNetworkClassifier
 
 // repeated .CoreML.Specification.NeuralNetworkLayer layers = 1;
@@ -42385,6 +42565,8 @@ inline void AdamOptimizer::set_allocated_eps(::CoreML::Specification::DoublePara
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

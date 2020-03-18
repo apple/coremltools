@@ -2,7 +2,7 @@ from coremltools.converters.nnv2.nnv2_program.vars import ScalarVar, TensorVar
 from coremltools.converters.nnv2.nnv2_program.program import Operation
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.builtins import int as bint, tensor as btensor
-from coremltools.converters.nnv2.builtin_types.builtins.type_mapping import builtin_from_nptype
+from coremltools.converters.nnv2.builtin_types.builtins import numpy_type_to_builtin_type
 
 from functools import reduce
 from sympy import symbols
@@ -64,7 +64,7 @@ def _make_builtin_tensor(np_dtype, shape, symbolic=False):
     else:
         size = reduce(lambda x, y: x*y, shape)
         np_tensor = np.asarray([range(size)]).reshape(shape).astype(np_dtype)
-    dtype = builtin_from_nptype(np_dtype)
+    dtype = numpy_type_to_builtin_type(np_dtype)
     tensor_t = btensor(dtype, shape)
     tensor_val = tensor_t()
     tensor_val.val = np_tensor
@@ -91,7 +91,7 @@ def test_tensor_var():
     # Missing value
     np_dtype = np.float32
     shape = (2,2)
-    tensor_t = btensor(builtin_from_nptype(np_dtype), shape)
+    tensor_t = btensor(numpy_type_to_builtin_type(np_dtype), shape)
     x = TensorVar("x", op, tensor_t, val=None)
     assert x.type == tensor_t
     assert x.val == None
@@ -108,7 +108,7 @@ def test_tensor_var():
     # Missing value with variadic rank
     np_dtype = np.float32
     shape = (3, symbols("*L"))
-    tensor_t = btensor(builtin_from_nptype(np_dtype), shape)
+    tensor_t = btensor(numpy_type_to_builtin_type(np_dtype), shape)
     x = TensorVar("x", op, tensor_t, val=None)
     assert x.type == tensor_t
     assert x.val == None

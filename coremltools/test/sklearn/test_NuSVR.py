@@ -14,8 +14,8 @@ from coremltools._deps import HAS_SKLEARN
 from coremltools.models.utils import evaluate_regressor, macos_version, is_macos
 
 if HAS_LIBSVM:
-    import svmutil
-    import svm
+    from libsvm import svmutil
+    from libsvm import svm
     from coremltools.converters import libsvm
 
 if HAS_SKLEARN:

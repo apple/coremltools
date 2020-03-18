@@ -42,7 +42,7 @@ except:
 # ---------------------------------------------------------------------------------------
 HAS_LIBSVM = True
 try:
-    import svm
+    from libsvm import svm
 except:
     HAS_LIBSVM = False
 
@@ -150,3 +150,10 @@ try:
     import caffe2
 except:
     HAS_CAFFE2 = False
+
+# ---------------------------------------------------------------------------------------
+HAS_TORCH = True
+try:
+    import torch
+except:
+    HAS_TORCH = False

@@ -634,6 +634,7 @@ bool CoreML::isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& 
         case Specification::NeuralNetworkLayer::LayerCase::kConvolution:
             return (layer.input().size() == 1);
         case Specification::NeuralNetworkLayer::LayerCase::kInnerProduct:
+            return !layer.innerproduct().int8dynamicquantize();
         case Specification::NeuralNetworkLayer::LayerCase::kBatchnorm:
         case Specification::NeuralNetworkLayer::LayerCase::kActivation:
         case Specification::NeuralNetworkLayer::LayerCase::kPooling:
@@ -646,6 +647,12 @@ bool CoreML::isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& 
         case Specification::NeuralNetworkLayer::LayerCase::kMultiply:
         case Specification::NeuralNetworkLayer::LayerCase::kUnary:
         case Specification::NeuralNetworkLayer::LayerCase::kUpsample:
+            if (layer.upsample().linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT) {
+                return false;
+            }
+            if (layer.upsample().fractionalscalingfactor_size() > 0) {
+                return false;
+            }
         case Specification::NeuralNetworkLayer::LayerCase::kBias:
         case Specification::NeuralNetworkLayer::LayerCase::kL2Normalize:
         case Specification::NeuralNetworkLayer::LayerCase::kReshape:
@@ -667,6 +674,9 @@ bool CoreML::isIOS12NeuralNetworkLayer(const Specification::NeuralNetworkLayer& 
         case Specification::NeuralNetworkLayer::LayerCase::kEmbedding:
         case Specification::NeuralNetworkLayer::LayerCase::kSequenceRepeat:
         case Specification::NeuralNetworkLayer::LayerCase::kReorganizeData:
+            if (layer.reorganizedata().mode() == Specification::ReorganizeDataLayerParams::PIXEL_SHUFFLE) {
+                      return false;
+            }
         case Specification::NeuralNetworkLayer::LayerCase::kSlice:
         case Specification::NeuralNetworkLayer::LayerCase::kCustom:
         case Specification::NeuralNetworkLayer::kResizeBilinear:
@@ -749,6 +759,7 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
                 case Specification::NeuralNetworkLayer::kPooling3D:
                 case Specification::NeuralNetworkLayer::kGlobalPooling3D:
                 case Specification::NeuralNetworkLayer::kConvolution3D:
+                case Specification::NeuralNetworkLayer::kSliceBySize:
                     return true;
                 case Specification::NeuralNetworkLayer::kUpsample:
                     if (layer.upsample().linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT) {

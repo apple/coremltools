@@ -1,11 +1,6 @@
-#from .const_elimination import const_elimination
-#from .matmul_to_linear import matmul_to_linear
-#from .dead_code_elimination import dead_code_elimination
-#from . import *
+# Import all passes in this dir
 from os.path import dirname, basename, isfile, join
 import glob
-
-# Import all passes
 excluded_files = [
         'pass_registry.py',
         'common_pass.py',

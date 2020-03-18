@@ -7,8 +7,8 @@ SHELL := /bin/bash
 SRC_PACKAGES=.
 
 TF_IOS13_TEST=../tensorflow/test
-NNV2_TEST=.
-NNV2_TEST_EXCLUDE=./nnv2_program/ops
+NNV2_TEST="."
+NNV2_TEST_INTERNAL="../../../../coremltools-internal/coremltools_internal/converters/nnv2"
 
 .PHONY: all lint test style checkstyle
 
@@ -30,7 +30,7 @@ lint:
 	${PYTHON} -m pylint -j 0 ${SRC_PACKAGES}
 
 test:
-	${PYTHON} -m pytest -W ignore::DeprecationWarning ${NNV2_TEST} # --ignore=${NNV2_TEST_EXCLUDE}
+	${PYTHON} -m pytest -W ignore::DeprecationWarning ${NNV2_TEST} ${NNV2_TEST_INTERNAL}
 
 test_ref:
 	${PYTHON} -m pytest -W ignore::DeprecationWarning ${TF_IOS13_TEST}

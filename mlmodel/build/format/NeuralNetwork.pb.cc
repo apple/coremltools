@@ -230,6 +230,7 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
   const ::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d_;
   const ::CoreML::Specification::Convolution3DLayerParams* convolution3d_;
+  const ::CoreML::Specification::SliceBySizeLayerParams* slicebysize_;
 } _NeuralNetworkLayer_default_instance_;
 class BranchLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BranchLayerParams> {
 } _BranchLayerParams_default_instance_;
@@ -595,6 +596,8 @@ class ClampedReLULayerParamsDefaultTypeInternal : public ::google::protobuf::int
 } _ClampedReLULayerParams_default_instance_;
 class ArgSortLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ArgSortLayerParams> {
 } _ArgSortLayerParams_default_instance_;
+class SliceBySizeLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<SliceBySizeLayerParams> {
+} _SliceBySizeLayerParams_default_instance_;
 class NeuralNetworkClassifierDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<NeuralNetworkClassifier> {
   public:
   const ::CoreML::Specification::StringVector* stringclasslabels_;
@@ -640,6 +643,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
     TableStruct::schema[] = {
+  { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
@@ -1038,6 +1042,7 @@ void TableStruct::Shutdown() {
   _NonMaximumSuppressionLayerParams_default_instance_.Shutdown();
   _ClampedReLULayerParams_default_instance_.Shutdown();
   _ArgSortLayerParams_default_instance_.Shutdown();
+  _SliceBySizeLayerParams_default_instance_.Shutdown();
   _NeuralNetworkClassifier_default_instance_.Shutdown();
   _OneHotLayerParams_default_instance_.Shutdown();
   _CumSumLayerParams_default_instance_.Shutdown();
@@ -1249,6 +1254,7 @@ void TableStruct::InitDefaultsImpl() {
   _NonMaximumSuppressionLayerParams_default_instance_.DefaultConstruct();
   _ClampedReLULayerParams_default_instance_.DefaultConstruct();
   _ArgSortLayerParams_default_instance_.DefaultConstruct();
+  _SliceBySizeLayerParams_default_instance_.DefaultConstruct();
   _NeuralNetworkClassifier_default_instance_.DefaultConstruct();
   _OneHotLayerParams_default_instance_.DefaultConstruct();
   _CumSumLayerParams_default_instance_.DefaultConstruct();
@@ -7660,6 +7666,7 @@ const int NeuralNetworkLayer::kArgSortFieldNumber;
 const int NeuralNetworkLayer::kPooling3DFieldNumber;
 const int NeuralNetworkLayer::kGlobalPooling3DFieldNumber;
 const int NeuralNetworkLayer::kConvolution3DFieldNumber;
+const int NeuralNetworkLayer::kSliceBySizeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NeuralNetworkLayer::NeuralNetworkLayer()
@@ -8312,6 +8319,10 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
     }
     case kConvolution3D: {
       mutable_convolution3d()->::CoreML::Specification::Convolution3DLayerParams::MergeFrom(from.convolution3d());
+      break;
+    }
+    case kSliceBySize: {
+      mutable_slicebysize()->::CoreML::Specification::SliceBySizeLayerParams::MergeFrom(from.slicebysize());
       break;
     }
     case LAYER_NOT_SET: {
@@ -8987,6 +8998,10 @@ void NeuralNetworkLayer::clear_layer() {
     }
     case kConvolution3D: {
       delete layer_.convolution3d_;
+      break;
+    }
+    case kSliceBySize: {
+      delete layer_.slicebysize_;
       break;
     }
     case LAYER_NOT_SET: {
@@ -10990,6 +11005,18 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+      case 1475: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(11802u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_slicebysize()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -12004,6 +12031,12 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
   if (has_convolution3d()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
       1470, *layer_.convolution3d_, output);
+  }
+
+  // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+  if (has_slicebysize()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1475, *layer_.slicebysize_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NeuralNetworkLayer)
@@ -13163,6 +13196,13 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.convolution3d_);
       break;
     }
+    // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+    case kSliceBySize: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.slicebysize_);
+      break;
+    }
     case LAYER_NOT_SET: {
       break;
     }
@@ -13824,6 +13864,10 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
     }
     case kConvolution3D: {
       mutable_convolution3d()->::CoreML::Specification::Convolution3DLayerParams::MergeFrom(from.convolution3d());
+      break;
+    }
+    case kSliceBySize: {
+      mutable_slicebysize()->::CoreML::Specification::SliceBySizeLayerParams::MergeFrom(from.slicebysize());
       break;
     }
     case LAYER_NOT_SET: {
@@ -21665,6 +21709,54 @@ void NeuralNetworkLayer::set_allocated_convolution3d(::CoreML::Specification::Co
     layer_.convolution3d_ = convolution3d;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+}
+
+// .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+bool NeuralNetworkLayer::has_slicebysize() const {
+  return layer_case() == kSliceBySize;
+}
+void NeuralNetworkLayer::set_has_slicebysize() {
+  _oneof_case_[0] = kSliceBySize;
+}
+void NeuralNetworkLayer::clear_slicebysize() {
+  if (has_slicebysize()) {
+    delete layer_.slicebysize_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::SliceBySizeLayerParams& NeuralNetworkLayer::slicebysize() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
+  return has_slicebysize()
+      ? *layer_.slicebysize_
+      : ::CoreML::Specification::SliceBySizeLayerParams::default_instance();
+}
+::CoreML::Specification::SliceBySizeLayerParams* NeuralNetworkLayer::mutable_slicebysize() {
+  if (!has_slicebysize()) {
+    clear_layer();
+    set_has_slicebysize();
+    layer_.slicebysize_ = new ::CoreML::Specification::SliceBySizeLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
+  return layer_.slicebysize_;
+}
+::CoreML::Specification::SliceBySizeLayerParams* NeuralNetworkLayer::release_slicebysize() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
+  if (has_slicebysize()) {
+    clear_has_layer();
+    ::CoreML::Specification::SliceBySizeLayerParams* temp = layer_.slicebysize_;
+    layer_.slicebysize_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_slicebysize(::CoreML::Specification::SliceBySizeLayerParams* slicebysize) {
+  clear_layer();
+  if (slicebysize) {
+    set_has_slicebysize();
+    layer_.slicebysize_ = slicebysize;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
 }
 
 bool NeuralNetworkLayer::has_layer() const {
@@ -69957,6 +70049,251 @@ void ArgSortLayerParams::set_descending(bool value) {
   
   descending_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ArgSortLayerParams.descending)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int SliceBySizeLayerParams::kSizeFieldNumber;
+const int SliceBySizeLayerParams::kAxisFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+SliceBySizeLayerParams::SliceBySizeLayerParams()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_NeuralNetwork_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.SliceBySizeLayerParams)
+}
+SliceBySizeLayerParams::SliceBySizeLayerParams(const SliceBySizeLayerParams& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::memcpy(&size_, &from.size_,
+    reinterpret_cast<char*>(&axis_) -
+    reinterpret_cast<char*>(&size_) + sizeof(axis_));
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.SliceBySizeLayerParams)
+}
+
+void SliceBySizeLayerParams::SharedCtor() {
+  ::memset(&size_, 0, reinterpret_cast<char*>(&axis_) -
+    reinterpret_cast<char*>(&size_) + sizeof(axis_));
+  _cached_size_ = 0;
+}
+
+SliceBySizeLayerParams::~SliceBySizeLayerParams() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.SliceBySizeLayerParams)
+  SharedDtor();
+}
+
+void SliceBySizeLayerParams::SharedDtor() {
+}
+
+void SliceBySizeLayerParams::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const SliceBySizeLayerParams& SliceBySizeLayerParams::default_instance() {
+  protobuf_NeuralNetwork_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+SliceBySizeLayerParams* SliceBySizeLayerParams::New(::google::protobuf::Arena* arena) const {
+  SliceBySizeLayerParams* n = new SliceBySizeLayerParams;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void SliceBySizeLayerParams::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.SliceBySizeLayerParams)
+  ::memset(&size_, 0, reinterpret_cast<char*>(&axis_) -
+    reinterpret_cast<char*>(&size_) + sizeof(axis_));
+}
+
+bool SliceBySizeLayerParams::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.SliceBySizeLayerParams)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // int64 size = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &size_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // int64 axis = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &axis_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.SliceBySizeLayerParams)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.SliceBySizeLayerParams)
+  return false;
+#undef DO_
+}
+
+void SliceBySizeLayerParams::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.SliceBySizeLayerParams)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // int64 size = 2;
+  if (this->size() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->size(), output);
+  }
+
+  // int64 axis = 3;
+  if (this->axis() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->axis(), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.SliceBySizeLayerParams)
+}
+
+size_t SliceBySizeLayerParams::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.SliceBySizeLayerParams)
+  size_t total_size = 0;
+
+  // int64 size = 2;
+  if (this->size() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int64Size(
+        this->size());
+  }
+
+  // int64 axis = 3;
+  if (this->axis() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::Int64Size(
+        this->axis());
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void SliceBySizeLayerParams::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const SliceBySizeLayerParams*>(&from));
+}
+
+void SliceBySizeLayerParams::MergeFrom(const SliceBySizeLayerParams& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.SliceBySizeLayerParams)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.size() != 0) {
+    set_size(from.size());
+  }
+  if (from.axis() != 0) {
+    set_axis(from.axis());
+  }
+}
+
+void SliceBySizeLayerParams::CopyFrom(const SliceBySizeLayerParams& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.SliceBySizeLayerParams)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool SliceBySizeLayerParams::IsInitialized() const {
+  return true;
+}
+
+void SliceBySizeLayerParams::Swap(SliceBySizeLayerParams* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void SliceBySizeLayerParams::InternalSwap(SliceBySizeLayerParams* other) {
+  std::swap(size_, other->size_);
+  std::swap(axis_, other->axis_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string SliceBySizeLayerParams::GetTypeName() const {
+  return "CoreML.Specification.SliceBySizeLayerParams";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// SliceBySizeLayerParams
+
+// int64 size = 2;
+void SliceBySizeLayerParams::clear_size() {
+  size_ = GOOGLE_LONGLONG(0);
+}
+::google::protobuf::int64 SliceBySizeLayerParams::size() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SliceBySizeLayerParams.size)
+  return size_;
+}
+void SliceBySizeLayerParams::set_size(::google::protobuf::int64 value) {
+  
+  size_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SliceBySizeLayerParams.size)
+}
+
+// int64 axis = 3;
+void SliceBySizeLayerParams::clear_axis() {
+  axis_ = GOOGLE_LONGLONG(0);
+}
+::google::protobuf::int64 SliceBySizeLayerParams::axis() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SliceBySizeLayerParams.axis)
+  return axis_;
+}
+void SliceBySizeLayerParams::set_axis(::google::protobuf::int64 value) {
+  
+  axis_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SliceBySizeLayerParams.axis)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

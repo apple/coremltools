@@ -183,6 +183,7 @@ namespace CoreML {
         Result validateCumSumLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateClampedReluLayer(const Specification::NeuralNetworkLayer& layer);
         Result validateArgsortLayer(const Specification::NeuralNetworkLayer& layer);
+        Result validateSliceBySizeLayer(const Specification::NeuralNetworkLayer& layer);
 
         Result validateFailUnknownType(const Specification::NeuralNetworkLayer& layer);
     };

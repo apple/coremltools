@@ -24,6 +24,7 @@ from .update_optimizer_utils import AdamParams, SgdParams
 
 _SUPPORTED_UPDATABLE_LAYERS = ['innerProduct', 'convolution']
 
+import math
 
 def _set_recurrent_activation(param, activation):
     activation = activation.upper() if isinstance(activation, str) else activation
@@ -1516,14 +1517,14 @@ class NeuralNetworkBuilder(object):
 
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.upsample
-        if isinstance(scaling_factor_h, float) or isinstance(scaling_factor_w, float):
+        if scaling_factor_h - math.floor(scaling_factor_h) > .001 or scaling_factor_w - math.floor(scaling_factor_w) > .001:
             if mode != 'BILINEAR' or linear_upsample_mode not in ['ALIGN_CORNERS_TRUE', 'ALIGN_CORNERS_FALSE']:
                 raise ValueError('Fractional upsampling only compatible with BILINEAR and ALIGN_CORNERS_TRUE or ALIGN_CORNERS_FALSE')
             spec_layer_params.fractionalScalingFactor.append(float(scaling_factor_h))
             spec_layer_params.fractionalScalingFactor.append(float(scaling_factor_w))
         else:
-            spec_layer_params.scalingFactor.append(scaling_factor_h)
-            spec_layer_params.scalingFactor.append(scaling_factor_w)
+            spec_layer_params.scalingFactor.append(int(scaling_factor_h))
+            spec_layer_params.scalingFactor.append(int(scaling_factor_w))
 
         spec_layer_params.mode = _NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value(mode)
         spec_layer_params.linearUpsampleMode = _NeuralNetwork_pb2.UpsampleLayerParams.LinearUpsampleMode.Value(linear_upsample_mode)
@@ -2888,6 +2889,45 @@ class NeuralNetworkBuilder(object):
                 _NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Value('WIDTH_AXIS')
         else:
             raise NotImplementedError('Unsupported Slice axis %s ' % axis)
+        return spec_layer
+
+    def add_slice_by_size(self, name, input_names, output_name, axis, size):
+        """
+        Add a slice layer. Equivalent to to numpy slice [start_index: start_index+size],
+        Input is list of str which is [input_tensor, begin_id].
+        
+        Assume input_tensor has shape (2, 3, 4), and axis=1, size=2.
+        This would produce input_tensor[:, begin_id:begin_id+2, :]
+
+        Refer to the **SliceBySizeLayerParams** message in specification (NeuralNetwork.proto) for more details.
+
+        Parameters
+        ----------
+        name: str
+            The name of this layer.
+
+        input_names: list of str
+            The input blob names of this layer.
+        output_name: str
+            The output blob name of this layer.
+        axis: int
+            axis along which input is sliced.
+        size: int
+            The size of which input will be taken
+
+        See Also
+        --------
+        add_slice, add_slice_static, add_slice_dynamic
+        """
+        spec_layer = self._add_generic_layer(name, input_names, [output_name])
+        spec_layer_params = spec_layer.sliceBySize
+
+        if size < 1:
+            raise ValueError("Invalid size value %d. Must be positive." % stride)
+
+        spec_layer_params.axis = axis
+        spec_layer_params.size = size
+
         return spec_layer
 
     def add_reorganize_data(self, name, input_name, output_name, mode='SPACE_TO_DEPTH', block_size=2):

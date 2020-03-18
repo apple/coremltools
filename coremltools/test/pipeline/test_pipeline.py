@@ -20,8 +20,8 @@ if HAS_SKLEARN:
     from coremltools.converters import sklearn as converter
 
 if HAS_LIBSVM:
-    import svm
-    import svmutil
+    from libsvm import svm
+    from libsvm import svmutil
     from coremltools.converters import libsvm as libsvm_converter
 
 

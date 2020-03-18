@@ -59,6 +59,7 @@ def try_to_transform(matmul_op, add_op, block):
 
     if add_op.op_type == 'sub':
         bias = cb.neg(x=bias)
+    out_name = add_op.outputs[0].name
 
     if x_is_weight:
         # If transpose_x == transpose_weight == False:
@@ -71,7 +72,7 @@ def try_to_transform(matmul_op, add_op, block):
                       weight=w_no_transpose,
                       bias=bias,
                       before_op=matmul_op)
-        x = transpose(x, before_op=matmul_op)
+        x = transpose(x, before_op=matmul_op, name=out_name)
     else:
         # If transpose_x == transpose_weight == False
         # x*w = x*(w^T)^T = linear(x, w^T)
@@ -82,9 +83,10 @@ def try_to_transform(matmul_op, add_op, block):
         x = cb.linear(x=x_no_transpose,
                       weight=w_transposed,
                       bias=bias,
-                      before_op=matmul_op)
+                      before_op=matmul_op, name=out_name)
 
-    add_op.replace_var_after_op(old_var=add_op.outputs[0], new_var=x)
+    add_op.enclosing_block.replace_var_after_op(anchor_op=add_op,
+            old_var=add_op.outputs[0], new_var=x)
     # Remove all the ops at once
     block.remove_ops([matmul_op, add_op])
 
@@ -106,7 +108,7 @@ def matmul_to_linear_block(block):
             break
 
 
-@register_pass
+@register_pass(namespace='common')
 def matmul_to_linear(prog):
     """
     Convert matmul + add/sub to linear whenever possible.

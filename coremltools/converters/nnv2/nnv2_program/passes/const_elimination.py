@@ -7,7 +7,6 @@ import numpy as np
 import six
 
 from coremltools.converters.nnv2 import CoremlBuilder as cb
-from coremltools.converters.nnv2.nnv2_program.program.var import TupleVar
 from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import register_pass
 
 
@@ -34,10 +33,6 @@ def const_elimination_block(block):
 
         all_outputs_are_const = True
         for i, o in enumerate(op.outputs):
-            if isinstance(o, TupleVar):
-                # Do not remove _make_tuple op
-                all_outputs_are_const = False
-                continue
             if o.val is not None:
                 idx_str = "" if len(op.outputs) == 1 else str(i)
                 const_name = op.name + "_const" + idx_str
@@ -46,7 +41,8 @@ def const_elimination_block(block):
                                    mode=get_const_mode(o.val),
                                    before_op=op,
                                    name=const_name)
-                op.replace_var_after_op(old_var=o, new_var=res)
+                op.enclosing_block.replace_var_after_op(anchor_op=op,
+                        old_var=o, new_var=res)
             else:
                 all_outputs_are_const = False
 
@@ -54,7 +50,7 @@ def const_elimination_block(block):
             op.remove_from_block()
 
 
-@register_pass
+@register_pass(namespace='common')
 def const_elimination(prog):
     """
     prog: SsaProgram

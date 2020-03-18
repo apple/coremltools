@@ -3716,6 +3716,15 @@ Result NeuralNetworkSpecValidator::validateArgsortLayer(const Specification::Neu
     return r;
 }
 
+Result NeuralNetworkSpecValidator::validateSliceBySizeLayer(const Specification::NeuralNetworkLayer& layer) {
+    Result r;
+    r = validateInputCount(layer, 2, 2);
+    if (r.good()) {
+        r = validateOutputCount(layer, 1, 1);
+    }
+    return r;
+}
+
 
 
 Result NeuralNetworkSpecValidator::validateFailUnknownType(const Specification::NeuralNetworkLayer& layer) {

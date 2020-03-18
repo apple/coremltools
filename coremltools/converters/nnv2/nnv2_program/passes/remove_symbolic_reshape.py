@@ -45,16 +45,16 @@ def remove_symbolic_reshape_block(block):
                     mode='immediate_value',
                     name=op.shape.name+'x', before_op=op)
             reshaped = cb.reshape(x=op.x, shape=shape_const,
-                    name=op.name+'x', before_op=op)
-            op.replace_var_after_op(old_var=op.outputs[0],
-                    new_var=reshaped)
+                    name=op.name, before_op=op)
+            op.enclosing_block.replace_var_after_op(anchor_op=op,
+                    old_var=op.outputs[0], new_var=reshaped)
             # Remove all the ops at once
             block.remove_ops([op, op.shape.op])
         num_changes += 1
     return num_changes
 
 
-@register_pass
+@register_pass(namespace='common')
 def remove_symbolic_reshape(prog):
     """
     Convert symbolic shape in `reshape` to integers.
@@ -72,8 +72,8 @@ def remove_symbolic_reshape(prog):
 	main(%x: (s0, 4, fp32)) {
 	  block0() {
 	    %reshape_0_shape_0x: (3,i32)* = const(val=[-1, 2, 2])
-	    %reshape_0x: (-1, 2, 2, fp32) = reshape(x=%x, shape=%reshape_0_shape_0x)
-	  } -> (%reshape_0x)
+	    %reshape_0: (-1, 2, 2, fp32) = reshape(x=%x, shape=%reshape_0_shape_0x)
+	  } -> (%reshape_0)
 	}
 
     Comment: Currently it does not perform any optimization, but simply

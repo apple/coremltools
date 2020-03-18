@@ -1,9 +1,4 @@
-cmake_minimum_required(VERSION 3.10.2)
-project(mlmodel)
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+include("${CMAKE_SOURCE_DIR}/cmake/coreml-utils.cmake")
 
 include_directories(
   ..
@@ -207,90 +202,7 @@ option(OVERWRITE_PB_SOURCE
 # This will get filled with the dependencies for the 'protosrc' target.
 set(proto_depends)
 foreach(proto_fn IN ITEMS ${proto_files})
-    add_custom_command(
-        OUTPUT
-            ${CMAKE_CURRENT_BINARY_DIR}/format/${proto_fn}.pb.cc
-            ${CMAKE_CURRENT_BINARY_DIR}/format/${proto_fn}.pb.h
-        COMMENT "Generating proto files for ${proto_fn}..."
-        COMMAND ${CMAKE_BINARY_DIR}/deps/protobuf/cmake/protoc
-            --cpp_out=${CMAKE_CURRENT_BINARY_DIR}/format/
-            -I${CMAKE_CURRENT_SOURCE_DIR}/format
-            ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
-        DEPENDS protoc
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-    add_custom_command(
-        OUTPUT
-            ${CMAKE_CURRENT_BINARY_DIR}/format/${proto_fn}_enum.h
-        COMMENT "Generating enums for ${proto_fn}..."
-        COMMAND ${CMAKE_BINARY_DIR}/deps/protobuf/cmake/protoc
-            --plugin=protoc-gen-enum=mlmodel/enumgen
-            --enum_out=${CMAKE_CURRENT_BINARY_DIR}/format/
-            -I${CMAKE_CURRENT_SOURCE_DIR}/format/
-            ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
-        DEPENDS enumgen protoc
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-    add_custom_command(
-        OUTPUT
-            ${CMAKE_BINARY_DIR}/coremltools/proto/${proto_fn}_pb2.py
-        COMMENT "Generating Python for ${proto_fn}..."
-        COMMAND ${CMAKE_BINARY_DIR}/deps/protobuf/cmake/protoc
-            --python_out=${CMAKE_BINARY_DIR}/coremltools/proto
-            -I${CMAKE_CURRENT_SOURCE_DIR}/format/
-            ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
-        COMMAND python
-            -m lib2to3
-            -wn
-            --no-diff
-            -f import
-            ${CMAKE_BINARY_DIR}/coremltools/${proto_fn}_pb2.py
-        DEPENDS protoc
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-    # For the CoreML framework we read the source file locations for these, and
-    # so it can be useful to update the source tree in addition.  So we repeat
-    # all of the above with different outputs.
-    if(OVERWRITE_PB_SOURCE)
-        add_custom_target(tgt_${proto_fn}_source ALL
-            COMMENT "Generating (source) proto files for ${proto_fn}..."
-            COMMAND ${CMAKE_BINARY_DIR}/deps/protobuf/cmake/protoc
-                --cpp_out=${CMAKE_CURRENT_SOURCE_DIR}/build/format/
-                -I${CMAKE_CURRENT_SOURCE_DIR}/format
-                ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
-            DEPENDS protoc
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        )
-        add_custom_target(tgt_${proto_fn}_enums ALL
-            COMMENT "Generating (source) enums for ${proto_fn}..."
-            COMMAND ${CMAKE_BINARY_DIR}/deps/protobuf/cmake/protoc
-                --plugin=protoc-gen-enum=mlmodel/enumgen
-                --enum_out=${CMAKE_CURRENT_SOURCE_DIR}/build/format/
-                -I${CMAKE_CURRENT_SOURCE_DIR}/format/
-                ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
-            DEPENDS enumgen protoc
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        )
-        add_custom_target(tgt_${proto_fn}_python ALL
-            COMMENT "Generating (source) Python for ${proto_fn}..."
-            COMMAND ${CMAKE_BINARY_DIR}/deps/protobuf/cmake/protoc
-                --python_out=${CMAKE_SOURCE_DIR}/coremltools/proto
-                -I${CMAKE_CURRENT_SOURCE_DIR}/format/
-                ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
-            COMMAND python
-                -m lib2to3
-                -wn
-                --no-diff
-                -f import
-                ${CMAKE_SOURCE_DIR}/coremltools/proto/${proto_fn}_pb2.py
-            DEPENDS protoc
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        )
-        # Record dependencies for 'protosrc' target.
-        list(APPEND proto_depends tgt_${proto_fn}_source)
-        list(APPEND proto_depends tgt_${proto_fn}_enums)
-        list(APPEND proto_depends tgt_${proto_fn}_python)
-    endif()
+    coreml_add_build_proto(${proto_fn} "")
 endforeach()
 # Add a custom 'protosrc' target that only builds the source objects from proto
 # files.

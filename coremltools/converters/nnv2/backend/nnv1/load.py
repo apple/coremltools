@@ -9,8 +9,9 @@ import coremltools.models.datatypes as datatypes
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.symbolic import (
         any_symbolic, any_variadic, is_symbolic)
-from .op_mapping import V2_TO_V1_OP_REGISTRY
+from .op_mapping import convert_ops
 from coremltools.models.neural_network.flexible_shape_utils import set_multiarray_ndshape_range
+from .passes.nnv1_passes import nnv1_backend_passes
 
 
 def load(prog, **kwargs):
@@ -21,6 +22,8 @@ def load(prog, **kwargs):
         msg = 'SsaProgram must have exactly one `main` function to ' \
             'convert to NNv1. SsaProgram: {}'
         raise ValueError(msg.format(prog))
+
+    nnv1_backend_passes(prog)
 
     v1_inputs = []
     symbolic_inputs = []
@@ -38,6 +41,8 @@ def load(prog, **kwargs):
                 # `set_multiarray_ndshape_range`
                 shape = [1 if is_symbolic(d) else d for d in shape]
             v1_inputs.append((name, datatypes.Array(*shape)))
+        elif builtins.is_scalar(var.sym_type):
+            v1_inputs.append((name, datatypes.Array(1)))
         else:
             raise NotImplementedError()
 
@@ -56,15 +61,10 @@ def load(prog, **kwargs):
     # const in V2 are added lazily to V1 by each op whenever needed.
     # `const_context` stores the const names we've added so far and avoid
     # adding a const more than once.
-    const_context = set()
+    const_context = set()  # set of str: const name for v1 & v2 (the same)
 
-    for op in prog.functions['main'].operations:
-        if op.op_type not in V2_TO_V1_OP_REGISTRY:
-            msg = "Op '{}' is not implemented for nnv1 backend."
-            logging.error(msg=msg.format(op.op_type) + '\n' + str(prog))
-            raise NotImplementedError(msg.format(op.op_type))
-        mapper = V2_TO_V1_OP_REGISTRY[op.op_type]
-        mapper(const_context, builder, op)
+    # Iterate through ops and add to builder
+    convert_ops(const_context, builder, prog.functions['main'].operations)
 
     model = builder.spec
 

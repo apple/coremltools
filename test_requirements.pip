@@ -5,6 +5,7 @@ h5py
 ipython
 future
 numpy
+libsvm;python_version>="3.4"
 olefile==0.44
 pandas
 pytest

@@ -299,7 +299,7 @@ class TestKerasApplications(unittest.TestCase):
         self._test_model(
             keras_model=keras_model,
             model_path=self.model_path,
-            inputs={input_name: (1, 32, 32, 3)},
+            inputs={'input_1': (1, 32, 32, 3)},
             outputs=[output_name])
 
     @pytest.mark.slow
@@ -558,7 +558,8 @@ class TestCornerCases(unittest.TestCase):
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
                                  inputs={input_name: (1, 6 * 75)},
-                                 outputs=[output_name], verbose=True)
+                                 outputs=[output_name],
+                                 use_cpu_only=True)
         num_reshapes = 0
         num_transposes = 0
         for layer in model.get_spec().neuralNetwork.layers:
@@ -584,7 +585,8 @@ class TestCornerCases(unittest.TestCase):
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
                                  inputs={input_name: (1, 6 * 75)},
-                                 outputs=[output_name])
+                                 outputs=[output_name],
+                                 use_cpu_only=True)
         num_transposes = 0
         for layer in model.get_spec().neuralNetwork.layers:
             if layer.WhichOneof('layer') == 'transpose':
@@ -605,7 +607,8 @@ class TestCornerCases(unittest.TestCase):
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
                                  inputs={input_name: (1, 6 * 75)},
-                                 outputs=[output_name])
+                                 outputs=[output_name],
+                                 use_cpu_only=True)
 
         num_reshapes = 0
         for layer in model.get_spec().neuralNetwork.layers:
