@@ -14,7 +14,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "Format.hpp"
+#include "MLModelSpecification.hpp"
 
 namespace CoreMLConverter {
    

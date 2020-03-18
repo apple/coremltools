@@ -10,7 +10,7 @@
 #define CaffeConverter_hpp
 
 #include "caffe_pb_wrapper.hpp"
-#include "Format.hpp"
+#include "MLModelSpecification.hpp"
 
 #include <stdio.h>
 #include <functional>
