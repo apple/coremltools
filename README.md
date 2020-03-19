@@ -20,11 +20,10 @@ For the latest changes please see the [release notes](https://github.com/apple/c
 
 # Table of Contents
 
-* [Neural network conversion](#Neural-network-conversion)
-* [Core ML specification](#Core-ML-specification)
-* [coremltools user guide and examples](#user-guide-and-examples)
-* [Installation from Source](#Installation)
-
+- [Neural network conversion](#Neural-network-conversion)
+- [Core ML specification](#Core-ML-specification)
+- [coremltools user guide and examples](#user-guide-and-examples)
+- [Installation from Source](#Installation)
 
 ## Neural Network Conversion
 
@@ -62,7 +61,6 @@ portion of the `model.proto` file.
 portion of the `NeuralNetwork.proto` file.
 - Auto-generated documentation for all the protobuf files can be found at this [link](https://apple.github.io/coremltools/coremlspecification/)
 
-
 ## User Guide and Examples
 
 - [API documentation](https://apple.github.io/coremltools)
@@ -96,7 +94,7 @@ virtualenv pythonenv
 To activate your new virtual environment and install `coremltools` in this
 environment, follow these steps:
 
-```
+```shell
 # Active your virtual environment
 source pythonenv/bin/activate
 
