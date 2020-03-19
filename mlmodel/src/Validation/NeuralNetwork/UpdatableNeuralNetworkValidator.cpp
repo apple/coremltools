@@ -396,6 +396,8 @@ static Result validateWeightParamsUpdatable(const Specification::NeuralNetworkLa
     bool weight_update_flag = false;
     bool bias_update_flag = false;
     bool has_bias = false;
+    bool weights_are_quantized = false;
+    bool bias_is_quantized = false;
     
     std::string err;
     
@@ -404,18 +406,27 @@ static Result validateWeightParamsUpdatable(const Specification::NeuralNetworkLa
             has_bias = layer.convolution().hasbias();
             if (has_bias) {
                 bias_update_flag = layer.convolution().bias().isupdatable();
+                bias_is_quantized = layer.convolution().bias().has_quantization();
             }
+            weights_are_quantized = layer.convolution().weights().has_quantization();
             weight_update_flag = layer.convolution().weights().isupdatable();
             break;
         case Specification::NeuralNetworkLayer::kInnerProduct:
             has_bias = layer.innerproduct().hasbias();
             if (has_bias) {
                 bias_update_flag = layer.innerproduct().bias().isupdatable();
+                bias_is_quantized = layer.innerproduct().bias().has_quantization();
             }
+            weights_are_quantized = layer.innerproduct().weights().has_quantization();
             weight_update_flag = layer.innerproduct().weights().isupdatable();
             break;
         default:
             return r;
+    }
+
+    if (weights_are_quantized || bias_is_quantized) {
+        err = "An updatable layer, named '" + layer.name() + "', has quantized weights/bias param. Quantized weights/bias not supported for update.";
+        return Result(ResultType::INVALID_UPDATABLE_MODEL_PARAMETERS, err);
     }
     
     if (!weight_update_flag || ((has_bias) && (!bias_update_flag))) {

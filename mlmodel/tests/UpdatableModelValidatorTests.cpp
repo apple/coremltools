@@ -784,6 +784,89 @@ int testUpdatableModelSpecVersion() {
     return 0;
 }
 
+int testInvalidUpdatableModelQuantizedWeights() {
+    Specification::Model m;
+    TensorAttributes inTensorAttr = { "A", 3 };
+    TensorAttributes outTensorAttr = { "B", 1 };
+    auto *nn = buildBasicNeuralNetworkModel(m, true, &inTensorAttr, &outTensorAttr, 1, true, false);
+
+    // set a softmax layer
+    auto softmaxLayer = nn->add_layers();
+    softmaxLayer->set_name("softmax");
+    softmaxLayer->add_input("B");
+    softmaxLayer->add_output("softmax_out");
+    softmaxLayer->mutable_softmax();
+
+    addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer", "softmax_out", "label_target");
+
+    // now add updatable model parameters.
+    addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
+
+    // expect validation to fail.
+    // "validator error: An updatable layer, named 'inner_layer', has quantized weights/bias param. Quantized weights/bias not supported for update."
+    Result res = Model::validate(m);
+    ML_ASSERT_BAD(res);
+    return 0;
+}
+
+int testInvalidUpdatableModelQuantizedBias() {
+    Specification::Model m;
+    TensorAttributes inTensorAttr = { "A", 3 };
+    TensorAttributes outTensorAttr = { "B", 1 };
+    auto *nn = buildBasicNeuralNetworkModel(m, true, &inTensorAttr, &outTensorAttr, 1, false, true);
+
+    // set a softmax layer
+    auto softmaxLayer = nn->add_layers();
+    softmaxLayer->set_name("softmax");
+    softmaxLayer->add_input("B");
+    softmaxLayer->add_output("softmax_out");
+    softmaxLayer->mutable_softmax();
+
+    // set a CCE loss layer
+    addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer", "softmax_out", "label_target");
+
+    // now add updatable model parameters.
+    addLearningRate(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(m.mutable_neuralnetwork(), Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
+
+    // expect validation to fail.
+    // "validator error: An updatable layer, named 'inner_layer', has quantized weights/bias param. Quantized weights/bias not supported for update."
+    Result res = Model::validate(m);
+    ML_ASSERT_BAD(res);
+    return 0;
+}
+
+int testValidUpdatableModelQuantizedWeightsAndBiasForNonUpdatableLayer() {
+    Specification::Model m;
+    TensorAttributes inTensorAttr = { "A", 3 };
+    TensorAttributes outTensorAttr = { "B", 1 };
+    auto *nn = buildBasicNeuralNetworkModel(m, true, &inTensorAttr, &outTensorAttr, 1, false, false);
+
+    // add a non-updatable inner product with quantized weights after softmax
+    inTensorAttr = { "B", 1 };
+    outTensorAttr = { "non_updatable_fc_output", 1 };
+    nn = addInnerProductLayer(m, false, "non_updatable_fc", &inTensorAttr, &outTensorAttr, true, true);
+
+    // add a softmax layer
+    nn = addSoftmaxLayer(m, "softmax", "non_updatable_fc_output", "softmax_out");
+
+    // set a CCE loss layer
+    addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer", "softmax_out", "label_target");
+
+    // now add updatable model parameters.
+    addLearningRate(nn, Specification::Optimizer::kSgdOptimizer, 0.7f, 0.0f, 1.0f);
+    addMiniBatchSize(nn, Specification::Optimizer::kSgdOptimizer, 10, 5, 100, std::set<int64_t>());
+    addEpochs(m.mutable_neuralnetwork(), 100, 1, 100, std::set<int64_t>());
+
+    // expect validation to pass.
+    Result res = Model::validate(m);
+    ML_ASSERT_GOOD(res);
+    return 0;
+}
+
 int testMissingMiniBatchSizeParameter() {
 
     Specification::Model m;

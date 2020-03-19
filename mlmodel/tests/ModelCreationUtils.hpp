@@ -20,7 +20,7 @@ typedef struct {
 
 Specification::NeuralNetwork* buildBasicUpdatableNeuralNetworkModel(Specification::Model& m);
 
-Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr, int numberOfLayers = 1);
+Specification::NeuralNetwork* buildBasicNeuralNetworkModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr, int numberOfLayers = 1, bool areWeightsQuantized = false, bool isBiasQuantized = false);
 
 Specification::NeuralNetworkClassifier* buildBasicNeuralNetworkClassifierModel(Specification::Model& m, bool isUpdatable, const TensorAttributes *inTensorAttr, std::vector<std::string> stringClassLabels, std::vector<int64_t> intClassLabels, bool includeBias);
 
@@ -32,6 +32,6 @@ Specification::Pipeline* buildEmptyPipelineModelWithStringOutput(Specification::
 
 void addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(Specification::Model& m, const char *softmaxInputName);
 
-Specification::NeuralNetwork* addInnerProductLayer(Specification::Model& m, bool isUpdatable, const char *name, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr);
+Specification::NeuralNetwork* addInnerProductLayer(Specification::Model& m, bool isUpdatable, const char *name, const TensorAttributes *inTensorAttr, const TensorAttributes *outTensorAttr, bool areWeightsQuantized = false, bool isBiasQuantized = false);
 
 Specification::NeuralNetwork* addSoftmaxLayer(Specification::Model& m, const char *name,  const char *input, const char *output);
