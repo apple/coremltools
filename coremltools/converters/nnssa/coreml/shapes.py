@@ -2,6 +2,8 @@
 Shape inference functions.
 """
 
+from ....proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
+
 
 def _transpose(layer_spec, input_shapes):
     axes = list(layer_spec.transpose.axes)
@@ -446,11 +448,14 @@ def _unidirectional_lstm(layer_spec, input_shapes):
 def _reorganize_data(layer_spec, input_shapes):
     block_size = layer_spec.reorganizeData.blockSize
     output_shape = input_shapes[0][:]
-    if 'SpaceToDepth' in layer_spec.name or 'SpaceToBatchND' in layer_spec.name:
+    mode = layer_spec.reorganizeData.mode
+    space_to_depth_mode = _NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value('SPACE_TO_DEPTH')
+    depth_to_space_mode = _NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value('DEPTH_TO_SPACE')
+    if mode == space_to_depth_mode:
         output_shape[2] //= block_size
         output_shape[3] //= block_size
         output_shape[1] = output_shape[1] * block_size * block_size
-    elif 'DepthToSpace' in layer_spec.name or 'BatchToSpaceND' in layer_spec.name:
+    elif mode == depth_to_space_mode:
         output_shape[2] *= block_size
         output_shape[3] *= block_size
         output_shape[1] = output_shape[1] // (block_size * block_size)
