@@ -1,6 +1,7 @@
 import functools
 import sympy as sm
-from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic, isscalar, any_symbolic
+from coremltools.converters.nnv2.builtin_types.symbolic import (
+        is_symbolic, isscalar, any_symbolic, any_variadic)
 from coremltools.converters.nnv2.nnv2_program.program.program import get_new_symbol, get_new_variadic_symbol, SYMBOL
 from ._op_reqs import *
 
@@ -354,7 +355,7 @@ class space_to_depth(Operation):
 class squeeze(Operation):
     input_spec = InputSpec(
             x = TensorInputType(),
-            axes = TensorInputType(const=True, optional=True),
+            axes = IntTensorInputType(const=True, optional=True),
             )
 
     def __init__(self, **kwargs):
@@ -365,7 +366,7 @@ class squeeze(Operation):
         x_shape = self.x.shape
         squeezed_shape = list(x_shape)
         if self.axes is None:
-            # Squeeze all single-dim
+            # Squeeze all single-dim, assuming symbolic dims != 1
             squeezed_shape = [s for s in squeezed_shape if s != 1]
         else:
             axes = self.axes.val
@@ -378,7 +379,7 @@ class squeeze(Operation):
 
         return builtins.tensor(x_type, tuple(squeezed_shape))
 
-    @precondition(allow=VALUE)
+    @precondition(allow=VALUE|SYMBOL)
     def value_inference(self):
         return np.squeeze(self.x.val, axis=tuple(self.axes.val))
 
@@ -396,14 +397,101 @@ class transpose(Operation):
 
     def type_inference(self):
         x_type = self.x.dtype
-        x_shape = self.x.shape
         perm = self.perm.val
-        x_shape = np.array(x_shape)
+        x_shape = np.array(self.x.shape)
         if len(perm) != len(x_shape):
             raise ValueError("perm should have the same length as rank(x).")
-        new_shape = x_shape[perm]
-        return builtins.tensor(x_type, tuple(new_shape))
+        if self.x.rank == 0:
+            return self.x.sym_type  # scalar cannot be transposed
+        if any_variadic(self.x.shape):
+            ret_shape = get_new_variadic_symbol()
+        else:
+            ret_shape = x_shape[perm]
+        return builtins.tensor(x_type, tuple(ret_shape))
 
-    @precondition(allow=VALUE)
+    @precondition(allow=VALUE|SYMBOL)
     def value_inference(self):
         return np.transpose(self.x.val, axes=self.perm.val)
+
+
+@register_op(doc_str="""
+Rearranges elements in a tensor from depth (channel) into spatial dimensions.
+Equivalent to PyTorch's pixel_shuffle.
+
+Inputs
+
+* x: <n, C x f^2, H, W, T> Required
+    * Input tensor of rank 4
+* upscale_factor: const<i32>
+    * Factor to increase spatial resolution by
+
+Outputs
+
+* <n, C, H x f, W x f, T> where f is the upscale factor.
+
+Type Domains
+
+* T: f32
+""")
+class pixel_shuffle(Operation):
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        upscale_factor=IntInputType(const=True),
+    )
+
+    def __init__(self, **kwargs):
+        super(pixel_shuffle, self).__init__(**kwargs)
+
+    def type_inference(self):
+        x_type = self.x.dtype
+        n, c, h, w = self.x.shape
+        f = self.upscale_factor.val
+        ret_shape = (n, c // (f * f), h * f, w * f)
+        return builtins.tensor(x_type, ret_shape)
+
+
+@register_op(doc_str="""
+Returns a tensor containing all windows of size, separated by stride along the given axis.
+
+Inputs
+
+* x: <*d0, d_axis, *dn, T>
+    * Input tensor
+* axis: const<i32>
+    * Axis to perform the operation.
+* size: const<i32>
+    * Number of elements in the sliding window
+* stride: const<i32>
+    * The stride of the input elements in the sliding window
+    * Optional, defaults to 1
+
+Outputs
+
+* <*d0, d_axis - size // stride + 1, size, *dn, T>
+    * The output will be a tensor of rank N+1 where N is the input tensor rank
+
+Type Domains
+
+* T: f32
+""")
+class sliding_windows(Operation):
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        axis=IntInputType(const=True),
+        size=IntInputType(const=True),
+        stride=IntInputType(const=True, default=1)
+    )
+
+    def __init__(self, **kwargs):
+        super(sliding_windows, self).__init__(**kwargs)
+
+    def type_inference(self):
+        x_shape = self.x.shape
+        axis = self.axis.val
+        size = self.size.val
+        stride = self.stride.val
+        ret_shape = list(x_shape)
+        ret_shape[axis] = (x_shape[axis] - size) // stride + 1
+        pos_axis = axis if axis >= 0 else axis + self.x.rank
+        ret_shape.insert(pos_axis + 1, size)
+        return builtins.tensor(self.x.dtype, tuple(ret_shape))

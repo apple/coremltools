@@ -70,7 +70,6 @@ class CoremlBuilder:
         before_op: created all vars / const op will come right before
                    `before_op` in the block's order. None to append at the end.
         """
-        kwargs = {k: v for k, v in kwargs.items() if v is not None}
         update_dict = {}
         for in_name, in_type in input_spec.input_types.items():
             new_var_name = op_name + "_" + in_name
@@ -142,6 +141,7 @@ class CoremlBuilder:
         logging.info("Adding op {} of type {}".format(kwargs["name"],
                                                       op_cls.__name__))
         before_op = kwargs.get('before_op', None)
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
         kwargs = cls._create_input_vars(op_cls.input_spec, kwargs['name'], op_cls,
                                         before_op, kwargs)
         new_op = op_cls(**kwargs)

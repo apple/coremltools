@@ -494,6 +494,7 @@ class TestNonMaximumSuppression:
 
         return out1, out2, out3, out4
 
+    @pytest.mark.xfail(reason='rdar://60390856', run=False)
     @pytest.mark.parametrize(','.join([
         'use_cpu_only',
         'backend',
@@ -1160,9 +1161,10 @@ class TestTopK:
         shape = np.random.randint(low=3, high=6, size=rank)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
-            values, indices = tf.math.top_k(x, k=k, sorted=True)
+            ref = tf.math.top_k(x, k=k, sorted=True)
+            ref = (ref[0] + 1, ref[1] + 2)
             run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                           [values, indices], use_cpu_only=use_cpu_only, backend=backend)
+                           ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestFlatten:
@@ -1170,8 +1172,8 @@ class TestFlatten:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
-                ))
+                backends,
+            ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         t = np.array([[[1, 2, 3], [4, 5, 6]], [[-1, -2, -3], [-4, -5, -6]]], dtype=np.float32)
         input_placeholders = {"x": cb.placeholder(shape=t.shape)}
@@ -1202,8 +1204,8 @@ class TestFlatten:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
-                ))
+                backends,
+            ))
     def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
         s0 = get_new_symbol()
 
@@ -1231,7 +1233,7 @@ class TestFlatten:
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              ))
     def test_tf(self, use_cpu_only, backend):
         shapes = [[10, 10],
@@ -1249,12 +1251,11 @@ class TestFlatten:
 
 
 class TestShape:
-    @pytest.mark.skip(reason="rdar://60306646 ([SSAv2 -> NNv1] Graph pass to ensure network output are output of a Layer with correct data type)")
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
-                ))
+                backends,
+            ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
         pad = np.array([1, 1, 2, 2], dtype=np.int32)
@@ -1265,7 +1266,7 @@ class TestShape:
             x = cb.pad(x=x, pad=pad, mode="constant", constant_val=0.0)
             return cb.shape(x=x)
 
-        expected_output_types = (2, builtins.fp32)
+        expected_output_types = (2, builtins.int32)
         expected_outputs = [
                 np.array([4, 7], dtype=np.int32),
                 ]
@@ -1285,7 +1286,7 @@ class TestShape:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
+                backends,
                 ))
     def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
         s0 = get_new_symbol()
@@ -1301,7 +1302,7 @@ class TestShape:
         input = np.random.rand(10, 4, 5, 6)
         output = np.array([10, 4, 5, 6], dtype=np.float32)
 
-        expected_output_types = (4, builtins.fp32)
+        expected_output_types = (4, builtins.int32)
         expected_outputs = [ output ]
 
         input_values = { "x": input }
@@ -1310,12 +1311,11 @@ class TestShape:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skip(reason="rdar://60306646 ([SSAv2 -> NNv1] Graph pass to ensure network output are output of a Layer with correct data type)")
     @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
     @pytest.mark.parametrize('use_cpu_only, backend, rank',
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                                  [rank for rank in range(1, 6)],
                              ))
     def test_tf(self, use_cpu_only, backend, rank):
@@ -1333,8 +1333,8 @@ class TestConcat:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
-                ))
+                backends,
+            ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         t1 = np.array([[1, 2],[4, 5]], dtype=np.float32)
         t2 = np.array([[7, 8]], dtype=np.float32)
@@ -1349,6 +1349,39 @@ class TestConcat:
             return cb.concat(values=(x, y), axis=0),
 
         expected_output_types = [
+                (3, 2, builtins.fp32),
+                ]
+        expected_outputs = [
+                np.array([[1, 2],
+                          [4, 5],
+                          [7, 8]], dtype=np.float32),
+                          ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+            ))
+    def test_builder_to_backend_type_promotion(self, use_cpu_only, backend):
+        t1 = np.array([[1, 2],[4, 5]], dtype=np.float32)
+        t2 = np.array([[7, 8]], dtype=np.float32)
+
+        input_placeholders = {
+                "x": cb.placeholder(shape=t1.shape),
+                }
+        input_values = {"x": t1}
+
+        def build(x):
+            t2 = np.array([[7, 8]], dtype=np.int32)
+            return cb.concat(values=(x, t2), axis=0),
+
+        expected_output_types = [
+                # np.int32 should be promoted to fp32
                 (3, 2, builtins.fp32),
                 ]
         expected_outputs = [
@@ -1403,8 +1436,8 @@ class TestSplit:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
-                ))
+                backends,
+            ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         t = np.array([[1, 2],
                       [3, 4],
@@ -1454,7 +1487,7 @@ class TestSplit:
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              )
                              )
     def test_tf(self, use_cpu_only, backend):
@@ -1482,7 +1515,7 @@ class TestSplit:
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              )
                              )
     def test_tf_splitv(self, use_cpu_only, backend):
@@ -1502,8 +1535,8 @@ class TestStack:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
-                ))
+                backends,
+            ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         t1 = np.array([1, 2, 3], dtype=np.float32)
         t2 = np.array([7, 8, 9], dtype=np.float32)
@@ -1546,7 +1579,7 @@ class TestStack:
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              )
                              )
     def test_tf(self, use_cpu_only, backend):
@@ -1562,3 +1595,59 @@ class TestStack:
             run_compare_tf(graph, inputs,
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
+
+
+class TestArgSort:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        val = np.array([[-1., 2., -3.], [4., -5., 6.]], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=val.shape)}
+        input_values = {'x': val}
+
+        def build(x):
+            return [
+                cb.argsort(x=x),
+                cb.argsort(x=x, axis=0, ascending=True)
+            ]
+
+        expected_output_types = [
+            (2, 3, builtins.int32),
+            (2, 3, builtins.int32),
+        ]
+        expected_outputs = [
+            np.array([[1, 0, 2], [2, 0, 1]], dtype=np.int32),
+            np.array([[0, 1, 0], [1, 0, 1]], dtype=np.int32),
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @ssa_fn
+    def test_builder_eval(self):
+        x_val = random_gen(shape=(1, 3, 2, 2), rand_min=-100, rand_max=100)
+        res = cb.argsort(x=x_val, axis=-3)
+        assert is_close(np.argsort(x_val, axis=-3), res.val)
+
+    @pytest.mark.skipif(True, reason='rdar://60498397 (Re-enable NNv2->NNv1 TF tests for ArgSort)')
+    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, axis, direction',
+                             itertools.product(
+                                 [True],
+                                 backends,
+                                 [rank for rank in range(1, 6)],
+                                 [-1, 0],
+                                 ['ascending', 'descending'],
+                             ))
+    def test_tf(self, use_cpu_only, backend, rank, axis, direction):
+        shape = np.random.randint(low=1, high=6, size=rank)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=shape)
+            ref = tf.argsort(x, axis=axis, direction=direction.upper())
+            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
+                           ref, use_cpu_only=use_cpu_only, backend=backend)

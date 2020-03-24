@@ -1,5 +1,6 @@
 from ._test_reqs import *
 import pytest
+from coremltools.converters.nnv2.nnv2_program.program import get_new_symbol
 
 @pytest.mark.skip("Broken for nnv2 backend")
 class TestResizeBilinear:
@@ -51,7 +52,7 @@ class TestResizeBilinear:
     @pytest.mark.parametrize("use_cpu_only, backend, input_shape, target_shape, align_corners, half_pixel_centers",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
+                backends,
                 [(1,10,20,1), (2,5,1,3)],
                 [(25, 30), (2, 20)],
                 [True, False],
@@ -106,7 +107,7 @@ class TestUpsampleBilinear:
     @pytest.mark.parametrize("use_cpu_only, backend, input_shape, scale_factor, align_corners",
             itertools.product(
                 [True],
-                ['nnv1_proto'],
+                backends,
                 [(2,5,10,22)],
                 [(3, 4), (2.5, 2), (0.5, 0.75)],
                 [True, False]
@@ -161,7 +162,7 @@ class TestUpsampleNearestNeighbor:
     @pytest.mark.parametrize("use_cpu_only, backend, input_shape, upsample_factor, data_format",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
+                backends,
                 [(1,1,1,3), (1,10,5,3)],
                 [(1,2), (4,3)],
                 ['channels_last', 'channels_first']
@@ -174,3 +175,128 @@ class TestUpsampleNearestNeighbor:
             ref = tf.keras.layers.UpSampling2D(size=upsample_factor, data_format=data_format, interpolation="nearest")(x)
             run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
+
+
+class TestCropResize:
+
+    @pytest.mark.parametrize("use_cpu_only, backend, is_symbolic",
+                            itertools.product(
+                                [True, False],
+                                backends,
+                                [True, False]
+                                ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, is_symbolic):
+        x = np.array([[1, 2, 3, 4],
+                      [5, 6, 7, 8],
+                      [9, 10, 11, 12],
+                      [13, 14, 15, 16]], dtype=np.float32).reshape(1, 1, 4, 4)
+
+        input_shape = list(x.shape)
+        placeholder_input_shape = input_shape
+        if is_symbolic:
+            # set batch and channel dimension symbolic
+            placeholder_input_shape[0] = get_new_symbol()
+            placeholder_input_shape[1] = get_new_symbol()
+
+        input_placeholder_dict = {"x": cb.placeholder(shape=placeholder_input_shape)}
+        input_value_dict = {"x" : x}
+        N = 1
+        roi = np.array([[1, 1, 2, 2]], dtype=np.float32).reshape(1, 1, 4, 1, 1)
+        roi_normalized = np.array([[0, 0.0, 0.0, 1.0/3, 1.0/3]], dtype=np.float32).reshape(1, 1, 5, 1, 1)
+        roi_invert = np.array([[2, 2, 1, 1]], dtype=np.float32).reshape(1, 1, 4, 1, 1)
+
+        def build(x):
+            return [cb.crop_resize(x=x,
+                                  roi=roi,
+                                  target_width=2,
+                                  target_height=2,
+                                  normalized_coordinates=False,
+                                  box_coordinate_mode='CORNERS_HEIGHT_FIRST',
+                                  sampling_mode='ALIGN_CORNERS'),
+                    cb.crop_resize(x=x,
+                                  roi=roi,
+                                  target_width=4,
+                                  target_height=4,
+                                  normalized_coordinates=False,
+                                  box_coordinate_mode='CORNERS_HEIGHT_FIRST',
+                                  sampling_mode='ALIGN_CORNERS'),
+                    cb.crop_resize(x=x,
+                                  roi=roi,
+                                  target_width=1,
+                                  target_height=1,
+                                  normalized_coordinates=False,
+                                  box_coordinate_mode='CORNERS_HEIGHT_FIRST',
+                                  sampling_mode='ALIGN_CORNERS'),
+                    cb.crop_resize(x=x,
+                                  roi=roi_normalized,
+                                  target_width=2,
+                                  target_height=2,
+                                  normalized_coordinates=True,
+                                  box_coordinate_mode='CORNERS_HEIGHT_FIRST',
+                                  sampling_mode='ALIGN_CORNERS'),
+                    cb.crop_resize(x=x,
+                                  roi=roi_invert,
+                                  target_width=2,
+                                  target_height=2,
+                                  normalized_coordinates=False,
+                                  box_coordinate_mode='CORNERS_HEIGHT_FIRST',
+                                  sampling_mode='ALIGN_CORNERS'),
+        ]
+
+        expected_output_type = [(N, placeholder_input_shape[0], placeholder_input_shape[1], 2, 2, builtins.fp32),
+                                (N, placeholder_input_shape[0], placeholder_input_shape[1], 4, 4, builtins.fp32),
+                                (N, placeholder_input_shape[0], placeholder_input_shape[1], 1, 1, builtins.fp32),
+                                (N, placeholder_input_shape[0], placeholder_input_shape[1], 2, 2, builtins.fp32),
+                                (N, placeholder_input_shape[0], placeholder_input_shape[1], 2, 2, builtins.fp32)
+        ]
+        expected_output = [np.array([6, 7, 10, 11], dtype=np.float32).reshape(1,1,1,2,2),
+                           np.array([[6, 6.333333, 6.66666, 7],
+                                      [7.333333, 7.666666, 8, 8.333333],
+                                      [8.666666, 9, 9.3333333, 9.666666],
+                                      [10, 10.333333, 10.666666, 11]
+                                     ], dtype=np.float32).reshape(1,1,1,4,4),
+                           np.array([8.5], dtype=np.float32).reshape(1,1,1,1,1),
+                           np.array([1, 2, 5, 6], dtype=np.float32).reshape(1,1,1,2,2),
+                           np.array([11, 10, 7, 6], dtype=np.float32).reshape(1,1,1,2,2),
+        ]
+
+        run_compare_builder(build, input_placeholder_dict, input_value_dict,
+                            expected_output_type, expected_output,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+
+    @pytest.mark.parametrize("use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic",
+            list(itertools.product(
+                [True, False],
+                backends,
+                [(1, 64, 64, 1)],
+                [1, 3, 5],
+                [(2, 2), (1, 1), (4, 4), (128, 128)],
+                ['bilinear'],
+                [False])) +
+                [pytest.param(True, 'nnv1_proto', (1, 64, 64, 1), 1, (2, 2), 'bilinear', True, marks=pytest.mark.xfail)]
+                )
+    def test_tf(self, use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic):
+        input = np.random.randn(*input_shape)
+        boxes = np.random.uniform(size=(num_of_crops, 4))
+        box_indices = np.random.randint(size=(num_of_crops,), low=0, high=input_shape[0])
+
+        def test_static():
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                output = tf.raw_ops.CropAndResize(image=x, boxes=boxes, box_ind=box_indices, crop_size=crop_size, method=method)
+                run_compare_tf(graph, {x: input}, output, use_cpu_only=use_cpu_only, backend=backend)
+
+        def test_dynamic():
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                boxes_pl = tf.placeholder(tf.float32, shape=boxes.shape)
+                box_indices_pl = tf.placeholder(tf.int32, shape=box_indices.shape)
+                output = tf.raw_ops.CropAndResize(image=x, boxes=boxes_pl, box_ind=box_indices_pl, crop_size=crop_size, method=method)
+                run_compare_tf(graph, {x: input, boxes_pl: boxes, box_indices_pl: box_indices}, output, use_cpu_only=use_cpu_only, backend=backend)
+
+        if dynamic:
+            test_dynamic()
+        else:
+            test_static()

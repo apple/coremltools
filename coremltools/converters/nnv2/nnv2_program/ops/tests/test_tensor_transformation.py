@@ -90,6 +90,42 @@ class TestExpandDims:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+        s0 = get_new_symbol()
+
+        input_placeholders = {
+                "x": cb.placeholder(shape=(2, s0)),
+                }
+
+        def build(x):
+            return [cb.expand_dims(x=x, axis=-1),
+                    cb.expand_dims(x=x, axis=1),
+                    ]
+
+        expected_output_types = [
+                (2, s0, 1, builtins.fp32),
+                (2, 1, s0, builtins.fp32),
+                ]
+        expected_outputs = [
+                np.array([[[1], [2], [3]],
+                          [[4], [5], [6]]], dtype=np.float32),
+                np.array([[[1, 2, 3]],
+                          [[4, 5, 6]]], dtype=np.float32),
+                ]
+
+        input_values = {
+                "x": np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32),
+                }
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
     @ssa_fn
     def test_builder_eval(self):
         x_val = np.random.rand(1, 1, 6, 6)
@@ -700,6 +736,40 @@ class TestTranspose:
         v = cb.transpose(x=x, perm = (1,0))
         assert is_close(x.T, v.val)
 
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+        s0 = get_new_symbol()
+
+        # Test variadic (rdar://59559656)
+        input_placeholders = {
+                "x": cb.placeholder(shape=(2, s0)),
+                }
+
+        def build(x):
+            return [cb.transpose(x=x, perm=[1, 0]),
+                    ]
+
+        expected_output_types = [
+                (s0, 2, builtins.fp32),
+                ]
+        expected_outputs = [
+                np.array([[1, 4],
+                          [2, 5],
+                          [3, 6]], dtype=np.float32),
+                ]
+
+        input_values = {
+                "x": np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32),
+                }
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
     @pytest.mark.parametrize("use_cpu_only, backend, rank_and_perm",
                              itertools.product(
@@ -719,3 +789,144 @@ class TestTranspose:
                            {x: np.random.rand(*x_shape)},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
+
+    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [1, 2, 3, 4],
+                             )
+                             )
+    def test_tf2(self, use_cpu_only, backend, rank):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        perm = np.random.permutation(rank).astype(np.float32)
+        def static_perm():
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                res = tf.transpose(x, perm)
+                run_compare_tf(graph, {x: np.random.rand(*input_shape)},
+                               res, use_cpu_only=use_cpu_only,
+                               frontend_only=False, backend=backend)
+        def dynamic_perm():
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                tf_perm = tf.placeholder(tf.int32, shape=[None])
+                res = tf.transpose(x, tf_perm)
+                run_compare_tf(graph, {x: np.random.rand(*input_shape),
+                    tf_perm: perm}, res, use_cpu_only=use_cpu_only,
+                    frontend_only=False, backend=backend)
+
+        static_perm()
+        # Note that TF supports dynamic perm in tf.transpose.
+        with pytest.raises(ValueError, \
+                match=r'.*must be const at compile time.*'):
+            dynamic_perm()
+
+
+class TestPixelShuffle:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        # original input type is (1, 4, 1, 1, fp32)
+        val = np.array([[[[9.]], [[5.]], [[1.]], [[3.]]]], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=val.shape)}
+        input_values = {'x': val}
+
+        def build(x):
+            return [cb.pixel_shuffle(x=x, upscale_factor=2)]
+
+        expected_output_types = (1, 1, 2, 2, builtins.fp32)
+        expected_outputs = np.array([[[[9., 5.], [1., 3.]]]], dtype=np.float32)
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.skipif(not HAS_PYTORCH, reason='PyTorch not found.')
+    @pytest.mark.parametrize('use_cpu_only, backend, shape, upscale_factor',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(1, 16, 1, 1), (2, 16, 3, 3), (1, 32, 1, 1)],
+                                 [2, 4],
+                             ))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, shape, upscale_factor):
+        val = np.random.rand(*shape)
+        input_placeholders = {'x': cb.placeholder(shape=val.shape)}
+        input_values = {'x': val}
+
+        def build(x):
+            return [cb.pixel_shuffle(x=x, upscale_factor=upscale_factor)]
+
+        torch_pixel_shuffle = torch.nn.PixelShuffle(upscale_factor)
+        expected_outputs = [torch_pixel_shuffle(torch.Tensor(val)).numpy()]
+        expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+
+class TestSlidingWindows:
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        # original input type is (1, 4, 1, 1, fp32)
+        val = np.array([[[[9.]], [[5.]], [[1.]], [[3.]]]], dtype=np.float32)
+        input_placeholders = {'x': cb.placeholder(shape=val.shape)}
+        input_values = {'x': val}
+
+        def build(x):
+            return [cb.sliding_windows(x=x, axis=1, size=2)]
+
+        expected_output_types = (1, 3, 2, 1, 1, builtins.fp32)
+        expected_outputs = np.array(
+            [[[[[9.]], [[5.]]], [[[5.]], [[1.]]],
+              [[[1.]], [[3.]]]]], dtype=np.float32)
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize('use_cpu_only, backend, rank_and_axis, size, stride',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(rank, axis) for rank in range(1, 5) for axis in range(-rank, rank)],
+                                 [1, 2],
+                                 [1, 2],
+                             ))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank_and_axis, size, stride):
+        def np_sliding_windows(a, np_axis, np_size, np_stride):
+            n = (a.shape[np_axis] - np_size) // np_stride + 1
+            x_shape = list(a.shape)
+            x_shape[np_axis] = n
+            if np_axis < 0:
+                np_axis += len(x_shape)
+            x_shape.insert(np_axis + 1, np_size)
+            strides = list(a.strides)
+            eff_stride = strides[np_axis] * np_stride
+            strides.insert(np_axis, eff_stride)
+            return np.lib.stride_tricks.as_strided(a, x_shape, strides)
+
+        rank, axis = rank_and_axis
+        shape = np.random.randint(low=2, high=5, size=rank)
+        val = np.random.rand(*shape)
+        input_placeholders = {'x': cb.placeholder(shape=val.shape)}
+        input_values = {'x': val}
+
+        def build(x):
+            return [cb.sliding_windows(x=x, axis=axis, size=size, stride=stride)]
+
+        expected_outputs = [np_sliding_windows(val, np_axis=axis, np_size=size, np_stride=stride)]
+        expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)

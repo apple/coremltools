@@ -48,7 +48,7 @@ def load(prog, **kwargs):
 
     v1_outputs = []
     for var in prog.functions['main'].outputs:
-        if builtins.is_tensor(var.sym_type):
+        if builtins.is_tensor(var.sym_type) or builtins.is_primitive(var.sym_type):
             # Disregard the output types
             v1_outputs.append((var.name, None))
         else:
@@ -64,7 +64,8 @@ def load(prog, **kwargs):
     const_context = set()  # set of str: const name for v1 & v2 (the same)
 
     # Iterate through ops and add to builder
-    convert_ops(const_context, builder, prog.functions['main'].operations)
+    convert_ops(const_context, builder, prog.functions['main'].operations,
+            prog.functions['main'].outputs)
 
     model = builder.spec
 

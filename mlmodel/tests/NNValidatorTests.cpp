@@ -1510,7 +1510,6 @@ int testInvalidConvolution3DNegativePadding() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -1589,7 +1588,6 @@ int testInvalidConvolution3DNoBias() {
     // Not specifying any biases should be invalid
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -1671,7 +1669,6 @@ int testInvalidConvolution3DNoInputChannels() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -1753,7 +1750,6 @@ int testInvalidConvolution3DNoOutputChannels() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -1826,7 +1822,6 @@ int testInvalidConvolution3DNoWeights() {
 
     // Not specifying any weights should be invalid
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -1906,7 +1901,6 @@ int testInvalidConvolution3DNonPositiveDilation() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -1987,7 +1981,6 @@ int testInvalidConvolution3DNonPositiveGroups() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -2067,7 +2060,6 @@ int testInvalidConvolution3DNonPositiveKernelSize() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -2147,7 +2139,6 @@ int testInvalidConvolution3DNonPositiveStride() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -2237,7 +2228,6 @@ int testInvalidConvolution3DTwoInputs() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_BAD(res);
     return 0;
 
@@ -2318,7 +2308,6 @@ int testValidConvolution3D() {
     }
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    std::cout << res.message() << std::endl;
     ML_ASSERT_GOOD(res);
     return 0;
 

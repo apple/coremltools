@@ -1487,7 +1487,7 @@ class SSAConverter(object):
 
         for in_name, out_name in zip(interm_output_names, output_names):
             layer = self._get_builder().add_squeeze(
-                name=out_name, input_name=in_name, output_name=out_name, axes=[0])
+                name=out_name, input_name=in_name, output_name=out_name, axes=[axis])
             shapes.propagate_single_layer(layer, self.tensor_shapes)
 
     def _convert_gather(self, node):

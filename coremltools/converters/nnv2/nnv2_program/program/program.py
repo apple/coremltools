@@ -6,6 +6,7 @@ import copy
 import logging
 import numpy as np
 import sympy as sm
+import six
 
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic
@@ -35,12 +36,12 @@ def precondition(allow=ALL):
     """
     A helper decorator for value_inference method.
     Decorate value_inference with parameter VALUE/SYMBOL/NONE or ALL.
-    For VALUE/SYMBOL/NONE use logical or ( | ) for multiple allowance. 
+    For VALUE/SYMBOL/NONE use logical or ( | ) for multiple allowance.
     Note that:
         1. ALL == VALUE | SYMBOL | NONE
         2. Chosen flag (some or all VALUE/SYMBOL/NONE) must be satisfied
            by EVERY INPUTS for the precondition to be satisfied.
-    
+
     The meaning for each flag is:
     VALUE: value that can be materialized during compile time
     SYMBOL: value that cannot be materialized by exist as a symbol value
@@ -193,8 +194,8 @@ class Operation(object):
         # Evaluation is two stage:
         #
         # Stage 1: Check whether the method value_inference() is implemented
-        # 
-        # Stage 2: Check if there's an value_inference() implementation 
+        #
+        # Stage 2: Check if there's an value_inference() implementation
         #          for given input types.
         #
         # Suppose input are all SYMBOL:
@@ -204,7 +205,7 @@ class Operation(object):
         # Case 3: If value_inference() implemented, and has no restriction on
         #         input types => Success
         #
-        # If either stage fails, outputs[i].val is None. 
+        # If either stage fails, outputs[i].val is None.
         # Otherwise, output[i].sym_val is not None.
 
         output_types: tuple of builtin types
@@ -319,7 +320,7 @@ class Operation(object):
                 # Set var as input_var
                 if isinstance(var, Var):
                     var.add_child_op(self)
-                elif isinstance(var, tuple):
+                elif isinstance(var, (tuple,list)):
                     for v in var:
                         v.add_child_op(self)
                 # ignore function inputs
@@ -360,7 +361,9 @@ class Operation(object):
                 if isinstance(self.val.sym_val, (np.generic, np.ndarray)):
                     val_str = str(self.val.sym_val.tolist())
                 else:
-                    val_str = str(self.val.sym_val)
+                    val_str = "\"" + self.val.sym_val + "\"" if \
+                        isinstance(self.val.sym_val, six.string_types) else \
+                                str(self.val.sym_val)
                 s += "val=" + val_str
             else:
                 s += "val=(file_value)"
@@ -368,7 +371,7 @@ class Operation(object):
             s += ", ".join([k + "=" + Operation.var_to_str(self.inputs[k]) \
                     for k in self._input_types.keys() if \
                     k in self.inputs and not is_internal_input(k)])
-        s += ")\n"
+        s += ", name=\"{}\")\n".format(self.name)
         for b in self.blocks:
             s += b.indented_str(indent=indent + SPACES)
         return s
@@ -889,7 +892,11 @@ class SsaBlock(object):
             self.operations.pop(idx)
             op.enclosing_block = None
             for v in op.inputs.values():
-                v.remove_child_op(op)
+                if isinstance(v, (tuple,list)):
+                    for vv in v:
+                        vv.remove_child_op(op)
+                else:
+                    v.remove_child_op(op)
 
     def indented_str(self, indent=None):
         if indent is None:
@@ -969,7 +976,7 @@ class SsaProgram(object):
     def find_ops(self, prefix=None, op_type=None, exactly_one=False):
         """
         Return list of ops with name matching `prefix` if specified, and
-        op_type, if specified. At least one of {prefix, op_type} must be 
+        op_type, if specified. At least one of {prefix, op_type} must be
         specified.
 
         If `exactly_one` == True, raise ValueError if we find <1 or >1 ops satisfying

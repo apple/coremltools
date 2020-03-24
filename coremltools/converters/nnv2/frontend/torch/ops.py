@@ -85,8 +85,8 @@ def t(context, node):
 @register_torch_op
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    matmul = cb.matmul(x=inputs[0], y=inputs[1])
-    context.add(matmul.name, matmul)
+    matmul = cb.matmul(x=inputs[0], y=inputs[1], name=node.name)
+    context.add(matmul)
 
 
 @register_torch_op
@@ -150,9 +150,7 @@ def _convolution(context, node):
 
     pad = inputs[4]
     # Need to explicity state L-R, T-B pad
-    # Multiply by 2 as hack to get output dimensions to line up
-    # TODO: rdar://59740053 (Padding Calculation for Conv2D does not work for custom padding)
-    pad = np.repeat(pad.val, 2) * 2
+    pad = np.repeat(pad.val, 2) 
 
     dilations = inputs[5]
     group = inputs[8]
@@ -215,7 +213,7 @@ def flatten(context, node):
     context.add(reshape)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["relu_"])
 def relu(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
@@ -296,3 +294,108 @@ def mean(context, node):
     assert inputs[3] is None
     mean = cb.reduce_mean(x=inputs[0], axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(mean)
+
+
+@register_torch_op
+def size(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+
+    # Get the shape of the tensor.
+    shape_node = cb.shape(x=inputs[0], name=node.name + "_shape")
+    context.add(shape_node)
+    # Get the size of the tensor along the input dimension.
+    dim = inputs[1]
+    size_node = cb.const(val=shape_node.val[dim.val], name=node.name)
+    context.add(size_node)
+
+
+@register_torch_op
+def view(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+
+    view = cb.reshape(x=inputs[0], shape=inputs[1], name=node.name)
+    context.add(view)
+    
+def adaptive_avg_pool2d(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+
+    _input = inputs[0]
+    output_size = inputs[1]
+    assert isinstance(output_size.val, np.ndarray)
+    if tuple(output_size.val) != (1, 1):
+        raise ValueError(
+            "adaptive_avg_pool2d only supports output size == (1,1). Recived: {}".format(output_size.val)
+        )
+
+    # Represent (1,1) output size via @reduce_mean
+    # Assume (b,c,h,w) input shape
+    axes = cb.const(val=[1, 2], name=node.name + "_axes")
+    keep_dims = cb.const(val=True, name=node.name + "_keep_dims")
+
+    reduce_mean = cb.reduce_mean(
+        x=_input, axes=axes, keep_dims=keep_dims, name=node.name
+    )
+    context.add(reduce_mean)
+
+
+@register_torch_op
+def batch_norm(context, node):
+    inputs = _get_inputs(context, node, expected=9)
+    # inputs skipped:
+    #   bool training (5)
+    #   float momentum (6)
+    #   bool cudnn_enabled (8)
+    _input = inputs[0]
+    weight = inputs[1]
+    bais = inputs[2]
+    running_mean = inputs[3]
+    running_var = inputs[4]
+    eps = inputs[7]
+    batch_norm = cb.batch_norm(
+        x=_input,
+        mean=running_mean,
+        variance=running_var,
+        gamma=weight,
+        beta=bais,
+        epsilon=eps,
+        name=node.name,
+    )
+    context.add(batch_norm)
+
+
+@register_torch_op
+def dropout(context, node):
+    """Dropout is set as a noOP."""
+    logging.warning("Setting dropout to no-op.")
+    inputs = _get_inputs(context, node, expected=3)
+
+    _input = inputs[0]
+    context.add(_input, torch_name=node.name)
+
+
+@register_torch_op
+def hardtanh_(context, node):
+    """Represent hardtanh as a hard sigmoid via the following translation:
+
+        hardtanh(min_val, max_val) = 
+            S * hardsigmoid(alpha = 1/S, beta = min_val/S) + min_val
+            where S = (max_val - min_val)
+    """
+    inputs = _get_inputs(context, node, expected=3)
+    _input = inputs[0]
+    min_val = inputs[1].val
+    max_val = inputs[2].val
+
+    beta = cb.const(val=0.0)
+    scalar = cb.const(val=max_val - min_val, name=node.name + "_scalar")
+    alpha = cb.const(val=1 / (max_val - min_val), name=node.name + "_alpha")
+    beta = cb.const(val=-min_val / (max_val - min_val), name=node.name + "_beta")
+    offset = cb.const(val=min_val, name=node.name + "_offset")
+
+    sig = cb.sigmoid_hard(
+        x=_input, alpha=alpha, beta=beta, name=node.name + "_hard_sigmoid"
+    )
+
+    scaled = cb.mul(x=sig, y=scalar, name=node.name + "_scaled")
+    offset = cb.add(x=scaled, y=offset, name=node.name)
+    context.add(offset)

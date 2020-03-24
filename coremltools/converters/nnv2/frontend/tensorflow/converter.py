@@ -1,6 +1,7 @@
 import six
 import logging
 from coremltools.converters.nnv2.nnv2_program.program.var import Var
+from coremltools.converters.nnv2.nnv2_program.program import get_new_symbol
 
 from coremltools.converters.nnv2.builtin_types import builtins
 from .basic_graph_ops import topsort, simple_topsort
@@ -97,6 +98,9 @@ class TFConverter:
 
         if inputs is None:
             self.inputs = []
+
+        elif isinstance(inputs,dict):
+            self.inputs = [self._get_tensor_name(k) for k,v in inputs.items()]
         else:
             if not isinstance(inputs, list):
                 inputs = [inputs]
@@ -144,6 +148,7 @@ class TFConverter:
         dtype = node.attr['dtype']
         if builtins.is_tensor(node.datatype):
             shape = node.datatype.get_shape()
+            shape = tuple(get_new_symbol() if s == -1 else s for s in shape)
         return cb.placeholder(shape, dtype=dtype)
 
     def convert_main_graph(self, prog, graph):

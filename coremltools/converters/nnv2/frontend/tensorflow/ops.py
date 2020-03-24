@@ -30,18 +30,18 @@ def Acos(context, node):
 @register_tf_op
 def All(context, node):
     x = context[node.inputs[0]]
-    axis = context[node.inputs[1]]
+    axes = context[node.inputs[1]]
     keep_dims = node.attr.get('keep_dims', False)
-    x = cb.reduce_prod(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    x = cb.reduce_prod(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
 
 @register_tf_op
 def Any(context, node):
     x = context[node.inputs[0]]
-    axis = context[node.inputs[1]]
+    axes = context[node.inputs[1]]
     keep_dims = node.attr.get('keep_dims', False)
-    x = cb.reduce_sum(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    x = cb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
 
@@ -49,7 +49,7 @@ def Any(context, node):
 def ArgMax(context, node):
     x = context[node.inputs[0]]
     axis = context[node.inputs[1]]
-    x = cb.reduce_argmax(x=x, axis=axis.val, name=node.name)
+    x = cb.reduce_argmax(x=x, axis=axis, name=node.name)
     context.add(node.name, x)
 
 
@@ -57,7 +57,7 @@ def ArgMax(context, node):
 def ArgMin(context, node):
     x = context[node.inputs[0]]
     axis = context[node.inputs[1]]
-    x = cb.reduce_argmin(x=x, axis=axis.val, name=node.name)
+    x = cb.reduce_argmin(x=x, axis=axis, name=node.name)
     context.add(node.name, x)
 
 
@@ -314,6 +314,39 @@ def Pow(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def DepthwiseConv2dNative(context, node):
+    # [kH, kW, C_in, multiplier]
+    W_hwim = context[node.inputs[1]] # m = multiplier
+    # [kH, kW, 1, C_in * multipler]
+    shape_hw1o = list(W_hwim.shape[:2]) + [1, W_hwim.shape[2]*W_hwim.shape[3]]
+    W_hw1o = cb.reshape(x=W_hwim, shape=shape_hw1o)
+    # [C_in * multipler, 1, kH, kW]. Note that C_in * multiplier = C_out in
+    # NNv2. C_in / group = 1 in depthwise conv.
+    W_o1hw = cb.transpose(x=W_hw1o, perm=[3, 2, 0, 1])
+    data_format = node.attr.get('data_format', 'NHWC')
+    HW_dilations = _conv2d_strides_or_dilations(
+            'dilations', node.attr.get('dilations'), data_format)
+    HW_strides = _conv2d_strides_or_dilations(
+            'strides', node.attr.get('strides'), data_format)
+
+    pad_type = node.attr.get('padding')
+    if pad_type not in ['VALID', 'SAME']:
+        raise ValueError("Invalid padding type for tf.nn.depthwise_conv2d")
+
+    pad_type = pad_type.lower()
+    x = context[node.inputs[0]]
+    C_in = x.shape[-1]
+    if data_format == "NHWC":
+        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+    # Only the last op should have the same name as node.name
+    conv_name = node.name + 'x' if data_format == 'NHWC' else node.name
+    x = cb.conv(x=x, W=W_o1hw, pad_type=pad_type, strides=HW_strides,
+            dilations=HW_dilations, group=C_in, name=conv_name)
+    if data_format == "NHWC":
+        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
 def Conv2D(context, node):
     W_hwio = context[node.inputs[1]]
     W_oihw = cb.transpose(x=W_hwio, perm=[3, 2, 0, 1])
@@ -357,9 +390,9 @@ def DepthToSpace(context, node):
 @register_tf_op
 def EuclideanNorm(context, node):
     x = context[node.inputs[0]]
-    axis = context[node.inputs[1]]
+    axes = context[node.inputs[1]]
     keep_dims = node.attr.get('keep_dims', False)
-    x = cb.reduce_l2_norm(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    x = cb.reduce_l2_norm(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
 
@@ -367,6 +400,11 @@ def EuclideanNorm(context, node):
 def ExpandDims(context, node):
     x = context[node.inputs[0]]
     axis = context[node.inputs[1]]
+    if axis.op.op_type == "const" and (axis.val is not None
+                                       and axis.val.size == 1):
+        axis = axis.val[0] if axis.shape == (1,) else axis.val
+    else:
+        raise ValueError("Expand Dims: Invalid value for parameter axis")
     x = cb.expand_dims(x=x, axis=axis, name=node.name)
     context.add(node.name, x)
 
@@ -426,19 +464,19 @@ def Sub(context, node):
     context.add(node.name, x)
 
 @register_tf_op
-def get_tuple(context, node):
-    x = context[node.inputs[0]]
-    if not isinstance(x, list):
-        raise ValueError("Op type {} should return multiple output.".format(
-            node.inputs[0].op))
-    idx = node.attr['index']
-    context.add(node.name, x[idx], is_new_var=False)
+def StopGradient(context, node):
+    Identity(context, node)
 
 @register_tf_op
 def Identity(context, node):
-    # Don't change tfssa. Just make downstream ops reference the pre-identity op.
     x = context[node.inputs[0]]
-    context.add(node.name, x, is_new_var=False)
+    # TODO rdar://60644469 NNv2 -> NNv1 backend output name uses op output var name, not op.name for all ops
+    if len(node.outputs) == 0:
+        x = cb.mul(x=x, y=1.0, name=node.name)
+        context.add(node.name, x)
+    else:
+        # Don't change tfssa. Just make downstream ops reference the pre-identity op.
+        context.add(node.name, x, is_new_var=False)
 
 @register_tf_op
 def Placeholder(context, node):
@@ -460,12 +498,12 @@ def _pool_pads_or_strides(tf_spec, data_format, d_rank):
     return d_spec
 
 
-@register_tf_op
+@register_tf_op(tf_alias=['BatchMatMul'])
 def MatMul(context, node):
     a = context[node.inputs[0]]
     b = context[node.inputs[1]]
-    transpose_a = node.attr.get('transpose_a', False)
-    transpose_b = node.attr.get('transpose_b', False)
+    transpose_a = node.attr.get('adj_x', False) or node.attr.get('transpose_a', False)
+    transpose_b = node.attr.get('adj_y', False) or node.attr.get('transpose_b', False)
     x = cb.matmul(x=a, y=b, transpose_x=transpose_a,
                   transpose_y=transpose_b, name=node.name)
     context.add(node.name, x)
@@ -515,20 +553,23 @@ def Max(context, node):
 @register_tf_op
 def Min(context, node):
     x = context[node.inputs[0]]
-    axis = context[node.inputs[1]]
+    axes = context[node.inputs[1]]
     keep_dims = node.attr.get('keep_dims', False)
-    x = cb.reduce_min(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    x = cb.reduce_min(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
 
 @register_tf_op
 def Prod(context, node):
     x = context[node.inputs[0]]
-    axis = context[node.inputs[1]]
+    axes = context[node.inputs[1]]
     keep_dims = node.attr.get('keep_dims', False)
-    x = cb.reduce_prod(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    x = cb.reduce_prod(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def Cast(context, node):
+    Round(context, node)
 
 @register_tf_op
 def Round(context, node):
@@ -575,11 +616,41 @@ def Square(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def StridedSlice(context, node):
+    x = context[node.inputs[0]]
+    begin = context[node.inputs[1]]
+    end = context[node.inputs[2]]
+    stride = context[node.inputs[3]]
+
+    def bitmask_to_array(bit):
+        arr = []
+        while bit > 0:
+            if bit & 1:
+                arr.append(True)
+            else:
+                arr.append(False)
+            bit >>= 1
+        return arr
+
+    begin_mask = bitmask_to_array(node.attr.get('begin_mask', 0))
+    end_mask = bitmask_to_array(node.attr.get('end_mask', 0))
+    squeeze_mask = bitmask_to_array(node.attr.get('shrink_axis_mask', 0))
+
+    begin_mask += [False]*(x.rank-len(begin_mask))
+    end_mask += [False]*(x.rank-len(end_mask))
+    squeeze_mask += [False]*(x.rank-len(squeeze_mask))
+
+    x = cb.slice_by_index(x=x, name=node.name, begin=begin, end=end, stride=stride,
+                          begin_mask=begin_mask, end_mask=end_mask, squeeze_mask=squeeze_mask)
+
+    context.add(node.name, x)
+
+@register_tf_op
 def Sum(context, node):
     x = context[node.inputs[0]]
-    axis = context[node.inputs[1]]
+    axes = context[node.inputs[1]]
     keep_dims = node.attr.get('keep_dims', False)
-    x = cb.reduce_sum(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    x = cb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
 
@@ -601,9 +672,9 @@ def get_tuple(context, node):
 @register_tf_op
 def Mean(context, node):
     x = context[node.inputs[0]]
-    axis = context[node.inputs[1]]
+    axes = context[node.inputs[1]]
     keep_dims = node.attr.get('keep_dims', False)
-    x = cb.reduce_mean(x=x, axes=axis, keep_dims=keep_dims, name=node.name)
+    x = cb.reduce_mean(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -687,14 +758,19 @@ def ReverseSequence(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def Transpose(context, node):
+    x = context[node.inputs[0]]
+    perm = context[node.inputs[1]]
+    x = cb.transpose(x=x, perm=perm, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
 def Squeeze(context, node):
     x = context[node.inputs[0]]
     axes = node.attr.get('squeeze_dims', [])
-    axes = None if axes == [] else axes
-    if not axes:
-        x = cb.squeeze(x=x, name=node.name)
-    else:
-        x = cb.squeeze(x=x, axes=axes, name=node.name)
+    if axes == []:
+        axes = None
+    x = cb.squeeze(x=x, axes=axes, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -752,6 +828,12 @@ def Softsign(context, node):
     x = cb.softsign(x=x, name=node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def Softmax(context, node):
+    logit = context[node.inputs[0]]
+    axis = node.attr.get('axis')
+    x = cb.softmax(logit=logit, axis=axis, name=node.name)
+    context.add(node.name, x)
 
 @register_tf_op
 def SpaceToDepth(context, node):
@@ -778,10 +860,8 @@ def Tanh(context, node):
 def TopK(context, node):
     x = context[node.inputs[0]]
     k = context[node.inputs[1]]
-    x, indices = cb.topk(x=x, k=k.val, axis=-1, name=node.name)
-    context.add(x.name, x)
-    context.add(indices.name, indices)
-    context.add(node.name, [x, indices])
+    x = cb.topk(x=x, k=k.val, axis=-1, name=node.name)
+    context.add(node.name, x)
 
 
 @register_tf_op
@@ -807,13 +887,6 @@ def GatherNd(context, node):
     indices = context[node.inputs[1]]
     x = cb.gather_nd(x=x, indices=indices, name=node.name)
     context.add(node.name,x)
-
-@register_tf_op
-def Transpose(context, node):
-    x = context[node.inputs[0]]
-    perm = context[node.inputs[1]]
-    x = cb.transpose(x=x, perm=perm, name=node.name)
-    context.add(node.name, x)
 
 @register_tf_op
 def Tile(context, node):
@@ -1168,6 +1241,22 @@ def Pack(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def Unpack(context, node):
+    x = context[node.inputs[0]]
+    axis = int(node.attr['axis'])
+    num_splits = node.attr.get('num', None)
+    if num_splits is None:
+        num_splits = x.shape[axis]
+    y = cb.split(x=x, num_splits=num_splits, axis=axis, name=node.name + "_unsqueezed")
+    output_vars = []
+    for i in range(num_splits):
+        output_vars.append(cb.squeeze(x=y[i], axes=[axis], name=node.name + ":{}".format(i)))
+
+    context.add(node.name, output_vars)
+
+
+
+@register_tf_op
 def SplitV(context, node):
     x = context[node.inputs[0]]
     split_sizes = context[node.inputs[1]]
@@ -1183,7 +1272,6 @@ def SplitV(context, node):
 def Split(context, node):
     axis = context[node.inputs[0]]
     x = context[node.inputs[1]]
-    node.attr
     if 'num_split' not in node.attr:
         raise ValueError('num_splits not found in TF op {}'.format(node.name))
     num_splits = node.attr['num_split']
@@ -1198,3 +1286,70 @@ def Split(context, node):
     # res are ['split:0', 'split:1', 'split']
     #
     # but node.outputs == ['gto_1', 'gto_2', 'gto_3']
+
+@register_tf_op
+def CropAndResize(context, node):
+    x = context[node.inputs[0]]
+    input_shape = x.shape  # (B, h_in, w_in, C)
+    if len(input_shape) != 4:
+        raise ValueError('\"CropResize\" op: expected input rank 4, got {}'.format(x.rank))
+    Hin, Win = input_shape[1:3]
+
+    const_box_info = True
+    if context[node.inputs[1]].val is None or context[node.inputs[2]].val is None:
+        const_box_info = False
+        # TODO: rdar://60540725 ([NNv2] [SSAv2] CropResize layer requires concat on float32 and int32 input)
+        raise ValueError('"CropResize" op: expected boxes and box_indices to be known during conversion!')
+
+    crop_size = context[node.inputs[3]].val
+    method = 'bilinear' if len(node.inputs) < 5 else context[node.inputs[4]].val
+    extrapolation_value = 1.0 if len(node.inputs) < 6 else context[node.inputs[5]].val
+
+    # CoreML index information along with boxes
+    if const_box_info:
+        boxes = context[node.inputs[1]].val
+        box_indices = context[node.inputs[2]].val
+        box_indices = np.expand_dims(box_indices, axis=1)
+        boxes = np.concatenate([box_indices, boxes], axis=1)
+        # CoreML expects boxes/ROI in
+        # [N, 1, 5, 1, 1] format
+        boxes = boxes.reshape(boxes.shape[0], 1, boxes.shape[1], 1, 1)
+    else:
+        box_indices = context[node.inputs[2]]
+        boxes = context[node.inputs[1]]
+        box_indices = cb.expand_dims(x=box_indices, axis=1)
+        # rdar://60540725 ([NNv2] [SSAv2] CropResize layer requires concat on float32 and int32 input)
+        boxes = cb.concat(values=(box_indices, boxes), axis=1)
+        # TODO: Dynamic rank: Use GetShape and select indices dynamically
+        boxes = cb.reshape(x=boxes, shape=[boxes.shape[0], 1, boxes.shape[1], 1, 1])
+
+    # Get Height and Width of crop
+    h_out, w_out = crop_size[0], crop_size[1]
+
+    # TF `nearest` mode not supported
+    method_map = {'bilinear':'ALIGN_CORNERS'}
+    if method not in method_map:
+        raise ValueError(
+            '\"\CropResize\" op: Unsupported method {}. Supports {}'.format(method, method_map.keys()))
+    method = method_map[method]
+
+    # TF input format: [B, h_in, w_in, C]
+    # CoreML input format: [B, C, h_in, w_in]
+    x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+
+
+    # Crop Resize
+    x = cb.crop_resize(x=x,
+                       roi=boxes,
+                       target_height=h_out,
+                       target_width=w_out,
+                       normalized_coordinates=True,
+                       spatial_scale=extrapolation_value,
+                       box_coordinate_mode='CORNERS_HEIGHT_FIRST',
+                       sampling_mode=method)
+    
+    # CoreML output format: [N, 1, C, h_out, w_out]
+    # TF output format: [N, h_out, h_out, C]
+    x = cb.squeeze(x=x, axes=[1])
+    x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    context.add(node.name, x)

@@ -339,7 +339,7 @@ class TestPReLU:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [2, 4, 8],
+                                 [1, 2, 4, 8],
                                  [2, 3, 4]))
     def test_builder_to_backend_stress(self, use_cpu_only, backend, dim, chan):
         shape = np.array([chan, dim, dim])
@@ -663,9 +663,6 @@ class TestSoftplusParametric:
                 backends,
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend == 'nnv1_proto':
-            pytest.skip("Broken with NNv1 Backend: <rdar://59954690>")
-    
         t = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
         input_placeholders = {
             "x": cb.placeholder(shape=t.shape)
@@ -746,12 +743,9 @@ class TestSoftplusParametric:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [2, 4, 8],
+                                 [1, 2, 4, 8],
                                  [1, 2, 3]))
     def test_builder_to_backend_stress(self, use_cpu_only, backend, dim, chan):
-        if backend == 'nnv1_proto':
-            pytest.skip("Broken with NNv1 Backend: <rdar://59954690>")
-    
         shape = np.array([chan, dim, dim])
         x_val = np.random.rand(*shape)
         alpha_val = np.random.rand(chan).astype(np.float32)
@@ -776,8 +770,50 @@ class TestSoftplusParametric:
                             use_cpu_only=use_cpu_only, backend=backend)
 
 
-# TODO: Softmax test
+class TestSoftmax:
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_buidler_to_backend_smoke(self, use_cpu_only, backend):
+        t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
+        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
+        input_values = {"x": t}
 
+        def build(x):
+            return cb.softmax(logit=x, axis=0)
+
+        expected_output_types = (2, 3, builtins.fp32)
+        expected_outputs = np.array([[6.69285092e-03, 9.99088949e-01, 1.23394576e-04],
+                                     [9.93307149e-01, 9.11051194e-04, 9.99876605e-01]], dtype=np.float32)
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @ssa_fn
+    def test_builder_eval(self):
+        x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
+        v = cb.softmax(logit=x_val, axis=0)
+        assert is_close(scipy.special.softmax(x_val, axis=0), v.val)
+
+    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.parametrize("use_cpu_only, backend, rank_and_axes",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(rank, tuple(range(-1, rank))) for rank in range(1, 6)]))
+    def test_tf(self, use_cpu_only, backend, rank_and_axes, **kwargs):
+        rank, axes = rank_and_axes
+        input_shape = np.random.randint(low=1, high=6, size=rank)
+        for axis in axes:
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                res = tf.nn.softmax(x, axis=axis)
+                run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
+                               res, use_cpu_only=use_cpu_only,
+                               frontend_only=False, backend=backend)
 
 class TestSoftsign:
     @pytest.mark.parametrize("use_cpu_only, backend",

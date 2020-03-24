@@ -7,7 +7,7 @@ from .tf_op_registry import _OPS_REGISTRY
 
 def compatible_shapes(tf_shape, inf_shape):
     def compare_elem(dt, ds):
-        if dt in [None, -1] and is_symbolic(ds):
+        if dt in [None, -1]:
             return True
         elif dt == ds:
             return True

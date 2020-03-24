@@ -6,6 +6,7 @@
 import os.path
 
 import torch
+import logging
 
 from ...models import MLModel
 from ..nnv2 import converter as NNV2_converter
@@ -23,9 +24,9 @@ def convert(model_spec, inputs):
 
     if isinstance(model_spec, str):
         filename = os.path.abspath(model_spec)
-        torchir = torch.jit.load(filename)
+        torchscript = torch.jit.load(filename)
     elif isinstance(model_spec, torch.jit.ScriptModule):
-        torchir = model_spec
+        torchscript = model_spec
     else:
         raise TypeError(
             "@model_spec must either be a PyTorch .pt file or a TorchScript object, received: {}".format(
@@ -33,7 +34,13 @@ def convert(model_spec, inputs):
             )
         )
 
-    converter = TorchConverter(torchir, inputs)
+    if torchscript.training:
+        logging.warning(
+            "Torchscript has @.training == true. This could be a sign that your torchscript has non-training operations "
+            "included. Make sure to set model to .eval mode before tracing."
+        )
+
+    converter = TorchConverter(torchscript, inputs)
     prog = converter.convert()
     proto = NNV2_converter.convert(
         prog, convert_from="NitroSSA", convert_to="nnv1_proto"

@@ -4,9 +4,11 @@ import logging
 def nnv1_backend_passes(prog):
     passes = [
         'nnv1_backend::commingle_loop_vars', # after loop_invariant_elimination
-        'nnv1_backend::handle_return_unused_inputs',
+        'nnv1_backend::handle_return_inputs_as_outputs',
         'common::const_elimination',
-        'common::dead_code_elimination', # always end with dce
+        'common::dead_code_elimination',
+        'nnv1_backend::handle_unused_inputs', # must come after dce.
+        'nnv1_backend::alert_return_type_cast', # must be at the end.
     ]
 
     for p in passes:

@@ -8,6 +8,7 @@ numpy
 libsvm;python_version>="3.4"
 olefile==0.44
 pandas
+pillow
 pytest
 pytest-sugar
 scikit-learn==0.19.2

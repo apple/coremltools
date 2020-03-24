@@ -5,23 +5,172 @@ backends = _test_reqs.backends
 
 class TestConv:
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, backend",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                             ))
-    def test_tf(self, use_cpu_only, backend):
-        N, H, W, C_in = 1, 3, 4, 2
-        kH, kW, C_out = 3, 3, 5
-        input_shape = (N, H, W, C_in)
+    @pytest.mark.parametrize(
+            ','.join([
+                'use_cpu_only',
+                'backend',
+                'conv_dim', # 1d or 2d conv
+                'padding',
+                'data_format',
+                'HWkHkW',
+                'strides',
+                'dilations']),
+             itertools.product(
+                 [True, False],
+                 backends,
+                 ['conv1d', 'conv2d'],
+                 ['SAME', 'VALID'],
+                 ['NHWC'],  # NCHW not supoported.
+                 [(11, 12, 3, 2), (12, 11, 2, 3)],
+                 [(1, 1), (2, 3)],
+                 [(1, 1), (2, 3)],
+             ))
+    def test_tf_conv(self, use_cpu_only, backend, conv_dim,
+            padding, data_format, HWkHkW, strides, dilations):
+        H, W, kH, kW = HWkHkW
+        N, C_in, C_out = 1, 2, 3
+        if data_format == 'NHWC':
+            input_shape = (N, W, C_in) if conv_dim == 'conv1d' \
+                    else (N, H, W, C_in)
+            if conv_dim == 'conv1d':
+                data_format = 'NWC'
+        else:  # 'NCHW'
+            input_shape = (N, C_in, W) if conv_dim == 'conv1d' \
+                    else (N, C_in, H, W)
+            if conv_dim == 'conv1d':
+                data_format = 'NCW'
+        W_shape = (kW, C_in, C_out) if conv_dim == 'conv1d' \
+                else (kH, kW, C_in, C_out)
+        dilations = dilations[1] if conv_dim == 'conv1d' else dilations
+        def test_static_W():
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                W = tf.constant(np.random.rand(*W_shape), tf.float32)
+                if conv_dim == 'conv1d':
+                    conv = tf.nn.conv1d(x, W, stride=strides[1], padding=padding,
+                        dilations=dilations, data_format=data_format)
+                else:
+                    conv = tf.nn.conv2d(x, W, strides=strides, padding=padding,
+                        dilations=dilations, data_format=data_format)
+                run_compare_tf(graph, {x: np.random.rand(*input_shape)},
+                               conv, use_cpu_only=use_cpu_only,
+                               frontend_only=False, backend=backend)
+
+        def test_dynamic_W():
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                W = tf.placeholder(tf.float32, shape=W_shape)
+                if conv_dim == 'conv1d':
+                    # Notice stride vs strides argument
+                    conv = tf.nn.conv1d(x, W, stride=strides[1], padding=padding,
+                        dilations=dilations, data_format=data_format)
+                else:
+                    conv = tf.nn.conv2d(x, W, strides=strides, padding=padding,
+                        dilations=dilations, data_format=data_format)
+                run_compare_tf(graph, {x: np.random.rand(*input_shape),
+                    W: np.random.rand(*W_shape)},
+                    conv, use_cpu_only=use_cpu_only,
+                    frontend_only=False, backend=backend)
+
+        test_static_W()
+        if dilations == (1, 1):
+            # We do not support dynamic weight when dilation != 1.
+            test_dynamic_W()
+
+    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skip(reason='rdar://60100504')
+    @pytest.mark.parametrize(
+            ','.join([
+                'use_cpu_only',
+                'backend',
+                'conv_dim', # 1d or 2d conv
+                'padding',
+                'data_format',
+                'HWkHkW',
+                'strides',
+                'dilations']),
+             itertools.product(
+                 [True, False],
+                 backends,
+                 ['conv1d', 'conv2d'],
+                 ['SAME', 'VALID'],
+                 ['NHWC'],  # NCHW not supoported.
+                 [(11, 12, 3, 2), (12, 11, 2, 3)],
+                 [(1, 1), (2, 3)],
+                 [(1, 1), (2, 3)],
+             ))
+    def test_tf_keras(self, use_cpu_only, backend, conv_dim,
+            padding, data_format, HWkHkW, strides, dilations):
+        H, W, kH, kW = HWkHkW
+        N, C_in, C_out = 1, 2, 3
+        keras_data_format = 'channels_last' if data_format == 'NHWC' \
+                else 'channels_first'
+        input_shape = (N, W, C_in) if conv_dim == 'conv1d' \
+                else (N, H, W, C_in)
+        conv = tf.keras.layers.Conv2D(C_out, (kH, kW), strides,
+                padding=padding, data_format=keras_data_format,
+                dilation_rate=dilations)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=input_shape)
-            W = tf.constant(np.random.rand(kH, kW, C_in, C_out), tf.float32)
-            conv = tf.nn.conv2d(x, W, strides=1, padding='SAME',
-                    data_format='NHWC')
+            res = conv(x)
             run_compare_tf(graph, {x: np.random.rand(*input_shape)},
-                           conv, use_cpu_only=use_cpu_only,
+                           res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
+
+    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.parametrize(
+            ','.join([
+                'use_cpu_only',
+                'backend',
+                'padding',
+                'HWkHkW',
+                'strides',
+                'dilations']),
+             itertools.product(
+                 [True, False],
+                 backends,
+                 ['SAME', 'VALID'],
+                 [(11, 12, 3, 2), (12, 11, 2, 3)],
+                 # TF doesn't support non-square strides for depthwise
+                 # https://github.com/tensorflow/tensorflow/issues/33005
+                 [(1, 1, 1, 1), (1, 2, 2, 1)],
+                 [(1, 1)], # Other dilation requires SpaceToBatchND
+             ))
+    def test_tf_depthwise_conv(self, use_cpu_only, backend,
+            padding, HWkHkW, strides, dilations):
+        H, W, kH, kW = HWkHkW
+        N, C_in, C_out = 1, 2, 6
+        input_shape = (N, H, W, C_in)
+        data_format = 'NHWC'
+        assert C_out % C_in == 0
+        multiplier = int(C_out / C_in)
+        W_shape = (kH, kW, C_in, multiplier)
+        def test_static_W():
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                W = tf.constant(np.random.rand(*W_shape), tf.float32)
+                conv = tf.nn.depthwise_conv2d(x, W, strides=strides, padding=padding,
+                    dilations=dilations, data_format=data_format)
+                run_compare_tf(graph, {x: np.random.rand(*input_shape)},
+                               conv, use_cpu_only=use_cpu_only,
+                               frontend_only=False, backend=backend)
+
+        def test_dynamic_W():
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=input_shape)
+                W = tf.placeholder(tf.float32, shape=W_shape)
+                conv = tf.nn.depthwise_conv2d(x, W, strides=strides, padding=padding,
+                    dilations=dilations, data_format=data_format)
+                run_compare_tf(graph, {x: np.random.rand(*input_shape),
+                    W: np.random.rand(*W_shape)},
+                    conv, use_cpu_only=use_cpu_only,
+                    frontend_only=False, backend=backend)
+
+        test_static_W()
+        if dilations == (1, 1):
+            # We do not support dynamic weight when dilation != 1.
+            test_dynamic_W()
+
 
 class TestConvTranspose:
     @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")

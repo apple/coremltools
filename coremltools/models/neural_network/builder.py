@@ -21,10 +21,9 @@ import numpy as np
 from .quantization_utils import unpack_to_bytes, _convert_array_to_nbit_quantized_bytes
 from .spec_inspection_utils import *
 from .update_optimizer_utils import AdamParams, SgdParams
+import math
 
 _SUPPORTED_UPDATABLE_LAYERS = ['innerProduct', 'convolution']
-
-import math
 
 def _set_recurrent_activation(param, activation):
     activation = activation.upper() if isinstance(activation, str) else activation
@@ -152,26 +151,43 @@ def _fill_tensor_fields(tensor_field, ranks=None, shapes=None):
     """
     if ranks is None and shapes is None:
         return
+
     if ranks is None and shapes is not None:
         ranks = [len(shape) for shape in shapes]
+
     # Fill ranks only
     for rank in ranks:
         if rank is None:
-            raise ValueError('Rank of a tensor should not be None')
-        # if rank > 5:
-        #     raise ValueError('Rank greater than 5 not supported')
+            continue
+
+        if not np.issubclass_(type(rank), (int, np.integer)):
+            rank = -1 # Symbolic rank set to -1
+
         field = tensor_field.add()
         field.rank = rank
+
     if ranks is not None and shapes is not None:
-        # Check validity
         if len(ranks) != len(shapes):
-            raise ValueError('Number of rank and shape of tensor field does not match')
-        for i, (r, s) in enumerate(zip(ranks, shapes)):
-            if s is None:
+            raise ValueError('Number of rank and shape of tensor field does not match.')
+
+        for i in range(0, len(ranks)):
+            shape = shapes[i]
+            rank = ranks[i]
+
+            # Ignore incomplete info
+            if shape is None or rank is None:
                 continue
-            if r != len(s):
+            
+            # Raise error on inconsistent input
+            if rank != len(shape):
                 raise ValueError('Rank and shape does not match')
-            tensor_field[i].dimValue.extend(s)
+
+            # Add the shape to the proto
+            is_symbolic = False
+            for s in shape:
+                if not np.issubclass_(type(s), (int, np.integer)):
+                    s = -1 # Symbolic shape set to -1
+                tensor_field[i].dimValue.append(s)
 
 
 class NeuralNetworkBuilder(object):
@@ -1235,7 +1251,8 @@ class NeuralNetworkBuilder(object):
         return spec_layer
 
     def add_activation(self, name, non_linearity, input_name, output_name,
-                       params=None):
+                       input_rank=None, input_shape=None,
+                       output_rank=None, output_shape=None, params=None):
         """
         Add an activation layer to the model.
         Refer to the specification (NeuralNetwork.proto) for more details.
@@ -1318,8 +1335,11 @@ class NeuralNetworkBuilder(object):
         --------
         add_convolution, add_softmax
         """
-
-        spec_layer = self._add_generic_layer(name, [input_name], [output_name])
+        input_rank = len(input_shape) if (input_shape and not input_rank) else input_rank
+        output_rank = len(output_shape) if (output_shape and not output_rank) else output_rank
+        spec_layer = self._add_generic_layer(name, [input_name], [output_name],
+                                                   [input_rank], [input_shape],
+                                                   [output_rank], [output_shape])
         spec_layer_params = spec_layer.activation
 
         # Fill in the parameters
@@ -2956,9 +2976,13 @@ class NeuralNetworkBuilder(object):
               Reverse of the operation 'SPACE_TO_DEPTH'.
               Output CHW dimensions are: [C/(block_size * block_size), H * block_size, C * block_size].
 
+            - If mode == 'PIXEL_SHUFFLE':  data is moved from the channel to the spatial dimension.
+              Reverse of the operation 'SPACE_TO_DEPTH'.
+              Output CHW dimensions are: [C/(block_size * block_size), H * block_size, C * block_size].
+
         block_size: int
             Must be greater than 1. Must divide H and W, when mode is 'SPACE_TO_DEPTH'. (block_size * block_size)
-            must divide C when mode is 'DEPTH_TO_SPACE'.
+            must divide C when mode is 'DEPTH_TO_SPACE' or 'PIXEL_SHUFFLE'.
 
         See Also
         --------
@@ -4579,7 +4603,7 @@ class NeuralNetworkBuilder(object):
         return spec_layer
 
     def add_slice_static(self, name, input_name, output_name, begin_ids,
-                         end_ids, strides, begin_masks, end_masks):
+                         end_ids, strides, begin_masks, end_masks, squeeze_masks=None):
         """
         Add a slice_static layer to the model that extracts a slice of size
         ``(end - begin) / stride`` from the given input tensor.
@@ -4603,6 +4627,8 @@ class NeuralNetworkBuilder(object):
             Boolean masks for begin offsets.
         end_masks: list of bool
             Boolean masks for end offsets.
+        squeeze_masks: list of bool
+            Boolean masks for squeezing axis.
 
         See Also
         --------
@@ -4614,6 +4640,7 @@ class NeuralNetworkBuilder(object):
         assert len(strides) == rank
         assert len(begin_masks) == rank
         assert len(end_masks) == rank
+        assert squeeze_masks is None or len(squeeze_masks) == rank
 
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.sliceStatic
@@ -4623,11 +4650,12 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.strides.extend(strides)
         spec_layer_params.beginMasks.extend(begin_masks)
         spec_layer_params.endMasks.extend(end_masks)
+        spec_layer_params.squeezeMasks.extend(squeeze_masks)
 
         return spec_layer
 
     def add_slice_dynamic(self, name, input_names, output_name, end_ids=None,
-                          strides=None, begin_masks=None, end_masks=None):
+                          strides=None, begin_masks=None, end_masks=None, squeeze_masks=None):
         """
         Add a slice_dynamic layer to the model that extracts a slice of size
         ``(end - begin) / stride`` from the given input tensor.
@@ -4649,6 +4677,8 @@ class NeuralNetworkBuilder(object):
             Boolean masks for begin offsets, default: [false].
         end_masks: list of bool, optional
             Boolean masks for end offsets, default: [false].
+        squeeze_masks: list of bool, optional
+            Boolean masks for squeezing axis, default: [false].
 
         See Also
         --------
@@ -4663,6 +4693,8 @@ class NeuralNetworkBuilder(object):
             begin_masks = [False for _ in range(5)]
         if not end_masks:
             end_masks = [False for _ in range(5)]
+        if not squeeze_masks:
+            squeeze_masks = [False for _ in range(5)]
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer_params = spec_layer.sliceDynamic
@@ -4671,6 +4703,12 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.strides.extend(strides)
         spec_layer_params.beginMasks.extend(begin_masks)
         spec_layer_params.endMasks.extend(end_masks)
+        if squeeze_masks is None:
+            return spec_layer
+
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
+            spec_layer_params.squeezeMasks.extend(squeeze_masks)
 
         return spec_layer
 

@@ -2,19 +2,25 @@ import numpy as np
 import logging
 import six
 from coremltools.models import neural_network as neural_network
+from coremltools.converters.nnv2.builtin_types.symbolic import is_variadic
+
 
 V2_TO_V1_OP_REGISTRY = {}
 
 
 def register_v2_op(func):
-    V2_TO_V1_OP_REGISTRY[func.__name__] = func
+    f_name = func.__name__
+    if f_name in V2_TO_V1_OP_REGISTRY:
+        raise ValueError("V2 op {} is already registered.".format(f_name))
+    V2_TO_V1_OP_REGISTRY[f_name] = func
     return func
 
-def convert_ops(const_context, builder, ops):
+def convert_ops(const_context, builder, ops, outputs):
     """
     const_context: set of str: const name for v1 & v2 (the same)
     builder: neural_network.NeuralNetworkBuilder
     ops: list[Operation], usually from SsaBlock.operations.
+    outputs: list[Var]. block outputs
     """
     for op in ops:
         if op.op_type not in V2_TO_V1_OP_REGISTRY:
@@ -23,6 +29,12 @@ def convert_ops(const_context, builder, ops):
         mapper = V2_TO_V1_OP_REGISTRY[op.op_type]
         # const is globally shared in nnv1.
         mapper(const_context, builder, op)
+
+    for ov in outputs:
+        # If block return value is a const, we need to add it.
+        if ov.op.op_type == 'const':
+            add_const(const_context, builder, ov.name, ov.val)
+
 
 
 def _convert_pool(const_context, builder, op, mode):
@@ -39,6 +51,40 @@ def _convert_pool(const_context, builder, op, mode):
         exclude_pad_area=True,
         is_global=False,
     )
+
+
+def _try_convert_global_pool(builder, op, mode):
+    """
+    Optional performance optimization pass that tries to lower spatial
+    reduce_mean / reduce_max to global_avg_pool / global_max_pool.
+    Return True if the lowering happened, otherwise return False to
+    continue as normal reduction op.
+    """
+    rank = op.x.rank
+    if is_variadic(rank) or rank not in {4, 5}:
+        return False
+    axes = op.axes.val
+    keep_dims = op.keep_dims.val
+    axes = sorted([rank + axis if axis < 0 else axis for axis in axes])
+    if keep_dims is False:
+        return False
+    if rank == 4 and tuple(axes) != (2, 3):
+        return False
+    if rank == 5 and tuple(axes) != (2, 3, 4):
+        return False
+    builder.add_pooling(
+        name=op.name,
+        height=0,
+        width=0,
+        stride_height=0,
+        stride_width=0,
+        layer_type=mode.upper(),
+        padding_type='valid'.upper(),
+        input_name=op.x.name,
+        output_name=op.name,
+        is_global=True,
+    )
+    return True
 
 
 def add_const(const_context, builder, name, val):
@@ -58,6 +104,7 @@ def add_const(const_context, builder, name, val):
     """
     if name in const_context:
         logging.warning('Const {} was already added.'.format(name))
+        return
     rank = len(val.shape)
     if rank == 0:
         builder.add_load_constant_nd(
@@ -139,42 +186,6 @@ def _split_bias(b, sections):
     return b
 
 @register_v2_op
-def add(const_context, builder, op):
-    if op.x.val is not None and op.x.rank > 0:
-        add_const(const_context, builder, op.x.name, op.x.val)
-    if op.y.val is not None and op.y.rank > 0:
-        add_const(const_context, builder, op.y.name, op.y.val)
-
-    if op.x.shape != op.y.shape:
-        # Use the braodcast version
-        builder.add_add_broadcastable(
-                name=op.name,
-                input_names=[op.x.name, op.y.name],
-                output_name=op.name)
-    elif op.x.rank == 0 and op.x.val is not None:
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.y.name],
-                output_name=op.name,
-                alpha=op.x.val,
-                mode='ADD')
-    elif op.y.rank == 0 and op.y.val is not None:
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.x.name],
-                output_name=op.name,
-                alpha=op.y.val,
-                mode='ADD')
-    else:
-        # x, y are same shape
-        builder.add_elementwise(
-                name=op.name,
-                input_names=[op.x.name, op.y.name],
-                output_name=op.name,
-                mode='ADD')
-
-
-@register_v2_op
 def avg_pool(const_context, builder, op):
     _convert_pool(
         const_context=const_context,
@@ -241,24 +252,22 @@ def conv(const_context, builder, op):
         # v2 conv W: (C_out, C_in/group, spatial_dims)
         # v1 convolution expects (H, W, C_in/group, C_out)
         W_v1 = op.W.val
-        if op.W.rank == 3:
+        if is_conv1d:
             W_v1 = np.expand_dims(op.W.val, 3)
         W_v1 = np.transpose(W_v1, [2, 3, 1, 0])
     else:
         # op.W is not const at compile time.
-        W_rank4 = op.W.name+'expand_dim'
-        if op.W.rank == 3:
+        # When weight is dynamic, v1 convolution expects weight to be
+        # (C_out, C_in/group, H, W)
+        W_rank4 = op.W.name
+        if is_conv1d:
+            W_rank4 = op.W.name + '_expand_dim'
             builder.add_expand_dims(
                     name=W_rank4,
                     input_name=op.W.name,
                     output_name=W_rank4,
                     axes=3)
-        W_transposed = op.W.name + 'transposed'
-        builder.add_transpose(
-                name=W_transposed,
-                axes=[2, 3, 1, 0],
-                output_name=W_transposed)
-        input_names.append(W_transposed)
+        input_names.append(W_rank4)
 
     # padding
     border_mode = op.pad_type.val
@@ -361,13 +370,14 @@ def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
                 builder.add_greater_than(**params)
             elif "less" in mode:
                 params["use_less_than_equal"] = mode.endswith("_equal")
+                builder.add_less_than(**params)
             return
 
     if op.x.val is not None:
         add_const(const_context, builder, op.x.name, op.x.val)
     if op.y.val is not None:
         if mode == "pow":
-            _add_elementwise_unary(builder, "power", alpha=op.y.val)
+            _add_elementwise_unary(builder, op, "power", alpha=op.y.val)
             return
         add_const(const_context, builder, op.y.name, op.y.val)
 
@@ -391,11 +401,18 @@ def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
     else:
         if mode in ["divide", "floor_div", "mod", "pow", "subtract"]:
             add_func = getattr(builder, "add_"+mode+"_broadcastable", None)
+        elif mode == 'less_equal':
+            add_func = builder.add_less_than
+            kwargs['use_less_than_equal'] = True
+        elif mode == 'greater_equal':
+            add_func = builder.add_greater_than
+            kwargs['use_greater_than_equal'] = True
         else:
             add_func = getattr(builder, "add_"+mode, None)
 
         if add_func is None:
-            logging.error('Elementwise binary method {} not found in builder.'.format(mode))
+            msg = 'Elementwise binary method {} not found in builder.'
+            raise ValueError(msg.format(mode))
 
         add_func(name=op.name,
                  input_names=[op.x.name, op.y.name],
@@ -559,6 +576,25 @@ def sinh(const_context, builder, op):
     _add_elementwise_unary(builder, op, "sinh")
 
 @register_v2_op
+def slice_by_index(const_context, builder, op):
+    rank = op.x.rank
+    stride = [1] * rank if op.stride is None else op.stride.val
+    begin_mask = [False] * rank if op.begin_mask is None else op.begin_mask.val
+    end_mask = [False] * rank if op.end_mask is None else op.end_mask.val
+    squeeze_mask = [False] * rank if op.squeeze_mask is None else op.squeeze_mask.val
+
+    input_names = make_input(const_context, builder, [op.x, op.begin, op.end])
+    builder.add_slice_dynamic(
+        name=op.name,
+        input_names=input_names,
+        output_name=op.name,
+        strides=tuple(stride),
+        begin_masks=tuple(begin_mask),
+        end_masks=tuple(end_mask),
+        squeeze_masks=tuple(squeeze_mask)
+    )
+
+@register_v2_op
 def slice_by_size(const_context, builder, op):
     size = op.size.val
 
@@ -712,17 +748,6 @@ def random_uniform(const_context, builder, op):
 
 
 @register_v2_op
-def reduce_argmax(const_context, builder, op):
-    builder.add_argmax(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axis=op.axis.val,
-        keepdims=op.keep_dims.val,
-    )
-
-
-@register_v2_op
 def gru(const_context, builder, op):
     # Input shape: [b, s, I]
     input_name = op.x.name
@@ -792,22 +817,13 @@ def gru(const_context, builder, op):
 
 @register_v2_op
 def squeeze(const_context, builder, op):
+    axes = op.axes.val if op.axes is not None else None
     builder.add_squeeze(
         name=op.name,
         input_name=op.x.name,
         output_name=op.name,
-        axes=op.axes.val,
-        squeeze_all=(op.axes.val is None)
-    )
-
-
-@register_v2_op
-def transpose(const_context, builder, op):
-    builder.add_transpose(
-            name=op.name,
-            axes=op.perm.val,
-            input_name=op.x.name,
-            output_name=op.name)
+        axes=axes,
+        squeeze_all=axes is None)
 
 
 @register_v2_op
@@ -848,6 +864,13 @@ def linear(const_context, builder, op):
 
 @register_v2_op
 def matmul(const_context, builder, op):
+
+    if op.x.val is not None:
+        add_const(const_context, builder, op.x.name, op.x.val)
+
+    if op.y.val is not None:
+        add_const(const_context, builder, op.y.name, op.y.val)
+
     builder.add_batched_mat_mul(
         name=op.name,
         input_names=[op.x.name, op.y.name],
@@ -1149,29 +1172,31 @@ def reduce_log_sum_exp(const_context, builder, op):
         reduce_all=op.axes.val is None
     )
 
+
 @register_v2_op
 def reduce_max(const_context, builder, op):
-    # rdar://59609180 (Optimization: mapping reduce to global_pool)
-    builder.add_reduce_max(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
+    if not _try_convert_global_pool(builder, op, mode='max'):
+        builder.add_reduce_max(
+            name=op.name,
+            input_name=op.x.name,
+            output_name=op.name,
+            axes=op.axes.val,
+            keepdims=op.keep_dims.val,
+            reduce_all=op.axes.val is None
+        )
+
 
 @register_v2_op
 def reduce_mean(const_context, builder, op):
-    # rdar://59609180 (Optimization: mapping reduce to global_pool)
-    builder.add_reduce_mean(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
+    if not _try_convert_global_pool(builder, op, mode='average'):
+        builder.add_reduce_mean(
+            name=op.name,
+            input_name=op.x.name,
+            output_name=op.name,
+            axes=op.axes.val,
+            keepdims=op.keep_dims.val,
+            reduce_all=op.axes.val is None
+        )
 
 @register_v2_op
 def reduce_min(const_context, builder, op):
@@ -1336,6 +1361,9 @@ def transpose(const_context, builder, op):
 
 @register_v2_op
 def gather(const_context, builder, op):
+    if op.x.val is not None:
+        add_const(const_context, builder, op.x.name, op.x.val)
+
     builder.add_gather(
             name=op.name,
             input_names=[op.x.name, op.indices.name],
@@ -1485,11 +1513,22 @@ def softplus(const_context, builder, op):
     )
 
 @register_v2_op
+def softmax(const_context, builder, op):
+    builder.add_softmax_nd(
+        name=op.name,
+        input_name=op.logit.name,
+        output_name=op.name,
+        axis=op.axis.val
+    )
+
+@register_v2_op
 def softplus_parametric(const_context, builder, op):
     builder.add_activation(
         name=op.name,
         non_linearity='PARAMETRICSOFTPLUS',
         input_name=op.x.name,
+        input_shape=op.x.shape,
+        input_rank=op.x.rank,
         output_name=op.name,
         params=[op.alpha.val, op.beta.val]
     )
@@ -1545,18 +1584,11 @@ def prelu(const_context, builder, op):
         name=op.name,
         non_linearity='PRELU',
         input_name=op.x.name,
+        input_shape=op.x.shape,
+        input_rank=op.x.rank,
         output_name=op.name,
         params=op.alpha.val
     )
-
-@register_v2_op
-def squeeze(const_context, builder, op):
-    builder.add_squeeze(
-            name=op.name,
-            axes=op.axes.val if op.axes else None,
-            squeeze_all=True if op.axes is None else False,
-            input_name=op.x.name,
-            output_name=op.name)
 
 @register_v2_op
 def pad(const_context, builder, op):
@@ -1879,6 +1911,7 @@ def resize_bilinear(const_context, builder, op):
         mode=grid_sampling_mode_map[op.sampling_mode.val]
     )
 
+
 @register_v2_op
 def cond(const_context, builder, op):
     true_block = op.blocks[0]
@@ -1891,7 +1924,8 @@ def cond(const_context, builder, op):
     true_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=branch_layer.branch.ifBranch,
             disable_rank5_shape_mapping=True)
-    convert_ops(const_context, true_builder, true_block.operations)
+    convert_ops(const_context, true_builder, true_block.operations,
+            true_block.outputs)
 
     # Copy block output to cond op output.
     for block_out, op_out in zip(true_block.outputs, op.outputs):
@@ -1903,7 +1937,8 @@ def cond(const_context, builder, op):
     false_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=branch_layer.branch.elseBranch,
             disable_rank5_shape_mapping=True)
-    convert_ops(const_context, false_builder, false_block.operations)
+    convert_ops(const_context, false_builder, false_block.operations,
+            false_block.outputs)
 
     for block_out, op_out in zip(false_block.outputs, op.outputs):
         false_builder.add_copy(
@@ -1935,7 +1970,8 @@ def while_loop(const_context, builder, op):
     cond_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=loop_layer.loop.conditionNetwork,
             disable_rank5_shape_mapping=True)
-    convert_ops(const_context, cond_builder, cond_block.operations)
+    convert_ops(const_context, cond_builder, cond_block.operations,
+            cond_block.outputs)
 
     loop_layer.loop.conditionVar = cond_block.outputs[0].name
 
@@ -1943,7 +1979,8 @@ def while_loop(const_context, builder, op):
     body_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=loop_layer.loop.bodyNetwork,
             disable_rank5_shape_mapping=True)
-    convert_ops(const_context, body_builder, body_block.operations)
+    convert_ops(const_context, body_builder, body_block.operations,
+            body_block.outputs)
 
     # Also assume all outputs are different from loop inputs (i.e., no loop
     # invariant.)
@@ -1966,6 +2003,9 @@ def identity(const_context, builder, op):
 
 @register_v2_op
 def concat(const_context, builder, op):
+    for v in op.values:
+        if v.op is not None and v.op.op_type == 'const':
+            add_const(const_context, builder, v.name, v.val)
     builder.add_concat_nd(
             name=op.name,
             input_names=[v.name for v in op.values],
@@ -1994,3 +2034,69 @@ def split(const_context, builder, op):
             axis=op.axis.val,
             num_splits=len(op.outputs),
             split_sizes=split_sizes)
+
+@register_v2_op
+def argsort(const_context, builder, op):
+    axis = op.x.rank + op.axis.val if op.axis.val < 0 else op.axis.val
+    builder.add_argsort(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axis=axis,
+        descending=(not op.ascending.val)
+    )
+
+
+@register_v2_op
+def pixel_shuffle(const_context, builder, op):
+    builder.add_reorganize_data(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        mode='PIXEL_SHUFFLE',
+        block_size=op.upscale_factor.val
+    )
+
+
+@register_v2_op
+def sliding_windows(const_context, builder, op):
+    builder.add_sliding_windows(
+        name=op.name,
+        input_name=op.x.name,
+        output_name=op.name,
+        axis=op.axis.val,
+        window_size=op.size.val,
+        step=op.stride.val
+    )
+
+@register_v2_op
+def crop_resize(const_context, builder, op):
+    grid_sampling_mode_map = {'STRICT_ALIGN_CORNERS' : 'STRICT_ALIGN_ENDPOINTS_MODE',
+                              'ALIGN_CORNERS' : 'ALIGN_ENDPOINTS_MODE',
+                              'DEFAULT' : 'UPSAMPLE_MODE',
+                              'OFFSET_CORNERS': 'ROI_ALIGN_MODE'
+    }
+
+    mode = grid_sampling_mode_map[op.sampling_mode.val]
+
+    if op.roi.val is not None:
+        add_const(const_context, builder, op.roi.name, op.roi.val)
+
+    input_expanded = op.name + '_x_expand'
+    builder.add_expand_dims(
+        name=input_expanded,
+        input_name=op.x.name,
+        output_name=input_expanded,
+        axes=[0]
+    )
+    builder.add_crop_resize(
+        name=op.name,
+        input_names=[input_expanded, op.roi.name],
+        output_name=op.name,
+        target_height=op.target_height.val,
+        target_width=op.target_width.val,
+        mode=mode,
+        normalized_roi=op.normalized_coordinates.val,
+        box_indices_mode=op.box_coordinate_mode.val,
+        spatial_scale=op.spatial_scale.val
+    )

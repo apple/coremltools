@@ -696,8 +696,8 @@ message NeuralNetworkLayer {
         ArgSortLayerParams argSort = 1461;
         Pooling3DLayerParams pooling3d = 1465;
         GlobalPooling3DLayerParams globalPooling3d = 1466;
-        Convolution3DLayerParams convolution3d = 1470;
-        SliceBySizeLayerParams sliceBySize = 1475;
+        SliceBySizeLayerParams sliceBySize = 1470;
+        Convolution3DLayerParams convolution3d = 1471;
 
     }
 
@@ -5796,13 +5796,30 @@ message ClipLayerParams {
  * "endMasks" is True
  *
  * e.g.:
+ * if i-th element of "squeezeMasks" is set to True, only beginIds[i] would be sliced
+ * out, and all other masks and inputs are ignored.
+ *
+ * e.g. (without squeezeMasks):
  * input shape:  (5, 5, 5)
  * beginIds:  [1, 2, 3]
  * beginMasks:  [True, False, True]
  * endIds:  [3, -3, 2]
  * endMasks:  [False, True, True]
  * strides:  [2, 2, 2]
+ * SqueezeMasks:  [False, False, False]
  * output shape:  (2, 2, 3)
+ * This is equivalent to input[:3:2, 2::2, ::2]
+ *
+ * e.g. (with squeezeMasks):
+ * input shape:  (5, 5, 5)
+ * beginIds:  [1, 2, 3]
+ * beginMasks:  [True, False, True]
+ * endIds:  [3, -3, 2]
+ * endMasks:  [False, True, True]
+ * strides:  [2, 2, 2]
+ * SqueezeMasks:  [False, True, False]
+ * output shape:  (2, 3)
+ * This is equivalent to input[:3:2, 2, ::2]
  *
  */
 message SliceStaticLayerParams {
@@ -5812,6 +5829,7 @@ message SliceStaticLayerParams {
     repeated int64 endIds = 3;
     repeated bool endMasks = 4;
     repeated int64 strides = 5;
+    repeated bool squeezeMasks = 6;
 
 
 }
@@ -5822,8 +5840,8 @@ message SliceStaticLayerParams {
  * Support negative indexing and negative strides.
  * See "SliceStaticLayerParams" for the description and an example of the functionality of the layer.
  *
- * Requires 2 to 6 inputs and produces 1 output.
- * Rank of the output is same as the rank of the first input.
+ * Requires 2 to 7 inputs and produces 1 output.
+ * Rank of the output is same as the rank of the first input unless squeezeMask is set.
  *
  * Value of beginIds, beginMasks, endIds, endMasks, strides can be passed in either
  * as dynamic inputs or as static parameters.
@@ -5834,6 +5852,7 @@ message SliceStaticLayerParams {
  * The 4th input, if present, corresponds to "strides". In this case the value of the "strides" parameter is ignored.
  * The 5th input, if present, corresponds to "beginMasks". In this case the value of the "beginMasks" parameter is ignored.
  * The 6th input, if present, corresponds to "endMasks". In this case the value of the "endMasks" parameter is ignored.
+ * The 7th input, if present, corresponds to "squeezeMasks". In this case the value of the "squeezeMasks" parameter is ignored.
  *
  */
 message SliceDynamicLayerParams {
@@ -5842,6 +5861,7 @@ message SliceDynamicLayerParams {
     repeated int64 endIds = 3;
     repeated bool endMasks = 4;
     repeated int64 strides = 5;
+    repeated bool squeezeMasks = 6;
 
 }
 

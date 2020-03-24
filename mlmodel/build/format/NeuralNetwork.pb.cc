@@ -229,8 +229,8 @@ class NeuralNetworkLayerDefaultTypeInternal : public ::google::protobuf::interna
   const ::CoreML::Specification::ArgSortLayerParams* argsort_;
   const ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
   const ::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d_;
-  const ::CoreML::Specification::Convolution3DLayerParams* convolution3d_;
   const ::CoreML::Specification::SliceBySizeLayerParams* slicebysize_;
+  const ::CoreML::Specification::Convolution3DLayerParams* convolution3d_;
 } _NeuralNetworkLayer_default_instance_;
 class BranchLayerParamsDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<BranchLayerParams> {
 } _BranchLayerParams_default_instance_;
@@ -7665,8 +7665,8 @@ const int NeuralNetworkLayer::kClampedReLUFieldNumber;
 const int NeuralNetworkLayer::kArgSortFieldNumber;
 const int NeuralNetworkLayer::kPooling3DFieldNumber;
 const int NeuralNetworkLayer::kGlobalPooling3DFieldNumber;
-const int NeuralNetworkLayer::kConvolution3DFieldNumber;
 const int NeuralNetworkLayer::kSliceBySizeFieldNumber;
+const int NeuralNetworkLayer::kConvolution3DFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 NeuralNetworkLayer::NeuralNetworkLayer()
@@ -8317,12 +8317,12 @@ NeuralNetworkLayer::NeuralNetworkLayer(const NeuralNetworkLayer& from)
       mutable_globalpooling3d()->::CoreML::Specification::GlobalPooling3DLayerParams::MergeFrom(from.globalpooling3d());
       break;
     }
-    case kConvolution3D: {
-      mutable_convolution3d()->::CoreML::Specification::Convolution3DLayerParams::MergeFrom(from.convolution3d());
-      break;
-    }
     case kSliceBySize: {
       mutable_slicebysize()->::CoreML::Specification::SliceBySizeLayerParams::MergeFrom(from.slicebysize());
+      break;
+    }
+    case kConvolution3D: {
+      mutable_convolution3d()->::CoreML::Specification::Convolution3DLayerParams::MergeFrom(from.convolution3d());
       break;
     }
     case LAYER_NOT_SET: {
@@ -8996,12 +8996,12 @@ void NeuralNetworkLayer::clear_layer() {
       delete layer_.globalpooling3d_;
       break;
     }
-    case kConvolution3D: {
-      delete layer_.convolution3d_;
-      break;
-    }
     case kSliceBySize: {
       delete layer_.slicebysize_;
+      break;
+    }
+    case kConvolution3D: {
+      delete layer_.convolution3d_;
       break;
     }
     case LAYER_NOT_SET: {
@@ -10993,24 +10993,24 @@ bool NeuralNetworkLayer::MergePartialFromCodedStream(
         break;
       }
 
-      // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
+      // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1470;
       case 1470: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(11762u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_convolution3d()));
+               input, mutable_slicebysize()));
         } else {
           goto handle_unusual;
         }
         break;
       }
 
-      // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
-      case 1475: {
+      // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1471;
+      case 1471: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(11802u)) {
+            static_cast< ::google::protobuf::uint8>(11770u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_slicebysize()));
+               input, mutable_convolution3d()));
         } else {
           goto handle_unusual;
         }
@@ -12027,16 +12027,16 @@ void NeuralNetworkLayer::SerializeWithCachedSizes(
       1466, *layer_.globalpooling3d_, output);
   }
 
-  // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
-  if (has_convolution3d()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      1470, *layer_.convolution3d_, output);
-  }
-
-  // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+  // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1470;
   if (has_slicebysize()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
-      1475, *layer_.slicebysize_, output);
+      1470, *layer_.slicebysize_, output);
+  }
+
+  // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1471;
+  if (has_convolution3d()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1471, *layer_.convolution3d_, output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.NeuralNetworkLayer)
@@ -13189,18 +13189,18 @@ size_t NeuralNetworkLayer::ByteSizeLong() const {
           *layer_.globalpooling3d_);
       break;
     }
-    // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
-    case kConvolution3D: {
-      total_size += 2 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          *layer_.convolution3d_);
-      break;
-    }
-    // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+    // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1470;
     case kSliceBySize: {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
           *layer_.slicebysize_);
+      break;
+    }
+    // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1471;
+    case kConvolution3D: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *layer_.convolution3d_);
       break;
     }
     case LAYER_NOT_SET: {
@@ -13862,12 +13862,12 @@ void NeuralNetworkLayer::MergeFrom(const NeuralNetworkLayer& from) {
       mutable_globalpooling3d()->::CoreML::Specification::GlobalPooling3DLayerParams::MergeFrom(from.globalpooling3d());
       break;
     }
-    case kConvolution3D: {
-      mutable_convolution3d()->::CoreML::Specification::Convolution3DLayerParams::MergeFrom(from.convolution3d());
-      break;
-    }
     case kSliceBySize: {
       mutable_slicebysize()->::CoreML::Specification::SliceBySizeLayerParams::MergeFrom(from.slicebysize());
+      break;
+    }
+    case kConvolution3D: {
+      mutable_convolution3d()->::CoreML::Specification::Convolution3DLayerParams::MergeFrom(from.convolution3d());
       break;
     }
     case LAYER_NOT_SET: {
@@ -21663,55 +21663,7 @@ void NeuralNetworkLayer::set_allocated_globalpooling3d(::CoreML::Specification::
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
 }
 
-// .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
-bool NeuralNetworkLayer::has_convolution3d() const {
-  return layer_case() == kConvolution3D;
-}
-void NeuralNetworkLayer::set_has_convolution3d() {
-  _oneof_case_[0] = kConvolution3D;
-}
-void NeuralNetworkLayer::clear_convolution3d() {
-  if (has_convolution3d()) {
-    delete layer_.convolution3d_;
-    clear_has_layer();
-  }
-}
- const ::CoreML::Specification::Convolution3DLayerParams& NeuralNetworkLayer::convolution3d() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.convolution3d)
-  return has_convolution3d()
-      ? *layer_.convolution3d_
-      : ::CoreML::Specification::Convolution3DLayerParams::default_instance();
-}
-::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::mutable_convolution3d() {
-  if (!has_convolution3d()) {
-    clear_layer();
-    set_has_convolution3d();
-    layer_.convolution3d_ = new ::CoreML::Specification::Convolution3DLayerParams;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.convolution3d)
-  return layer_.convolution3d_;
-}
-::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::release_convolution3d() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.convolution3d)
-  if (has_convolution3d()) {
-    clear_has_layer();
-    ::CoreML::Specification::Convolution3DLayerParams* temp = layer_.convolution3d_;
-    layer_.convolution3d_ = NULL;
-    return temp;
-  } else {
-    return NULL;
-  }
-}
-void NeuralNetworkLayer::set_allocated_convolution3d(::CoreML::Specification::Convolution3DLayerParams* convolution3d) {
-  clear_layer();
-  if (convolution3d) {
-    set_has_convolution3d();
-    layer_.convolution3d_ = convolution3d;
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.convolution3d)
-}
-
-// .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+// .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1470;
 bool NeuralNetworkLayer::has_slicebysize() const {
   return layer_case() == kSliceBySize;
 }
@@ -21757,6 +21709,54 @@ void NeuralNetworkLayer::set_allocated_slicebysize(::CoreML::Specification::Slic
     layer_.slicebysize_ = slicebysize;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
+}
+
+// .CoreML.Specification.Convolution3DLayerParams convolution3d = 1471;
+bool NeuralNetworkLayer::has_convolution3d() const {
+  return layer_case() == kConvolution3D;
+}
+void NeuralNetworkLayer::set_has_convolution3d() {
+  _oneof_case_[0] = kConvolution3D;
+}
+void NeuralNetworkLayer::clear_convolution3d() {
+  if (has_convolution3d()) {
+    delete layer_.convolution3d_;
+    clear_has_layer();
+  }
+}
+ const ::CoreML::Specification::Convolution3DLayerParams& NeuralNetworkLayer::convolution3d() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  return has_convolution3d()
+      ? *layer_.convolution3d_
+      : ::CoreML::Specification::Convolution3DLayerParams::default_instance();
+}
+::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::mutable_convolution3d() {
+  if (!has_convolution3d()) {
+    clear_layer();
+    set_has_convolution3d();
+    layer_.convolution3d_ = new ::CoreML::Specification::Convolution3DLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  return layer_.convolution3d_;
+}
+::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::release_convolution3d() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  if (has_convolution3d()) {
+    clear_has_layer();
+    ::CoreML::Specification::Convolution3DLayerParams* temp = layer_.convolution3d_;
+    layer_.convolution3d_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void NeuralNetworkLayer::set_allocated_convolution3d(::CoreML::Specification::Convolution3DLayerParams* convolution3d) {
+  clear_layer();
+  if (convolution3d) {
+    set_has_convolution3d();
+    layer_.convolution3d_ = convolution3d;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.convolution3d)
 }
 
 bool NeuralNetworkLayer::has_layer() const {
@@ -66299,6 +66299,7 @@ const int SliceStaticLayerParams::kBeginMasksFieldNumber;
 const int SliceStaticLayerParams::kEndIdsFieldNumber;
 const int SliceStaticLayerParams::kEndMasksFieldNumber;
 const int SliceStaticLayerParams::kStridesFieldNumber;
+const int SliceStaticLayerParams::kSqueezeMasksFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 SliceStaticLayerParams::SliceStaticLayerParams()
@@ -66317,6 +66318,7 @@ SliceStaticLayerParams::SliceStaticLayerParams(const SliceStaticLayerParams& fro
       endids_(from.endids_),
       endmasks_(from.endmasks_),
       strides_(from.strides_),
+      squeezemasks_(from.squeezemasks_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.SliceStaticLayerParams)
@@ -66359,6 +66361,7 @@ void SliceStaticLayerParams::Clear() {
   endids_.Clear();
   endmasks_.Clear();
   strides_.Clear();
+  squeezemasks_.Clear();
 }
 
 bool SliceStaticLayerParams::MergePartialFromCodedStream(
@@ -66461,6 +66464,24 @@ bool SliceStaticLayerParams::MergePartialFromCodedStream(
         break;
       }
 
+      // repeated bool squeezeMasks = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(50u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, this->mutable_squeezemasks())));
+        } else if (static_cast< ::google::protobuf::uint8>(tag) ==
+                   static_cast< ::google::protobuf::uint8>(48u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 1, 50u, input, this->mutable_squeezemasks())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -66532,6 +66553,14 @@ void SliceStaticLayerParams::SerializeWithCachedSizes(
   for (int i = 0, n = this->strides_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteInt64NoTag(
       this->strides(i), output);
+  }
+
+  // repeated bool squeezeMasks = 6;
+  if (this->squeezemasks_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(6, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_squeezemasks_cached_byte_size_);
+    ::google::protobuf::internal::WireFormatLite::WriteBoolArray(
+      this->squeezemasks().data(), this->squeezemasks_size(), output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.SliceStaticLayerParams)
@@ -66616,6 +66645,21 @@ size_t SliceStaticLayerParams::ByteSizeLong() const {
     total_size += data_size;
   }
 
+  // repeated bool squeezeMasks = 6;
+  {
+    unsigned int count = this->squeezemasks_size();
+    size_t data_size = 1UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _squeezemasks_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -66640,6 +66684,7 @@ void SliceStaticLayerParams::MergeFrom(const SliceStaticLayerParams& from) {
   endids_.MergeFrom(from.endids_);
   endmasks_.MergeFrom(from.endmasks_);
   strides_.MergeFrom(from.strides_);
+  squeezemasks_.MergeFrom(from.squeezemasks_);
 }
 
 void SliceStaticLayerParams::CopyFrom(const SliceStaticLayerParams& from) {
@@ -66663,6 +66708,7 @@ void SliceStaticLayerParams::InternalSwap(SliceStaticLayerParams* other) {
   endids_.InternalSwap(&other->endids_);
   endmasks_.InternalSwap(&other->endmasks_);
   strides_.InternalSwap(&other->strides_);
+  squeezemasks_.InternalSwap(&other->squeezemasks_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -66823,6 +66869,36 @@ SliceStaticLayerParams::mutable_strides() {
   return &strides_;
 }
 
+// repeated bool squeezeMasks = 6;
+int SliceStaticLayerParams::squeezemasks_size() const {
+  return squeezemasks_.size();
+}
+void SliceStaticLayerParams::clear_squeezemasks() {
+  squeezemasks_.Clear();
+}
+bool SliceStaticLayerParams::squeezemasks(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+  return squeezemasks_.Get(index);
+}
+void SliceStaticLayerParams::set_squeezemasks(int index, bool value) {
+  squeezemasks_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+}
+void SliceStaticLayerParams::add_squeezemasks(bool value) {
+  squeezemasks_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+}
+const ::google::protobuf::RepeatedField< bool >&
+SliceStaticLayerParams::squeezemasks() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+  return squeezemasks_;
+}
+::google::protobuf::RepeatedField< bool >*
+SliceStaticLayerParams::mutable_squeezemasks() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+  return &squeezemasks_;
+}
+
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
 
 // ===================================================================
@@ -66832,6 +66908,7 @@ const int SliceDynamicLayerParams::kBeginMasksFieldNumber;
 const int SliceDynamicLayerParams::kEndIdsFieldNumber;
 const int SliceDynamicLayerParams::kEndMasksFieldNumber;
 const int SliceDynamicLayerParams::kStridesFieldNumber;
+const int SliceDynamicLayerParams::kSqueezeMasksFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 SliceDynamicLayerParams::SliceDynamicLayerParams()
@@ -66849,6 +66926,7 @@ SliceDynamicLayerParams::SliceDynamicLayerParams(const SliceDynamicLayerParams& 
       endids_(from.endids_),
       endmasks_(from.endmasks_),
       strides_(from.strides_),
+      squeezemasks_(from.squeezemasks_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.SliceDynamicLayerParams)
@@ -66890,6 +66968,7 @@ void SliceDynamicLayerParams::Clear() {
   endids_.Clear();
   endmasks_.Clear();
   strides_.Clear();
+  squeezemasks_.Clear();
 }
 
 bool SliceDynamicLayerParams::MergePartialFromCodedStream(
@@ -66974,6 +67053,24 @@ bool SliceDynamicLayerParams::MergePartialFromCodedStream(
         break;
       }
 
+      // repeated bool squeezeMasks = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(50u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, this->mutable_squeezemasks())));
+        } else if (static_cast< ::google::protobuf::uint8>(tag) ==
+                   static_cast< ::google::protobuf::uint8>(48u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 1, 50u, input, this->mutable_squeezemasks())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -67035,6 +67132,14 @@ void SliceDynamicLayerParams::SerializeWithCachedSizes(
   for (int i = 0, n = this->strides_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteInt64NoTag(
       this->strides(i), output);
+  }
+
+  // repeated bool squeezeMasks = 6;
+  if (this->squeezemasks_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(6, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_squeezemasks_cached_byte_size_);
+    ::google::protobuf::internal::WireFormatLite::WriteBoolArray(
+      this->squeezemasks().data(), this->squeezemasks_size(), output);
   }
 
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.SliceDynamicLayerParams)
@@ -67104,6 +67209,21 @@ size_t SliceDynamicLayerParams::ByteSizeLong() const {
     total_size += data_size;
   }
 
+  // repeated bool squeezeMasks = 6;
+  {
+    unsigned int count = this->squeezemasks_size();
+    size_t data_size = 1UL * count;
+    if (data_size > 0) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _squeezemasks_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
+
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
   GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
   _cached_size_ = cached_size;
@@ -67127,6 +67247,7 @@ void SliceDynamicLayerParams::MergeFrom(const SliceDynamicLayerParams& from) {
   endids_.MergeFrom(from.endids_);
   endmasks_.MergeFrom(from.endmasks_);
   strides_.MergeFrom(from.strides_);
+  squeezemasks_.MergeFrom(from.squeezemasks_);
 }
 
 void SliceDynamicLayerParams::CopyFrom(const SliceDynamicLayerParams& from) {
@@ -67149,6 +67270,7 @@ void SliceDynamicLayerParams::InternalSwap(SliceDynamicLayerParams* other) {
   endids_.InternalSwap(&other->endids_);
   endmasks_.InternalSwap(&other->endmasks_);
   strides_.InternalSwap(&other->strides_);
+  squeezemasks_.InternalSwap(&other->squeezemasks_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -67277,6 +67399,36 @@ SliceDynamicLayerParams::strides() const {
 SliceDynamicLayerParams::mutable_strides() {
   // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.SliceDynamicLayerParams.strides)
   return &strides_;
+}
+
+// repeated bool squeezeMasks = 6;
+int SliceDynamicLayerParams::squeezemasks_size() const {
+  return squeezemasks_.size();
+}
+void SliceDynamicLayerParams::clear_squeezemasks() {
+  squeezemasks_.Clear();
+}
+bool SliceDynamicLayerParams::squeezemasks(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+  return squeezemasks_.Get(index);
+}
+void SliceDynamicLayerParams::set_squeezemasks(int index, bool value) {
+  squeezemasks_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+}
+void SliceDynamicLayerParams::add_squeezemasks(bool value) {
+  squeezemasks_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+}
+const ::google::protobuf::RepeatedField< bool >&
+SliceDynamicLayerParams::squeezemasks() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+  return squeezemasks_;
+}
+::google::protobuf::RepeatedField< bool >*
+SliceDynamicLayerParams::mutable_squeezemasks() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+  return &squeezemasks_;
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

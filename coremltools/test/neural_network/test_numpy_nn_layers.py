@@ -1838,10 +1838,18 @@ class NewLayersSimpleTest(CorrectnessTest):
         for rank in range(1, 6):
             input_shape = np.array([5 for _ in range(rank)])
             objs, strides, begin_masks, end_ids, end_masks, begin_ids = [], [], [], [], [], []
+            squeeze_masks = []
+            squeeze_axes = []
             for dim in range(rank):
                 stride = random.choice([-3, -1, 1, 2])
                 begin_mask = random.choice([True, False])
                 end_mask = random.choice([True, False])
+                if len(squeeze_axes) + 1 < rank:
+                    squeeze_mask = random.choice([True, False])
+                else:
+                    squeeze_mask = False
+                if squeeze_mask:
+                    squeeze_axes.append(dim)
                 length = 0
                 while length <= 0:
                     begin_id = np.random.randint(low=-input_shape[dim],
@@ -1856,10 +1864,11 @@ class NewLayersSimpleTest(CorrectnessTest):
                     begin_mask)
                 end_masks.append(end_mask), begin_ids.append(
                     begin_id), end_ids.append(end_id)
+                squeeze_masks.append(squeeze_mask)
 
-            # test different number of inputs, from 2 inputs up to 6 inputs
+            # test different number of inputs, from 2 inputs up to 7 inputs
             # when num_inputs == 2, begin_ids are inputs, rest are read from parameters
-            # when num_inputs == 6, all read from inputs, none are read from parameters
+            # when num_inputs == 7, all read from inputs, none are read from parameters
             for num_inputs in [2, 3, 4, 5, 6]:
                 x = np.random.rand(*input_shape)
 
@@ -1914,6 +1923,22 @@ class NewLayersSimpleTest(CorrectnessTest):
                     inputs['strides'] = np.array(strides, dtype=np.int32)
                     inputs['begin_masks'] = np.array(begin_masks, dtype=np.int32)
                     inputs['end_masks'] = np.array(end_masks, dtype=np.int32)
+                elif num_inputs == 7:
+                    input_features = [('data', datatypes.Array(*input_shape)),
+                                      ('begin_ids', datatypes.Array(len(begin_ids))),
+                                      ('end_ids', datatypes.Array(len(end_ids))),
+                                      ('strides', datatypes.Array(len(strides))),
+                                      ('begin_masks', datatypes.Array(len(begin_masks))),
+                                      ('end_masks', datatypes.Array(len(end_masks))),
+                                      ('squeeze_masks', datatypes.Array(len(squeeze_masks)))]
+                    input_names = ['data', 'begin_ids', 'end_ids',
+                                   'strides', 'begin_masks', 'end_masks', 'squeeze_masks']
+                    inputs['begin_ids'] = np.array(begin_ids, dtype=np.int32)
+                    inputs['end_ids'] = np.array(end_ids, dtype=np.int32)
+                    inputs['strides'] = np.array(strides, dtype=np.int32)
+                    inputs['begin_masks'] = np.array(begin_masks, dtype=np.int32)
+                    inputs['end_masks'] = np.array(end_masks, dtype=np.int32)
+                    inputs['squeeze_masks'] = np.array(squeeze_masks, dtype=np.int32)
 
                 builder = neural_network.NeuralNetworkBuilder(
                     input_features, [('output', None)],
@@ -1922,21 +1947,34 @@ class NewLayersSimpleTest(CorrectnessTest):
                 if num_inputs == 2:
                     builder.add_slice_dynamic('slice_dynamic', input_names, 'output',
                                               end_ids=end_ids, strides=strides,
-                                              begin_masks=begin_masks, end_masks=end_masks)
+                                              begin_masks=begin_masks, end_masks=end_masks,
+                                              squeeze_masks=squeeze_masks)
                 elif num_inputs == 3:
                     builder.add_slice_dynamic('slice_dynamic', input_names, 'output',
                                               strides=strides, begin_masks=begin_masks,
-                                              end_masks=end_masks)
+                                              end_masks=end_masks, squeeze_masks=squeeze_masks)
                 elif num_inputs == 4:
                     builder.add_slice_dynamic('slice_dynamic', input_names, 'output',
-                                              begin_masks=begin_masks, end_masks=end_masks)
+                                              begin_masks=begin_masks, end_masks=end_masks,
+                                              squeeze_masks=squeeze_masks)
                 elif num_inputs == 5:
                     builder.add_slice_dynamic('slice_dynamic', input_names, 'output',
-                                              end_masks=end_masks)
+                                              end_masks=end_masks, squeeze_masks=squeeze_masks)
                 elif num_inputs == 6:
+                    builder.add_slice_dynamic('slice_dynamic', input_names, 'output',
+                                             squeeze_masks=squeeze_masks)
+                elif num_inputs == 7:
                     builder.add_slice_dynamic('slice_dynamic', input_names, 'output')
 
-                expected = {'output': x[tuple(objs)]}
+                expected_x = x[tuple(objs)]
+                squeeze_slices = []
+                for squeeze in squeeze_masks:
+                    if squeeze:
+                        squeeze_slices.append(slice(None, 1, None))
+                    else:
+                        squeeze_slices.append(slice(None, None, None))
+                expected_x = np.squeeze(expected_x[tuple(squeeze_slices)], axis=tuple(squeeze_axes))
+                expected = {'output': expected_x}
 
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
                 self.assertEqual(rank, builder._get_rank('output'))
@@ -4474,8 +4512,8 @@ class CoreML3NetworkStressTest(CorrectnessTest):
             batch_size = [1, 64, 512, 1024, 2048]
         )
 
-        input_size = 16
-        input_channels = 3
+        input_size = 64
+        input_channels = 256
         input_dim = [1, input_channels, input_size, input_size]
 
         def conv_spatial_size(image_size, kernel_size, stride, dilation,
@@ -4539,6 +4577,86 @@ class CoreML3NetworkStressTest(CorrectnessTest):
             expected = np.ones(output_dim) * (kwargs['kernel_size'] * kwargs['kernel_size'] * input_channels)
 
             feed_dict = {'input': input_val, 'weight': weight_val}
+            expected = {'output': expected}
+
+            self._test_model(builder.spec, feed_dict, expected)
+
+    def test_static_weight_conv2d_stress(self):
+        options = dict(
+            padding = ['valid'],
+            filters = [1, 2, 5],
+            kernel_size = [1, 3, 4], # square kernels
+            strides = [1, 2],
+            dilation_rate = [1, 2],
+            batch_size = [1, 32, 256, 1024]
+        )
+
+        input_size = 64
+        input_channels = 256
+        input_dim = [1, input_channels, input_size, input_size]
+
+        def conv_spatial_size(image_size, kernel_size, stride, dilation,
+                padding):
+            if padding == 'valid':
+                kernel_size_dilated = (kernel_size - 1) * dilation + 1
+                return (image_size - kernel_size_dilated) // stride + 1
+            elif padding == 'same':
+                return int(math.ceil(image_size * 1.0 / stride))
+            else:
+                return 0
+
+        for x in itertools.product(*options.values()):
+            kwargs = dict(zip(options.keys(), x))
+            if kwargs['strides'] > 1 and kwargs['dilation_rate'] > 1:
+                continue
+            # weight layout: (output_channels, kernel_channels, height, width)
+            weight_dim = (kwargs['filters'], input_channels,
+                kwargs['kernel_size'], kwargs['kernel_size'])
+
+            input_dim[0] = kwargs['batch_size']
+            input_features = [
+                ('input', datatypes.Array(*input_dim))] 
+                # ('weight', datatypes.Array(*weight_dim))]
+            output_features = [('output', None)]
+
+            input_weight = np.ones(weight_dim)
+            builder = neural_network.NeuralNetworkBuilder(
+                input_features,
+                output_features,
+                disable_rank5_shape_mapping=True)
+
+            builder.add_convolution(
+                name='two_input_conv_layer',
+                kernel_channels=input_channels,
+                output_channels=kwargs['filters'],
+                height=kwargs['kernel_size'],
+                width=kwargs['kernel_size'],
+                stride_height=kwargs['strides'],
+                stride_width=kwargs['strides'],
+                border_mode=kwargs['padding'],
+                groups=1,
+                W=input_weight,
+                b=None,
+                has_bias=False,
+                dilation_factors=[kwargs['dilation_rate']]*2,
+                input_name=['input'],
+                output_name='output')
+
+            # Assigning everything to ones should cover the execution path
+            # and engine failures, but is not a complete check on numerics.
+            out_spatial_size = conv_spatial_size(
+                input_size,
+                kwargs['kernel_size'],
+                kwargs['strides'],
+                kwargs['dilation_rate'],
+                kwargs['padding'])
+
+            input_val = np.ones(input_dim)
+            weight_val = np.ones(weight_dim)
+            output_dim = (kwargs['batch_size'], kwargs['filters'], out_spatial_size, out_spatial_size)
+            expected = np.ones(output_dim) * (kwargs['kernel_size'] * kwargs['kernel_size'] * input_channels)
+
+            feed_dict = {'input': input_val} #, 'weight': weight_val}
             expected = {'output': expected}
 
             self._test_model(builder.spec, feed_dict, expected)

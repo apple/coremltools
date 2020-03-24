@@ -34,13 +34,13 @@ def const_elimination_block(block):
         all_outputs_are_const = True
         for i, o in enumerate(op.outputs):
             if o.val is not None:
-                idx_str = "" if len(op.outputs) == 1 else str(i)
-                const_name = op.name + "_const" + idx_str
                 with block:
                     res = cb.const(val=o.val,
                                    mode=get_const_mode(o.val),
                                    before_op=op,
-                                   name=const_name)
+                                   # same var name, but different python
+                                   # instance does not violate SSA property.
+                                   name=o.name)
                 op.enclosing_block.replace_var_after_op(anchor_op=op,
                         old_var=o, new_var=res)
             else:

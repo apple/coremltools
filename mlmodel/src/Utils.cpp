@@ -758,9 +758,15 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
                 case Specification::NeuralNetworkLayer::kArgSort:
                 case Specification::NeuralNetworkLayer::kPooling3D:
                 case Specification::NeuralNetworkLayer::kGlobalPooling3D:
-                case Specification::NeuralNetworkLayer::kConvolution3D:
                 case Specification::NeuralNetworkLayer::kSliceBySize:
+                case Specification::NeuralNetworkLayer::kConvolution3D:
                     return true;
+                case Specification::NeuralNetworkLayer::kSliceDynamic:
+                    if (layer.input().size() == 7) {
+                        return true;
+                    } else if (layer.slicedynamic().squeezemasks_size()) {
+                        return true;
+                    }
                 case Specification::NeuralNetworkLayer::kUpsample:
                     if (layer.upsample().linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT) {
                         return true;

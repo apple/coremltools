@@ -82,7 +82,7 @@ class const(Operation):
             value = np.bool(value)
         elif isinstance(value, six.integer_types):
             value = np.int32(value)
-        elif isinstance(value, (tuple, list)):
+        elif isinstance(value, (tuple, list, np.ndarray)):
             value = np.array(value)
             if value.dtype == np.int64:
                 # We use int32 by default.

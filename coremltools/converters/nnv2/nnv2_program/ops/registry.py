@@ -10,6 +10,9 @@ class SSAOpRegistry:
             op_type = op_cls.__name__
             # op_cls.__doc__ = doc_str  # TODO: rdar://58622145
             logging.debug("Registering op {}".format(op_type))
+            if op_type in SSAOpRegistry.ops:
+                raise ValueError(
+                        'SSA Op {} already registered.'.format(op_type))
             SSAOpRegistry.ops[op_type] = {
                     'class':    op_cls,
                     'doc_str':  doc_str

@@ -233,6 +233,14 @@ class IntTensorInputType(ScalarOrTensorInputType):
                v.dtype in {builtins.int32, builtins.int64}
 
 
+class BoolTensorInputType(ScalarOrTensorInputType):
+    def __init__(self, **kwargs):
+        super(BoolTensorInputType, self).__init__(**kwargs)
+
+    def _is_compatible(self, v):
+        return builtins.is_tensor(v.sym_type) and v.dtype == builtins.bool
+
+
 class StringInputType(ScalarOrTensorInputType):
     def __init__(self, **kwargs):
         super(StringInputType, self).__init__(**kwargs)

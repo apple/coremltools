@@ -10,6 +10,7 @@ from .pool import *
 from .random import *
 from .recurrent import *
 from .reduction import *
+from .slicend import *
 from .scatter_gather import *
 from .tensor_operation import *
 from .tensor_transformation import *

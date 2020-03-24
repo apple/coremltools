@@ -40,7 +40,7 @@ class SimpleNet(nn.Module):
 
 
 if __name__ == "__main__":
-    net = SimpleNet()
+    net = SimpleNet().eval()
     test_data = torch.ones(net.input_shape)
     trace = torch.jit.trace(net, test_data)
     trace.save("SimpleNet.pt")

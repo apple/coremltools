@@ -90,8 +90,10 @@ def compare_backend(proto, input_values, expected_outputs,
         atol = min(atol * 100., 1e-1)
         rtol = min(rtol * 100., 1e-2)
     for o, expected in expected_outputs.items():
-        assert is_close(expected, pred[o], atol, rtol), \
-            'Output {} differs. useCPUOnly={}.\nInput={}, Expected={}, Output={}\n'.format(o, use_cpu_only, input_values, expected, pred[o])
+        msg = 'Output {} differs. useCPUOnly={}.\nInput={}, ' + \
+            'Expected={}, Output={}\n'
+        assert is_close(expected, pred[o], atol, rtol), msg.format(
+                o, use_cpu_only, input_values, expected, pred[o])
 
 def compare_shapes(proto, input_values, expected_outputs, use_cpu_only=False):
     """

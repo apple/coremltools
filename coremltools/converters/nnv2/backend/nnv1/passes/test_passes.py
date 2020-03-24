@@ -45,7 +45,7 @@ def test_commingle_loop_vars():
     assert_model_is_valid(prog, {'a': (1, 2), 'b': (1, 2)})
 
 
-def test_handle_return_unused_inputs():
+def test_handle_return_return_inputs_as_outputs():
     @cb.program(input_specs=[
         cb.TensorSpec(shape=(1,2)),
         cb.TensorSpec(shape=(1,2)),
@@ -57,10 +57,27 @@ def test_handle_return_unused_inputs():
     assert prog['main'].outputs[1].op is None  # output comes from input
 
     prev_prog = copy.deepcopy(prog)
-    PASS_REGISTRY['nnv1_backend::handle_return_unused_inputs'](prog)
+    PASS_REGISTRY['nnv1_backend::handle_return_inputs_as_outputs'](prog)
     assert_same_output_names(prev_prog, prog)
 
     assert prog['main'].outputs[1].op is not None  # output comes from an op
     assert prog['main'].outputs[1].op.op_type == 'identity'
 
     assert_model_is_valid(prog, {'a': (1, 2), 'b': (1, 2)})
+
+def test_handle_unused_inputs():
+    @cb.program(input_specs=[
+        cb.TensorSpec(shape=(1,2)),
+        ])
+    def prog(unused_input):
+        return cb.const(val=[3, 2])
+
+    prev_prog = copy.deepcopy(prog)
+    PASS_REGISTRY['nnv1_backend::handle_unused_inputs'](prog)
+    assert_same_output_names(prev_prog, prog)
+
+    id_op = prog.find_ops(op_type='identity', exactly_one=True)[0]
+    # Assert that input var is consumed by an identity op.
+    assert id_op in prog['main'].inputs['unused_input'].child_ops
+
+    assert_model_is_valid(prog, {'unused_input': (1, 2)})

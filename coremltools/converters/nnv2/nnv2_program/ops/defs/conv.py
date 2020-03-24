@@ -1,28 +1,40 @@
 from ._op_reqs import *
 
-def _conv2d_pad(pad_type, num_dims, custom_pad, filter_dims, strides):
-    # pad = [t+b, l+r]
-    if pad_type == 'same':
-        return [d - 1 for d in filter_dims]
-    if pad_type == 'valid':
-        return [0] * 2
-    if pad_type == 'custom':
-        if custom_pad is None or len(custom_pad) != 2*num_dims:
-            raise ValueError('Invalid custom_pad.')
-        return custom_pad
-    raise ValueError('Invalid padding pad_type "{}"'.format(pad_type))
+def _aggregated_pad(pad_type, kernel_shape, dilations=None, custom_pad=None):
+    """
+    custom_pad: Required iff pad_type == 'custom'. custom_pad[2*i],
+    custom_pad[2*i+1] are left/right custom padding for spatial dim i.
 
+    kernel_shape: [kH, kW, ...]: spatial kernel dims (excluding channels)
+
+    Returns:
+        pad[i] = left + right padding for dim i
+    """
+    num_spatial_dims = len(kernel_shape)
+    if dilations is None:
+        dilations = [1]*num_spatial_dims
+    if pad_type == 'same':
+        effective_ks = [(k-1)*d+1 for k, d in zip(kernel_shape, dilations)]
+        return [k - 1 for k in effective_ks]
+    if pad_type == 'valid':
+        return [0] * num_spatial_dims
+    if pad_type == 'custom':
+        if custom_pad is None or len(custom_pad) != 2*num_spatial_dims:
+            raise ValueError('Invalid custom_pad.')
+        return [custom_pad[2*d] + custom_pad[2*d+1] for d in
+                range(num_spatial_dims)]
+    raise ValueError('Invalid padding pad_type "{}"'.format(pad_type))
 
 # rdar://58622145
 @register_op(doc_str='TODO')
 class conv(Operation):
     input_spec = InputSpec(
             x = TensorInputType(),
-            W = TensorInputType(const=True),
-            strides = TensorInputType(const=True, optional=True),
+            W = TensorInputType(),
+            strides = IntTensorInputType(const=True, optional=True),
             pad_type = StringInputType(const=True),
             pad = IntTensorInputType(const=True, optional=True),
-            dilations = TensorInputType(const=True, optional=True),
+            dilations = IntTensorInputType(const=True, optional=True),
             group = IntInputType(const=True, default=1),
             B = TensorInputType(const=True, optional=True),
             )
@@ -35,27 +47,29 @@ class conv(Operation):
         f_shape = self.W.shape
         kernel_shape = f_shape[2:]
         num_dims = len(inshape) - 2
+        C_in = self.x.shape[1]
+        group = self.group.val
+        if C_in % group != 0:
+            msg = '# of input channels {} not divisible by group {}'
+            raise ValueError(msg.format(C_in, group))
+        if C_in // group != self.W.shape[1]:
+            msg = 'C_in / group = {}/{} != W[1] ({})'
+            raise ValueError(msg.format(C_in, group, self.W.shape[1]))
 
         strides = [1]*num_dims if self.strides is None else self.strides.val
-        dilations = [1]*num_dims if self.dilations is None else self.dilations.val
-        pad = None if self.pad is None else self.pad.val
+        dilations = [1]*num_dims if self.dilations is None \
+                else self.dilations.val
+        custom_pad = None if self.pad is None else self.pad.val
         N = inshape[0]
         C_out = f_shape[0]
         D_in = inshape[2:]  # spatial dimensions
         pad_type = self.pad_type.val
-        if pad_type == 'same':
-            for k in kernel_shape:
-                if k % 2 == 0:
-                    msg = "Even kernel size {} is disallowed " + \
-                        "under same padding. Use custom padding instead"
-                    raise ValueError(msg.format(kernel_shape))
-        pad = _conv2d_pad(pad_type,
-                num_dims, pad, kernel_shape, strides)
+        pad = _aggregated_pad(pad_type, kernel_shape, dilations, custom_pad)
 
-        D_out_shape = [
-            int((D_in[r] + pad[r] - dilations[r] * (kernel_shape[r] - 1) - 1) \
-                / strides[r] + 1) for r in range(num_dims) ]
-        retshape = [N, C_out] + D_out_shape
+        d_out_shape = [
+            (D_in[r] + pad[r] - dilations[r] * (kernel_shape[r] - 1) - 1) \
+                // strides[r] + 1 for r in range(num_dims) ]
+        retshape = [N, C_out] + d_out_shape
         return builtins.tensor(self.x.dtype, tuple(retshape))
 
 

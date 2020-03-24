@@ -87,12 +87,21 @@ class TestMatMul:
 
         def build(x, y):
             return [
+                cb.matmul(x=x_val, y=y),
+                cb.matmul(x=x,y=y_val),
                 cb.matmul(x=x, y=y),
                 cb.matmul(x=x, y=y, transpose_x=True, transpose_y=True)
             ]
 
-        expected_output_types = [(2, 2, builtins.fp32), (2, 2, builtins.fp32)]
+        expected_output_types = [
+            (2, 2, builtins.fp32),
+            (2, 2, builtins.fp32),
+            (2, 2, builtins.fp32),
+            (2, 2, builtins.fp32)
+        ]
         expected_outputs = [
+            np.array([[-17., -76.], [-12., -51.]], dtype=np.float32),
+            np.array([[-17., -76.], [-12., -51.]], dtype=np.float32),
             np.array([[-17., -76.], [-12., -51.]], dtype=np.float32),
             np.array([[17., 28.], [-50., -85.]], dtype=np.float32)
         ]

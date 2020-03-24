@@ -54,22 +54,21 @@ def load(tfgraph, resume_on_errors=False, **kwargs):
         for k, v in default_shapes.items():
             graph[k].attr['_output_shapes'] = v
 
-    passes = [
+    tf_passes = [
         delete_asserts, functionalize_loops, constant_propagation, cond_to_where,
         remove_variable_nodes
     ]
 
     if not resume_on_errors:
-        for p in passes:
+        for p in tf_passes:
             p(tfssa)
     else:
-        for p in passes:
+        for p in tf_passes:
             try:
                 p(tfssa)
             except:
                 logging.exception("Exception in pass %s", str(p))
                 logging.info("Ignoring exception and continuing to next pass")
-
 
     converter = TFConverter(tfssa, **kwargs)
     prog = converter.convert()

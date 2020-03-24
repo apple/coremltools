@@ -379,7 +379,19 @@ class softplus_parametric(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str='''
+Returns exp(x) / tf.reduce_sum(tf.exp(x), axis)
+
+Parameters
+----------
+x: <*, f32>, required
+axis: const<f32>, optional, default = -1
+
+Returns
+-------
+<*, f32>, a tensor of the same shape as x.
+
+''')
 class softmax(Operation):
     input_spec = InputSpec(
             logit = TensorInputType(),
@@ -396,9 +408,7 @@ class softmax(Operation):
     def value_inference(self):
         x = self.logit.val
         axis = self.axis.val
-        e_x = np.exp(x - np.amax(x, axis=axis))
-        return e_x / e_x.sum()
-
+        return scipy.special.softmax(x, axis=axis)
 
 @register_op(doc_str="""
 Returns x / ( 1 + |x| ) applied elementwise.

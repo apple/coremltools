@@ -18,7 +18,11 @@ def _ssa_name_list(names):
 
 
 class InternalTorchIRNode:
-    """CoreML internal representation of a torch IR node. Can construct itself from a provided torchIR node or manually constructed with args for testing. See InternalTorchIRGraph for the motivation behind this structure.
+    """CoreML internal representation of a torch IR node. 
+    Can construct itself from a provided torchIR node or manually constructed with 
+    args for testing. 
+    
+    See InternalTorchIRGraph for the motivation behind this structure.
 
         TODO: Support control flow by adding blocks
         rdar://60177478
@@ -57,7 +61,7 @@ class InternalTorchIRNode:
 
     def __str__(self):
         node_str = "{} = {}".format(", ".join(_ssa_name_list(self.outputs)), self.kind)
-        node_str += "[value={}]".format(self.val) if self.val else ""
+        node_str += "[value={}]".format(self.val) if self.val is not None else ""
         node_str += "({})".format(", ".join(_ssa_name_list(self.inputs)))
         return node_str
 

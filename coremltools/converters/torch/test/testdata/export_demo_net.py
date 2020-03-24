@@ -53,9 +53,9 @@ class DemoNet(nn.Module):
 
 
 if __name__ == "__main__":
-    net = DemoNet()
+    net = DemoNet().eval()
     state_dict = torch.load(
-        "saved_models/demo_net_weights.reloadthis", map_location=torch.device("cpu")
+        "saved_models/demo_net_weights.pth", map_location=torch.device("cpu")
     )["network"]
     new_state_dict = collections.OrderedDict()
     # remove 'model.' from keys

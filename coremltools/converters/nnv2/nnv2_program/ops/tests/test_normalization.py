@@ -237,7 +237,7 @@ class TestNormalizationL2Norm:
         shape = np.random.randint(low=1, high=6, size=rank)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.math.l2_normalize(x, axis=axes)
+            ref = tf.math.l2_normalize(x, axis=axes, epsilon=epsilon)
             run_compare_tf(graph, {x: random_gen(shape, rand_min=-10, rand_max=10)},
                            ref, use_cpu_only=use_cpu_only, backend=backend,
                            atol=1e-2, rtol=1e-3)

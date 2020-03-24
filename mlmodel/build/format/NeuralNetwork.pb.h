@@ -2981,8 +2981,8 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     kArgSort = 1461,
     kPooling3D = 1465,
     kGlobalPooling3D = 1466,
-    kConvolution3D = 1470,
-    kSliceBySize = 1475,
+    kSliceBySize = 1470,
+    kConvolution3D = 1471,
     LAYER_NOT_SET = 0,
   };
 
@@ -4526,23 +4526,23 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   ::CoreML::Specification::GlobalPooling3DLayerParams* release_globalpooling3d();
   void set_allocated_globalpooling3d(::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d);
 
-  // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
-  bool has_convolution3d() const;
-  void clear_convolution3d();
-  static const int kConvolution3DFieldNumber = 1470;
-  const ::CoreML::Specification::Convolution3DLayerParams& convolution3d() const;
-  ::CoreML::Specification::Convolution3DLayerParams* mutable_convolution3d();
-  ::CoreML::Specification::Convolution3DLayerParams* release_convolution3d();
-  void set_allocated_convolution3d(::CoreML::Specification::Convolution3DLayerParams* convolution3d);
-
-  // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+  // .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1470;
   bool has_slicebysize() const;
   void clear_slicebysize();
-  static const int kSliceBySizeFieldNumber = 1475;
+  static const int kSliceBySizeFieldNumber = 1470;
   const ::CoreML::Specification::SliceBySizeLayerParams& slicebysize() const;
   ::CoreML::Specification::SliceBySizeLayerParams* mutable_slicebysize();
   ::CoreML::Specification::SliceBySizeLayerParams* release_slicebysize();
   void set_allocated_slicebysize(::CoreML::Specification::SliceBySizeLayerParams* slicebysize);
+
+  // .CoreML.Specification.Convolution3DLayerParams convolution3d = 1471;
+  bool has_convolution3d() const;
+  void clear_convolution3d();
+  static const int kConvolution3DFieldNumber = 1471;
+  const ::CoreML::Specification::Convolution3DLayerParams& convolution3d() const;
+  ::CoreML::Specification::Convolution3DLayerParams* mutable_convolution3d();
+  ::CoreML::Specification::Convolution3DLayerParams* release_convolution3d();
+  void set_allocated_convolution3d(::CoreML::Specification::Convolution3DLayerParams* convolution3d);
 
   LayerCase layer_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.NeuralNetworkLayer)
@@ -4703,8 +4703,8 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
   void set_has_argsort();
   void set_has_pooling3d();
   void set_has_globalpooling3d();
-  void set_has_convolution3d();
   void set_has_slicebysize();
+  void set_has_convolution3d();
 
   inline bool has_layer() const;
   void clear_layer();
@@ -4875,8 +4875,8 @@ class NeuralNetworkLayer : public ::google::protobuf::MessageLite /* @@protoc_in
     ::CoreML::Specification::ArgSortLayerParams* argsort_;
     ::CoreML::Specification::Pooling3DLayerParams* pooling3d_;
     ::CoreML::Specification::GlobalPooling3DLayerParams* globalpooling3d_;
-    ::CoreML::Specification::Convolution3DLayerParams* convolution3d_;
     ::CoreML::Specification::SliceBySizeLayerParams* slicebysize_;
+    ::CoreML::Specification::Convolution3DLayerParams* convolution3d_;
   } layer_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -19787,6 +19787,18 @@ class SliceStaticLayerParams : public ::google::protobuf::MessageLite /* @@proto
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
       mutable_strides();
 
+  // repeated bool squeezeMasks = 6;
+  int squeezemasks_size() const;
+  void clear_squeezemasks();
+  static const int kSqueezeMasksFieldNumber = 6;
+  bool squeezemasks(int index) const;
+  void set_squeezemasks(int index, bool value);
+  void add_squeezemasks(bool value);
+  const ::google::protobuf::RepeatedField< bool >&
+      squeezemasks() const;
+  ::google::protobuf::RepeatedField< bool >*
+      mutable_squeezemasks();
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.SliceStaticLayerParams)
  private:
 
@@ -19801,6 +19813,8 @@ class SliceStaticLayerParams : public ::google::protobuf::MessageLite /* @@proto
   mutable int _endmasks_cached_byte_size_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 > strides_;
   mutable int _strides_cached_byte_size_;
+  ::google::protobuf::RepeatedField< bool > squeezemasks_;
+  mutable int _squeezemasks_cached_byte_size_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -19916,6 +19930,18 @@ class SliceDynamicLayerParams : public ::google::protobuf::MessageLite /* @@prot
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
       mutable_strides();
 
+  // repeated bool squeezeMasks = 6;
+  int squeezemasks_size() const;
+  void clear_squeezemasks();
+  static const int kSqueezeMasksFieldNumber = 6;
+  bool squeezemasks(int index) const;
+  void set_squeezemasks(int index, bool value);
+  void add_squeezemasks(bool value);
+  const ::google::protobuf::RepeatedField< bool >&
+      squeezemasks() const;
+  ::google::protobuf::RepeatedField< bool >*
+      mutable_squeezemasks();
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.SliceDynamicLayerParams)
  private:
 
@@ -19928,6 +19954,8 @@ class SliceDynamicLayerParams : public ::google::protobuf::MessageLite /* @@prot
   mutable int _endmasks_cached_byte_size_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 > strides_;
   mutable int _strides_cached_byte_size_;
+  ::google::protobuf::RepeatedField< bool > squeezemasks_;
+  mutable int _squeezemasks_cached_byte_size_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -31397,55 +31425,7 @@ inline void NeuralNetworkLayer::set_allocated_globalpooling3d(::CoreML::Specific
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.globalPooling3d)
 }
 
-// .CoreML.Specification.Convolution3DLayerParams convolution3d = 1470;
-inline bool NeuralNetworkLayer::has_convolution3d() const {
-  return layer_case() == kConvolution3D;
-}
-inline void NeuralNetworkLayer::set_has_convolution3d() {
-  _oneof_case_[0] = kConvolution3D;
-}
-inline void NeuralNetworkLayer::clear_convolution3d() {
-  if (has_convolution3d()) {
-    delete layer_.convolution3d_;
-    clear_has_layer();
-  }
-}
-inline  const ::CoreML::Specification::Convolution3DLayerParams& NeuralNetworkLayer::convolution3d() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.convolution3d)
-  return has_convolution3d()
-      ? *layer_.convolution3d_
-      : ::CoreML::Specification::Convolution3DLayerParams::default_instance();
-}
-inline ::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::mutable_convolution3d() {
-  if (!has_convolution3d()) {
-    clear_layer();
-    set_has_convolution3d();
-    layer_.convolution3d_ = new ::CoreML::Specification::Convolution3DLayerParams;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.convolution3d)
-  return layer_.convolution3d_;
-}
-inline ::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::release_convolution3d() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.convolution3d)
-  if (has_convolution3d()) {
-    clear_has_layer();
-    ::CoreML::Specification::Convolution3DLayerParams* temp = layer_.convolution3d_;
-    layer_.convolution3d_ = NULL;
-    return temp;
-  } else {
-    return NULL;
-  }
-}
-inline void NeuralNetworkLayer::set_allocated_convolution3d(::CoreML::Specification::Convolution3DLayerParams* convolution3d) {
-  clear_layer();
-  if (convolution3d) {
-    set_has_convolution3d();
-    layer_.convolution3d_ = convolution3d;
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.convolution3d)
-}
-
-// .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1475;
+// .CoreML.Specification.SliceBySizeLayerParams sliceBySize = 1470;
 inline bool NeuralNetworkLayer::has_slicebysize() const {
   return layer_case() == kSliceBySize;
 }
@@ -31491,6 +31471,54 @@ inline void NeuralNetworkLayer::set_allocated_slicebysize(::CoreML::Specificatio
     layer_.slicebysize_ = slicebysize;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.sliceBySize)
+}
+
+// .CoreML.Specification.Convolution3DLayerParams convolution3d = 1471;
+inline bool NeuralNetworkLayer::has_convolution3d() const {
+  return layer_case() == kConvolution3D;
+}
+inline void NeuralNetworkLayer::set_has_convolution3d() {
+  _oneof_case_[0] = kConvolution3D;
+}
+inline void NeuralNetworkLayer::clear_convolution3d() {
+  if (has_convolution3d()) {
+    delete layer_.convolution3d_;
+    clear_has_layer();
+  }
+}
+inline  const ::CoreML::Specification::Convolution3DLayerParams& NeuralNetworkLayer::convolution3d() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  return has_convolution3d()
+      ? *layer_.convolution3d_
+      : ::CoreML::Specification::Convolution3DLayerParams::default_instance();
+}
+inline ::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::mutable_convolution3d() {
+  if (!has_convolution3d()) {
+    clear_layer();
+    set_has_convolution3d();
+    layer_.convolution3d_ = new ::CoreML::Specification::Convolution3DLayerParams;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  return layer_.convolution3d_;
+}
+inline ::CoreML::Specification::Convolution3DLayerParams* NeuralNetworkLayer::release_convolution3d() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.NeuralNetworkLayer.convolution3d)
+  if (has_convolution3d()) {
+    clear_has_layer();
+    ::CoreML::Specification::Convolution3DLayerParams* temp = layer_.convolution3d_;
+    layer_.convolution3d_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void NeuralNetworkLayer::set_allocated_convolution3d(::CoreML::Specification::Convolution3DLayerParams* convolution3d) {
+  clear_layer();
+  if (convolution3d) {
+    set_has_convolution3d();
+    layer_.convolution3d_ = convolution3d;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.NeuralNetworkLayer.convolution3d)
 }
 
 inline bool NeuralNetworkLayer::has_layer() const {
@@ -40447,6 +40475,36 @@ SliceStaticLayerParams::mutable_strides() {
   return &strides_;
 }
 
+// repeated bool squeezeMasks = 6;
+inline int SliceStaticLayerParams::squeezemasks_size() const {
+  return squeezemasks_.size();
+}
+inline void SliceStaticLayerParams::clear_squeezemasks() {
+  squeezemasks_.Clear();
+}
+inline bool SliceStaticLayerParams::squeezemasks(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+  return squeezemasks_.Get(index);
+}
+inline void SliceStaticLayerParams::set_squeezemasks(int index, bool value) {
+  squeezemasks_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+}
+inline void SliceStaticLayerParams::add_squeezemasks(bool value) {
+  squeezemasks_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+}
+inline const ::google::protobuf::RepeatedField< bool >&
+SliceStaticLayerParams::squeezemasks() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+  return squeezemasks_;
+}
+inline ::google::protobuf::RepeatedField< bool >*
+SliceStaticLayerParams::mutable_squeezemasks() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.SliceStaticLayerParams.squeezeMasks)
+  return &squeezemasks_;
+}
+
 // -------------------------------------------------------------------
 
 // SliceDynamicLayerParams
@@ -40569,6 +40627,36 @@ inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
 SliceDynamicLayerParams::mutable_strides() {
   // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.SliceDynamicLayerParams.strides)
   return &strides_;
+}
+
+// repeated bool squeezeMasks = 6;
+inline int SliceDynamicLayerParams::squeezemasks_size() const {
+  return squeezemasks_.size();
+}
+inline void SliceDynamicLayerParams::clear_squeezemasks() {
+  squeezemasks_.Clear();
+}
+inline bool SliceDynamicLayerParams::squeezemasks(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+  return squeezemasks_.Get(index);
+}
+inline void SliceDynamicLayerParams::set_squeezemasks(int index, bool value) {
+  squeezemasks_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+}
+inline void SliceDynamicLayerParams::add_squeezemasks(bool value) {
+  squeezemasks_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+}
+inline const ::google::protobuf::RepeatedField< bool >&
+SliceDynamicLayerParams::squeezemasks() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+  return squeezemasks_;
+}
+inline ::google::protobuf::RepeatedField< bool >*
+SliceDynamicLayerParams::mutable_squeezemasks() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.SliceDynamicLayerParams.squeezeMasks)
+  return &squeezemasks_;
 }
 
 // -------------------------------------------------------------------

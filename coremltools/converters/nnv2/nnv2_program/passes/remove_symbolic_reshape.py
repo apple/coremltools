@@ -61,20 +61,20 @@ def remove_symbolic_reshape(prog):
 
     Given:
 
-	main(%x: (s0, 4, fp32)) {
-	  block0() {
-	    %reshape_0_shape_0: (3,i32)^ = const(val=(s0, s1, 2))
-	    %reshape_0: (s0, 2, 2, fp32) = reshape(x=%x, shape=%reshape_0_shape_0)
-	  } -> (%reshape_0)
-	}
+        main(%x: (s0, 4, fp32)) {
+          block0() {
+            %reshape_0_shape_0: (3,i32)^ = const(val=(s0, s1, 2))
+            %reshape_0: (s0, 2, 2, fp32) = reshape(x=%x, shape=%reshape_0_shape_0)
+          } -> (%reshape_0)
+        }
 
     Result:
-	main(%x: (s0, 4, fp32)) {
-	  block0() {
-	    %reshape_0_shape_0x: (3,i32)* = const(val=[-1, 2, 2])
-	    %reshape_0: (-1, 2, 2, fp32) = reshape(x=%x, shape=%reshape_0_shape_0x)
-	  } -> (%reshape_0)
-	}
+        main(%x: (s0, 4, fp32)) {
+          block0() {
+            %reshape_0_shape_0x: (3,i32)* = const(val=[-1, 2, 2])
+            %reshape_0: (-1, 2, 2, fp32) = reshape(x=%x, shape=%reshape_0_shape_0x)
+          } -> (%reshape_0)
+        }
 
     Comment: Currently it does not perform any optimization, but simply
     replacing symbols with positive integer if solved from volumetric

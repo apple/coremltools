@@ -21,5 +21,8 @@ from ._test_utils import (
 _utils.converter = converter
 backends = converter.ConverterRegistry.backends.keys()
 
-if HAS_TF: import tensorflow.compat.v1 as tf
+if HAS_TF:
+    import tensorflow.compat.v1 as tf
+    tf.set_random_seed(1234)
+
 if HAS_PYTORCH: import torch

@@ -6,9 +6,11 @@ import torch
 
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
-from coremltools.converters.nnv2.nnv2_program.program import (Placeholder,
-                                                              SsaFunction,
-                                                              SsaProgram)
+from coremltools.converters.nnv2.nnv2_program.program import (
+    Placeholder,
+    SsaFunction,
+    SsaProgram,
+)
 from coremltools.converters.nnv2.nnv2_program.program.var import Var
 
 from .internal_graph import *
@@ -50,7 +52,7 @@ class TranscriptionContext:
     def __str__(self):
         _str = ""
         for k, v in self._current_graph.items():
-            _str += "%{} : {}\n".format(k, v.shape_str())
+            _str += "%{} : {}\n".format(k, v.shape_str() if hasattr(v, "shape_str") else v.sym_shape())
         return _str
 
     def __repr__(self):
@@ -66,22 +68,22 @@ class TorchConverter:
     The internal graph representation was added to make testing easier. 
 
     Arguments:
-        torchir: torch.jit.ScriptModule object representing the model to convert.
+        torchscript: torch.jit.ScriptModule object representing the model to convert.
         input_values: A single torch.Tensor or list of torch.Tensor objects
             representing model inputs.
     """
 
     def __init__(
-        self, torchir, input_values,
+        self, torchscript, input_values,
     ):
-        assert isinstance(torchir, torch.jit.ScriptModule)
+        assert isinstance(torchscript, torch.jit.ScriptModule)
         if isinstance(input_values, torch.Tensor):
             input_values = [input_values]
 
-        self.torchir = torchir
+        self.torchscript = torchscript
         self.input_values = input_values
         self.context = TranscriptionContext()
-        raw_graph, params_dict = self._expand_and_optimize_ir(self.torchir)
+        raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
         self.graph = InternalTorchIRGraph(raw_graph, params_dict, self.input_values)
 
     @staticmethod
@@ -136,13 +138,13 @@ class TorchConverter:
         return prog
 
     @staticmethod
-    def _expand_and_optimize_ir(torchir):
+    def _expand_and_optimize_ir(torchscript):
         """Given a torch.jit.ScriptModule, convert it to a optimized
         torch._C.Graph and dict of model parameter's names to tensors.        
         """
 
         graph, params = torch._C._jit_pass_lower_graph(
-            torchir.forward.graph, torchir._c
+            torchscript.forward.graph, torchscript._c
         )
 
         torch._C._jit_pass_inline(graph)

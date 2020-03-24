@@ -3,6 +3,7 @@ from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic, any_
 from coremltools.converters.nnv2.nnv2_program.program.program import (
         get_new_symbol, get_new_variadic_symbol, SYMBOL, VALUE, NONE)
 from ._op_reqs import *
+from ._utils import _promoted_primitive_type
 
 @register_op(doc_str="""
 Returns a tensor setting everything outside a center band to zeros for the innermost matrix. Special cases:
@@ -280,7 +281,7 @@ class pad(Operation):
         pad = self.pad.val
         ret_shape = list(in_shape)
         pad_index = 0
-        
+
         if pad.shape[0] % 2 != 0:
             raise ValueError("Padding must be even! Provided {}".format(self.pad.shape[0]))
 
@@ -383,6 +384,47 @@ class tile(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.tile(self.x.val, reps=self.reps.val)
+
+
+@register_op(doc_str="""
+Returns a tensor containing the indices of the sorted values along given axis
+of the input tensor.
+
+Inputs
+
+* x: <*, T> Required
+    * Input tensor.
+* axis: const<i32> or const<D, i32> Optional
+    * Axis to perform the operation.
+* ascending: const<bool> Optional
+    * True to sort in ascending order. Default to false, sort in descending order
+
+Outputs
+
+* <*, T>
+
+Type Domains
+
+* T: f32
+""")
+class argsort(Operation):
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        axis=IntInputType(const=True, default=-1),
+        ascending=BoolInputType(const=True, default=False)
+    )
+
+    def __init__(self, **kwargs):
+        super(argsort, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return builtins.tensor(builtins.int32, self.x.shape)
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        if self.ascending.val:
+            return np.argsort(-self.x.val, axis=self.axis.val)
+        return np.argsort(self.x.val, axis=self.axis.val)
 
 
 @register_op(doc_str="""
@@ -530,11 +572,11 @@ class shape(Operation):
     def type_inference(self):
         # TODO: rdar://60250739 ([NNv2] Allow Variadic rank for get_shape type_inference)
         input_rank = self.x.rank
-        # TODO: rdar://60238144 ([NNv2] error when network output is output of get_shape (int32 and not float32))
-        return builtins.tensor(builtins.float, tuple([input_rank]))
+        return builtins.tensor(builtins.int32, tuple([input_rank]))
 
     def value_inference(self):
         return np.array(self.x.shape)
+
 
 @register_op(doc_str='TODO')
 class concat(Operation):
@@ -570,13 +612,18 @@ class concat(Operation):
                 '(rank {})'
             raise ValueError(msg.format(self.name, self.op_type, rank))
 
-        # Validate primitive types match and non-axis dimensions match
-        retshape = list(self.values[0].shape)
+        # Validate primitive types are compatible 
         dtype = self.values[0].dtype
         for v in self.values[1:]:
-            if v.dtype != dtype:
-                msg = 'Primitive type mismatch in {} op {}'
-                raise ValueError(msg.format(self.op_type, self.name))
+            new_dtype = _promoted_primitive_type(v.dtype, dtype)
+            if new_dtype is None:
+                msg = 'Incompatible primitive types concat: {} vs {}'
+                raise ValueError(msg.format(v.dtype, dtype))
+            dtype = new_dtype
+
+        # validate that non-axis dimensions match
+        retshape = list(self.values[0].shape)
+        for v in self.values[1:]:
             for i in range(rank):
                 if i != concat_axis and retshape[i] != v.shape[i]:
                     msg = 'Dimension mismatch in {} op {}'

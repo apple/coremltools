@@ -8,8 +8,8 @@ Reduction Op Superclasses
 class ReductionAxes(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
-        axes=IntTensorInputType(const=True, default=None),
-        keep_dims=BoolInputType(const=True, default=False),
+        axes=IntTensorInputType(const=True, optional=True, default=None),
+        keep_dims=BoolInputType(const=True, optional=True, default=False),
     )
 
     def __init__(self, **kwargs):
@@ -49,8 +49,8 @@ class ReductionAxes(Operation):
 class ReductionAxis(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
-        axis=IntInputType(const=True, optional=True),
-        keep_dims=BoolInputType(const=True, default=False),
+        axis=IntInputType(const=True, optional=True, default=-1),
+        keep_dims=BoolInputType(const=True, optional=True, default=False),
     )
 
     def __init__(self, **kwargs):

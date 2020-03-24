@@ -1,6 +1,6 @@
 import math
 from ._op_reqs import *
-from .conv import _conv2d_pad
+from .conv import _aggregated_pad
 
 """
 Pooling Op Superclass
@@ -31,7 +31,7 @@ class Pooling(Operation):
             D_out_shape = [int(math.ceil(float(d) / float(s))) for d, s in zip(D_in, strides)]
         else:
             # rdar://59740053 (Padding Calculation for Conv2D does not work for custom padding)
-            pad = _conv2d_pad(pad_type, D_in_rank, pad, ksize, strides)
+            pad = _aggregated_pad(pad_type, ksize, dilations=None, custom_pad=pad)
             D_out_shape = [
                 ((D_in[r] + pad[r] - (ksize[r] - 1) - 1) // strides[r] + 1) for r in range(D_in_rank)
             ]

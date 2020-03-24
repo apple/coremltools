@@ -222,22 +222,32 @@ class TestElementwiseBinary:
 
 
 class TestEqual:
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
-    @pytest.mark.parametrize("use_cpu_only", [True, False])
-    def test_builder_to_backend_smoke(self, use_cpu_only):
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
         input_values = {"x": x, "y": y}
 
         def build(x, y):
-            return cb.equal(x=x, y=y)
-        expected_output_types = (2, 3, builtins.bool)
-        expected_outputs = np.array([[0, 1, 0], [1, 0, 1]], dtype=np.bool)
+            return cb.equal(x=x, y=y), cb.equal(x=-3, y=y)
+        expected_output_types = [
+                (2, 3, builtins.bool),
+                (2, 3, builtins.bool),
+                ]
+        expected_outputs = [
+                np.array([[0, 1, 0], [1, 0, 1]], dtype=np.bool),
+                np.array([[0, 0, 1], [0, 0, 0]], dtype=np.bool),
+                ]
 
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False)
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
 
     @ssa_fn
     def test_builder_eval(self):
@@ -247,15 +257,15 @@ class TestEqual:
         v = cb.equal(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, rank",
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
+                                 backends,
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, rank):
+    def test_tf(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -270,26 +280,37 @@ class TestEqual:
             res = tf.equal(x, y)
             run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only, frontend_only=False)
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
 
 
 class TestGreater:
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
-    @pytest.mark.parametrize("use_cpu_only", [True, False])
-    def test_builder_to_backend_smoke(self, use_cpu_only):
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
         input_values = {"x": x, "y": y}
 
         def build(x, y):
-            return cb.greater(x=x, y=y)
-        expected_output_types = (2, 3, builtins.bool)
-        expected_outputs = np.array([[1, 0, 1], [0, 1, 0]], dtype=np.bool)
+            return cb.greater(x=x, y=y), cb.greater(x=x, y=3.5)
+        expected_output_types = [
+                (2, 3, builtins.bool),
+                (2, 3, builtins.bool),
+                ]
+        expected_outputs = [
+                np.array([[1, 0, 1], [0, 1, 0]], dtype=np.bool),
+                np.array([[0, 0, 0], [1, 1, 1]], dtype=np.bool),
+                ]
 
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False)
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
 
     @ssa_fn
     def test_builder_eval(self):
@@ -299,15 +320,15 @@ class TestGreater:
         v = cb.greater(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, rank",
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
+                                 backends,
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, rank):
+    def test_tf(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -322,26 +343,37 @@ class TestGreater:
             res = tf.greater(x, y)
             run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only, frontend_only=False)
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
 
 
 class TestGreaterEqual:
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
-    @pytest.mark.parametrize("use_cpu_only", [True, False])
-    def test_builder_to_backend_smoke(self, use_cpu_only):
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
         input_values = {"x": x, "y": y}
 
         def build(x, y):
-            return cb.greater_equal(x=x, y=y)
-        expected_output_types = (2, 3, builtins.bool)
-        expected_outputs = np.array([[1, 1, 1], [1, 1, 1]], dtype=np.bool)
+            return cb.greater_equal(x=x, y=y), cb.greater_equal(x=x, y=3.5)
+        expected_output_types = [
+                (2, 3, builtins.bool),
+                (2, 3, builtins.bool),
+                ]
+        expected_outputs = [
+                np.array([[1, 1, 1], [1, 1, 1]], dtype=np.bool),
+                np.array([[0, 0, 0], [1, 1, 1]], dtype=np.bool),
+                ]
 
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False)
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
 
     @ssa_fn
     def test_builder_eval(self):
@@ -351,15 +383,15 @@ class TestGreaterEqual:
         v = cb.greater_equal(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, rank",
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
+                                 backends,
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, rank):
+    def test_tf(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -374,13 +406,17 @@ class TestGreaterEqual:
             res = tf.greater_equal(x, y)
             run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only, frontend_only=False)
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
 
 
 class TestLess:
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
-    @pytest.mark.parametrize("use_cpu_only", [True, False])
-    def test_builder_to_backend_smoke(self, use_cpu_only):
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
@@ -393,7 +429,51 @@ class TestLess:
 
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only, frontend_only=False)
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_smoke2(self, use_cpu_only, backend):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        input_placeholders = {"x": cb.placeholder(shape=x.shape)}
+        input_values = {"x": x}
+
+        def build(x):
+            # y is const
+            y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            return cb.less(x=x, y=y)
+        expected_output_types = (2, 3, builtins.bool)
+        expected_outputs = np.array([[0, 0, 0], [0, 0, 0]], dtype=np.bool)
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_broadcast(self, use_cpu_only, backend):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        input_placeholders = {"x": cb.placeholder(shape=x.shape)}
+        input_values = {"x": x}
+
+        def build(x):
+            # y is const
+            return cb.less(x=x, y=3.5)
+        expected_output_types = (2, 3, builtins.bool)
+        expected_outputs = np.array([[1, 1, 1], [0, 0, 0]], dtype=np.bool)
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
 
     @ssa_fn
     def test_builder_eval(self):
@@ -403,15 +483,15 @@ class TestLess:
         v = cb.less(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, rank",
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
+                                 backends,
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, rank):
+    def test_tf(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -426,13 +506,17 @@ class TestLess:
             res = tf.less(x, y)
             run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only, frontend_only=False)
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
 
 
 class TestLessEqual:
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
-    @pytest.mark.parametrize("use_cpu_only", [True, False])
-    def test_builder_to_backend_smoke(self, use_cpu_only):
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": cb.placeholder(shape=x.shape), "y": cb.placeholder(shape=y.shape)}
@@ -456,15 +540,15 @@ class TestLessEqual:
         v = cb.less_equal(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
-    @pytest.mark.parametrize("use_cpu_only, rank",
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
+                                 backends,
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, rank):
+    def test_tf(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -479,11 +563,11 @@ class TestLessEqual:
             res = tf.less_equal(x, y)
             run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only, frontend_only=False)
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
 
 
 class TestNotEqual:
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
@@ -513,7 +597,6 @@ class TestNotEqual:
         v = cb.not_equal(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skip("Output does not support bool values rdar://problem/59216804")
     @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
