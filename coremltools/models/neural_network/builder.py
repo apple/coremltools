@@ -3346,7 +3346,12 @@ class NeuralNetworkBuilder(object):
                             output_name=input_transpose
                         )
                         layers = self.nn_spec.layers
-                        layers.insert(0, layers.pop())
+                        index = 0
+                        for i, layer_ in enumerate(layers):
+                            if layer_.name.startswith(input_.name):
+                                index = i
+                                break
+                        layers.insert(index, layers.pop())
                         for layer_ in layers:
                             for i in range(len(layer_.input)):
                                 if layer_.name == input_transpose:
