@@ -114,6 +114,8 @@ namespace CoreML {
     bool hasAppleGazetteer(const Specification::Model& model);
     bool hasAppleWordEmbedding(const Specification::Model& model);
     bool hasAppleImageFeatureExtractor(const Specification::Model& model);
+    bool hasScenePrint(const Specification::Model& model);
+    bool hasObjectPrint(const Specification::Model& model);
     bool hasCategoricalSequences(const Specification::Model& model);
     bool hasNonmaxSuppression(const Specification::Model& model);
     bool hasBayesianProbitRegressor(const Specification::Model& model);

@@ -29,19 +29,38 @@ namespace CoreML {
         if (!result.good()) {
             return result;
         }
-        
-        // validate the outputs: only one output with multiarray type is allowed
-        result = validateDescriptionsContainFeatureWithTypes(interface.output(), 1, {Specification::FeatureType::kMultiArrayType});
-        if (!result.good()) {
-            return result;
-        }
-        
+
         // other validate logics here
         const auto &visionFeaturePrint = format.visionfeatureprint();
         switch (visionFeaturePrint.VisionFeaturePrintType_case()) {
             case Specification::CoreMLModels::VisionFeaturePrint::kScene:
                 if (visionFeaturePrint.scene().version() == Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_INVALID) {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version for scene is invalid");
+                }
+                
+                if (visionFeaturePrint.scene().version() == Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_1) {
+                    // validate the outputs: only one output with multiarray type is allowed for version 1
+                    result = validateDescriptionsContainFeatureWithTypes(interface.output(), 1, {Specification::FeatureType::kMultiArrayType});
+                    if (!result.good()) {
+                        return result;
+                    }
+                }
+                break;
+            case Specification::CoreMLModels::VisionFeaturePrint::kObject:
+                if (visionFeaturePrint.object().version() == Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_INVALID) {
+                    return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version for object is invalid");
+                }
+                if (visionFeaturePrint.object().version() == Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_1) {
+
+                    if (visionFeaturePrint.object().output_size() != 2) {
+                        return Result(ResultType::INVALID_MODEL_PARAMETERS, "Two outputs for object need to be provided");
+                    }
+
+                    // validate the outputs: only two outputs with multiarray type is allowed for version 1
+                    result = validateDescriptionsContainFeatureWithTypes(interface.output(), 2, {Specification::FeatureType::kMultiArrayType});
+                    if (!result.good()) {
+                        return result;
+                    }
                 }
                 break;
             case Specification::CoreMLModels::VisionFeaturePrint::VISIONFEATUREPRINTTYPE_NOT_SET:

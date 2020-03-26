@@ -367,7 +367,7 @@ bool CoreML::hasIOS12Features(const Specification::Model& model) {
         default:
             return (hasFlexibleShapes(model) || hasCustomModel(model) || hasCategoricalSequences(model) ||
                     hasAppleTextClassifier(model) || hasAppleWordTagger(model) ||
-                    hasAppleImageFeatureExtractor(model) || hasUnsignedQuantizedWeights(model) ||
+                    hasScenePrint(model) || hasUnsignedQuantizedWeights(model) ||
                     hasNonmaxSuppression(model) || hasBayesianProbitRegressor(model) ||
                     hasIOS12NewNeuralNetworkLayers(model));
     }
@@ -467,6 +467,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
     // New IOS14 features:
     // - new layers in Neural Network
     // - Non-zero values for optional inputs
+    // - VisionFeaturePrint.Object
 
     bool result = false;
     switch (model.Type_case()) {
@@ -497,7 +498,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
         case Specification::Model::kSerializedModel:
             return true;
         default:
-            return hasIOS14NeuralNetworkFeatures(model);
+            return (hasIOS14NeuralNetworkFeatures(model) || hasObjectPrint(model));
     }
     return false;
 }
@@ -525,6 +526,14 @@ bool CoreML::hasAppleWordEmbedding(const Specification::Model& model) {
 
 bool CoreML::hasAppleImageFeatureExtractor(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kVisionFeaturePrint);
+}
+
+bool CoreML::hasScenePrint(const Specification::Model& model) {
+    return (hasAppleImageFeatureExtractor(model) && model.visionfeatureprint().has_scene());
+}
+
+bool CoreML::hasObjectPrint(const Specification::Model& model) {
+    return (hasAppleImageFeatureExtractor(model) && model.visionfeatureprint().has_object());
 }
 
 bool CoreML::hasNonmaxSuppression(const Specification::Model& model) {

@@ -31,6 +31,7 @@ add_library(mlmodel_test
     tests/OneHotEncoderTests.cpp
     tests/SaveLoadTests.cpp
     tests/SoundAnalysisPreprocessingValidatorTests.cpp
+    tests/VisionFeaturePrintValidatorTests.cpp
     tests/TreeEnsembleTests.cpp
     tests/UpdatableModelValidatorTests.cpp
     tests/UtilsTests.cpp
