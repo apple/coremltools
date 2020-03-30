@@ -141,6 +141,12 @@ class slice_by_index(Operation):
                     logging.warning("%s seems to be a 0 sized tensor", self.name)
                     return np.array([])
                 res = res.tolist()[0]
+                if self.x.sym_val.dtype == np.int32 or self.x.sym_val.dtype == np.int64:
+                    res = np.int32(res)
+                elif self.x.sym_val.dtype == np.float32 or self.x.sym_val.dtype == np.float64:
+                    res = np.float32(res)
+                else:
+                    raise ValueError("Unable to convert type {}".format(self.x.sym_val.dtype))
             else:
                 res = np.squeeze(res, axis=tuple(squeeze_axes))
         return res

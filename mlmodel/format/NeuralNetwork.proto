@@ -1553,11 +1553,19 @@ message ConvolutionLayerParams {
  *   A blob of rank 5.
  *   The output blob's shape is ``[batch, channelsOut, depthOut, heightOut, widthOut]``.
  *
- *
- * Type of padding can be `custom``, ``valid``, ``same_left``, or ``same_right`` . Padded values
- * are all zeros.
+ * Type of padding can be ``custom``, ``valid``, or ``same``. Padded values are all zeros.
  * Output spatial dimensions depend on the the type of padding. For details, refer to the
- * descriptions of the "PaddingType" field of this ``Convolution3DLayerParams`` message.
+ * descriptions of the ``PaddingType`` field of this ``Convolution3DLayerParams`` message.
+ *
+ * Example
+ *   For example, given an input of size ``[1, 3, 3, 8, 8]``, a stride of 2 in each dimension,
+ *   a kernel of 3 in each dimension, 2 output channels, and ``same`` padding, this layer will
+ *   compute the total padding applied in the depth, height, and width dimensions to be 2, 1, and 1,
+ *   respectively. The depth padding is even and will be applied equally to both sides of the depth
+ *   dimension. Since the height and width padding values are odd, they'll be applied to the
+ *   bottom/right of the height/width dimensions. Thus, the padding applied to the input will be
+ *   ``[1, 1, 0, 1, 0, 1]`` (front, back, top, bottom, left, right). Finally, the output produced
+ *   will have size ``[1, 2, 2, 4, 4]``.
  *
  */
 message Convolution3DLayerParams {
@@ -1647,20 +1655,17 @@ message Convolution3DLayerParams {
      * VALID padding adds no padding to any dimension. In this case, the last convolution along
      * each dimension will be dropped if the input dimension and the kernel size, stride, and
      * dilation do not match.
-     * SAME_LEFT padding adds enough padding to each dimension such that the output of the
-     * convolution has the same spatial dimensions as the input. Padding is added evenly to both
-     * sides of each dimension unless the total padding to add is odd, in which case it is added to
-     * the front/top/left side of the respective dimension.
-     * SAME_RIGHT padding adds enough padding to each dimension such that the output of the
-     * convolution has the same spatial dimensions as the input. Padding is added evenly to both
-     * sides of each dimension unless the total padding to add is odd, in which case it is added to
-     * the back/bottom/right side of the respective dimension.
+     * SAME padding adds enough padding to each dimension such that the output of the convolution
+     * has size ``Ceiling(inputShape / stride)``. Padding is added evenly to both sides of each
+     * dimension unless the total padding to add is odd, in which case it is added to the
+     * back/bottom/right side of the respective dimension. For example, if the total padding needed
+     * in the depth dimension is 3, 1 zero will be added to the front side of the depth dimension
+     * and 2 zeros will be added to the back side.
      */
     enum PaddingType {
         CUSTOM = 0;
         VALID = 1;
-        SAME_LEFT = 2;
-        SAME_RIGHT = 3;
+        SAME = 2;
     }
     PaddingType paddingType = 70;
 
@@ -1959,7 +1964,7 @@ message PoolingLayerParams {
 }
 
 /*
- * A layer to pool three spacial dimensions
+ * A layer to pool three spatial dimensions
  *
  * Input
  *      A blob with rank equal to 5, representing [Batch, channels, depth, height, width].
@@ -1988,7 +1993,7 @@ message PoolingLayerParams {
  * And applying MAX pooling using:
  *      Kernel: 2x2x2
  *      Stride: 1x1x1
- *      No padding
+ *      Valid Padding
  * We expect to get an output with shape: (1,1,1,2,2) and value:
  * +----+----+
  * | 14 | 15 |
@@ -2024,6 +2029,28 @@ message Pooling3DLayerParams {
     // Stride along the width direction
     int32 strideWidth = 7;
     
+    /**
+     * The type of padding.
+     * All padding types pad the input shape with zeros.
+     * CUSTOM padding will add the custom padding values specified below to their respective
+     * dimensions, e.g., `customPaddingFront` number of zeros will be added to one side of the
+     * input's depth dimension and `customPaddingBack` number of zeros will be added to the other
+     * side of the input's depth dimension.
+     * VALID padding adds no padding to any dimension. In this case, the last pool along
+     * each dimension will be dropped if the input dimension and the kernel size, and stride do not match.
+     * SAME padding adds enough padding to each dimension such that the output
+     * has the same spatial dimensions as the input. Padding is added evenly to both
+     * sides of each dimension unless the total padding to add is odd, in which case the extra padding
+     * is added to the back/bottom/right side of the respective dimension.  For example, if the the
+     * total horizontal padding is 3, then there will be 1 padding on the left, and 2 padding on the right.
+     */
+    enum Pooling3DPaddingType {
+        CUSTOM = 0;
+        VALID = 1;
+        SAME = 2;
+    }
+    Pooling3DPaddingType paddingType = 15;
+    
     // Padding before the input in the depth direction.
     int32 customPaddingFront = 8;
     
@@ -2042,12 +2069,12 @@ message Pooling3DLayerParams {
     // Padding after the input in the width direction.
     int32 customPaddingRight = 13;
     
-    // If true, exclude zeros from padding in average pooling.  Can only be true for AVERAGE padding.
+    // If true, exclude zeros from padding in Average pooling.  Meaningless in Max Pooling.
     bool countExcludePadding = 14;
 }
 
 /*
- * A layer to pool three spacial dimensions down to one value.
+ * A layer to pool three spatial dimensions down to one value.
  * This behaves like a special case of Pooling3DLayerParams in which
  * the Kernel is the size of the input and there is no padding.
  *
@@ -6231,20 +6258,16 @@ message NeuralNetworkClassifier {
 
     NetworkUpdateParameters updateParams = 10;
 
-    /**
-     * Mapping from indexed vector of probabilities to class label
-     */
+    // The set of labels for every possible class.
     oneof ClassLabels {
         StringVector stringClassLabels = 100;
         Int64Vector int64ClassLabels = 101;
     }
 
-    /**
-     * The name of the output blob which will be used as the predicted
-     * probabilities of each class label.
-     */
+    // The name of the output blob containing the probability of each class.
+    // In other words, the score vector. Must be a 1-D tensor with the same
+    // number and order of elements as ClassLabels.
     string labelProbabilityLayerName = 200;
-
 }
 
 

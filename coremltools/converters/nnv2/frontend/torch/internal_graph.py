@@ -17,6 +17,55 @@ def _ssa_name_list(names):
     return [_make_ssa_name(x) for x in names]
 
 
+class InternalTorchIRBlock:
+    """CoreML internal representation of a torch IR block.
+
+        Arguments:
+            raw_block: The torch._C.Block to convert, or None.
+            nodes: If @raw_block is None, the list of InternalTorchIRNodes in the block
+            inputs: If @raw_block is None, the list of input symbols.
+            outputs: If @raw_block is None, the list of output symbols.
+    """
+
+    def __init__(self, raw_block=None, nodes=None, inputs=None, outputs=None):
+        self.nodes = []
+        self.inputs = []
+        self.outputs = []
+
+        if raw_block:
+            # Add nodes
+            for raw_node in raw_block.nodes():
+                self.nodes.append(InternalTorchIRNode(raw_node))
+
+            # Add inputs
+            for inp in raw_block.inputs():
+                self.inputs.append(inp.debugName())
+
+            # Add outputs
+            for outp in raw_block.outputs():
+                self.outputs.append(outp.debugName())
+        else:
+            self.nodes = nodes
+            self.inputs = inputs
+            self.outputs = outputs
+
+    def __str__(self, indent=2):
+        indent_str = " " * indent
+        graph_str = "{}block({}):\n".format(
+            indent_str, ", ".join(_ssa_name_list(self.inputs))
+        )
+        graph_str += "{}\n".format(indent_str).join(
+            [x.__str__(indent=indent + 2) for x in self.nodes]
+        )
+        graph_str += "\n{}return ({})".format(
+            indent_str, ", ".join(_ssa_name_list(self.outputs))
+        )
+        return graph_str
+
+    def __repr__(self):
+        return str(self)
+
+
 class InternalTorchIRNode:
     """CoreML internal representation of a torch IR node. 
     Can construct itself from a provided torchIR node or manually constructed with 
@@ -24,19 +73,17 @@ class InternalTorchIRNode:
     
     See InternalTorchIRGraph for the motivation behind this structure.
 
-        TODO: Support control flow by adding blocks
-        rdar://60177478
-
         Arguments:
             node: The torch._C.Node to convert, or None.
             val: If @node is not specified, the value of the node.
             inputs: If @node is not specified, the list of input symbols.
             outputs: If @node is not specified, the list of output symbols.
             kind: If @node is not specified, the kind (op) of the node.
+            blocks: If @node is not specified, the list of InternalTorchIRBlock .
     """
 
     def __init__(
-        self, node=None, val=None, inputs=None, outputs=None, kind=None,
+        self, node=None, val=None, inputs=None, outputs=None, kind=None, blocks=None,
     ):
         if node:
             try:
@@ -52,17 +99,23 @@ class InternalTorchIRNode:
             # will work correctly.
             if len(self.outputs) == 1 and next(node.outputs()).type().str() == "bool":
                 self.val = bool(self.val)
+            self.blocks = [InternalTorchIRBlock(raw_block=b) for b in node.blocks()]
         else:
             self.val = val
             self.inputs = inputs
             self.outputs = outputs
             self.name = self.outputs[0]
             self.kind = kind
+            self.blocks = blocks if blocks is not None else []
 
-    def __str__(self):
-        node_str = "{} = {}".format(", ".join(_ssa_name_list(self.outputs)), self.kind)
+    def __str__(self, indent=2):
+        node_str = " " * indent + "{} = {}".format(
+            ", ".join(_ssa_name_list(self.outputs)), self.kind
+        )
         node_str += "[value={}]".format(self.val) if self.val is not None else ""
         node_str += "({})".format(", ".join(_ssa_name_list(self.inputs)))
+        for b in self.blocks:
+            node_str += "\n" + b.__str__(indent=indent + 2)
         return node_str
 
     def __repr__(self):
@@ -127,7 +180,7 @@ class InternalTorchIRGraph:
         graph_str += self._format_inputs(self.inputs)
         graph_str += self._format_inputs(self.params)
         graph_str += "):\n"
-        graph_str += "\n".join(["  {}".format(x) for x in self.nodes]) + "\n"
+        graph_str += "\n".join([str(x) for x in self.nodes]) + "\n"
         graph_str += "return ({})".format(", ".join(_ssa_name_list(self.outputs)))
         return graph_str
 

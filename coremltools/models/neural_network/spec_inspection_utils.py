@@ -172,7 +172,7 @@ def summarize_neural_network_spec_code_style(nn_spec, indentation=0, input_names
     indentation_size = 1
 
     if input_names:
-        print('def model({}) :'.format(', '.join(input_names)))
+        print('def model({}):'.format(', '.join(input_names)))
         indentation += indentation_size
 
     for i, layer in enumerate(nn_spec.layers):
@@ -231,7 +231,7 @@ def summarize_neural_network_spec_code_style(nn_spec, indentation=0, input_names
                 value = map(float, list(layer.loadConstantND.data.floatValue))
 
         print(indentation * '\t', end='')
-        print('{} = '.format(', '.join(layer_outputs)), end='')
+        print('{} ='.format(', '.join(layer_outputs)), end='')
         _print_layer_type_and_arguments(layer_type_str, layer_inputs, indentation, to_indent=False,
                                         shape=shape, value=value)
 

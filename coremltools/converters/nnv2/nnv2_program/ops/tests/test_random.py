@@ -64,7 +64,7 @@ class TestRandomBernoulli:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, size, rank',
                              itertools.product(
                                  [True, False],
@@ -77,8 +77,8 @@ class TestRandomBernoulli:
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.add(x, tf.keras.backend.random_binomial(shape=shape, p=1.0))
-            run_compare_tf(graph, {x: np.random.rand(*shape)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: np.random.rand(*shape)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestRandomCategorical:
@@ -182,21 +182,21 @@ class TestRandomCategorical:
         assert np.allclose(np.true_divide(pred1, n_sample),
                            np.true_divide(ref1, n_sample), atol=1e-2)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, size',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [size for size in range(1, 10)]))
-    def test_tf(self, use_cpu_only, backend, size):
+    def test_tf1(self, use_cpu_only, backend, size):
         # TensorFlow's input is 2-D tensor with shape [batch_size, num_classes].
         shape = np.random.randint(low=1, high=6, size=2)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.random.categorical(x, size)
-            run_compare_tf(graph, {x: np.random.rand(*shape)},
-                           ref, use_cpu_only=use_cpu_only,
-                           validate_shapes_only=True, backend=backend)
+            run_compare_tf1(graph, {x: np.random.rand(*shape)},
+                            ref, use_cpu_only=use_cpu_only,
+                            validate_shapes_only=True, backend=backend)
 
 
 class TestRandomNormal:
@@ -258,7 +258,7 @@ class TestRandomNormal:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, mean, rank',
                              itertools.product(
                                  [True, False],
@@ -266,15 +266,15 @@ class TestRandomNormal:
                                  [0.],
                                  [rank for rank in range(1, 6)]
                              ))
-    def test_tf(self, use_cpu_only, backend, mean, rank):
+    def test_tf1(self, use_cpu_only, backend, mean, rank):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.add(x, tf.random.normal(shape=shape, mean=mean, stddev=0.))
-            run_compare_tf(graph, {x: np.random.rand(*shape)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: np.random.rand(*shape)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, mean, rank',
                              itertools.product(
                                  [True, False],
@@ -287,8 +287,8 @@ class TestRandomNormal:
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.add(x, tf.keras.backend.random_normal(shape=shape, mean=mean, stddev=0.))
-            run_compare_tf(graph, {x: np.random.rand(*shape)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: np.random.rand(*shape)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestRandomUniform:
@@ -350,21 +350,21 @@ class TestRandomUniform:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [0.], [0.], [rank for rank in range(1, 2)]))
-    def test_tf(self, use_cpu_only, backend, low, high, rank):
+    def test_tf1(self, use_cpu_only, backend, low, high, rank):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.add(x, tf.random.uniform(shape=shape, minval=low, maxval=high))
-            run_compare_tf(graph, {x: np.random.rand(*shape)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: np.random.rand(*shape)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank',
                              itertools.product(
                                  [True, False],
@@ -375,5 +375,5 @@ class TestRandomUniform:
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.add(x, tf.keras.backend.random_uniform(shape=shape, minval=low, maxval=high))
-            run_compare_tf(graph, {x: np.random.rand(*shape)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: np.random.rand(*shape)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend)

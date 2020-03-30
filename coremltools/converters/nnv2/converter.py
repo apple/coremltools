@@ -1,17 +1,18 @@
 from .nnv2_program.passes.common_pass import common_pass
 
+
 class ConverterRegistry:
     frontends = {}
     backends = {}
 
     @staticmethod
     def frontend(converter):
-        ConverterRegistry.frontends[converter.NAME] = converter
+        ConverterRegistry.frontends[converter.name] = converter
         return converter
 
     @staticmethod
     def backend(converter):
-        ConverterRegistry.backends[converter.NAME] = converter
+        ConverterRegistry.backends[converter.name] = converter
         return converter
 
 
@@ -20,30 +21,33 @@ class ConverterRegistry:
 @ConverterRegistry.frontend
 class NitroSSAConverter:
     """Deprecated and use NNv2DummyFrontend"""
-    NAME = "NitroSSA"
+    name = "nitrossa"
 
     def __call__(self, model, *args, **kwargs):
         return model
 
+
 @ConverterRegistry.frontend
-class TensorflowFrontend:
-    NAME = "tensorflow"
+class TensorFlowFrontend:
+    name = 'tensorflow'
 
     def __call__(self, *args, **kwargs):
         from .frontend.tensorflow import load
         return load(*args, **kwargs)
 
+
 @ConverterRegistry.backend
 class NNv1ProtoBackend:
-    NAME = "nnv1_proto"
+    name = "nnv1_proto"
 
     def __call__(self, *args, **kwargs):
-        from .backend.nnv1 import load as backend_load
-        return backend_load(*args, **kwargs)
+        from .backend.nnv1 import load
+        return load(*args, **kwargs)
+
 
 @ConverterRegistry.frontend
 class CustomFrontend:
-    NAME = "custom"
+    name = "custom"
 
     def __call__(self, *args, **kwargs):
         from coremltools.converters.nnv2.nnv2_program.passes.common_pass import common_pass
@@ -53,13 +57,14 @@ class CustomFrontend:
 @ConverterRegistry.frontend
 class NNv2DummyFrontend:
     "A dummy frontend that returns the identical nnv2 program"
-    NAME = "nnv2_program"
+    name = "nnv2_program"
 
     def __call__(self, program, *args, **kwargs):
         return program
 
 
-def convert(model, convert_from='tensorflow', convert_to='proto', ConverterRegistry=ConverterRegistry, **kwargs):
+def convert(model, convert_from='TensorFlow', convert_to='nnv1_proto',
+            converter_registry=ConverterRegistry, **kwargs):
     """
     Convert from an external representation.
 
@@ -67,23 +72,26 @@ def convert(model, convert_from='tensorflow', convert_to='proto', ConverterRegis
         model (Any): The model to convert.
         convert_from (str): The name of the input converter.
         convert_to (str): The name of the output converter.
+        converter_registry: Converter registries.
     Returns:
         The converted model.
     """
-    frontend_conv_type = ConverterRegistry.frontends.get(convert_from)
-    if not frontend_conv_type:
-        raise NotImplementedError(
-            'Frontend converter "{}" not implemented'.format(convert_from))
-    frontend_conv = frontend_conv_type()
+    frontend_converter_type = converter_registry.frontends.get(convert_from.lower())
+    if not frontend_converter_type:
+        msg = 'Frontend converter "{}" not implemented, must be one of: {}'
+        raise NotImplementedError(msg.format(
+            convert_from, list(converter_registry.frontends.keys())))
+    frontend_converter = frontend_converter_type()
 
-    backend_conv_type = ConverterRegistry.backends.get(convert_to)
-    if not backend_conv_type:
-        raise NotImplementedError(
-            'Backend converter "{}" not implemented'.format(convert_to))
-    backend_conv = backend_conv_type()
+    backend_converter_type = converter_registry.backends.get(convert_to.lower())
+    if not backend_converter_type:
+        msg = 'Backend converter "{}" not implemented, must be one of: {}'
+        raise NotImplementedError(msg.format(
+            convert_to, list(converter_registry.backends.keys())))
+    backend_converter = backend_converter_type()
 
-    prog = frontend_conv(model, **kwargs)
+    prog = frontend_converter(model, **kwargs)
     common_pass(prog)
-    out = backend_conv(prog, **kwargs)
+    out = backend_converter(prog, **kwargs)
 
     return out

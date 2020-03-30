@@ -6,7 +6,7 @@ class TestSelect:
     @pytest.mark.parametrize('use_cpu_only, backend',
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto']
+                                 backends,
                              ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         cond_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
@@ -39,14 +39,14 @@ class TestSelect:
         res = cb.select(cond=cond, a=a, b=b)
         assert is_close(np.where(cond, a, b), res.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, rank',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)]
                              ))
-    def test_tf(self, use_cpu_only, backend, rank):
+    def test_tf1(self, use_cpu_only, backend, rank):
         shape = np.random.randint(low=1, high=4, size=rank)
         cond_val = np.random.randint(low=0, high=2, size=shape).astype(np.int32)
         a_val = random_gen(shape=shape, rand_min=-1962., rand_max=0.)
@@ -56,8 +56,8 @@ class TestSelect:
             a = tf.placeholder(tf.float32, shape=shape)
             b = tf.placeholder(tf.float32, shape=shape)
             ref = tf.where(cond, a, b)
-            run_compare_tf(graph, {cond: cond_val, a: a_val, b: b_val}, ref,
-                           use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {cond: cond_val, a: a_val, b: b_val}, ref,
+                            use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestCond:
@@ -65,7 +65,7 @@ class TestCond:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
+                backends,
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
 
@@ -102,36 +102,35 @@ class TestCond:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              )
                              )
-    def test_tf(self, use_cpu_only, backend):
+    def test_tf1(self, use_cpu_only, backend):
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(1,))
             y = tf.placeholder(tf.float32, shape=(1,))
             z = tf.multiply(x, y)
             pred = tf.less(tf.math.reduce_mean(x), tf.math.reduce_mean(y))
             res = tf.cond(pred, lambda: tf.add(x, z), lambda: tf.square(y))
-            run_compare_tf(graph,
-                           {x: np.array([1], dtype=np.float32),
+            run_compare_tf1(graph,
+                            {x: np.array([1], dtype=np.float32),
                             y: np.array([2], dtype=np.float32),
                             },
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              )
                              )
-    def test_tf_multi_returns(self, use_cpu_only, backend):
+    def test_tf1_multi_returns(self, use_cpu_only, backend):
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(1,))
             y = tf.placeholder(tf.float32, shape=(1,))
@@ -140,19 +139,19 @@ class TestCond:
             def true_fn(): return tf.add(x, z), x
             def false_fn(): return tf.square(y), z
             res = tf.cond(pred, true_fn, false_fn)
-            run_compare_tf(graph,
-                           {x: np.array([1], dtype=np.float32),
+            run_compare_tf1(graph,
+                            {x: np.array([1], dtype=np.float32),
                             y: np.array([2], dtype=np.float32),
                             },
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
 class TestWhileLoop:
 
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],
-                ['nnv1_proto'],
+                backends,
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         def body(a, b):
@@ -187,14 +186,14 @@ class TestWhileLoop:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
                                  ['nnv1_proto'],
                              )
                              )
-    def test_tf(self, use_cpu_only, backend):
+    def test_tf1(self, use_cpu_only, backend):
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(1,))
             y = tf.placeholder(tf.float32, shape=(1,))
@@ -202,21 +201,21 @@ class TestWhileLoop:
                     tf.less(tf.math.reduce_mean(i), tf.math.reduce_mean(j))
             b = lambda i, j: (tf.add(i, 1), j)
             res = tf.while_loop(c, b, [x, y])
-            run_compare_tf(graph,
-                           {x: np.array([1], dtype=np.float32),
+            run_compare_tf1(graph,
+                            {x: np.array([1], dtype=np.float32),
                             y: np.array([2], dtype=np.float32),
                                },
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              )
                              )
-    def test_tf_nested_while_body(self, use_cpu_only, backend):
+    def test_tf1_nested_while_body(self, use_cpu_only, backend):
         with tf.Graph().as_default() as graph:
             # The following while loop:
             #
@@ -237,21 +236,21 @@ class TestWhileLoop:
                 new_i = tf.while_loop(cond2, body2, [i])
                 return new_i + 2, j
             res = tf.while_loop(cond1, body1, [x, y])
-            run_compare_tf(graph,
-                           {x: np.array([0], dtype=np.float32),
+            run_compare_tf1(graph,
+                            {x: np.array([0], dtype=np.float32),
                             y: np.array([10], dtype=np.float32),
                                },
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              )
                              )
-    def test_tf_nested_while_cond(self, use_cpu_only, backend):
+    def test_tf1_nested_while_cond(self, use_cpu_only, backend):
         with tf.Graph().as_default() as graph:
             # The following while loop:
             #
@@ -276,9 +275,9 @@ class TestWhileLoop:
             def body1(i, j):
                 return i + 2, j + 1
             res = tf.while_loop(cond1, body1, [x, y])
-            run_compare_tf(graph,
-                           {x: np.array([0], dtype=np.float32),
+            run_compare_tf1(graph,
+                            {x: np.array([0], dtype=np.float32),
                             y: np.array([10], dtype=np.float32),
                                },
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)

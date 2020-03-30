@@ -177,7 +177,7 @@ def _fill_tensor_fields(tensor_field, ranks=None, shapes=None):
             # Ignore incomplete info
             if shape is None or rank is None:
                 continue
-            
+
             # Raise error on inconsistent input
             if rank != len(shape):
                 raise ValueError('Rank and shape does not match')
@@ -510,7 +510,7 @@ class NeuralNetworkBuilder(object):
 
         predicted_feature_name: str
             Name of the output feature for the class labels exposed in the
-            Core ML neural network classifier, defaults: 'class_output'.
+            Core ML neural network classifier, defaults: 'classLabel'.
 
         prediction_blob: str
             If provided, then this is the name of the neural network blob which
@@ -1250,9 +1250,9 @@ class NeuralNetworkBuilder(object):
         spec_layer.softmax.MergeFromString(b'')
         return spec_layer
 
-    def add_activation(self, name, non_linearity, input_name, output_name,
+    def add_activation(self, name, non_linearity, input_name, output_name, params=None,
                        input_rank=None, input_shape=None,
-                       output_rank=None, output_shape=None, params=None):
+                       output_rank=None, output_shape=None):
         """
         Add an activation layer to the model.
         Refer to the specification (NeuralNetwork.proto) for more details.
@@ -1338,8 +1338,10 @@ class NeuralNetworkBuilder(object):
         input_rank = len(input_shape) if (input_shape and not input_rank) else input_rank
         output_rank = len(output_shape) if (output_shape and not output_rank) else output_rank
         spec_layer = self._add_generic_layer(name, [input_name], [output_name],
-                                                   [input_rank], [input_shape],
-                                                   [output_rank], [output_shape])
+                                                   [input_rank] if input_rank else None,
+                                                   [input_shape] if input_shape else None,
+                                                   [output_rank] if output_rank else None,
+                                                   [output_shape] if output_shape else None)
         spec_layer_params = spec_layer.activation
 
         # Fill in the parameters
@@ -1897,7 +1899,7 @@ class NeuralNetworkBuilder(object):
                             W, b, has_bias, groups=1,
                             stride_depth=1, stride_height=1, stride_width=1,
                             dilation_width=1, dilation_height=1, dilation_depth=1,
-                            padding_mode='valid', same_padding_asymmetry_mode='BOTTOM_RIGHT_HEAVY',
+                            padding_mode='valid',
                             padding_front=0, padding_back=0,
                             padding_top=0, padding_bottom=0,
                             padding_left=0, padding_right=0,
@@ -1921,13 +1923,10 @@ class NeuralNetworkBuilder(object):
             Height of each kernel.
         width: int
             Width of each kernel.
-        W: numpy.array or bytes() or None
+        W: numpy.array or bytes()
             Weight of the convolution kernels.
-            - W should have shape (height, width, kernel_channels, output_channels), where
-              kernel_channel = input_channels / groups
-            For Core ML specification version >=4, W can be None. In this case,
-            the convolution layer takes 2 inputs, where the 1st input represents the input feature map,
-            the 2nd input represents the weight blob.
+            - W should have shape (output_channels, kernel_channels, depth, height, width), where
+              kernel_channels = input_channels / groups
         b: numpy.array
             Biases of the convolution kernels. b should have shape (outputChannels, ).
         has_bias: boolean
@@ -1935,22 +1934,20 @@ class NeuralNetworkBuilder(object):
             - If True, bias is not ignored.
             - If False, bias is ignored.
         groups: int
-            Number of kernel groups. Input is divided into groups along the channel axis. Each kernel
-            group share the same weights. Defaults to 1.
+            Number of kernel groups. Input is divided into groups along the channel axis. Each
+            kernel group share the same weights. Defaults to 1.
         stride_depth, stride_height, stride_width: int
             Stride along the depth, height, and width directions, respectively. Must all be positive
             integers. Defaults to 1.
         dilation_depth, dilation_width, dilation_height: int
-            Dilation factors across depth, height, and width directions. Must all be positive integers.
-            Defaults to 1 in each dimension.
+            Dilation factors across depth, height, and width directions. Must all be positive
+            integers. Defaults to 1 in each dimension.
         padding_mode: str
-            Option for the padding type and output blob shape. Can be 'valid', 'same', or 'custom'.
-        same_padding_asymmetry_mode: str.
-            Type of asymmetric padding to be used when  border_mode is 'same'.
-            Can be either 'BOTTOM_RIGHT_HEAVY' or  'TOP_LEFT_HEAVY'.
+            Option for the padding type and output blob shape. Can be 'custom', 'valid', or 'same'.
+            Defaults to 'valid'. Case-insensitive.
         padding_front, padding_back, padding_top, padding_bottom, padding_left, padding_right: int
-            Values of depth (front, back), height (top, bottom), and width (left, right) padding to be
-            used. Must all be positive integers. All default to 0.
+            Values of depth (front, back), height (top, bottom), and width (left, right) padding to
+            be used. Must all be positive integers. All default to 0.
         input_name: str or list of str
             The input blob name(s) of this layer.
         output_name: str
@@ -1978,12 +1975,16 @@ class NeuralNetworkBuilder(object):
             input_names = input_name
         else:
             input_names = [input_name]
+
+        # 3D convolution doesn't currently support 2-inputs
+        if len(input_names) > 1:
+            raise ValueError('3D convolution only supports 1 input.')
+
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
 
         # Set the layer params
         spec_layer_params = spec_layer.convolution3d
         spec_layer_params.nGroups = groups
-        spec_layer_params.hasBias = has_bias
 
         spec_layer_params.outputChannels = output_channels
         spec_layer_params.inputChannels = input_channels
@@ -1996,43 +1997,29 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.strideHeight = stride_height
         spec_layer_params.strideWidth = stride_width
 
-        if padding_mode == 'valid' or padding_mode == 'custom':
+        supported_padding_modes = {'CUSTOM', 'VALID', 'SAME'}
+        if padding_mode.upper() not in supported_padding_modes:
+            raise ValueError('Unsupported padding mode: %s.  Must be one of %s'
+                             % (padding_mode, supported_padding_modes))
+        if padding_mode.upper() == 'CUSTOM':
             spec_layer_params.customPaddingFront = padding_front
             spec_layer_params.customPaddingBack = padding_back
             spec_layer_params.customPaddingTop = padding_top
             spec_layer_params.customPaddingBottom = padding_bottom
             spec_layer_params.customPaddingLeft = padding_left
             spec_layer_params.customPaddingRight = padding_right
-        elif padding_mode == 'same':
-            if not (same_padding_asymmetry_mode == 'BOTTOM_RIGHT_HEAVY' or
-                    same_padding_asymmetry_mode == 'TOP_LEFT_HEAVY'):
-                raise ValueError("Invalid value %d of same_padding_asymmetry_mode parameter" %
-                                    same_padding_asymmetry_mode)
-            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(
-                same_padding_asymmetry_mode)
-        else:
-            raise NotImplementedError(
-                'Border mode %s is not implemented.' % padding_mode)
+        spec_layer_params.paddingType = _NeuralNetwork_pb2.Convolution3DLayerParams.PaddingType.Value(padding_mode.upper())
 
         spec_layer_params.dilationDepth = dilation_depth
         spec_layer_params.dilationHeight = dilation_height
         spec_layer_params.dilationWidth = dilation_width
 
-        # If weight comes from another tensor just return
-        if len(input_names) > 1:
-            return
-
-        # Weight alignment: MLModel Spec requires following weight arrangement:
-        # Convolution ==> (output_channels, kernel_channels, depth, height, width), where
-        # kernel_channel = input_channels / groups
-        Wt = W.transpose((4, 3, 0, 1, 2))
-        Wt = Wt.flatten()
-
         # Assign weights
         weights = spec_layer_params.weights
-        weights.floatValue.extend(map(float, Wt.flatten()))
+        weights.floatValue.extend(map(float, W.flatten()))
 
         # Assign biases
+        spec_layer_params.hasBias = has_bias
         if has_bias:
             bias = spec_layer_params.bias
             for f in range(output_channels):
@@ -2091,7 +2078,7 @@ class NeuralNetworkBuilder(object):
         # Update spec version if necessary
         if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
             self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
-        
+
         # Create spec layer
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.pooling
@@ -2133,19 +2120,19 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.avgPoolExcludePadding = exclude_pad_area
         spec_layer_params.globalPooling = is_global
         return spec_layer
-    
-    
+
     def add_pooling3d(self, name, input_name, output_name, pooling_type,
-                        kernel_depth, kernel_height, kernel_width,
-                        stride_depth, stride_height, stride_width,
-                        custom_padding_front=0, custom_padding_back=0,
-                        custom_padding_top=0, custom_padding_bottom=0,
-                        custom_padding_left=0, custom_padding_right=0,
-                        average_pooling_count_excludes_padding=False):
+                      kernel_depth, kernel_height, kernel_width,
+                      stride_depth, stride_height, stride_width,
+                      padding_mode='valid',
+                      custom_padding_front=0, custom_padding_back=0,
+                      custom_padding_top=0, custom_padding_bottom=0,
+                      custom_padding_left=0, custom_padding_right=0,
+                      average_pooling_count_excludes_padding=False):
         """
         Add a pooling layer to the model that performs spatial pooling across three dimensions.
         Refer to the **Pooling3DLayerParams** message in specification (NeuralNetwork.proto) for more details.
-        
+
         Parameters
         ----------
         name: str
@@ -2168,6 +2155,9 @@ class NeuralNetworkBuilder(object):
             Stride along the height direction.
         stride_width: int
             Stride along the width direction.
+        padding_mode: str
+            Option for the padding type and output blob shape.
+            Can be 'VALID', 'SAME', or 'CUSTOM'.
         custom_padding_front: int
             Padding before the input in the depth direction.
         custom_padding_back: int
@@ -2182,44 +2172,51 @@ class NeuralNetworkBuilder(object):
             Padding after the input in the width direction.
         average_pooling_count_excludes_padding: boolean
             If true, exclude zeros from padding in average pooling.  Can only be true for AVERAGE padding.
-        
+
         See Also
         --------
         add_pooling, add_global_pooling3d
         """
-        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+        if self.spec and (
+                not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
             self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.pooling3d
-        
+
         spec_layer_params.type = _NeuralNetwork_pb2.Pooling3DLayerParams.PoolingType3D.Value(pooling_type.upper())
-        
+
         spec_layer_params.kernelDepth = kernel_depth
         spec_layer_params.kernelHeight = kernel_height
         spec_layer_params.kernelWidth = kernel_width
-        
+
         spec_layer_params.strideDepth = stride_depth
         spec_layer_params.strideHeight = stride_height
         spec_layer_params.strideWidth = stride_width
-        
-        spec_layer_params.customPaddingFront = custom_padding_front
-        spec_layer_params.customPaddingBack = custom_padding_back
-        spec_layer_params.customPaddingTop = custom_padding_top
-        spec_layer_params.customPaddingBottom = custom_padding_bottom
-        spec_layer_params.customPaddingLeft = custom_padding_left
-        spec_layer_params.customPaddingRight = custom_padding_right
-        
+
+        supported_padding_modes = {'CUSTOM', 'VALID', 'SAME'}
+        if padding_mode.upper() not in supported_padding_modes:
+            raise ValueError('Unsupported padding mode: %s.  Must be one of %s'
+                             % (padding_mode, supported_padding_modes))
+        if padding_mode.upper() == 'CUSTOM':
+            spec_layer_params.customPaddingFront = custom_padding_front
+            spec_layer_params.customPaddingBack = custom_padding_back
+            spec_layer_params.customPaddingTop = custom_padding_top
+            spec_layer_params.customPaddingBottom = custom_padding_bottom
+            spec_layer_params.customPaddingLeft = custom_padding_left
+            spec_layer_params.customPaddingRight = custom_padding_right
+        spec_layer_params.paddingType = _NeuralNetwork_pb2.Pooling3DLayerParams.Pooling3DPaddingType.Value(padding_mode.upper())
+
         spec_layer_params.countExcludePadding = average_pooling_count_excludes_padding
-        
+
         return spec_layer
-    
+
     def add_global_pooling3d(self, name, input_name, output_name, pooling_type):
         """
-        Add a layer to pool three spacial dimensions down to one value.
+        Add a layer to pool three spatial dimensions down to one value.
         This behaves like a special case of Pooling3DLayerParams in which
         the Kernel is the size of the input and there is no padding.
         Refer to the **GlobalPooling3DLayerParams** message in specification (NeuralNetwork.proto) for more details.
-        
+
         Parameters
         ----------
         name: str
@@ -2230,27 +2227,27 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         pooling_type: str
             Type of pooling performed. Can either be 'MAX' OR 'AVERAGE'.
-        
+
         See Also
         --------
         add_pooling, add_pooling3d
         """
         if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
             self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
-        
+
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.globalPooling3d
-        
+
         spec_layer_params.type = _NeuralNetwork_pb2.GlobalPooling3DLayerParams.GlobalPoolingType3D.Value(pooling_type.upper())
-        
+
         return spec_layer
 
     def add_padding(self, name, left=0, right=0, top=0, bottom=0,
                     value=0, input_name='data', output_name='out',
                     padding_type='constant'):
         """
-        
-        
+
+
         Add a padding layer to the model that performs padding along spatial dimensions.
         Refer to the **PaddingLayerParams** message in specification (NeuralNetwork.proto) for more details.
 
@@ -2915,7 +2912,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a slice layer. Equivalent to to numpy slice [start_index: start_index+size],
         Input is list of str which is [input_tensor, begin_id].
-        
+
         Assume input_tensor has shape (2, 3, 4), and axis=1, size=2.
         This would produce input_tensor[:, begin_id:begin_id+2, :]
 

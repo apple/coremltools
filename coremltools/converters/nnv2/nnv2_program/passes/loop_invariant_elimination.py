@@ -29,10 +29,20 @@ def loop_invariant_elimination_block(block):
             continue
 
         body_block = op.blocks[1]
+        has_invariant = False
         for v_in, body_vx_in, body_vx_out, op_out in zip(op.loop_vars,
                 body_block.inputs, body_block.outputs, op.outputs):
             if body_vx_in == body_vx_out:
                 output_rename.append((v_in, op_out, op))
+                has_invariant = True
+        if has_invariant:
+            # Avoid the following case:
+            # %a, %b = while_loop(..., name="b")
+            # becomes
+            # %b = identity(..., name="b")
+            # %a = while_loop(..., name="b")
+            # (two ops with the same name -> name collision)
+            op.name = op.name + '_renamed'
 
     # Phase 2: insert rename
     for v_src, v_tgt, op in output_rename:

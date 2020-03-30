@@ -1022,6 +1022,7 @@ int testValidPooling3d() {
     mutablePooling3d->set_stridewidth(5);
 
     // Add 6 Custom Paddings
+    mutablePooling3d->set_paddingtype(CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType_CUSTOM);
     mutablePooling3d->set_custompaddingfront(7);
     mutablePooling3d->set_custompaddingback(7);
     mutablePooling3d->set_custompaddingtop(7);
@@ -1071,6 +1072,7 @@ int testInvalidPooling3dNegativeKernelSize() {
     mutablePooling3d->set_stridewidth(5);
 
     // Add 6 Custom Paddings
+    mutablePooling3d->set_paddingtype(CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType_CUSTOM);
     mutablePooling3d->set_custompaddingfront(7);
     mutablePooling3d->set_custompaddingback(7);
     mutablePooling3d->set_custompaddingtop(7);
@@ -1084,7 +1086,8 @@ int testInvalidPooling3dNegativeKernelSize() {
     return 0;
 }
 
-int testInvalidPooling3dCountExcludePaddingUsedWithMAXPooling() {
+
+int testInvalidPooling3dCostumPaddingSetForNonCustomPaddingType() {
     Specification::Model m1;
 
     auto *topIn = m1.mutable_description()->add_input();
@@ -1120,16 +1123,13 @@ int testInvalidPooling3dCountExcludePaddingUsedWithMAXPooling() {
     mutablePooling3d->set_stridewidth(5);
 
     // Add 6 Custom Paddings
+    mutablePooling3d->set_paddingtype(CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType_VALID);
     mutablePooling3d->set_custompaddingfront(7);
     mutablePooling3d->set_custompaddingback(7);
     mutablePooling3d->set_custompaddingtop(7);
     mutablePooling3d->set_custompaddingbottom(7);
     mutablePooling3d->set_custompaddingleft(7);
     mutablePooling3d->set_custompaddingright(7);
-    
-    // Set padding type to MAX
-    mutablePooling3d->set_type(CoreML::Specification::Pooling3DLayerParams_PoolingType3D_MAX);
-    mutablePooling3d->set_countexcludepadding(true);
     
     Result res = validate<MLModelType_neuralNetwork>(m1);
     ML_ASSERT_BAD(res);
@@ -1490,6 +1490,7 @@ int testInvalidConvolution3DNegativePadding() {
     params->set_dilationdepth(dilation_depth);
     params->set_dilationheight(dilation_height);
     params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
     params->set_custompaddingfront(pad_front);
     params->set_custompaddingback(pad_back);
     params->set_custompaddingtop(pad_top);
@@ -1881,6 +1882,7 @@ int testInvalidConvolution3DNonPositiveDilation() {
     params->set_dilationdepth(dilation_depth);
     params->set_dilationheight(dilation_height);
     params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
     params->set_custompaddingfront(pad_front);
     params->set_custompaddingback(pad_back);
     params->set_custompaddingtop(pad_top);
@@ -1960,6 +1962,7 @@ int testInvalidConvolution3DNonPositiveGroups() {
     params->set_dilationdepth(dilation_depth);
     params->set_dilationheight(dilation_height);
     params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
     params->set_custompaddingfront(pad_front);
     params->set_custompaddingback(pad_back);
     params->set_custompaddingtop(pad_top);
@@ -2040,6 +2043,7 @@ int testInvalidConvolution3DNonPositiveKernelSize() {
     params->set_dilationdepth(dilation_depth);
     params->set_dilationheight(dilation_height);
     params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
     params->set_custompaddingfront(pad_front);
     params->set_custompaddingback(pad_back);
     params->set_custompaddingtop(pad_top);
@@ -2119,6 +2123,7 @@ int testInvalidConvolution3DNonPositiveStride() {
     params->set_dilationdepth(dilation_depth);
     params->set_dilationheight(dilation_height);
     params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
     params->set_custompaddingfront(pad_front);
     params->set_custompaddingback(pad_back);
     params->set_custompaddingtop(pad_top);
@@ -2208,6 +2213,7 @@ int testInvalidConvolution3DTwoInputs() {
     params->set_dilationdepth(dilation_depth);
     params->set_dilationheight(dilation_height);
     params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_CUSTOM);
     params->set_custompaddingfront(pad_front);
     params->set_custompaddingback(pad_back);
     params->set_custompaddingtop(pad_top);
@@ -2288,6 +2294,7 @@ int testValidConvolution3D() {
     params->set_dilationdepth(dilation_depth);
     params->set_dilationheight(dilation_height);
     params->set_dilationwidth(dilation_width);
+    params->set_paddingtype(CoreML::Specification::Convolution3DLayerParams_PaddingType_SAME);
     params->set_custompaddingfront(pad_front);
     params->set_custompaddingback(pad_back);
     params->set_custompaddingtop(pad_top);

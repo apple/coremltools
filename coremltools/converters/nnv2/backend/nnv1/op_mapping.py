@@ -3,6 +3,7 @@ import logging
 import six
 from coremltools.models import neural_network as neural_network
 from coremltools.converters.nnv2.builtin_types.symbolic import is_variadic
+from coremltools.converters.nnv2.nnv2_program.var import Var
 
 
 V2_TO_V1_OP_REGISTRY = {}
@@ -38,19 +39,39 @@ def convert_ops(const_context, builder, ops, outputs):
 
 
 def _convert_pool(const_context, builder, op, mode):
-    builder.add_pooling(
-        name=op.name,
-        height=op.kernel_sizes.val[-2],
-        width=op.kernel_sizes.val[-1],
-        stride_height=op.strides.val[-2],
-        stride_width=op.strides.val[-1],
-        layer_type=mode.upper(),
-        padding_type=op.pad_type.val.upper(),
-        input_name=op.x.name,
-        output_name=op.name,
-        exclude_pad_area=True,
-        is_global=False,
-    )
+    num_spatial_dimensions = len(op.kernel_sizes.val)
+    if num_spatial_dimensions <= 2:
+        builder.add_pooling(
+            name=op.name,
+            height=op.kernel_sizes.val[-2],
+            width=op.kernel_sizes.val[-1],
+            stride_height=op.strides.val[-2],
+            stride_width=op.strides.val[-1],
+            layer_type=mode.upper(),
+            padding_type=op.pad_type.val.upper(),
+            input_name=op.x.name,
+            output_name=op.name,
+            exclude_pad_area=True,
+            is_global=False,
+        )
+    elif num_spatial_dimensions == 3:
+        builder.add_pooling3d(
+            name=op.name,
+            input_name=op.x.name,
+            output_name=op.name,
+            pooling_type=mode.upper(),
+            kernel_depth=op.kernel_sizes.val[-3],
+            kernel_height=op.kernel_sizes.val[-2],
+            kernel_width=op.kernel_sizes.val[-1],
+            stride_depth=op.strides.val[-3],
+            stride_height=op.strides.val[-2],
+            stride_width=op.strides.val[-1],
+            padding_mode=op.pad_type.val,
+            average_pooling_count_excludes_padding=True
+        )
+    else:
+        raise ValueError('Unsupported number of spatial dimensions.  Maximum is 3, but got %s'
+                         % num_spatial_dimensions)
 
 
 def _try_convert_global_pool(builder, op, mode):
@@ -63,15 +84,16 @@ def _try_convert_global_pool(builder, op, mode):
     rank = op.x.rank
     if is_variadic(rank) or rank not in {4, 5}:
         return False
-    axes = op.axes.val
     keep_dims = op.keep_dims.val
-    axes = sorted([rank + axis if axis < 0 else axis for axis in axes])
-    if keep_dims is False:
-        return False
-    if rank == 4 and tuple(axes) != (2, 3):
-        return False
-    if rank == 5 and tuple(axes) != (2, 3, 4):
-        return False
+    if op.axes is not None:
+        axes = op.axes.val
+        axes = sorted([rank + axis if axis < 0 else axis for axis in axes])
+        if keep_dims is False:
+            return False
+        if rank == 4 and tuple(axes) != (2, 3):
+            return False
+        if rank == 5 and tuple(axes) != (2, 3, 4):
+            return False
     builder.add_pooling(
         name=op.name,
         height=0,
@@ -105,6 +127,8 @@ def add_const(const_context, builder, name, val):
     if name in const_context:
         logging.warning('Const {} was already added.'.format(name))
         return
+    if not isinstance(val, (np.ndarray, np.generic)):
+        val = np.array([val])
     rank = len(val.shape)
     if rank == 0:
         builder.add_load_constant_nd(
@@ -126,6 +150,8 @@ def add_const(const_context, builder, name, val):
                 shape=val.shape)
     const_context.add(name)
 
+
+
 # Helper function for making sure input exists.
 def make_input(const_context, builder, ops):
     if isinstance(ops, (list, tuple)):
@@ -133,7 +159,7 @@ def make_input(const_context, builder, ops):
     if isinstance(ops, six.string_types):
         return ops
 
-    if ops.__class__.__name__ == 'const':
+    if ops.__class__.__name__ == 'const' or ops.val is not None:
         add_const(const_context, builder, ops.name, ops.val)
     return ops.name
 
@@ -865,15 +891,10 @@ def linear(const_context, builder, op):
 @register_v2_op
 def matmul(const_context, builder, op):
 
-    if op.x.val is not None:
-        add_const(const_context, builder, op.x.name, op.x.val)
-
-    if op.y.val is not None:
-        add_const(const_context, builder, op.y.name, op.y.val)
-
+    input_names = make_input(const_context, builder, [op.x, op.y])
     builder.add_batched_mat_mul(
         name=op.name,
-        input_names=[op.x.name, op.y.name],
+        input_names=input_names,
         output_name=op.name,
         transpose_a=op.transpose_x.val,
         transpose_b=op.transpose_y.val,
@@ -1128,119 +1149,59 @@ def reduce_argmin(const_context, builder, op):
         keepdims=op.keep_dims.val,
     )
 
-@register_v2_op
-def reduce_l1_norm(const_context, builder, op):
-    builder.add_reduce_l1(
+def _reduce_axes(builder_op, op):
+    axes = op.axes.val if op.axes is not None else op.axes
+    builder_op(
         name=op.name,
         input_name=op.x.name,
         output_name=op.name,
-        axes=op.axes.val,
+        axes=axes,
         keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
+        reduce_all=axes is None
     )
+
+@register_v2_op
+def reduce_l1_norm(const_context, builder, op):
+    _reduce_axes(builder.add_reduce_l1, op)
 
 @register_v2_op
 def reduce_l2_norm(const_context, builder, op):
-    builder.add_reduce_l2(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
+    _reduce_axes(builder.add_reduce_l2, op)
 
 @register_v2_op
 def reduce_log_sum(const_context, builder, op):
-    builder.add_reduce_logsum(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
+    _reduce_axes(builder.add_reduce_logsum, op)
 
 @register_v2_op
 def reduce_log_sum_exp(const_context, builder, op):
-    builder.add_reduce_logsumexp(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
-
+    _reduce_axes(builder.add_reduce_logsumexp, op)
 
 @register_v2_op
 def reduce_max(const_context, builder, op):
     if not _try_convert_global_pool(builder, op, mode='max'):
-        builder.add_reduce_max(
-            name=op.name,
-            input_name=op.x.name,
-            output_name=op.name,
-            axes=op.axes.val,
-            keepdims=op.keep_dims.val,
-            reduce_all=op.axes.val is None
-        )
+        _reduce_axes(builder.add_reduce_max, op)
 
 
 @register_v2_op
 def reduce_mean(const_context, builder, op):
     if not _try_convert_global_pool(builder, op, mode='average'):
-        builder.add_reduce_mean(
-            name=op.name,
-            input_name=op.x.name,
-            output_name=op.name,
-            axes=op.axes.val,
-            keepdims=op.keep_dims.val,
-            reduce_all=op.axes.val is None
-        )
+        _reduce_axes(builder.add_reduce_mean, op)
 
 @register_v2_op
 def reduce_min(const_context, builder, op):
-    builder.add_reduce_min(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
+    _reduce_axes(builder.add_reduce_min, op)
 
 @register_v2_op
 def reduce_prod(const_context, builder, op):
-    builder.add_reduce_prod(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
+    _reduce_axes(builder.add_reduce_prod, op)
 
 @register_v2_op
 def reduce_sum(const_context, builder, op):
-    builder.add_reduce_sum(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
+    _reduce_axes(builder.add_reduce_sum, op)
 
 @register_v2_op
 def reduce_sum_square(const_context, builder, op):
-    builder.add_reduce_sumsquare(
-        name=op.name,
-        input_name=op.x.name,
-        output_name=op.name,
-        axes=op.axes.val,
-        keepdims=op.keep_dims.val,
-        reduce_all=op.axes.val is None
-    )
+    _reduce_axes(builder.add_reduce_sumsquare, op)
 
 
 @register_v2_op
@@ -1603,7 +1564,7 @@ def pad(const_context, builder, op):
     if op.x.rank > 1 and np.all(pad[:-4] == 0):
         # TODO: <rdar://problem/59771971> [NNv2] Padding layer handling NHWC input
         builder.add_padding(
-            name=op.x.name,
+            name=op.name,
             top=pad[-4],
             bottom=pad[-3],
             left=pad[-2],
@@ -1615,7 +1576,7 @@ def pad(const_context, builder, op):
         )
     elif mode == "constant":
         builder.add_constant_pad(
-            name=op.x.name,
+            name=op.name,
             input_names=[op.x.name],
             output_name=op.name,
             value=constant_val,
@@ -1753,18 +1714,20 @@ def conv_transpose(const_context, builder, op):
     dilations = [op.dilations.val[0], 1 if is_conv_transpose_1d else op.dilations.val[1]]
     # Get H and W from output shape
     output_shape = None if op.output_shape is None else tuple(op.output_shape.val)
+    kernel_channels = weight.shape[3]
+    output_channels = weight.shape[2]
 
     builder.add_convolution(
             name=out_name,
-            kernel_channels=weight.shape[3],
-            output_channels=weight.shape[2],
+            kernel_channels=kernel_channels,
+            output_channels=output_channels,
             height=weight.shape[0],
             width=weight.shape[1],
             stride_height=strides[0],
             stride_width=strides[1],
             border_mode=border_mode,
             groups=group,
-            W=weight,
+            W=np.transpose(weight, (0, 1, 3, 2)),
             b=op.bias.val if has_bias else None,
             has_bias=has_bias,
             is_deconv=True,
@@ -1951,6 +1914,25 @@ def cond(const_context, builder, op):
 def while_loop(const_context, builder, op):
     cond_block = op.blocks[0]
     body_block = op.blocks[1]
+
+
+    # This is temporary solution...don't expose globally yet!
+    def make_input_v(const_context, builder, vs):
+        """
+        vs: Var or list[Var] or tuple[Var]. Vars that may need to added as const.
+
+        Returns:
+            list[str] (if vs is list[Var]/tuple[Var]) or str (if vs is Var): the
+            var names of vs.
+        """
+        if isinstance(vs, Var):
+            vs = [vs]
+        for v in vs:
+            if v.op is not None and v.op.op_type == 'const':
+                add_const(const_context, builder, v.name, v.val)
+        return [v.name for v in vs]
+
+    make_input_v(const_context, builder, op.loop_vars)
 
     # Assume that all loop vars aren't loop invariant (invariant loop vars
     # should've be optimized away in graph passes).

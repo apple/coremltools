@@ -49,6 +49,7 @@ class TestResizeBilinear:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, input_shape, target_shape, align_corners, half_pixel_centers",
             itertools.product(
                 [True, False],
@@ -58,14 +59,14 @@ class TestResizeBilinear:
                 [True, False],
                 [True, False]
                 ))
-    def test_tf(self, use_cpu_only, backend, input_shape, target_shape, align_corners, half_pixel_centers):
+    def test_tf1(self, use_cpu_only, backend, input_shape, target_shape, align_corners, half_pixel_centers):
         if half_pixel_centers and align_corners:
             return
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=input_shape)
             ref = tf.raw_ops.ResizeBilinear(images=x, size=target_shape, half_pixel_centers=half_pixel_centers, align_corners=align_corners)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
 @pytest.mark.skip("Broken for nnv1 backend")
@@ -158,7 +159,7 @@ class TestUpsampleNearestNeighbor:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, input_shape, upsample_factor, data_format",
             itertools.product(
                 [True, False],
@@ -167,14 +168,14 @@ class TestUpsampleNearestNeighbor:
                 [(1,2), (4,3)],
                 ['channels_last', 'channels_first']
                 ))
-    def test_tf(self, use_cpu_only, backend, input_shape, upsample_factor, data_format):
+    def test_tf1(self, use_cpu_only, backend, input_shape, upsample_factor, data_format):
         if data_format == 'channels_last':
             input_shape = (input_shape[0], input_shape[2], input_shape[3], input_shape[1])
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=input_shape)
             ref = tf.keras.layers.UpSampling2D(size=upsample_factor, data_format=data_format, interpolation="nearest")(x)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestCropResize:
@@ -265,7 +266,7 @@ class TestCropResize:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic",
             list(itertools.product(
                 [True, False],
@@ -277,7 +278,7 @@ class TestCropResize:
                 [False])) +
                 [pytest.param(True, 'nnv1_proto', (1, 64, 64, 1), 1, (2, 2), 'bilinear', True, marks=pytest.mark.xfail)]
                 )
-    def test_tf(self, use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic):
+    def test_tf1(self, use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic):
         input = np.random.randn(*input_shape)
         boxes = np.random.uniform(size=(num_of_crops, 4))
         box_indices = np.random.randint(size=(num_of_crops,), low=0, high=input_shape[0])
@@ -286,7 +287,7 @@ class TestCropResize:
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=input_shape)
                 output = tf.raw_ops.CropAndResize(image=x, boxes=boxes, box_ind=box_indices, crop_size=crop_size, method=method)
-                run_compare_tf(graph, {x: input}, output, use_cpu_only=use_cpu_only, backend=backend)
+                run_compare_tf1(graph, {x: input}, output, use_cpu_only=use_cpu_only, backend=backend)
 
         def test_dynamic():
             with tf.Graph().as_default() as graph:
@@ -294,7 +295,7 @@ class TestCropResize:
                 boxes_pl = tf.placeholder(tf.float32, shape=boxes.shape)
                 box_indices_pl = tf.placeholder(tf.int32, shape=box_indices.shape)
                 output = tf.raw_ops.CropAndResize(image=x, boxes=boxes_pl, box_ind=box_indices_pl, crop_size=crop_size, method=method)
-                run_compare_tf(graph, {x: input, boxes_pl: boxes, box_indices_pl: box_indices}, output, use_cpu_only=use_cpu_only, backend=backend)
+                run_compare_tf1(graph, {x: input, boxes_pl: boxes, box_indices_pl: box_indices}, output, use_cpu_only=use_cpu_only, backend=backend)
 
         if dynamic:
             test_dynamic()

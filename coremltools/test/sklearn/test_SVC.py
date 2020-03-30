@@ -9,6 +9,7 @@ import os
 import pandas as pd
 import random
 import pytest
+import numpy as np
 
 from coremltools.models.utils import evaluate_classifier,\
     evaluate_classifier_with_probabilities, macos_version, is_macos
@@ -179,6 +180,7 @@ class CSVCLibSVMTest(unittest.TestCase):
 
     def test_default_names(self):
         df = pd.DataFrame({'input': self.x})
+        df['input'] = df['input'].apply(np.array)
 
         # Test with probabilities
         spec = libsvm.convert(self.libsvm_model).get_spec()

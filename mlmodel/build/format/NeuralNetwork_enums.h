@@ -638,8 +638,7 @@ static const char * MLConvolutionLayerParamsConvolutionPaddingType_Name(MLConvol
 enum MLPaddingType: int {
     MLPaddingTypeCUSTOM = 0,
     MLPaddingTypeVALID = 1,
-    MLPaddingTypeSAME_LEFT = 2,
-    MLPaddingTypeSAME_RIGHT = 3,
+    MLPaddingTypeSAME = 2,
 };
 
 enum MLPoolingType: int {
@@ -673,6 +672,12 @@ static const char * MLPoolingLayerParamsPoolingPaddingType_Name(MLPoolingLayerPa
 enum MLPoolingType3D: int {
     MLPoolingType3DMAX = 0,
     MLPoolingType3DAVERAGE = 1,
+};
+
+enum MLPooling3DPaddingType: int {
+    MLPooling3DPaddingTypeCUSTOM = 0,
+    MLPooling3DPaddingTypeVALID = 1,
+    MLPooling3DPaddingTypeSAME = 2,
 };
 
 enum MLGlobalPoolingType3D: int {

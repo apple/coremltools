@@ -368,4 +368,34 @@ inline Result validateRecurrentActivationParams(const Specification::ActivationP
     return Result();
 }
 
+// Validate that 3d Pooling Padding arguments are only set if padding type is CUSTOM;
+// and if set, that they are non-negative.
+inline Result validatePooling3dPadding(const Specification::Pooling3DLayerParams_Pooling3DPaddingType paddingType,
+                              const int padding, const std::string& paddingName) {
+    if (paddingType == Specification::Pooling3DLayerParams_Pooling3DPaddingType_CUSTOM) {
+        if (padding < 0) {
+            std::string err = "Custom Padding " + paddingName + " must be non-negative, got " + std::to_string(padding) + ".";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+    } else {
+        if (padding != 0) {
+            std::string err = "Custom Padding " + paddingName + " cannot be non-zero (got " + std::to_string(padding)
+            + ") unless padding type is CUSTOM (got " + std::to_string(paddingType) + ").";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+    }
+    Result r;
+    return r;
+}
+
+// Validate that a value is positive
+inline Result validatePositive(const int value, const std::string& name) {
+    if (value <= 0 ) {
+        std::string err = name + " must be positive, got " + std::to_string(value) + ".";
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+    }
+    Result r;
+    return r;
+}
+
 }

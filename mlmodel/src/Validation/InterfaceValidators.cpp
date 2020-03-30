@@ -413,6 +413,44 @@ namespace CoreML {
         return result;
     }
 
+    Result validateClassifierFeatureDescriptions(const Specification::ModelDescription& interface,
+                                                 bool expected_class_is_int64) {
+
+        const auto& predictedFeatureName = interface.predictedfeaturename();
+        const auto& probOutputName = interface.predictedprobabilitiesname();
+
+        if (predictedFeatureName.empty()) {
+            return Result(ResultType::INVALID_MODEL_INTERFACE,
+                          "Specification is missing classifier predictedFeatureName");
+        } else {
+            auto expected_class = (expected_class_is_int64
+                                   ? Specification::FeatureType::TypeCase::kInt64Type
+                                   : Specification::FeatureType::TypeCase::kStringType);
+
+            auto result = validateDescriptionsContainFeatureWithNameAndType(interface.output(),
+                                                                            predictedFeatureName,
+                                                                            {expected_class});
+            if (!result.good()) {
+                return result;
+            }
+        }
+
+        if (!probOutputName.empty()) {
+            // TODO @znation: validate array length below
+            // and value type (must be double? different for different classifiers?)
+            // TODO Probability outputs are always dictionaries!
+            auto result = validateDescriptionsContainFeatureWithNameAndType(interface.output(),
+                                                                            probOutputName,
+                                                                            {Specification::FeatureType::TypeCase::kMultiArrayType, // TODO ARRAY TYPE IS INVALID, REMOVE
+                                                                            Specification::FeatureType::TypeCase::kDictionaryType});
+            if (!result.good()) {
+                return result;
+            }
+        }
+
+        return Result();
+    }
+
     /*
      * Validate optional inputs/outputs.
      * For most models, optional is not allowed (all inputs/outputs required).

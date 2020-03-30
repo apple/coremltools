@@ -31,7 +31,7 @@ class TestScatter:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rankData_rankIndices_axis, accumulate_mode",
                              itertools.product(
                                  [True, False],
@@ -198,7 +198,7 @@ class TestScatterNd:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rankData_rankIndices, accumulate_mode",
                              itertools.product(
                                  [True, False],
@@ -308,7 +308,7 @@ class TestGather:
 
 
     # TODO: <rdar://problem/59738824> [NNv2] Gather layer with 0-d indices leads to input shape mismatch
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rankX_rankIndices_axis",
                              itertools.product(
                                  [True, False],
@@ -317,7 +317,7 @@ class TestGather:
                                   (3,3,-2), (3,3,2), (3,3,0), (1,3,-1), (3,1,2), (3,1,-1)]
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rankX_rankIndices_axis):
+    def test_tf1(self, use_cpu_only, backend, rankX_rankIndices_axis):
         x_rank, indices_rank, axis = rankX_rankIndices_axis
         x_shape = np.random.randint(low=2, high=5, size=x_rank)
         indices_shape = np.random.randint(low=2, high=5, size=indices_rank)
@@ -325,11 +325,11 @@ class TestGather:
             x = tf.placeholder(tf.float32, shape=x_shape)
             indices = tf.placeholder(tf.int32, shape=indices_shape)
             res = tf.gather(x, indices, axis=axis)
-            run_compare_tf(graph,
-                           {x: np.random.rand(*x_shape),
+            run_compare_tf1(graph,
+                            {x: np.random.rand(*x_shape),
                             indices:  np.random.randint(0, x_shape[axis], size=indices_shape,dtype=np.int32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
 
 class TestGatherAlongAxis:
@@ -447,7 +447,7 @@ class TestGatherNd:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rankX_rankIndices",
                              itertools.product(
                                  [True, False],
@@ -456,7 +456,7 @@ class TestGatherNd:
                                   (2,5), (4,3), (3,4), (2,4), (4,2), (1,5)]
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rankX_rankIndices):
+    def test_tf1(self, use_cpu_only, backend, rankX_rankIndices):
         x_rank, indices_rank = rankX_rankIndices
         x_shape = np.random.randint(low=2, high=8, size=x_rank)
         indices_shape = np.random.randint(low=2, high=8, size=indices_rank)
@@ -474,6 +474,6 @@ class TestGatherNd:
 
             input_values = {x: a, indices: np.stack(indices_list, axis=-1).astype(np.float)}
 
-            run_compare_tf(graph, input_values,
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            run_compare_tf1(graph, input_values,
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)

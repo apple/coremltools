@@ -810,14 +810,13 @@ const int BoxCoordinatesMode_Coordinates_Coordinates_ARRAYSIZE = BoxCoordinatesM
 enum Convolution3DLayerParams_PaddingType {
   Convolution3DLayerParams_PaddingType_CUSTOM = 0,
   Convolution3DLayerParams_PaddingType_VALID = 1,
-  Convolution3DLayerParams_PaddingType_SAME_LEFT = 2,
-  Convolution3DLayerParams_PaddingType_SAME_RIGHT = 3,
+  Convolution3DLayerParams_PaddingType_SAME = 2,
   Convolution3DLayerParams_PaddingType_Convolution3DLayerParams_PaddingType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   Convolution3DLayerParams_PaddingType_Convolution3DLayerParams_PaddingType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
 bool Convolution3DLayerParams_PaddingType_IsValid(int value);
 const Convolution3DLayerParams_PaddingType Convolution3DLayerParams_PaddingType_PaddingType_MIN = Convolution3DLayerParams_PaddingType_CUSTOM;
-const Convolution3DLayerParams_PaddingType Convolution3DLayerParams_PaddingType_PaddingType_MAX = Convolution3DLayerParams_PaddingType_SAME_RIGHT;
+const Convolution3DLayerParams_PaddingType Convolution3DLayerParams_PaddingType_PaddingType_MAX = Convolution3DLayerParams_PaddingType_SAME;
 const int Convolution3DLayerParams_PaddingType_PaddingType_ARRAYSIZE = Convolution3DLayerParams_PaddingType_PaddingType_MAX + 1;
 
 enum PoolingLayerParams_PoolingType {
@@ -842,6 +841,18 @@ bool Pooling3DLayerParams_PoolingType3D_IsValid(int value);
 const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams_PoolingType3D_PoolingType3D_MIN = Pooling3DLayerParams_PoolingType3D_MAX;
 const Pooling3DLayerParams_PoolingType3D Pooling3DLayerParams_PoolingType3D_PoolingType3D_MAX = Pooling3DLayerParams_PoolingType3D_AVERAGE;
 const int Pooling3DLayerParams_PoolingType3D_PoolingType3D_ARRAYSIZE = Pooling3DLayerParams_PoolingType3D_PoolingType3D_MAX + 1;
+
+enum Pooling3DLayerParams_Pooling3DPaddingType {
+  Pooling3DLayerParams_Pooling3DPaddingType_CUSTOM = 0,
+  Pooling3DLayerParams_Pooling3DPaddingType_VALID = 1,
+  Pooling3DLayerParams_Pooling3DPaddingType_SAME = 2,
+  Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DLayerParams_Pooling3DPaddingType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DLayerParams_Pooling3DPaddingType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+};
+bool Pooling3DLayerParams_Pooling3DPaddingType_IsValid(int value);
+const Pooling3DLayerParams_Pooling3DPaddingType Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DPaddingType_MIN = Pooling3DLayerParams_Pooling3DPaddingType_CUSTOM;
+const Pooling3DLayerParams_Pooling3DPaddingType Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DPaddingType_MAX = Pooling3DLayerParams_Pooling3DPaddingType_SAME;
+const int Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DPaddingType_ARRAYSIZE = Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DPaddingType_MAX + 1;
 
 enum GlobalPooling3DLayerParams_GlobalPoolingType3D {
   GlobalPooling3DLayerParams_GlobalPoolingType3D_MAX = 0,
@@ -7325,10 +7336,8 @@ class Convolution3DLayerParams : public ::google::protobuf::MessageLite /* @@pro
     Convolution3DLayerParams_PaddingType_CUSTOM;
   static const PaddingType VALID =
     Convolution3DLayerParams_PaddingType_VALID;
-  static const PaddingType SAME_LEFT =
-    Convolution3DLayerParams_PaddingType_SAME_LEFT;
-  static const PaddingType SAME_RIGHT =
-    Convolution3DLayerParams_PaddingType_SAME_RIGHT;
+  static const PaddingType SAME =
+    Convolution3DLayerParams_PaddingType_SAME;
   static inline bool PaddingType_IsValid(int value) {
     return Convolution3DLayerParams_PaddingType_IsValid(value);
   }
@@ -8341,6 +8350,23 @@ class Pooling3DLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
   static const int PoolingType3D_ARRAYSIZE =
     Pooling3DLayerParams_PoolingType3D_PoolingType3D_ARRAYSIZE;
 
+  typedef Pooling3DLayerParams_Pooling3DPaddingType Pooling3DPaddingType;
+  static const Pooling3DPaddingType CUSTOM =
+    Pooling3DLayerParams_Pooling3DPaddingType_CUSTOM;
+  static const Pooling3DPaddingType VALID =
+    Pooling3DLayerParams_Pooling3DPaddingType_VALID;
+  static const Pooling3DPaddingType SAME =
+    Pooling3DLayerParams_Pooling3DPaddingType_SAME;
+  static inline bool Pooling3DPaddingType_IsValid(int value) {
+    return Pooling3DLayerParams_Pooling3DPaddingType_IsValid(value);
+  }
+  static const Pooling3DPaddingType Pooling3DPaddingType_MIN =
+    Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DPaddingType_MIN;
+  static const Pooling3DPaddingType Pooling3DPaddingType_MAX =
+    Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DPaddingType_MAX;
+  static const int Pooling3DPaddingType_ARRAYSIZE =
+    Pooling3DLayerParams_Pooling3DPaddingType_Pooling3DPaddingType_ARRAYSIZE;
+
   // accessors -------------------------------------------------------
 
   // .CoreML.Specification.Pooling3DLayerParams.PoolingType3D type = 1;
@@ -8427,6 +8453,12 @@ class Pooling3DLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
   bool countexcludepadding() const;
   void set_countexcludepadding(bool value);
 
+  // .CoreML.Specification.Pooling3DLayerParams.Pooling3DPaddingType paddingType = 15;
+  void clear_paddingtype();
+  static const int kPaddingTypeFieldNumber = 15;
+  ::CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType paddingtype() const;
+  void set_paddingtype(::CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType value);
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.Pooling3DLayerParams)
  private:
 
@@ -8445,6 +8477,7 @@ class Pooling3DLayerParams : public ::google::protobuf::MessageLite /* @@protoc_
   ::google::protobuf::int32 custompaddingleft_;
   ::google::protobuf::int32 custompaddingright_;
   bool countexcludepadding_;
+  int paddingtype_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -34263,6 +34296,20 @@ inline void Pooling3DLayerParams::set_stridewidth(::google::protobuf::int32 valu
   // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.strideWidth)
 }
 
+// .CoreML.Specification.Pooling3DLayerParams.Pooling3DPaddingType paddingType = 15;
+inline void Pooling3DLayerParams::clear_paddingtype() {
+  paddingtype_ = 0;
+}
+inline ::CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType Pooling3DLayerParams::paddingtype() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Pooling3DLayerParams.paddingType)
+  return static_cast< ::CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType >(paddingtype_);
+}
+inline void Pooling3DLayerParams::set_paddingtype(::CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType value) {
+  
+  paddingtype_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Pooling3DLayerParams.paddingType)
+}
+
 // int32 customPaddingFront = 8;
 inline void Pooling3DLayerParams::clear_custompaddingfront() {
   custompaddingfront_ = 0;
@@ -43076,6 +43123,7 @@ template <> struct is_proto_enum< ::CoreML::Specification::BoxCoordinatesMode_Co
 template <> struct is_proto_enum< ::CoreML::Specification::Convolution3DLayerParams_PaddingType> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::PoolingLayerParams_PoolingType> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::Pooling3DLayerParams_PoolingType3D> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::CoreML::Specification::Pooling3DLayerParams_Pooling3DPaddingType> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::GlobalPooling3DLayerParams_GlobalPoolingType3D> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::UnaryFunctionLayerParams_Operation> : ::google::protobuf::internal::true_type {};
 template <> struct is_proto_enum< ::CoreML::Specification::UpsampleLayerParams_InterpolationMode> : ::google::protobuf::internal::true_type {};

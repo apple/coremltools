@@ -243,7 +243,7 @@ class TestReduction:
                             frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, rank_and_axes, keep_dims, tf_op',
                              itertools.product(
                                  [True, False],
@@ -258,7 +258,7 @@ class TestReduction:
                                  # TODO: add 'log_sum_exp' tests which requires IsFinate op conversion. 'any' tests
                                  # rdar://59563732 (Add support for TensorFlow IsFinate op conversion.)
                              ))
-    def test_tf(self, use_cpu_only, backend, rank_and_axes, keep_dims, tf_op):
+    def test_tf1(self, use_cpu_only, backend, rank_and_axes, keep_dims, tf_op):
         rank, axes = rank_and_axes
         shape = np.random.randint(low=1, high=6, size=rank)
 
@@ -266,15 +266,15 @@ class TestReduction:
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=shape)
                 ref = tf.math.argmax(x, axis=axes[0] if axes else 0)
-                run_compare_tf(graph, {x: random_gen(shape=shape, rand_min=-5., rand_max=5.)},
-                               ref, use_cpu_only=use_cpu_only, backend=backend)
+                run_compare_tf1(graph, {x: random_gen(shape=shape, rand_min=-5., rand_max=5.)},
+                                ref, use_cpu_only=use_cpu_only, backend=backend)
 
         def test_tf_argmin():
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=shape)
                 ref = tf.math.argmin(x, axis=axes[0] if axes else 0)
-                run_compare_tf(graph, {x: random_gen(shape=shape, rand_min=-5., rand_max=5.)},
-                               ref, use_cpu_only=use_cpu_only, backend=backend)
+                run_compare_tf1(graph, {x: random_gen(shape=shape, rand_min=-5., rand_max=5.)},
+                                ref, use_cpu_only=use_cpu_only, backend=backend)
 
         def test_tf_reduction():
             if axes and len(axes) == rank and not keep_dims:
@@ -288,9 +288,11 @@ class TestReduction:
                     x_val = np.random.randint(low=0, high=2, size=shape).astype(np.float32)
                 elif tf_op in {tf.math.reduce_euclidean_norm}:
                     x_val = random_gen(shape=shape, rand_min=0., rand_max=10.)
+                elif tf_op in {tf.reduce_prod}:
+                    x_val = random_gen(shape=shape, rand_min=1., rand_max=1.5)
                 ref = tf_op(x, axis=axes, keepdims=keep_dims)
-                run_compare_tf(graph, {x: x_val}, ref,
-                               use_cpu_only=use_cpu_only, backend=backend)
+                run_compare_tf1(graph, {x: x_val}, ref,
+                                use_cpu_only=use_cpu_only, backend=backend)
 
         test_tf_argmax()
         test_tf_argmin()

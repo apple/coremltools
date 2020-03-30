@@ -17,16 +17,22 @@ from .internal_graph import *
 from .ops import *
 from .torch_op_registry import _TORCH_OPS_REGISTRY
 
-torch_to_proto_types = {torch.float32: builtins.float}
+torch_to_proto_types = {
+    torch.float32: builtins.fp32,
+    torch.int32: builtins.int32,
+    torch.int64: builtins.int64,
+}
 
 
 class TranscriptionContext:
-    """Mantains a map from torch operations to their NNV2 values 
-    while building the graph"""
+    """Maintains a map from torch operations to their NNV2 values
+        while building the graph. Can be used to process subgraphs recursively
+        by pushing new context when stepping into a subgraph and popping that
+        context when stepping out."""
 
     def __init__(self, name=None):
         self.name = name if name else ""
-        self._current_graph = {}
+        self._current_graph = [{}]
 
     def add(self, ssa_var, torch_name=None):
         """
@@ -37,22 +43,56 @@ class TranscriptionContext:
         """
         if torch_name is None:
             torch_name = ssa_var.name
-        if torch_name in self._current_graph:
+        if torch_name in self._current_graph[-1]:
             print("Torch var {} is added again.".format(torch_name))
             return
-        self._current_graph[torch_name] = ssa_var
+        self._current_graph[-1][torch_name] = ssa_var
 
     def __getitem__(self, torch_name):
-        if torch_name not in self._current_graph:
-            raise ValueError(
-                "Torch var {} not found in context {}".format(torch_name, self.name)
-            )
-        return self._current_graph[torch_name]
+        """ Lookup a name in the context. Note that since nested blocks must be
+            able to access anything that was defined before them, we have to
+            search all contexts for a name, starting with the most local scope.
+        """
+        for idx in reversed(range(len(self._current_graph))):
+            current_graph = self._current_graph[idx]
+            if torch_name in current_graph:
+                return self._current_graph[idx][torch_name]
+        raise ValueError(
+            "Torch var {} not found in context {}".format(torch_name, self.name)
+        )
+
+    def push(self, inputs=None):
+        """
+        Add another frame to the context. Optionally provide a tuple of
+        (name list, Var list) to populate the new context frame.
+        """
+        self._current_graph.append({})
+
+        if inputs is not None:
+            if len(inputs[0]) != len(inputs[1]):
+                raise ValueError("name list and Var list must be the same length")
+            for name, var in zip(inputs[0], inputs[1]):
+                self.add(var, torch_name=name)
+
+    def pop(self):
+        """
+        Remove and discard the top context frame.
+        """
+        self._current_graph = self._current_graph[:-1]
 
     def __str__(self):
         _str = ""
-        for k, v in self._current_graph.items():
-            _str += "%{} : {}\n".format(k, v.shape_str() if hasattr(v, "shape_str") else v.sym_shape())
+        for current_graph in reversed(self._current_graph):
+            __str = ""
+            for k, v in current_graph.items():
+                if hasattr(v, "shape_str"):
+                    shape_str = v.shape_str()
+                elif hasattr(v, "sym_shape"):
+                    shape_str = v.sym_shape()
+                else:
+                    shape_str = "None"
+                __str += "%{} : {}\n".format(k, shape_str)
+            _str += __str + "\n"
         return _str
 
     def __repr__(self):
@@ -94,6 +134,19 @@ class TorchConverter:
         dtype = torch_to_proto_types[_input.dtype]
         return cb.placeholder(shape, dtype=dtype)
 
+    def check_ops(self):
+        """Returns the set of ops in @self.graph that are implemented, and
+            the set for which no conversion function is registered."""
+        implemented_ops = set()
+        missing_ops = set()
+        for node in self.graph.nodes:
+            _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
+            if _add_op is None:
+                missing_ops.add(node.kind)
+            else:
+                implemented_ops.add(node.kind)
+        return implemented_ops, missing_ops
+
     def convert(self):
 
         logging.info("Converting graph.")
@@ -117,17 +170,7 @@ class TorchConverter:
                 self.context.add(const)
 
             # Add the rest of the operations
-            for node in self.graph.nodes:
-                _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
-                logging.debug("Converting op {}".format(node.kind))
-                if _add_op is None:
-                    raise RuntimeError(
-                        "Pytorch convert function for op {} not implemented".format(
-                            node.kind
-                        )
-                    )
-                else:
-                    _add_op(self.context, node)
+            convert_nodes(self.context, self.graph)
 
             graph_outputs = [self.context[name] for name in self.graph.outputs]
             ssa_func.set_outputs(graph_outputs)

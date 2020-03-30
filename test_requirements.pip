@@ -1,4 +1,5 @@
 boto3
+configparser
 Keras==2.1.6
 Pillow
 h5py

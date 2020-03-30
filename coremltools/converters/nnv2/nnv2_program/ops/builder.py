@@ -10,6 +10,7 @@ from ..program.input_type import (_InputType, InternalStringInputType,
                                  InputSpec, InternalInputType,
                                  PyFunctionInputType)
 from ..program.var import InternalVar, Var
+from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic
 
 
 class CoremlBuilder:
@@ -46,6 +47,12 @@ class CoremlBuilder:
 
     @classmethod
     def _add_const_immediate_value(cls, val, name, before_op):
+        if any_symbolic(val):
+            msg = 'Python native vals (list, tuple), np.array that are' +\
+            'operation inputs cannot have symbolic values. Consider feeding' + \
+            'symbolic shape in through placeholder and use cb.shape() ' + \
+            'operator. Input {}: {}'
+            raise ValueError(msg.format(name, val))
         const_name = cls._get_free_name(name)
         logging.debug("Adding immediate value op {}".format(const_name))
         output_var = cls.const(mode="immediate_value",
@@ -145,7 +152,7 @@ class CoremlBuilder:
         kwargs = cls._create_input_vars(op_cls.input_spec, kwargs['name'], op_cls,
                                         before_op, kwargs)
         new_op = op_cls(**kwargs)
-        curr_block().insert_op_before(new_op, before_op=before_op)
+        curr_block()._insert_op_before(new_op, before_op=before_op)
         new_op.build_nested_blocks()
         new_op.type_value_inference()
         if len(new_op.outputs) == 1:

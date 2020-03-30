@@ -51,7 +51,7 @@ class TestNormalizationBatchNorm:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, shape_mode, epsilon',
                              itertools.product(
                                  [True, False],
@@ -60,7 +60,7 @@ class TestNormalizationBatchNorm:
                                  [True, False],
                                  [1e-1, 1e-10]
                              ))
-    def test_tf(self, use_cpu_only, backend, rank, shape_mode, epsilon):
+    def test_tf1(self, use_cpu_only, backend, rank, shape_mode, epsilon):
         shape = np.random.randint(low=1, high=6, size=rank)
         if shape_mode:
             # same shape with 1 for being normalized over
@@ -78,7 +78,7 @@ class TestNormalizationBatchNorm:
             s = tf.placeholder(tf.float32, shape=attr_shape)
             ref = tf.nn.batch_normalization(
                 x, mean=m, variance=v, offset=o, scale=s, variance_epsilon=epsilon)
-            run_compare_tf(graph, {
+            run_compare_tf1(graph, {
                 x: random_gen(shape=shape, rand_min=-100., rand_max=100.),
                 m: random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
                 v: random_gen(shape=attr_shape, rand_min=0., rand_max=10.),
@@ -86,7 +86,7 @@ class TestNormalizationBatchNorm:
                 s: random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
             }, ref, use_cpu_only=use_cpu_only, backend=backend, atol=1e-2, rtol=1e-3)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, shape_mode, epsilon, scale_after_normalization',
                              itertools.product(
                                  [True, False],
@@ -114,13 +114,13 @@ class TestNormalizationBatchNorm:
             ref = tf.nn.batch_norm_with_global_normalization(
                 x, mean=m, variance=v, variance_epsilon=epsilon,
                 scale_after_normalization=scale_after_normalization)
-            run_compare_tf(graph, {
+            run_compare_tf1(graph, {
                 x: random_gen(shape=shape, rand_min=-100., rand_max=100.),
                 m: random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
                 v: random_gen(shape=attr_shape, rand_min=0., rand_max=10.),
             }, ref, use_cpu_only=use_cpu_only, backend=backend, atol=1e-2, rtol=1e-3)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, epsilon',
                              itertools.product(
                                  [True, False],
@@ -138,8 +138,9 @@ class TestNormalizationBatchNorm:
             o = tf.constant(random_gen(shape=attr_shape, rand_min=1., rand_max=10.))
             s = tf.constant(random_gen(shape=attr_shape, rand_min=-1., rand_max=1.))
             ref = tf.nn.fused_batch_norm(x, mean=m, variance=v, offset=o, scale=s,
-                                         epsilon=epsilon, is_training=False)[0]
-            run_compare_tf(graph, {
+                                         epsilon=epsilon, is_training=False)
+            ref = ref[0]
+            run_compare_tf1(graph, {
                 x: random_gen(shape=shape, rand_min=-100., rand_max=100.),
             }, ref, use_cpu_only=use_cpu_only, backend=backend, atol=1e-2, rtol=1e-3)
 
@@ -224,7 +225,7 @@ class TestNormalizationL2Norm:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, axes, epsilon',
                              itertools.product(
                                  [True, False],
@@ -233,14 +234,14 @@ class TestNormalizationL2Norm:
                                  [(-1,), (-2,), (0, 1)],
                                  [1e-5, 1e-10],
                              ))
-    def test_tf(self, use_cpu_only, backend, rank, axes, epsilon):
+    def test_tf1(self, use_cpu_only, backend, rank, axes, epsilon):
         shape = np.random.randint(low=1, high=6, size=rank)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.math.l2_normalize(x, axis=axes, epsilon=epsilon)
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-10, rand_max=10)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend,
-                           atol=1e-2, rtol=1e-3)
+            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-10, rand_max=10)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend,
+                            atol=1e-2, rtol=1e-3)
 
 
 class TestNormalizationLayerNorm:
@@ -296,7 +297,7 @@ class TestNormalizationLayerNorm:
         assert is_close(ref, res.val)
 
     @pytest.mark.skip('VarHandleOp')
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, axis, epsilon',
                              itertools.product(
                                  [True],
@@ -305,13 +306,13 @@ class TestNormalizationLayerNorm:
                                  [-1, ],
                                  [1e-10],
                              ))
-    def test_tf(self, use_cpu_only, backend, rank, axis, epsilon):
+    def test_tf1(self, use_cpu_only, backend, rank, axis, epsilon):
         shape = np.random.randint(low=2, high=6, size=rank)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.keras.layers.LayerNormalization(axis=-1, epsilon=epsilon, trainable=False)(x)
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestNormalizationLocalResponseNorm:
@@ -375,7 +376,7 @@ class TestNormalizationLocalResponseNorm:
                             use_cpu_only=use_cpu_only, backend=backend,
                             atol=1e-2, rtol=1e-3)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, size, alpha, beta, k',
                              itertools.product(
                                  [True, False],
@@ -385,13 +386,13 @@ class TestNormalizationLocalResponseNorm:
                                  [0.75, 1.0],
                                  [1.0, 2.0],
                              ))
-    def test_tf(self, use_cpu_only, backend, size, alpha, beta, k):
+    def test_tf1(self, use_cpu_only, backend, size, alpha, beta, k):
         # TensorFlow's local_response_normalization only supports rank 4
         shape = np.random.randint(low=3, high=6, size=4)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.nn.local_response_normalization(
                 x, depth_radius=size, bias=k, alpha=alpha, beta=beta)
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend,
-                           atol=1e-2, rtol=1e-3)
+            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
+                            ref, use_cpu_only=use_cpu_only, backend=backend,
+                            atol=1e-2, rtol=1e-3)

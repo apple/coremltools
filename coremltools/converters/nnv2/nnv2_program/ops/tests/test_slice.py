@@ -48,7 +48,7 @@ class TestSliceByIndex:
         for idx in range(len(v)):
             assert is_close(ans[idx], v[idx].val)
 
-    @pytest.mark.skipif(not HAS_TF, reason='TensorFlow not found.')
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, masking',
                              itertools.product(
                                  [True, False],
@@ -56,7 +56,7 @@ class TestSliceByIndex:
                                  [rank for rank in range(1, 5)],
                                  [True, False]
                                  ))
-    def test_tf(self, use_cpu_only, backend, rank, masking):
+    def test_tf1(self, use_cpu_only, backend, rank, masking):
         shape = np.random.randint(low=2, high=6, size=rank)
         begin_val = np.array([np.random.randint(low=-shape[i], high=shape[i]) for i in range(rank)]).astype(np.int32)
         end_val = np.array([np.random.randint(low=-shape[i], high=shape[i]) for i in range(rank)]).astype(np.int32)
@@ -134,7 +134,7 @@ class TestSliceByIndex:
                                    begin_mask=_mask_to_bit(begin_mask),
                                    end_mask=_mask_to_bit(end_mask),
                                    shrink_axis_mask=_mask_to_bit(squeeze_mask))
-            run_compare_tf(graph, {x: x_val, begin: begin_val, end: end_val},
-                           res, use_cpu_only=use_cpu_only, backend=backend)
+            run_compare_tf1(graph, {x: x_val, begin: begin_val, end: end_val},
+                            res, use_cpu_only=use_cpu_only, backend=backend)
 
 

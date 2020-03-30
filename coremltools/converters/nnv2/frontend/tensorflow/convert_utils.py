@@ -7,7 +7,7 @@ from .tf_op_registry import _OPS_REGISTRY
 
 def compatible_shapes(tf_shape, inf_shape):
     def compare_elem(dt, ds):
-        if dt in [None, -1]:
+        if dt is None or dt < 0:
             return True
         elif dt == ds:
             return True
@@ -24,6 +24,8 @@ def check_output_shapes(x, node):
     x: list[Var] or tuple[Var]
     node: ParsedTFNode
     """
+    if not isinstance(x, (list, tuple)):
+        x = [x]
     tf_shapes = node.attr.get('_output_shapes', None)
     if tf_shapes is None:
         return
@@ -49,7 +51,7 @@ def check_output_shapes(x, node):
 
 def convert_graph(context, graph, outputs=None):
     """
-    Construct Coreml ops corresopnding to `graph`.
+    Construct Core ML ops corresponding to `graph`.
 
     Inputs:
 
@@ -81,22 +83,34 @@ def convert_graph(context, graph, outputs=None):
             outputs = second_last_node.name
 
     # Translate the non-placeholder ops.
-    for node_name in nodes:
+    num_nodes = len(nodes)
+    for i, node_name in enumerate(nodes):
         node = graph[node_name]
         if node.op == 'return':
             continue
-        logging.debug("Converting {} op {}".format(node.op, node.name))
+        logging.info("[{}/{}] Converting {} op {}".format(
+            i + 1, num_nodes, node.op, node.name))
         _add_op = _OPS_REGISTRY.get(node.op, None)
         if _add_op is None:
-            msg = "Conversion for TF op {} not implemented."
-            raise RuntimeError(msg.format(node.op))
+            msg = "Conversion for TF op '{}' not implemented."
+            raise NotImplementedError(msg.format(node.op))
         _add_op(context, node)
 
-        x = context[node.name]
-        if not isinstance(x, (tuple, list)):
-            x = [x]
-        check_output_shapes(x, node)
+        if node.op != 'NoOp':
+            x = context[node.name]
+            check_output_shapes(x, node)
 
-    if isinstance(outputs, (list, tuple)):
-        return [context[o] for o in outputs]
-    return context[outputs]
+    output_is_list = isinstance(outputs, (tuple, list))
+    if not output_is_list:
+        outputs = [outputs]
+
+    output_vars = []
+    for output in outputs:
+        x = context[output.split(':')[0]]
+        if isinstance(x, (tuple,list)):
+            idx = int(output.split(':')[1])
+            output_vars.append(x[idx])
+        else:
+            output_vars.append(x)
+
+    return output_vars if output_is_list else output_vars[0]

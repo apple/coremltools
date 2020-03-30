@@ -3,23 +3,27 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import logging
 import os.path
 
 import torch
-import logging
 
 from ...models import MLModel
 from ..nnv2 import converter as NNV2_converter
 from ..nnv2.frontend.torch.converter import TorchConverter
 
 
-def convert(model_spec, inputs):
+def convert(model_spec, inputs, check_only=False):
     """
     Convert Pytorch .pt file to nnv2 CoreML format.
 
-    model_spec: String path to .pt file, or a TorchScript object representing the model to convert.
+    model_spec: String path to .pt file, or a TorchScript object representing
+        the model to convert.
     inputs: List of torch.Tensor inputs to the model.
         TODO: Allow @inputs to describe variable size inputs.
+    check_only: If False (default), will convert the model as normal. If True,
+        instead of converting the model this will print which ops in the model
+        are implemented and which aren't.
     """
 
     if isinstance(model_spec, str):
@@ -34,15 +38,19 @@ def convert(model_spec, inputs):
             )
         )
 
-    if torchscript.training:
-        logging.warning(
-            "Torchscript has @.training == true. This could be a sign that your torchscript has non-training operations "
-            "included. Make sure to set model to .eval mode before tracing."
-        )
-
     converter = TorchConverter(torchscript, inputs)
-    prog = converter.convert()
-    proto = NNV2_converter.convert(
-        prog, convert_from="NitroSSA", convert_to="nnv1_proto"
-    )
-    return MLModel(proto, useCPUOnly=True)
+    if check_only:
+        implemented, missing = converter.check_ops()
+        all_ops = implemented.union(missing)
+        if "loop" in all_ops or "if" in all_ops:
+            print("Warning: control flow ops present, results will be incomplete")
+        print("the following model ops are IMPLEMENTED:")
+        print("\n".join(["  " + str(x) for x in sorted(implemented)]))
+        print("the following model ops are MISSING:")
+        print("\n".join(["  " + str(x) for x in sorted(missing)]))
+    else:
+        prog = converter.convert()
+        proto = NNV2_converter.convert(
+            prog, convert_from="NitroSSA", convert_to="nnv1_proto"
+        )
+        return MLModel(proto, useCPUOnly=True)

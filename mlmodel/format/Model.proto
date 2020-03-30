@@ -153,11 +153,18 @@ message ModelDescription {
     repeated FeatureDescription input = 1;
     repeated FeatureDescription output = 10;
 
+    // [Required for regressor and classifier models]: the name
+    // to give to an output feature containing the prediction.
     string predictedFeatureName = 11;
+
+    // [Optional for classifier models]: the name to give to an
+    // output feature containing a dictionary mapping class
+    // labels to their predicted probabilities. If not specified,
+    // the dictionary will not be returned by the model.
     string predictedProbabilitiesName = 12;
 
     repeated FeatureDescription trainingInput = 50;
-    
+
     Metadata metadata = 100;
 }
 

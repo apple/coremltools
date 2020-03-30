@@ -212,8 +212,6 @@ class while_loop(Operation):
         return tuple(v.sym_type for v in self.blocks[1].outputs)
 
 
-
-
 # identity is used for renaming and is rarely necessary. See
 # `loop_invariant_elimination` pass for a rare use case.
 @register_op(doc_str='TODO')

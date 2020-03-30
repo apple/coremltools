@@ -355,7 +355,7 @@ class SimpleTest(CorrectnessTest):
         self._test_model(builder.spec, input, expected)
         for output_ in output_names:
             self.assertEqual(len(input_dim), builder._get_rank(output_))
-        
+
     def test_scale_constant(self):
         input_dim = (1, 2, 2)
         input_features = [('data', datatypes.Array(*input_dim))]
@@ -648,7 +648,7 @@ class SimpleTest(CorrectnessTest):
         expected = {'output': np.reshape(x, (1, 10, 1, 1))}
 
         self._test_model(builder.spec, input, expected)
-        self.assertEqual(len(target_dim), builder._get_rank('output'))  
+        self.assertEqual(len(target_dim), builder._get_rank('output'))
 
     def test_bias_matrix_cpu(self):
         input_dim = (1, 2, 2)
@@ -769,7 +769,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
         kernel_channels = input_dim[0]
         output_channels, kernel_channels, height, width = weight_dim
-        
+
         input_features = [
             ('input', datatypes.Array(*input_dim)),
             ('weight', datatypes.Array(*weight_dim))]
@@ -1296,7 +1296,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             builder.add_where_broadcastable(name='where',
                                             input_names=['condition', 'x', 'y'],
                                             output_name='output')
-            
+
             self.assertEqual(builder._get_rank('output'), -1)
 
 
@@ -4509,7 +4509,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
             kernel_size = [1,3,5], # square kernels
             strides = [1,2],
             dilation_rate = [1],
-            batch_size = [1, 64, 512, 1024, 2048]
+            batch_size = [1, 64, 512, 1024]
         )
 
         input_size = 64
@@ -4984,110 +4984,191 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
     def test_clamped_relu_gpu(self):
         self.test_clamped_relu_cpu(cpu_only=False)
-    
+
     def _test_pool3d(self, cpu_only):
         pool_types = ('MAX', 'AVERAGE')
+        # Defining shapes as (batch, channel, depth, height, width)
         shapes = ((1,1,1,2,2), (1,1,3,3,3), (3,4,10,17,90))
+        # Defining kernels and strides as (depth, height, width)
         kernels = ((2,2,2), (1,3,4), (2,3,4), (5,1,6), (8,9,1), (7,11,13))
         strides = ((1,1,1), (1,2,3), (2,3,2), (4,1,2), (3,4,1), (7,11,13))
-        # Because Torch takes paddings in tuples of length 3 (one entry for each dimension), the start and end
-        # of each dimension must add up to an even number so that they can be converted into an integer value
-        # for Torch without discrepancy.
-        paddings = ((0,0,0,0,0,0), (2,2,2,2,2,2), (2,2,4,6,8,10))
-        
+        # Defining paddings as (left, right, top, bottom, front, back)
+        # This is backwards from how we define shapes, kernels, and strides,
+        # but it better matches pytorch, making the creation of pytorch layers
+        # much easier.
+        paddings = (('CUSTOM', (0,0,0,0,0,0)),
+                    ('CUSTOM', (2,2,2,2,2,2)),
+                    ('CUSTOM', (5,6,3,4,2,2)),
+                    # VALID and SAME padding must have custom paddings unset or set to zero.
+                    ('VALID', (0,0,0,0,0,0)),
+                    ('SAME', (0,0,0,0,0,0)))
+
         # Structure to collect failures so
         # we can run all tests, even if one fails.
         # This should be able to go away when we can parameterize
         # our tests: <rdar://problem/59966164> Enable parameterized tests in test_numpy_nn_layers.py
         failures = []
-        
+        num_successes = 0
+        num_skipped = 0
+
         for pool_type in pool_types:
             for shape in shapes:
                 for kernel in kernels:
                     for stride in strides:
                         for padding in paddings:
                             for average_pooling_count_excludes_padding in (False, True):
-                                if pool_type != 'AVERAGE' and average_pooling_count_excludes_padding:
-                                    continue
-                                test_case = 'Test case:: pool_type: %s, shape: %s, kernel: %s, stride: %s, padding: %s, average_pooling_count_excludes_padding: %s' \
-                                    % (pool_type, shape, kernel, stride, padding, average_pooling_count_excludes_padding)
-                                print(test_case)
-                                input_features = [('data', datatypes.Array(*shape))]
-                                output_features = [('output', None)]
-                                builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
-                                                                                disable_rank5_shape_mapping=True)
-                                builder.add_pooling3d(name='pooling3d',
-                                                        input_name='data',
-                                                        output_name='output',
-                                                        pooling_type=pool_type,
-                                                        kernel_depth=kernel[0],
-                                                        kernel_height=kernel[1],
-                                                        kernel_width=kernel[2],
-                                                        stride_depth=stride[0],
-                                                        stride_height=stride[1],
-                                                        stride_width=stride[2],
-                                                        custom_padding_front=padding[0],
-                                                        custom_padding_back=padding[1],
-                                                        custom_padding_top=padding[2],
-                                                        custom_padding_bottom=padding[3],
-                                                        custom_padding_left=padding[4],
-                                                        custom_padding_right=padding[5],
-                                                        average_pooling_count_excludes_padding=average_pooling_count_excludes_padding)
-                                input = np.random.rand(*shape)
-                                expected_batch = shape[0]
-                                expected_channel = shape[1]
-                                try:
-                                    expected_depth = IOS14SingleLayerTests._compute_and_validate_pooling_dimension(shape[2], kernel[0], stride[0], padding[0], padding[1])
-                                except ValueError as e:
-                                    print(str(e) + ', skipping')
-                                    continue
-                                    
-                                try:
-                                    expected_height = IOS14SingleLayerTests._compute_and_validate_pooling_dimension(shape[3], kernel[1], stride[1], padding[2], padding[3])
-                                except ValueError as e:
-                                    print(str(e) + ', skipping')
-                                    continue
-                                
-                                try:
-                                    expected_width = IOS14SingleLayerTests._compute_and_validate_pooling_dimension(shape[4], kernel[2], stride[2], padding[4], padding[5])
-                                except ValueError as e:
-                                    print(str(e) + ', skipping')
-                                    continue
-                                
-                                # Expected output
-                                validate_shapes_only = False
-                                torch_input = torch.from_numpy(np.reshape(input, shape))
-                                # Average pooling
-                                if pool_type == 'AVERAGE':
-                                    is_padding_homogeneous = all(p == padding[0] for p in padding)
-                                    # Torch can only apply average 3d pooling with
-                                    # homogeneous padding
-                                    if is_padding_homogeneous:
-                                        torch_pool = torch.nn.AvgPool3d(kernel, stride=stride, padding=padding[0],
-                                                                        count_include_pad=not average_pooling_count_excludes_padding)
-                                        expected = torch_pool(torch_input).numpy()
-                                    else:
-                                        validate_shapes_only = True
-                                        expected = np.random.rand(expected_batch, expected_channel, expected_depth, expected_height, expected_width)
-                                        print('Non-homogeneous padding for average pooling, only validating shape')
-                                # Max pooling
+                                result = self._test_pool3d_single_case(
+                                    cpu_only,
+                                    pool_type,
+                                    shape,
+                                    kernel,
+                                    stride,
+                                    padding,
+                                    average_pooling_count_excludes_padding
+                                )
+                                if type(result) is str:
+                                    failures.append(result)
+                                elif result:
+                                    num_successes += 1
                                 else:
-                                    # Torch's max pooling takes a length-3 vector of padding, one entry for each dimension
-                                    # which gets applied to BOTH sides of the dimension.
-                                    torch_padding = (int((padding[0] + padding[1])/2), int((padding[2] + padding[3])/2), int((padding[4] + padding[5])/2))
-                                    torch_pool = torch.nn.MaxPool3d(kernel, stride=stride, padding=torch_padding)
-                                    expected = torch_pool(torch_input).numpy()
-                                
-                                try:
-                                    self._test_model(builder.spec, {'data':input}, {'output': expected}, validate_shapes_only=validate_shapes_only, useCPUOnly=cpu_only)
-                                except AssertionError as e:
-                                    print(e)
-                                    failures.append('test_case: %s, error: %s' % (test_case, e))
-        self.assertEqual(len(failures), 0, 'Got %s failures: %s' % (len(failures), failures))
-    
+                                    num_skipped += 1
+        self.assertEqual(len(failures), 0, 'Got %s successes, %s skipped,  %s failures: %s'
+                         % (num_successes, num_skipped, len(failures), failures))
+
+    def _test_pool3d_single_case(self, cpu_only, pool_type, shape, kernel, stride, padding,
+                                 average_pooling_count_excludes_padding):
+        """
+
+        Args:
+            cpu_only:
+            pool_type:
+            shape:
+            kernel:
+            stride:
+            padding:
+            average_pooling_count_excludes_padding:
+
+        Returns: True if success, False if skipped, Str if error
+
+        """
+        test_case = 'Test case:: pool_type: %s, shape: %s, kernel: %s, stride: %s, padding: %s, average_pooling_count_excludes_padding: %s' \
+            % (pool_type, shape, kernel, stride, padding, average_pooling_count_excludes_padding)
+        input_features = [('data', datatypes.Array(*shape))]
+        output_features = [('output', None)]
+        builder = neural_network.NeuralNetworkBuilder(input_features, output_features,
+                                                      disable_rank5_shape_mapping=True)
+        padding_mode = padding[0]
+        padding_values = padding[1]
+        builder.add_pooling3d(name='pooling3d',
+                              input_name='data',
+                              output_name='output',
+                              pooling_type=pool_type,
+                              kernel_depth=kernel[0],
+                              kernel_height=kernel[1],
+                              kernel_width=kernel[2],
+                              stride_depth=stride[0],
+                              stride_height=stride[1],
+                              stride_width=stride[2],
+                              padding_mode=padding_mode,
+                              custom_padding_front=padding_values[4],
+                              custom_padding_back=padding_values[5],
+                              custom_padding_top=padding_values[2],
+                              custom_padding_bottom=padding_values[3],
+                              custom_padding_left=padding_values[0],
+                              custom_padding_right=padding_values[1],
+                              average_pooling_count_excludes_padding=average_pooling_count_excludes_padding)
+
+        # Expected output
+        input = np.random.rand(*shape)
+        torch_input = torch.from_numpy(np.reshape(input, shape))
+
+        # Padding
+        if padding_mode == 'CUSTOM':
+            torch_padding = torch.nn.ConstantPad3d(padding_values, 0)
+        elif padding_mode == 'VALID':
+            torch_padding = torch.nn.ConstantPad3d(0, 0)
+        elif padding_mode == 'SAME':
+            padding_list = []
+            # torch.nn.ConstantPad3d wants (left, right, top, bottom, front, back)
+            # but our shape, kernel, and stride are (depth, height, width).
+            # Therefore we have to iterate through our shape, kernel, and stride backwards.
+            for i in [-1, -2, -3]:
+                padding_before, padding_after = \
+                    IOS14SingleLayerTests._same_padding_for_dimension(shape[i],
+                                                                      kernel[i],
+                                                                      stride[i],
+                                                                      before=False)
+                padding_list.append(padding_before)
+                padding_list.append(padding_after)
+            torch_padding = torch.nn.ConstantPad3d(tuple(padding_list), 0)
+            padding_values = padding_list[:]
+        else:
+            assert False
+
+        # Validate output shape
+        try:
+            IOS14SingleLayerTests._validate_pooling_dimension(shape[2], kernel[0], stride[0], padding_values[4], padding_values[5])
+        except ValueError as e:
+            print(str(e) + ', skipping')
+            return False
+
+        try:
+            IOS14SingleLayerTests._validate_pooling_dimension(shape[3], kernel[1], stride[1], padding_values[2], padding_values[3])
+        except ValueError as e:
+            print(str(e) + ', skipping')
+            return False
+
+        try:
+            IOS14SingleLayerTests._validate_pooling_dimension(shape[4], kernel[2], stride[2], padding_values[0], padding_values[1])
+        except ValueError as e:
+            print(str(e) + ', skipping')
+            return False
+
+        # Pooling type
+        # Average pooling
+        if pool_type == 'AVERAGE':
+            # torch.nn.AvgPool3d only accepts a single integer for padding, so we normally
+            # create a pooling layer first which allows us to fully specify the
+            # before and after padding in all three dimensions.
+            #
+            # However, when we use a padding layer, torch.nn.AvgPool3d doesn't
+            # know what is padding and what isn't, which means that its
+            # `count_include_pad` parameter has no effect.
+            #
+            # Therefore, we can only test average_pooling_count_excludes_padding=True
+            # when padding is homogeneous.
+            is_padding_homogeneous = all(p == padding_values[0] for p in padding_values)
+            if average_pooling_count_excludes_padding:
+                if not is_padding_homogeneous:
+                    print('average_pooling_count_excludes_padding=True can only be tested with homogeneous padding, but padding was %s, skipping' % str(padding_values))
+                    return False
+                else:
+                    # padding is homogeneous
+                    torch_model = torch.nn.AvgPool3d(kernel, stride=stride,
+                                                     padding=padding_values[0],
+                                                     count_include_pad=not average_pooling_count_excludes_padding)
+            else:
+                # average_pooling_count_excludes_padding == False
+                torch_pool = torch.nn.AvgPool3d(kernel, stride=stride,
+                                                count_include_pad=not average_pooling_count_excludes_padding)
+                torch_model = torch.nn.Sequential(torch_padding, torch_pool)
+        # Max pooling
+        else:
+            torch_pool = torch.nn.MaxPool3d(kernel, stride=stride)
+            torch_model = torch.nn.Sequential(torch_padding, torch_pool)
+
+        try:
+            expected = torch_model(torch_input).numpy()
+            self._test_model(builder.spec, {'data': input}, {'output': expected}, useCPUOnly=cpu_only)
+            return True
+        except AssertionError as e:
+            print(e)
+            return 'test_case: %s, error: %s' % (test_case, e)
+
     @staticmethod
-    def _compute_and_validate_pooling_dimension(input_size, kernel_size, stride, start_padding, end_padding):
-        output_size =  (input_size + start_padding + end_padding - kernel_size)/stride + 1
+    def _validate_pooling_dimension(input_size, kernel_size, stride, start_padding, end_padding):
+        # https://adeshpande3.github.io/A-Beginner%27s-Guide-To-Understanding-Convolutional-Neural-Networks-Part-2/
+        output_size = (input_size + start_padding + end_padding - kernel_size)/stride + 1
         if output_size < 1:
             raise ValueError('Dimension with input_size: %s, kernel_size: %s, stride: %s, start_padding: %s, end_padding: %s '
             'has output size of %s, but must be >= 1' %
@@ -5097,19 +5178,43 @@ class IOS14SingleLayerTests(CorrectnessTest):
         if (start_padding + end_padding) / 2 >= kernel_size/2:
             raise ValueError('The average of the start (%s) and end (%s) padding must be less than half the kernel size (%s / 2 = %s)'
                 % (start_padding, end_padding, kernel_size, kernel_size / 2))
-        # Intentionally rounding down.
-        return int(output_size)
 
+    @staticmethod
+    def _same_padding_for_dimension(input_size, kernel_size, stride, before):
+        """
+        Computes same padding along one dimension
+        Args:
+            input_size: integer size of the input tensor along dimension
+            kernel_size: integer size of the kernel along dimension
+            stride: integer stride of along dimension
+            before: boolean.  If padding is odd, this determines if the
+                extra padding should go before or after the dimension.
+
+        Returns: A tuple of (padding_before, padding_after)
+
+        """
+        # https://stanford.edu/~shervine/teaching/cs-230/cheatsheet-convolutional-neural-networks#filter
+        total_padding = max(0, stride * math.ceil(input_size / stride) - input_size + kernel_size - stride)
+        if total_padding % 2 == 0:  # even
+            return int(total_padding / 2), int(total_padding / 2)
+        else:  # odd
+            if before:
+                return int(total_padding / 2) + 1, int(total_padding / 2)
+            else:
+                return int(total_padding / 2), int(total_padding / 2) + 1
+
+    @pytest.mark.xfail(reason="<rdar://problem/60656796> Fix pool3d tests in test_numpy_nn_layers")
     def test_pool3d_cpu(self):
         self._test_pool3d(cpu_only=True)
-    
+
+    @pytest.mark.xfail(reason="<rdar://problem/60656796> Fix pool3d tests in test_numpy_nn_layers")
     def test_pool3d_gpu(self):
         self._test_pool3d(cpu_only=False)
-    
-    def  _test_global_pool3d(self, cpu_only):
+
+    def _test_global_pool3d(self, cpu_only):
         shapes = ((1,1,1,2,2), (1,1,3,3,3), (3,4,10,17,90))
         pool_types = ('MAX', 'AVERAGE')
-        
+
         for shape in shapes:
             for pool_type in pool_types:
                 test_case = 'test_case:: shape: %s, pool_type: %s' % (shape, pool_type)
@@ -5123,8 +5228,6 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                         output_name='output',
                                         pooling_type=pool_type)
                 input = np.random.rand(*shape)
-                expected_batch = shape[0]
-                expected_channel = shape[1]
                 
                 # Expected output from Torch
                 torch_input = torch.from_numpy(np.reshape(input, shape))
@@ -5133,15 +5236,13 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 else:
                     torch_pool = torch.nn.MaxPool3d(shape[-3:])
                 exptected = torch_pool(torch_input).numpy()
-                
+
                 self._test_model(builder.spec, {'data': input}, {'output': exptected}, useCPUOnly=cpu_only)
-    
-    # These are disabled because global pooling is not yet supported in espresso
-    # see <rdar://problem/60049667> Espresso pooling 3d is_global requires kernel size to be specified
-    def disabled_test_global_pool3d_cpu(self):
+
+    def test_global_pool3d_cpu(self):
         self._test_global_pool3d(cpu_only=True)
-    
-    def disabled_test_global_pool3d_gpu(self):
+
+    def test_global_pool3d_gpu(self):
         self._test_global_pool3d(cpu_only=False)
 
     def test_argsort_cpu(self, cpu_only = True):
@@ -5250,90 +5351,250 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 input = {'data': x, 'begin': begin_input}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    def _test_conv3d(self, cpu_only):
-        input_shapes = [(1,1,10,20,20), (1,1,3,3,3), (3,4,10,17,90)]
-        kernels = [(2,2,2), (1,3,4), (2,3,4), (5,1,6), (8,9,1), (7,11,13)]
+    def _test_conv3d(self, cpu_only, full_test):
+        # Input shape defined by us and PyTorch as [batch, channels, depth, height, width]
+        input_shapes = [[1, 3, 3, 8, 8], [1, 1, 3, 8, 8], [1, 7, 8, 15, 63], [4, 32, 8, 16, 16]]
+        # Large enough kernels and/or input causes int overflow and seg fault: see rdar://60309763
+        kernels = [[3, 3, 3], [2, 2, 2]]
+        strides = [[1, 1, 1], [2, 2, 2]]
+        dilations = [[1, 1, 1], [2, 2, 2]]
         has_biases = [True, False]
-        strides = [(1,1,1), (1,2,3), (2,3,2), (4,1,2), (3,4,1), (7,11,13)]
-        dilations = [(1,1,1), (1,2,3), (0,1,0), (2,0,2), (3,5,7)]
-        #padding_types = ['same_left', 'same_right', 'valid', 'custom']
-        paddings = [(0,0,0), (1,2,3)]
-        group_sizes = [1]
+        # Note: PyTorch's `torch.nn.Conv3d` doesn't support these padding modes, just a single
+        # padding value (for all dimensions) or 3 values (for each dimension)
+        padding_modes = ["custom", "valid", "same"]
+        # Padding shape is front, back, top, bottom, left, right
+        paddings = [[0, 0, 0, 0, 0, 0], [1, 1, 1, 1, 1, 1]]
 
-        output_channels = 2
+        # Add some additional test cases if `full_test` is True
+        if full_test:
+            input_shapes.extend([[1, 4, 3, 128, 128]])
+            kernels.extend([[1, 2, 3], [5, 5, 5]])
+            strides.extend([[1, 2, 3]])
+            dilations.extend([[1, 2, 3]])
+            paddings.extend([[2, 0, 2, 0, 2, 0], [0, 1, 2, 3, 4, 5]])
 
-        for input_shape in input_shapes:
+        test_case_format_str = (
+            "Conv3d test case | Input shape: {}, Output channels: {}, Groups: {}, Kernel shape: {},"
+            " Stride: {}, Padding: {}, Padding mode: {}, Dilation: {}, Has bias: {}"
+        )
+
+        for in_shape in input_shapes:
+            # Test "normal" and depthwise convolution with corresponding groups and output channels
+            groups_outchannels = [(1, 2), (in_shape[1], 2 * in_shape[1])]
             for kernel in kernels:
                 for has_bias in has_biases:
                     for stride in strides:
                         for dilation in dilations:
-                            for padding in paddings:
-                                for groups in group_sizes:
-                                    input_features = [('data', datatypes.Array(*input_shape))]
-                                    output_features = [('output', None)]
+                            for padding_mode in padding_modes:
+                                # For all modes besides 'custom', the padding values are ignored
+                                if padding_mode == "custom":
+                                    loop_paddings = paddings
+                                else:
+                                    loop_paddings = [[0, 0, 0, 0, 0, 0]]
+                                for padding in loop_paddings:
+                                    for groups, output_channels in groups_outchannels:
+                                        # Dilated kernel shape = (K - 1) * D + 1
+                                        dilated_kernel = list(
+                                            map(lambda k, d: (k - 1) * d + 1, kernel, dilation)
+                                        )
 
-                                    input_channels = input_shape[1]
+                                        # Use paddings if padding_mode is "custom", else compute
+                                        # them according to
+                                        # https://stanford.edu/~shervine/teaching/cs-230/cheatsheet-convolutional-neural-networks#filter
+                                        if padding_mode == "same":
+                                            pad_d = max(
+                                                0,
+                                                (
+                                                    stride[0] * math.ceil(in_shape[2] / stride[0])
+                                                    - in_shape[2]
+                                                    + dilated_kernel[0]
+                                                    - stride[0]
+                                                )
+                                                / 2,
+                                            )
+                                            pad_h = max(
+                                                0,
+                                                (
+                                                    stride[1] * math.ceil(in_shape[3] / stride[1])
+                                                    - in_shape[3]
+                                                    + dilated_kernel[1]
+                                                    - stride[1]
+                                                )
+                                                / 2,
+                                            )
+                                            pad_w = max(
+                                                0,
+                                                (
+                                                    stride[2] * math.ceil(in_shape[4] / stride[2])
+                                                    - in_shape[4]
+                                                    + dilated_kernel[2]
+                                                    - stride[2]
+                                                )
+                                                / 2,
+                                            )
 
-                                    builder = neural_network.NeuralNetworkBuilder(input_features,
-                                                                                  output_features,
-                                                                                  disable_rank5_shape_mapping=True
-                                                                                  )
-                                    # Init random weights
-                                    weights = np.random.rand(output_channels, int(input_channels / groups), *kernel)
-                                    # Init random bias if applicable
-                                    if has_bias:
-                                        bias = np.random.rand(output_channels)
-                                    else:
-                                        bias = None
+                                            # Depth
+                                            padding[0] = math.floor(pad_d)
+                                            padding[1] = math.ceil(pad_d)
+                                            # Height
+                                            padding[2] = math.floor(pad_h)
+                                            padding[3] = math.ceil(pad_h)
+                                            # Width
+                                            padding[4] = math.floor(pad_w)
+                                            padding[5] = math.ceil(pad_w)
+                                        elif padding_mode == "valid":
+                                            # Set to zero for PyTorch padding
+                                            padding = [0] * 6
+                                        elif padding_mode == "custom":
+                                            # No-op: valid ignores padding and custom uses the
+                                            # specifed padding
+                                            pass
 
-                                    builder.add_convolution3d(name='conv3d',
-                                                                input_name='data',
-                                                                output_name='output',
-                                                                input_channels=input_channels,
-                                                                output_channels=output_channels,
-                                                                depth=kernel[0],
-                                                                height=kernel[1],
-                                                                width=kernel[2],
-                                                                stride_depth=stride[0],
-                                                                stride_height=stride[1],
-                                                                stride_width=stride[2],
-                                                                dilation_depth=dilation[0],
-                                                                dilation_height=dilation[1],
-                                                                dilation_width=dilation[2],
-                                                                groups=groups,
-                                                                W=weights,
-                                                                b=bias,
-                                                                has_bias=has_bias,
-                                                                padding_front=padding[0],
-                                                                padding_back=padding[0],
-                                                                padding_top=padding[1],
-                                                                padding_bottom=padding[1],
-                                                                padding_left=padding[2],
-                                                                padding_right=padding[2])
-                                    # Init random input
-                                    input = np.random.rand(*input_shape)
+                                        input_features = [("data", datatypes.Array(*in_shape))]
+                                        output_features = [("output", None)]
+                                        input_channels = in_shape[1]
+                                        # [output_channels, kernel_channels, depth, height, width]
+                                        weights_shape = [
+                                            output_channels,
+                                            int(input_channels / groups),
+                                            kernel,
+                                        ]
 
-                                    # Get PyTorch output to compare ours to
-                                    torch_out = torch.nn.functional.conv3d(torch.from_numpy(input),
-                                                                            torch.from_numpy(weights),
-                                                                            bias=torch.from_numpy(bias),
-                                                                            stride=stride,
-                                                                            padding=padding,
-                                                                            dilation=dilation,
-                                                                            groups=groups)
+                                        # Init random input
+                                        input_tensor = np.random.normal(size=in_shape)
+                                        input_torch = torch.tensor(input_tensor)
+                                        # Init random weights
+                                        weights_tensor = np.random.normal(size=weights_shape)
+                                        weights_torch = torch.DoubleTensor(weights_tensor)
+                                        # Init random bias if applicable
+                                        if has_bias:
+                                            bias_tensor = np.random.normal(size=output_channels)
+                                            bias_torch = torch.DoubleTensor(bias_tensor)
+                                        else:
+                                            bias_tensor = None
+                                            bias_torch = None
 
-                                    self._test_model(builder.spec,
-                                                        {'data': input},
-                                                        {'output': torch_out.numpy()},
-                                                        useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
+                                        print(
+                                            test_case_format_str.format(
+                                                in_shape,
+                                                output_channels,
+                                                groups,
+                                                weights_shape,
+                                                stride,
+                                                padding,
+                                                padding_mode,
+                                                dilation,
+                                                has_bias,
+                                            )
+                                        )
 
-    @pytest.mark.xfail(reason='rdar://60252451')
-    def test_conv3d_cpu(self):
-        self._test_conv3d(cpu_only=True)
+                                        builder = neural_network.NeuralNetworkBuilder(
+                                            input_features,
+                                            output_features,
+                                            disable_rank5_shape_mapping=True,
+                                        )
+                                        builder.add_convolution3d(
+                                            name="conv3d",
+                                            input_channels=input_channels,
+                                            output_channels=output_channels,
+                                            depth=kernel[0],
+                                            height=kernel[1],
+                                            width=kernel[2],
+                                            W=weights_tensor,
+                                            b=bias_tensor,
+                                            has_bias=has_bias,
+                                            groups=groups,
+                                            stride_depth=stride[0],
+                                            stride_height=stride[1],
+                                            stride_width=stride[2],
+                                            dilation_depth=dilation[0],
+                                            dilation_height=dilation[1],
+                                            dilation_width=dilation[2],
+                                            padding_mode=padding_mode,
+                                            padding_front=padding[0],
+                                            padding_back=padding[1],
+                                            padding_top=padding[2],
+                                            padding_bottom=padding[3],
+                                            padding_left=padding[4],
+                                            padding_right=padding[5],
+                                            input_name="data",
+                                            output_name="output",
+                                        )
 
-    @pytest.mark.xfail(reason='rdar://60252451')
-    def test_conv3d_gpu(self):
-        self._test_conv3d(cpu_only=False)
+                                        # Get PyTorch output to compare ours to
+                                        # First pad, since PyTorch Conv3d only supports custom and
+                                        # same symmetric padding. Padding shape is
+                                        # (left, right, top, bottom, front, back)
+                                        padded_input = input_torch
+                                        if any(p > 0 for p in padding):
+                                            torch_padding = (
+                                                padding[4],
+                                                padding[5],
+                                                padding[2],
+                                                padding[3],
+                                                padding[0],
+                                                padding[1],
+                                            )
+                                            pad_layer = torch.nn.ConstantPad3d(torch_padding, 0)
+                                            padded_input = pad_layer(input_torch)
+                                        # Check if dilated kernel size exceeds padded input size in
+                                        # any dimension. If it does, it's not a valid convolution
+                                        if (
+                                            dilated_kernel[0] > padded_input.shape[2]
+                                            or dilated_kernel[1] > padded_input.shape[3]
+                                            or dilated_kernel[2] > padded_input.shape[4]
+                                        ):
+                                            print("SKIPPING: Dilated kernel exceeds padded input.")
+                                            continue
+                                        # Using Sequential with a padding layer first produces
+                                        # incorrect convolution output
+                                        model = torch.nn.Sequential(
+                                            torch.nn.Conv3d(
+                                                input_channels,
+                                                output_channels,
+                                                kernel,
+                                                stride=stride,
+                                                padding=0,
+                                                dilation=dilation,
+                                                groups=groups,
+                                                bias=False,
+                                            )
+                                        )
+                                        with torch.no_grad():
+                                            model[0].weight = torch.nn.Parameter(weights_torch)
+                                            if has_bias:
+                                                model[0].bias = torch.nn.Parameter(bias_torch)
+                                        torch_expected = model(padded_input)
+
+                                        self._test_model(
+                                            builder.spec,
+                                            {"data": input_tensor},
+                                            {"output": torch_expected.detach().numpy()},
+                                            useCPUOnly=cpu_only,
+                                            test_metric="SNR",
+                                            SNR=40,
+                                            validate_shapes_only=False,
+                                        )
+
+    @pytest.mark.xfail(reason="rdar://60649718")  # Espresso grouped conv weight size mismatch
+    def test_conv3d_cpu_basic(self):
+        self._test_conv3d(cpu_only=True, full_test=False)
+
+    @pytest.mark.xfail(reason="rdar://60649718")  # Espresso grouped conv weight size mismatch
+    @pytest.mark.xfail(reason="rdar://60649022")  # Espresso depth dilation not properly set
+    @pytest.mark.slow
+    def test_conv3d_cpu_slow(self):
+        self._test_conv3d(cpu_only=True, full_test=True)
+
+    @pytest.mark.xfail(reason="rdar://60649718")  # Espresso grouped conv weight size mismatch
+    def test_conv3d_gpu_basic(self):
+        self._test_conv3d(cpu_only=False, full_test=False)
+
+    @pytest.mark.xfail(reason="rdar://60649718")  # Espresso grouped conv weight size mismatch
+    @pytest.mark.xfail(reason="rdar://60649022")  # Espresso depth dilation not properly set
+    @pytest.mark.slow
+    def test_conv3d_gpu_slow(self):
+        self._test_conv3d(cpu_only=False, full_test=True)
 
 
 class ReorganizeDataTests(CorrectnessTest):

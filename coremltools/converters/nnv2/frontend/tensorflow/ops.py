@@ -6,8 +6,23 @@ from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
 
+def _transpose_NHWC_to_NCHW(x):
+    return cb.transpose(x=x, perm=[0, 3, 1, 2])
 
-@register_tf_op(tf_alias=['BiasAdd'])
+
+def _transpose_NCHW_to_NHWC(x, node_name):
+    return cb.transpose(x=x, perm=[0, 2, 3, 1], name=node_name)
+
+
+def _transpose_NDHWC_to_NCDHW(x):
+    return cb.transpose(x=x, perm=[0, 4, 1, 2, 3])
+
+
+def _transpose_NCDHW_to_NDHWC(x, node_name):
+    return cb.transpose(x=x, perm=[0, 2, 3, 4, 1], name=node_name)
+
+
+@register_tf_op(tf_alias=['BiasAdd', 'AddV2'])
 def Add(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
@@ -94,13 +109,36 @@ def AvgPool(context, node):
         strides = _pool_pads_or_strides(strides, data_format, d_rank)
     pad_type = node.attr['padding'].lower()
     if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = _transpose_NHWC_to_NCHW(x)
         x = cb.avg_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
                         pad_type=pad_type)
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name)
     else:
         x = cb.avg_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
                         pad_type=pad_type, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
+def AvgPool3D(context, node):
+    x = context[node.inputs[0]]
+    d_rank = x.rank - 2
+    data_format = node.attr.get('data_format', 'NDHWC')
+    ksize = node.attr.get('ksize', None)
+    kernel_sizes = _pool_pads_or_strides(ksize, data_format, d_rank)
+    strides = node.attr.get('strides', None)
+    if strides is not None:
+        strides = _pool_pads_or_strides(strides, data_format, d_rank)
+    pad_type = node.attr['padding'].lower()
+    if data_format == 'NDHWC':
+        x = _transpose_NDHWC_to_NCDHW(x)
+        x = cb.avg_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
+                        pad_type=pad_type)
+        x = _transpose_NCDHW_to_NDHWC(x, node.name)
+    else:
+        x = cb.avg_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
+                        pad_type=pad_type, name=node.name)
+
     context.add(node.name, x)
 
 
@@ -257,9 +295,9 @@ def LRN(context, node):
     alpha = node.attr.get('alpha') * size
     beta = node.attr.get('beta')
     bias = node.attr.get('bias')
-    x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+    x = _transpose_NHWC_to_NCHW(x)
     x = cb.local_response_norm(x=x, size=size, alpha=alpha, beta=beta, k=bias)
-    x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
 
 
@@ -337,13 +375,13 @@ def DepthwiseConv2dNative(context, node):
     x = context[node.inputs[0]]
     C_in = x.shape[-1]
     if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = _transpose_NHWC_to_NCHW(x)
     # Only the last op should have the same name as node.name
     conv_name = node.name + 'x' if data_format == 'NHWC' else node.name
     x = cb.conv(x=x, W=W_o1hw, pad_type=pad_type, strides=HW_strides,
             dilations=HW_dilations, group=C_in, name=conv_name)
     if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -363,13 +401,13 @@ def Conv2D(context, node):
     pad_type = pad_type.lower()
     x = context[node.inputs[0]]
     if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = _transpose_NHWC_to_NCHW(x)
     # Only the last op should have the same name as node.name
     conv_name = node.name + 'x' if data_format == 'NHWC' else node.name
     x = cb.conv(x=x, W=W_oihw, pad_type=pad_type, strides=HW_strides,
             dilations=HW_dilations, name=conv_name)
     if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
 
 
@@ -379,9 +417,9 @@ def DepthToSpace(context, node):
     block_size = node.attr.get('block_size')
     data_format = node.attr.get('data_format', 'NHWC')
     if data_format == 'NHWC':
-        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = _transpose_NHWC_to_NCHW(x)
         x = cb.depth_to_space(x=x, block_size=block_size)
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name)
     else:
         x = cb.depth_to_space(x=x, block_size=block_size, name=node.name)
     context.add(node.name, x)
@@ -423,16 +461,16 @@ def FusedBatchNorm(context, node):
     variance = context[node.inputs[4]]
     if data_format == 'NHWC':
         # TF's FusedBatchNorm is only for 4D inputs
-        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = _transpose_NHWC_to_NCHW(x)
         x = cb.batch_norm(x=x, mean=mean, variance=variance, gamma=scale,
                           beta=offset, epsilon=epsilon)
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name+':0')
     else:
         x = cb.batch_norm(x=x, mean=mean, variance=variance, gamma=scale,
-                          beta=offset, epsilon=epsilon, name=node.name)
+                          beta=offset, epsilon=epsilon, name=node.name+':0')
     # Inference only batch norm does not have meaningful outputs for
-    # batch_mean, batch_variance etc.
-    context.add(node.name, x)
+    # batch_mean, batch_variance etc.g
+    context.add(node.name, [x, mean, variance])
 
 
 @register_tf_op
@@ -495,6 +533,14 @@ def _pool_pads_or_strides(tf_spec, data_format, d_rank):
             d_spec = tf_spec[1:3]
         else:
             d_spec = tf_spec[2:]
+    elif len(tf_spec) == 5:
+        if data_format == 'NDHWC':
+            d_spec = tf_spec[1:4]
+        else:
+            # NCDHW
+            d_spec = tf_spec[2:]
+    else:
+        raise ValueError('Unsupported tf_spec: %s' % tf_spec)
     return d_spec
 
 
@@ -522,13 +568,35 @@ def MaxPool(context, node):
         strides = _pool_pads_or_strides(strides, data_format, d_rank)
     pad_type = node.attr['padding'].lower()
     if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = _transpose_NHWC_to_NCHW(x)
         x = cb.max_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
                         pad_type=pad_type)
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name)
     else:
         x = cb.max_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
                         pad_type=pad_type, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def MaxPool3D(context, node):
+    x = context[node.inputs[0]]
+    d_rank = x.rank - 2
+    data_format = node.attr.get('data_format', 'NDHWC')
+    ksize = node.attr.get('ksize', None)
+    kernel_sizes = _pool_pads_or_strides(ksize, data_format, d_rank)
+    strides = node.attr.get('strides', None)
+    if strides is not None:
+        strides = _pool_pads_or_strides(strides, data_format, d_rank)
+    pad_type = node.attr['padding'].lower()
+    if data_format == 'NDHWC':
+        x = _transpose_NDHWC_to_NCDHW(x)
+        x = cb.max_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
+                        pad_type=pad_type)
+        x = _transpose_NCDHW_to_NDHWC(x, node.name)
+    else:
+        x = cb.max_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
+                        pad_type=pad_type, name=node.name)
+
     context.add(node.name, x)
 
 
@@ -841,9 +909,9 @@ def SpaceToDepth(context, node):
     block_size = node.attr.get('block_size')
     data_format = node.attr.get('data_format', 'NHWC')
     if data_format == 'NHWC':
-        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = _transpose_NHWC_to_NCHW(x)
         x = cb.space_to_depth(x=x, block_size=block_size)
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name)
     else:
         x = cb.space_to_depth(x=x, block_size=block_size, name=node.name)
     context.add(node.name, x)
@@ -934,7 +1002,7 @@ def Conv2DBackpropInput(context, node):
     # CoreML expects input to be in NCHW format
     # Transpose input to NCHW format
     if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = _transpose_NHWC_to_NCHW(x)
         output_shape = [output_shape[1], output_shape[2]]
     else:
         output_shape = [output_shape[2], output_shape[3]]
@@ -947,7 +1015,7 @@ def Conv2DBackpropInput(context, node):
 
     # Convert NCHW output back to NHWC format
     if data_format == "NHWC":
-        x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
 
 
@@ -1035,14 +1103,14 @@ def ResizeNearestNeighbor(context, node):
     scaling_factor_w = int(Wout / Win)
 
     # first transpose to from channel last to channel first format for coreml
-    x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+    x = _transpose_NHWC_to_NCHW(x)
     # add the upsample layer
     x = cb.upsample_nearest_neighbor(x=x,
                                      upscale_factor_height=scaling_factor_h,
                                      upscale_factor_width=scaling_factor_w,
                                      name=node.name + '_channel_first_upsample')
     # transpose again
-    x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    x = _transpose_NCHW_to_NHWC(x, node.name)
 
     context.add(node.name, x)
 
@@ -1076,7 +1144,7 @@ def ResizeBilinear(context, node):
     half_pixel_centers = node.attr.get('half_pixel_centers', False)
 
     # first transpose to from channel last to channel first format for coreml
-    x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+    x = _transpose_NHWC_to_NCHW(x)
 
     # add either the resize_bilinear layer or the upsample layer
 
@@ -1111,7 +1179,7 @@ def ResizeBilinear(context, node):
 
 
     # transpose again
-    x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
 
 
@@ -1216,11 +1284,19 @@ def iff(context, node):
 
     def true_fn():
         return cb.identity(x=true_output_var)
+
     def false_fn():
         return cb.identity(x=false_output_var)
 
     x = cb.cond(pred=pred, _true_fn=true_fn, _false_fn=false_fn,
-            name=node.name)
+                name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def Concat(context, node):
+    values = [context[input] for input in node.inputs[1:]]
+    axis = context[node.inputs[0]]
+    x = cb.concat(values=values, axis=axis, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -1264,9 +1340,12 @@ def SplitV(context, node):
     if 'num_split' not in node.attr:
         raise ValueError('num_splits not found in TF op {}'.format(node.name))
     num_splits = node.attr['num_split']
-    x = cb.split(x=x, num_splits=num_splits, split_sizes=split_sizes,
-            axis=axis, name=node.name)
-    context.add(node.name, x)
+    if num_splits == 1:
+        Identity(context, node)
+    else:
+        x = cb.split(x=x, num_splits=num_splits, split_sizes=split_sizes,
+                axis=axis, name=node.name)
+        context.add(node.name, x)
 
 @register_tf_op
 def Split(context, node):
@@ -1275,17 +1354,26 @@ def Split(context, node):
     if 'num_split' not in node.attr:
         raise ValueError('num_splits not found in TF op {}'.format(node.name))
     num_splits = node.attr['num_split']
-    x = cb.split(x=x, num_splits=num_splits, axis=axis, name=node.name)
-    context.add(node.name, x)
-    # TODO (rdar://60358242) If tf.split output is returned, there's no
-    # get_tuple nodes. Some graph pass is needed. Example:
-    #
-    #    x = tf.placeholder(tf.float32, shape=input_shape1)
-    #    res = tf.split(x, 3, axis=0)
-    #
-    # res are ['split:0', 'split:1', 'split']
-    #
-    # but node.outputs == ['gto_1', 'gto_2', 'gto_3']
+    if num_splits == 1:
+        if len(node.outputs) == 0:
+            x = cb.mul(x=x, y=1.0, name=node.name)
+            context.add(node.name, x)
+        else:
+            # Don't change tfssa. Just make downstream ops reference the pre-identity op.
+            context.add(node.name, x, is_new_var=False)
+    else:
+        x = cb.split(x=x, num_splits=num_splits, axis=axis, name=node.name)
+        context.add(node.name, x)
+        # TODO (rdar://60358242) If tf.split output is returned, there's no
+        # get_tuple nodes. Some graph pass is needed. Example:
+        #
+        #    x = tf.placeholder(tf.float32, shape=input_shape1)
+        #    res = tf.split(x, 3, axis=0)
+        #
+        # res are ['split:0', 'split:1', 'split']
+        #
+        # but node.outputs == ['gto_1', 'gto_2', 'gto_3']
+
 
 @register_tf_op
 def CropAndResize(context, node):
@@ -1335,7 +1423,7 @@ def CropAndResize(context, node):
 
     # TF input format: [B, h_in, w_in, C]
     # CoreML input format: [B, C, h_in, w_in]
-    x = cb.transpose(x=x, perm=[0, 3, 1, 2])
+    x = _transpose_NHWC_to_NCHW(x)
 
 
     # Crop Resize
@@ -1347,9 +1435,14 @@ def CropAndResize(context, node):
                        spatial_scale=extrapolation_value,
                        box_coordinate_mode='CORNERS_HEIGHT_FIRST',
                        sampling_mode=method)
-    
+
     # CoreML output format: [N, 1, C, h_out, w_out]
     # TF output format: [N, h_out, h_out, C]
     x = cb.squeeze(x=x, axes=[1])
-    x = cb.transpose(x=x, perm=[0, 2, 3, 1], name=node.name)
+    x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
+
+
+@register_tf_op
+def NoOp(context, node):
+    pass

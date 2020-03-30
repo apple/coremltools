@@ -6,13 +6,18 @@ import coremltools
 import coremltools.converters.nnv2.converter as converter
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
 from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic
-from coremltools.converters.nnv2._deps import HAS_TF
+from coremltools.converters.nnv2._deps import HAS_TF1, HAS_TF2
 
 UNK_VARIADIC = '*s_unk'
 UNK_SYM = 's_unk'
 
-if HAS_TF:
+if HAS_TF1:
     import tensorflow as tf
+
+elif HAS_TF2:
+    import tensorflow as tf
+    from tensorflow.python.framework import dtypes
+
 
 def _random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0, dtype=np.float32):
     """
@@ -41,10 +46,12 @@ def ssa_fn(func):
             func(*args, **kwargs)
     return wrapper
 
+
 def to_tuple(v):
     if not isinstance(v, (list, tuple)):
         return tuple([v])
     return tuple(v)
+
 
 def is_close(expected, actual, atol=1e-04, rtol=1e-05):
     """
@@ -66,6 +73,7 @@ def is_close(expected, actual, atol=1e-04, rtol=1e-05):
             logging.error("Delta: {}".format(diff[~close]))
         return False
     return True
+
 
 def compare_backend(proto, input_values, expected_outputs,
         use_cpu_only=False, atol=1e-04, rtol=1e-05):
@@ -94,6 +102,7 @@ def compare_backend(proto, input_values, expected_outputs,
             'Expected={}, Output={}\n'
         assert is_close(expected, pred[o], atol, rtol), msg.format(
                 o, use_cpu_only, input_values, expected, pred[o])
+
 
 def compare_shapes(proto, input_values, expected_outputs, use_cpu_only=False):
     """
@@ -191,7 +200,7 @@ def run_compare_builder(build, input_placeholders, input_values,
         msg = 'Output {} shape: expect {}, got {}. Program:\n{}'.format(
               out_var.name, expected_shape, out_var.shape, prog)
         # No more variadic here.
-        if len(out_var.shape) != len(expected_shape):   
+        if len(out_var.shape) != len(expected_shape):
             raise ValueError(msg)
         # replace UNK_SYM in out_var.shape.
         output_shape = [0 if es == UNK_SYM else os for os, es in zip(out_var.shape, expected_shape)]
@@ -226,8 +235,14 @@ def run_compare_builder(build, input_placeholders, input_values,
                     atol=atol, rtol=rtol)
 
 
-def get_tf_node_names(tf_nodes):
+def get_tf_node_names(tf_nodes, mode='inputs'):
     """
+    Inputs:
+        - tf_nodes: list[str]. Names of target placeholders or output variable.
+        - mode: str. When mode == inputs, do the stripe for the input names, for
+                instance 'placeholder:0' could become 'placeholder'.
+                when model == 'outputs', we keep the origin suffix number, like
+                'bn:0' will still be 'bn:0'.
     Return a list of names from given list of TensorFlow nodes. Tensor name's
     postfix is eliminated if there's no ambiguity. Otherwise, postfix is kept
     """
@@ -236,6 +251,9 @@ def get_tf_node_names(tf_nodes):
     names = list()
     for n in tf_nodes:
         tensor_name = n if isinstance(n, six.string_types) else n.name
+        if mode == 'outputs':
+            names.append(tensor_name)
+            continue
         name = tensor_name.split(':')[0]
         if name in names:
             # keep postfix notation for multiple inputs/outputs
@@ -246,18 +264,31 @@ def get_tf_node_names(tf_nodes):
     return names
 
 
-def run_compare_tf(graph, placeholder_vals, output_nodes,
+def run_compare_tf1(
+        graph, placeholder_vals, output_nodes,
         use_cpu_only=False, frontend_only=False, backend='nnv1_proto',
         atol=1e-04, rtol=1e-05, validate_shapes_only=False):
     """
-    Inputs:
-        - graph: tf.Graph
-
-        - placeholder_vals: dict of tf.placeholder -> np.array/primitive.
-          tf.placeholder must be part of `graph`.
-
-        - output_nodes: tf.node or list[tf.node] representing outputs of
-          `graph`.
+    Parameters
+    ----------
+    graph: tf.Graph
+        TensorFlow 1.x model in tf.Graph format.
+    placeholder_vals: dict of tf.placeholder -> np.array/primitive.
+        Dictionary of (name, shape) pairs representing inputs.
+    output_nodes: tf.node or list[tf.node]
+        List of names representing outputs.
+    use_cpu_only: bool
+        If true, use CPU only for prediction, otherwise, use GPU also.
+    frontend_only: bool
+        If true, skip the prediction call, only validate conversion.
+    backend: str
+        Backend to convert to.
+    atol: float
+        The absolute tolerance parameter.
+    rtol: float
+        The relative tolerance parameter.
+    validate_shapes_only: bool
+        If true, skip element-wise value comparision.
     """
     if isinstance(output_nodes, tuple):
         output_nodes = list(output_nodes)
@@ -265,14 +296,15 @@ def run_compare_tf(graph, placeholder_vals, output_nodes,
         output_nodes = [output_nodes]
 
     # Convert TF graph.
-    input_names = get_tf_node_names(list(placeholder_vals.keys()))
-    output_names = get_tf_node_names(output_nodes)
+    input_names = get_tf_node_names(list(placeholder_vals.keys()), mode='inputs')
+    output_names = get_tf_node_names(output_nodes, mode='outputs')
     input_values = {name: val for name, val in zip(input_names, placeholder_vals.values())}
 
     proto = converter.convert(graph, convert_from='tensorflow',
                               convert_to=backend,
                               inputs=input_names,
                               outputs=output_names)
+
 
     if frontend_only:
         return
@@ -285,3 +317,112 @@ def run_compare_tf(graph, placeholder_vals, output_nodes,
     else:
         compare_backend(proto, input_values, expected_outputs,
                         use_cpu_only, atol=atol, rtol=rtol)
+
+
+def run_compare_tf2(
+        model, input_values, use_cpu_only=False, frontend_only=False,
+        backend='nnv1_proto', atol=1e-04, rtol=1e-05):
+    """
+    Parameters
+    ----------
+    model: TensorFlow 2.x model
+        TensorFlow 2.x model annotated with @tf.function.
+    input_values: list of np.array
+        List of input values in the same order as the input signature.
+    use_cpu_only: bool
+        If true, use CPU only for prediction, otherwise, use GPU also.
+    frontend_only: bool
+        If true, skip the prediction call, only validate conversion.
+    backend: str
+        Backend to convert to.
+    atol: float
+        The absolute tolerance parameter.
+    rtol: float
+        The relative tolerance parameter.
+    """
+    # construct model and convert
+    tf_model = model()
+    cf = tf_model.__call__.get_concrete_function()
+
+    inputs = {}
+    cf_inputs = [t for t in cf.inputs if t.dtype != dtypes.resource]
+    for t in cf_inputs:
+        name = get_tf_node_names(t.name)[0]
+        inputs[name] = list(t.get_shape())
+    outputs = []
+    for t in cf.outputs:
+        name = get_tf_node_names(t.name)[0]
+        outputs.append(name)
+
+    proto = converter.convert(
+        [cf], convert_from='TensorFlow', convert_to=backend,
+        inputs=inputs, outputs=outputs)
+
+    if frontend_only:
+        return
+
+    # get TensorFlow 2.x output as reference and run comparision
+    tf_input_values = [tf.constant(t) for t in input_values]
+    ref = [tf_model(*tf_input_values).numpy()]
+    expected_outputs = {n: v for n, v in zip(outputs, ref)}
+    input_key_values = {n: v for n, v in zip(inputs.keys(), input_values)}
+    compare_backend(
+        proto, input_key_values, expected_outputs,
+        use_cpu_only, atol=atol, rtol=rtol)
+
+
+def run_compare_tf_keras(
+        model, input_values, use_cpu_only=False, frontend_only=False,
+        backend='nnv1_proto', atol=1e-04, rtol=1e-05):
+    """
+    Parameters
+    ----------
+    model: TensorFlow 2.x model
+        TensorFlow 2.x model annotated with @tf.function.
+    input_values: list of np.array
+        List of input values in the same order as the input signature.
+    use_cpu_only: bool
+        If true, use CPU only for prediction, otherwise, use GPU also.
+    frontend_only: bool
+        If true, skip the prediction call, only validate conversion.
+    backend: str
+        Backend to convert to.
+    atol: float
+        The absolute tolerance parameter.
+    rtol: float
+        The relative tolerance parameter.
+    """
+    # construct model and convert
+    tf_keras_model = tf.function(lambda x: model(x))
+
+    input_tensor_spec = []
+    for i in range(len(model.inputs)):
+        input_tensor_spec.append(
+            tf.TensorSpec(model.inputs[i].shape, model.inputs[i].dtype))
+
+    cf = tf_keras_model.get_concrete_function(*input_tensor_spec)
+
+    inputs = {}
+    cf_inputs = [t for t in cf.inputs if t.dtype != dtypes.resource]
+    for t in cf_inputs:
+        name = get_tf_node_names(t.name)[0]
+        inputs[name] = list(t.get_shape())
+    outputs = []
+    for t in cf.outputs:
+        name = get_tf_node_names(t.name)[0]
+        outputs.append(name)
+
+    proto = converter.convert(
+        [cf], convert_from='TensorFlow', convert_to=backend,
+        inputs=inputs, outputs=outputs)
+
+    if frontend_only:
+        return
+
+    # get tf.keras model output as reference and run comparision
+    ref = [model(*input_values).numpy()]
+    expected_outputs = {n: v for n, v in zip(outputs, ref)}
+    input_key_values = {n: v for n, v in zip(inputs.keys(), input_values)}
+    compare_backend(
+        proto, input_key_values, expected_outputs,
+        use_cpu_only, atol=atol, rtol=rtol)

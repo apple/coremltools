@@ -151,7 +151,7 @@ class TestElementwiseBinary:
         v = cb.sub(x=x, y=y)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
                              itertools.product(
                                  [True, False],
@@ -162,7 +162,7 @@ class TestElementwiseBinary:
                                   'squared_difference']
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank, mode):
+    def test_tf1(self, use_cpu_only, backend, rank, mode):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -216,9 +216,9 @@ class TestElementwiseBinary:
                 x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(np.float32)
                 y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(np.float32)
 
-            run_compare_tf(graph, {x: x_val, y: y_val},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            run_compare_tf1(graph, {x: x_val, y: y_val},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
 
 class TestEqual:
@@ -257,7 +257,7 @@ class TestEqual:
         v = cb.equal(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
@@ -265,7 +265,7 @@ class TestEqual:
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank):
+    def test_tf1(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -278,10 +278,10 @@ class TestEqual:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            run_compare_tf1(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
+                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
 
 class TestGreater:
@@ -320,7 +320,7 @@ class TestGreater:
         v = cb.greater(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
@@ -328,7 +328,7 @@ class TestGreater:
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank):
+    def test_tf1(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -341,10 +341,10 @@ class TestGreater:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.greater(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            run_compare_tf1(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
+                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
 
 class TestGreaterEqual:
@@ -383,15 +383,16 @@ class TestGreaterEqual:
         v = cb.greater_equal(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
+
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank):
+    def test_tf1(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -404,10 +405,10 @@ class TestGreaterEqual:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.greater_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            run_compare_tf1(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
+                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
 
 class TestLess:
@@ -483,7 +484,7 @@ class TestLess:
         v = cb.less(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
@@ -491,7 +492,7 @@ class TestLess:
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank):
+    def test_tf1(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -504,10 +505,10 @@ class TestLess:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.less(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            run_compare_tf1(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
+                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
 
 class TestLessEqual:
@@ -540,7 +541,7 @@ class TestLessEqual:
         v = cb.less_equal(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
@@ -548,7 +549,7 @@ class TestLessEqual:
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank):
+    def test_tf1(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -561,10 +562,10 @@ class TestLessEqual:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.less_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            run_compare_tf1(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
+                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
 
 class TestNotEqual:
@@ -597,7 +598,7 @@ class TestNotEqual:
         v = cb.not_equal(x=x_val, y=y_val)
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
@@ -605,7 +606,7 @@ class TestNotEqual:
                                  [rank for rank in range(1, 4)]
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank):
+    def test_tf1(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -618,8 +619,7 @@ class TestNotEqual:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.not_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
-
+            run_compare_tf1(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
+                                    y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)

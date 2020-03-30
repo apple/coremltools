@@ -68,7 +68,14 @@ namespace CoreML {
      */
     Result validateRegressorInterface(const Specification::ModelDescription& interface, int modelVersion);
 
-    
+
+    /*
+     * Validate classifier output feature descriptions.
+     */
+    Result validateClassifierFeatureDescriptions(const Specification::ModelDescription& interface,
+                                                 bool expected_class_is_int64);
+
+
     /*
      * Validate model interface describes a valid classifier
      *
@@ -129,41 +136,8 @@ namespace CoreML {
         if (!result.good()) {
             return result;
         }
-        
-        const auto& predictedFeatureName = interface.predictedfeaturename();
-        const auto& probOutputName = interface.predictedprobabilitiesname();
-        
-        
-        if (predictedFeatureName == "") {
-            return Result(ResultType::INVALID_MODEL_INTERFACE,
-                          "Specification is missing classifier predictedFeatureName");
-        } else {
-            auto expected_class = (expected_class_is_int64
-                                   ? Specification::FeatureType::TypeCase::kInt64Type
-                                   : Specification::FeatureType::TypeCase::kStringType);
-            
-            result = validateDescriptionsContainFeatureWithNameAndType(interface.output(),
-                                                                       predictedFeatureName,
-                                                                       {expected_class});
-            if (!result.good()) {
-                return result;
-            }
-        }
-        
-        if (probOutputName != "") {
-            // TODO @znation: validate array length below
-            // and value type (must be double? different for different classifiers?)
-            // TODO Probability outputs are always dictionaries!
-            result = validateDescriptionsContainFeatureWithNameAndType(interface.output(),
-                                                                       probOutputName,
-                                                                       {Specification::FeatureType::TypeCase::kMultiArrayType, // TODO ARRAY TYPE IS INVALID, REMOVE
-                                                                        Specification::FeatureType::TypeCase::kDictionaryType});
-            if (!result.good()) {
-                return result;
-            }
-        }
-        
-        return Result();
+
+        return validateClassifierFeatureDescriptions(interface, expected_class_is_int64);
     }
     
     /*

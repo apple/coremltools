@@ -377,7 +377,7 @@ class TestElementwiseUnary:
 
         assert is_close(expected_outputs, v.val)
 
-    @pytest.mark.skipif(not HAS_TF, reason="Tensorflow not installed.")
+    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
                              itertools.product(
                                  [True, False],
@@ -389,7 +389,7 @@ class TestElementwiseUnary:
                                   'sin', 'sinh', 'sqrt', 'square', 'tan', 'tanh']
                              )
                              )
-    def test_tf(self, use_cpu_only, backend, rank, mode):
+    def test_tf1(self, use_cpu_only, backend, rank, mode):
         atol, rtol = 1e-4, 1e-5
         input_shape = np.random.randint(low=2, high=6, size=rank)
         with tf.Graph().as_default() as graph:
@@ -490,7 +490,7 @@ class TestElementwiseUnary:
                 res = tf.tanh(x)
                 val = random_gen(input_shape, rand_min=-1000, rand_max=1000)
 
-            run_compare_tf(graph, {x: val},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend,
-                           atol=atol, rtol=rtol)
+            run_compare_tf1(graph, {x: val},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend,
+                            atol=atol, rtol=rtol)

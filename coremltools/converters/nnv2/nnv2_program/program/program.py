@@ -218,7 +218,7 @@ class Operation(object):
         if do_auto_val:
             # Is self.value_inference implemented for corresponding input?
             try:
-                self.value_inference()
+                vals = self.value_inference()
             except NotImplementedError as e:
                 do_auto_val = False
 
@@ -226,11 +226,15 @@ class Operation(object):
             # No auto_val possible.
             return tuple(None for _ in output_types)
 
-        # perform auto val
-        if do_auto_val:
-            vals = self.value_inference()
         if not isinstance(vals, (tuple, list)):
             vals = (vals, )
+        for val in vals:
+            if val is None:
+                do_auto_val = False
+        if not do_auto_val:
+            # No auto_val possible.
+            return tuple(None for _ in output_types)
+
         auto_val = []
         for t, v in zip(output_types, vals):
             builtin_val = t()
@@ -301,7 +305,7 @@ class Operation(object):
                 # Remove this operation itself from existing input Var's child_ops
                 existing_input_var = self._input_vars.get(name, None)
                 if existing_input_var is not None:
-                    if isinstance(existing_input_var, tuple):
+                    if isinstance(existing_input_var, (list, tuple)):
                         for v_old, v_new in zip(existing_input_var, var):
                             if v_old.sym_type != v_new.sym_type:
                                 msg = 'New var type {} != existing var type {}'
@@ -484,6 +488,7 @@ class SsaBlock(object):
                 v.op_output_idx = None
                 v._child_ops = set()
                 v.name = v.name + ".x"
+                v._sym_val = None
         else:
             self._block_inputs = tuple()
             self._shadowed_vars = tuple()
@@ -541,7 +546,8 @@ class SsaBlock(object):
         outputs: list[Var]
         """
         if not isinstance(outputs, list):
-            raise ValueError("outputs must be list of Vars")
+            raise ValueError("Outputs must be list of Vars")
+
         # Need to copy, or block's output would be completely tied to a var's
         # output and we cannot replace a block output with another var's
         # output.
@@ -688,9 +694,10 @@ class SsaBlock(object):
 
         return visible_vars
 
-
-    def insert_op_before(self, new_op, before_op=None):
+    def _insert_op_before(self, new_op, before_op=None):
         """
+        A private API used by builder. Please use `builder.YOUR_OP(...,before_op)`.
+
         new_op's outputs are not used (not input to any other op) after
         this call. All inputs to new_op must visible at or before
         before_op (i.e., new_op must be added in topologically sorted
@@ -709,8 +716,9 @@ class SsaBlock(object):
                  %4 = op2(%1)
                  %6 = op3(%4, %4)
 
-        Comment: We assume op1 has been constructed outside of the block with
-        %1, %2 as inputs.
+        Comment: We assume op1 has been constructed outside the block with
+        %1, %2 as inputs. Typically it's builder's job to create an op and
+        insert into the current block.
 
         Comment: insert_op_before(op0, op1) would error as %2 (an input to op1)
         is not visible before op0.
@@ -755,7 +763,7 @@ class SsaBlock(object):
             new_inputs = {'no_check': no_check}
             affected = False
             for k, v in op.inputs.items():
-                if isinstance(v, tuple) and old_var in v:
+                if isinstance(v, (list, tuple)) and old_var in v:
                     new_inputs[k] = tuple(new_var \
                             if vv == old_var else vv for vv in v)
                     affected = True
@@ -891,12 +899,18 @@ class SsaBlock(object):
             # remove the op (in reverse topological order)
             self.operations.pop(idx)
             op.enclosing_block = None
+
+            # an binary op may take the same input, e.g. add(x0, x0)
+            # we should only call remove add from x0 once.
+            unique_inputs = set()
             for v in op.inputs.values():
                 if isinstance(v, (tuple,list)):
                     for vv in v:
-                        vv.remove_child_op(op)
+                        unique_inputs.add(vv)
                 else:
-                    v.remove_child_op(op)
+                    unique_inputs.add(v)
+            for v in unique_inputs:
+                v.remove_child_op(op)
 
     def indented_str(self, indent=None):
         if indent is None:

@@ -9,6 +9,7 @@
 #define ML_ASSERT_GOOD(x) ML_ASSERT((x).good())
 #define ML_ASSERT_BAD(x) ML_ASSERT(!((x).good()))
 #define ML_ASSERT_BAD_WITH_REASON(x, r) ML_ASSERT_BAD((x)); ML_ASSERT_EQ((r), (x).reason())
+#define ML_ASSERT_BAD_WITH_TYPE(x, t) ML_ASSERT_BAD((x)); ML_ASSERT_EQ((t), (x).type())
 #define ML_ASSERT_EQ(x, y) ML_ASSERT((x) == (y))
 #define ML_ASSERT_NE(x, y) ML_ASSERT((x) != (y))
 #define ML_ASSERT_LT(x, y) ML_ASSERT((x) < (y))

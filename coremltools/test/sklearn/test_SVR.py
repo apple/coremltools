@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import pandas as pd
+import numpy as np
 import random
 import tempfile
 import unittest
@@ -142,6 +143,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
     def test_input_names(self):
         data = load_boston()
         df = pd.DataFrame({'input': data['data'].tolist()})
+        df['input'] = df['input'].apply(np.array)
 
         # Default values
         spec = libsvm.convert(self.libsvm_model)

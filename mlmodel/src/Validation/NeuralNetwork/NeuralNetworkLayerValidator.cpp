@@ -181,16 +181,16 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
 
     Result r;
     r = validateInputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
+    if (!r.good()) { return r; }
 
     r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
+    if (!r.good()) { return r; }
 
     if (ndArrayInterpretation) {
         r = validateInputOutputRankEquality(layer, "Convolution3D", blobNameToRank);
-        if (!r.good()) {return r;}
+        if (!r.good()) { return r; }
         r = validateRankCount(layer, "Convolution3D", 5, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        if (!r.good()) { return r; }
     }
 
     const auto& params = layer.convolution3d();
@@ -201,85 +201,43 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    // Validate input and output channels and number of convolution groups
+    // Validate input and output channels and number of convolution groups are positive
     int inputChannels = params.inputchannels();
     int outputChannels = params.outputchannels();
     int nGroups = params.ngroups();
-    if (inputChannels <= 0) {
-        std::string err = "Input Channels must be positive, got '" +
-            std::to_string(inputChannels) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    if (outputChannels <= 0) {
-        std::string err = "Output Channels must be positive, got '" +
-            std::to_string(outputChannels) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    if (nGroups == 0) {
-        std::string err = "Number of convolution filter groups must be positive, got '" +
-            std::to_string(nGroups) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
+    r = validatePositive(inputChannels, "Input Channels");
+    if (!r.good()) { return r; }
+    r = validatePositive(outputChannels, "Output Channels");
+    if (!r.good()) { return r; }
+    r = validatePositive(nGroups, "Groups");
+    if (!r.good()) { return r; }
 
-    // Validate kernel
+    // Validate kernel is positive
     int kernelDepth = params.kerneldepth();
     int kernelHeight = params.kernelheight();
     int kernelWidth = params.kernelwidth();
-    if (kernelDepth <= 0) {
-        std::string err = "Kernel Depth must be positive, got '" +
-            std::to_string(kernelDepth) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    if (kernelHeight <= 0) {
-        std::string err = "Kernel Height must be positive, got '" +
-            std::to_string(kernelHeight) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    if (kernelWidth <= 0) {
-        std::string err = "Kernel Width must be positive, got '" +
-            std::to_string(kernelWidth) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
+    r = validatePositive(kernelDepth, "Kernel Depth");
+    if (!r.good()) { return r; }
+    r = validatePositive(kernelHeight, "Kernel Height");
+    if (!r.good()) { return r; }
+    r = validatePositive(kernelWidth, "Kernel Width");
+    if (!r.good()) { return r; }
 
-    // Validate stride
-    int strideDepth = params.stridedepth();
-    int strideHeight = params.strideheight();
-    int strideWidth = params.stridewidth();
-    if (strideDepth <= 0) {
-        std::string err = "Stride Depth must be positive, got '" +
-            std::to_string(strideDepth) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    if (strideHeight <= 0) {
-        std::string err = "Stride Height must be positive, got '" +
-            std::to_string(strideHeight) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    if (strideWidth <= 0) {
-        std::string err = "Stride Width must be positive, got '" +
-            std::to_string(strideWidth) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
+    // Validate stride is positive
+    r = validatePositive(params.stridedepth(), "Stride Depth");
+    if (!r.good()) { return r; }
+    r = validatePositive(params.strideheight(), "Stride Height");
+    if (!r.good()) { return r; }
+    r = validatePositive(params.stridewidth(), "Stride Width");
+    if (!r.good()) { return r; }
 
-    // Validate dilation
-    int dilationDepth = params.dilationdepth();
-    int dilationHeight = params.dilationheight();
-    int dilationWidth = params.dilationwidth();
-    if (dilationDepth <= 0) {
-        std::string err = "Dilation Depth must be positive, got '" +
-            std::to_string(dilationDepth) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    if (dilationHeight <= 0) {
-        std::string err = "Dilation Height must be positive, got '" +
-            std::to_string(dilationHeight) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-    if (dilationWidth <= 0) {
-        std::string err = "Dilation Width must be positive, got '" +
-            std::to_string(dilationWidth) + "'.";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
+    // Validate dilation is positive
+    r = validatePositive(params.dilationdepth(), "Dilation Depth");
+    if (!r.good()) { return r; }
+    r = validatePositive(params.dilationheight(), "Dilation Height");
+    if (!r.good()) { return r; }
+    r = validatePositive(params.dilationwidth(), "Dilation Width");
+    if (!r.good()) { return r; }
 
     // Validate padding
     int customPaddingFront = params.custompaddingfront();
@@ -319,20 +277,10 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    if (layer.input_size() > 1) {
-        return r;
-    }
-
-    bool has_bias = params.hasbias();
-    if (has_bias && layer.input_size() != 1) {
-        std::string err = "Convolution3D layer: '" + layer.name() +
-            "' with dynamic weight does not support static bias.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
     WeightParamType weightsValueType, biasValueType;
     weightsValueType = valueType(params.weights());
     biasValueType = valueType(params.bias());
+    bool has_bias = params.hasbias();
 
     // Check weight/bias value types. Only float32 or float16 parameters can be populated at any time
     if ((weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
@@ -350,39 +298,18 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
         }
     }
 
-    // Get populated weight and bias sizes
-    // Check weights
-    // conv: outputChannels, kernelChannels, kernelDepth, kernelHeight, kernelWidth -- kernelChannels = inputChannels / nGroups
-    int expected_weight_size = outputChannels * (inputChannels / nGroups) * kernelDepth * kernelHeight * kernelWidth;
-    int weight_size = 0;
-    if (weightsValueType == FLOAT32 || weightsValueType == FLOAT16) {
-        if (weightsValueType == FLOAT32) {
-            weight_size = static_cast<int>(params.weights().floatvalue().size());
-        } else {
-            weight_size = static_cast<int>(params.weights().float16value().size() / 2);
-        }
-        if (weight_size != expected_weight_size) {
-            std::string err = "Convolution3D layer '" + layer.name() +
-                "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " +
-                std::to_string(outputChannels) + " x " + std::to_string((inputChannels / nGroups)) +
-                " x " + std::to_string(kernelDepth) + " x " + std::to_string(kernelHeight) +
-                " x " + std::to_string(kernelWidth) +
-                " convolution3D.";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
-        }
-    } // if (weightsValueType == FLOAT32 || weightsValueType == FLOAT16)
-    else if (weightsValueType == QUINT) {
-        // We don't currently support quantized parameters.
+    // Manually check if weights are quantized--we don't currently support them and
+    // `validateGeneralWeightParams` allows them
+    if (weightsValueType == QUINT) {
         std::string err = "Layer '" + layer.name() + "' has invalid weights field. Quantized " +
             "weights are not supported.";
         r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         return r;
-    } else { // EMPTY
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layer.name() +
-            "' has not specified weights.");
-        return r;
     }
+    uint64_t expected_weight_size = uint64_t(outputChannels * (inputChannels / nGroups) * kernelDepth * kernelHeight * kernelWidth);
+    r = validateGeneralWeightParams(params.weights(), expected_weight_size, uint64_t(outputChannels),
+                                    "Convolution3D ", layer.name(), "weights");
+    if (!r.good()) { return r; }
 
     // Check the bias
     int bias_size = 0;
@@ -655,103 +582,64 @@ Result NeuralNetworkSpecValidator::validatePoolingLayer(const Specification::Neu
 Result NeuralNetworkSpecValidator::validatePooling3dLayer(const Specification::NeuralNetworkLayer& layer) {
     Result r;
     r = validateInputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
+    if (!r.good()) { return r; }
     
     r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
+    if (!r.good()) { return r; }
     
     if (ndArrayInterpretation) {
         r = validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank);
-        if (!r.good()) {return r;}
+        if (!r.good()) { return r; }
         // Rank 5 for 2 spacial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
         r = validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        if (!r.good()) { return r; }
     }
     
     // Kernel
-    int kernelDepth = layer.pooling3d().kerneldepth();
-    if (kernelDepth <= 0) {
-        std::string err = "Kernel Depth must be positive, got " + std::to_string(kernelDepth) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
+    const auto pooling3d = layer.pooling3d();
+   
+    r = validatePositive(pooling3d.kerneldepth(), "Kernel Depth");
+    if (!r.good()) { return r; }
 
-    int kernelHeight = layer.pooling3d().kernelheight();
-    if (kernelHeight <= 0) {
-        std::string err = "Kernel Height must be positive, got " + std::to_string(kernelHeight) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
+    r = validatePositive(pooling3d.kernelheight(), "Kernel Height");
+    if (!r.good()) { return r; }
 
-    int kernelWidth = layer.pooling3d().kernelwidth();
-    if (kernelWidth <= 0) {
-        std::string err = "Kernel Width must be positive, got " + std::to_string(kernelWidth) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
+    r = validatePositive(pooling3d.kernelwidth(), "Kernel Width");
+    if (!r.good()) { return r; }
 
     // Stride
-    int strideDepth = layer.pooling3d().stridedepth();
-    if (strideDepth <= 0) {
-        std::string err = "Stride Depth must be positive, got " + std::to_string(strideDepth) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    int strideHeight = layer.pooling3d().strideheight();
-    if (strideHeight <= 0) {
-        std::string err = "Stride Height must be positive, got " + std::to_string(strideHeight) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    int strideWidth = layer.pooling3d().stridewidth();
-    if (strideWidth <= 0) {
-        std::string err = "Stride Width must be positive, got " + std::to_string(strideWidth) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    // Custom Padding
-    int paddingFront = layer.pooling3d().custompaddingfront();
-    if (paddingFront < 0) {
-        std::string err = "Custom Padding Front must be non-negative, got " + std::to_string(paddingFront) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    int paddingBack = layer.pooling3d().custompaddingback();
-    if (paddingBack < 0) {
-        std::string err = "Custom Padding Back must be non-negative, got " + std::to_string(paddingBack) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    int paddingTop = layer.pooling3d().custompaddingtop();
-    if (paddingTop < 0) {
-        std::string err = "Custom Padding Top must be non-negative, got " + std::to_string(paddingTop) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    int paddingBottom = layer.pooling3d().custompaddingbottom();
-    if (paddingBottom < 0) {
-        std::string err = "Custom Padding Bottom must be non-negative, got " + std::to_string(paddingBottom) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    int paddingLeft = layer.pooling3d().custompaddingleft();
-    if (paddingLeft < 0) {
-        std::string err = "Custom Padding Left must be non-negative, got " + std::to_string(paddingLeft) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    int paddingRight = layer.pooling3d().custompaddingright();
-    if (paddingRight < 0) {
-        std::string err = "Custom Padding Right must be non-negative, got " + std::to_string(paddingRight) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
-
-    // CountExcludePadding should only be set if we are using AVERAGE pooling, otherwise it should be left to the default value of False.
-    if (layer.pooling3d().type() != Specification::Pooling3DLayerParams_PoolingType3D_AVERAGE && layer.pooling3d().countexcludepadding()) {
-        std::string err = "Including or excluding the zeros in padding only makes sense for AVERAGE pooling types, but it was explicitly excluded for " + std::to_string(layer.pooling3d().type()) + ".";
-        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-    }
+    r = validatePositive(pooling3d.stridedepth(), "Stride Depth");
+    if (!r.good()) { return r; }
     
+    r = validatePositive(pooling3d.strideheight(), "Stride Height");
+    if (!r.good()) { return r; }
+    
+    r = validatePositive(pooling3d.stridewidth(), "Stride Width");
+    if (!r.good()) { return r; }
+    
+    // Custom Padding
+    auto paddingType = pooling3d.paddingtype();
+    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingfront(), "Front");
+    if (!r.good()) { return r; }
+
+    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingback(), "Back");
+    if (!r.good()) { return r; }
+
+    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingtop(), "Top");
+    if (!r.good()) { return r; }
+
+    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingbottom(), "Bottom");
+    if (!r.good()) { return r; }
+
+    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingleft(), "Left");
+    if (!r.good()) { return r; }
+
+    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingright(), "Right");
+    if (!r.good()) { return r; }
     
     return r;
 }
+
 
 Result NeuralNetworkSpecValidator::validateGlobalPooling3dLayer(const Specification::NeuralNetworkLayer& layer) {
     Result r;
