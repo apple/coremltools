@@ -1,9 +1,11 @@
 import scipy
+from coremltools.converters.nnv2 import testing_reqs
 from coremltools.converters.nnv2.nnv2_program.program import get_new_symbol
-from . import _test_reqs
-from ._test_reqs import *
+from coremltools.converters.nnv2.testing_reqs import *
 
-backends = _test_reqs.backends
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
 
 
 class TestReduction:
@@ -242,58 +244,3 @@ class TestReduction:
                             use_cpu_only=use_cpu_only,
                             frontend_only=False,
                             backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank_and_axes, keep_dims, tf_op',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1, (-1,)), (2, (0,)), (2, (-1, 0)), (3, (1, -3)), (3, (-2,)),
-                                  (4, (0, 1, 2)), (4, (-2, -1, 0)), (4, (1, -2)), (5, (-3, -1)),
-                                  (5, (0, -1, 1, -2)), (3, None), (5, None)],
-                                 [True, False],
-                                 [tf.reduce_all, tf.math.reduce_euclidean_norm,
-                                  tf.reduce_max, tf.reduce_mean, tf.reduce_min,
-                                  tf.reduce_prod, tf.reduce_sum]
-                                 # TODO: add 'log_sum_exp' tests which requires IsFinate op conversion. 'any' tests
-                                 # rdar://59563732 (Add support for TensorFlow IsFinate op conversion.)
-                             ))
-    def test_tf1(self, use_cpu_only, backend, rank_and_axes, keep_dims, tf_op):
-        rank, axes = rank_and_axes
-        shape = np.random.randint(low=1, high=6, size=rank)
-
-        def test_tf_argmax():
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=shape)
-                ref = tf.math.argmax(x, axis=axes[0] if axes else 0)
-                run_compare_tf1(graph, {x: random_gen(shape=shape, rand_min=-5., rand_max=5.)},
-                                ref, use_cpu_only=use_cpu_only, backend=backend)
-
-        def test_tf_argmin():
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=shape)
-                ref = tf.math.argmin(x, axis=axes[0] if axes else 0)
-                run_compare_tf1(graph, {x: random_gen(shape=shape, rand_min=-5., rand_max=5.)},
-                                ref, use_cpu_only=use_cpu_only, backend=backend)
-
-        def test_tf_reduction():
-            if axes and len(axes) == rank and not keep_dims:
-                return  # TODO <rdar://problem/59152311> NNV2: Add rank 0 and dim size 0 related tests for every op
-
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=shape)
-                x_val = random_gen(shape=shape, rand_min=-5., rand_max=5.)
-                if tf_op in {tf.reduce_all, tf.reduce_any}:
-                    x = tf.placeholder(tf.bool, shape=shape)
-                    x_val = np.random.randint(low=0, high=2, size=shape).astype(np.float32)
-                elif tf_op in {tf.math.reduce_euclidean_norm}:
-                    x_val = random_gen(shape=shape, rand_min=0., rand_max=10.)
-                elif tf_op in {tf.reduce_prod}:
-                    x_val = random_gen(shape=shape, rand_min=1., rand_max=1.5)
-                ref = tf_op(x, axis=axes, keepdims=keep_dims)
-                run_compare_tf1(graph, {x: x_val}, ref,
-                                use_cpu_only=use_cpu_only, backend=backend)
-
-        test_tf_argmax()
-        test_tf_argmin()
-        test_tf_reduction()

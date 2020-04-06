@@ -1,5 +1,6 @@
 from __future__ import division
 
+from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic
 from coremltools.converters.nnv2.nnv2_program.program.program import get_new_symbol
 from ._op_reqs import *
 
@@ -19,84 +20,61 @@ class slice_by_index(Operation):
         super(slice_by_index, self).__init__(**kwargs)
 
     def type_inference(self):
-        if self.begin.rank != 1:
-            raise ValueError("begin should be 1-D tensor, got {}-D tensor instead".format(self.begin.rank))
-        if self.end.rank != 1:
-            raise ValueError("end should be 1-D tensor, got {}-D tensor instead".format(self.end.rank))
-        if self.x.rank != self.begin.shape[0]:
-            raise ValueError("Length of begin {} doesn't equal to input rank {}.".format(len(self.begin.shape[0]), len(self.x.rank)))
-        if self.x.rank != self.end.shape[0]:
-            raise ValueError("Length of end {} doesn't equal to input rank {}.".format(len(self.end.shape[0]), len(self.x.rank)))
 
+        # get tensor and set default value
+        begin = self.begin.val
+        end = self.end.val
+        x_rank = self.x.rank
+        stride = self.stride.val if self.stride is not None else [1] * x_rank
+        begin_mask = self.begin_mask.val if self.begin_mask is not None else [False] * x_rank
+        end_mask = self.end_mask.val if self.end_mask is not None else [False] * x_rank
+        squeeze_mask = self.squeeze_mask.val if self.squeeze_mask is not None else [False] * x_rank
+
+        # solve shape
         x_shape = self.x.shape
         ret_shape = []
-        rank_offset = 0
-        if self.squeeze_mask is not None:
-            squeeze_mask = self.squeeze_mask.val
-        else:
-            squeeze_mask = [False for _ in range(self.x.rank)]
-        for s in squeeze_mask:
-            if s:
-                rank_offset += 1
 
-        if self.begin.sym_val is None and self.begin_mask is None:
-            ret_shape = [get_new_symbol() for _ in range(len(x_shape)-rank_offset)]
-            return builtins.tensor(self.x.dtype, tuple(ret_shape))
-        if self.end.sym_val is None and self.end_mask is None:
-            ret_shape = [get_new_symbol() for _ in range(len(x_shape)-rank_offset)]
-            return builtins.tensor(self.x.dtype, tuple(ret_shape))
+        if begin is None or len(begin) == 0:
+            begin = [None] * len(x_shape)
+        if end is None or len(end) == 0:
+            end = [None] * len(x_shape)
 
-        begin = self.begin.sym_val
-        end = self.end.sym_val
-        stride = [1] * self.x.rank if self.stride is None else self.stride.val
-        if begin is None:
-            begin_mask = self.begin_mask.val
-            begin = [None for _ in range(len(x_shape))]
-            for idx, mask in enumerate(begin_mask):
-                if mask:
-                    begin[idx] = 0 if stride[idx] > 0 else x_shape[idx]-1
-        if end is None:
-            end_mask = self.end_mask.val
-            end = [None for _ in range(len(x_shape))]
-            for idx, mask in enumerate(end_mask):
-                if mask:
-                    # This is not totally correct, we need to read end_mask to take care of this case
-                    end[idx] = x_shape[idx] if stride[idx] > 0 else 0
-
-        if None in end or None in begin:
-            ret_shape = []
-            for idx in range(len(x_shape)):
-                if squeeze_mask[idx]:
-                    continue
-                if begin[idx] is not None and end[idx] is not None:
-                    if stride[idx] > 0:
-                        ret_shape.append(np.ceil((end[idx]-begin[idx])/stride[idx]))
-                    elif end_mask[idx]:
-                        ret_shape.append(np.ceil((-1-begin[idx])/stride[idx]))
-                    else:
-                        ret_shape.append(np.ceil((end[idx]-begin[idx])/stride[idx]))
-                else:
-                    ret_shape.append(get_new_symbol())
-            return builtins.tensor(self.x.dtype, tuple(ret_shape))
-
-        for idx, b in enumerate(begin):
-            if b >= 0:
-                continue
-            begin[idx] += x_shape[idx]
-        for idx, e in enumerate(end):
-            if e >= 0:
-                continue
-            end[idx] += x_shape[idx]
-        stride = [1 for _ in range(len(x_shape))] if self.stride is None else self.stride.val
-        end_mask = [False] * len(x_shape) if self.end_mask is None else self.end_mask.val
-        squeeze_mask = [False] * len(x_shape) if self.squeeze_mask is None else self.squeeze_mask.val
+        # solve for shape inference
         for idx in range(len(x_shape)):
+            num = np.ceil(float(x_shape[idx])/abs(stride[idx])).astype(np.int32)
+
+            # skip if we want to squeeze the dimension
             if squeeze_mask[idx]:
                 continue
-            if end_mask[idx] and stride[idx] < 0:
-                ret_shape.append(np.ceil((-1-begin[idx])/stride[idx]).astype(np.int32))
-            else:
-                ret_shape.append(np.ceil((end[idx]-begin[idx])/stride[idx]).astype(np.int32))
+
+            # for those a[:] cases
+            if begin_mask[idx] and end_mask[idx]:
+                ret_shape.append(num)
+                continue
+
+            # when begin and end are not determined
+            if begin[idx] is None and not begin_mask[idx]:
+                ret_shape.append(get_new_symbol())
+                continue
+            if end[idx] is None and not end_mask[idx]:
+                ret_shape.append(get_new_symbol())
+                continue
+
+            # parse negative dimention
+            if begin[idx] is not None and begin[idx] < 0:
+                begin[idx] = max(0, begin[idx] + x_shape[idx])
+            if end[idx] is not None and end[idx] < 0:
+                end[idx] = max(0, end[idx] + x_shape[idx])
+
+            # compute shape
+            low, high = [0, x_shape[idx]] if stride[idx] > 0 else [-1, x_shape[idx]-1]
+            begin_idx, end_idx = [begin[idx], end[idx]] if stride[idx] > 0 else [end[idx], begin[idx]]
+            is_begin_mask, is_end_mask = [begin_mask[idx], end_mask[idx]] if stride[idx] > 0 else [end_mask[idx], begin_mask[idx]]
+            if is_begin_mask:
+                begin_idx = low
+            end_idx = high if is_end_mask else min(end_idx, high)
+            num = np.ceil(float(end_idx-begin_idx)/abs(stride[idx])).astype(np.int32)
+            ret_shape.append(max(0., num))
 
         if len(ret_shape) == 0:
             # Scalar case.
@@ -141,9 +119,11 @@ class slice_by_index(Operation):
                     logging.warning("%s seems to be a 0 sized tensor", self.name)
                     return np.array([])
                 res = res.tolist()[0]
-                if self.x.sym_val.dtype == np.int32 or self.x.sym_val.dtype == np.int64:
+                if is_symbolic(res):
+                    return res
+                elif self.x.dtype == builtins.int32 or self.x.dtype == builtins.int64:
                     res = np.int32(res)
-                elif self.x.sym_val.dtype == np.float32 or self.x.sym_val.dtype == np.float64:
+                elif self.x.dtype == builtins.float or self.x.dtype == builtins.double:
                     res = np.float32(res)
                 else:
                     raise ValueError("Unable to convert type {}".format(self.x.sym_val.dtype))

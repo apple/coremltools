@@ -143,6 +143,34 @@ def AvgPool3D(context, node):
 
 
 @register_tf_op
+def BatchToSpaceND(context, node):
+    x = context[node.inputs[0]]
+    block_shape = context[node.inputs[1]].val
+
+    if x.rank != 4:
+        raise NotImplementedError('rank of input != 4 is not yet supported')
+    if len(block_shape.flatten()) != 2:
+        raise NotImplementedError('rank of spatial shape != 2 is not yet supported')
+    if block_shape[0] != block_shape[1]:
+        raise NotImplementedError('non-equal block shape is not yet supported')
+    crops = context[node.inputs[2]].val
+    needs_cropping = any(crops.flatten())
+
+    x = cb.transpose(x=x, perm=[3, 0, 1, 2])
+
+    x = cb.depth_to_space(x=x, block_size=block_shape[0])
+    if needs_cropping:
+        x = cb.crop(
+                x=x,
+                crop_height=[crops[0][0], crops[0][1]],
+                crop_width=[crops[1][0], crops[1][1]],
+            )
+
+    x = cb.transpose(x=x, perm=[1, 2, 3, 0], name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
 def Ceil(context, node):
     x = context[node.inputs[0]]
     x = cb.ceil(x=x, name=node.name)
@@ -703,10 +731,90 @@ def StridedSlice(context, node):
     begin_mask = bitmask_to_array(node.attr.get('begin_mask', 0))
     end_mask = bitmask_to_array(node.attr.get('end_mask', 0))
     squeeze_mask = bitmask_to_array(node.attr.get('shrink_axis_mask', 0))
+    ellipsis_mask = bitmask_to_array(node.attr.get('ellipsis_mask', 0))
 
-    begin_mask += [False]*(x.rank-len(begin_mask))
-    end_mask += [False]*(x.rank-len(end_mask))
-    squeeze_mask += [False]*(x.rank-len(squeeze_mask))
+    def _pad_mask(x, begin, end, stride, begin_mask, end_mask, squeeze_mask, ellipsis_mask):
+        # This function pad the masks, stride, begin and end to the same rank as the input tensor.
+        if begin.rank != 1:
+            raise ValueError("begin should be 1-D tensor, got {}-D tensor instead".format(self.begin.rank))
+        if end.rank != 1:
+            raise ValueError("end should be 1-D tensor, got {}-D tensor instead".format(self.end.rank))
+
+        # check if inputs can be determined
+        begin_cache = begin
+        end_cache = end
+        begin = [] if begin.sym_val is None else begin.sym_val.tolist()
+        end = [] if end.sym_val is None else end.sym_val.tolist()
+        stride = [] if stride is None else stride.val.tolist()
+
+        # pad masks function
+        x_rank = x.rank
+        def pad_array(arr, max_rank, idx, default_value):
+            '''
+            This function pads the arr to x_rank with default_value.
+            idx is the index where ellipis_mask = True.
+            max_rank is the maximum rank of the masks, stride, begin and end.
+            '''
+            mask = arr[:]
+            mask += [default_value]*(x_rank-len(mask))
+            new_mask = []
+
+            for i in range(max_rank):
+                num = 1 if i != idx else x_rank-max_rank+1
+                new_mask += [mask[i]]*num
+            return new_mask
+
+        mask_list = [begin_mask, end_mask, squeeze_mask, ellipsis_mask, stride, begin, end]
+        max_rank = max([len(arr) for arr in mask_list])
+
+        # If ellipsis_mask is given, the last element of it would be True
+        # Otherwise, we simply pad each mask by appending default value
+        if ellipsis_mask != []:
+            rank = max_rank
+            idx = len(ellipsis_mask)-1
+        else:
+            rank = x_rank
+            idx = -1
+
+        begin_mask = pad_array(begin_mask, rank, idx, False)
+        end_mask = pad_array(end_mask, rank, idx, False)
+        squeeze_mask = pad_array(squeeze_mask, rank, idx, False)
+        ellipsis_mask = pad_array(ellipsis_mask, rank, idx, False)
+        stride = pad_array(stride, rank, idx, 1)
+
+        # pad begin and end if they are determined during compile time
+        if begin != []:
+            begin = pad_array(begin, max_rank, idx, 0)
+        if end != []:
+            end = pad_array(end, max_rank, idx, 0)
+
+        # make sure begin_mask, end_mask, and stride are consistent with ellipsis mask
+        # begin_mask and end_mask should be True, and stride should be 1.
+        for i, mask in enumerate(ellipsis_mask):
+            if mask:
+                begin_mask[i] = True
+                end_mask[i] = True
+                stride[i] = 1
+
+        # return if begin and end are run-time determined
+        if begin == [] and end == []:
+            begin = begin_cache
+            end   = end_cache
+
+        # check which mask is adding by our default value
+        # This happens when the given index is less than the tensor rank,
+        # for instance, indexing a 3D tensor A with A[:1, :1] is equivalent to
+        # A[:1, :1, :]. In this case we should append True to begin_mask and end_mask
+
+        if ellipsis_mask == [False]*x_rank:
+            for i in range(max_rank, x_rank):
+                begin_mask[i] = True
+                end_mask[i] = True
+
+        return begin, end, stride, begin_mask, end_mask, squeeze_mask
+
+    begin, end, stride, begin_mask, end_mask, squeeze_mask =  \
+    _pad_mask(x, begin, end, stride, begin_mask, end_mask, squeeze_mask, ellipsis_mask)
 
     x = cb.slice_by_index(x=x, name=node.name, begin=begin, end=end, stride=stride,
                           begin_mask=begin_mask, end_mask=end_mask, squeeze_mask=squeeze_mask)
@@ -749,26 +857,52 @@ def Mean(context, node):
 def MirrorPad(context, node):
     x = context[node.inputs[0]]
     pad = context[node.inputs[1]]
+    constant_val = node.attr.get('constant_val', 0.0)
+
     if pad is None:
         raise ValueError("TF `paddings` in Pad op must be const.")
-    # mode must be 'reflect'. 'symmetry' mode not supported
+
     mode = node.attr.get('mode', 'reflect').lower()
-    constant_val = node.attr.get('constant_val', 0.0)
-    in_shape = x.sym_type.get_shape()
-    in_rank = len(in_shape)
-    # Reflect mode requires padding to be provided for all dimensions
-    if in_rank <= 5 and mode == 'reflect':
-        pad = pad.val.reshape(-1)
-        # Reflect mode is supported only on last two dimension
-        # If possible, pass padding of size 4
-        if pad.shape[0] > 4:
-            if np.all(pad[:-4] == 0):
-                pad = pad[-4:]
-            else:
-                raise ValueError("Padding must be applied for last 2 dimensions in reflect mode! Applied for {}".format(pad.shape[0]))
-        x = cb.pad(x=x, pad=pad, name=node.name, mode=mode, constant_val=constant_val)
-    else:
-        raise ValueError('Unsupported Pad configuration!')
+    in_rank = len(x.sym_type.get_shape())
+
+    if in_rank > 5 or in_rank < 2:
+        raise ValueError('Unsupported Pad configuration with input rank {}!'.format(str(in_rank)))
+
+    if pad.val.shape != (in_rank, 2):
+        raise ValueError('Padding must have length as input tensor rank.')
+
+    pad = pad.val
+
+    # get axix which is non zero
+    non_zero_axis = []
+    for i in range(len(pad)):
+        if not all(pad[i] == 0):
+            non_zero_axis.append(i)
+
+    if len(non_zero_axis) > 2:
+        raise ValueError ("Unsupported configuration for Pad layer!")
+
+    # make padding a 2 x 2 tensor if len(non_zero_axis) < 2
+    if len(non_zero_axis) == 0:
+        non_zero_axis = [0, 1]
+
+    if len(non_zero_axis) == 1:
+        if non_zero_axis[0] != len(pad)-1:
+            non_zero_axis.append(len(pad)-1)
+        else:
+            non_zero_axis = [0, non_zero_axis[0]]
+
+    # transpose the input such that the padding dim is the last two
+    perm = [i for i in range(in_rank) if i not in non_zero_axis] + non_zero_axis
+    x = cb.transpose(x=x, perm=perm, name=node.name + '_transpose_1')
+    pad = pad[non_zero_axis,:]
+    pad = pad.reshape(-1)
+    x = cb.pad(x=x, pad=pad, name=node.name + '_pad', constant_val=constant_val, mode=mode)
+    inverse_perm = [-1]*len(perm)
+    for i, index in enumerate(perm):
+        inverse_perm[index] = i
+    x = cb.transpose(x=x, perm=inverse_perm, name=node.name)
+
     context.add(node.name, x)
 
 @register_tf_op
@@ -777,16 +911,16 @@ def Pad(context, node):
     pad = context[node.inputs[1]]
     if pad is None:
         raise ValueError("TF `paddings` in Pad op must be const.")
-    # mode must be one of 'constant', 'reflect' or 'replicate'
+
     mode = node.attr.get('mode', 'constant').lower()
     constant_val = node.attr.get('constant_val', 0.0)
-    in_shape = x.sym_type.get_shape()
-    in_rank = len(in_shape)
-    if in_rank <= 5 or mode == 'constant':
-        pad = pad.val.reshape(-1)
-        x = cb.pad(x=x, pad=pad, name=node.name, mode=mode, constant_val=constant_val)
-    else:
+    in_rank = len(x.sym_type.get_shape())
+
+    if in_rank > 5:
         raise ValueError('Unsupported Pad configuration!')
+
+    pad = pad.val.reshape(-1)
+    x = cb.pad(x=x, pad=pad, name=node.name, mode=mode, constant_val=constant_val)
     context.add(node.name, x)
 
 @register_tf_op
@@ -904,6 +1038,30 @@ def Softmax(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def SpaceToBatchND(context, node):
+    x = context[node.inputs[0]]
+    block_shape = context[node.inputs[1]].val
+    if x.rank != 4:
+        raise NotImplementedError('rank of input != 4 is not yet supported')
+    if len(block_shape.flatten()) != 2:
+        raise NotImplementedError('rank of spatial shape != 2 is not yet supported')
+    if block_shape[0] != block_shape[1]:
+        raise NotImplementedError('non-equal block shape is not yet supported')
+    paddings = context[node.inputs[2]].val
+    needs_paddings = any(paddings.flatten())
+
+    x = cb.transpose(x=x, perm=[3, 0, 1, 2])
+
+    if needs_paddings:
+        x = cb.pad(x=x, pad=paddings.flatten(), mode='constant')
+
+    x = cb.space_to_depth(x=x, block_size=block_shape[0])
+    x = cb.transpose(x=x, perm=[1, 2, 3, 0], name=node.name)
+
+    context.add(node.name, x)
+
+
+@register_tf_op
 def SpaceToDepth(context, node):
     x = context[node.inputs[0]]
     block_size = node.attr.get('block_size')
@@ -1003,9 +1161,11 @@ def Conv2DBackpropInput(context, node):
     # Transpose input to NCHW format
     if data_format == "NHWC":
         x = _transpose_NHWC_to_NCHW(x)
-        output_shape = [output_shape[1], output_shape[2]]
+        if output_shape is not None:
+            output_shape = [output_shape[1], output_shape[2]]
     else:
-        output_shape = [output_shape[2], output_shape[3]]
+        if output_shape is not None:
+            output_shape = [output_shape[2], output_shape[3]]
 
     # Only the last op should have the same name as node.name
     conv_name = node.name + 'x' if data_format == 'NHWC' else node.name

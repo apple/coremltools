@@ -1,6 +1,6 @@
 from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic
 from ._op_reqs import *
-from ._utils import _broadcast_shapes
+from ._utils import broadcast_shapes
 
 @register_op(doc_str="""
 Performs  x*weight.T + bias where weight and bias are const at compile time.
@@ -83,7 +83,7 @@ class matmul(Operation):
             msg = "Op {} (matmul): x {}, y {} are not broadcastable"
             raise ValueError(msg.format(self.name, self.x.shape, self.y.shape))
 
-        ret_shape = list(_broadcast_shapes(x_shape[:-2], y_shape[:-2]))
+        ret_shape = list(broadcast_shapes(x_shape[:-2], y_shape[:-2]))
         ret_shape += [x_shape[-2], y_shape[-1]]
         return builtins.tensor(x_type, tuple(ret_shape))
 

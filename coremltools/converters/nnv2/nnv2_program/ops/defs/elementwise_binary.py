@@ -1,6 +1,6 @@
 import operator
 from ._op_reqs import *
-from ._utils import _promoted_primitive_type, _broadcast_shapes
+from ._utils import promoted_primitive_type, broadcast_shapes
 
 """
 Elementwise Binary Op Superclass
@@ -17,7 +17,7 @@ class elementwise_binary(Operation):
     def type_inference(self):
         typea = self.x.sym_type
         typeb = self.y.sym_type
-        primitive_type = _promoted_primitive_type(typea, typeb)
+        primitive_type = promoted_primitive_type(typea, typeb)
         if primitive_type is None:
             raise ValueError('Incompatible primitive types in broadcast operation')
         primitive_type = self.get_dtype(primitive_type)
@@ -36,7 +36,7 @@ class elementwise_binary(Operation):
         # both a, b are tensors
         shapea = list(typea.get_shape())
         shapeb = list(typeb.get_shape())
-        ret_shape = _broadcast_shapes(shapea, shapeb)
+        ret_shape = broadcast_shapes(shapea, shapeb)
         return builtins.tensor(primitive_type, ret_shape)
 
     @precondition(allow=VALUE)

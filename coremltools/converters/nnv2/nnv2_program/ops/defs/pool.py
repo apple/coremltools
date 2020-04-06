@@ -1,6 +1,6 @@
-import math
+from coremltools.converters.nnv2.nnv2_program.ops.defs._utils import spatial_dimensions_out_shape
+
 from ._op_reqs import *
-from .conv import _aggregated_pad
 
 """
 Pooling Op Superclass
@@ -26,15 +26,12 @@ class Pooling(Operation):
         pad_type = 'valid' if self.pad_type is None else self.pad_type.val.lower()
         pad = None if self.pad is None else self.pad.val
         D_in = x_shape[2:]  # spatial dimensions
-
-        if pad_type == 'same':
-            D_out_shape = [int(math.ceil(float(d) / float(s))) for d, s in zip(D_in, strides)]
-        else:
-            # rdar://59740053 (Padding Calculation for Conv2D does not work for custom padding)
-            pad = _aggregated_pad(pad_type, ksize, dilations=None, custom_pad=pad)
-            D_out_shape = [
-                ((D_in[r] + pad[r] - (ksize[r] - 1) - 1) // strides[r] + 1) for r in range(D_in_rank)
-            ]
+        D_out_shape = spatial_dimensions_out_shape(
+            pad_type=pad_type,
+            input_shape=D_in,
+            kernel_shape=ksize,
+            strides=strides,
+            custom_pad=pad)
         ret_shape = list(x_shape[:2]) + D_out_shape
         return builtins.tensor(self.x.dtype, tuple(ret_shape))
 

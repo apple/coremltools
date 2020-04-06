@@ -98,3 +98,32 @@ class crop_resize(Operation):
         N, B, C = self.roi.shape[0], self.x.shape[0], self.x.shape[1]
         ret_shape = [N, B, C, self.target_height.val, self.target_width.val]
         return builtins.tensor(self.x.dtype, ret_shape)
+
+@register_op(doc_str='TODO')
+class crop(Operation):
+    input_spec = InputSpec(
+                         x = TensorInputType(),
+               crop_height = IntTensorInputType(const=True),
+                crop_width = IntTensorInputType(const=True),
+                )
+
+    def __init__(self, **kwargs):
+        super(crop, self).__init__(**kwargs)
+
+    def type_inference(self):
+        if self.x.rank < 2:
+            raise ValueError("input to the \"crop\" op must at least be of rank 2. Provided {}".format(self.x.rank))
+
+        crop_height = self.crop_height.val
+        crop_width = self.crop_width.val
+
+        if len(crop_height.flatten()) != 2:
+            raise ValueError("crop_height must have 2 elements. Provided {}".format(len(crop_height.flatten())))
+
+        if len(crop_width.flatten()) != 2:
+            raise ValueError("crop_width must have 2 elements. Provided {}".format(len(crop_width.flatten())))
+
+
+        input_shape = list(self.x.shape)
+        ret_shape = input_shape[:-2] + [input_shape[-2] - crop_height[0] - crop_height[1]] + [input_shape[-1] - crop_width[0] - crop_width[1]]
+        return builtins.tensor(self.x.dtype, ret_shape)

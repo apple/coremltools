@@ -1,7 +1,11 @@
-from ._test_utils import get_core_ml_prediction
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2 import testing_reqs
+from coremltools.converters.nnv2.testing_reqs import *
+from coremltools.converters.nnv2.testing_utils import get_core_ml_prediction
+
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestRandomBernoulli:
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -63,22 +67,6 @@ class TestRandomBernoulli:
         run_compare_builder(build, input_placeholders, input_values, expected_output_types,
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, size, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [size for size in range(1, 5)],
-                                 [rank for rank in range(1, 6)],
-                             ))
-    def test_tf_keras(self, use_cpu_only, backend, size, rank):
-        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.keras.backend.random_binomial(shape=shape, p=1.0))
-            run_compare_tf1(graph, {x: np.random.rand(*shape)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestRandomCategorical:
@@ -182,22 +170,6 @@ class TestRandomCategorical:
         assert np.allclose(np.true_divide(pred1, n_sample),
                            np.true_divide(ref1, n_sample), atol=1e-2)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, size',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [size for size in range(1, 10)]))
-    def test_tf1(self, use_cpu_only, backend, size):
-        # TensorFlow's input is 2-D tensor with shape [batch_size, num_classes].
-        shape = np.random.randint(low=1, high=6, size=2)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.random.categorical(x, size)
-            run_compare_tf1(graph, {x: np.random.rand(*shape)},
-                            ref, use_cpu_only=use_cpu_only,
-                            validate_shapes_only=True, backend=backend)
-
 
 class TestRandomNormal:
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -258,38 +230,6 @@ class TestRandomNormal:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, mean, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [0.],
-                                 [rank for rank in range(1, 6)]
-                             ))
-    def test_tf1(self, use_cpu_only, backend, mean, rank):
-        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.random.normal(shape=shape, mean=mean, stddev=0.))
-            run_compare_tf1(graph, {x: np.random.rand(*shape)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, mean, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [0.],
-                                 [rank for rank in range(1, 6)]
-                             ))
-    def test_tf_keras(self, use_cpu_only, backend, mean, rank):
-        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.keras.backend.random_normal(shape=shape, mean=mean, stddev=0.))
-            run_compare_tf1(graph, {x: np.random.rand(*shape)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)
-
 
 class TestRandomUniform:
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -349,31 +289,3 @@ class TestRandomUniform:
         run_compare_builder(build, input_placeholders, input_values, expected_output_types,
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [0.], [0.], [rank for rank in range(1, 2)]))
-    def test_tf1(self, use_cpu_only, backend, low, high, rank):
-        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.random.uniform(shape=shape, minval=low, maxval=high))
-            run_compare_tf1(graph, {x: np.random.rand(*shape)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [1.], [1.], [rank for rank in range(1, 6)]))
-    def test_tf_keras(self, use_cpu_only, backend, low, high, rank):
-        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.keras.backend.random_uniform(shape=shape, minval=low, maxval=high))
-            run_compare_tf1(graph, {x: np.random.rand(*shape)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)

@@ -1,7 +1,11 @@
 import scipy
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2 import testing_reqs
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestElementwiseUnary:
     # All ops in this test share the same backends
@@ -376,121 +380,3 @@ class TestElementwiseUnary:
         expected_outputs = np.array([[1.0, 2, 1.0], [4.5, 1.0, 6.7]], dtype=np.float32)
 
         assert is_close(expected_outputs, v.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)],
-                                 ['abs', 'acos', 'asin', 'atan', 'atanh',
-                                  'ceil', 'clip', 'cos', 'cosh', 'erf', 'exp',
-                                  'floor', 'log', 'negative', 'round', 'rsqrt', 'sign',
-                                  'sin', 'sinh', 'sqrt', 'square', 'tan', 'tanh']
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, rank, mode):
-        atol, rtol = 1e-4, 1e-5
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            if mode == 'abs':
-                res = tf.abs(x)
-                val = random_gen(input_shape, rand_min=-1, rand_max=1)
-            elif mode == 'acos':
-                res = tf.acos(x)
-                val = random_gen(input_shape, rand_min=-1, rand_max=1)
-            elif mode == 'asin':
-                res = tf.asin(x)
-                val = random_gen(input_shape, rand_min=-1, rand_max=1)
-            elif mode == 'atan':
-                res = tf.atan(x)
-                val = random_gen(input_shape, rand_min=-100, rand_max=100)
-            elif mode == 'atanh':
-                if backend == 'nnv2_proto':
-                    #TODO
-                    return
-                res = tf.atanh(x)
-                val = random_gen(input_shape, rand_min=-0.9, rand_max=0.9)
-            elif mode == 'ceil':
-                res = tf.ceil(x)
-                eps_from_int = 0.0
-                if not use_cpu_only:
-                    eps_from_int = 0.1
-                val = random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int)
-            elif mode == 'clip':
-                if backend == 'nnv2_proto':
-                    #TODO
-                    return
-                res = tf.clip_by_value(x, clip_value_min=0.0, clip_value_max=5.0)
-                val = random_gen(input_shape, rand_min=-5, rand_max=10)
-            elif mode == 'cos':
-                res = tf.cos(x)
-                rand_range = 1000
-                if not use_cpu_only:
-                    rand_range = 10
-                val = random_gen(input_shape, rand_min=-rand_range, rand_max=rand_range)
-            elif mode == 'cosh':
-                res = tf.cosh(x)
-                val = random_gen(input_shape, rand_min=-4, rand_max=4)
-            elif mode == 'erf':
-                res = tf.math.erf(x)
-                val = random_gen(input_shape, rand_min=1, rand_max=6)
-            elif mode == 'exp':
-                if not use_cpu_only:
-                    # We skip GPU here, since exp(1) already differs in Espresso.
-                    return
-                res = tf.exp(x)
-                val = random_gen(input_shape, rand_min=-4, rand_max=20)
-            elif mode == 'floor':
-                res = tf.floor(x)
-                eps_from_int = 0.0
-                if not use_cpu_only:
-                    eps_from_int = 0.1
-                val = random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int)
-            elif mode == 'log':
-                res = tf.log(x)
-                val = random_gen(input_shape, rand_min=0.2, rand_max=1000)
-            elif mode == 'negative':
-                if backend == 'nnv2_proto':
-                    return  # TODO
-                res = tf.math.negative(x)
-                val = random_gen(input_shape, rand_min=-100., rand_max=100.)
-            elif mode == 'round':
-                res = tf.round(x)
-                val = random_gen(input_shape, rand_min=-1000, rand_max=1000)
-            elif mode == 'rsqrt':
-                res = tf.rsqrt(x)
-                val = random_gen(input_shape, rand_min=0.5, rand_max=1000)
-            elif mode == 'sign':
-                res = tf.sign(x)
-                val = random_gen(input_shape, rand_min=-5, rand_max=5)
-            elif mode == 'sin':
-                res = tf.sin(x)
-                rand_range = 1000
-                if not use_cpu_only:
-                    rand_range = 10
-                val = random_gen(input_shape, rand_min=-rand_range, rand_max=rand_range)
-            elif mode == 'sinh':
-                res = tf.sinh(x)
-                val = random_gen(input_shape, rand_min=-10, rand_max=10)
-            elif mode == 'sqrt':
-                res = tf.sqrt(x)
-                val = random_gen(input_shape, rand_min=0.5, rand_max=1000)
-            elif mode == 'square':
-                if backend == 'nnv2_proto':
-                    return  # TODO
-                res = tf.math.square(x)
-                val = random_gen(input_shape, rand_min=-5, rand_max=5)
-                atol, rtol = 1e-2, 1e-3
-            elif mode == 'tan':
-                res = tf.tan(x)
-                val = random_gen(input_shape, rand_min=-1000, rand_max=1000)
-            elif mode == 'tanh':
-                res = tf.tanh(x)
-                val = random_gen(input_shape, rand_min=-1000, rand_max=1000)
-
-            run_compare_tf1(graph, {x: val},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend,
-                            atol=atol, rtol=rtol)

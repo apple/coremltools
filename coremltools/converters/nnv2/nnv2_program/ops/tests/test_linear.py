@@ -1,6 +1,10 @@
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2 import testing_reqs
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestLinear:
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -146,32 +150,3 @@ class TestMatMul:
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, dim, transpose_a, transpose_b, use_constant',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [2, 4, 8],
-                                 [True, False],
-                                 [True, False],
-                                 [True, False]))
-    def test_tf1(self, use_cpu_only, backend, dim, transpose_a, transpose_b, use_constant):
-        shape_x = np.array([dim, dim])
-        shape_y = shape_x if transpose_b else np.flip(shape_x, axis=-1)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape_x)
-            y = tf.placeholder(tf.float32, shape=shape_y)
-
-            if not use_constant:
-                res = tf.linalg.matmul(x, y, transpose_a=transpose_a, transpose_b=transpose_b)
-                run_compare_tf1(graph, {
-                    x: random_gen(shape_x, rand_min=-100, rand_max=100),
-                    y: random_gen(shape_y, rand_min=-1., rand_max=1.)},
-                                res, use_cpu_only=use_cpu_only, backend=backend)
-            else:
-                y = tf.constant(np.random.rand(dim, dim).astype(np.float32))
-                res = tf.linalg.matmul(x, y, transpose_a=transpose_a, transpose_b=transpose_b)
-                run_compare_tf1(graph, {
-                    x: random_gen(shape_x, rand_min=-100, rand_max=100)},
-                                res, use_cpu_only=use_cpu_only, backend=backend)

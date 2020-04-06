@@ -1,29 +1,7 @@
+from coremltools.converters.nnv2.nnv2_program.ops.defs._utils import spatial_dimensions_out_shape
+
 from ._op_reqs import *
 
-def _aggregated_pad(pad_type, kernel_shape, dilations=None, custom_pad=None):
-    """
-    custom_pad: Required iff pad_type == 'custom'. custom_pad[2*i],
-    custom_pad[2*i+1] are left/right custom padding for spatial dim i.
-
-    kernel_shape: [kH, kW, ...]: spatial kernel dims (excluding channels)
-
-    Returns:
-        pad[i] = left + right padding for dim i
-    """
-    num_spatial_dims = len(kernel_shape)
-    if dilations is None:
-        dilations = [1]*num_spatial_dims
-    if pad_type == 'same':
-        effective_ks = [(k-1)*d+1 for k, d in zip(kernel_shape, dilations)]
-        return [k - 1 for k in effective_ks]
-    if pad_type == 'valid':
-        return [0] * num_spatial_dims
-    if pad_type == 'custom':
-        if custom_pad is None or len(custom_pad) != 2*num_spatial_dims:
-            raise ValueError('Invalid custom_pad.')
-        return [custom_pad[2*d] + custom_pad[2*d+1] for d in
-                range(num_spatial_dims)]
-    raise ValueError('Invalid padding pad_type "{}"'.format(pad_type))
 
 # rdar://58622145
 @register_op(doc_str='TODO')
@@ -62,13 +40,14 @@ class conv(Operation):
         custom_pad = None if self.pad is None else self.pad.val
         N = inshape[0]
         C_out = f_shape[0]
-        D_in = inshape[2:]  # spatial dimensions
-        pad_type = self.pad_type.val
-        pad = _aggregated_pad(pad_type, kernel_shape, dilations, custom_pad)
-
-        d_out_shape = [
-            (D_in[r] + pad[r] - dilations[r] * (kernel_shape[r] - 1) - 1) \
-                // strides[r] + 1 for r in range(num_dims) ]
+        # spatial dimensions
+        d_out_shape = spatial_dimensions_out_shape(
+            pad_type=self.pad_type.val,
+            input_shape=inshape[2:],
+            kernel_shape=kernel_shape,
+            strides=strides,
+            dilations=dilations,
+            custom_pad=custom_pad)
         retshape = [N, C_out] + d_out_shape
         return builtins.tensor(self.x.dtype, tuple(retshape))
 
@@ -112,12 +91,21 @@ class conv_transpose(Operation):
 
         strides = [1] * spatial_dim_rank if self.strides is None else self.strides.val
         dilations = [1] * spatial_dim_rank if self.dilations is None else self.dilations.val
-        pad = None if self.pad is None else self.pad.val
+        kernel_shape = [(kernel_shape[r] -1) * dilations[r] + 1 for r in range(spatial_dim_rank)]
 
         D_in = in_shape[2:]  # spatial dimensions
-        if pad is None:
-            pad = [0] * spatial_dim_rank
-        d_out_shape = [ strides[r] * (D_in[r] - 1) + ((kernel_shape[r] - 1) * dilations[r]) - pad[2*r] - pad[2*r+1] + 1
-                        for r in range(spatial_dim_rank) ]
+
+        # Deconv's output shape is non-deterministic, we follow TF shape logic here.
+        if self.pad_type.val == 'same':
+            d_out_shape = [ strides[r] * D_in[r] for r in range(spatial_dim_rank) ]
+        elif self.pad_type.val == 'valid':
+            d_out_shape = [ strides[r] * D_in[r] + kernel_shape[r] - 1 for r in range(spatial_dim_rank) ]
+        elif self.pad_type.val == 'custom':
+            if self.pad is None:
+                raise ValueError('self.pad must exist if pad_type is custom')
+            pad = self.pad.val
+            d_out_shape = [ strides[r] * (D_in[r] - 1) + kernel_shape[r] - pad[2*r] - pad[2*r+1]
+                            for r in range(spatial_dim_rank) ]
+
         retshape = [N, C_out] + d_out_shape
         return builtins.tensor(self.x.dtype, tuple(retshape))

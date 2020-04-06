@@ -1,6 +1,11 @@
-from ._test_reqs import *
-import pytest
+from coremltools.converters.nnv2 import testing_reqs
 from coremltools.converters.nnv2.nnv2_program.program import get_new_symbol
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
+
 
 @pytest.mark.skip("Broken for nnv2 backend")
 class TestResizeBilinear:
@@ -48,25 +53,6 @@ class TestResizeBilinear:
                             expected_output_type, expected_output,
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, input_shape, target_shape, align_corners, half_pixel_centers",
-            itertools.product(
-                [True, False],
-                backends,
-                [(1,10,20,1), (2,5,1,3)],
-                [(25, 30), (2, 20)],
-                [True, False],
-                [True, False]
-                ))
-    def test_tf1(self, use_cpu_only, backend, input_shape, target_shape, align_corners, half_pixel_centers):
-        if half_pixel_centers and align_corners:
-            return
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            ref = tf.raw_ops.ResizeBilinear(images=x, size=target_shape, half_pixel_centers=half_pixel_centers, align_corners=align_corners)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
 @pytest.mark.skip("Broken for nnv1 backend")
@@ -159,23 +145,72 @@ class TestUpsampleNearestNeighbor:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, input_shape, upsample_factor, data_format",
-            itertools.product(
-                [True, False],
-                backends,
-                [(1,1,1,3), (1,10,5,3)],
-                [(1,2), (4,3)],
-                ['channels_last', 'channels_first']
-                ))
-    def test_tf1(self, use_cpu_only, backend, input_shape, upsample_factor, data_format):
-        if data_format == 'channels_last':
-            input_shape = (input_shape[0], input_shape[2], input_shape[3], input_shape[1])
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            ref = tf.keras.layers.UpSampling2D(size=upsample_factor, data_format=data_format, interpolation="nearest")(x)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)
+
+class TestCrop:
+
+    @pytest.mark.parametrize("use_cpu_only, backend, is_symbolic",
+                            itertools.product(
+                                [True, False],
+                                backends,
+                                [True, False]
+                                ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, is_symbolic):
+        x = np.array([[1, 2, 3, 4],
+                      [5, 6, 7, 8],
+                      [9, 10, 11, 12],
+                      [13, 14, 15, 16]], dtype=np.float32).reshape(1, 1, 4, 4)
+
+        input_shape = list(x.shape)
+        placeholder_input_shape = input_shape
+        if is_symbolic:
+            # set batch and channel dimension symbolic
+            placeholder_input_shape[0] = get_new_symbol()
+            placeholder_input_shape[1] = get_new_symbol()
+
+        input_placeholder_dict = {"x": cb.placeholder(shape=placeholder_input_shape)}
+        input_value_dict = {"x" : x}
+
+        def build(x):
+            return cb.crop(x=x, crop_height=[0, 1], crop_width=[1, 1])
+
+        expected_output_type = (placeholder_input_shape[0], placeholder_input_shape[1], 3, 2, builtins.fp32)
+        expected_output = np.array([2, 3, 6, 7, 10, 11], dtype=np.float32).reshape(1,1,3,2),
+
+        run_compare_builder(build, input_placeholder_dict, input_value_dict,
+                            expected_output_type, expected_output,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend, C, H, W",
+                            itertools.product(
+                                [True, False],
+                                backends,
+                                [x for x in range(1, 4)],
+                                [x for x in range(5, 10)],
+                                [x for x in range(5, 10)],
+                                ))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, C, H, W):
+        input_shape = (1, C, H, W)
+        x = np.random.random(input_shape)
+
+        crop_h = [np.random.randint(H)]
+        crop_h.append(np.random.randint(H-crop_h[0]))
+        crop_w = [np.random.randint(W)]
+        crop_w.append(np.random.randint(W-crop_w[0]))
+
+        input_placeholder_dict = {"x": cb.placeholder(shape=input_shape)}
+        input_value_dict = {"x" : x}
+
+        def build(x):
+            return cb.crop(x=x, crop_height=crop_h, crop_width=crop_w)
+
+        expected_output_type = (1, C, H-crop_h[0]-crop_h[1], W-crop_w[0]-crop_w[1], builtins.fp32)
+        expected_output = x[:, :, crop_h[0]: H-crop_h[1], crop_w[0]: W-crop_w[1]]
+
+        run_compare_builder(build, input_placeholder_dict, input_value_dict,
+                            expected_output_type, expected_output,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
 
 
 class TestCropResize:
@@ -265,39 +300,3 @@ class TestCropResize:
                             expected_output_type, expected_output,
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic",
-            list(itertools.product(
-                [True, False],
-                backends,
-                [(1, 64, 64, 1)],
-                [1, 3, 5],
-                [(2, 2), (1, 1), (4, 4), (128, 128)],
-                ['bilinear'],
-                [False])) +
-                [pytest.param(True, 'nnv1_proto', (1, 64, 64, 1), 1, (2, 2), 'bilinear', True, marks=pytest.mark.xfail)]
-                )
-    def test_tf1(self, use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic):
-        input = np.random.randn(*input_shape)
-        boxes = np.random.uniform(size=(num_of_crops, 4))
-        box_indices = np.random.randint(size=(num_of_crops,), low=0, high=input_shape[0])
-
-        def test_static():
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                output = tf.raw_ops.CropAndResize(image=x, boxes=boxes, box_ind=box_indices, crop_size=crop_size, method=method)
-                run_compare_tf1(graph, {x: input}, output, use_cpu_only=use_cpu_only, backend=backend)
-
-        def test_dynamic():
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                boxes_pl = tf.placeholder(tf.float32, shape=boxes.shape)
-                box_indices_pl = tf.placeholder(tf.int32, shape=box_indices.shape)
-                output = tf.raw_ops.CropAndResize(image=x, boxes=boxes_pl, box_ind=box_indices_pl, crop_size=crop_size, method=method)
-                run_compare_tf1(graph, {x: input, boxes_pl: boxes, box_indices_pl: box_indices}, output, use_cpu_only=use_cpu_only, backend=backend)
-
-        if dynamic:
-            test_dynamic()
-        else:
-            test_static()

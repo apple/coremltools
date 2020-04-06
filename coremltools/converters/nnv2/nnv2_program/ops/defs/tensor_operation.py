@@ -3,7 +3,7 @@ from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic, any_
 from coremltools.converters.nnv2.nnv2_program.program.program import (
         get_new_symbol, get_new_variadic_symbol, SYMBOL, VALUE, NONE)
 from ._op_reqs import *
-from ._utils import _promoted_primitive_type
+from ._utils import promoted_primitive_type
 
 @register_op(doc_str="""
 Returns a tensor setting everything outside a center band to zeros for the innermost matrix. Special cases:
@@ -280,23 +280,15 @@ class pad(Operation):
         in_shape = self.x.shape
         pad = self.pad.val
         ret_shape = list(in_shape)
-        pad_index = 0
+        if len(pad.shape) != 1:
+            raise ValueError('Pad should be a 1D tensor!')
+        pad = pad.copy()
+        pad = pad.reshape(-1,2)
 
-        if pad.shape[0] % 2 != 0:
-            raise ValueError("Padding must be even! Provided {}".format(self.pad.shape[0]))
+        for i in range(len(pad)):
+            ret_shape[-len(pad)+i] = ret_shape[-len(pad)+i] + pad[i][0] + pad[i][1]
 
-        mode = self.mode.val
-        if mode in {"reflect", "replicate"}:
-            # Reflect and Replicate mode only support padding to last two dimensions
-            if self.pad.shape[0] != 4:
-                msg = "For {} mode, padding is only supported on last two dimension, provided" + \
-                      " {}".format(mode, self.pad.val)
-                raise ValueError("Incorrect Pad configuration! {}".format(msg))
-
-        for i in range(len(ret_shape) - pad.shape[0] // 2, len(ret_shape)):
-            ret_shape[i] = in_shape[i] + pad[2*pad_index] + pad[2*pad_index + 1]
-            pad_index += 1
-        return builtins.tensor(self.x.dtype, ret_shape)
+        return builtins.tensor(self.x.dtype, tuple(ret_shape))
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -612,10 +604,10 @@ class concat(Operation):
                 '(rank {})'
             raise ValueError(msg.format(self.name, self.op_type, rank))
 
-        # Validate primitive types are compatible 
+        # Validate primitive types are compatible
         dtype = self.values[0].dtype
         for v in self.values[1:]:
-            new_dtype = _promoted_primitive_type(v.dtype, dtype)
+            new_dtype = promoted_primitive_type(v.dtype, dtype)
             if new_dtype is None:
                 msg = 'Incompatible primitive types concat: {} vs {}'
                 raise ValueError(msg.format(v.dtype, dtype))
@@ -625,6 +617,8 @@ class concat(Operation):
         retshape = list(self.values[0].shape)
         for v in self.values[1:]:
             for i in range(rank):
+                if is_symbolic(retshape[i]) or is_symbolic(v.shape[i]):
+                    continue
                 if i != concat_axis and retshape[i] != v.shape[i]:
                     msg = 'Dimension mismatch in {} op {}'
                     raise ValueError(msg.format(self.op_type, self.name))
@@ -656,10 +650,10 @@ class concat(Operation):
         # If input shapes are small, we create symbolic values from symbols.
         ret_shape = self.type_inference().get_shape()
         num_elems = np.prod(ret_shape)
-        if num_elems > 5:
-            return None
         if any_symbolic(ret_shape):
             # Don't know the exact shape.
+            return None
+        if num_elems > 5:
             return None
         arr = np.array([Symbol(self.name + '%d' % d) \
                 for d in range(num_elems)])
@@ -746,7 +740,7 @@ class split(Operation):
             return self.x.sym_val
 
         split_indices = np.cumsum(sizes).astype(np.int)
-        return tuple(np.split(self.x.sym_val, split_indices[:-1]))
+        return tuple(np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val))
 
 @register_op(doc_str='TODO')
 class stack(Operation):

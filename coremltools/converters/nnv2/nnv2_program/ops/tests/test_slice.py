@@ -1,7 +1,10 @@
-from ._test_utils import UNK_SYM
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2 import testing_reqs
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import UNK_SYM, run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestSliceByIndex:
 
@@ -35,106 +38,45 @@ class TestSliceByIndex:
         x_val = np.array(list(range(24))).reshape((2,3,4))
         v = [cb.slice_by_index(x=x_val, begin=[1, 1, 1], end=[2, 2, 2]),
              cb.slice_by_index(x=x_val, begin=[1, 1, 1], end=[2, 3, 4], stride=[1, 1, 2]),
+             cb.slice_by_index(x=x_val, begin=[-1, -3, -3], end=[-1, -1, -1]),
+             cb.slice_by_index(x=x_val, begin=[0, 0, -3], end=[-1, -2, -2]),
+             cb.slice_by_index(x=x_val, begin=[-1, -1, -1], end=[0, 1, -3], stride=[-2, -1, -3]),
              cb.slice_by_index(x=x_val, begin=[1, 1, 1], end=[2, 3, 4], stride=[1, 1, 2], begin_mask=[True, False, True]),
              cb.slice_by_index(x=x_val, begin=[1, 1, 1], end=[2, 3, 4], stride=[1, 1, 2], begin_mask=[True, False, True], end_mask=[True, True, False]),
              cb.slice_by_index(x=x_val, begin=[1, 1, 1], end=[2, 3, 4], stride=[1, 1, 2], begin_mask=[False, False, True], end_mask=[True, False, False], squeeze_mask=[False, True, False]),
+             cb.slice_by_index(x=x_val, begin=[0, 0, 0], end=[0, 0 ,0], stride=[1, 1, 1], begin_mask=[True, True, True], end_mask=[True, True, True]),
+             cb.slice_by_index(x=x_val, begin=[1, 1, 1], end=[2, 2, 0], stride=[1, 1, 1], squeeze_mask=[False, False, True]),
+             cb.slice_by_index(x=x_val, begin=[1, 0, 0], end=[2, 0, 0], stride=[1, 1, 1], begin_mask=[False, True, True], end_mask=[False, True, True]),
+             cb.slice_by_index(x=x_val, begin=[0, 0, 0], end=[0, 0, 0], stride=[1, 1, 1], begin_mask=[True, True, True], end_mask=[True, True, True]),
+             cb.slice_by_index(x=x_val, begin=[1, 0, 1], end=[2, 0, 2], stride=[1, 1, 1], begin_mask=[False, True, False], end_mask=[False, True, False]),
+             cb.slice_by_index(x=x_val, begin=[0, 0, 1], end=[0, 0, 0], stride=[1, 1, 1], begin_mask=[True, True, False], end_mask=[True, True, False], squeeze_mask=[False, False, True]),
+             cb.slice_by_index(x=x_val, begin=[0, 0, 0], end=[0, 0, 0], stride=[1, 1, 1], begin_mask=[False, False, True], end_mask=[False, False, True], squeeze_mask=[True, True, False]),
+             cb.slice_by_index(x=x_val, begin=[1, 0, 0], end=[2, 0, 0], stride=[1, 1, 1], begin_mask=[False, True, True], end_mask=[False, True, True]),
+             cb.slice_by_index(x=x_val, begin=[1, 1, 0], end=[2, 2, 0], stride=[1, 1, 1], begin_mask=[False, False, True], end_mask=[False, False, True]),
+             cb.slice_by_index(x=x_val, begin=[1, 0, 0], end=[0, 0, 0], stride=[1, 1, 1], begin_mask=[False, True, True], end_mask=[False, True, True], squeeze_mask=[True, False, False]),
+             cb.slice_by_index(x=x_val, begin=[0, 0, 0], end=[0, 0, 0], begin_mask=[True, True, True], end_mask=[True, True, True]),
+             cb.slice_by_index(x=x_val, begin=[0, 0, 0], end=[0, 0, 0], stride=[1, 1, -1], begin_mask=[True, True, True], end_mask=[True, True, True]),
             ]
         ans = [x_val[1:2, 1:2, 1:2],
                x_val[1:2, 1:3, 1:4:2],
+               x_val[-3:-1,-3:-1,-3:-1],
+               x_val[0:-1,0:-2,-3:-2],
+               x_val[-1:0:-2, -1:1:-1, -1:-3:-3],
                x_val[:2, 1:3, :4:2],
                x_val[:, 1:, :4:2],
                x_val[1::1, 1, :3:2],
+               x_val[:,:,:],
+               x_val[1:2,1:2,1],
+               x_val[1:2,...],
+               x_val[...],
+               x_val[1:2,...,1:2],
+               x_val[...,1],
+               x_val[0,0,:],
+               x_val[1:2],
+               x_val[1:2,1:2],
+               x_val[1],
+               x_val[:],
+               x_val[...,::-1],
               ]
         for idx in range(len(v)):
             assert is_close(ans[idx], v[idx].val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank, masking',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 5)],
-                                 [True, False]
-                                 ))
-    def test_tf1(self, use_cpu_only, backend, rank, masking):
-        shape = np.random.randint(low=2, high=6, size=rank)
-        begin_val = np.array([np.random.randint(low=-shape[i], high=shape[i]) for i in range(rank)]).astype(np.int32)
-        end_val = np.array([np.random.randint(low=-shape[i], high=shape[i]) for i in range(rank)]).astype(np.int32)
-        stride_val = np.array([np.random.randint(low=-shape[i], high=shape[i]) for i in range(rank)]).astype(np.int32)
-        if not masking:
-            begin_mask = [False] * rank
-            end_mask = [False] * rank
-            squeeze_mask = [False] * rank
-        else:
-            begin_mask = np.array([np.random.choice([True, False, False]) for i in range(rank)]).astype(np.bool)
-            end_mask = np.array([np.random.choice([True, False, False]) for i in range(rank)]).astype(np.bool)
-            squeeze_flag = True
-            # We do not squeeze to scalar in nnv1
-            while squeeze_flag and backend == 'nnv1_proto':
-                squeeze_mask = np.array([np.random.choice([True, False]) for i in range(rank)]).astype(np.bool)
-                for i in range(rank):
-                    if begin_mask[i] or end_mask[i]:
-                        squeeze_mask[i] = False
-                for s in squeeze_mask:
-                    if not s:
-                        squeeze_flag = False
-
-        for i in range(rank):
-            if begin_mask[i] or end_mask[i]:
-                stride = 0
-                while stride == 0:
-                    stride = np.random.randint(low=-shape[i], high=shape[i])
-                stride_val[i] = stride
-
-                if not end_mask[i]:
-                    while True:
-                        end = np.random.randint(low=-shape[i], high=shape[i])
-                        normalized_end = shape[i] + end if end < 0 else end
-                        if normalized_end == 0 and stride_val[i] > 0:
-                            continue
-                        elif normalized_end == shape[i]-1 and stride_val[i] < 0:
-                            continue
-                        else:
-                            end_val[i] = end
-                            break
-                continue
-            if squeeze_mask[i]:
-                stride_val[i] = 1
-            while True:
-                end = np.random.randint(low=-shape[i], high=shape[i])
-                normalized_end = shape[i] + end if end < 0 else end
-                normalized_begin = shape[i] + begin_val[i] if begin_val[i] < 0 else begin_val[i]
-                if normalized_end == normalized_begin:
-                    continue
-                if begin_mask[i] or end_mask[i] or squeeze_mask[i]:
-                    stride = 1
-                elif normalized_end < normalized_begin:
-                    stride = -np.random.randint(low=1, high=shape[i])
-                else:
-                    stride = np.random.randint(low=1, high=shape[i])
-                end_val[i] = end
-                stride_val[i] = stride
-                break
-
-        def _mask_to_bit(mask):
-            ret = 0
-            for x in mask[::-1]:
-                ret <<= 1
-                if x:
-                    ret += 1
-            return ret
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            begin = tf.placeholder(tf.int32, shape=begin_val.shape)
-            end = tf.placeholder(tf.int32, shape=end_val.shape)
-
-            x_val = np.array(list(range(np.prod(shape)))).reshape(shape).astype(np.float32)
-            res = tf.strided_slice(x, begin, end, stride_val,
-                                   begin_mask=_mask_to_bit(begin_mask),
-                                   end_mask=_mask_to_bit(end_mask),
-                                   shrink_axis_mask=_mask_to_bit(squeeze_mask))
-            run_compare_tf1(graph, {x: x_val, begin: begin_val, end: end_val},
-                            res, use_cpu_only=use_cpu_only, backend=backend)
-
-

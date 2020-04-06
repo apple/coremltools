@@ -1,6 +1,10 @@
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2 import testing_reqs
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestAvgPool:
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -29,57 +33,6 @@ class TestAvgPool:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, 
                             frontend_only=False, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,)],
-                                 [(1,), (2,)],
-                                 ['same', 'valid']))
-    def test_tf_avg_pool_1d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        input_shape = np.random.randint(low=2, high=6, size=3)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.avg_pool1d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                            res, use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,), (2,), (1, 1), (1, 2), (2, 2)],
-                                 [(1,), (2,), (1, 1), (1, 2), (2, 2)],
-                                 ['same', 'valid']))
-    def test_tf_avg_pool_2d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        shape = np.random.randint(low=2, high=6, size=4)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.nn.avg_pool(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                            res, use_cpu_only=use_cpu_only, backend=backend)
-
-
-# Separated out into a separate class so it can be excluded from nnv2 tests
-class TestAvgPool3d:
-    @pytest.mark.skipif(not HAS_TF1, reason='TF1 not found.')
-    @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,), (2,), (1, 1, 1), (1, 2, 3), (2, 2, 3), (3, 3, 3)],
-                                 [(1,), (2,), (1, 1, 1), (1, 2, 3), (2, 2, 3), (3, 3, 3)],
-                                 ['same', 'valid']))
-    def test_tf_avg_pool_3d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        shape = np.random.randint(low=3, high=6, size=5)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.nn.avg_pool3d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                            res, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestL2Pool:
@@ -132,54 +85,3 @@ class TestMaxPool:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,)],
-                                 [(1,), (2,)],
-                                 ['same', 'valid']))
-    def test_tf_max_pool_1d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        input_shape = np.random.randint(low=2, high=6, size=3)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.max_pool1d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                            res, use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,), (2,), (1, 1), (1, 2), (2, 2)],
-                                 [(1,), (2,), (1, 1), (1, 2), (2, 2)],
-                                 ['same', 'valid']))
-    def test_tf_max_pool_2d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        shape = np.random.randint(low=2, high=6, size=4)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.nn.max_pool(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                            res, use_cpu_only=use_cpu_only, backend=backend)
-
-
-# Separated out into a separate class so it can be excluded from nnv2 tests
-class TestMaxPool3d:
-    @pytest.mark.skipif(not HAS_TF1, reason='TF1 not found.')
-    @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,), (2,), (1, 1, 1), (1, 2, 3), (2, 2, 3), (3, 3, 3)],
-                                 [(1,), (2,), (1, 1, 1), (1, 2, 3), (2, 2, 3), (3, 3, 3)],
-                                 ['same', 'valid']))
-    def test_tf_max_pool_3d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        shape = np.random.randint(low=3, high=6, size=5)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.nn.max_pool3d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                            res, use_cpu_only=use_cpu_only, backend=backend)

@@ -13,17 +13,10 @@ from coremltools.converters.nnv2._deps import (
 )
 import coremltools.converters.nnv2.converter as converter
 
-from . import _test_utils as _utils
-from ._test_utils import (
-    run_compare_builder,
-    run_compare_tf1,
-    run_compare_tf2,
-    run_compare_tf_keras,
-    ssa_fn,
-    is_close,
-    _random_gen as random_gen)
+from . import testing_utils as utils
+from .testing_utils import ssa_fn, is_close, random_gen
 
-_utils.converter = converter
+utils.converter = converter
 backends = converter.ConverterRegistry.backends.keys()
 
 if HAS_TF1 or HAS_TF2:

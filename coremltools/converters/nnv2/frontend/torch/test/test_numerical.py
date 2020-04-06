@@ -11,7 +11,7 @@ from .testing_utils import *
 
 class ModuleWrapper(nn.Module):
     def __init__(self, function, kwargs):
-        super().__init__()
+        super(ModuleWrapper, self).__init__()
         self.function = function
         self.kwargs = kwargs
 
@@ -69,6 +69,34 @@ class TestTorchNumerical:
         groups=1,
     ):
         model = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+        )
+        self.run_numerical_test((1, in_channels, height, width), model)
+
+    @pytest.mark.parametrize(
+        "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation",
+        itertools.product(
+            [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3]
+        ),
+    )
+    def test_convolution_transpose2d(
+        self,
+        height,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        groups=1,
+    ):
+        model = nn.ConvTranspose2d(
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
@@ -163,26 +191,24 @@ class TestTorchNumerical:
 
         self.run_numerical_test(model.input_size, torch_model)
 
-    # TODO: Get this test passing via:
-    # rdar://60942015 (Implement New Ops (See Description) and add numerical upsample test)
-    @pytest.mark.xfail
     @pytest.mark.parametrize(
         "scales_h, scales_w, output_size, align_corners",
         [
             x
             for x in itertools.product(
-                [None], [None], [(10, 10), (1, 1), (20, 20)], [1, 0]
+                [None], [None], [(10, 10), (1, 1), (20, 20)], [True, False]
             )
         ]
-        + [x for x in itertools.product([2, 3], [4, 5], [None], [1, 0])],
+        # + [x for x in itertools.product([2, 3], [4, 5], [None], [True, False])],
+        # TODO: These fail, due to rdar://61129798 ((Updated) Upsample_bilinear2d returns the wrong shape at runtime)
     )
     def test_upsample_bilinear2d(self, scales_h, scales_w, output_size, align_corners):
         input_shape = (1, 3, 10, 10)
         model = ModuleWrapper(
             nn.functional.interpolate,
             {
-                "output_size": output_size,
-                "scale_factor": (scales_h, scales_w),
+                "size": output_size,
+                "scale_factor": (scales_h, scales_w) if scales_h else None,
                 "mode": "bilinear",
                 "align_corners": align_corners,
             },
@@ -203,4 +229,57 @@ class TestTorchNumerical:
     )
     def test_batch_norm(self, input_shape, eps):
         model = nn.BatchNorm2d(input_shape[-3], eps=eps)
+        self.run_numerical_test(input_shape, model)
+
+    @pytest.mark.xfail(reason="rdar://problem/61064173")
+    @pytest.mark.parametrize(
+        "input_shape, kernel_size, stride, pad, include_pad",
+        itertools.product(
+            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0], [True, False],
+        ),
+    )
+    def test_avg_pool1d(self, input_shape, kernel_size, stride, pad, include_pad):
+        model = nn.AvgPool1d(kernel_size, stride, pad, False, include_pad)
+        self.run_numerical_test(input_shape, model)
+
+    # TODO: once the radar is resolved, these test cases can be merged with
+    # the passing ones.
+    @pytest.mark.xfail(reason="rdar://60635129")
+    @pytest.mark.parametrize(
+        "input_shape, kernel_size, stride, pad, include_pad",
+        itertools.product(
+            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [2, 3], [1, 2], [1], [True, False],
+        ),
+    )
+    def test_avg_pool1d_xfail(self, input_shape, kernel_size, stride, pad, include_pad):
+        model = nn.AvgPool1d(kernel_size, stride, pad, False, include_pad)
+        self.run_numerical_test(input_shape, model)
+
+    @pytest.mark.parametrize(
+        "input_shape, kernel_size, stride, pad, include_pad",
+        itertools.product(
+            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
+            [1, 2, 3],
+            [1, 2],
+            [0],
+            [True, False],
+        ),
+    )
+    def test_avg_pool2d(self, input_shape, kernel_size, stride, pad, include_pad):
+        model = nn.AvgPool2d(kernel_size, stride, pad, False, include_pad)
+        self.run_numerical_test(input_shape, model)
+
+    @pytest.mark.xfail(reason="rdar://60635129")
+    @pytest.mark.parametrize(
+        "input_shape, kernel_size, stride, pad, include_pad",
+        itertools.product(
+            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
+            [2, 3],
+            [1, 2],
+            [1],
+            [True, False],
+        ),
+    )
+    def test_avg_pool2d(self, input_shape, kernel_size, stride, pad, include_pad):
+        model = nn.AvgPool2d(kernel_size, stride, pad, False, include_pad)
         self.run_numerical_test(input_shape, model)

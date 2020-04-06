@@ -18,6 +18,7 @@ import torch
 
 import coremltools
 import coremltools.models.datatypes as datatypes
+from coremltools.converters.nnv2.nnv2_program.ops.defs._utils import aggregated_pad
 from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION
 from coremltools.models import neural_network as neural_network
 from coremltools.models.neural_network import flexible_shape_utils
@@ -5091,38 +5092,30 @@ class IOS14SingleLayerTests(CorrectnessTest):
             padding_list = []
             # torch.nn.ConstantPad3d wants (left, right, top, bottom, front, back)
             # but our shape, kernel, and stride are (depth, height, width).
-            # Therefore we have to iterate through our shape, kernel, and stride backwards.
-            for i in [-1, -2, -3]:
-                padding_before, padding_after = \
-                    IOS14SingleLayerTests._same_padding_for_dimension(shape[i],
-                                                                      kernel[i],
-                                                                      stride[i],
-                                                                      before=False)
-                padding_list.append(padding_before)
-                padding_list.append(padding_after)
+            total_paddings = aggregated_pad(pad_type=padding_mode.lower(),
+                                            kernel_shape=kernel,
+                                            input_shape=shape[2:],
+                                            strides=stride)
+            total_paddings.reverse()
+            for p in total_paddings:
+                before = math.floor(p / 2)
+                after = math.ceil(p / 2)
+                padding_list.append(before)
+                padding_list.append(after)
+
             torch_padding = torch.nn.ConstantPad3d(tuple(padding_list), 0)
             padding_values = padding_list[:]
         else:
             assert False
 
         # Validate output shape
-        try:
-            IOS14SingleLayerTests._validate_pooling_dimension(shape[2], kernel[0], stride[0], padding_values[4], padding_values[5])
-        except ValueError as e:
-            print(str(e) + ', skipping')
-            return False
-
-        try:
-            IOS14SingleLayerTests._validate_pooling_dimension(shape[3], kernel[1], stride[1], padding_values[2], padding_values[3])
-        except ValueError as e:
-            print(str(e) + ', skipping')
-            return False
-
-        try:
-            IOS14SingleLayerTests._validate_pooling_dimension(shape[4], kernel[2], stride[2], padding_values[0], padding_values[1])
-        except ValueError as e:
-            print(str(e) + ', skipping')
-            return False
+        for i in range(3):
+            try:
+                IOS14SingleLayerTests._validate_pooling_dimension(shape[i+2], kernel[i], stride[i],
+                                                                  padding_values[6 - i - 2],
+                                                                  padding_values[6 - i - 1])
+            except ValueError:
+                return False
 
         # Pooling type
         # Average pooling
@@ -5140,7 +5133,6 @@ class IOS14SingleLayerTests(CorrectnessTest):
             is_padding_homogeneous = all(p == padding_values[0] for p in padding_values)
             if average_pooling_count_excludes_padding:
                 if not is_padding_homogeneous:
-                    print('average_pooling_count_excludes_padding=True can only be tested with homogeneous padding, but padding was %s, skipping' % str(padding_values))
                     return False
                 else:
                     # padding is homogeneous
@@ -5178,30 +5170,6 @@ class IOS14SingleLayerTests(CorrectnessTest):
         if (start_padding + end_padding) / 2 >= kernel_size/2:
             raise ValueError('The average of the start (%s) and end (%s) padding must be less than half the kernel size (%s / 2 = %s)'
                 % (start_padding, end_padding, kernel_size, kernel_size / 2))
-
-    @staticmethod
-    def _same_padding_for_dimension(input_size, kernel_size, stride, before):
-        """
-        Computes same padding along one dimension
-        Args:
-            input_size: integer size of the input tensor along dimension
-            kernel_size: integer size of the kernel along dimension
-            stride: integer stride of along dimension
-            before: boolean.  If padding is odd, this determines if the
-                extra padding should go before or after the dimension.
-
-        Returns: A tuple of (padding_before, padding_after)
-
-        """
-        # https://stanford.edu/~shervine/teaching/cs-230/cheatsheet-convolutional-neural-networks#filter
-        total_padding = max(0, stride * math.ceil(input_size / stride) - input_size + kernel_size - stride)
-        if total_padding % 2 == 0:  # even
-            return int(total_padding / 2), int(total_padding / 2)
-        else:  # odd
-            if before:
-                return int(total_padding / 2) + 1, int(total_padding / 2)
-            else:
-                return int(total_padding / 2), int(total_padding / 2) + 1
 
     @pytest.mark.xfail(reason="<rdar://problem/60656796> Fix pool3d tests in test_numpy_nn_layers")
     def test_pool3d_cpu(self):

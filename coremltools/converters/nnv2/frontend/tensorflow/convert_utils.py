@@ -3,7 +3,7 @@ from .basic_graph_ops import topsort
 from coremltools.converters.nnv2.builtin_types.symbolic import (
         is_symbolic, any_variadic)
 from coremltools.converters.nnv2.builtin_types import builtins
-from .tf_op_registry import _OPS_REGISTRY
+from .tf_op_registry import _TF_OPS_REGISTRY
 
 def compatible_shapes(tf_shape, inf_shape):
     def compare_elem(dt, ds):
@@ -90,7 +90,8 @@ def convert_graph(context, graph, outputs=None):
             continue
         logging.info("[{}/{}] Converting {} op {}".format(
             i + 1, num_nodes, node.op, node.name))
-        _add_op = _OPS_REGISTRY.get(node.op, None)
+
+        _add_op = _TF_OPS_REGISTRY.get(node.op, None)
         if _add_op is None:
             msg = "Conversion for TF op '{}' not implemented."
             raise NotImplementedError(msg.format(node.op))

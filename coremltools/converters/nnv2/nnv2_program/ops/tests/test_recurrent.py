@@ -1,7 +1,11 @@
+from coremltools.converters.nnv2 import testing_reqs
 from coremltools.converters.nnv2.nnv2_program.program import get_new_symbol
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestGRU:
     @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")

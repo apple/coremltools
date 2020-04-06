@@ -14,6 +14,10 @@ from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
 
 
+# This is a magic number in PyTorch. It's used as a default value in many
+# functions.
+PYTORCH_MAGIC_DEFAULT = 9223372036854775807
+
 def convert_nodes(context, graph):
     """Iterate over the nodes of a graph or block and convert to NNv2.
 
@@ -103,6 +107,12 @@ def _construct_constant(val, name):
     # Converter cannot handle torch tensors.
     if isinstance(val, torch.Tensor):
         val = val.numpy()
+
+    # NNv2 casts ints to int32, which can't represent the 64 bit magic number.
+    # So we instead represent it with None, and any ops that might get the
+    # value will check for None instead.
+    if isinstance(val, int) and val == PYTORCH_MAGIC_DEFAULT:
+        val = None
 
     mode = decide_immediate_or_file(val)
     if val is None:
@@ -204,6 +214,13 @@ def t(context, node):
 
 
 @register_torch_op
+def permute(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    perm = cb.transpose(x=inputs[0], perm=inputs[1], name=node.name)
+    context.add(perm)
+
+
+@register_torch_op
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
     matmul = cb.matmul(x=inputs[0], y=inputs[1], name=node.name)
@@ -274,11 +291,15 @@ def _convolution(context, node):
     pad = np.repeat(pad.val, 2)
 
     dilations = inputs[5]
+    transposed = inputs[6]
+    out_pad = inputs[7] # unused
     group = inputs[8]
+
+    if any([v != 0 for v in out_pad.val]):
+        raise ValueError("convolution does not support output_padding (given {})".format(out_pad))
 
     kwargs = {
         "x": x,
-        "W": weight,
         "strides": strides,
         "pad_type": "custom",
         "pad": pad,
@@ -286,10 +307,26 @@ def _convolution(context, node):
         "group": group,
         "name": node.name,
     }
-    # Bias is optional in PyTorch's convolution.
-    if bias:
-        kwargs["B"] = bias
-    conv = cb.conv(**kwargs)
+
+    if transposed.val is True:
+        # Transposed convolution
+
+        # PyTorch weight ordering [Cin, Cout, H, W]
+        # NNv2 expects [H, W, Cout, Cin]
+        weight_transpose = cb.transpose(x=weight, perm=[2, 3, 1, 0], name=weight.name + "_transpose")
+        kwargs["weight"] = weight_transpose
+        if bias is not None:
+            kwargs["bias"] = bias
+        conv = cb.conv_transpose(**kwargs)
+    else:
+        # Normal convolution
+
+        kwargs["W"] = weight
+        # Bias is optional in PyTorch's convolution.
+        if bias is not None:
+            kwargs["B"] = bias
+        conv = cb.conv(**kwargs)
+
     context.add(conv)
 
 
@@ -299,7 +336,7 @@ def softmax(context, node):
 
     x = inputs[0]
     axis = inputs[1]
-    softmax = cb.softmax(x=x, axis=axis, name=node.name)
+    softmax = cb.softmax(logit=x, axis=axis, name=node.name)
     context.add(softmax)
 
 
@@ -354,7 +391,10 @@ def max_pool2d(context, node):
     # Need to explicity state L-R, T-B pad
     pad = inputs[3]
     pad = np.repeat(pad.val, 2)
-    dilation = inputs[4]
+    dilation = inputs[4].val
+    if np.any(dilation > 1):
+        # See: rdar://60633736 (Implement dilation for nnv2 op max_pool)
+        raise ValueError("@max_pool2d does not support dilation > 1")
     pool = cb.max_pool(
         x=x,
         kernel_sizes=kernel_sizes,
@@ -537,10 +577,12 @@ def embedding(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     indices = inputs[1]
-    if (len(inputs) > 2):
-        logging.warning("CoreML embedding (gather) layer does not support any "
-                        "inputs besides the weights and indices. Those given "
-                        "will be ignored.")
+    if len(inputs) > 2:
+        logging.warning(
+            "CoreML embedding (gather) layer does not support any "
+            "inputs besides the weights and indices. Those given "
+            "will be ignored."
+        )
     # inputs skipped:
     #  padding_idx (2)
     #  scale_grad_by_freq (3)
@@ -616,22 +658,26 @@ def item(context, node):
 
 @register_torch_op(torch_alias=["bool"])
 def _bool(context, node):
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node, expected=1)
 
-    if builtins.is_bool(inputs[0]) or inputs[0].val is None:
-        context.add(inputs[0], node.name)
-    else:
-        context.add(bool(inputs[0].val), node.name)
+    x = inputs[0]
+    # TODO: this is a hack, we'll be able to use the cast op once it is
+    # complete (rdar://problem/61168016)
+    if x.val is not None and not isinstance(x.val, bool):
+        x = cb.const(val=bool(x.val), name=node.name)
+    context.add(x, node.name)
 
 
 @register_torch_op(torch_alias=["int"])
 def _int(context, node):
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node, expected=1)
 
-    if builtins.is_int(inputs[0]):
-        context.add(inputs[0], node.name)
-    else:
-        context.add(int(inputs[0].val), node.name)
+    x = inputs[0]
+    # TODO: this is a hack, we'll be able to use the cast op once it is
+    # complete (rdar://problem/61168016)
+    if x.val is not None and not isinstance(x.val, int):
+        x = cb.const(val=int(x.val), name=node.name)
+    context.add(x, node.name)
 
 
 @register_torch_op
@@ -657,7 +703,7 @@ def layer_norm(context, node):
     weight = inputs[2]
     bias = inputs[3]
     eps = inputs[4]
-    cudnn_enable = inputs[5]  # unused
+    # cudnn_enable = inputs[5] unused
     layer_norm = cb.layer_norm(
         x=_input,
         axes=normalized_shape,
@@ -672,18 +718,28 @@ def layer_norm(context, node):
 @register_torch_op
 def numtotensor(context, node):
     inputs = _get_inputs(context, node, expected=1)
-    assert inputs[0].shape == ()
-    context.add([inputs[0].val], node.name)
+    x = inputs[0]
+    assert x.shape == ()
+    res = cb.const(val=[x.val], name=node.name)
+    context.add(res)
 
 
 @register_torch_op
 def upsample_bilinear2d(context, node):
-    inputs = _get_inputs(context, node, expected=5)
+    inputs = _get_inputs(context, node)
     _input = inputs[0]
-    output_size = inputs[1]  # unused
-    align_corners = bool(inputs[2])
-    scales_h = inputs[3]
-    scales_w = inputs[4]
+    output_size = inputs[1]
+    align_corners = bool(inputs[2].val)
+    if len(inputs) == 5:
+        scales_h = inputs[3]
+        scales_w = inputs[4]
+    elif len(inputs) == 3:
+        scales_h = None
+        scales_w = None
+    else:
+        raise ValueError(
+            "Invalid number of args in Pytorch conversion op for node: {}".format(node)
+        )
 
     assert output_size is None or scales_h is None
 
@@ -702,12 +758,12 @@ def upsample_bilinear2d(context, node):
     context.add(upsample_bilinear)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["listunpack"])
 def tupleunpack(context, node):
     inputs = _get_inputs(context, node, expected=1)
     values = inputs[0]
     # Node input could have been turned into constant array in @tupleconstruct
-    if not isinstance(values, tuple):
+    if not isinstance(values, tuple) and not isinstance(values, list):
         values = values.val
     assert len(values) == len(node.outputs)
     # @value is either a numpy primitive or a Var object
@@ -768,8 +824,9 @@ def loop(context, node):
     inputs = _get_inputs(context, node)
     max_iter_count = inputs[0]
 
-    # Determine if the loop condition also includes an iteration count.
-    has_iter_count = max_iter_count.val >= 0
+    # Magic default signals this is a while-only loop, so no iteration count
+    # is needed.
+    has_iter_count = max_iter_count is not None and max_iter_count.val >= 0
 
     # Create an interation count. This will only be used if this is a for loop.
     iter_count = cb.const(val=0, name=node.name + "_iter")
@@ -907,10 +964,186 @@ def select(context, node):
 def ones(context, node):
     inputs = _get_inputs(context, node, expected=5)
     size = cb.shape(x=inputs[0])
-    dtype = NUM_TO_TORCH_DTYPE[inputs[1].val]  # unused
-    layout = inputs[2]  # unused
-    device = inputs[3]  # unused
-    pin_memory = inputs[4]  # unused
+    # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
+    # layout = inputs[2] unused
+    # device = inputs[3] unused
+    # pin_memory = inputs[4] unused
     name = node.name
     fill = cb.fill(shape=size, value=1.0, name=node.name)
     context.add(fill)
+
+
+def _avg_pool(context, node, inputs):
+    x = inputs[0]
+    kernel_sizes = inputs[1]
+    strides = inputs[2]
+    # TODO: fix padding
+    # rdar://problem/60635129
+    pad_type = "valid"
+    # Need to explicity state L-R, T-B pad
+    pad = inputs[3]
+    pad = np.repeat(pad.val, 2)
+    ceil_mode = inputs[4]
+    if ceil_mode.val is True:
+        raise ValueError("ceil_mode=True is not supported for avg_pool")
+    include_pad = inputs[5]
+    pool = cb.avg_pool(
+        x=x,
+        kernel_sizes=kernel_sizes,
+        strides=strides,
+        pad_type=pad_type,
+        pad=pad,
+        name=node.name,
+    )
+    context.add(pool)
+
+
+@register_torch_op
+def avg_pool1d(context, node):
+    inputs = _get_inputs(context, node, expected=6)
+    _avg_pool(context, node, inputs)
+
+
+@register_torch_op
+def avg_pool2d(context, node):
+    inputs = _get_inputs(context, node, expected=7)
+    divisor_override = inputs[6]
+    if divisor_override is not None:
+        raise ValueError("divisor_override is not supported for avg_pool2d")
+    _avg_pool(context, node, inputs)
+
+
+@register_torch_op
+def log_softmax(context, node):
+    inputs = _get_inputs(context, node)
+
+    x = inputs[0]
+    axis = inputs[1]
+    out = inputs[2]  # Ignored.
+    assert out is None
+    res = cb.softmax(logit=x, axis=axis, name=node.name + "_softmax")
+    res = cb.log(x=res, name=node.name)
+    context.add(res)
+
+
+@register_torch_op
+def sigmoid(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    res = cb.sigmoid(x=inputs[0], name=node.name)
+    context.add(res)
+
+
+@register_torch_op
+def gelu(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    res = cb.gelu(x=inputs[0], name=node.name)
+    context.add(res)
+
+
+@register_torch_op(torch_alias=["slice"])
+def _slice(context, node):
+    inputs = _get_inputs(context, node, expected=5)
+    x = inputs[0]
+    dim = inputs[1].val
+    start = inputs[2].val
+    end = inputs[3].val
+    step = inputs[4].val
+
+    begin_array = np.array([0] * len(x.shape))
+    begin_array[dim] = start
+    end_array = np.array(x.shape)
+    if end != None:
+        end_array[dim] = end
+
+    kwargs = {"x": x, "begin": begin_array, "end": end_array, "name": node.name}
+
+    if step != 1:
+        stride_array = np.array([1] * len(x.shape))
+        stride_array[dim] = step
+        kwargs["stride"] = stride_array
+
+    res = cb.slice_by_index(**kwargs)
+    context.add(res)
+
+
+@register_torch_op(torch_alias=["split_with_sizes"])
+def split(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    split_sizes = inputs[1]
+    dim = inputs[2]
+
+    if not isinstance(split_sizes.val, np.ndarray):
+        # NNv2 needs the size of each split to be given explicitly.
+        num_whole_splits = x.shape[dim.val] // split_sizes.val
+        remainder = x.shape[dim.val] % split_sizes.val
+        split_sizes = [split_sizes.val] * num_whole_splits
+        if remainder > 0:
+            split_sizes += [remainder]
+    res = cb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
+    context.add(res, torch_name=node.name)
+
+
+def to(context, node):
+    # @non_blocking and @copy are unused
+    inputs = _get_inputs(context, node)
+    if len(inputs) == 5:
+        _input = inputs[0]
+        device = inputs[1]
+        dtype = inputs[2].val
+        # non_blocking = inputs[3]
+        # copy = inputs[4]
+    elif len(inputs) == 4:
+        _input = inputs[0]
+        dtype = inputs[1].val
+        # non_blocking = inputs[2]
+        # copy = inputs[3]
+    elif len(inputs) == 3:
+        # Since @non_blocking and @copy are unused, add back to context
+        _input = inputs[0]
+        # non_blocking = inputs[1]
+        # copy = inputs[2]
+        context.add(_input, torch_name=node.name)
+        return
+    else:
+        raise ValueError(
+            "Received invalid arguments for Pytorch conversion of op {}".format(node)
+        )
+
+    torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
+    if isinstance(_input, Var):
+        _input = _input.val
+
+    # numpy -> torch -> torch cast -> numpy
+    # This path is needed to use the mapping of passed in dtypes to torch dtypes.
+    casted_input = torch.tensor(_input).type(torch_dtype).numpy()
+    const = cb.const(mode="immediate_value", val=casted_input, name=node.name)
+    context.add(const)
+
+
+@register_torch_op
+def floor(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    _input = inputs[0]
+    floor = cb.floor(x=_input, name=node.name)
+    context.add(floor)
+
+
+@register_torch_op
+def erf(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    _input = inputs[0]
+    erf = cb.erf(x=_input, name=node.name)
+    context.add(erf)
+
+
+@register_torch_op
+def implicittensortonum(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    _input = inputs[0]
+    assert _input.shape == (1,)
+    # shape: (1,) -> () 
+    squeeze = cb.squeeze(x=_input, name=node.name)
+    context.add(squeeze)

@@ -1,8 +1,11 @@
+from coremltools.converters.nnv2 import testing_reqs
 from coremltools.converters.nnv2.nnv2_program.program import get_new_symbol
-from ._test_utils import UNK_SYM, UNK_VARIADIC
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestBandPart:
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -60,22 +63,6 @@ class TestBandPart:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank, lower_and_upper',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(2, 6)],
-                                 [(0, -1), (-1, 0), (0, 0)]))
-    def test_tf1(self, use_cpu_only, backend, rank, lower_and_upper):
-        lower, upper = lower_and_upper
-        shape = np.random.randint(low=3, high=4, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.matrix_band_part(x, num_lower=lower, num_upper=upper)
-            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                            res, use_cpu_only=use_cpu_only, backend=backend)
-
 
 class TestCumsum():
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -84,12 +71,6 @@ class TestCumsum():
                 backends,
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend == 'nnv1_proto':
-            pytest.skip("CumSum not implemented for NNv1 Backend")
-
-        #Need to be removed
-        frontend_only = True
-
         t = np.array([[1,2,3],[4,5,6]], dtype=np.float32)
         input_placeholders = {"x": cb.placeholder(shape=t.shape)}
         input_values = {"x": t}
@@ -102,64 +83,13 @@ class TestCumsum():
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only,
-                            frontend_only=frontend_only, backend=backend)
+                            frontend_only=False, backend=backend)
 
     @ssa_fn
     def test_builder_eval(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
         v = cb.cumsum(x=x_val)
         assert is_close(np.cumsum(x_val, axis=0), v.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank, reverse, exclusive",
-                             itertools.product(
-                                [True, False],
-                                backends,
-                                [rank for rank in range(1,6)],
-                                [True, False],
-                                [True, False]
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, rank, reverse, exclusive):
-        if backend == 'nnv1_proto':
-            pytest.skip("CumSum not implemented for NNv1 Backend")
-
-        #Need to be removed
-        frontend_only = True
-
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            for axis in range(-1, rank):
-                res = tf.math.cumsum(x, axis=axis, reverse=reverse, exclusive=exclusive)
-                run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                                res, use_cpu_only=use_cpu_only,
-                                frontend_only=frontend_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                backends,
-                ))
-    def test_empty_input_tf(self, use_cpu_only, backend):
-        if backend == 'nnv1_proto':
-            pytest.skip("CumSum not implemented for NNv1 Backend")
-
-        #Corner cases
-        #Need to be removed
-        frontend_only = True
-        empty_inputs = [[], [[]], [[[]]], [[],[]], [[[]],[[]]]]
-        for input_x in empty_inputs:
-            input_x = np.array(input_x)
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_x.shape)
-                for axis in range(-1, len(input_x.shape)):
-                    res = tf.math.cumsum(x, axis=axis)
-                    run_compare_tf1(graph, {x: input_x},
-                                    res, use_cpu_only=use_cpu_only,
-                                    frontend_only=frontend_only,
-                                    backend=backend)
 
     @ssa_fn
     def test_invalid_axis1(self):
@@ -226,6 +156,7 @@ class TestCumsum():
         x_val = ['1']
         with pytest.raises(TypeError):
             pred = cb.cumsum(x=x_val)
+
 
 class TestFill:
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -302,34 +233,6 @@ class TestFill:
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank, value',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)],
-                                 [-19., 0., 37.]))
-    def test_tf1(self, use_cpu_only, backend, rank, value):
-
-        def test_tf_static():
-            shape = np.random.randint(low=1, high=3, size=rank)
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=shape)
-                ref = tf.add(x, tf.fill(dims=np.array(shape, dtype=np.float32), value=value))
-                run_compare_tf1(graph, {x: np.random.rand(*shape)},
-                                ref, use_cpu_only=use_cpu_only, backend=backend)
-
-        def test_tf_dynamic():
-            shape = np.random.randint(low=1, high=3, size=rank)
-            with tf.Graph().as_default() as graph:
-                s = tf.placeholder(tf.int32, shape=(len(shape),))
-                ref = tf.fill(dims=s, value=value)
-                run_compare_tf1(graph, {s: np.array(shape, dtype=np.float32)},
-                                ref, use_cpu_only=use_cpu_only, backend=backend)
-
-        test_tf_static()
-        test_tf_dynamic()
 
 
 class TestNonMaximumSuppression:
@@ -565,48 +468,6 @@ class TestNonMaximumSuppression:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    # TODO (rdar://60390856) TF may output fewer than max_boxes, but
-    # current TF frontend will always output max_boxes. Need to apply
-    # slice.
-    @pytest.mark.xfail
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize(
-        ','.join([
-            'use_cpu_only',
-            'backend',
-            'num_boxes',
-            'max_boxes',
-            'iou_threshold',
-            'score_threshold']),
-        itertools.product(
-            [True, False],
-            backends,
-            [20, 30, 100],
-            [5, 20],
-            [1.0, 0.99],
-            [float('-inf'), -200.],
-        ))
-    def test_tf1(self, use_cpu_only, backend, num_boxes,
-                max_boxes, iou_threshold, score_threshold):
-        """
-        Note: TensorFlow and Core ML does not have exact same implementation,
-        Core ML pad -1s to the results while TensorFlow does not. Threshold
-        values are carefully choose to make test success as it fails when:
-        1) input num_boxes < max_boxes because of shape mis-match.
-        2) output num_boxes < max_boxes because of shape mis-match.
-        """
-        boxes_val = random_gen(shape=(num_boxes, 4), rand_min=0, rand_max=32)
-        scores_val = random_gen(shape=(num_boxes,), rand_min=-100, rand_max=100)
-
-        with tf.Graph().as_default() as graph:
-            boxes = tf.placeholder(tf.float32, shape=boxes_val.shape)
-            scores = tf.placeholder(tf.float32, shape=scores_val.shape)
-            ref = tf.image.non_max_suppression(
-                boxes=boxes, scores=scores, max_output_size=max_boxes,
-                iou_threshold=iou_threshold, score_threshold=score_threshold)
-            run_compare_tf1(graph, {boxes: boxes_val, scores: scores_val},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)
-
 
 class TestNonZero:
     @pytest.mark.parametrize('use_cpu_only, backend',
@@ -636,21 +497,6 @@ class TestNonZero:
         x_val = np.random.randint(low=-1, high=2, size=(6, 1, 7))
         res = cb.non_zero(x=x_val)
         assert is_close(np.transpose(np.nonzero(x_val)), res.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]
-                             ))
-    def test_tf1(self, use_cpu_only, backend, rank):
-        with tf.Graph().as_default() as graph:
-            shape = np.random.randint(low=1, high=4, size=rank)
-            x_val = np.random.randint(low=-1, high=2, size=shape).astype(np.float32)
-            x = tf.placeholder(tf.float32, shape=shape)
-            run_compare_tf1(graph, {x: x_val}, tf.where(x),
-                            use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestOneHot:
@@ -692,42 +538,6 @@ class TestOneHot:
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank_and_axis, dynamic",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(2, 0), (2, -1), (3, 3), (3, 0), (3,-2),
-                                  (4, -4), (4, 1), (4,-1), (4,-2), (4,3)],
-                                 [True, False]
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, rank_and_axis, dynamic):
-        rank, axis = rank_and_axis
-        depth, on_value, off_value = 30, 28.0, -4.0
-        x_shape = np.random.randint(low=2, high=5, size=rank)
-
-        if not dynamic:
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.int32, shape=x_shape)
-                axis = axis if axis >= -1 else axis + rank + 1 ## TF limitation: Doesn't support axis < -1
-                res = tf.one_hot(x, axis = axis, depth=depth, on_value=on_value, off_value=off_value)
-                run_compare_tf1(graph,
-                                {x: np.random.randint(0, depth, size=x_shape)},
-                                res, use_cpu_only=use_cpu_only,
-                                frontend_only=False, backend=backend)
-        else: # Dynamic Case with depth being an input
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.int32, shape=x_shape)
-                depth_input = tf.placeholder(tf.int32)
-                axis = axis if axis >= -1 else axis + rank + 1 ## TF limitation: Doesn't support axis < -1
-                res = tf.one_hot(x, axis = axis, depth=depth_input, on_value=on_value, off_value=off_value)
-                run_compare_tf1(graph,
-                                {x: np.random.randint(0, depth, size=x_shape),
-                               depth_input:depth},
-                                res, use_cpu_only=use_cpu_only,
-                                frontend_only=False, backend=backend)
 
 
 class TestPad:
@@ -862,7 +672,7 @@ class TestPad:
             assert is_close(expected_outputs, v.val)
 
         def test_replicate_mode():
-            x_val = np.array([[[1, 2, 3],[4, 5, 6]]], dtype=np.float32)
+            x_val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
             v = cb.pad(x=x_val, pad=np.array([1, 1, 2, 2], dtype=np.int32), mode="replicate")
             expected_outputs = np.array([[1., 1., 1., 2., 3., 3., 3.],
                                          [1., 1., 1., 2., 3., 3., 3.],
@@ -883,37 +693,6 @@ class TestPad:
         test_reflect_mode()
         test_replicate_mode()
         test_constant_general()
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [2, 3, 4],
-                                 # rdar://59854962 ([Pad Precision issue] Rank 5 Pad precision dropped on GPU comparing to CPU)
-                                 ['reflect', 'constant']
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, rank, mode):
-        input_shape = np.random.randint(low=2, high=10, size=rank)
-        min_input_dim_size = input_shape.min()
-        padding_val = np.random.randint(low=0, high=min_input_dim_size, size=(rank, 2), dtype=np.int32)
-
-        # Only constant mode supports padding across all dimensions
-        # All other padding modes are only applied on last two dimensions.
-        if mode != "constant":
-            padding_val[:-2] = 0
-
-        tf_mode = mode.upper()
-        tf.reset_default_graph()
-        input = random_gen(input_shape, rand_min=0.2, rand_max=1000)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            paddings = tf.constant(padding_val)
-            res = tf.pad(x, paddings=paddings, mode=tf_mode)
-            run_compare_tf1(graph, {x: input},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
 
 
 class TestRange1d:
@@ -974,41 +753,6 @@ class TestRange1d:
         v = cb.range_1d(start=5, end=15, step=2)
         assert is_close(np.arange(5,15,2), v.val)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, params",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(-10.4, 23, 12.2), (0, 1000, 1), (50.5, 90.5, 1.5), (5, 8, 2),
-                                  (5, 8, 98), (5, 8, 1.5), (10, 5, -0.6), (24, -65, -2)]
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, params):
-        start, end, step = params
-        with tf.Graph().as_default() as graph:
-            limit = tf.placeholder(tf.float32)
-            res = tf.range(start=start, limit= limit, delta=step)
-            run_compare_tf1(graph,
-                            {limit: end},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
-        with tf.Graph().as_default() as graph:
-            delta = tf.placeholder(tf.float32)
-            res = tf.range(start=start, limit= end, delta=delta)
-            run_compare_tf1(graph,
-                            {delta: step},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
-        with tf.Graph().as_default() as graph:
-            begin = tf.placeholder(tf.float32)
-            res = tf.range(start=begin, limit= end, delta=step)
-            run_compare_tf1(graph,
-                            {begin: start},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
 
 class TestTile:
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -1049,26 +793,6 @@ class TestTile:
         x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
         v = cb.tile(x=x, reps = (2,))
         assert is_close(np.tile(x, reps = (2,)), v.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank_and_reps",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1, (2,)), (2, (1,2)), (2, (2,2)), (3, (3,2,1)), (3, (2,1,3)), (3, (2,1,1)),
-                                  (4, (1,3,2,1)), (4, (2,1,1,2)), (5, (2,1,1,3,2)), (5, (1,1,2,3,2))]
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, rank_and_reps):
-        rank, reps = rank_and_reps
-        x_shape = np.random.randint(low=2, high=5, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            res = tf.tile(x, multiples = reps)
-            run_compare_tf1(graph,
-                            {x: np.random.rand(*x_shape)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
 
 
 class TestTopK:
@@ -1148,23 +872,6 @@ class TestTopK:
                             use_cpu_only=use_cpu_only,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank, k',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)],
-                                 [1, 2, 3],
-                             ))
-    def test_tf1(self, use_cpu_only, backend, rank, k):
-        # TensorFlow only supports last dimension (axis = -1).
-        shape = np.random.randint(low=3, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.math.top_k(x, k=k, sorted=True)
-            ref = (ref[1], ref[0])
-            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 class TestFlatten:
 
@@ -1228,26 +935,6 @@ class TestFlatten:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                             ))
-    def test_tf1(self, use_cpu_only, backend):
-        shapes = [[10, 10],
-                  [3, 4, 5, 6],
-                  [4, 4, 5, 6]]
-
-        for _shape in shapes:
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=_shape)
-                # NOTE: Currently, this gets map to reshape
-                res = tf.keras.backend.flatten(x)
-                run_compare_tf1(graph, {x: np.random.rand(*_shape)},
-                                res, use_cpu_only=use_cpu_only,
-                                frontend_only=False, backend=backend)
-
 
 class TestShape:
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -1309,22 +996,6 @@ class TestShape:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)],
-                             ))
-    def test_tf1(self, use_cpu_only, backend, rank):
-        shape = np.random.randint(low=3, high=6, size=rank)
-        shape_holder = [None] * rank
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape_holder)
-            values = tf.shape(x)
-            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                            values, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestConcat:
@@ -1408,32 +1079,6 @@ class TestConcat:
         with pytest.raises(ValueError):
             v = cb.concat(values=values, axis=2)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, op_version",
-                             itertools.product(
-                                 [True, False],
-                                 ['nnv1_proto'],
-                                 ['v1','v2']
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, op_version):
-        input_shape1 = [3, 2, 1]
-        input_shape2 = [3, 1, 1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape1)
-            y = tf.placeholder(tf.float32, shape=input_shape2)
-            if op_version == 'v1':
-                # Seems like now the tf functions are using concatV2, so create as raw_ops here
-                res = tf.raw_ops.Concat(concat_dim=-2,values=[x,y],name='concat')
-            elif op_version == 'v2':
-                res = tf.concat((x, y), axis=-2)
-            inputs = {x: np.random.rand(*input_shape1),
-                      y: np.random.rand(*input_shape2)
-                    }
-            run_compare_tf1(graph, inputs,
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
 
 class TestSplit:
 
@@ -1453,20 +1098,18 @@ class TestSplit:
         input_values = {"x": t}
 
         def build(x):
-            return cb.split(x=x, num_splits=3, axis=0) + \
+            return cb.split(x=x, num_splits=2, axis=1) + \
                     cb.split(x=x, split_sizes=[1,2], axis=0)
 
         expected_output_types = [
-                (1, 2, builtins.fp32),
-                (1, 2, builtins.fp32),
-                (1, 2, builtins.fp32),
+                (3, 1, builtins.fp32),
+                (3, 1, builtins.fp32),
                 (1, 2, builtins.fp32),
                 (2, 2, builtins.fp32),
                 ]
         expected_outputs = [
-                np.array([[1, 2]], dtype=np.float32),
-                np.array([[3, 4]], dtype=np.float32),
-                np.array([[5, 6]], dtype=np.float32),
+                np.array([[1], [3], [5]], dtype=np.float32),
+                np.array([[2], [4], [6]], dtype=np.float32),
                 np.array([[1, 2]], dtype=np.float32),
                 np.array([[3, 4],
                           [5, 6]], dtype=np.float32),
@@ -1487,52 +1130,6 @@ class TestSplit:
         for v, e in zip(vs, es):
             assert is_close(e, v.val)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend):
-        input_shape1 = [3, 2, 1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape1)
-            res = tf.split(x, 3, axis=0)
-            # TODO (rdar://60358242) If tf.split output is returned, there's no
-            # get_tuple nodes. Some graph pass is needed. Example:
-            #
-            #    x = tf.placeholder(tf.float32, shape=input_shape1)
-            #    res = tf.split(x, 3, axis=0)
-            #
-            # res are ['split:0', 'split:1', 'split']
-            #
-            # but node.outputs == ['gto_1', 'gto_2', 'gto_3']
-            res = (res[2], res[0], res[1])
-            inputs = {x: np.random.rand(*input_shape1),
-                    }
-            run_compare_tf1(graph, inputs,
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                             )
-                             )
-    def test_tf_splitv(self, use_cpu_only, backend):
-        input_shape1 = [3, 2, 1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape1)
-            res = tf.split(x, [1, 2], axis=0)
-            res = (res[0], res[1])
-            inputs = {x: np.random.rand(*input_shape1),
-                    }
-            run_compare_tf1(graph, inputs,
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
 
 class TestStack:
 
@@ -1579,27 +1176,6 @@ class TestStack:
         v = cb.stack(values=values, axis=2)
         assert is_close(np.stack(values, 2), v.val)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend):
-        input_shape1 = [3, 1, 1]
-        input_shape2 = [3, 1, 1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape1)
-            y = tf.placeholder(tf.float32, shape=input_shape2)
-            res = [tf.stack((x, y), axis=0), tf.stack((x, y), axis=-1)]
-            inputs = {x: np.random.rand(*input_shape1),
-                      y: np.random.rand(*input_shape2)
-                    }
-            run_compare_tf1(graph, inputs,
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
 
 class TestArgSort:
 
@@ -1637,21 +1213,3 @@ class TestArgSort:
         x_val = random_gen(shape=(1, 3, 2, 2), rand_min=-100, rand_max=100)
         res = cb.argsort(x=x_val, axis=-3)
         assert is_close(np.argsort(x_val, axis=-3), res.val)
-
-    @pytest.mark.skipif(True, reason='rdar://60498397 (Re-enable NNv2->NNv1 TF tests for ArgSort)')
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank, axis, direction',
-                             itertools.product(
-                                 [True],
-                                 backends,
-                                 [rank for rank in range(1, 6)],
-                                 [-1, 0],
-                                 ['ascending', 'descending'],
-                             ))
-    def test_tf1(self, use_cpu_only, backend, rank, axis, direction):
-        shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.argsort(x, axis=axis, direction=direction.upper())
-            run_compare_tf1(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                            ref, use_cpu_only=use_cpu_only, backend=backend)

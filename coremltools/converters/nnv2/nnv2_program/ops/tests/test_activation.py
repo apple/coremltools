@@ -1,8 +1,11 @@
-import pytest
 import scipy
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2 import testing_reqs
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestClampedReLU:
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -100,21 +103,6 @@ class TestELU:
 
         assert is_close(b, v.val)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf1(self, use_cpu_only, backend, rank, **kwargs):
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.elu(x)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
 
 class TestGeLU:
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -202,21 +190,6 @@ class TestLeakyReLU:
         b = np.copy(x_val)
         b[b < 0] *= 2.0
         assert is_close(b, v.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf1(self, use_cpu_only, backend, rank, **kwargs):
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.leaky_relu(x, 0.2)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
 
 
 class TestLinearActivation:
@@ -394,56 +367,6 @@ class TestReLU:
         v = cb.relu(x=x_val)
         assert is_close(np.maximum(x_val, 0), v.val)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf1(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.relu(x)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF2, reason=MSG_TF2_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf2(self, use_cpu_only, backend, rank):
-        shape = np.random.randint(low=1, high=6, size=rank)
-
-        class model(tf.Module):
-            @tf.function(input_signature=[
-                tf.TensorSpec(shape=shape, dtype=tf.float32),
-            ])
-            def __call__(self, x):
-                return tf.nn.relu(x)
-
-        run_compare_tf2(
-            model, input_values=[random_gen(shape, rand_min=-10, rand_max=10)],
-            use_cpu_only=use_cpu_only, backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF2, reason=MSG_TF2_NOT_FOUND)
-    @pytest.mark.parametrize('use_cpu_only, backend, rank',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf_keras(self, use_cpu_only, backend, rank):
-        shape = np.random.randint(low=1, high=6, size=rank)
-        model = tf.keras.Sequential([
-            tf.keras.layers.ReLU(input_shape=shape[1:])
-        ])
-        run_compare_tf_keras(
-            model, input_values=[random_gen(shape, rand_min=-10, rand_max=10)],
-            use_cpu_only=use_cpu_only, backend=backend)
-
 
 class TestReLU6:
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -472,21 +395,6 @@ class TestReLU6:
         x_val = np.array([[-1, 7, -3], [4, -5, 8]], dtype=np.float32)
         v = cb.relu6(x=x_val)
         assert is_close(np.minimum(np.maximum(x_val, 0), 6), v.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf1(self, use_cpu_only, backend, rank, **kwargs):
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.relu6(x)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
 
 
 class TestScaledTanh:
@@ -571,21 +479,6 @@ class TestSigmoid:
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         v = cb.sigmoid(x=x_val)
         assert is_close(1/(1 + np.exp(-x_val)), v.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf1(self, use_cpu_only, backend, rank, **kwargs):
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.math.sigmoid(x)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
 
 
 class TestSigmoidHard:
@@ -672,21 +565,6 @@ class TestSoftplus:
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         v = cb.softplus(x=x_val)
         assert is_close(np.log(1 + np.exp(-np.abs(x_val))) + np.maximum(x_val, 0), v.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf1(self, use_cpu_only, backend, rank, **kwargs):
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.math.softplus(x)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
 
 
 # TODO (rdar://59954690): NNv1 Segfaults when converting from NNv2 ParametricSoftplus layer
@@ -833,22 +711,6 @@ class TestSoftmax:
         v = cb.softmax(logit=x_val, axis=0)
         assert is_close(scipy.special.softmax(x_val, axis=0), v.val)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank_and_axes",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(rank, tuple(range(-1, rank))) for rank in range(1, 6)]))
-    def test_tf1(self, use_cpu_only, backend, rank_and_axes, **kwargs):
-        rank, axes = rank_and_axes
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-        for axis in axes:
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                res = tf.nn.softmax(x, axis=axis)
-                run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                                res, use_cpu_only=use_cpu_only,
-                                frontend_only=False, backend=backend)
 
 class TestSoftsign:
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -878,21 +740,6 @@ class TestSoftsign:
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         v = cb.softsign(x=x_val)
         assert is_close(x_val / (1 + np.abs(x_val)), v.val)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [rank for rank in range(1, 6)]))
-    def test_tf1(self, use_cpu_only, backend, rank, **kwargs):
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.math.softsign(x)
-            run_compare_tf1(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
 
 
 class TestThresholdedReLU:

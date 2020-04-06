@@ -7,7 +7,7 @@ def is_symbolic(val):
     return issubclass(type(val), sm.Basic)  # pylint: disable=consider-using-ternary
 
 def is_variadic(val):
-    return issubclass(type(val), sm.Basic) and val.name[0] == '*'  # pylint: disable=consider-using-ternary
+    return issubclass(type(val), sm.Symbol) and val.name[0] == '*'  # pylint: disable=consider-using-ternary
 
 def num_symbolic(val):
     """

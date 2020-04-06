@@ -1,6 +1,10 @@
-from . import _test_reqs
-from ._test_reqs import *
-backends = _test_reqs.backends
+from coremltools.converters.nnv2 import testing_reqs
+from coremltools.converters.nnv2.testing_reqs import *
+
+from .testing_utils import run_compare_builder
+
+backends = testing_reqs.backends
+
 
 class TestScatter:
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -307,31 +311,6 @@ class TestGather:
         assert is_close(np.array([[2, 1],[5, 4]], dtype=np.float32), v.val)
 
 
-    # TODO: <rdar://problem/59738824> [NNv2] Gather layer with 0-d indices leads to input shape mismatch
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rankX_rankIndices_axis",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,2,-1), (2,1,0), (3,2,-2), (2,3,1), (2,2,1), (1,1,0),
-                                  (3,3,-2), (3,3,2), (3,3,0), (1,3,-1), (3,1,2), (3,1,-1)]
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, rankX_rankIndices_axis):
-        x_rank, indices_rank, axis = rankX_rankIndices_axis
-        x_shape = np.random.randint(low=2, high=5, size=x_rank)
-        indices_shape = np.random.randint(low=2, high=5, size=indices_rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            indices = tf.placeholder(tf.int32, shape=indices_shape)
-            res = tf.gather(x, indices, axis=axis)
-            run_compare_tf1(graph,
-                            {x: np.random.rand(*x_shape),
-                            indices:  np.random.randint(0, x_shape[axis], size=indices_shape,dtype=np.int32)},
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
-
 class TestGatherAlongAxis:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
@@ -446,34 +425,3 @@ class TestGatherNd:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
-
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rankX_rankIndices",
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,2), (2,2), (3,2), (2,3), (1,4), (5,2),
-                                  (2,5), (4,3), (3,4), (2,4), (4,2), (1,5)]
-                             )
-                             )
-    def test_tf1(self, use_cpu_only, backend, rankX_rankIndices):
-        x_rank, indices_rank = rankX_rankIndices
-        x_shape = np.random.randint(low=2, high=8, size=x_rank)
-        indices_shape = np.random.randint(low=2, high=8, size=indices_rank)
-        indices_shape[-1] = np.random.randint(low=1, high=x_rank + 1)
-
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            indices = tf.placeholder(tf.int32, shape=indices_shape)
-            res = tf.gather_nd(x, indices)
-
-            a = np.random.rand(*x_shape)
-            indices_list = []
-            for i in range(indices_shape[-1]):
-                indices_list.append(np.random.randint(0, x_shape[i], size=indices_shape[:-1]))
-
-            input_values = {x: a, indices: np.stack(indices_list, axis=-1).astype(np.float)}
-
-            run_compare_tf1(graph, input_values,
-                            res, use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
