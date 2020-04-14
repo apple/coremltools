@@ -406,6 +406,78 @@ class TestConv:
                        frontend_only=False, backend=backend)
 
 
+class TestConv3d:
+    @pytest.mark.parametrize(
+        ','.join([
+            'use_cpu_only',
+            'backend',
+            'data_format',
+            'input_size',
+            'kernel_size',
+            'strides',
+            'dilations',
+            'padding_type',
+            'batch_size',
+        ]),
+        itertools.product(
+            [True, False],  # use_cpu_only
+            backends,
+            ['NDHWC'],  # NCDHW not supported by TF.
+            [(7, 11, 13), (32, 16, 8)],  # input_size
+            [(1, 1, 1), (3, 3, 3), (1, 2, 3)],  # kernel_size
+            [(1, 1, 1), (2, 2, 2), (3, 2, 1)],  # strides
+            [(1, 1, 1)],  # , (2, 2, 2), (2, 3, 1)],  # dilations: dilations greater than 1 not supported on CPU
+            ['SAME', 'VALID'],  # padding_type
+            [1, 3],  # batch_size
+        ))
+    def test_tf(
+        self,
+        use_cpu_only,
+        backend,
+        data_format,
+        input_size,
+        kernel_size,
+        strides,
+        dilations,
+        padding_type,
+        batch_size,
+    ):
+        C_in = np.random.randint(low=1, high=5)
+        C_out = np.random.randint(low=1, high=(C_in + 1))
+        input_shape = [batch_size] + list(input_size) + [C_in]
+        weights_shape = list(kernel_size) + [C_in, C_out]
+        # TF1 and TF2 tf.nn.conv3d require dilations and strides to have length 5 or greater, with values of 1 for
+        # indices 0 and 4 (batch and channel in NDHWC format)
+        tf_strides = [1] + list(strides) + [1]
+        tf_dilations = [1] + list(dilations) + [1]
+
+        @make_tf_graph({'x': input_shape})
+        def build_model_static_weights(x):
+            W = tf.constant(np.random.rand(*weights_shape), tf.float32)
+            return tf.nn.conv3d(
+                x,
+                W,
+                strides=tf_strides,
+                padding=padding_type,
+                data_format=data_format,
+                dilations=tf_dilations,
+            )
+
+        model, inputs, outputs = build_model_static_weights
+        input_values = [random_gen(input_shape, -10., 10.)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+            frontend_only=False,
+            atol=1e-03,  # default 1e-04
+            rtol=2e-03,  # default 1e-05
+        )
+
+
 class TestDepthwiseConv:
     @pytest.mark.parametrize(
         ','.join([
@@ -539,8 +611,9 @@ class TestElementWiseBinary:
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 4)],
-                                 ['add', 'floor_div', 'maximum', 'minimum',
-                                  'mod', 'mul', 'pow', 'real_div', 'sub',
+                                 ['add', 'floor_div', 'floor_mod',
+                                  'maximum', 'minimum', 'mod', 'mul',
+                                  'pow', 'real_div', 'sub',
                                   'squared_difference']
                              ))
     def test_binary(self, use_cpu_only, backend, rank, mode):
@@ -562,6 +635,10 @@ class TestElementWiseBinary:
             elif mode == 'floor_div':
                 res = tf.floor_div(x, y)
                 x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(np.float32)
+                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
+            elif mode == 'floor_mod':
+                res = tf.floormod(x, y)
+                x_val = np.random.randint(low=0, high=100, size=x_shape).astype(np.float32)
                 y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
             elif mode == 'maximum':
                 res = tf.maximum(x, y)
@@ -752,10 +829,11 @@ class TestElementWiseUnary:
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)],
-                                 ['abs', 'acos', 'asin', 'atan', 'atanh',
+                                 ['abs', 'acos', 'asin', 'atan', 'atanh', 'cast',
                                   'ceil', 'clip', 'cos', 'cosh', 'erf', 'exp',
-                                  'floor', 'log', 'negative', 'round', 'rsqrt', 'sign',
-                                  'sin', 'sinh', 'sqrt', 'square', 'tan', 'tanh']
+                                  'floor', 'inverse', 'log', 'negative', 'round',
+                                  'rsqrt', 'sign', 'sin', 'sinh', 'sqrt', 'square',
+                                  'tan', 'tanh']
                              ))
     def test_unary(self, use_cpu_only, backend, rank, mode):
         atol, rtol = 1e-4, 1e-5
@@ -780,6 +858,15 @@ class TestElementWiseUnary:
                     return
                 res = tf.atanh(x)
                 val = random_gen(input_shape, rand_min=-0.9, rand_max=0.9)
+            elif mode == 'cast':
+                if backend == 'nnv2_proto':
+                    # TODO <rdar://problem/61400566> [NNV2] Add cast operation in NNV2 backend and enable tests
+                    return
+                eps_from_int = 0.0
+                if not use_cpu_only:
+                    eps_from_int = 0.1
+                res = tf.cast(x, dtype=tf.int32)
+                val = random_gen(input_shape, rand_min=-10, rand_max=10, eps_from_int=eps_from_int)
             elif mode == 'ceil':
                 res = tf.ceil(x)
                 eps_from_int = 0.0
@@ -816,6 +903,9 @@ class TestElementWiseUnary:
                 if not use_cpu_only:
                     eps_from_int = 0.1
                 val = random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int)
+            elif mode == 'inverse':
+                res = tf.reciprocal(x)
+                val = random_gen(input_shape, rand_min=0.1, rand_max=10)
             elif mode == 'log':
                 res = tf.log(x)
                 val = random_gen(input_shape, rand_min=0.2, rand_max=1000)
@@ -1286,7 +1376,7 @@ class TestReduction:
                                  backends,
                                  [(1, (-1,)), (2, (0,)), (2, (-1, 0)), (3, (1, -3)), (3, (-2,)),
                                   (4, (0, 1, 2)), (4, (-2, -1, 0)), (4, (1, -2)), (5, (-3, -1)),
-                                  (5, (0, -1, 1, -2)), (3, None), (5, None)],
+                                  (5, (0, -1, 1, -2)), (3, None), (5, None), (3, 1), (5, -1)],
                                  [True, False],
                                  [tf.reduce_all, tf.math.reduce_euclidean_norm,
                                   tf.reduce_max, tf.reduce_mean, tf.reduce_min,
@@ -1298,22 +1388,29 @@ class TestReduction:
         rank, axes = rank_and_axes
         shape = np.random.randint(low=1, high=6, size=rank)
 
+        def parse_axes(axes):
+            if axes is None:
+                axes = 0
+            elif isinstance(axes, (tuple, list)):
+                axes = axes[0]
+            return axes
+
         def test_tf_argmax():
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=shape)
-                ref = tf.math.argmax(x, axis=axes[0] if axes else 0)
+                ref = tf.math.argmax(x, axis=parse_axes(axes))
                 run_compare_tf(graph, {x: random_gen(shape=shape, rand_min=-5., rand_max=5.)},
                                ref, use_cpu_only=use_cpu_only, backend=backend)
 
         def test_tf_argmin():
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=shape)
-                ref = tf.math.argmin(x, axis=axes[0] if axes else 0)
+                ref = tf.math.argmin(x, axis=parse_axes(axes))
                 run_compare_tf(graph, {x: random_gen(shape=shape, rand_min=-5., rand_max=5.)},
                                ref, use_cpu_only=use_cpu_only, backend=backend)
 
         def test_tf_reduction():
-            if axes and len(axes) == rank and not keep_dims:
+            if isinstance(axes, list) and axes and len(axes) == rank and not keep_dims:
                 return  # TODO <rdar://problem/59152311> NNV2: Add rank 0 and dim size 0 related tests for every op
 
             with tf.Graph().as_default() as graph:
@@ -1337,26 +1434,33 @@ class TestReduction:
 
 class TestScatterGather:
     # TODO: <rdar://problem/59738824> [NNv2] Gather layer with 0-d indices leads to input shape mismatch
-    @pytest.mark.parametrize("use_cpu_only, backend, rankX_rankIndices_axis",
+    @pytest.mark.parametrize("use_cpu_only, backend, rankX_rankIndices_axis, mode",
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [(1, 2, -1), (2, 1, 0), (3, 2, -2), (2, 3, 1), (2, 2, 1), (1, 1, 0),
-                                  (3, 3, -2), (3, 3, 2), (3, 3, 0), (1, 3, -1), (3, 1, 2), (3, 1, -1)]
+                                  (3, 3, -2), (3, 3, 2), (3, 3, 0), (1, 3, -1), (3, 1, 2), (3, 1, -1)],
+                                 ["Gather","GatherV2","gather"]
                              ))
-    def test_gather(self, use_cpu_only, backend, rankX_rankIndices_axis):
+    def test_gather_function(self, use_cpu_only, backend, rankX_rankIndices_axis, mode):
         x_rank, indices_rank, axis = rankX_rankIndices_axis
         x_shape = np.random.randint(low=2, high=5, size=x_rank)
         indices_shape = np.random.randint(low=2, high=5, size=indices_rank)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=x_shape)
             indices = tf.placeholder(tf.int32, shape=indices_shape)
-            res = tf.gather(x, indices, axis=axis)
+            if mode == "Gather":
+                res = tf.raw_ops.Gather(params=x, indices=indices)
+                axis = 0
+            elif mode == "GatherV2":
+                res = tf.raw_ops.GatherV2(params=x, indices=indices, axis=axis)
+            elif mode == "gather":
+                res = tf.gather(x, indices, axis=axis)
             run_compare_tf(graph,
                            {x: np.random.rand(*x_shape),
                             indices: np.random.randint(0, x_shape[axis], size=indices_shape, dtype=np.int32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend, rankX_rankIndices",
                              itertools.product(
@@ -1884,32 +1988,39 @@ class TestConcat:
 
 
 class TestSplit:
-    @pytest.mark.parametrize("use_cpu_only, backend",
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
                                  [True, False],
                                  backends,
+                                 [1,2,3,4]
                              )
                              )
-    def test_split(self, use_cpu_only, backend):
-        input_shape1 = [3, 2, 1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape1)
-            res = tf.split(x, 3, axis=0)
-            # TODO (rdar://60358242) If tf.split output is returned, there's no
-            # get_tuple nodes. Some graph pass is needed. Example:
-            #
-            #    x = tf.placeholder(tf.float32, shape=input_shape1)
-            #    res = tf.split(x, 3, axis=0)
-            #
-            # res are ['split:0', 'split:1', 'split']
-            #
-            # but node.outputs == ['gto_1', 'gto_2', 'gto_3']
-            res = (res[2], res[0], res[1])
-            inputs = {x: np.random.rand(*input_shape1),
-                      }
-            run_compare_tf(graph, inputs,
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+    def test_split(self, use_cpu_only, backend, rank):
+        input_shape1 = np.random.randint(low=1, high=10, size=rank)
+        for axis in range(-rank, rank):
+            for split_num in range(1, input_shape1[axis]+1):
+                if input_shape1[axis] % split_num != 0:
+                    continue
+                with tf.Graph().as_default() as graph:
+                    x = tf.placeholder(tf.float32, shape=input_shape1)
+                    res = tf.split(x, split_num, axis=axis)
+                    # TODO (rdar://60358242) If tf.split output is returned, there's no
+                    # get_tuple nodes. Some graph pass is needed. Example:
+                    #
+                    #    x = tf.placeholder(tf.float32, shape=input_shape1)
+                    #    res = tf.split(x, 3, axis=0)
+                    #
+                    # res are ['split:0', 'split:1', 'split']
+                    #
+                    # but node.outputs == ['gto_1', 'gto_2', 'gto_3']
+                    import random
+                    random.shuffle(res)
+                    res = tuple(res)
+                    inputs = {x: np.random.rand(*input_shape1),
+                              }
+                    run_compare_tf(graph, inputs,
+                                   res, use_cpu_only=use_cpu_only,
+                                   frontend_only=False, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
@@ -1951,7 +2062,6 @@ class TestStack:
 
 
 class TestArgSort:
-    @pytest.mark.xfail(reason='rdar://60498397 (Re-enable NNv2->NNv1 TF tests for ArgSort)', run=False)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, axis, direction',
                              itertools.product(
                                  [True, False],

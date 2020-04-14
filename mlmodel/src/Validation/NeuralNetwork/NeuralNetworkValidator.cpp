@@ -541,7 +541,7 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
                     }
 
     // Check the input types
-    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputTypes(interface.input(), ResultReason::MODEL_INVALID_INPUT_TYPE, "inputs"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputTypes(interface.input(), ResultReason::MODEL_INPUT_TYPE_INVALID, "inputs"));
 
     std::map<std::string, int> ioBlobNameToRank; // to collect ranks of input/output blobs from the shapes present in the description
     
@@ -745,7 +745,7 @@ namespace CoreML {
         const auto& interface = format.description();
         
         // This isn't true for classifiers and regressors -- need to template specialize it to make these work
-        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputTypes(interface.output(), ResultReason::MODEL_INVALID_OUTPUT_TYPE, "outputs"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputTypes(interface.output(), ResultReason::MODEL_OUTPUT_TYPE_INVALID, "outputs"));
 
         std::set<std::string> outputBlobNames;
         

@@ -75,44 +75,55 @@ class InternalTorchIRNode:
 
         Arguments:
             node: The torch._C.Node to convert, or None.
-            val: If @node is not specified, the value of the node.
+            attr: If @node is not specified, the dict of named attributes.
             inputs: If @node is not specified, the list of input symbols.
             outputs: If @node is not specified, the list of output symbols.
             kind: If @node is not specified, the kind (op) of the node.
-            blocks: If @node is not specified, the list of InternalTorchIRBlock .
+            blocks: If @node is not specified, the list of InternalTorchIRBlock.
     """
 
     def __init__(
-        self, node=None, val=None, inputs=None, outputs=None, kind=None, blocks=None,
+        self,
+        node=None,
+        attr=None,
+        inputs=None,
+        outputs=None,
+        kind=None,
+        blocks=None,
     ):
         if node:
-            try:
-                const_type = node.kindOf("value")
-                self.val = getattr(node, const_type)("value")
-            except:
-                self.val = None
             self.inputs = [_input.debugName() for _input in node.inputs()]
             self.outputs = [output.debugName() for output in node.outputs()]
             self.name = self.outputs[0]
             self.kind = node.kind().split("::")[1].lower()
+            self.blocks = [InternalTorchIRBlock(raw_block=b) for b in node.blocks()]
+            self.attr = {
+                name: getattr(node, node.kindOf(name))(name)
+                for name in node.attributeNames()
+            }
+            if "value" not in self.attr:
+                self.attr["value"] = None
             # If the output is boolean, explicitly cast it so type inference
             # will work correctly.
             if len(self.outputs) == 1 and next(node.outputs()).type().str() == "bool":
-                self.val = bool(self.val)
-            self.blocks = [InternalTorchIRBlock(raw_block=b) for b in node.blocks()]
+                self.attr["value"] = bool(self.attr["value"])
         else:
-            self.val = val
             self.inputs = inputs
             self.outputs = outputs
             self.name = self.outputs[0]
             self.kind = kind
             self.blocks = blocks if blocks is not None else []
+            self.attr = attr if attr is not None else {"value": None}
 
     def __str__(self, indent=2):
         node_str = " " * indent + "{} = {}".format(
             ", ".join(_ssa_name_list(self.outputs)), self.kind
         )
-        node_str += "[value={}]".format(self.val) if self.val is not None else ""
+        node_str += "[{}]".format(
+            ", ".join(
+                ["{}={}".format(n, v) for n, v in self.attr.items() if v is not None]
+            )
+        )
         node_str += "({})".format(", ".join(_ssa_name_list(self.inputs)))
         for b in self.blocks:
             node_str += "\n" + b.__str__(indent=indent + 2)

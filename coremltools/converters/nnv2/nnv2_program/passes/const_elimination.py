@@ -41,7 +41,7 @@ def const_elimination_block(block):
                                    # same var name, but different python
                                    # instance does not violate SSA property.
                                    name=o.name)
-                op.enclosing_block.replace_var_after_op(anchor_op=op,
+                op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
                         old_var=o, new_var=res)
             else:
                 all_outputs_are_const = False

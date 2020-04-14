@@ -235,23 +235,16 @@ class TestTorchNumerical:
     @pytest.mark.parametrize(
         "input_shape, kernel_size, stride, pad, include_pad",
         itertools.product(
-            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0], [True, False],
+            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0, 1], [True, False],
         ),
     )
     def test_avg_pool1d(self, input_shape, kernel_size, stride, pad, include_pad):
-        model = nn.AvgPool1d(kernel_size, stride, pad, False, include_pad)
-        self.run_numerical_test(input_shape, model)
-
-    # TODO: once the radar is resolved, these test cases can be merged with
-    # the passing ones.
-    @pytest.mark.xfail(reason="rdar://60635129")
-    @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, include_pad",
-        itertools.product(
-            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [2, 3], [1, 2], [1], [True, False],
-        ),
-    )
-    def test_avg_pool1d_xfail(self, input_shape, kernel_size, stride, pad, include_pad):
+        if pad > kernel_size / 2:
+            # Because this test is xfail, we have to fail rather than
+            # just return here, otherwise these test cases unexpectedly pass.
+            # This can be changed to `return` once the above radar
+            # is fixed and the test is no longer xfail.
+            raise ValueError('pad must be less than half the kernel size')
         model = nn.AvgPool1d(kernel_size, stride, pad, False, include_pad)
         self.run_numerical_test(input_shape, model)
 
@@ -261,25 +254,45 @@ class TestTorchNumerical:
             [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
             [1, 2, 3],
             [1, 2],
-            [0],
+            [0, 1],
             [True, False],
         ),
     )
     def test_avg_pool2d(self, input_shape, kernel_size, stride, pad, include_pad):
+        if pad > kernel_size / 2:
+            return
         model = nn.AvgPool2d(kernel_size, stride, pad, False, include_pad)
         self.run_numerical_test(input_shape, model)
 
-    @pytest.mark.xfail(reason="rdar://60635129")
+    @pytest.mark.xfail(reason="Pytorch convert function for op max_pool1d not implemented, "
+                              "we will also likely run into rdar://problem/61064173")
     @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, include_pad",
+        "input_shape, kernel_size, stride, pad",
         itertools.product(
-            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
-            [2, 3],
-            [1, 2],
-            [1],
-            [True, False],
+            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0, 1],
         ),
     )
-    def test_avg_pool2d(self, input_shape, kernel_size, stride, pad, include_pad):
-        model = nn.AvgPool2d(kernel_size, stride, pad, False, include_pad)
+    def test_max_pool1d(self, input_shape, kernel_size, stride, pad):
+        if pad > kernel_size / 2:
+            # Because this test is xfail, we have to fail rather than
+            # just return here, otherwise these test cases unexpectedly pass.
+            # This can be changed to `return` once the above radar
+            # is fixed and the test is no longer xfail.
+            raise ValueError('pad must be less than half the kernel size')
+        model = nn.MaxPool1d(kernel_size, stride, pad, ceil_mode=False)
+        self.run_numerical_test(input_shape, model)
+
+    @pytest.mark.parametrize(
+        "input_shape, kernel_size, stride, pad",
+        itertools.product(
+            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
+            [1, 2, 3],
+            [1, 2],
+            [0, 1],
+        ),
+    )
+    def test_max_pool2d(self, input_shape, kernel_size, stride, pad):
+        if pad > kernel_size / 2:
+            return
+        model = nn.MaxPool2d(kernel_size, stride, pad, ceil_mode=False)
         self.run_numerical_test(input_shape, model)

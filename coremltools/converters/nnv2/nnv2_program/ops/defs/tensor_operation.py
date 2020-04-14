@@ -567,7 +567,10 @@ class shape(Operation):
         return builtins.tensor(builtins.int32, tuple([input_rank]))
 
     def value_inference(self):
-        return np.array(self.x.shape)
+        if any_symbolic(self.x.shape):
+            return np.array(self.x.shape)
+        else:
+            return np.array(self.x.shape).astype(np.int32)
 
 
 @register_op(doc_str='TODO')
@@ -655,8 +658,7 @@ class concat(Operation):
             return None
         if num_elems > 5:
             return None
-        arr = np.array([Symbol(self.name + '%d' % d) \
-                for d in range(num_elems)])
+        arr = np.array([get_new_symbol() for _ in range(num_elems)])
         return arr.reshape(ret_shape)
 
 @register_op(doc_str='TODO')

@@ -157,7 +157,7 @@ int testNNValidatorBadOutput2() {
     innerProductParams->set_hasbias(false);
 
     Result res = validate<MLModelType_neuralNetwork>(m1);
-    ML_ASSERT_BAD_WITH_REASON(res, ResultReason::MODEL_INVALID_OUTPUT_TYPE);
+    ML_ASSERT_BAD_WITH_REASON(res, ResultReason::MODEL_OUTPUT_TYPE_INVALID);
 
     return 0;
 }

@@ -12,7 +12,7 @@ from coremltools.converters.nnv2.frontend.tensorflow2.test.testing_utils import 
 )
 from coremltools.models import MLModel
 
-tf = pytest.importorskip('tensorflow', minversion='2.0.0')
+tf = pytest.importorskip('tensorflow', minversion='2.1.0')
 
 # -----------------------------------------------------------------------------
 # Overwrite utilities to enable different conversion / compare method

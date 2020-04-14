@@ -19,6 +19,8 @@ from .testing_utils import ssa_fn, is_close, random_gen
 utils.converter = converter
 backends = converter.ConverterRegistry.backends.keys()
 
+np.random.seed(1984)
+
 if HAS_TF1 or HAS_TF2:
     import tensorflow as tf
 

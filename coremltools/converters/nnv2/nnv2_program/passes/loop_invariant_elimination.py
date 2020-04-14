@@ -50,7 +50,7 @@ def loop_invariant_elimination_block(block):
             # rename the loop output to existing block output names
             with block:
                 res = cb.identity(x=v_src, before_op=op, name=v_tgt.name)
-                op.enclosing_block.replace_var_after_op(anchor_op=op,
+                op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
                         old_var=v_tgt, new_var=res)
 
     # Phase 3: Perform loop invariant elimination without fear!
@@ -84,9 +84,9 @@ def loop_invariant_elimination_block(block):
 
         # replace occurences of loop_variants within the body and cond blocks.
         for i, v_in, body_vx_in, cond_vx_in in loop_invariants:
-            body_block.replace_var_after_op(anchor_op=None,
+            body_block.replace_uses_of_var_after_op(anchor_op=None,
                     old_var=body_vx_in, new_var=v_in)
-            cond_block.replace_var_after_op(anchor_op=None,
+            cond_block.replace_uses_of_var_after_op(anchor_op=None,
                     old_var=cond_vx_in, new_var=v_in)
 
         # remove invariants from while_loop loop_vars
@@ -96,7 +96,7 @@ def loop_invariant_elimination_block(block):
 
         # replace usage of while_loop outputs that we'll eliminate.
         for i, v_in, _, _ in loop_invariants:
-            op.enclosing_block.replace_var_after_op(anchor_op=op,
+            op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
                     old_var=op.outputs[i], new_var=v_in)
 
         # remove invariants from while_loop outputs

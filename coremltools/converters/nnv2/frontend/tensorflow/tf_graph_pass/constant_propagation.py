@@ -11,31 +11,6 @@ from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.builtins.type_mapping import numpy_val_to_builtin_val
 
 
-def convert_constant_nodes_to_const_ops(tfssa):
-    """
-    Convert nodes with known constant value to Const nodes
-    """
-    for f in tfssa.functions.values():
-        for v in f.graph.values():
-            if v.value is not None:
-                v.op = 'Const'
-                # delete all upstream edges now that this is constant
-                inv = v.inputs[:]
-                for i in inv:
-                    curnode = i
-                    nextnode = v.name
-                    disconnect_edge(f.graph, curnode, nextnode)
-
-                    # keep deleting upwards as long as it is a chain
-                    while (curnode is not None):
-                        prevnode = None
-                        if len(f.graph[curnode].outputs) == 0:
-                            if len(f.graph[curnode].inputs) == 1:
-                                prevnode = f.graph[curnode].inputs[0]
-                            delete_node(f.graph, curnode)
-                        curnode = prevnode
-
-
 def constant_propagation(tfssa):
     # we are going to rely on the tensorflow graph to perform constant
     # propagation. We construct a new graph comprising of only the
@@ -129,6 +104,14 @@ def constant_propagation(tfssa):
                                     v.value.val[idx] = val[0]
                             except:
                                 logging.error(values)
+                for k, v in f.graph.items():
+                    if v.op == 'get_tuple':
+                        inp = f.graph[v.inputs[0]]
+                        idx = v.attr['index']
+                        if inp.value is not None:
+                            v.value = inp.value.val[idx]
+                            v.datatype = inp.datatype.T[idx]
+
     except Exception as e:
         logging.exception("Constant Propagation pass failed: {}".format(e))
 

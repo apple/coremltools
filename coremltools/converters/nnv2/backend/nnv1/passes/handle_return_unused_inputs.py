@@ -18,7 +18,7 @@ def handle_return_unused_inputs_func(f):
             # copy twice since NNv1 layer cannot have input name == output name
             v_tmp = cb.identity(x=v, name=v.name+'_tmp')
             res = cb.identity(x=v_tmp, name=v.name)
-            res.op.enclosing_block.replace_var_after_op(anchor_op=res.op,
+            res.op.enclosing_block.replace_uses_of_var_after_op(anchor_op=res.op,
                     old_var=v, new_var=res)
 
 @register_pass(namespace='nnv1_backend')

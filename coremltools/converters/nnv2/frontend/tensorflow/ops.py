@@ -3,6 +3,7 @@ import six
 import numpy as np
 
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
+from coremltools.converters.nnv2.builtin_types import builtins
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
 
@@ -21,6 +22,12 @@ def _transpose_NDHWC_to_NCDHW(x):
 def _transpose_NCDHW_to_NDHWC(x, node_name):
     return cb.transpose(x=x, perm=[0, 2, 3, 4, 1], name=node_name)
 
+def _check_axes_type(x):
+    if x is None or x.val is None:
+        return None
+    if isinstance(x.val, np.int32):
+        return np.array([x.val])
+    return x.val
 
 @register_tf_op(tf_alias=['BiasAdd', 'AddV2'])
 def Add(context, node):
@@ -45,7 +52,7 @@ def Acos(context, node):
 @register_tf_op
 def All(context, node):
     x = context[node.inputs[0]]
-    axes = context[node.inputs[1]]
+    axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get('keep_dims', False)
     x = cb.reduce_prod(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
@@ -111,11 +118,12 @@ def AvgPool(context, node):
     if data_format == "NHWC":
         x = _transpose_NHWC_to_NCHW(x)
         x = cb.avg_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
-                        pad_type=pad_type)
+                        pad_type=pad_type, exclude_padding_from_average=True)
         x = _transpose_NCHW_to_NHWC(x, node.name)
     else:
         x = cb.avg_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
-                        pad_type=pad_type, name=node.name)
+                        pad_type=pad_type, exclude_padding_from_average=True,
+                        name=node.name)
     context.add(node.name, x)
 
 
@@ -133,11 +141,12 @@ def AvgPool3D(context, node):
     if data_format == 'NDHWC':
         x = _transpose_NDHWC_to_NCDHW(x)
         x = cb.avg_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
-                        pad_type=pad_type)
+                        pad_type=pad_type, exclude_padding_from_average=True)
         x = _transpose_NCDHW_to_NDHWC(x, node.name)
     else:
         x = cb.avg_pool(x=x, kernel_sizes=kernel_sizes, strides=strides,
-                        pad_type=pad_type, name=node.name)
+                        pad_type=pad_type, exclude_padding_from_average=True,
+                        name=node.name)
 
     context.add(node.name, x)
 
@@ -186,33 +195,40 @@ def Const(context, node):
     x = cb.const(val=node.value.val, mode=mode, name=node.name)
     context.add(node.name, x)
 
-def _conv2d_strides_or_dilations(name, value, data_format,
-        default_value=1):
+def _conv2d3d_strides_or_dilations(name, value, data_format, default_value=1):
+    """Compute strides or dilation values for 2D and 3D convolutions."""
     if value is None:
         value = default_value
     if not isinstance(value, (int, list)):
         raise ValueError('{} must be an int or list'.format(name))
 
+    # Parse number of spatial dimensions from `data_format`, assuming N (batch) and C
+    # (input channels) are present
+    n_dims = len(data_format) - 2
+
     if isinstance(value, int):
-        return [value] * 2
+        return [value] * n_dims
 
     if len(value) == 1:
-        return value * 2
-    if len(value) == 2:
+        return value * n_dims
+    if len(value) == n_dims:
         return value
-    if len(value) != 4:
-        raise ValueError('{} must have length 1, 2, or 4'.format(name))
+    if len(value) != n_dims + 2:
+        raise ValueError('{} must have length 1, {}, or {}'.format(name, n_dims, n_dims + 2))
 
     if data_format == "NHWC":
         # Only support stride/dilation along N, C == 1
         if not (value[0] == value[3] == 1):
             raise ValueError('{} along N and C other than 1 not implemented'.format(name))
         return value[1:3]
-
-    # "NCHW"
-    if not (value[0] == value[1] == 1):
+    elif data_format == "NCHW" or data_format == "NCDHW":
+        if not (value[0] == value[1] == 1):
+            raise ValueError('{} along N and C other than 1 not implemented'.format(name))
+        return value[2:]
+    # "NDHWC"
+    if not (value[0] == value[4] == 1):
         raise ValueError('{} along N and C other than 1 not implemented'.format(name))
-    return value[2:]
+    return value[1:4]
 
 @register_tf_op
 def Cos(context, node):
@@ -347,7 +363,9 @@ def Minimum(context, node):
 def FloorMod(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
-    x = cb.mod(x=x, y=y, name=node.name)
+    floor = cb.floor_div(x=x, y=y, name=node.name+'_floor_div')
+    floor_mutiply = cb.mul(x=floor, y=y, name=node.name+'_multiply')
+    x = cb.sub(x=x, y=floor_mutiply, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -390,9 +408,9 @@ def DepthwiseConv2dNative(context, node):
     # NNv2. C_in / group = 1 in depthwise conv.
     W_o1hw = cb.transpose(x=W_hw1o, perm=[3, 2, 0, 1])
     data_format = node.attr.get('data_format', 'NHWC')
-    HW_dilations = _conv2d_strides_or_dilations(
+    HW_dilations = _conv2d3d_strides_or_dilations(
             'dilations', node.attr.get('dilations'), data_format)
-    HW_strides = _conv2d_strides_or_dilations(
+    HW_strides = _conv2d3d_strides_or_dilations(
             'strides', node.attr.get('strides'), data_format)
 
     pad_type = node.attr.get('padding')
@@ -417,9 +435,9 @@ def Conv2D(context, node):
     W_hwio = context[node.inputs[1]]
     W_oihw = cb.transpose(x=W_hwio, perm=[3, 2, 0, 1])
     data_format = node.attr.get('data_format', 'NHWC')
-    HW_dilations = _conv2d_strides_or_dilations(
+    HW_dilations = _conv2d3d_strides_or_dilations(
             'dilations', node.attr.get('dilations'), data_format)
-    HW_strides = _conv2d_strides_or_dilations(
+    HW_strides = _conv2d3d_strides_or_dilations(
             'strides', node.attr.get('strides'), data_format)
 
     pad_type = node.attr.get('padding')
@@ -438,6 +456,33 @@ def Conv2D(context, node):
         x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def Conv3D(context, node):
+    W_dhwio = context[node.inputs[1]]
+    W_oidhw = cb.transpose(x=W_dhwio, perm=[4, 3, 0, 1, 2])
+    data_format = node.attr.get("data_format", "NDHWC")
+    DHW_dilations = _conv2d3d_strides_or_dilations(
+            "dilations", node.attr.get("dilations"), data_format)
+    DHW_strides = _conv2d3d_strides_or_dilations(
+            "strides", node.attr.get("strides"), data_format)
+
+    pad_type = node.attr.get("padding")
+    if not isinstance(pad_type, six.string_types):
+        pad_type = "custom"
+        raise NotImplementedError("Custom padding not implemented for TF")
+    pad_type = pad_type.lower()
+    x = context[node.inputs[0]]
+    if data_format == "NDHWC":
+        # Convert input to NCDHW
+        x = _transpose_NDHWC_to_NCDHW(x)
+    # Only the last op should have the same name as node.name
+    conv_name = node.name + "x" if data_format == "NDHWC" else node.name
+    x = cb.conv(x=x, W=W_oidhw, pad_type=pad_type, strides=DHW_strides,
+            dilations=DHW_dilations, name=conv_name)
+    if data_format == "NDHWC":
+        # Convert input back to NDHWC (from NCDHW)
+        x = _transpose_NCDHW_to_NDHWC(x, node.name)
+    context.add(node.name, x)
 
 @register_tf_op
 def DepthToSpace(context, node):
@@ -456,7 +501,7 @@ def DepthToSpace(context, node):
 @register_tf_op
 def EuclideanNorm(context, node):
     x = context[node.inputs[0]]
-    axes = context[node.inputs[1]]
+    axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get('keep_dims', False)
     x = cb.reduce_l2_norm(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
@@ -471,7 +516,7 @@ def ExpandDims(context, node):
         axis = axis.val[0] if axis.shape == (1,) else axis.val
     else:
         raise ValueError("Expand Dims: Invalid value for parameter axis")
-    x = cb.expand_dims(x=x, axis=axis, name=node.name)
+    x = cb.expand_dims(x=x, axes=[axis], name=node.name)
     context.add(node.name, x)
 
 
@@ -497,7 +542,7 @@ def FusedBatchNorm(context, node):
         x = cb.batch_norm(x=x, mean=mean, variance=variance, gamma=scale,
                           beta=offset, epsilon=epsilon, name=node.name+':0')
     # Inference only batch norm does not have meaningful outputs for
-    # batch_mean, batch_variance etc.g
+    # batch_mean, batch_variance etc.
     context.add(node.name, [x, mean, variance])
 
 
@@ -640,7 +685,7 @@ def MatrixBandPart(context, node):
 @register_tf_op
 def Max(context, node):
     x = context[node.inputs[0]]
-    axes = context[node.inputs[1]]
+    axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get('keep_dims', False)
     x = cb.reduce_max(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
@@ -649,7 +694,7 @@ def Max(context, node):
 @register_tf_op
 def Min(context, node):
     x = context[node.inputs[0]]
-    axes = context[node.inputs[1]]
+    axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get('keep_dims', False)
     x = cb.reduce_min(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
@@ -658,14 +703,26 @@ def Min(context, node):
 @register_tf_op
 def Prod(context, node):
     x = context[node.inputs[0]]
-    axes = context[node.inputs[1]]
+    axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get('keep_dims', False)
     x = cb.reduce_prod(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
 def Cast(context, node):
-    Round(context, node)
+    type_map = {
+        builtins.float : "fp32",
+        builtins.double: "fp64",
+        builtins.int32 : "int32",
+        builtins.int64 : "int64"
+    }
+    if node.attr["DstT"] not in type_map.keys():
+        raise NotImplementedError("Cast: Provided destination type {} not "
+                                  "supported.".format(builtins.get_type_info(node.attr['DstT'])))
+    x = context[node.inputs[0]]
+    dtype = type_map[node.attr['DstT']]
+    x = cb.cast(x=x, dtype=dtype, name = node.name)
+    context.add(node.name, x)
 
 @register_tf_op
 def Round(context, node):
@@ -736,9 +793,9 @@ def StridedSlice(context, node):
     def _pad_mask(x, begin, end, stride, begin_mask, end_mask, squeeze_mask, ellipsis_mask):
         # This function pad the masks, stride, begin and end to the same rank as the input tensor.
         if begin.rank != 1:
-            raise ValueError("begin should be 1-D tensor, got {}-D tensor instead".format(self.begin.rank))
+            raise ValueError("begin should be 1-D tensor, got {}-D tensor instead".format(begin.rank))
         if end.rank != 1:
-            raise ValueError("end should be 1-D tensor, got {}-D tensor instead".format(self.end.rank))
+            raise ValueError("end should be 1-D tensor, got {}-D tensor instead".format(end.rank))
 
         # check if inputs can be determined
         begin_cache = begin
@@ -824,7 +881,7 @@ def StridedSlice(context, node):
 @register_tf_op
 def Sum(context, node):
     x = context[node.inputs[0]]
-    axes = context[node.inputs[1]]
+    axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get('keep_dims', False)
     x = cb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
@@ -848,7 +905,7 @@ def get_tuple(context, node):
 @register_tf_op
 def Mean(context, node):
     x = context[node.inputs[0]]
-    axes = context[node.inputs[1]]
+    axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get('keep_dims', False)
     x = cb.reduce_mean(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
@@ -927,6 +984,12 @@ def Pad(context, node):
 def Relu(context, node):
     x = context[node.inputs[0]]
     x = cb.relu(x=x, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def Reciprocal(context, node):
+    x = context[node.inputs[0]]
+    x = cb.inverse(x=x, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -1100,6 +1163,14 @@ def Cumsum(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def Gather(context, node):
+    x = context[node.inputs[0]]
+    indices = context[node.inputs[1]]
+    axis = 0
+    x = cb.gather(x=x, indices=indices, axis=axis, name=node.name)
+    context.add(node.name,x)
+
+@register_tf_op
 def GatherV2(context, node):
     x = context[node.inputs[0]]
     indices = context[node.inputs[1]]
@@ -1146,9 +1217,9 @@ def Conv2DBackpropInput(context, node):
     x = context[node.inputs[2]]
 
     data_format = node.attr.get('data_format', 'NHWC')
-    HW_dilations = _conv2d_strides_or_dilations(
+    HW_dilations = _conv2d3d_strides_or_dilations(
                         'dilations', node.attr.get('dilations'), data_format)
-    HW_strides = _conv2d_strides_or_dilations(
+    HW_strides = _conv2d3d_strides_or_dilations(
                         'strides', node.attr.get('strides'), data_format)
     pad_type = node.attr.get('padding')
 
@@ -1211,9 +1282,8 @@ def NonMaxSuppression(context, node):
         # TensorFlow's default value for score_threshold, Core ML does not
         # have float('-inf') support, converted to minimum float32 instead
         score_threshold = -3.4e38
-    boxes = cb.expand_dims(x=boxes, axis=0)
-    scores = cb.expand_dims(x=scores, axis=0)
-    scores = cb.expand_dims(x=scores, axis=-1)
+    boxes = cb.expand_dims(x=boxes, axes=[0])
+    scores = cb.expand_dims(x=scores, axes=[0, -1])
     _, _, x, _ = cb.non_maximum_suppression(
         boxes=boxes,
         scores=scores,
@@ -1255,6 +1325,10 @@ def ResizeNearestNeighbor(context, node):
     if not (isinstance(Hout, np.int32) and isinstance(Wout, np.int32)):
         raise ValueError(
             '\"ResizeNearestNeighbor\" op: the second input, which is the output size, must have elements of type int32')
+
+    if Hout < Hin and Wout < Win:
+        ResizeBilinear(context, node)
+        return
 
     if (Hout % Hin > 0 or Wout % Win > 0):
         raise ValueError('\"ResizeNearestNeighbor\" op: fractional upsampling factors not supported')
@@ -1520,7 +1594,7 @@ def Split(context, node):
             context.add(node.name, x)
         else:
             # Don't change tfssa. Just make downstream ops reference the pre-identity op.
-            context.add(node.name, x, is_new_var=False)
+            context.add(node.name, [x], is_new_var=False)
     else:
         x = cb.split(x=x, num_splits=num_splits, axis=axis, name=node.name)
         context.add(node.name, x)
@@ -1565,7 +1639,7 @@ def CropAndResize(context, node):
     else:
         box_indices = context[node.inputs[2]]
         boxes = context[node.inputs[1]]
-        box_indices = cb.expand_dims(x=box_indices, axis=1)
+        box_indices = cb.expand_dims(x=box_indices, axes=[1])
         # rdar://60540725 ([NNv2] [SSAv2] CropResize layer requires concat on float32 and int32 input)
         boxes = cb.concat(values=(box_indices, boxes), axis=1)
         # TODO: Dynamic rank: Use GetShape and select indices dynamically

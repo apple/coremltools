@@ -4,6 +4,10 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
+from coremltools.converters.nnv2.testing_utils import (
+    get_op_types_in_program, assert_same_output_shapes,
+    assert_same_output_names)
+import copy
 
 """
 Test manipulating variable and operations in the SsaBlock.
@@ -98,6 +102,87 @@ def test_remove_op2():
     assert block.inputs["x0"] == block.outputs[0]
 
 
+def test_op_removal_and_insertion():
+    """
+    Remove a transpose pair and materialize one transpose before another op
+    Given:
+        %x1 = transpose(%x)
+        %x2 = relu(%x1)
+        %out1 = avg_pool(%x2)
+        %x3 = transpose(%x2)
+        %out2 = log(%x3)
+
+    After removing both transposes:
+        %x2 = relu(%x)
+        %out1 = avg_pool(%x2)
+        %out2 = log(%x2)
+
+    After inserting a transpose:
+        %x2 = relu(%x)
+        %x4 = transpose(%x2)
+        %out1 = avg_pool(%x4)
+        %out2 = log(%x2)
+
+    """
+    @cb.program(input_specs=[cb.TensorSpec(shape=(1, 2, 6, 6))])
+    def prog(x):
+        x1 = cb.transpose(x=x, perm=[0,2,3,1])
+        x2 = cb.relu(x=x1)
+        out1 = cb.avg_pool(x=x2, kernel_sizes=[1, 1], strides=[1, 1], pad_type='valid')
+        x3 = cb.transpose(x=x2, perm=[0,3,1,2])
+        out2 = cb.log(x=x3)
+        return out1, out2
+
+    prev_prog = copy.deepcopy(prog)
+
+    print("before:\n{}".format(prog))
+    assert get_op_types_in_program(prog) == ['transpose', 'relu', 'avg_pool',
+                                             'transpose', 'log']
+    block = prog.functions['main']
+
+    def remove_transpose(block):
+        op = block.find_ops(op_type="transpose")[0]
+        block.replace_uses_of_var_after_op(
+            anchor_op=op.inputs["x"].op,
+            old_var=op.outputs[0],
+            new_var=op.inputs["x"],
+            no_check_var_types=True
+        )
+        block.remove_ops([op])
+
+    # remove 1st transpose
+    remove_transpose(block)
+    assert get_op_types_in_program(prog) == ['relu', 'avg_pool',
+                                             'transpose', 'log']
+
+    # remove 2nd transpose
+    remove_transpose(block)
+    assert get_op_types_in_program(prog) == ['relu', 'avg_pool', 'log']
+
+    print("after transpose ops removal:\n{}".format(prog))
+
+    # insert transpose before pool
+    pool_op = block.find_ops(op_type="avg_pool")[0]
+    with block:
+        y = cb.transpose(x=pool_op.inputs['x'], perm=[0,2,3,1], before_op=pool_op)
+
+    block.replace_uses_of_var_after_op(
+        anchor_op=y.op,
+        end_op=pool_op,
+        old_var=pool_op.inputs['x'], new_var=y,
+        no_check_var_types=True
+    )
+
+    print("after transpose insertion:\n{}".format(prog))
+    assert get_op_types_in_program(prog) == ['relu', 'transpose', 'avg_pool', 'log']
+
+    for op in block.operations:
+        op.type_value_inference(overwrite_output=True)
+
+    assert_same_output_names(prev_prog, prog)
+    assert_same_output_shapes(prev_prog, prog)
+
+
 def test_simple_substituion():
     """Replace log(x+y) with log(x*y)
     """
@@ -121,8 +206,8 @@ def test_simple_substituion():
     x1 = add.outputs[0]
 
     with block:
-        # It's important add 'mul' before 'add' (its even better to do it
-        # immeidately after 'add' but we don't have the API)
+        # It's important to add 'mul' before 'add' (its even better to do it
+        # immediately after 'add' but we don't have the API)
         # because we need to replace any op affected by add with 'mul'
         x2 = cb.mul(x=x0, y=y0, before_op=add)
 
@@ -130,9 +215,9 @@ def test_simple_substituion():
     assert len(block.find_ops(op_type="add")) == 1
     assert len(block.find_ops(op_type="log")) == 1
 
-    # It's important to set anchor_op = 'mul' becuase new_var is only visible
+    # It's important to set anchor_op = 'mul' because new_var is only visible
     # after 'mul'.
-    block.replace_var_after_op(anchor_op=x2.op, old_var=x1, new_var=x2)
+    block.replace_uses_of_var_after_op(anchor_op=x2.op, old_var=x1, new_var=x2)
     block.remove_ops([add])
 
     print("after:\n{}".format(prog))
@@ -163,7 +248,7 @@ def test_substitute_nested_op():
     cond = block.find_ops(op_type="cond")[0]
     x0 = block.inputs["x0"]
     z = cond.outputs[0]
-    block.replace_var_after_op(anchor_op=None, old_var=z, new_var=x0)
+    block.replace_uses_of_var_after_op(anchor_op=None, old_var=z, new_var=x0)
 
     # removing cond will also remove the abs ops within its block
     block.remove_ops([cond])
@@ -176,7 +261,7 @@ def test_substitute_nested_op():
 
 
 def test_simple_transpose_squash():
-    """Test eliminiate consecutive transpose can be canceled
+    """Test eliminate consecutive transpose can be canceled
     """
 
     @cb.program(input_specs=[cb.TensorSpec(shape=(2, 4))])
@@ -201,7 +286,7 @@ def test_simple_transpose_squash():
             and all(trans1.perm.val == trans2.perm.val)
         )
 
-    # Find all candidate pairs tranposes
+    # Find all candidate pairs transposes
     # we ignore all const (transpose_perm_%x), and add pairs of transpose op as
     # candidate. This won't generalize to more complicated program with other
     # shape invariant ops in between.
@@ -224,7 +309,7 @@ def test_simple_transpose_squash():
     for (trans1, trans2) in candidates:
         before = trans1.inputs["x"]
         after = trans2.outputs[0]
-        block.replace_var_after_op(anchor_op=trans2, old_var=after, new_var=before)
+        block.replace_uses_of_var_after_op(anchor_op=trans2, old_var=after, new_var=before)
         block.remove_ops([trans1, trans2])
 
     print("after:\n{}".format(prog))

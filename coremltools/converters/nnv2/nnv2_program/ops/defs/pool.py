@@ -5,6 +5,8 @@ from ._op_reqs import *
 """
 Pooling Op Superclass
 """
+
+
 class Pooling(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -40,14 +42,10 @@ class Pooling(Operation):
 Pooling op implementations
 """
 
+
 @register_op(doc_str='TODO')
 class avg_pool(Pooling):
     input_spec = InputSpec(
-        x=TensorInputType(),
-        kernel_sizes=IntTensorInputType(const=True),
-        strides=IntTensorInputType(const=True, optional=True),
-        pad_type=StringInputType(const=True),
-        pad=IntTensorInputType(const=True, optional=True),
         exclude_padding_from_average=BoolInputType(const=True, default=False)
     ) + Pooling.input_spec
 
@@ -57,14 +55,6 @@ class avg_pool(Pooling):
 
 @register_op(doc_str='TODO')
 class l2_pool(Pooling):
-    input_spec = InputSpec(
-        x=TensorInputType(),
-        kernel_sizes=IntTensorInputType(const=True),
-        strides=IntTensorInputType(const=True, optional=True),
-        pad_type=StringInputType(const=True),
-        pad=IntTensorInputType(const=True, optional=True),
-    ) + Pooling.input_spec
-
     def __init__(self, **kwargs):
         super(l2_pool, self).__init__(**kwargs)
 
@@ -72,15 +62,6 @@ class l2_pool(Pooling):
 # rdar://58622145
 @register_op(doc_str='TODO')
 class max_pool(Pooling):
-    input_spec = InputSpec(
-        x=TensorInputType(),
-        kernel_sizes=IntTensorInputType(const=True),
-        strides=IntTensorInputType(const=True, optional=True),
-        pad_type=StringInputType(const=True),
-        pad=IntTensorInputType(const=True, optional=True),
-    ) + Pooling.input_spec
 
     def __init__(self, **kwargs):
         super(max_pool, self).__init__(**kwargs)
-
-

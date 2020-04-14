@@ -2,7 +2,7 @@ import functools
 import sympy as sm
 from coremltools.converters.nnv2.builtin_types.symbolic import (
         is_symbolic, isscalar, any_symbolic, any_variadic)
-from coremltools.converters.nnv2.nnv2_program.program.program import get_new_symbol, get_new_variadic_symbol, SYMBOL
+from coremltools.converters.nnv2.nnv2_program.program.program import get_new_symbol, get_new_variadic_symbol, VALUE, SYMBOL
 from ._op_reqs import *
 
 @register_op(doc_str="""
@@ -45,13 +45,13 @@ class depth_to_space(Operation):
 @register_op(doc_str="""
 # expand_dims
 
-Insert a single-dimension in a 1D or higher tensor at index axis.
-
+Insert a single-dimension in a 1D or higher tensor at each axis in axes.
+s
 ### Inputs
 
 - `x: <*,T>` _(Required)_ Scalar or tensor
-- `axis: const<i32>` _(Required)_ Insert single dimension at axis dimension
-index. Negative value to index from the end. `-D-1 <= axis <= D` where `D` is
+- `axes: const<K, i32>` _(Required)_ Insert single dimension at dimension
+index at each axes. Negative value to index from the end. `-D-1 <= axis <= D` where `D` is
 the rank of `x`.
 
 ### Outputs
@@ -64,31 +64,49 @@ the rank of `x`.
 """)
 class expand_dims(Operation):
     input_spec = InputSpec(
-            x = TensorInputType(),
-            axis = IntInputType(const=True),
-            )
+        x=TensorInputType(),
+        axes=IntTensorInputType(const=True),
+    )
 
     def __init__(self, **kwargs):
         super(expand_dims, self).__init__(**kwargs)
 
     def type_inference(self):
+        x_rank = self.x.rank
         x_type = self.x.dtype
         x_shape = list(self.x.shape)
-        if self.axis.val < -self.x.rank - 1 \
-                or self.axis.val > self.x.rank:
-            raise IndexError(
-                'Axis value {} is out of bounds for {} node {}'.format(
-                    self.axis.val, self.op_type, self.name))
-        cut = self.axis.val
-        if cut < 0:
-            cut = self.x.rank + cut + 1
-        ret_shape = x_shape[:cut] + [1] + x_shape[cut:]
+        axes = self.axes.val
+        out_rank = x_rank + len(axes)
+
+        for axis in axes:
+            if axis <= -out_rank - 1 or axis >= out_rank:
+                msg = 'Axis value {} is out of bounds for {} node "{}" of shape {}'
+                raise IndexError(
+                    msg.format(axis, self.op_type, self.name, self.x.shape))
+
+        ret_shape = x_shape
+        axes = sorted([out_rank + axis if axis < 0 else axis for axis in axes])
+        for axis in axes:
+            ret_shape.insert(axis, 1)
 
         return builtins.tensor(x_type, tuple(ret_shape))
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.expand_dims(self.x.val, axis=self.axis.val)
+        axes = self.axes.val
+        out_rank = self.x.rank + len(axes)
+
+        for axis in axes:
+            if axis <= -out_rank - 1 or axis >= out_rank:
+                msg = 'Axis value {} is out of bounds for {} node "{}" of shape {}'
+                raise IndexError(
+                    msg.format(axis, self.op_type, self.name, self.x.shape))
+
+        axes = sorted([out_rank + axis if axis < 0 else axis for axis in axes])
+        ret_shape = list(self.x.shape)
+        for axis in axes:
+            ret_shape.insert(axis, 1)
+        return np.reshape(self.x.val, ret_shape)
 
 
 def reshape_with_symbol(v, shape):
@@ -314,6 +332,22 @@ class slice_by_size(Operation):
 
         return builtins.tensor(self.x.dtype, tuple(ret_shape))
 
+    @precondition(allow=VALUE|SYMBOL)
+    def value_inference(self):
+        if any_symbolic(self.begin.val):
+            return None
+        slices = []
+        for i in range(self.x.rank):
+            begin_val = self.begin.val[i]
+            if begin_val < 0:
+                if is_symbolic(self.x.shape[i]):
+                    return None
+                begin_val += self.x.shape[i]
+            if self.size.val[i] > 0:
+                slices.append(slice(begin_val, begin_val+self.size.val[i]))
+            else:
+                slices.append(slice(begin_val, None, None))
+        return self.x.val[tuple(slices)]
 
 @register_op(doc_str="""
 Rearranges elements in a tensor from spatial into depth (channel) dimension.
@@ -381,7 +415,10 @@ class squeeze(Operation):
 
     @precondition(allow=VALUE|SYMBOL)
     def value_inference(self):
-        return np.squeeze(self.x.val, axis=tuple(self.axes.val))
+        if self.axes is None:
+            return np.squeeze(self.x.val)
+        else:
+            return np.squeeze(self.x.val, axis=tuple(self.axes.val))
 
 
 # rdar://58622145

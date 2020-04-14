@@ -46,7 +46,7 @@ class InputSpec(object):
             ValueError if a require input is missing
         """
         ret = []
-        no_check = kwargs.get('no_check', False)
+        no_check_var_visibility = kwargs.get('no_check_var_visibility', False)
         for name, input_type in self.input_types.items():
             if name in kwargs:
                 var = kwargs[name]
@@ -56,15 +56,15 @@ class InputSpec(object):
                         input_type.is_compatible(var):
                     ret.append((name, var))
                 else:
-                    msg = "Input {} has type {} not compatible with \
-                           expected type {}".format(name, var.sym_type,
+                    msg = "Input {} has type {} not compatible with " \
+                          "expected type {}".format(name, var.sym_type,
                                                     input_type)
                     raise TypeError(msg)
             else:
                 # if input is not found in kwargs, it must be optional has no
                 # default value
                 if not input_type.optional or input_type.default:
-                    if no_check:
+                    if no_check_var_visibility:
                         continue
                     raise ValueError("Input {} is required".format(name))
                 else:

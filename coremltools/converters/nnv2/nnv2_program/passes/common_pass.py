@@ -9,6 +9,7 @@ def common_pass(prog):
         'common::const_elimination',
         'common::loop_invariant_elimination',
         'common::remove_symbolic_reshape',
+        'common::reduce_transposes',
         'common::dead_code_elimination', # always end with dce
     ]
 

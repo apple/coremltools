@@ -231,6 +231,9 @@ class real_div(elementwise_binary):
     def get_operator(self):
         return operator.truediv
 
+    def get_dtype(self, promoted_dtype):
+        return builtins.float
+
 
 @register_op(doc_str='TODO')
 class pow(elementwise_binary):

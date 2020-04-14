@@ -24,10 +24,16 @@ class TestAvgPool:
         def build(x):
             return [
                 cb.avg_pool(x=x, kernel_sizes=[1, 2], strides=[2, 1], pad_type='valid'),
+                cb.avg_pool(x=x, kernel_sizes=[2, 1], strides=[1, 2], pad_type='same',
+                            exclude_padding_from_average=True)
             ]
 
-        expected_output_types = [(1, 2, 1, 1, builtins.fp32)]
-        expected_outputs = [np.array([[[[-8.611837]], [[-1.1343001]]]], dtype=np.float32)]
+        expected_output_types = [(1, 2, 1, 1, builtins.fp32), (1, 2, 2, 1, builtins.fp32)]
+        expected_outputs = [
+            np.array([[[[-8.611837]], [[-1.1343001]]]], dtype=np.float32),
+            np.array([[[[-8.94101143], [-7.07911015]],
+                       [[4.39836979], [11.97855473]]]], dtype=np.float32)
+        ]
 
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,

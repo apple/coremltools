@@ -1,5 +1,6 @@
 import logging
 
+import math
 import numpy as np
 import torch
 
@@ -17,6 +18,7 @@ from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 # This is a magic number in PyTorch. It's used as a default value in many
 # functions.
 PYTORCH_MAGIC_DEFAULT = 9223372036854775807
+
 
 def convert_nodes(context, graph):
     """Iterate over the nodes of a graph or block and convert to NNv2.
@@ -127,7 +129,7 @@ def constant(context, node):
     assert len(node.outputs) == 1
 
     name = node.name
-    val = node.val
+    val = node.attr["value"]
 
     const = _construct_constant(val, name)
     context.add(const, torch_name=name)
@@ -197,20 +199,30 @@ def gt(context, node):
     context.add(greater)
 
 
-@register_torch_op
-def t(context, node):
+@register_torch_op(torch_alias=["t", "transpose_"])
+def transpose(context, node):
     assert len(node.outputs) == 1
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
 
-    # PyToch has several tranpose ops that can be emitted. This one is only
-    # emitted when .T() is called on a tensor, which means it can only be
-    # called on a matrix.
     if len(node.inputs) == 1:
-        # Special case where we are transposing a rank 2 tensor (matrix).
-        _input = node.inputs[0]
-        transpose = cb.transpose(x=context[_input], perm=[1, 0], name=node.name)
-        context.add(transpose)
+        # PyTorch has several tranpose ops that can be emitted. This one is only
+        # emitted when .t() is called on a tensor, which means it can only be
+        # called on a matrix.
+        if len(x.shape) > 2:
+            raise ValueError("transpose without dims for rank > 2 is unsupported")
+        res = cb.transpose(x=x, perm=[1, 0], name=node.name)
     else:
-        raise ValueError("transpose for rank != 2 is unsupported")
+        assert len(inputs) == 3
+        ax0 = inputs[1].val
+        ax1 = inputs[2].val
+
+        perm = list(range(len(x.shape)))
+        perm[ax0] = ax1
+        perm[ax1] = ax0
+
+        res = cb.transpose(x=x, perm=perm, name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -286,17 +298,32 @@ def _convolution(context, node):
     bias = inputs[2]
     strides = inputs[3]
 
+    # Expand padding. Torch accepts either an int (for all dimensions) or an n-tuple of ints (one per dimension), but
+    # we require a (2 * n)-tuple, where n is the number of spatial dimensions, start and end for each spatial dimension
     pad = inputs[4]
-    # Need to explicity state L-R, T-B pad
-    pad = np.repeat(pad.val, 2)
+    if weight.val.ndim in (3, 4):
+        # 1D and 2D: Need to explicitly state L-R, T-B pad
+        pad = np.repeat(pad.val, 2)
+    elif weight.val.ndim == 5:
+        # 3D: Need to explicitly state F-Bk, L-R, T-B pad
+        if type(pad.val) == int:
+            pad = np.repeat(pad.val, 6)
+        elif len(pad.val) == 3:
+            pad = np.repeat(pad.val, 2)
+    else:
+        raise ValueError(
+            "Invalid weight dimension. Must be 3, 4, or 5 for 1D, 2D, or 3D convolution, respectively."
+        )
 
     dilations = inputs[5]
     transposed = inputs[6]
-    out_pad = inputs[7] # unused
+    out_pad = inputs[7]  # unused
     group = inputs[8]
 
     if any([v != 0 for v in out_pad.val]):
-        raise ValueError("convolution does not support output_padding (given {})".format(out_pad))
+        raise ValueError(
+            "convolution does not support output_padding (given {})".format(out_pad)
+        )
 
     kwargs = {
         "x": x,
@@ -313,7 +340,9 @@ def _convolution(context, node):
 
         # PyTorch weight ordering [Cin, Cout, H, W]
         # NNv2 expects [H, W, Cout, Cin]
-        weight_transpose = cb.transpose(x=weight, perm=[2, 3, 1, 0], name=weight.name + "_transpose")
+        weight_transpose = cb.transpose(
+            x=weight, perm=[2, 3, 1, 0], name=weight.name + "_transpose"
+        )
         kwargs["weight"] = weight_transpose
         if bias is not None:
             kwargs["bias"] = bias
@@ -386,7 +415,7 @@ def max_pool2d(context, node):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
-    pad_type = "valid"
+    pad_type = "custom"
 
     # Need to explicity state L-R, T-B pad
     pad = inputs[3]
@@ -430,7 +459,7 @@ def pow(context, node):
     context.add(_pow)
 
 
-@register_torch_op
+@register_torch_op(torch_alias="rsub")
 def sub(context, node):
     inputs = _get_inputs(context, node, expected=3)
     assert len(node.outputs) == 1
@@ -472,6 +501,24 @@ def mean(context, node):
     assert len(inputs) <= 3 or inputs[3] is None
     mean = cb.reduce_mean(**kwargs)
     context.add(mean)
+
+
+@register_torch_op
+def squeeze(context, node):
+    inputs = _get_inputs(context, node)
+    if len(inputs) == 1:
+        squeeze = cb.squeeze(x=inputs[0], name=node.name)
+    elif len(inputs) == 2:
+        squeeze_dim = inputs[1].val
+        squeeze = cb.squeeze(x=inputs[0], axes=(squeeze_dim,), name=node.name)
+    context.add(squeeze)
+
+
+@register_torch_op
+def unsqueeze(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    unsqueeze = cb.expand_dims(x=inputs[0], axes=[inputs[1].val], name=node.name)
+    context.add(unsqueeze)
 
 
 @register_torch_op
@@ -962,13 +1009,26 @@ def select(context, node):
 
 @register_torch_op
 def ones(context, node):
-    inputs = _get_inputs(context, node, expected=5)
+    inputs = _get_inputs(context, node, expected=6)
+    size = inputs[0]
+    # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
+    # layout = inputs[2] unused
+    # device = inputs[3] unused
+    # requires_grad = inputs[4] unused
+    # out = inputs[5] unused
+    fill = cb.fill(shape=size, value=1.0, name=node.name)
+    context.add(fill)
+
+
+@register_torch_op
+def ones_like(context, node):
+    inputs = _get_inputs(context, node, expected=6)
     size = cb.shape(x=inputs[0])
     # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
     # layout = inputs[2] unused
     # device = inputs[3] unused
-    # pin_memory = inputs[4] unused
-    name = node.name
+    # requires_grad = inputs[4] unused
+    # out = inputs[5] unused
     fill = cb.fill(shape=size, value=1.0, name=node.name)
     context.add(fill)
 
@@ -977,16 +1037,14 @@ def _avg_pool(context, node, inputs):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
-    # TODO: fix padding
-    # rdar://problem/60635129
-    pad_type = "valid"
+    pad_type = "custom"
     # Need to explicity state L-R, T-B pad
     pad = inputs[3]
     pad = np.repeat(pad.val, 2)
     ceil_mode = inputs[4]
     if ceil_mode.val is True:
         raise ValueError("ceil_mode=True is not supported for avg_pool")
-    include_pad = inputs[5]
+    include_pad = inputs[5].val
     pool = cb.avg_pool(
         x=x,
         kernel_sizes=kernel_sizes,
@@ -994,6 +1052,7 @@ def _avg_pool(context, node, inputs):
         pad_type=pad_type,
         pad=pad,
         name=node.name,
+        exclude_padding_from_average=not include_pad,
     )
     context.add(pool)
 
@@ -1086,6 +1145,7 @@ def split(context, node):
     context.add(res, torch_name=node.name)
 
 
+@register_torch_op
 def to(context, node):
     # @non_blocking and @copy are unused
     inputs = _get_inputs(context, node)
@@ -1144,6 +1204,161 @@ def implicittensortonum(context, node):
     inputs = _get_inputs(context, node, expected=1)
     _input = inputs[0]
     assert _input.shape == (1,)
-    # shape: (1,) -> () 
+    # shape: (1,) -> ()
     squeeze = cb.squeeze(x=_input, name=node.name)
     context.add(squeeze)
+
+
+@register_torch_op
+def contiguous(context, node):
+    """Contiguous is set as a noOP."""
+    logging.warning("Setting contiguous to no-op.")
+    inputs = _get_inputs(context, node)
+    context.add(inputs[0], node.name)
+
+
+@register_torch_op
+def constantchunk(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    # ConstantChunk gets its parameters as attributes of the node.
+    chunks = node.attr["chunks"]
+    dim = node.attr["dim"]
+
+    total = x.shape[dim]
+    size = int(math.ceil(float(total) / float(chunks)))
+    split_sizes = [size] * int(math.floor(total / size))
+    remainder = total - sum(split_sizes)
+    if remainder > 0:
+        split_sizes.append(remainder)
+
+    res = cb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
+    for val, name in zip(res, node.outputs):
+        context.add(val, name)
+
+
+def _expand(context, name, tensor, shape):
+    reps = [ds if ds > 0 and ts == 1 else 1 for ts, ds in zip(tensor.shape, shape)]
+    res = cb.tile(x=tensor, reps=reps, name=name)
+    context.add(res)
+
+
+@register_torch_op
+def expand(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    shape = inputs[1].val
+
+    _expand(context, node.name, x, shape)
+
+
+@register_torch_op
+def expand_as(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    other = inputs[1]
+
+    _expand(context, node.name, x, other.shape)
+
+
+@register_torch_op
+def device(context, node):
+    """Device is set as a noOP."""
+    logging.warning("Setting device to no-op.")
+    inputs = _get_inputs(context, node)
+    context.add(inputs[0], node.name)
+
+
+@register_torch_op
+def arange(context, node):
+    inputs = _get_inputs(context, node)
+    # dtype = inputs[-4]
+    # layout = inputs[-3]
+    # device = inputs[-2]
+    # pin_memory = inputs[-1]
+    if len(inputs) == 5:
+        # inputs are [end, dtype, layout, device, pin_memory]
+        start = 0
+        end = inputs[0]
+        step = 1
+    elif len(inputs) == 6:
+        # inputs are [start, end, dtype, layout, device, pin_memory]
+        start = inputs[0].val
+        end = inputs[1].val
+        step = 1
+    elif len(inputs) == 7:
+        # inputs are [start, end, step, dtype, layout, device, pin_memory]
+        start = inputs[0].val
+        end = inputs[1].val
+        step = inputs[2].val
+    else:
+        raise ValueError(
+            "arange must have exactly 5, 6, or 7 inputs, got {}".format(len(inputs))
+        )
+
+    res = cb.range_1d(start=start, end=end, step=step, name=node.name)
+    context.add(res)
+
+
+@register_torch_op(torch_alias=["masked_fill_"])
+def masked_fill(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    mask = inputs[1]
+    value = inputs[2]
+    # cb.select does not properly broadcast scalar input, so as a workaround
+    # we create a full sized tensor.
+    # rdar://61463562
+    value = cb.fill(shape=x.shape, value=value, name=node.name + "_value")
+    res = cb.select(cond=mask, a=value, b=x, name=node.name)
+    context.add(res)
+
+
+def meshgrid(context, node):
+    """
+    For N input tensors, a meshgrid is constructed by viewing each tensor as an N-dimension tensor 
+    with values in the dimension corresponding it its order in the args. (a.)
+    Then, it is expanded along dimensions corresponding to the dimensions of each
+    1d tensor in the order that they were passed in. (b.)
+     
+    Each output tensor is put into a tuple that is returned. These tuples form 
+    N, N-dimenional grids, where the ith grid is defined as expanding the ith input over
+    dimensions defined by the other inputs. 
+    """
+    inputs = _get_inputs(context, node)
+    if len(inputs) < 2:
+        raise ValueError("Requires > 2 tensor inputs.")
+
+    # scalar inputs will be considered 1d tensors
+    tensor_inputs = []
+    for tensor_var in inputs:
+        if not isinstance(tensor_var.val, np.ndarray):
+            tensor_inputs.append(np.array(tensor_var.val))
+        else:
+            tensor_inputs.append(np.array(tensor_var))
+
+    if any([len(tensor_var.shape) > 1 for tensor_var in inputs]):
+        raise ValueError("meshgrid recieved non-1d tensor.")
+
+    dim_tuple = tuple(tensor_var.shape[0] for tensor_var in inputs)
+
+    grids = []
+    size = len(inputs)
+    for i in range(size):
+        view_shape = [1] * size
+        view_shape[i] = -1
+        view_shape = tuple(view_shape)
+        tensor = torch.tensor(inputs[i].val)
+        # (a.) in docstring
+        view = cb.reshape(
+            x=inputs[i], shape=view_shape, name=node.name + "_view_" + str(i)
+        )
+
+        # (b.) in docstring
+        reps = [
+            ds if ds > 0 and ts == 1 else 1 for ts, ds in zip(view.shape, dim_tuple)
+        ]
+        expand = cb.tile(x=view, reps=reps, name=node.name + "_expand_" + str(i))
+        grids.append(expand)
+
+    context.add(tuple(grids), node.name)

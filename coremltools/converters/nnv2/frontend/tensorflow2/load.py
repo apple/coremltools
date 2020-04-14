@@ -14,7 +14,7 @@ from tensorflow.python.framework.convert_to_constants import convert_variables_t
 from tensorflow.python.keras.saving import saving_utils
 from tensorflow.lite.python.util import run_graph_optimizations, get_grappler_config
 
-from coremltools.converters.nnv2.frontend.tensorflow.converter import TFConverter
+from .converter import TFConverter
 from coremltools.converters.nnv2.frontend.tensorflow.tf_graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from coremltools.converters.nnv2.frontend.tensorflow.load import tf_ssa_from_graph
 
@@ -44,7 +44,7 @@ def load(model, debug=False, **kwargs):
         import graphviz
         dot_string = tf_ssa.get_dot_string(
             annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
-        graphviz.Source(dot_string).view(filename='/tmp/ssa_before_tf_passes.pdf')
+        graphviz.Source(dot_string).view(filename='/tmp/ssa_before_tf_passes', cleanup=True)
 
     tf_passes = [
         delete_asserts,
@@ -64,7 +64,7 @@ def load(model, debug=False, **kwargs):
         import graphviz
         dot_string = tf_ssa.get_dot_string(
             annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
-        graphviz.Source(dot_string).view(filename='/tmp/ssa_after_tf_passes.pdf')
+        graphviz.Source(dot_string).view(filename='/tmp/ssa_after_tf_passes', cleanup=True)
         tf.io.write_graph(tf_graph, '/tmp/', '/tmp/tf_graph.pb', as_text=False)
 
     else:
@@ -125,7 +125,7 @@ def tf_graph_from_model(model):
             graph_def,
             func_inputs,
             frozen_func.outputs,
-            config=get_grappler_config(['constfold']),
+            config=get_grappler_config(['constfold', 'dependency']),
             graph=frozen_func.graph)
 
         return graph_def

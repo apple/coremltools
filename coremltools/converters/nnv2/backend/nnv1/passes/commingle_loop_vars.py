@@ -22,11 +22,11 @@ def commingle_loop_vars_block(block):
 
         for v_out, body_vx_in in zip(op.outputs, body_block.inputs):
             # Disable check as v_out is not visible in body_block.
-            body_block.replace_var_after_op(anchor_op=None,
-                    old_var=body_vx_in, new_var=v_out, no_check=True)
+            body_block.replace_uses_of_var_after_op(anchor_op=None,
+                    old_var=body_vx_in, new_var=v_out, no_check_var_visibility=True)
         for v_out, cond_vx_in in zip(op.outputs, cond_block.inputs):
-            cond_block.replace_var_after_op(anchor_op=None,
-                    old_var=cond_vx_in, new_var=v_out, no_check=True)
+            cond_block.replace_uses_of_var_after_op(anchor_op=None,
+                    old_var=cond_vx_in, new_var=v_out, no_check_var_visibility=True)
 
         # replace block inputs
         body_block._block_inputs = op.outputs

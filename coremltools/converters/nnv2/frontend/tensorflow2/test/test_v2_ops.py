@@ -5,7 +5,7 @@ from coremltools.converters.nnv2.frontend.tensorflow2.test.testing_utils import 
 )
 from coremltools.converters.nnv2.testing_reqs import *
 
-tf = pytest.importorskip('tensorflow', minversion='2.0.0')
+tf = pytest.importorskip('tensorflow', minversion='2.1.0')
 
 backends = testing_reqs.backends
 
@@ -20,4 +20,5 @@ tf_testing_utils.run_compare_tf = run_compare_tf2
 from coremltools.converters.nnv2.frontend.tensorflow.test.test_ops import (
     TestActivationReLU,
     TestConv,
+    TestConv3d,
 )

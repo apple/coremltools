@@ -58,14 +58,21 @@ def make_input(const_context, builder, variables):
         return variables
 
     v = variables # variables is Var
-    if v.op is not None and v.op.op_type == 'const':
+    if v.op is not None and v.op.op_type == 'const' and not v.name in const_context:
         add_const(const_context, builder, v.name, v.val)
     return v.name
 
 
-def _convert_pool(const_context, builder, op, mode):
+def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average=True):
     num_spatial_dimensions = len(op.kernel_sizes.val)
+    op_pad = op.pad.val if op.pad is not None else [0] * num_spatial_dimensions * 2
     if num_spatial_dimensions <= 2:
+        padding_type = op.pad_type.val.upper()
+        # nnv1's add_pool function does not support CUSTOM padding,
+        # but VALID padding supports user-defined padding amounts.
+        # Therefore we map CUSTOM padding to VALID padding.
+        if padding_type == 'CUSTOM':
+            padding_type = 'VALID'
         builder.add_pooling(
             name=op.name,
             height=op.kernel_sizes.val[-2],
@@ -73,10 +80,14 @@ def _convert_pool(const_context, builder, op, mode):
             stride_height=op.strides.val[-2],
             stride_width=op.strides.val[-1],
             layer_type=mode.upper(),
-            padding_type=op.pad_type.val.upper(),
+            padding_type=padding_type,
             input_name=make_input(const_context, builder, op.x),
             output_name=op.name,
-            exclude_pad_area=True,
+            exclude_pad_area=exclude_padding_from_average,
+            padding_top=op_pad[0],
+            padding_bottom=op_pad[1],
+            padding_left=op_pad[2],
+            padding_right=op_pad[3],
             is_global=False,
         )
     elif num_spatial_dimensions == 3:
@@ -92,7 +103,13 @@ def _convert_pool(const_context, builder, op, mode):
             stride_height=op.strides.val[-2],
             stride_width=op.strides.val[-1],
             padding_mode=op.pad_type.val,
-            average_pooling_count_excludes_padding=True
+            custom_padding_front=op_pad[0],
+            custom_padding_back=op_pad[1],
+            custom_padding_top=op_pad[2],
+            custom_padding_bottom=op_pad[3],
+            custom_padding_left=op_pad[4],
+            custom_padding_right=op_pad[5],
+            average_pooling_count_excludes_padding=exclude_padding_from_average
         )
     else:
         raise ValueError('Unsupported number of spatial dimensions.  Maximum is 3, but got %s'
@@ -161,12 +178,6 @@ def add_const(const_context, builder, name, val):
                 output_name=name,
                 constant_value=val.reshape([1]),
                 shape=[1])
-    elif rank == 3:
-        builder.add_load_constant(
-                name=name,
-                output_name=name,
-                constant_value=val,
-                shape=val.shape)
     else:
         builder.add_load_constant_nd(
                 name=name,
@@ -230,7 +241,8 @@ def avg_pool(const_context, builder, op):
         const_context=const_context,
         builder=builder,
         op=op,
-        mode='average')
+        mode='average',
+        exclude_padding_from_average=op.exclude_padding_from_average.val)
 
 
 @register_v2_op
@@ -274,60 +286,80 @@ def conv(const_context, builder, op):
     # v2 x: (n, C_in/group, *D_in)
     x_name = make_input(const_context, builder, op.x)
     is_conv1d = op.x.rank == 3
+    is_conv2d = op.x.rank == 4
+    is_conv3d = op.x.rank == 5
+    if not (is_conv1d or is_conv2d or is_conv3d):
+        raise ValueError(
+            "Input tensor rank '{}' is not one of '{}'.".format(
+                op.x.rank,
+                (3, 4, 5),
+            )
+        )
     if is_conv1d:
-        x_name = op.name+'expand_dim'
+        x_name = op.name + "expand_dim"
         builder.add_expand_dims(
-                name=x_name,
-                input_name=op.x.name,
-                output_name=x_name,
-                axes=3)
-    # `x_name` is guaranteed to be (n, C_in/group, H, W)
+            name=x_name,
+            input_name=op.x.name,
+            output_name=x_name,
+            axes=3,
+        )
+    # `x_name` is guaranteed to be (n, C_in/group, H, W) for 1D and 2D convolution
 
     # W_v1 wil be np.ndarray (if W is const at compile time) or None
     # (if W is not known at compile time).
-    W_v1 = None
+    weights = None
     input_names = make_input(const_context, builder, [op.x])
     if op.W.val is not None:
-        # v2 conv W: (C_out, C_in/group, spatial_dims)
-        # v1 convolution expects (H, W, C_in/group, C_out)
-        W_v1 = op.W.val
+        # v2 convolution (conv3d) expects weights to have shape (C_out, C_in/group, spatial_dims)
+        # v1 convolution expects (H, W, C_in/group, C_out) or (D, H, W, C_in/group, C_out)
+        weights = op.W.val
         if is_conv1d:
-            W_v1 = np.expand_dims(op.W.val, 3)
-        W_v1 = np.transpose(W_v1, [2, 3, 1, 0])
+            weights = np.expand_dims(op.W.val, 3)
+        if is_conv1d or is_conv2d:
+            weights = np.transpose(weights, [2, 3, 1, 0])
     else:
         # op.W is not const at compile time.
         # When weight is dynamic, v1 convolution expects weight to be
         # (C_out, C_in/group, H, W)
-        W_rank4 = make_input(const_context, builder, op.W)
+        # TODO 3D convolution doesn't support dynamic weights:
+        if is_conv3d:
+            raise ValueError("3D Convolution doesn't support dynamic weights.")
+        weights_name = op.W.name
         if is_conv1d:
-            W_rank4 = op.W.name + '_expand_dim'
+            weights_name += "_expand_dim"
             builder.add_expand_dims(
-                    name=W_rank4,
-                    input_name=op.W.name,
-                    output_name=W_rank4,
-                    axes=3)
-        input_names.append(W_rank4)
+                name=weights_name,
+                input_name=op.W.name,
+                output_name=weights_name,
+                axes=3,
+            )
+        input_names.append(weights_name)
 
     # padding
-    border_mode = op.pad_type.val
+    padding_mode = op.pad_type.val
     pad = {}
-    if border_mode == 'custom':
-        border_mode = 'valid'
-        pad['padding_top'] = op.pad.val[0]
-        pad['padding_bottom'] = op.pad.val[1]
-        if not is_conv1d:
-            pad['padding_left'] = op.pad.val[2]
-            pad['padding_right'] = op.pad.val[3]
+    if padding_mode == "custom":
+        padding_mode = "valid"
+        pad["padding_top"] = op.pad.val[0]
+        pad["padding_bottom"] = op.pad.val[1]
+        if is_conv2d or is_conv3d:
+            pad["padding_left"] = op.pad.val[2]
+            pad["padding_right"] = op.pad.val[3]
+        if is_conv3d:
+            pad["padding_front"] = op.pad.val[4]
+            pad["padding_back"] = op.pad.val[5]
 
     # This doesn't work till builder fills in all optional values
     # (rdar://59280101)
     #has_bias = np.sum(np.abs(op.B.val)) > 0
     has_bias = op.B is not None
+    groups = op.group.val
     dilations = op.dilations.val.tolist()
     if is_conv1d:
         dilations = dilations + [1]
 
-    builder.add_convolution(
+    if is_conv1d or is_conv2d:
+        builder.add_convolution(
             name=op.name,
             kernel_channels=op.W.shape[1],
             output_channels=op.W.shape[0],
@@ -335,16 +367,40 @@ def conv(const_context, builder, op):
             width=1 if is_conv1d else op.W.shape[3],
             stride_height=op.strides.val[0],
             stride_width=1 if is_conv1d else op.strides.val[1],
-            border_mode=border_mode,
-            groups=op.group.val,
-            W=W_v1,
+            border_mode=padding_mode,
+            groups=groups,
+            W=weights,
             b=op.B.val if has_bias else None,
             has_bias=has_bias,
             is_deconv=False,
             input_name=input_names,
             output_name=op.outputs[0].name,
             dilation_factors=dilations,
-            **pad)
+            **pad  # Python 2.7.16 will fail with a syntax error if a comma is included after `**pad`
+        )
+    if is_conv3d:
+        builder.add_convolution3d(
+            name=op.name,
+            input_channels=op.W.shape[1] * groups,
+            output_channels=op.W.shape[0],
+            depth=op.W.shape[2],
+            height=op.W.shape[3],
+            width=op.W.shape[4],
+            W=weights,
+            b=op.B.val if has_bias else None,
+            has_bias=has_bias,
+            groups=groups,
+            stride_depth=op.strides.val[0],
+            stride_height=op.strides.val[1],
+            stride_width=op.strides.val[2],
+            dilation_depth=dilations[0],
+            dilation_height=dilations[1],
+            dilation_width=dilations[2],
+            padding_mode=padding_mode,
+            input_name=input_names,
+            output_name=op.name,
+            **pad  # Python 2.7.16 will fail with a syntax error if a comma is included after `**pad`
+        )
 
 
 @register_v2_op
@@ -358,26 +414,30 @@ def cumsum(const_context, builder, op):
         reverse=op.reverse.val,
         exclusive=op.exclusive.val)
 
-def _add_elementwise_unary(const_context, builder, op, mode, **kwargs):
+def _add_elementwise_unary(const_context, builder, op, mode, output_name=None, **kwargs):
+    output_name = output_name if output_name else op.outputs[0].name
+    name = output_name if output_name else op.name
     if mode in ["sqrt", "rsqrt", "inverse", "power", "exp", "log", "abs", "threshold"]:
         builder.add_unary(
-                name=op.name,
+                name=name,
                 input_name=make_input(const_context, builder, op.x),
-                output_name=op.outputs[0].name,
+                output_name=output_name,
                 mode=mode,
                 **kwargs)
     else:
         add_func = getattr(builder, "add_"+mode, None)
         if add_func is None:
             logging.error('Elementwise unary method {} not found in builder.'.format(mode))
-        add_func(name=op.name,
+        add_func(name=name,
                  input_name=make_input(const_context, builder, op.x),
-                 output_name=op.outputs[0].name,
+                 output_name=output_name,
                  **kwargs)
 
-def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
+def _add_elementwise_binary(const_context, builder, op, mode, output_name = None, **kwargs):
+    output_name = output_name if output_name else op.outputs[0].name
+    name = output_name if output_name else op.name
     if mode in ["add", "multiply"]:
-        params = {"name": op.name, "output_name": op.name, "mode": mode.upper()}
+        params = {"name": name, "output_name": output_name, "mode": mode.upper()}
         if op.x.val is not None and op.x.rank == 0:
             params["input_names"] = make_input(const_context, builder, [op.y])
             params["alpha"] = op.x.val
@@ -390,7 +450,7 @@ def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
             return
     elif mode in ["equal", "not_equal"]:
         add_func = getattr(builder, "add_"+mode, None)
-        params = {"name": op.name, "output_name": op.name}
+        params = {"name": name, "output_name": output_name}
         if op.x.val is not None and op.x.rank == 0:
             params["input_names"] = make_input(const_context, builder, [op.y])
             params["alpha"] = op.x.val
@@ -402,7 +462,7 @@ def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
             add_func(**params)
             return
     elif mode in ["greater_than", "greater_equal", "less_than", "less_equal"]:
-        params = {"name": op.name, "output_name": op.name}
+        params = {"name": name, "output_name": output_name}
         if op.x.val is not None and op.x.rank == 0:
             params["input_names"] = make_input(const_context, builder, [op.y])
             params["alpha"] = op.x.val
@@ -428,7 +488,7 @@ def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
         add_const(const_context, builder, op.x.name, op.x.val)
     if op.y.val is not None:
         if mode == "pow":
-            _add_elementwise_unary(const_context, builder, op, "power",
+            _add_elementwise_unary(const_context, builder, op, "power", output_name=output_name,
                     alpha=op.y.val)
             return
         add_const(const_context, builder, op.y.name, op.y.val)
@@ -436,10 +496,10 @@ def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
     if mode in ["add", "multiply", "max", "min", "ave"]:
         if op.x.shape == op.y.shape:
             builder.add_elementwise(
-                    name=op.name,
+                    name=name,
                     input_names=make_input(const_context, builder,
                         [op.x, op.y]),
-                    output_name=op.outputs[0].name,
+                    output_name=output_name,
                     mode=mode.upper())
         else:
             add_func = getattr(builder, "add_"+mode+"_broadcastable", None)
@@ -447,10 +507,10 @@ def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
             if add_func is None:
                 logging.error('Elementwise binary broadcastable method {} not found in builder.'.format(mode))
 
-            add_func(name=op.name,
+            add_func(name=name,
                      input_names=make_input(const_context, builder,
                          [op.x, op.y]),
-                     output_name=op.outputs[0].name,
+                     output_name=output_name,
                      **kwargs)
     else:
         if mode in ["divide", "floor_div", "mod", "pow", "subtract"]:
@@ -468,9 +528,9 @@ def _add_elementwise_binary(const_context, builder, op, mode, **kwargs):
             msg = 'Elementwise binary method {} not found in builder.'
             raise ValueError(msg.format(mode))
 
-        add_func(name=op.name,
+        add_func(name=name,
                  input_names=make_input(const_context, builder, [op.x, op.y]),
-                 output_name=op.outputs[0].name,
+                 output_name=output_name,
                  **kwargs)
 
 def _add_logical(const_context, builder, op, mode):
@@ -508,6 +568,36 @@ def atan(const_context, builder, op):
 @register_v2_op
 def atanh(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "atanh")
+
+@register_v2_op
+def cast(const_context, builder, op):
+    if op.dtype.val in ["int32", "int64"]:
+        _add_elementwise_unary(const_context, builder, op, "floor", output_name=op.name + "_floor")
+        _add_elementwise_unary(const_context, builder, op, "ceil", output_name=op.name + "_ceil")
+
+        builder.add_greater_than(
+            name = op.name + "_cond",
+            input_names = [make_input(const_context, builder, op.x)],
+            output_name = op.name + "_cond",
+            alpha = 0.0
+        )
+
+        builder.add_where_broadcastable(
+            name = op.name,
+            input_names=[op.name + i for i in ["_cond", "_floor", "_ceil"]],
+            output_name=op.outputs[0].name
+        )
+    elif op.dtype.val in ["fp32", "fp64"]:
+        builder.add_activation(
+            name=op.name,
+            non_linearity='LINEAR',
+            input_name=make_input(const_context, builder, op.x),
+            output_name=op.outputs[0].name,
+            params=[1.0, 0.0]
+        )
+    else:
+        raise NotImplementedError("Parameter dtype of the cast operation can be one of the {}. "
+                                  "Provided {}".format(["int32", "int64","fp32", "fp64"], op.dtype.val))
 
 @register_v2_op
 def ceil(const_context, builder, op):
@@ -553,6 +643,10 @@ def greater(const_context, builder, op):
 @register_v2_op
 def greater_equal(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "greater_equal")
+
+@register_v2_op
+def inverse(const_context, builder, op):
+    _add_elementwise_unary(const_context, builder, op, "inverse")
 
 @register_v2_op
 def less(const_context, builder, op):
@@ -704,7 +798,7 @@ def expand_dims(const_context, builder, op):
         name=op.name,
         input_name=make_input(const_context, builder, op.x),
         output_name=op.outputs[0].name,
-        axes=[op.axis.val])
+        axes=op.axes.val)
 
 
 @register_v2_op
@@ -1596,7 +1690,7 @@ def pad(const_context, builder, op):
     if op.x.rank > 1 and np.all(pad[:-4] == 0):
         # check and map mode
         if mode == "symmetric":
-            mode = "reflect"
+            mode = "reflection"
         pad = pad[-4:]
         left, right = pad[2], pad[3]
         top, bottom = pad[0], pad[1]

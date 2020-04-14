@@ -41,20 +41,24 @@ class TestExpandDims:
                 backends,
                 ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         input_placeholders = {"x": cb.placeholder(shape=t.shape)}
         input_values = {"x": t}
 
         def build(x):
-            return [cb.expand_dims(x=x, axis=0),
-                    cb.expand_dims(x=x, axis=1),
-                    cb.expand_dims(x=x, axis=2),
-                    cb.expand_dims(x=x, axis=-1)]
+            return [cb.expand_dims(x=x, axes=[0]),
+                    cb.expand_dims(x=x, axes=[1]),
+                    cb.expand_dims(x=x, axes=[2]),
+                    cb.expand_dims(x=x, axes=[-1]),
+                    cb.expand_dims(x=x, axes=[0, 1]),
+                    cb.expand_dims(x=x, axes=[-2, -1])]
         expected_output_types = [
                 (1, 2, 3, builtins.fp32),
                 (2, 1, 3, builtins.fp32),
                 (2, 3, 1, builtins.fp32),
                 (2, 3, 1, builtins.fp32),
+                (1, 1, 2, 3, builtins.fp32),
+                (2, 3, 1, 1, builtins.fp32),
                 ]
         expected_outputs = [
                 np.array([[[1, 2, 3],
@@ -73,8 +77,15 @@ class TestExpandDims:
                           [[4],
                            [5],
                            [6]]], dtype=np.float32),
-                          ]
-
+                np.array([[[[1, 2, 3],
+                            [4, 5, 6]]]], dtype=np.float32),
+                np.array([[[[1]],
+                           [[2]],
+                           [[3]]],
+                          [[[4]],
+                           [[5]],
+                           [[6]]]], dtype=np.float32),
+            ]
 
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
@@ -94,8 +105,8 @@ class TestExpandDims:
                 }
 
         def build(x):
-            return [cb.expand_dims(x=x, axis=-1),
-                    cb.expand_dims(x=x, axis=1),
+            return [cb.expand_dims(x=x, axes=[-1]),
+                    cb.expand_dims(x=x, axes=[1]),
                     ]
 
         expected_output_types = [
@@ -119,25 +130,36 @@ class TestExpandDims:
 
     @ssa_fn
     def test_builder_eval(self):
-        x_val = np.random.rand(1, 1, 6, 6)
-        v = cb.expand_dims(x=x_val, axis=2)
-        assert is_close(np.expand_dims(x_val, 2), v.val)
+        x_val = np.random.rand(1, 6)
+        v1 = cb.expand_dims(x=x_val, axes=[2])
+        assert is_close(np.expand_dims(x_val, 2), v1.val)
+
+        v2 = cb.expand_dims(x=x_val, axes=[-1])
+        assert is_close(np.expand_dims(x_val, -1), v2.val)
+
+        v3 = cb.expand_dims(x=x_val, axes=[-1, -2])
+        ref = np.expand_dims(np.expand_dims(x_val, -1), -1)
+        assert is_close(ref, v3.val)
+
+        v4 = cb.expand_dims(x=x_val, axes=[0, -1, -2])
+        assert is_close(np.reshape(x_val, (1, 1, 6, 1, 1)), v4.val)
 
     @pytest.mark.parametrize("use_cpu_only, backend, rank_and_axis",
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [(rank, axis) for rank in range(1, 5) for
-                                     axis in range(-rank - 1, rank + 1)],
-                             )
-                             )
-    def test_builder_to_backend_programmatic(self, use_cpu_only, backend,
-            rank_and_axis):
+                                  axis in range(-rank - 1, rank + 1)],
+                             ))
+    def test_builder_to_backend_programmatic_one_axis(
+            self, use_cpu_only, backend, rank_and_axis):
         rank, axis = rank_and_axis
         x_shape = np.random.randint(low=2, high=6, size=rank)
         input_placeholders = {"x": cb.placeholder(shape=x_shape)}
         input_values = {"x": np.random.sample(x_shape).astype(np.float32)}
-        def build(x): return cb.expand_dims(x=x, axis=axis)
+
+        def build(x): return cb.expand_dims(x=x, axes=[axis])
+
         adjusted_axis = axis if axis >= 0 else rank + axis + 1
         x_shape = list(x_shape)
         out_shape = x_shape[:adjusted_axis] + [1] + x_shape[adjusted_axis:]
@@ -148,6 +170,39 @@ class TestExpandDims:
                             np.expand_dims(input_values['x'], axis),
                             use_cpu_only=use_cpu_only,
                             frontend_only=False, backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend, rank_and_axes",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(3, [0, 1]), (3, [1, 0]), (3, [-2, -1]), (3, [-1, -2]),
+                                  (2, [-3, -1]), (2, [-3, 1, -1]), (2, [-2, 0]),
+                                  (1, [-1, -2, -3, -4]), (1, [0, -1]), (1, [0, 1, -2, -1])]
+                             ))
+    def test_builder_to_backend_programmatic_multiple_axes(
+            self, use_cpu_only, backend, rank_and_axes):
+        rank, axes = rank_and_axes
+        x_shape = np.random.randint(low=1, high=6, size=rank)
+        input_placeholders = {'x': cb.placeholder(shape=x_shape)}
+        input_values = {'x': np.random.sample(x_shape).astype(np.float32)}
+
+        def build(x): return cb.expand_dims(x=x, axes=axes)
+
+        out_shape = list(x_shape)
+        out_rank = rank + len(axes)
+        pos_axes = sorted([out_rank + axis if axis < 0 else axis for axis in axes])
+        for axis in pos_axes:
+            out_shape.insert(axis, 1)
+
+        expected_outputs = np.reshape(input_values['x'], out_shape)
+        expected_output_types = tuple(out_shape) + (builtins.fp32,)
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types,
+                            expected_outputs,
+                            use_cpu_only=use_cpu_only,
+                            frontend_only=False,
+                            backend=backend)
 
 
 class TestReshape:
@@ -427,6 +482,17 @@ class TestSliceBySize:
         run_compare_builder(build_single, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, frontend_only=False, backend=backend)
+
+
+    @ssa_fn
+    def test_builder_eval(self):
+        x = np.array(list(range(24))).reshape(2,3,4)
+        v_1 = cb.slice_by_size(x=x, begin=(0, 1, 0), size=(-1, -1, -1))
+        v_2 = cb.slice_by_size(x=x, begin=(0, 1, 0), size=(-1, -1, 3))
+        v_3 = cb.slice_by_size(x=x, begin=(0, -2, 0), size=(-1, -1, 3))
+        assert is_close(x[:, 1:, :], v_1.val)
+        assert is_close(x[:, 1:, :3], v_2.val)
+        assert is_close(x[:, -2:, :3], v_3.val)
 
 
 class TestSpaceToDepth:

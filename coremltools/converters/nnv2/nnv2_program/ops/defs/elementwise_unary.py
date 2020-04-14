@@ -168,6 +168,14 @@ class floor(elementwise_unary):
     def value_inference(self):
         return np.floor(self.x.val)
 
+@register_op(doc_str='TODO')
+class inverse(elementwise_unary):
+    def __init__(self, **kwargs):
+        super(inverse, self).__init__(**kwargs)
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        return np.reciprocal(self.x.val)
 
 @register_op(doc_str='TODO')
 class log(elementwise_unary):
@@ -308,3 +316,46 @@ class threshold(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.maximum(self.x.val, self.alpha.val)
+
+@register_op(doc_str='TODO')
+class cast(Operation):
+    input_spec = InputSpec(
+            x = ScalarOrTensorInputType(),
+            dtype = StringInputType(const=True)
+            )
+
+    def __init__(self, **kwargs):
+        super(cast, self).__init__(**kwargs)
+
+    def type_inference(self):
+        type_map = {
+            "int32": builtins.int32,
+            "int64": builtins.int64,
+            "fp32" : builtins.fp32,
+            "fp64" : builtins.fp64
+        }
+
+        if self.dtype.val not in type_map.keys():
+            raise NotImplementedError("Parameter dtype of the cast operation can be one of the {}. "
+                                      "Provided {}".format(type_map.keys(), self.dtype.val))
+
+        if not builtins.is_tensor(self.x.sym_type):
+            return type_map[self.dtype.val]
+
+        ret_shape = self.x.shape
+        return builtins.tensor(type_map[self.dtype.val], ret_shape)
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        type_map = {
+            "int32": np.int32,
+            "int64": np.int64,
+            "fp32" : np.float32,
+            "fp64" : np.float64
+        }
+
+        if self.dtype.val not in type_map.keys():
+            raise NotImplementedError("Parameter dtype of the cast operation can be one of the {}. "
+                                      "Provided {}".format(type_map.keys(), self.dtype.val))
+
+        return np.array(self.x.val).astype(dtype=type_map[self.dtype.val])

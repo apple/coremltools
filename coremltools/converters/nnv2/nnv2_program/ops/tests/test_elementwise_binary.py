@@ -148,6 +148,21 @@ class TestElementwiseBinary:
         assert is_close(expected_outputs, v.val)
 
     @ssa_fn
+    def test_builder_real_div_both_ints(self):
+        x = np.array([5], dtype=np.int32)
+        y = np.array([2], dtype=np.int32)
+        expected_outputs = np.array([2.5],
+                                     dtype=np.float32)
+        v = cb.real_div(x=x, y=y)
+        assert is_close(expected_outputs, v.val)
+        # real_div should produce float values regardless of input type
+        assert isinstance(v.val[0], float)
+        # make sure the dtype is float
+        assert builtins.is_float(v.dtype)
+        # make sure the symbolic type matches the value type
+        assert v._sym_type.get_primitive() == v._sym_val.get_primitive()
+
+    @ssa_fn
     def test_builder_sub(self):
         x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)

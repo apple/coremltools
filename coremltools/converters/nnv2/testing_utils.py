@@ -24,8 +24,8 @@ def assert_op_count_match(program, expect, op=None, verbose=False):
         np.testing.assert_equal(count, expect)
 
 
-def assert_model_is_valid(
-        program, inputs, backend='nnv1_proto', verbose=True):
+def assert_model_is_valid(program, inputs, backend='nnv1_proto',
+        verbose=True, expected_output_shapes=None):
     """
     Assert Core ML model is valid.
 
@@ -42,18 +42,41 @@ def assert_model_is_valid(
     model = coremltools.models.MLModel(proto)
     assert model is not None
     if verbose:
-        print(model)
+        from coremltools.models.neural_network.printer import print_network_spec
+        print_network_spec(proto, style='coding')
 
-    prediction = model.predict(input_dict)
+    prediction = model.predict(input_dict, useCPUOnly=True)
     assert prediction is not None
-    if verbose:
-        print(prediction)
+    if expected_output_shapes is not None:
+        for out_name, out_shape in expected_output_shapes.items():
+            assert out_name in prediction
+            assert out_shape == prediction[out_name].shape
 
 
 def assert_same_output_names(prog1, prog2, func_name='main'):
     prog1_outputs = [o.name for o in prog1[func_name].outputs]
     prog2_outputs = [o.name for o in prog2[func_name].outputs]
     assert prog1_outputs == prog2_outputs
+
+
+def assert_same_output_shapes(prog1, prog2, func_name='main'):
+    prog1_output_shapes = [o.shape for o in prog1[func_name].outputs]
+    prog2_output_shapes = [o.shape for o in prog2[func_name].outputs]
+    assert prog1_output_shapes == prog2_output_shapes
+
+
+def get_op_types_in_program(prog, func_name='main', skip_const_ops=True):
+    """
+    Return the operation types in prog[func_name],
+    in the same order as they are stored (topological)
+    """
+    op_types_in_program = []
+    for op in prog[func_name].operations:
+        if skip_const_ops:
+            if op.op_type == 'const':
+                continue
+        op_types_in_program.append(op.op_type)
+    return op_types_in_program
 
 
 def random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0, dtype=np.float32):

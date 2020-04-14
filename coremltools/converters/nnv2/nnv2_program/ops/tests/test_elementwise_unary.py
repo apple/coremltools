@@ -15,8 +15,9 @@ class TestElementwiseUnary:
                                  backends,
                                  ['abs', 'acos', 'asin', 'atan', 'atanh',
                                   'exp2', 'clip', 'cos', 'cosh', 'erf', 'exp',
-                                  'erf', 'floor', 'log', 'round', 'rsqrt', 'sign',
-                                  'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'threshold']
+                                  'erf', 'floor', 'inverse', 'log', 'round', 'rsqrt',
+                                  'sign', 'sin', 'sinh', 'sqrt', 'tan', 'tanh',
+                                  'threshold', 'cast']
                              ))
     def test_builder_to_backend_smoke(self, use_cpu_only, backend, mode):
         if mode == 'abs':
@@ -54,6 +55,14 @@ class TestElementwiseUnary:
                                          dtype=np.float32)
 
             build = lambda x: cb.atanh(x=x)
+        elif mode == 'cast':
+            if backend == 'nnv2_proto':
+                #TODO <rdar://problem/61400566> [NNV2] Add cast operation in NNV2 backend and enable tests
+                return
+            val = np.array([[-1.2, 2, -3.6], [4.5, -5, 6.7]], dtype=np.float32)
+            expected_outputs = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.int32)
+
+            build = lambda x: cb.cast(x=x, dtype="int32")
         elif mode == 'ceil':
             val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
             expected_outputs = np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)
@@ -102,6 +111,12 @@ class TestElementwiseUnary:
             expected_outputs = np.array([[-2, 2, -4], [4, -5, 6]], dtype=np.float32)
 
             build = lambda x: cb.floor(x=x)
+        elif mode == 'inverse':
+            val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+            expected_outputs = np.array([[-1.   ,  0.5 , -0.33333334],
+                                      [ 0.25 , -0.2 ,  0.16666667]],
+                                      dtype=np.float32)
+            build = lambda x: cb.inverse(x=x)
         elif mode == 'log':
             val = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
             expected_outputs = np.array([[0., 0.69314718, 1.09861229],
@@ -158,7 +173,7 @@ class TestElementwiseUnary:
             val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
             expected_outputs = np.array([[-0.7615942,  0.9640276, -0.9950548],
                                          [ 0.9993293, -0.9999092,  0.9999877]], dtype=np.float32)
-            
+
             build = lambda x: cb.tanh(x=x)
         elif mode == 'threshold':
             val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
@@ -168,7 +183,7 @@ class TestElementwiseUnary:
 
         input_placeholders = {'x': cb.placeholder(shape=val.shape)}
         input_values = {'x': val}
-        expected_output_types = (2, 3, builtins.fp32)
+        expected_output_types = (2,3,builtins.int32) if mode == "cast" else (2, 3, builtins.fp32)
 
         run_compare_builder(build, input_placeholders, input_values,
                             expected_output_types, expected_outputs,
@@ -219,6 +234,15 @@ class TestElementwiseUnary:
         expected_outputs = np.array([[-1.09861229, -0.54930614, 0.],
                                      [0.42364893, 0.54930614, 1.09861229]],
                                      dtype=np.float32)
+
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_cast_eval(self):
+        val = np.array([[-1.2, 2, -3.4],[4.5, -5, 6.7]], dtype=np.float32)
+        expected_outputs = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.int32)
+
+        v = cb.cast(x=val, dtype= "int32")
 
         assert is_close(expected_outputs, v.val)
 
@@ -289,6 +313,14 @@ class TestElementwiseUnary:
         v = cb.floor(x=val)
         expected_outputs = np.array([[-2, 2, -4], [4, -5, 6]], dtype=np.float32)
 
+        assert is_close(expected_outputs, v.val)
+
+    @ssa_fn
+    def test_builder_inverse_eval(self):
+        val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
+        v = cb.inverse(x=val)
+        expected_outputs = np.array([[-1.   ,  0.5 , -0.33333334],
+                                     [ 0.25 , -0.2 ,  0.16666667]], dtype=np.float32)
         assert is_close(expected_outputs, v.val)
 
     @ssa_fn

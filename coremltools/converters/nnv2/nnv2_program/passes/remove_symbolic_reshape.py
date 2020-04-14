@@ -46,7 +46,7 @@ def remove_symbolic_reshape_block(block):
                     name=op.shape.name+'x', before_op=op)
             reshaped = cb.reshape(x=op.x, shape=shape_const,
                     name=op.name, before_op=op)
-            op.enclosing_block.replace_var_after_op(anchor_op=op,
+            op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
                     old_var=op.outputs[0], new_var=reshaped)
             # Remove all the ops at once
             block.remove_ops([op, op.shape.op])

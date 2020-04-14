@@ -131,10 +131,7 @@ template<typename T> Result validateTrainingInputs(const Specification::ModelDes
         target = updateParams.losslayers(0).meansquarederrorlosslayer().target();
     }
 
-    bool isClassifier = true;
-
-    // Done to detect if the NN is a neuralNetworkClassifier
-    try { (void)(dynamic_cast<const Specification::NeuralNetworkClassifier &>(nn)); } catch (std::bad_cast) { isClassifier = false; }
+    bool isClassifier = (dynamic_cast<const Specification::NeuralNetworkClassifier*>(&nn) != nullptr);
 
     bool trainingInputMeetsRequirement = false;
     for (size_t i = 0; i < trainingInputExclusiveIndices.size(); i++) {

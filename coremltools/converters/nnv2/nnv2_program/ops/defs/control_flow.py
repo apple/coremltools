@@ -76,11 +76,11 @@ class const(Operation):
 
     def _get_type_val(self, value):
 
-        if isinstance(value, float):
+        if isinstance(value, (float, np.float64)):
             value = np.float32(value)
         elif isinstance(value, bool):
             value = np.bool(value)
-        elif isinstance(value, six.integer_types):
+        elif isinstance(value, (six.integer_types, np.int64)):
             value = np.int32(value)
         elif isinstance(value, (tuple, list, np.ndarray)):
             value = np.array(value)
@@ -119,7 +119,7 @@ Shape of cond, a, b must be broadcastable.
 Inputs
 
 * cond <*, T>
-    * Tensor, when True (non-zero), select element from x, otherwise, y
+    * Tensor, when True (non-zero), select element from a, otherwise, b
 * a <*, T> Optional
     * Tensor, values selected at indices where condition is True
     * Defaults to None.

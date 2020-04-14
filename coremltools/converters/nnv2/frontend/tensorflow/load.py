@@ -40,7 +40,7 @@ def load(model, debug=False, **kwargs):
         import graphviz
         dot_string = tf_ssa.get_dot_string(
             annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
-        graphviz.Source(dot_string).view(filename='/tmp/ssa_before_tf_passes.pdf')
+        graphviz.Source(dot_string).view(filename='/tmp/ssa_before_tf_passes', cleanup=True)
 
     tf_passes = [
         delete_asserts,
@@ -62,7 +62,7 @@ def load(model, debug=False, **kwargs):
         import graphviz
         dot_string = tf_ssa.get_dot_string(
             annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
-        graphviz.Source(dot_string).view(filename='/tmp/ssa_after_tf_passes.pdf')
+        graphviz.Source(dot_string).view(filename='/tmp/ssa_after_tf_passes', cleanup=True)
         tf.io.write_graph(tf_graph, '/tmp/', '/tmp/tf_graph.pb', as_text=False)
 
     else:

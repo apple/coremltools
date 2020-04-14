@@ -4,7 +4,7 @@ from coremltools.converters.nnv2.testing_reqs import *
 
 backends = testing_reqs.backends
 
-tf = pytest.importorskip('tensorflow', minversion='2.0.0')
+tf = pytest.importorskip('tensorflow', minversion='2.1.0')
 
 
 class TestActivationReLU:
@@ -111,6 +111,48 @@ class TestConvolution:
 
 
 class TestNormalization:
+    @pytest.mark.parametrize(
+        'use_cpu_only, backend, rank, axis, momentum, epsilon',
+        itertools.product(
+            [True, False],
+            backends,
+            [rank for rank in range(1, 6)],
+            [0, -1],
+            [0.99, 0.85],
+            [1e-2, 1e-5],
+        ))
+    def test_batch_normalization(
+            self, use_cpu_only, backend, rank, axis, momentum, epsilon):
+        shape = np.random.randint(low=2, high=5, size=rank)
+        model = tf.keras.Sequential([
+            tf.keras.layers.BatchNormalization(
+                batch_input_shape=shape, axis=axis, momentum=momentum, epsilon=epsilon)
+        ])
+        run_compare_tf_keras(
+            model, [random_gen(shape, rand_min=-10, rand_max=10)],
+            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize(
+        'use_cpu_only, backend, rank_and_axis, momentum, epsilon',
+        itertools.product(
+            [True, False],
+            backends,
+            [(4, 1), (4, -3)],
+            [0.99, 0.85],
+            [1e-2, 1e-5],
+        ))
+    def test_fused_batch_norm_v3(
+            self, use_cpu_only, backend, rank_and_axis, momentum, epsilon):
+        rank, axis = rank_and_axis
+        shape = np.random.randint(low=2, high=5, size=rank)
+        model = tf.keras.Sequential([
+            tf.keras.layers.BatchNormalization(
+                batch_input_shape=shape, axis=axis, momentum=momentum, epsilon=epsilon)
+        ])
+        run_compare_tf_keras(
+            model, [random_gen(shape, rand_min=-10, rand_max=10)],
+            use_cpu_only=use_cpu_only, backend=backend)
+
     @pytest.mark.parametrize('use_cpu_only, backend, rank, axis, epsilon',
                              itertools.product(
                                  [True, False],
@@ -123,7 +165,7 @@ class TestNormalization:
         shape = np.random.randint(low=2, high=6, size=rank)
         model = tf.keras.Sequential([
             tf.keras.layers.LayerNormalization(
-                batch_input_shape=shape, axis=-1, epsilon=epsilon, trainable=False)
+                batch_input_shape=shape, axis=axis, epsilon=epsilon, trainable=False)
         ])
         run_compare_tf_keras(
             model, [random_gen(shape, rand_min=-100, rand_max=100)],

@@ -85,7 +85,7 @@ def try_to_transform(matmul_op, add_op, block):
                       bias=bias,
                       before_op=matmul_op, name=out_name)
 
-    add_op.enclosing_block.replace_var_after_op(anchor_op=add_op,
+    add_op.enclosing_block.replace_uses_of_var_after_op(anchor_op=add_op,
             old_var=add_op.outputs[0], new_var=x)
     # Remove all the ops at once
     block.remove_ops([matmul_op, add_op])

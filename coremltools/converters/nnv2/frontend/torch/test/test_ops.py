@@ -36,7 +36,7 @@ class TestTorchOps:
     def test_constant(self, context, dtype):
         test_data = torch.ones(1, dtype=dtype)
         node = InternalTorchIRNode(
-            val=test_data, kind="constant", inputs=[], outputs=["1"]
+            attr={"value": test_data}, kind="constant", inputs=[], outputs=["1"]
         )
         ssa = self._construct_test_graph(context, ops.constant, node, "1")
         assert np.allclose(test_data, ssa.val)
@@ -45,7 +45,7 @@ class TestTorchOps:
     def test_constant_magic(self, context):
         test_val = ops.PYTORCH_MAGIC_DEFAULT
         node = InternalTorchIRNode(
-            val=test_val, kind="constant", inputs=[], outputs=["1"]
+            attr={"value": test_val}, kind="constant", inputs=[], outputs=["1"]
         )
         ssa = self._construct_test_graph(context, ops.constant, node, "1")
         # We expect the magic default to get converted to None
@@ -70,7 +70,10 @@ class TestTorchOps:
                 val = vals
             constants.append(
                 InternalTorchIRNode(
-                    val=val, kind="constant", inputs=[], outputs=[str(index)]
+                    attr={"value": val},
+                    kind="constant",
+                    inputs=[],
+                    outputs=[str(index)],
                 )
             )
         input_list = [str(i) for i in range(size)]
@@ -108,7 +111,7 @@ class TestTorchOps:
             num_constants, test_input
         )
         eb_node = InternalTorchIRNode(
-            val=None, kind=op_name, inputs=input_list, outputs=[output_name]
+            kind=op_name, inputs=input_list, outputs=[output_name]
         )
         ssa = self._construct_test_graph(
             context, op, eb_node, output_name, constants=constants
@@ -154,9 +157,14 @@ class TestTorchOps:
             test_input_1 + test_input_2,
         )
 
-    def test_sub(self, context):
-        test_input_1 = np.random.rand(3, 2)
-        test_input_2 = np.random.rand(3, 2)
+    @pytest.mark.parametrize(
+        "test_input_1, test_input_2",
+        [
+            (np.random.rand(3, 2), np.random.rand(3, 2)),
+            (np.random.rand(3, 2), 5) # tests `rsub`
+        ],
+    )
+    def test_sub(self, context, test_input_1, test_input_2):
         scale_factor = 1
         self._test_elementwise_binary(
             context,
@@ -279,6 +287,40 @@ class TestTorchOps:
         assert np.array_equal(ssa.val, expected_val)
 
     @pytest.mark.parametrize(
+        "input_shape, dim0, dim1",
+        [
+            x
+            for x in itertools.product(
+                [(1, 2, 3), (1, 2, 3, 4), (1, 2, 3, 4, 5)], [0, 1, -1], [0, 2, -2],
+            )
+        ]
+        + [((1, 2), None, None)],
+    )
+    def test_transpose(self, context, input_shape, dim0, dim1):
+        test_input = torch.rand(input_shape)
+
+        constant_list = [test_input]
+        if len(input_shape) > 2:
+            constant_list += [dim0, dim1]
+            kind = "transpose"
+            expected_result = torch.transpose(test_input, dim0, dim1)
+        else:
+            kind = "t"
+            expected_result = test_input.t()
+
+        constants, input_list, output_name = self._gen_constants(
+            len(constant_list), constant_list
+        )
+        transpose_node = InternalTorchIRNode(
+            kind=kind, inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.transpose, transpose_node, output_name, constants=constants,
+        )
+        np.testing.assert_array_equal(expected_result.shape, ssa.shape)
+        np.testing.assert_allclose(expected_result, ssa.val)
+
+    @pytest.mark.parametrize(
         "dim1, dim2, dim3", itertools.product([1, 2, 5], [2, 5, 10], [1, 2, 5]),
     )
     def test_matmul(self, context, dim1, dim2, dim3):
@@ -299,6 +341,60 @@ class TestTorchOps:
         )
         expected_result = torch.matmul(mat1, mat2).detach().numpy()
         assert np.allclose(expected_result, ssa.val)
+
+    @pytest.mark.parametrize(
+        "input_shape, axis, expected_shape",
+        [
+            ((1, 2), None, (2,)),
+            ((1, 2), 0, (2,)),
+            ((1, 2, 1), None, (2,)),
+            ((1, 2, 1, 1), None, (2,)),
+            ((1, 2, 1, 1), 2, (1, 2, 1)),
+            ((1, 2, 1, 1, 1), None, (2,)),
+        ],
+    )
+    def test_squeeze(self, context, input_shape, axis, expected_shape):
+        test_data = torch.rand(input_shape)
+        if axis is None:
+            constants, input_list, output_name = self._gen_constants(1, test_data)
+        else:
+            constants, input_list, output_name = self._gen_constants(
+                2, [test_data, axis]
+            )
+        squeeze_node = InternalTorchIRNode(
+            kind="Squeeze", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.squeeze, squeeze_node, output_name, constants=constants
+        )
+        if axis is None:
+            expected_result = torch.squeeze(test_data)
+        else:
+            expected_result = torch.squeeze(test_data, axis)
+        assert np.allclose(expected_result, ssa.val)
+        assert expected_result.size() == torch.Size(expected_shape)
+
+    @pytest.mark.parametrize(
+        "input_shape, axis, expected_shape",
+        [
+            ((2,), 0, (1, 2)),
+            ((2,), 1, (2, 1)),
+            ((2,), -1, (2, 1)),
+            ((2, 3), 1, (2, 1, 3)),
+        ],
+    )
+    def test_unsqueeze(self, context, input_shape, axis, expected_shape):
+        test_data = torch.rand(input_shape)
+        constants, input_list, output_name = self._gen_constants(2, [test_data, axis])
+        unsqueeze_node = InternalTorchIRNode(
+            kind="Unsqueeze", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.unsqueeze, unsqueeze_node, output_name, constants=constants
+        )
+        expected_result = torch.unsqueeze(test_data, axis)
+        assert np.allclose(expected_result, ssa.val)
+        assert expected_result.size() == torch.Size(expected_shape)
 
     @pytest.mark.parametrize(
         "input_shape, start, end",
@@ -416,11 +512,16 @@ class TestTorchOps:
             np.array([stride, stride]),
             np.array([padding, padding]),
             np.array([dilation, dilation]),
-            False, # transposed
-            np.array([0, 0]), # output_pad
+            False,  # transposed
+            np.array([0, 0]),  # output_pad
             groups,
         ]
-        constants, _, output_name = self._gen_constants(len(constant_vals), constant_vals)
+        constants, _, output_name = self._gen_constants(
+            len(constant_vals), constant_vals
+        )
+        # For reference, the values for `kind` and `inputs` indices are determined from the definition for Torch's
+        # `at::_convolution` used for all convolutions. The link below is approximately correct at the time of writing.
+        # https://github.com/pytorch/pytorch/blob/bd604cb5b7ae4f6388aca461891d620b0d485fbb/aten/src/ATen/native/Convolution.cpp#L544
         conv_node = InternalTorchIRNode(
             kind="_convolution",
             inputs=["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "0", "0"],
@@ -440,6 +541,87 @@ class TestTorchOps:
         )
         expected_shape = tuple(torch_conv(test_input).shape)
         assert ssa.val == None
+        assert expected_shape == ssa.shape
+
+    @pytest.mark.parametrize(
+        "depth, height, width, kernel_size, stride, padding, dilation, groups",
+        itertools.product(
+            [5, 5],
+            [5, 6],
+            [5, 7],
+            [1, 3],
+            [(1, 1, 1), (3, 2, 1)],
+            [(1, 1, 1), (1, 3, 2)],
+            [(1, 1, 1), (1, 2, 3)],
+            [
+                1,
+                -1,
+            ],  # -1 groups indicates it should be set to the number of input channels for depthwise convolution
+        ),
+    )
+    def test_convolution3d(
+        self,
+        context,
+        depth,
+        height,
+        width,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        groups,
+        in_channels=2,
+        out_channels=4,
+    ):
+        if groups == -1:
+            groups = in_channels
+        test_input = torch.rand(1, in_channels, depth, height, width)
+        constant_vals = [
+            1,  # None argument
+            test_input,
+            np.random.rand(
+                out_channels,
+                in_channels // groups,
+                kernel_size,
+                kernel_size,
+                kernel_size,
+            ),  # weights
+            np.random.rand(out_channels),  # bias
+            # PyTorch's Conv3d accepts either an int (for all dimensions) or a 3-tuple of ints (one per dimension)
+            np.array([stride[0], stride[1], stride[2]]),
+            np.array([padding[0], padding[1], padding[2]]),
+            np.array([dilation[0], dilation[1], dilation[2]]),
+            False,  # transposed
+            np.array([0, 0, 0]),  # out_pad
+            groups,
+        ]
+        constants, _, output_name = self._gen_constants(
+            len(constant_vals), constant_vals
+        )
+        # For reference, the values for `kind` and `inputs` indices are determined from the definition for Torch's
+        # `at::_convolution` used for all convolutions. The link below is approximately correct at the time of writing.
+        # https://github.com/pytorch/pytorch/blob/bd604cb5b7ae4f6388aca461891d620b0d485fbb/aten/src/ATen/native/Convolution.cpp#L544
+        conv_node = InternalTorchIRNode(
+            kind="_convolution",
+            inputs=["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "0", "0"],
+            outputs=[output_name],
+        )
+
+        ssa = self._construct_test_graph(
+            context, ops._convolution, conv_node, output_name, constants=constants
+        )
+        torch_conv = nn.Conv3d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            groups=groups,
+        )
+        expected_result = torch_conv(test_input)
+        expected_shape = tuple(expected_result.shape)
+        assert ssa.val is None
         assert expected_shape == ssa.shape
 
     @pytest.mark.parametrize(
@@ -469,8 +651,8 @@ class TestTorchOps:
             np.array([stride, stride]),
             np.array([padding, padding]),
             np.array([dilation, dilation]),
-            True, # transposed,
-            np.array([0, 0]), # output_pad
+            True,  # transposed,
+            np.array([0, 0]),  # output_pad
             groups,
             False,
             False,
@@ -478,15 +660,20 @@ class TestTorchOps:
         ]
         graph_inputs = {"input": cb.placeholder(test_input.shape, dtype=builtins.float)}
 
-        constants, input_list, output_name = self._gen_constants(len(constant_vals), constant_vals)
+        constants, input_list, output_name = self._gen_constants(
+            len(constant_vals), constant_vals
+        )
         conv_node = InternalTorchIRNode(
-            kind="_convolution",
-            inputs=["input"] + input_list,
-            outputs=[output_name],
+            kind="_convolution", inputs=["input"] + input_list, outputs=[output_name],
         )
 
         ssa = self._construct_test_graph(
-            context, ops._convolution, conv_node, output_name, constants=constants, graph_inputs=graph_inputs
+            context,
+            ops._convolution,
+            conv_node,
+            output_name,
+            constants=constants,
+            graph_inputs=graph_inputs,
         )
         torch_conv = nn.ConvTranspose2d(
             in_channels=in_channels,
@@ -715,10 +902,13 @@ class TestTorchOps:
             "input2": cb.placeholder(input_shape, dtype=builtins.float),
         }
         dim_node = InternalTorchIRNode(
-            val=axis, kind="constant", inputs=[], outputs=["0"],
+            attr={"value": axis}, kind="constant", inputs=[], outputs=["0"],
         )
         const_tensor_node = InternalTorchIRNode(
-            val=const_input.numpy(), kind="constant", inputs=[], outputs=["1"],
+            attr={"value": const_input.numpy()},
+            kind="constant",
+            inputs=[],
+            outputs=["1"],
         )
         listconstruct_node = InternalTorchIRNode(
             kind="listconstruct", inputs=["1", "input1", "input2"], outputs=["2"]
@@ -847,16 +1037,31 @@ class TestTorchOps:
         expected_shape = nn.functional.interpolate(test_input, **kwargs).shape
         assert ssa.shape == tuple(expected_shape)
 
-    def test_ones(self, context):
-        input_shape = (get_new_symbol(),)
-        graph_inputs = {"input": cb.placeholder(input_shape, dtype=builtins.float)}
-        constants, constant_input_list, output_name = self._gen_constants(4, 1)
+    @pytest.mark.parametrize("shape", [(1, 2), (2, 3, 4, 5), (3, 4, 5),])
+    def test_ones(self, context, shape):
+        constants, constant_input_list, output_name = self._gen_constants(
+            6, [shape, 1, 1, 1, 1, 1]
+        )
         ones_node = InternalTorchIRNode(
-            kind="ones", inputs=["input"] + constant_input_list, outputs=[output_name],
+            kind="ones", inputs=constant_input_list, outputs=[output_name],
+        )
+        ssa = self._construct_test_graph(
+            context, ops.ones, ones_node, output_name, constants=constants,
+        )
+        assert ssa.shape == shape
+
+    @pytest.mark.parametrize("input_shape", [(1, 2), (2, 3, 4, 5), (3, 4, 5),])
+    def test_ones_like(self, context, input_shape):
+        graph_inputs = {"input": cb.placeholder(input_shape, dtype=builtins.float)}
+        constants, constant_input_list, output_name = self._gen_constants(5, 1)
+        ones_node = InternalTorchIRNode(
+            kind="ones_like",
+            inputs=["input"] + constant_input_list,
+            outputs=[output_name],
         )
         ssa = self._construct_test_graph(
             context,
-            ops.ones,
+            ops.ones_like,
             ones_node,
             output_name,
             graph_inputs=graph_inputs,
@@ -949,18 +1154,18 @@ class TestTorchOps:
             assert ssa_dyanmic.val is None
             assert ssa_dyanmic.shape == input_shape
 
-    def _test_avg_pool(
+    def _test_pool(
         self, context, test_input, param_list, op_kind, op_func, expected_result
     ):
         constants, input_list, output_name = self._gen_constants(
             len(param_list) + 1, [test_input] + param_list,
         )
 
-        avg_pool_node = InternalTorchIRNode(
+        pool_node = InternalTorchIRNode(
             kind=op_kind, inputs=input_list, outputs=[output_name]
         )
         ssa = self._construct_test_graph(
-            context, op_func, avg_pool_node, output_name, constants=constants,
+            context, op_func, pool_node, output_name, constants=constants,
         )
         expected_shape = tuple(expected_result.shape)
         assert expected_shape == ssa.shape
@@ -968,12 +1173,14 @@ class TestTorchOps:
     @pytest.mark.parametrize(
         "input_shape, kernel_size, stride, pad, include_pad",
         itertools.product(
-            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0], [True, False],
+            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0, 1], [True, False],
         ),
     )
     def test_avg_pool1d(
         self, context, input_shape, kernel_size, stride, pad, include_pad
     ):
+        if pad > kernel_size / 2:
+            return
         test_input = torch.rand(input_shape)
         expected_result = F.avg_pool1d(
             test_input,
@@ -983,37 +1190,7 @@ class TestTorchOps:
             ceil_mode=False,
             count_include_pad=include_pad,
         )
-        self._test_avg_pool(
-            context,
-            test_input,
-            [[kernel_size], [stride], [pad], False, not include_pad],
-            "avg_pool1d",
-            ops.avg_pool1d,
-            expected_result,
-        )
-
-    # TODO: once the radar is resolved, these test cases can be merged with
-    # the passing ones.
-    @pytest.mark.xfail(reason="rdar://60635129")
-    @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, include_pad",
-        itertools.product(
-            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [2, 3], [1, 2], [1], [True, False]
-        ),
-    )
-    def test_avg_pool1d_xfail(
-        self, context, input_shape, kernel_size, stride, pad, include_pad
-    ):
-        test_input = torch.rand(input_shape)
-        expected_result = F.avg_pool1d(
-            test_input,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=pad,
-            ceil_mode=False,
-            count_include_pad=include_pad,
-        )
-        self._test_avg_pool(
+        self._test_pool(
             context,
             test_input,
             [[kernel_size], [stride], [pad], False, not include_pad],
@@ -1028,13 +1205,15 @@ class TestTorchOps:
             [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
             [1, 2, 3],
             [1, 2],
-            [0],
+            [0, 1],
             [True, False],
         ),
     )
     def test_avg_pool2d(
         self, context, input_shape, kernel_size, stride, pad, include_pad
     ):
+        if pad > kernel_size / 2:
+            return
         test_input = torch.rand(input_shape)
         expected_result = F.avg_pool2d(
             test_input,
@@ -1044,7 +1223,7 @@ class TestTorchOps:
             ceil_mode=False,
             count_include_pad=include_pad,
         )
-        self._test_avg_pool(
+        self._test_pool(
             context,
             test_input,
             [
@@ -1060,32 +1239,62 @@ class TestTorchOps:
             expected_result,
         )
 
-    # TODO: once the radar is resolved, these test cases can be merged with
-    # the passing ones.
-    @pytest.mark.xfail(reason="rdar://60635129")
     @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, include_pad",
+        "input_shape, kernel_size, stride, pad",
         itertools.product(
-            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
-            [2, 3],
-            [1, 2],
-            [1],
-            [True, False],
+            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0, 1],
         ),
     )
-    def test_avg_pool2d_xfail(
-        self, context, input_shape, kernel_size, stride, pad, include_pad
+    @pytest.mark.xfail(reason="torch converter for max_pool1d not implemented")
+    def test_max_pool1d(
+            self, context, input_shape, kernel_size, stride, pad
     ):
+        if pad > kernel_size / 2:
+            # Because this test is xfail, we have to fail rather than
+            # just return here, otherwise these test cases unexpectedly pass.
+            # This can be changed to `return` once the above radar
+            # is fixed and the test is no longer xfail.
+            raise ValueError('pad must be less than half the kernel size')
         test_input = torch.rand(input_shape)
-        expected_result = F.avg_pool2d(
+        expected_result = F.max_pool1d(
             test_input,
             kernel_size=kernel_size,
             stride=stride,
             padding=pad,
             ceil_mode=False,
-            count_include_pad=include_pad,
         )
-        self._test_avg_pool(
+        self._test_pool(
+            context,
+            test_input,
+            [[kernel_size], [stride], [pad], False, True],
+            "max_pool1d",
+            ops.max_pool1d,
+            expected_result,
+        )
+
+    @pytest.mark.parametrize(
+        "input_shape, kernel_size, stride, pad",
+        itertools.product(
+            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
+            [1, 2, 3],
+            [1, 2],
+            [0, 1],
+        ),
+    )
+    def test_max_pool2d(
+            self, context, input_shape, kernel_size, stride, pad
+    ):
+        if pad > kernel_size / 2:
+            return
+        test_input = torch.rand(input_shape)
+        expected_result = F.max_pool2d(
+            test_input,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=pad,
+            ceil_mode=False,
+        )
+        self._test_pool(
             context,
             test_input,
             [
@@ -1093,11 +1302,11 @@ class TestTorchOps:
                 [stride, stride],
                 [pad, pad],
                 False,
-                not include_pad,
+                True,  # include_pad, doesn't matter.
                 None,
             ],
-            "avg_pool2d",
-            ops.avg_pool2d,
+            "max_pool2d",
+            ops.max_pool2d,
             expected_result,
         )
 
@@ -1273,3 +1482,141 @@ class TestTorchOps:
             graph_inputs=graph_inputs,
         )
         assert ssa.shape == ()
+
+    @pytest.mark.parametrize(
+        "chunks, dim", itertools.product([2, 3, 5], [0, 1, 2, 3]),
+    )
+    def test_constantchunk(self, context, chunks, dim):
+        test_input = torch.rand(5, 8, 9, 11)
+        expected_result = test_input.chunk(chunks, dim=dim)
+        constants, input_list, first_output = self._gen_constants(1, [test_input])
+        outputs = [str(int(first_output) + i) for i in range(len(expected_result))]
+        node = InternalTorchIRNode(
+            attr={"chunks": chunks, "dim": dim},
+            kind="constantchunk",
+            inputs=input_list,
+            outputs=outputs,
+        )
+        self._construct_test_graph(
+            context, ops.constantchunk, node, first_output, constants=constants
+        )
+        actual_result = [context[name] for name in outputs]
+
+        np.testing.assert_equal(len(expected_result), len(actual_result))
+        for ex_res, ssa_res in zip(expected_result, actual_result):
+            np.testing.assert_allclose(ex_res.numpy(), ssa_res.val, atol=1e-6)
+
+    @pytest.mark.parametrize(
+        "input_shape, shape",
+        [
+            ((3, 1), (3, 4)),
+            ((3, 1), (-1, 4)),
+            ((3, 1, 1), (3, 4, 1)),
+            ((3, 1, 1), (3, -1, 5)),
+            ((3, 1, 1), (3, 4, 5)),
+            ((1, 3, 1, 1), (2, 3, -1, 1)),
+            ((1, 3, 4, 1), (2, 3, -1, 5)),
+        ],
+    )
+    def test_expand(self, context, input_shape, shape):
+        test_input = torch.rand(input_shape)
+        constants, input_list, output_name = self._gen_constants(2, [test_input, shape])
+        node = InternalTorchIRNode(
+            kind="expand", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.expand, node, output_name, constants=constants
+        )
+        expected_result = test_input.expand(shape)
+        np.testing.assert_allclose(expected_result, ssa.val)
+
+    @pytest.mark.parametrize(
+        "input_shape, other_shape",
+        [
+            ((3, 1), (3, 4)),
+            ((3, 1, 1), (3, 4, 1)),
+            ((3, 1, 1), (3, 4, 5)),
+            ((1, 3, 1, 1), (2, 3, 4, 1)),
+            ((1, 3, 4, 1), (2, 3, 4, 5)),
+            ((1, 3, 4, 1), (1, 3, 4, 5)),
+        ],
+    )
+    def test_expand_as(self, context, input_shape, other_shape):
+        test_input = torch.rand(input_shape)
+        other = torch.rand(other_shape)
+        constants, input_list, output_name = self._gen_constants(2, [test_input, other])
+        node = InternalTorchIRNode(
+            kind="expand_as", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.expand_as, node, output_name, constants=constants
+        )
+        expected_result = test_input.expand_as(other)
+        np.testing.assert_allclose(expected_result, ssa.val)
+
+    @pytest.mark.parametrize(
+        "start, end, step",
+        [x for x in itertools.product((None, 0, 2), (5, 10), (None,),)]
+        + [x for x in itertools.product((0, 2), (5, 10), (1, 2))],
+    )
+    def test_arange(self, context, start, end, step):
+        # Arange can get [end], [start, end], or [start, end, step]
+        args = [x for x in [start, end, step] if x is not None]
+        args += [0, 0, 0, False]  # Extra args needed but ignored by arange
+        constants, input_list, output_name = self._gen_constants(len(args), args)
+        node = InternalTorchIRNode(
+            kind="arange", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.arange, node, output_name, constants=constants
+        )
+        kwargs = {"end": end}
+        if start is not None:
+            kwargs["start"] = start
+        if step is not None:
+            kwargs["step"] = step
+        expected_result = torch.arange(**kwargs)
+        np.testing.assert_allclose(expected_result, ssa.val)
+
+    @pytest.mark.parametrize(
+        "input_shape, axis",
+        [
+            ((2, 3), 0),
+            ((2, 3, 4), 1),
+            ((2, 3, 4, 5), 0),
+            ((2, 3, 4, 5), 2),
+        ]
+    )
+    def test_masked_fill(self, context, input_shape, axis):
+        mask_shape = list(input_shape)
+        mask_shape[axis] = 1
+        mask = torch.randint(0, 1, mask_shape, dtype=torch.bool)
+        input_data = torch.rand(input_shape)
+        value = -1.0
+        constants, input_list, output_name = self._gen_constants(3, [input_data, mask, value])
+        node = InternalTorchIRNode(
+            kind="masked_fill", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.masked_fill, node, output_name, constants=constants
+        )
+        expected_result = input_data.masked_fill(mask, value)
+        np.testing.assert_allclose(expected_result, ssa.val)
+
+    @pytest.mark.parametrize(
+        "sizes", itertools.permutations([1,2,3])
+    )
+    def test_meshgrid(self, context, sizes):
+        input_tensors = [torch.rand(size) for size in sizes]
+        expected_results = torch.meshgrid(input_tensors)
+        constants, input_list, output_name = self._gen_constants(
+            3, input_tensors
+        )
+        node = InternalTorchIRNode(
+            kind="meshgrid", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.meshgrid, node, output_name, constants=constants,
+        )
+        for expected_result, ssa_result in zip(expected_results, ssa):
+            np.testing.assert_allclose(expected_result.numpy(), ssa_result.val)

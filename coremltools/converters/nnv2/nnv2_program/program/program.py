@@ -12,6 +12,7 @@ from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic
 from .var import Var, InternalVar
 from .input_type import TupleInputType
+from .dot_visitor import DotVisitor
 
 # BLOCK_STACK[-1] is the current block
 BLOCK_STACK = []
@@ -133,14 +134,18 @@ class Operation(object):
 
     def set_inputs(self, **kwargs):
         self._validate_and_set_inputs(**kwargs)
-        self.type_value_inference()
+        if not kwargs.get('no_check_var_types', False):
+            self.type_value_inference()
 
-    def type_value_inference(self):
+    def type_value_inference(self, overwrite_output=False):
         """
         Perform type inference and auto_val computation based on new input Vars
         in kwargs. If self._output_vars is None then we generate _output_vars;
         otherwise no new Var is created, but type inference result is verified
-        against existing _output_vars.
+        against existing _output_vars, if overwrite_output is False.
+
+        If overwrite_output is True, then the type inference result overwrites the
+        existing _output_vars
         """
         output_types = self.type_inference()
         if not isinstance(output_types, tuple):
@@ -177,17 +182,26 @@ class Operation(object):
                 out_var = self._output_vars[i]
                 # Check type inference
                 if sym_type != out_var.sym_type:
-                    msg = "Output Var {} in op {} type changes with new input Vars"
-                    raise ValueError(msg.format(out_var.name, self.name))
+                    if overwrite_output:
+                        out_var._sym_type = sym_type
+                    else:
+                        msg = "Output Var '{}' in op '{}' type changes with new input Vars"
+                        raise ValueError(msg.format(out_var.name, self.name))
 
                 # Check value inference
                 if sym_val is not None and out_var.sym_val is None:
-                    msg = 'value_inference failed with new inputs for op {}'
-                    raise ValueError(msg.format(self.name))
+                    if overwrite_output:
+                        out_var._sym_val = sym_val
+                    else:
+                        msg = 'value_inference failed with new inputs for op {}'
+                        raise ValueError(msg.format(self.name))
                 if sym_val is not None and out_var.sym_val is not None:
                     if np.any(sym_val.val != out_var.sym_val):
-                        msg = 'value_inference differs for var {} in op {}'
-                        raise ValueError(msg.format(output_var.name, self.name))
+                        if overwrite_output:
+                            out_var._sym_val = sym_val
+                        else:
+                            msg = 'value_inference differs for var {} in op {}'
+                            raise ValueError(msg.format(out_var.name, self.name))
 
     def _auto_val(self, output_types):
         """
@@ -287,11 +301,13 @@ class Operation(object):
             "value",
             "version",
             "before_op",
-            "no_check",  # no_check==True to deviate from SSA
+            "no_check_var_visibility",  # no_check_var_visibility==True to deviate from SSA
+            "no_check_var_types", # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
         ]
         op_inputs = list(self._input_types.keys())
         legal_args = op_inputs + non_attributes
-        no_check = kwargs.get('no_check', False)
+        no_check_var_visibility = kwargs.get('no_check_var_visibility', False)
+        no_check_var_types = kwargs.get('no_check_var_types', False)
 
         for key in kwargs.keys():
             if key not in legal_args:
@@ -308,18 +324,20 @@ class Operation(object):
                     if isinstance(existing_input_var, (list, tuple)):
                         for v_old, v_new in zip(existing_input_var, var):
                             if v_old.sym_type != v_new.sym_type:
-                                msg = 'New var type {} != existing var type {}'
-                                raise ValueError(msg.format(v_new.sym_type,
-                                    v_old.sym_type))
-                            v_old.remove_child_op(self, no_check)
+                                if not no_check_var_types:
+                                    msg = 'New var type {} != existing var type {}'
+                                    raise ValueError(msg.format(v_new.sym_type,
+                                        v_old.sym_type))
+                            v_old.remove_child_op(self, no_check_var_visibility)
                     else:
                         # Check new var's sym_type is compatible with the
                         # existing's sym_type.
                         if existing_input_var.sym_type != var.sym_type:
-                            msg = 'New var type {} != existing var type {}'
-                            raise ValueError(msg.format(var.sym_type,
-                                existing_input_var.sym_type))
-                        existing_input_var.remove_child_op(self, no_check)
+                            if not no_check_var_types:
+                                msg = 'New var type {} != existing var type {}'
+                                raise ValueError(msg.format(var.sym_type,
+                                    existing_input_var.sym_type))
+                        existing_input_var.remove_child_op(self, no_check_var_visibility)
 
                 # Set var as input_var
                 if isinstance(var, Var):
@@ -699,10 +717,10 @@ class SsaBlock(object):
         A private API used by builder. Please use `builder.YOUR_OP(...,before_op)`.
 
         new_op's outputs are not used (not input to any other op) after
-        this call. All inputs to new_op must visible at or before
-        before_op (i.e., new_op must be added in topologically sorted
+        this call. All inputs to new_op must be visible at or before
+        the before_op (i.e., new_op must be added in topologically sorted
         order). Note that this is more restrictive than NNv2, whose Block
-        supports lexical scoping and can thus op can reference Var in enclosing
+        supports lexical scoping and thus an op can reference Var in enclosing
         scopes. new_op.name must be unique in the block.
 
         before_op=None to append new_op at the end of self.operations.
@@ -710,7 +728,10 @@ class SsaBlock(object):
         Given:   %2 = op0(%1, %1)
                  %4 = op2(%1)
                  %6 = op3(%4, %4)
-        Execute: insert_op_before(op2, op1)
+
+        Execute: insert_op_before(op1, before_op=op2),
+                 where %3 = op1(%1, %2)
+
         Result:  %2 = op0(%1, %1)
                  %3 = op1(%1, %2)
                  %4 = op2(%1)
@@ -720,7 +741,7 @@ class SsaBlock(object):
         %1, %2 as inputs. Typically it's builder's job to create an op and
         insert into the current block.
 
-        Comment: insert_op_before(op0, op1) would error as %2 (an input to op1)
+        Comment: insert_op_before(op1, before_op=op0) would error as %2 (an input to op1)
         is not visible before op0.
         """
         self.validate()
@@ -756,11 +777,18 @@ class SsaBlock(object):
         else:
             self.operations.insert(idx, new_op)
 
-    def _replace_var(self, old_var, new_var, start=0, no_check=False):
-        """Helper function for replace_var_after_op"""
+    def _replace_var(self, old_var, new_var, start=0, end_id=-1, no_check_var_visibility=False,
+                     no_check_var_types=False):
+        """Helper function for replace_uses_of_var_after_op"""
         num_ops_affected = 0
-        for op in self.operations[start:]:
-            new_inputs = {'no_check': no_check}
+
+        if end_id == -1:
+            op_list = self.operations[start:]
+        else:
+            op_list = self.operations[start:end_id+1]
+
+        for op in op_list:
+            new_inputs = {'no_check_var_visibility': no_check_var_visibility, 'no_check_var_types': no_check_var_types}
             affected = False
             for k, v in op.inputs.items():
                 if isinstance(v, (list, tuple)) and old_var in v:
@@ -780,20 +808,36 @@ class SsaBlock(object):
             for b in op.blocks:
                 num_ops_affected += b._replace_var(old_var, new_var)
 
+        if end_id != -1 and old_var.op not in op_list:
+            return num_ops_affected
+
         # If old_var is block's output, replace as well.
         if old_var in self._outputs:
             idx = self._outputs.index(old_var)
             self._outputs[idx] = new_var
         return num_ops_affected
 
-    def replace_var_after_op(self, anchor_op, old_var, new_var,
-            no_check=False):
+    def replace_uses_of_var_after_op(self, anchor_op, old_var, new_var, no_check_var_visibility=False,
+                                     end_op=None,
+                                     no_check_var_types=False):
         """
-        Replace all uses of `old_var` with `new_var` after `anchor_op`. If
-        `anchor_op` is None, replace all occurences of `old_var` in the block.
+        Replace all uses of `old_var` with `new_var` after `anchor_op`,
+        and before `end_op` (inclusive).
 
-        no_check: True to disable the check ensuring new_var is visible
+        That is all the ops that use `old_var` will now use `new_var`.
+        The op that produces the `old_var` will continue to produce it, its output
+        won't be replaced by `new_var`.
+
+        If `anchor_op` is None, replace all input occurrences of `old_var` in the block.
+        If `end_op` is None, all occurrences of `old_var` are replaced in the block starting from the op just
+        after `anchor_op`
+
+        no_check_var_visibility: True to disable the check ensuring new_var is visible
         (visibility requirement depends on anchor_op).
+
+        no_check_var_types: An error will be raised if the type of new_var is not same as the old_var, unless
+        `no_check_var_types` is set to True. Normally type inference is re-invoked for all the child ops of `old_var`
+         after updating it to `new_var`. However, this is skipped if `no_check_var_types` is set to True.
 
         old_var, new_var must meet the following conditions:
 
@@ -811,25 +855,51 @@ class SsaBlock(object):
                  %3 = op1(%1, %2)
                  %4 = op2(%1)
                  %6 = op3(%4, %4)
-        Execute: replace_var_after_op(op2, %4, %3)
+
+        Execute: replace_uses_of_var_after_op(op2, %4, %3)
+
         Result:  %2 = op0(%1, %1)
                  %3 = op1(%1, %2)
                  %4 = op2(%1)
                  %6 = op3(%3, %3)     # type inference check against %6
 
 
-        Comment: Execute: replace_var_after_op(op1, %4, %3) would lead to
+        Comment: Execute: replace_uses_of_var_after_op(op1, %4, %3) would lead to
         identical results, as op2 does not take %4 as input.
 
-        Comment: replace_var_after_op(op0, %4, %3) cause error as %3 is
+        Comment: replace_uses_of_var_after_op(op0, %4, %3) would cause error as %3 is
         after op0
 
         Comment: To avoid clutter, we drop the names of arguments and return
         Var in the illustration above.
+
+
+        Another example, usage of "end_op":
+
+        Given:   %2 = op0(%1, %1)
+                 %3 = op1()
+                 %4 = op2(%1, %2)
+                 %5 = op3(%2)
+
+        if execute replace_uses_of_var_after_op(anchor_op=op0, old_var=%2, new_var=%3)
+
+        Result:  %2 = op0(%1, %1)
+                 %3 = op1()
+                 %4 = op2(%1, %3)
+                 %5 = op3(%3)
+
+        if execute replace_uses_of_var_after_op(anchor_op=op0, old_var=%2, new_var=%3, end_op=op2)
+
+        Result:  %2 = op0(%1, %1)
+                 %3 = op1()
+                 %4 = op2(%1, %3)           # %2 is replaced with %3 till here
+                 %5 = op3(%2)               # will continue using %2
+
         """
         self.validate()
         # Get visible vars from enclosing block
         visible_vars = self._visible_vars_from_enclosing_block()
+
         if anchor_op is not None:
             # Get visible vars from the current block
             idx, block_vars = self._visible_vars_in_block(anchor_op,
@@ -844,15 +914,25 @@ class SsaBlock(object):
             # Perform replacement from beginning
             start = 0
 
-        if not no_check and new_var not in visible_vars:
-            msg = "new_var {} is not visible in block {} at or before "\
-                    + "anchor_op {}"
+        if not no_check_var_visibility and new_var not in visible_vars:
+            msg = "new_var '{}' is not visible in block '{}' at or before "\
+                    + "anchor_op '{}'"
             anchor_op_name = "None" if anchor_op is None else anchor_op.name
             raise ValueError(
                 msg.format(new_var.name, self.name, anchor_op_name))
 
+        if end_op is not None:
+            end_id, _ = self._visible_vars_in_block(end_op, inclusive=True)
+        else:
+            end_id = -1
+
+        if end_id > start:
+            msg = "end_op '{}' comes before the anchor_op '{}'"
+            raise ValueError(msg.format(end_op.name, anchor_op.name))
+
         num_ops_affected = self._replace_var(old_var, new_var,
-                start=start, no_check=no_check)
+                start=start, end_id=end_id, no_check_var_visibility=no_check_var_visibility,
+                no_check_var_types=no_check_var_types)
 
         logging.debug(
             "Num ops affected in replacing var: {}".format(num_ops_affected))
@@ -886,7 +966,7 @@ class SsaBlock(object):
                 # Check that no ops depend on op's outputs
                 if len(v.child_ops) > 0:
                     child_op_names = [s.name for s in v.child_ops]
-                    msg = "Cannot delete op {} with active output {}: {} " +\
+                    msg = "Cannot delete op '{}' with active output at id {}: '{}' " +\
                             "used by ops {}"
                     raise ValueError(
                         msg.format(op.name, i, v.name, child_op_names))
@@ -930,6 +1010,51 @@ class SsaBlock(object):
 
     def __str__(self):
         return self.indented_str()
+
+
+    def get_dot_string(self, function_name='main', prefix_id=0,
+                       highlight_debug_op_types = [],
+                       highlight_debug_op_names = []):
+        """
+        Return the dot string that can be used to show the block
+        with dot. Const ops are not added to the dot string.
+
+        * Input vars : yellow
+        * output vars : goldenrod2
+        * op names that user wants to highlight, provided in "highlight_debug_op_names": cyan
+        * op types that user wants to highlight, provided in "highlight_debug_op_types": green
+
+        Examples
+        --------
+        >>> import graphviz
+        >>> graphviz.Source(block.get_dot_string()).view()
+        >>> # OR
+        >>> graphviz.Source(block.get_dot_string()).view(filename='graph.pdf')
+        """
+
+        dotstring = 'digraph g {\n' + \
+                    '\tcompound=true;\n'
+
+        input_var_names = list(self.inputs.keys())
+        output_var_names = [v.name for v in self.outputs]
+
+        debug_op_types = []
+        if len(highlight_debug_op_types) > 0:
+            for op in self.operations:
+                if op.op_type in highlight_debug_op_types:
+                    debug_op_types.append(op.name)
+
+        vis = DotVisitor()
+        vis.highlight_nodes(input_var_names, 'yellow') \
+           .highlight_nodes(output_var_names,'goldenrod2') \
+           .highlight_nodes(highlight_debug_op_names,'cyan') \
+           .highlight_nodes(debug_op_types,'green')
+
+        vis.visit_all(self, nodename_prefix=str(prefix_id))
+        res = vis.get_result('subgraph', 'cluster_' + function_name.replace('/', '_'))
+        dotstring += '\n'.join('\t' + r for r in res.split('\n')) + "\n"
+        dotstring += "}"
+        return dotstring
 
 
 class SsaFunction(SsaBlock):
