@@ -14,7 +14,13 @@ from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
 
 if _HAS_SKLEARN:
     import sklearn
-    from sklearn.preprocessing import Imputer
+    try:
+        # scikit-learn >= 0.21
+        from sklearn.impute import SimpleImputer as Imputer
+    except ImportError:
+        # scikit-learn < 0.21
+        from sklearn.preprocessing import Imputer
+        
     model_type = 'transformer'
     sklearn_class = sklearn.preprocessing.Imputer
 
