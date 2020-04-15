@@ -23,7 +23,7 @@ Model::~Model() {
     NSError *error = nil;
     NSFileManager *fileManager = [NSFileManager defaultManager];
     if (compiledUrl != nil) {
-        [fileManager removeItemAtPath:[[compiledUrl URLByDeletingLastPathComponent] path]  error:&error];
+        [fileManager removeItemAtURL:compiledUrl error:&error];
     }
 }
 
