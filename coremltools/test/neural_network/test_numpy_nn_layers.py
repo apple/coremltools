@@ -4510,11 +4510,11 @@ class CoreML3NetworkStressTest(CorrectnessTest):
             kernel_size = [1,3,5], # square kernels
             strides = [1,2],
             dilation_rate = [1],
-            batch_size = [1, 64, 512, 1024]
+            batch_size = [1, 64, 512]
         )
 
         input_size = 64
-        input_channels = 256
+        input_channels = 64
         input_dim = [1, input_channels, input_size, input_size]
 
         def conv_spatial_size(image_size, kernel_size, stride, dilation,
@@ -4589,11 +4589,11 @@ class CoreML3NetworkStressTest(CorrectnessTest):
             kernel_size = [1, 3, 4], # square kernels
             strides = [1, 2],
             dilation_rate = [1, 2],
-            batch_size = [1, 32, 256, 1024]
+            batch_size = [1, 32, 512]
         )
 
         input_size = 64
-        input_channels = 256
+        input_channels = 64
         input_dim = [1, input_channels, input_size, input_size]
 
         def conv_spatial_size(image_size, kernel_size, stride, dilation,
