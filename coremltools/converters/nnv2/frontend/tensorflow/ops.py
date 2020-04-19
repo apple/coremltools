@@ -3,9 +3,10 @@ import six
 import numpy as np
 
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
-from coremltools.converters.nnv2.builtin_types import builtins
+from coremltools.converters.nnv2.nnv2_program.ops.defs._utils import broadcast_shapes
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
+from coremltools.converters.nnv2.builtin_types import builtins
 
 def _transpose_NHWC_to_NCHW(x):
     return cb.transpose(x=x, perm=[0, 3, 1, 2])
@@ -247,6 +248,74 @@ def Equal(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
     x = cb.equal(x=x, y=y, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def ExtractImagePatches(context, node):
+    x = context[node.inputs[0]]
+    sizes = node.attr.get('ksizes')
+    strides = node.attr.get('strides')
+    rates = node.attr.get('rates')
+    padding = node.attr.get('padding')
+    if x.rank != 4:
+        raise ValueError('input for ExtractImagePatches should be a 4D tensor.')
+    if not all([rate==1 for rate in rates]):
+        raise NotImplementedError('only rates with all 1s is implemented for ExtractImagePatches.')
+    if len(sizes) != 4 or sizes[0] != 1 or sizes[3] != 1:
+        raise ValueError('ExtractImagePatches only supports sizes (4D tensor) with 1s for batch and channel dimensions.')
+    if len(sizes) != 4 or strides[0] != 1 or strides[3] != 1:
+        raise ValueError('ExtractImagePatches only supports strides (4D tensor) with 1s for batch and channel dimensions.')
+    if not padding in ["VALID", "SAME"]:
+        raise ValueError('non-supported padding for ExtractImagePatches.')
+    h, w = x.shape[1], x.shape[2]
+
+    # padding for SAME mode
+    if padding == "SAME":
+        delta_h = h % strides[1] if h % strides[1] != 0 else strides[1]
+        delta_w = w % strides[2] if w % strides[2] != 0 else strides[2]
+        last_h = h - delta_h + 1
+        last_w = w - delta_w + 1
+        pad_h = max(0, last_h + sizes[1] - 1 - h)
+        pad_w = max(0, last_w + sizes[2] - 1 - w)
+        pad_h = [pad_h//2, pad_h//2 if pad_h%2 ==0 else pad_h//2+1]
+        pad_w = [pad_w//2, pad_w//2 if pad_w%2 == 0 else pad_w//2+1]
+        pad = np.array([[0,0],pad_h,pad_w,[0,0]]).astype(np.int32)
+        pad = pad.reshape(-1)
+        if not all(pad == 0):
+            x = cb.pad(x=x, pad=pad, mode='constant', constant_val=0.)
+            h, w = x.shape[1], x.shape[2]
+
+    # compute boxes
+    batch = x.shape[0]
+    boxes = []
+    h_index = list(range(0, h-sizes[1]+1, strides[1]))
+    w_index = list(range(0, w-sizes[2]+1, strides[2]))
+    for hi in h_index:
+        for wi in w_index:
+            boxes.append((hi, wi, hi+sizes[1]-1, wi+sizes[2]-1))
+
+    boxes = np.array(boxes)
+    box_indices = np.arange(batch)
+    box_indices = np.tile(box_indices,(len(boxes),1))
+    box_indices = np.transpose(box_indices)
+    box_indices = box_indices.reshape(-1, 1)
+    boxes = np.tile(boxes,(batch,1))
+    boxes = np.concatenate([box_indices, boxes], axis=1)
+    boxes = boxes.reshape(boxes.shape[0], 1, boxes.shape[1], 1, 1)
+
+    # use crop_and_resize
+    x = _transpose_NHWC_to_NCHW(x)
+    x = cb.crop_resize(x=x,
+                       roi=boxes,
+                       target_height=sizes[1],
+                       target_width=sizes[2],
+                       normalized_coordinates=False,
+                       spatial_scale=1.,
+                       box_coordinate_mode='CORNERS_HEIGHT_FIRST',
+                       sampling_mode='ALIGN_CORNERS')
+    x = cb.squeeze(x=x, axes=[1])
+    x = _transpose_NCHW_to_NHWC(x, node_name=node.name+'_transpose_to_nhwc')
+    x = cb.reshape(x=x, shape=(batch, len(h_index), len(w_index), -1), name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -1066,6 +1135,14 @@ def LeakyReLU(context, node):
     context.add(node.name, x)
 
 
+@register_tf_op
+def Selu(context, node):
+    x = context[node.inputs[0]]
+    x = cb.elu(x=x, alpha=1.6732632423543772)
+    x = cb.mul(x=x, y=1.0507009873554805, name=node.name)
+    context.add(node.name, x)
+
+
 @register_tf_op(tf_alias=['SelectV2'])
 def Select(context, node):
     cond = context[node.inputs[0]]
@@ -1258,6 +1335,19 @@ def Range(context,node):
     x = cb.range_1d(start=start, end=end, step=step, name=node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def RandomUniform(context,node):
+    shape = context[node.inputs[0]]
+    seed = node.attr['seed']
+    x = cb.random_uniform(shape=shape, seed=seed, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def RandomStandardNormal(context,node):
+    shape = context[node.inputs[0]]
+    seed = node.attr['seed']
+    x = cb.random_normal(shape=shape, seed=seed, name=node.name)
+    context.add(node.name, x)
 
 @register_tf_op
 def OneHot(context,node):
@@ -1322,7 +1412,7 @@ def ResizeNearestNeighbor(context, node):
 
     Hout, Wout = context[node.inputs[1]].val
 
-    if not (isinstance(Hout, np.int32) and isinstance(Wout, np.int32)):
+    if not (isinstance(Hout, (np.int32, np.int64)) and isinstance(Wout, (np.int32, np.int64))):
         raise ValueError(
             '\"ResizeNearestNeighbor\" op: the second input, which is the output size, must have elements of type int32')
 
@@ -1455,6 +1545,7 @@ def While(context, node):
     loop_vars = context[node.inputs[0]]  # python tuple of Vars
     cond_graph = context.get_graph(node.attr['cond_function'])
     body_graph = context.get_graph(node.attr['body_function'])
+
     def cond(*loop_vars):
         context.stack_func_inputs(loop_vars)
 
@@ -1671,12 +1762,91 @@ def CropAndResize(context, node):
                        sampling_mode=method)
 
     # CoreML output format: [N, 1, C, h_out, w_out]
-    # TF output format: [N, h_out, h_out, C]
+    # TF output format: [N, h_out, w_out, C]
     x = cb.squeeze(x=x, axes=[1])
     x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
 
 
 @register_tf_op
-def NoOp(context, node):
-    pass
+def TensorArrayV3(context, node):
+    if 'infer_shape' in node.attr:
+        if not node.attr['infer_shape']:
+            raise ValueError('Only fixed size TensorArray is supported')
+    elem_shape = node.attr.get('element_shape', None)
+    size = node.attr.get('size', None)
+    if size is None:
+        size = context[node.inputs[0]]
+    builtin_dtype = node.attr['dtype']
+    dtype_str = builtins.builtin_to_string(builtin_dtype)
+    if elem_shape is not None:
+        ls = cb.make_list(init_length=size, dtype=dtype_str,
+                elem_shape=elem_shape, name=node.name)
+    else:
+        ls = cb.tf_make_list(init_length=size, dtype=dtype_str,
+                name=node.name)
+    context.add(node.name, ls)
+
+@register_tf_op
+def TensorArrayWriteV3(context, node):
+    index = context[node.inputs[0]]
+    new_val = context[node.inputs[1]]
+    ls = context[node.inputs[2]]
+    new_list = cb.list_write(ls=ls, index=index, value=new_val,
+            name=node.name)
+    context.add(node.name, new_list)
+
+@register_tf_op
+def TensorArraySizeV3(context, node):
+    ls = context[node.inputs[0]]
+    length = cb.list_length(ls=ls, name=node.name)
+    context.add(node.name, length)
+
+@register_tf_op
+def TensorArrayGatherV3(context, node):
+    indices = context[node.inputs[0]]
+    ls = context[node.inputs[1]]
+    tensor = cb.list_gather(ls=ls, indices=indices,
+            name=node.name)
+    context.add(node.name, tensor)
+
+@register_tf_op
+def TensorArrayReadV3(context, node):
+    ls = context[node.inputs[0]]
+    idx = context[node.inputs[1]]
+    ls = cb.list_read(ls=ls, index=idx,
+            name=node.name)
+    context.add(node.name, ls)
+
+@register_tf_op
+def TensorArrayScatterV3(context, node):
+    indices = context[node.inputs[0]]
+    value = context[node.inputs[1]]
+    ls = context[node.inputs[2]]
+    ls = cb.list_scatter(ls=ls, indices=indices,
+            value=value, name=node.name)
+    context.add(node.name, ls)
+
+
+@register_tf_op
+def BroadcastTo(context, node):
+    x = context[node.inputs[0]]
+    shape = context[node.inputs[1]]
+    if shape.val is None:  # dynamic shape
+        raise NotImplementedError('dynamic shape not yet supported')
+    else:  # static shape
+        target_shape = tuple(shape.val)
+        broadcast_shape = broadcast_shapes(x.shape, target_shape)
+        if target_shape != broadcast_shape:
+            msg = 'shapes are not broadcastable: {} vs. {}'
+            raise ValueError(msg.format(x.shape, target_shape))
+        target_rank = len(target_shape)
+        if x.rank != target_rank:
+            axes = [i for i in range(target_rank - x.rank)]
+            x = cb.expand_dims(x=x, axes=axes)
+        reps = [1] * target_rank
+        for i in range(target_rank):
+            reps[i] = target_shape[i] // x.shape[i]
+
+    x = cb.tile(x=x, reps=reps, name=node.name)
+    context.add(node.name, x)

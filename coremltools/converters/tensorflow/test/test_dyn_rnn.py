@@ -134,9 +134,3 @@ class TFDynRNNTest(TFNetworkTest):
         ]
         self._test_tf_model(graph, {'input': input_shape}, output_node_names)
 
-
-if __name__ == '__main__':
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(TFDynRNNTest('test_lstm_block_fused_cell'))
-    # unittest.TextTestRunner().run(suite)

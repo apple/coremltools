@@ -157,3 +157,10 @@ try:
     import torch
 except:
     HAS_TORCH = False
+
+# ---------------------------------------------------------------------------------------
+HAS_ONNX = True
+try:
+    import onnx
+except:
+    HAS_ONNX = False

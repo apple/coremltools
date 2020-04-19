@@ -1,7 +1,7 @@
 import math
 from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic, any_symbolic
 from coremltools.converters.nnv2.nnv2_program.program.program import (
-        get_new_symbol, get_new_variadic_symbol, SYMBOL, VALUE, NONE)
+    get_new_symbol, get_new_variadic_symbol, SYMBOL, VALUE, NONE)
 from ._op_reqs import *
 from ._utils import promoted_primitive_type
 
@@ -359,17 +359,18 @@ class tile(Operation):
         x_type = self.x.dtype
         x_shape = np.array(self.x.shape)
         reps = self.reps.val
-        if len(reps) == 0  or len(reps) > self.x.rank:
-            raise ValueError("Length of the reps parameter must be at least 1 and " \
-                                                 "not greater than the rank of the input, x")
+        if len(reps) == 0 or len(reps) > self.x.rank:
+            msg = "Length of the reps ({}) must be at least 1, and " \
+                  "not greater than the rank of the input x ({})"
+            raise ValueError(msg.format(len(reps), self.x.rank))
 
-        if any(i <=0 for i in reps):
-            raise ValueError("All entries of reps paramerer must be greater than 0")
+        if any(i <= 0 for i in reps):
+            raise ValueError("All entries of reps parameter must be greater than 0")
 
         if len(reps) < self.x.rank:
             reps = [1]*(self.x.rank - len(reps)) + list(reps)
 
-        out_shape =  tuple([reps[i] * x_shape[i] for i in range(len(reps))])
+        out_shape = tuple([reps[i] * x_shape[i] for i in range(len(reps))])
 
         return builtins.tensor(x_type, out_shape)
 
@@ -623,15 +624,16 @@ class concat(Operation):
                 if is_symbolic(retshape[i]) or is_symbolic(v.shape[i]):
                     continue
                 if i != concat_axis and retshape[i] != v.shape[i]:
-                    msg = 'Dimension mismatch in {} op {}'
-                    raise ValueError(msg.format(self.op_type, self.name))
+                    msg = 'Dimension mismatch in {} ("{}"): shapes {} vs. {}'
+                    raise ValueError(msg.format(
+                        self.op_type, self.name, retshape, v.shape))
 
         # Get length of concat dim
         concat_dim_len = 0
         for v in self.values:
             taxis = v.shape[concat_axis]
             if is_symbolic(taxis):
-                concat_dim_len = Symbol(self.name + '_axis')
+                concat_dim_len = get_new_symbol()
                 break
             concat_dim_len += taxis
 

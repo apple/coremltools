@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from .type_bool import bool as builtins_bool
 from .type_double import is_float, fp16 as builtins_fp16, fp32 as builtins_fp32, fp64 as builtins_fp64
+from .type_list import is_list
 from .type_int import is_int, int8 as builtins_int8, int16 as builtins_int16, int32 as builtins_int32, \
     int64 as builtins_int64, uint8 as builtins_uint8, uint16 as builtins_uint16, uint32 as builtins_uint32, \
     uint64 as builtins_uint64
 from .type_str import str as builtins_str
+from .type_unknown import unknown
 import numpy as np
 import six
 from .get_type_info import get_type_info
@@ -40,6 +42,14 @@ _BUILTINS_TO_STRINGS = {
     builtins_fp64: 'fp64',
     builtins_str: 'str'
 }
+
+_STRINGS_TO_BUILTINS = {v: k for k, v in _BUILTINS_TO_STRINGS.items()}
+
+def string_to_builtin(s):
+    """
+    Given a str, return its corresponding builtin type.
+    """
+    return _STRINGS_TO_BUILTINS.get(s, None)
 
 def builtin_to_string(builtin_type):
     """
@@ -198,3 +208,16 @@ def numpy_val_to_builtin_val(npval):
         ret = ret_type()
         ret.val = npval
         return ret, ret_type
+
+def is_subtype(type1, type2):
+    """
+    Return True if type1 is a subtype of type2. False otherwise.
+    """
+    if type2 == unknown:
+        return True  # any class is a subclass of unknown (None) type.
+    if is_list(type2):
+        return is_list(type1) and is_subtype(type1.T[0], type2.T[0])
+
+    # simplistic handling of types is sufficient for now. Handling compatible
+    # tensor shape requires using builtins.is_tensor_and_is_compatible
+    return type1 == type2

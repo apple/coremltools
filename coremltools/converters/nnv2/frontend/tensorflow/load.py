@@ -42,6 +42,8 @@ def load(model, debug=False, **kwargs):
             annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_before_tf_passes', cleanup=True)
 
+    # Applying frontend passes on tfssa. Note that these are different from
+    # passes applied to nnv2 ssa in TF frontend.
     tf_passes = [
         delete_asserts,
         functionalize_loops,

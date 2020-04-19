@@ -3,6 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 import logging
+from collections import defaultdict
 
 from coremltools.models import neural_network as neural_network
 import coremltools.models.datatypes as datatypes
@@ -88,7 +89,10 @@ def load(prog, **kwargs):
     # const in V2 are added lazily to V1 by each op whenever needed.
     # `const_context` stores the const names we've added so far and avoid
     # adding a const more than once.
-    const_context = set()  # set of str: const name for v1 & v2 (the same)
+    # const_context: builder object -> set[str] (const name for v1 & v2
+    # (the same)). Note that layers in different builders are not visible to
+    # each other, and thus we segregate constant sets by builder
+    const_context = defaultdict(set)
 
     # Iterate through ops and add to builder
     convert_ops(const_context, builder, prog.functions['main'].operations,

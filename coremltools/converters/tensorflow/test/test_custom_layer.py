@@ -157,6 +157,3 @@ class TestCustomLayer(CustomLayerTest):
         layers = spec.neuralNetwork.layers
         self.assertIsNotNone(layers[2].custom)
         self.assertEqual('Acos', layers[2].custom.className)
-
-if __name__ == '__main__':
-    unittest.main() 

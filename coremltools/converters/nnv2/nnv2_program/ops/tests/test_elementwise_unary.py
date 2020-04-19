@@ -112,6 +112,8 @@ class TestElementwiseUnary:
 
             build = lambda x: cb.floor(x=x)
         elif mode == 'inverse':
+            if backend == 'nnv2_proto':  # TODO
+                return
             val = np.array([[-1, 2, -3],[4, -5, 6]], dtype=np.float32)
             expected_outputs = np.array([[-1.   ,  0.5 , -0.33333334],
                                       [ 0.25 , -0.2 ,  0.16666667]],

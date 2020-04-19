@@ -2,8 +2,10 @@ import logging
 import numpy as np
 
 import coremltools
-import coremltools.converters.nnv2.converter as converter
+from coremltools.converters.nnv2 import converter
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
+
+converter = converter
 
 
 def assert_op_count_match(program, expect, op=None, verbose=False):
@@ -79,11 +81,12 @@ def get_op_types_in_program(prog, func_name='main', skip_const_ops=True):
     return op_types_in_program
 
 
-def random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0, dtype=np.float32):
+def random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0, allow_duplicate=True, dtype=np.float32):
     """
     This helper function generates a random array of shape `shape`
     The range of generated numbers will be between (rand_min, rand_max].
     The value of generated numbers will be at least `eps_from_int` apart from integers.
+    If allow_duplicate is set to false, it is guaranteed that value generated are all different.
     Default data type is np.float32.
     """
 
@@ -91,7 +94,9 @@ def random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0, dtype=np.flo
     ret = []
     for _ in range(elem):
         while True:
-            r = (rand_max - rand_min) * np.random.random() + rand_min
+            r = dtype((rand_max - rand_min) * np.random.random() + rand_min)
+            if not allow_duplicate and r in ret:
+                continue
             if np.fabs(np.round(r) - r) > eps_from_int:
                 ret.append(r)
                 break

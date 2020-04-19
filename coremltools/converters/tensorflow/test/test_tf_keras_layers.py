@@ -410,8 +410,3 @@ class SimpleLayerTests(TensorFlowKerasTests):
         model = tf.keras.Sequential()
         model.add(layers.MaxPooling1D(input_shape=(16, 3), pool_size=2))
         self._test_model(model, has_variables=False)
-
-
-if __name__ == '__main__':
-    np.random.seed(1984)
-    unittest.main()

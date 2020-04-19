@@ -17,10 +17,12 @@ def broadcast_shapes(shape_x, shape_y):
     :return: tuple of int or symbols
         Result from broadcast.
     """
+    shape_x = tuple(shape_x)
+    shape_y = tuple(shape_y)
     if len(shape_x) < len(shape_y):
-        shape_x = ([1] * (len(shape_y) - len(shape_x))) + shape_x
+        shape_x = tuple([1] * (len(shape_y) - len(shape_x))) + shape_x
     if len(shape_y) < len(shape_x):
-        shape_y = ([1] * (len(shape_x) - len(shape_y))) + shape_y
+        shape_y = tuple([1] * (len(shape_x) - len(shape_y))) + shape_y
 
     ret_shapes = list()
     for i in range(len(shape_x)):

@@ -170,3 +170,107 @@ class TestNormalization:
         run_compare_tf_keras(
             model, [random_gen(shape, rand_min=-100, rand_max=100)],
             use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize(
+        'use_cpu_only, backend, rank, axis, epsilon, center, scale',
+        itertools.product(
+            [True, False],
+            backends,
+            [rank for rank in range(4, 5)],
+            [-1],
+            [1e-3, 1e-5],
+            [True, False],
+            [True, False]))
+    def test_instance_normalization(
+            self, use_cpu_only, backend, rank, axis, epsilon, center, scale):
+        from tensorflow_addons.layers import InstanceNormalization
+        shape = np.random.randint(low=2, high=6, size=rank)
+        model = tf.keras.Sequential([
+            InstanceNormalization(batch_input_shape=shape, axis=axis,
+                                  epsilon=epsilon, center=center, scale=scale)
+        ])
+        run_compare_tf_keras(
+            model, [random_gen(shape, rand_min=-1, rand_max=1)],
+            use_cpu_only=use_cpu_only, backend=backend,
+            atol=1e-3, rtol=1e-4)
+
+    @pytest.mark.parametrize(
+        'use_cpu_only, backend, rank, groups, axis, epsilon, center, scale',
+        itertools.product(
+            [True, False],
+            backends,
+            [rank for rank in range(4, 5)],
+            [1, 2, 3],
+            [-1],
+            [1e-3, 1e-5],
+            [True, False],
+            [True, False]))
+    def test_group_normalization(
+            self, use_cpu_only, backend, rank, groups, axis, epsilon, center, scale):
+        from tensorflow_addons.layers import GroupNormalization
+        shape = np.random.randint(low=2, high=6, size=rank)
+        shape[-1] = shape[-1] * groups  # groups must be a multiple of channels
+        model = tf.keras.Sequential([
+            GroupNormalization(batch_input_shape=shape, groups=groups, axis=axis,
+                               epsilon=epsilon, center=center, scale=scale)
+        ])
+        run_compare_tf_keras(
+            model, [random_gen(shape, rand_min=-1, rand_max=1)],
+            use_cpu_only=use_cpu_only, backend=backend,
+            atol=1e-3, rtol=1e-4)
+
+
+class TestCropping:
+    @pytest.mark.parametrize('use_cpu_only, backend, begin_end',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4), (3, 2)],
+                             ))
+    def test_cropping_1d(self, use_cpu_only, backend, begin_end):
+        shape = (1, 10, 3)
+        model = tf.keras.Sequential([
+            tf.keras.layers.Cropping1D(
+                batch_input_shape=shape, cropping=begin_end)
+        ])
+        run_compare_tf_keras(
+            model, [random_gen(shape, rand_min=-1, rand_max=1)],
+            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize('use_cpu_only, backend, begin_end1, begin_end2',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
+                                 [(0, 0), (1, 1), (1, 2), (2, 1), (4, 2)],
+                             ))
+    def test_cropping_2d(self, use_cpu_only, backend, begin_end1, begin_end2):
+        shape = (1, 10, 10, 3)
+        model = tf.keras.Sequential([
+            tf.keras.layers.Cropping2D(
+                batch_input_shape=shape, cropping=(begin_end1, begin_end2))
+        ])
+        run_compare_tf_keras(
+            model, [random_gen(shape, rand_min=-1, rand_max=1)],
+            use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize(
+        'use_cpu_only, backend, begin_end1, begin_end2, begin_end3',
+        itertools.product(
+            [True, False],
+            backends,
+            [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
+            [(0, 0), (1, 1), (1, 2), (2, 1), (4, 2)],
+            [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
+        ))
+    def test_cropping_3d(
+            self, use_cpu_only, backend, begin_end1, begin_end2, begin_end3):
+        shape = (1, 10, 10, 10, 3)
+        model = tf.keras.Sequential([
+            tf.keras.layers.Cropping3D(
+                batch_input_shape=shape,
+                cropping=(begin_end1, begin_end2, begin_end3))
+        ])
+        run_compare_tf_keras(
+            model, [random_gen(shape, rand_min=-1, rand_max=1)],
+            use_cpu_only=use_cpu_only, backend=backend)

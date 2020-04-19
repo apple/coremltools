@@ -8,7 +8,7 @@ from .parsed_tf_node import ParsedTFNode
 from tensorflow.core.framework.types_pb2 import DataType
 
 import logging
-
+import numpy as np
 
 def parse_type(t):
     mapping = {
@@ -44,29 +44,35 @@ def parse_tensor(t):
     typ = parse_type(t.dtype)
     shape = parse_shape(t.tensor_shape)
 
+    retval = None
+    if len(t.half_val) > 0:
+        retval = np.array(t.half_val)
+    elif len(t.float_val) > 0:
+        retval = np.array(t.float_val)
+    elif len(t.double_val) > 0:
+        retval = np.array(t.double_val)
+    elif len(t.int_val) > 0:
+        retval = np.array(t.int_val)
+    elif len(t.int64_val) > 0:
+        retval = np.array(t.int64_val)
+    elif len(t.bool_val) > 0:
+        retval = np.array(t.bool_val)
+    elif hasattr(t, 'uint32_val') and len(t.uint32_val) > 0:
+        retval = np.array(t.uint32_val)
+    elif hasattr(t, 'uint64_val') and len(t.uint64_val) > 0:
+        retval = np.array(t.uint64_val)
+
     if not t.tensor_shape.unknown_rank and len(shape) == 0:
         retobj = typ()
+        if retval is not None:
+            retobj.val = retval[0]
     else:
         rettype = builtins.tensor(typ, tuple(shape))
         retobj = rettype()
         retobj.shape = shape
+        if retval is not None:
+            retobj.val = retval
 
-    if len(t.half_val) > 0:
-        retobj.val = t.half_val
-    elif len(t.float_val) > 0:
-        retobj.val = t.float_val
-    elif len(t.double_val) > 0:
-        retobj.val = t.double_val
-    elif len(t.int_val) > 0:
-        retobj.val = t.int_val
-    elif len(t.int64_val) > 0:
-        retobj.val = t.int64_val
-    elif len(t.bool_val) > 0:
-        retobj.val = t.bool_val
-    elif hasattr(t, 'uint32_val') and len(t.uint32_val) > 0:
-        retobj.val = t.uint32_val
-    elif hasattr(t, 'uint64_val') and len(t.uint64_val) > 0:
-        retobj.val = t.uint64_val
     return retobj
 
 

@@ -1,9 +1,13 @@
 import six
-from coremltools.converters.nnv2.builtin_types.builtins.type_mapping import numpy_val_to_builtin_val
+from coremltools.converters.nnv2.builtin_types import builtins
+from coremltools.converters.nnv2.builtin_types.builtins.type_mapping import (
+        numpy_val_to_builtin_val, is_subtype)
 from coremltools.converters.nnv2.nnv2_program.program.program import (
         SsaBlock, SYMBOL)
 from coremltools.converters.nnv2.nnv2_program.program.var import Var
+from coremltools.converters.nnv2.nnv2_program.program.program import get_new_symbol
 from ._op_reqs import *
+import logging
 
 # rdar://58622145
 @register_op(doc_str='TODO')
@@ -181,35 +185,30 @@ class while_loop(Operation):
     def build_nested_blocks(self):
         # self.loop_vars is python tuple of Vars
         # Cond block
-        cond_block_name = self.name + '_cond'
-        # SsaBlock takes a python tuple[Var]
+        block_name = self.name + '_block'
         with SsaBlock(block_inputs=self.loop_vars, outer_op=self,
-                name=cond_block_name) as cond_block:
-            cond_func = self._cond.val
-            cond_var = cond_func(*cond_block.inputs)
-            cond_block.set_outputs([cond_var])
-            self.blocks.append(cond_block)
-        if not isinstance(cond_var, Var) or cond_var.dtype != builtins.bool:
-            msg = "Cond in while_loop {} should return bool, but got {}"
-            raise ValueError(msg.format(self.name, cond_var.sym_type))
-
-        # Body block
-        body_block_name = self.name + '_body'
-        with SsaBlock(block_inputs=self.loop_vars, outer_op=self,
-                name=body_block_name) as body_block:
+                name=block_name) as block:
+            # Body func
             body_func = self._body.val
-            exit_vars = body_func(*body_block.inputs)
-            body_block.set_outputs(list(exit_vars))
-            self.blocks.append(body_block)
+            exit_vars = body_func(*block.inputs)
+
+            # Cond func:
+            cond_func = self._cond.val
+            cond_var = cond_func(*block.inputs)
+
+            # Concatenate the outputs
+            block.set_outputs([cond_var] + list(exit_vars))
+            self.blocks.append(block)
 
         # Verify exit_vars has the same types as loop_vars
         for v_in, v_out in zip(self.loop_vars, exit_vars):
-            if v_in.sym_type != v_out.sym_type:
+            if  not is_subtype(v_out.sym_type, v_in.sym_type):
                 msg = "loop_vars {} changes in the body while_loop {}"
                 raise ValueError(msg.format(v_in.name, self.name))
 
     def type_inference(self):
-        return tuple(v.sym_type for v in self.blocks[1].outputs)
+        # Skip the conditional var
+        return tuple(v.sym_type for v in self.blocks[0].outputs[1:])
 
 
 # identity is used for renaming and is rarely necessary. See
@@ -229,3 +228,132 @@ class identity(Operation):
     @precondition(allow=VALUE|SYMBOL)
     def value_inference(self):
         return self.x.sym_val
+
+@register_op(doc_str='TODO')
+class make_list(Operation):
+    input_spec = InputSpec(
+        init_length = IntInputType(optional=True, default=1),
+        elem_shape = TensorInputType(const=True),
+        dtype = StringInputType(const=True, optional=True, default='fp32'),
+    )
+
+    def __init__(self, **kwargs):
+        super(make_list, self).__init__(**kwargs)
+
+    def type_inference(self):
+        init_length = self.init_length.val
+        builtin_dtype = builtins.string_to_builtin(self.dtype.val)
+        if builtin_dtype is None:
+            raise ValueError('Unsupported dtype {}'.format(self.dtype.val))
+        elem_type = builtins.tensor(builtin_dtype, self.elem_shape.sym_val)
+        return builtins.list(elem_type, init_length=init_length)
+
+
+@register_op(doc_str='TODO')
+class list_length(Operation):
+    input_spec = InputSpec(
+        ls = ListInputType(),
+    )
+
+    def __init__(self, **kwargs):
+        super(list_length, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return builtins.int32
+
+@register_op(doc_str='TODO')
+class list_write(Operation):
+    input_spec = InputSpec(
+        ls = ListInputType(),
+        index = IntInputType(),
+        value = TensorInputType(),
+    )
+
+    def __init__(self, **kwargs):
+        super(list_write, self).__init__(**kwargs)
+
+    def type_inference(self):
+        list_elem_type = self.ls.elem_type
+        value_type = self.value.sym_type
+        if list_elem_type is None:
+            # fill in the elem type using value's type info.
+            return builtins.list(value_type)
+        if list_elem_type == builtins.unknown:
+            msg = 'Input ls elem type unknown. Override with {}'
+            logging.warning(msg.format(value_type))
+            return builtins.list(value_type)
+        if not builtins.is_subtype(value_type, list_elem_type):
+            msg = 'Elem type mismatch: ls elem type {} vs ' + \
+                    'value type {}'
+            raise ValueError(msg.format(list_elem_type, value_type))
+        return self.ls.sym_type
+
+@register_op(doc_str='TODO')
+class list_read(Operation):
+    input_spec = InputSpec(
+        ls = ListInputType(),
+        index = IntInputType(),
+    )
+
+    def __init__(self, **kwargs):
+        super(list_read, self).__init__(**kwargs)
+
+    def type_inference(self):
+        list_elem_type = self.ls.elem_type
+        if list_elem_type is None:
+            msg = 'Unknown element type. The List might not have been ' +\
+                'written to ({})'
+            raise ValueError(msg.format(self.name))
+        return list_elem_type
+
+@register_op(doc_str='TODO')
+class list_gather(Operation):
+    input_spec = InputSpec(
+        ls = ListInputType(),
+        indices = IntTensorInputType(),
+    )
+
+    def __init__(self, **kwargs):
+        super(list_gather, self).__init__(**kwargs)
+
+    def type_inference(self):
+        list_elem_type = self.ls.elem_type
+        if list_elem_type == builtins.unknown:
+            msg = 'Unknown element type. The List might not have been ' +\
+                'written to ({})'
+            raise ValueError(msg.format(self.name))
+        elem_shape = list_elem_type.get_shape()
+        dtype = list_elem_type.get_primitive()
+        ret_shape = [self.indices.shape[0]] + list(elem_shape)
+        return builtins.tensor(dtype, tuple(ret_shape))
+
+
+@register_op(doc_str='TODO')
+class list_scatter(Operation):
+    input_spec = InputSpec(
+        ls = ListInputType(),
+        indices = IntTensorInputType(),
+        value = TensorInputType(),
+    )
+
+    def __init__(self, **kwargs):
+        super(list_scatter, self).__init__(**kwargs)
+
+    def type_inference(self):
+        num_indices = self.indices.shape[0]
+        num_values = self.value.shape[0]
+        if num_values != num_indices:
+            raise ValueError('Cannot scatter {} values to {} indices'.format(
+                num_values, num_indices))
+        list_elem_type = self.ls.elem_type
+        value_type = self.value.sym_type
+        elem_type = builtins.tensor(value_type.get_primitive(),
+                value_type.get_shape()[1:])
+        if list_elem_type == builtins.unknown:
+            # fill in the elem type using value's type info.
+            return builtins.list(elem_type)
+        if not builtins.is_subtype(elem_type, list_elem_type):
+            msg = 'Elem type mismatch: ls elem type {} vs ' + \
+                    'value type {}'
+            raise ValueError(msg.format(list_elem_type, elem_type))
+        return self.ls.sym_type

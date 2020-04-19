@@ -130,6 +130,3 @@ class TestDumpImpl(unittest.TestCase):
         self._assert_event(WriterEvent.WRITE_INT, 5)
         self._assert_event(WriterEvent.WRITE_STR, "pants".encode("latin-1"))
 
-
-if __name__ == '__main__':
-    unittest.main()

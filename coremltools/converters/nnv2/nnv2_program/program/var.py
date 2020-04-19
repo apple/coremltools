@@ -62,7 +62,7 @@ class Var(object):
         Idx of the output from Operation corresponding to _Input.  May be
         None.
 
-    child_ops [_child_ops]: set[Operation]
+    child_ops [_child_ops]: list[Operation]
         Ops that take this Var as an input.
     """
     __slots__ = [
@@ -86,7 +86,9 @@ class Var(object):
         self._sym_val = sym_val
         self._op = op
         self.op_output_idx = op_output_idx
-        self._child_ops = set()
+        # An op can appear twice if it consumes a var twice (e.g.,
+        # add(%1, %1), while_loop(loop_vars=(%1, %1)).
+        self._child_ops = list()
 
     @property
     def sym_type(self):
@@ -129,7 +131,7 @@ class Var(object):
         return self._child_ops
 
     def add_child_op(self, new_op):
-        self._child_ops.add(new_op)
+        self._child_ops.append(new_op)
 
     def remove_child_op(self, target_op, no_check=False):
         if target_op not in self._child_ops:
@@ -157,13 +159,21 @@ class Var(object):
 
 
 class ListVar(Var):
-    __slots__ = ["_elem_type"]
+    __slots__ = ["_elem_type", "init_length"]
 
-    def __init__(self, name, elem_type):
+    def __init__(self, name, elem_type=None, init_length=None, **kwargs):
+        """
+        elem_type (builtin.tensor)
+
+        # init_length is not used right now
+        #init_length (python:int32): max length. None means the List
+        #size is runtime determined (not necessarily dynamic).
+        """
         super(ListVar, self).__init__(name=name,
-                                      sym_type=builtins.list(elem),
-                                      sym_val=None)
+                                      sym_type=builtins.list(elem_type),
+                                      sym_val=None, **kwargs)
         self._elem_type = elem_type
+        self.init_length = init_length
 
     @property
     def shape(self):
@@ -182,6 +192,23 @@ class ListVar(Var):
     @property
     def elem_type(self):
         return self._elem_type
+
+    @property
+    def elem_shape(self):
+        if self._elem_type == builtins.unknown:
+            return None
+        return self._elem_type.get_shape()
+
+    def shape_str(self):
+        if self._elem_type == builtins.unknown:
+            return 'List[unknown]'
+        elem_shape = self._elem_type.get_shape()
+        elem_dtype = self._elem_type.get_primitive()
+        shape_str = str(elem_shape)[:-1]  # trim the ")"
+        if len(elem_shape) > 1:
+            shape_str += ", "
+        shape_str += builtins.builtin_to_string(elem_dtype) + ")"
+        return 'List[{}]'.format(shape_str)
 
 
 class InternalVar(Var):

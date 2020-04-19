@@ -358,4 +358,7 @@ class cast(Operation):
             raise NotImplementedError("Parameter dtype of the cast operation can be one of the {}. "
                                       "Provided {}".format(type_map.keys(), self.dtype.val))
 
-        return np.array(self.x.val).astype(dtype=type_map[self.dtype.val])
+        if not builtins.is_tensor(self.x.sym_type):
+            return self.x.val.astype(dtype=type_map[self.dtype.val])
+        else:
+            return np.array(self.x.val).astype(dtype=type_map[self.dtype.val])

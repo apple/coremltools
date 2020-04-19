@@ -118,7 +118,8 @@ def test_tensor_var():
     assert x.__str__() == "%x: (3, *L, fp32)"
 
     # Symbolic value
-    np_dtype = np.float32
+    # Note: Symbolic values are treated as int32, more detail in builtins/type_mapping.py
+    np_dtype = np.int32
     shape = (2,2)
     tensor_t, tensor_val, np_tensor = _make_builtin_tensor(np_dtype, shape,
                                                            symbolic=True)
@@ -129,7 +130,7 @@ def test_tensor_var():
     assert x.shape == shape
     assert x.dtype == tensor_t.get_primitive()
     assert x.rank == 2
-    assert x.__str__() == "%x: (2, 2, fp32)^"
+    assert x.__str__() == "%x: (2, 2, i32)^"
 
     assert x.has_symbolic() == True
     assert x.get_value() == None

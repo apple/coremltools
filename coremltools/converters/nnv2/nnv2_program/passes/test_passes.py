@@ -133,7 +133,10 @@ def test_remove_symbolic_reshape():
         assert_model_is_valid(prog, {'x': (3, 4)})
 
 
-def test_loop_invariant_elimination():
+def test_loop_invariant_elimination1():
+    """
+    Invariant pattern: Block input vars are returned as block output vars.
+    """
     def body(a, b):
         return cb.add(x=a, y=b), b
 
@@ -147,17 +150,15 @@ def test_loop_invariant_elimination():
         cb.TensorSpec(shape=(1,2)),
         ])
     def prog(a, b):
+        # b is loop invariant
         return cb.while_loop(_cond=cond, _body=body, loop_vars=(a, b))
 
     while_op = prog.find_ops(op_type='while_loop', exactly_one=True)[0]
     assert len(while_op.blocks[0].inputs) == 2
-    assert len(while_op.blocks[1].inputs) == 2
     assert len(while_op.outputs) == 2
     assert len(while_op.loop_vars) == 2
     assert while_op.blocks[0].inputs[0].name == 'a.x'
     assert while_op.blocks[0].inputs[1].name == 'b.x'
-    assert while_op.blocks[1].inputs[0].name == 'a.x'
-    assert while_op.blocks[1].inputs[1].name == 'b.x'
 
     prev_prog = copy.deepcopy(prog)
     PASS_REGISTRY['common::loop_invariant_elimination'](prog)
@@ -165,11 +166,49 @@ def test_loop_invariant_elimination():
 
     while_op = prog.find_ops(op_type='while_loop', exactly_one=True)[0]
     assert len(while_op.blocks[0].inputs) == 1
-    assert len(while_op.blocks[1].inputs) == 1
     assert len(while_op.outputs) == 1
     assert len(while_op.loop_vars) == 1
     assert while_op.blocks[0].inputs[0].name == 'a.x'
-    assert while_op.blocks[1].inputs[0].name == 'a.x'
+
+    if validate_model:
+        assert_model_is_valid(prog, {'a': (1, 2), 'b': (1, 2)})
+
+def test_loop_invariant_elimination2():
+    """
+    Invariant pattern: Block outputs var from outside of the block
+    """
+
+    @cb.program(input_specs=[
+        cb.TensorSpec(shape=(1,2)),
+        cb.TensorSpec(shape=(1,2)),
+        ])
+    def prog(a, b):
+        def body(a, bx):
+            return cb.add(x=a, y=b), b
+
+        def cond(a, bx):
+            a_mean = cb.reduce_mean(x=a, axes=[0, 1])
+            b_mean = cb.reduce_mean(x=bx, axes=[0, 1])
+            return cb.less(x=a_mean, y=b_mean)
+        # b is loop invariant
+        return cb.while_loop(_cond=cond, _body=body, loop_vars=(a, b))
+
+    while_op = prog.find_ops(op_type='while_loop', exactly_one=True)[0]
+    assert len(while_op.blocks[0].inputs) == 2
+    assert len(while_op.outputs) == 2
+    assert len(while_op.loop_vars) == 2
+    assert while_op.blocks[0].inputs[0].name == 'a.x'
+    assert while_op.blocks[0].inputs[1].name == 'b.x'
+
+    prev_prog = copy.deepcopy(prog)
+    PASS_REGISTRY['common::loop_invariant_elimination'](prog)
+    assert_same_output_names(prev_prog, prog)
+
+    while_op = prog.find_ops(op_type='while_loop', exactly_one=True)[0]
+    assert len(while_op.blocks[0].inputs) == 1
+    assert len(while_op.outputs) == 1
+    assert len(while_op.loop_vars) == 1
+    assert while_op.blocks[0].inputs[0].name == 'a.x'
 
     if validate_model:
         assert_model_is_valid(prog, {'a': (1, 2), 'b': (1, 2)})

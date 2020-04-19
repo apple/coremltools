@@ -166,7 +166,7 @@ def add_const(const_context, builder, name, val):
              If we really need a const scalar, we upcast it to rank-1.
 
     """
-    if name in const_context:
+    if name in const_context[builder]:
         logging.warning('Const {} was already added.'.format(name))
         return
     if not isinstance(val, (np.ndarray, np.generic)):
@@ -184,7 +184,8 @@ def add_const(const_context, builder, name, val):
                 output_name=name,
                 constant_value=val,
                 shape=val.shape)
-    const_context.add(name)
+    const_context[builder].add(name)
+    print('added const {} for builder {}'.format(name, builder))
 
 
 # Helper routines for recurrent layers
@@ -2015,7 +2016,9 @@ def cond(const_context, builder, op):
     for block_out, op_out in zip(true_block.outputs, op.outputs):
         true_builder.add_copy(
                     name=block_out.name+'_ret_copy',
-                    input_name=make_input(const_context, builder, block_out),
+                    # No need to make_input for block_out which is guaranteed
+                    # to be a node
+                    input_name=block_out.name,
                     output_name=op_out.name)
 
     false_builder = neural_network.NeuralNetworkBuilder(
@@ -2027,18 +2030,17 @@ def cond(const_context, builder, op):
     for block_out, op_out in zip(false_block.outputs, op.outputs):
         false_builder.add_copy(
                     name=block_out.name+'_ret_copy',
-                    input_name=make_input(const_context, builder, block_out),
+                    input_name=block_out.name,
                     output_name=op_out.name)
 
 
 @register_v2_op
 def while_loop(const_context, builder, op):
-    cond_block = op.blocks[0]
-    body_block = op.blocks[1]
+    block = op.blocks[0]
 
     # Assume that all loop vars aren't loop invariant (invariant loop vars
     # should've be optimized away in graph passes).
-    for v_in, vx_in in zip(op.loop_vars, body_block.inputs):
+    for v_in, vx_in in zip(op.loop_vars, block.inputs):
         assert v_in.name != vx_in.name, 'Loop invariant detected in {}'.format(op)
         builder.add_copy(
                 name=vx_in.name+'_input_copy',
@@ -2054,21 +2056,23 @@ def while_loop(const_context, builder, op):
     cond_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=loop_layer.loop.conditionNetwork,
             disable_rank5_shape_mapping=True)
-    convert_ops(const_context, cond_builder, cond_block.operations,
-            cond_block.outputs)
+    convert_ops(const_context, cond_builder,
+            block.operations_for_vars(block.outputs[:1]),
+            block.outputs[:1])
 
-    loop_layer.loop.conditionVar = cond_block.outputs[0].name
+    loop_layer.loop.conditionVar = block.outputs[0].name
 
-    # while_loop body
+    # while_loop body produces [cond_var] + loop_vars
     body_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=loop_layer.loop.bodyNetwork,
             disable_rank5_shape_mapping=True)
-    convert_ops(const_context, body_builder, body_block.operations,
-            body_block.outputs)
+    convert_ops(const_context, body_builder,
+            block.operations_for_vars(block.outputs[1:]),
+            block.outputs[1:])
 
     # Also assume all outputs are different from loop inputs (i.e., no loop
     # invariant.)
-    for vx_in, vx_out in zip(body_block.inputs, body_block.outputs):
+    for vx_in, vx_out in zip(block.inputs, block.outputs[1:]):
         if vx_in.name == vx_out.name:
             msg = 'Loop invariant var {} detected in block {}'
             logging.warning(msg.format(vx_in.name, body_block))
@@ -2241,3 +2245,194 @@ def custom_op(const_context, builder, op):
         output_names=output_names,
         custom_proto_spec=params
     )
+
+@register_v2_op
+def make_list(const_context, builder, op):
+    # op.elem_shape is technically optional but ssa passes ensures it's
+    # always there
+    elem_shape = op.elem_shape.val
+
+    # Set a default initial size
+    array_shape = [op.init_length.val] + list(elem_shape)
+    add_const(const_context, builder, op.outputs[0].name,
+            val=np.zeros(array_shape, dtype='float'))
+
+def _realloc_list(const_context, builder, ls_var, index_var):
+    # If index_var >= len(ls_var), reallocate the array and copy over existing
+    # contents
+    # index_var: str or Var
+    # ls_var: Var
+
+    full_shape_name = ls_var.name + '_full_shape'
+    builder.add_get_shape(
+        name=full_shape_name,
+        input_name=ls_var.name, # no need to make_input
+        output_name=full_shape_name)
+
+    # slice shape [length, elem_size1, ...] to get current length
+    curr_len_name = ls_var.name + '_length'
+    builder.add_slice_static(
+        name=curr_len_name,
+        input_name=full_shape_name,
+        output_name=curr_len_name,
+        begin_ids=[0],
+        end_ids=[1],
+        begin_masks=[False],
+        end_masks=[False],
+        strides=[1])
+
+    is_growing_name = ls_var.name + '_is_growing'
+    builder.add_greater_than(
+        name=is_growing_name,
+        input_names=make_input(const_context, builder,
+            [index_var, curr_len_name]),
+        output_name=is_growing_name,
+        use_greater_than_equal=True
+    )
+
+    elem_shape_name = ls_var.name + '_elem_shape'
+    add_const(const_context, builder, elem_shape_name,
+            np.array(ls_var.elem_shape))
+
+    condition_name = ls_var.name + '_condition'
+    layer = builder.add_branch(
+        name=condition_name,
+        input_name=is_growing_name)
+
+    true_builder = neural_network.NeuralNetworkBuilder(
+            nn_spec=layer.branch.ifBranch,
+            disable_rank5_shape_mapping=True)
+
+    # alloc_length_name0 = index - list_length
+    alloc_length_name0 = ls_var.name + '_extra_length0'
+    true_builder.add_subtract_broadcastable(
+            name=alloc_length_name0,
+            input_names=make_input(const_context, builder,
+                [index_var, curr_len_name]),
+            output_name=alloc_length_name0,
+            )
+
+    # alloc_length_name1 = index - list_length + 1
+    alloc_length_name1 = ls_var.name + '_extra_length1'
+    true_builder.add_elementwise(
+            name=alloc_length_name1,
+            input_names=[alloc_length_name0],
+            mode='ADD',
+            output_name=alloc_length_name1,
+            alpha=1)
+
+    # alloc_shape_name = [alloc_length] + elem_shape
+    alloc_shape_name = ls_var.name + '_alloc_shape'
+    true_builder.add_concat_nd(
+            name=alloc_shape_name,
+            input_names=[alloc_length_name1, elem_shape_name],
+            output_name=alloc_shape_name,
+            axis=0)
+
+    # new_alloc_name is np.zeros([alloc_length] + elem_shape)
+    new_alloc_name = ls_var.name + '_alloc'
+    true_builder.add_fill_dynamic(
+        name=new_alloc_name,
+        input_name=alloc_shape_name,
+        output_name=new_alloc_name,
+        value=0.0)
+
+    # new_list_name is np.concat([old_list, new_alloc])
+    new_list_name = ls_var.name + '_new'
+    true_builder.add_concat_nd(
+            name=new_list_name,
+            input_names=[ls_var.name, new_alloc_name],
+            output_name=new_list_name,
+            axis=0)
+
+    # Copy new_list_name to ls_var.name
+    true_builder.add_copy(
+            name=ls_var.name + '_assign',
+            input_name=new_list_name,
+            output_name=ls_var.name
+            )
+
+@register_v2_op
+def list_write(const_context, builder, op):
+
+    _realloc_list(const_context, builder, op.ls, op.index)
+
+    # expanded_value_name is [1, op.value]
+    expanded_value_name = op.value.name + '_expanded'
+    builder.add_expand_dims(
+        name=expanded_value_name,
+        input_name=make_input(const_context, builder, op.value),
+        output_name=expanded_value_name,
+        axes=[0])
+
+    builder.add_scatter(
+        name=op.name,
+        input_names=make_input(const_context, builder, [op.ls,
+            op.index, expanded_value_name]),
+        output_name=op.outputs[0].name)
+
+@register_v2_op
+def list_gather(const_context, builder, op):
+    builder.add_gather(
+        name=op.name,
+        input_names=make_input(const_context, builder,
+            [op.ls, op.indices]),
+        output_name=op.outputs[0].name,
+        axis=0)
+
+@register_v2_op
+def list_scatter(const_context, builder, op):
+    max_idx_name = op.indices.name + '_max'
+    builder.add_reduce_max(
+            name=max_idx_name,
+            axes=[0],
+            keepdims=False,
+            input_name=make_input(const_context, builder, op.indices),
+            output_name=max_idx_name)
+
+    _realloc_list(const_context, builder, op.ls, max_idx_name)
+
+    builder.add_scatter(
+        name=op.name,
+        input_names=make_input(const_context, builder, [op.ls,
+            op.indices, op.value]),
+        output_name=op.outputs[0].name)
+
+@register_v2_op
+def list_read(const_context, builder, op):
+    # gathered_name has shape [1] + elem_shape
+    gathered_name = op.name + '_gathered'
+    builder.add_gather(
+            name=op.name,
+            input_names=make_input(const_context, builder,
+                [op.ls, op.index]),
+            output_name=gathered_name,
+            axis=0)
+
+    # squeezed_name has shape elem_shape
+    squeezed_name = op.name + '_squeezed'
+    builder.add_squeeze(
+            name=squeezed_name,
+            input_name=gathered_name,
+            output_name=op.outputs[0].name,
+            axes=[0])
+
+@register_v2_op
+def list_length(const_context, builder, op):
+    # list_shape_name == [list_length] + elem_shape
+    list_shape_name = op.ls.name + '_shape'
+    builder.add_get_shape(
+        name=list_shape_name,
+        input_name=make_input(const_context, builder, op.ls),
+        output_name=list_shape_name)
+
+    # slice to get list_length
+    builder.add_slice_static(
+        name=op.name,
+        input_name=list_shape_name,
+        output_name=op.outputs[0].name,
+        begin_ids=[0],
+        end_ids=[1],
+        begin_masks=[False],
+        end_masks=[False],
+        strides=[1])

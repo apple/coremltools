@@ -80,7 +80,7 @@ sure to install virtualenv using your system pip.
 pip install virtualenv
 ```
 
-The method for installing `coremltools` follows the
+The method for installing `coremltools` follows
 [standard python package installation steps](https://packaging.python.org/installing/).
 To create a Python virtual environment called `pythonenv` follow these steps:
 

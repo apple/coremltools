@@ -64,7 +64,7 @@ class TestBandPart:
                             backend=backend)
 
 
-class TestCumsum():
+class TestCumSum:
     @pytest.mark.parametrize("use_cpu_only, backend",
             itertools.product(
                 [True, False],

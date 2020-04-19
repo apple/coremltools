@@ -64,7 +64,10 @@ class InputSpec(object):
                 # if input is not found in kwargs, it must be optional has no
                 # default value
                 if not input_type.optional or input_type.default:
-                    if no_check_var_visibility:
+                    # Skip check on PyFunctionInput since created while_loop /
+                    # cond ops don't need to rebuild the nested blocks
+                    if no_check_var_visibility or isinstance(input_type,
+                            PyFunctionInputType):
                         continue
                     raise ValueError("Input {} is required".format(name))
                 else:
@@ -102,22 +105,19 @@ class _InputType(object):
 
     def is_compatible(self, v):
         """
-        v is Var, tuple of Var, or native python function (PyFunctionInput)
-        """
-        return self._is_compatible(v)
-
-    def _is_compatible(self, v):
-        """
         Return True if (possibly symbolic) value `v` is compatible. False
         otherwise.
 
         Inputs:
 
-        v (builtin value): A possibly symbolic value.
+        v (Var | ListVar | native python function): input
 
         Comment: Define is_compatible as instance method to call proper subclass
         methods.
         """
+        return self._is_compatible(v)
+
+    def _is_compatible(self, v):
         return True
 
     def _get_predefined_datatype(self):
@@ -129,6 +129,14 @@ class _InputType(object):
 
     def __str__(self):
         return type(self).__name__
+
+
+class ListInputType(_InputType):
+    def __init__(self, **kwargs):
+        super(ListInputType, self).__init__(**kwargs)
+
+    def _is_compatible(self, v):
+        return builtins.is_list(v.sym_type)
 
 
 class ScalarOrTensorInputType(_InputType):

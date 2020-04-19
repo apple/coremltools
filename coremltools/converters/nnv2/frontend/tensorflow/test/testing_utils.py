@@ -1,17 +1,38 @@
 import six
-
-import coremltools.converters.nnv2.converter as converter
-from coremltools.converters.nnv2.testing_utils import compare_shapes, compare_backend
 import tensorflow as tf
+from coremltools.converters.nnv2.testing_utils import compare_shapes, compare_backend
+from coremltools.converters.nnv2.testing_reqs import converter
+from tensorflow.python.framework import dtypes
 
 frontend = 'tensorflow'
 
 
-def make_tf_graph(input_spec):
+def make_tf_graph(input_types):
+    """
+    Decorator to help construct TensorFlow 1.x model.
+
+    Parameters
+    ----------
+    input_types: list of tuple
+        List of input types. E.g. [(3, 224, 224, tf.int32)] represent 1 input,
+        with shape (3, 224, 224), and the expected data type is tf.int32. The
+        dtype is optional, in case it's missing, tf.float32 will be used.
+
+    Returns
+    -------
+    tf.Graph, list of str, list of str
+    """
     def wrapper(ops):
         with tf.Graph().as_default() as model:
-            inputs = [tf.placeholder(tf.float32, shape=s, name=n)
-                      for n, s in input_spec.items()]
+            inputs = []
+            for input_type in input_types:
+                input_type = tuple(input_type)
+                if isinstance(input_type[-1], dtypes.DType):
+                    shape, dtype = input_type[:-1], input_type[-1]
+                else:
+                    shape, dtype = input_type, tf.float32
+                inputs.append(tf.placeholder(shape=shape, dtype=dtype))
+
             outputs = ops(*inputs)
         return model, inputs, outputs
 
@@ -59,7 +80,7 @@ def get_tf_node_names(tf_nodes, mode='inputs'):
             names.append(name)
     return names
 
-def tf_graph_to_proto(graph, feed_dict, output_nodes, backend='nnv1_proto', add_custom_layer=False):
+def tf_graph_to_proto(graph, feed_dict, output_nodes, backend='nnv1_proto'):
     """
     Parameters
     ----------
@@ -87,8 +108,7 @@ def tf_graph_to_proto(graph, feed_dict, output_nodes, backend='nnv1_proto', add_
     proto = converter.convert(graph, convert_from='tensorflow',
                               convert_to=backend,
                               inputs=input_names,
-                              outputs=output_names,
-                              add_custom_layer=add_custom_layer)
+                              outputs=output_names)
     return proto, input_values, output_names, output_nodes
 
 

@@ -2,11 +2,14 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
+
+import numpy as np
+import math
+import logging
+
 from .annotate import class_annotate, annotate, delay_type
 from .type_bool import bool
 from .type_spec import Type
-import math
-
 
 def make_float(width):
     delay_type_float = getattr(delay_type, "fp" + str(width))
@@ -16,7 +19,29 @@ def make_float(width):
         _width = width
 
         def __init__(self, v=0.0):
-            self.val = v
+            self._val = v
+
+        @property
+        def val(self):
+            return self._val
+
+        @val.setter
+        def val(self, v):
+            from .type_mapping import nptype_from_builtin, numpy_type_to_builtin_type, builtin_to_string
+            if not isinstance(v, np.generic):
+                raise ValueError("builtins types should have value of numpy type, got {} instead".format(type(v)))
+
+            if isinstance(v, np.floating):
+                v_type = numpy_type_to_builtin_type(v.dtype)
+                if v_type.get_bitwidth() <= self.get_bitwidth():
+                    self._val = v
+                else:
+                    self._val = v.astype(nptype_from_builtin(self.__class__))
+                    logging.warning("Saving value type of {} into a builtin type of {}, might lose precision!".format(v.dtype, builtin_to_string(self.__class__)))
+            else:
+                self._val = v.astype(nptype_from_builtin(self.__class__))
+                logging.warning("Saving value type of {} into a builtin type of {}, might be incompatible or loses precision!".format(v.dtype, builtin_to_string(self.__class__)))
+
 
         @classmethod
         def __type_info__(cls):

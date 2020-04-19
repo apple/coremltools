@@ -7,6 +7,7 @@ future
 numpy
 libsvm;python_version>="3.4"
 olefile==0.44
+onnx==1.6.0
 pandas
 pillow
 pytest

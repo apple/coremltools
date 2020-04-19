@@ -23,24 +23,16 @@ def test_commingle_loop_vars():
         return cb.while_loop(_cond=cond, _body=body, loop_vars=(a, b))
 
     while_op = prog.find_ops(op_type='while_loop', exactly_one=True)[0]
-    # cond block inputs
     assert while_op.blocks[0].inputs[0].name == 'a.x'
     assert while_op.blocks[0].inputs[1].name == 'b.x'
-    # body block inputs
-    assert while_op.blocks[1].inputs[0].name == 'a.x'
-    assert while_op.blocks[1].inputs[1].name == 'b.x'
 
     prev_prog = copy.deepcopy(prog)
     PASS_REGISTRY['nnv1_backend::commingle_loop_vars'](prog)
     assert_same_output_names(prev_prog, prog)
 
     while_op = prog.find_ops(op_type='while_loop', exactly_one=True)[0]
-    # cond block inputs
     assert while_op.blocks[0].inputs[0].name == while_op.outputs[0].name
     assert while_op.blocks[0].inputs[1].name == while_op.outputs[1].name
-    # body block inputs
-    assert while_op.blocks[1].inputs[0].name == while_op.outputs[0].name
-    assert while_op.blocks[1].inputs[1].name == while_op.outputs[1].name
 
     assert_model_is_valid(prog, {'a': (1, 2), 'b': (1, 2)})
 

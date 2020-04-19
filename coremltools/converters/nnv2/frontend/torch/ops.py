@@ -408,6 +408,32 @@ def relu(context, node):
     context.add(relu)
 
 
+def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes):
+    """ TODO Given an input tensor and pooling parameters, add the extra input
+        padding needed to replicate ceil_mode. If no padding is needed, returns
+        the original input. Otherwise, returns the Var returned by the new
+        padding op.
+    """
+    new_pad = pad_sizes
+    for idx in range(len(input_shape)):
+        dim = input_shape[idx]
+        kernel = kernel_sizes[idx]
+        stride = stride_sizes[idx]
+        pad = pad_sizes[idx * 2 : idx * 2 + 2]
+        out_numerator = dim + pad[0] + pad[1] - kernel
+        remainder = out_numerator % stride
+        # Additional padding is added only on one side.
+        # https://stackoverflow.com/questions/59906456/in-pytorchs-maxpool2d-is-padding-added-depending-on-ceil-mode
+        if remainder > 0:
+            # NNv2 pooling does not support ceil_mode natively, but we can
+            # workaround by padding the input appropriately.
+            # rdar://60634390
+            logging.warn("padding adjusted to support ceil_mode=True")
+            new_pad[2 * idx + 1] += stride - remainder
+
+    return new_pad
+
+
 @register_torch_op
 def max_pool2d(context, node):
     inputs = _get_inputs(context, node)
@@ -421,9 +447,15 @@ def max_pool2d(context, node):
     pad = inputs[3]
     pad = np.repeat(pad.val, 2)
     dilation = inputs[4].val
+    ceil_mode = inputs[5].val
     if np.any(dilation > 1):
         # See: rdar://60633736 (Implement dilation for nnv2 op max_pool)
         raise ValueError("@max_pool2d does not support dilation > 1")
+    if ceil_mode is True:
+        pad = _adjust_pad_for_ceil_mode(
+            x.shape[-2:], kernel_sizes.val, strides.val, pad
+        )
+
     pool = cb.max_pool(
         x=x,
         kernel_sizes=kernel_sizes,
@@ -639,16 +671,6 @@ def embedding(context, node):
     context.add(gather)
 
 
-@register_torch_op(torch_alias=["dropout_"])
-def dropout(context, node):
-    """Dropout is set as a noOP."""
-    logging.warning("Setting dropout to no-op.")
-    inputs = _get_inputs(context, node, expected=3)
-
-    _input = inputs[0]
-    context.add(_input, torch_name=node.name)
-
-
 @register_torch_op
 def hardtanh_(context, node):
     """Represent hardtanh as a hard sigmoid via the following translation:
@@ -682,6 +704,12 @@ def cat(context, node):
     inputs = _get_inputs(context, node)
 
     values = inputs[0]
+    if len(values) == 1:
+        # Only one item to "concatenate", so treat it as a no-OP. Otherwise,
+        # NNv1 concatND layer will complain it only has one input.
+        context.add(values[0], node.name)
+        return
+
     if len(inputs) < 2:
         axis = 0
     else:
@@ -725,21 +753,6 @@ def _int(context, node):
     if x.val is not None and not isinstance(x.val, int):
         x = cb.const(val=int(x.val), name=node.name)
     context.add(x, node.name)
-
-
-@register_torch_op
-def feature_dropout(context, node):
-    inputs = _get_inputs(context, node, expected=3)
-    # Inputs are:
-    #   inputs[0]: input tensor
-    #   inputs[1]: dropout rate
-    #   inputs[2]: training flag
-
-    if inputs[2].val:
-        logging.warning("Setting feature_dropout to no-op.")
-
-    _input = inputs[0]
-    context.add(_input, torch_name=node.name)
 
 
 @register_torch_op
@@ -792,8 +805,17 @@ def upsample_bilinear2d(context, node):
 
     if output_size:
         assert len(output_size.val) == 2
-        scales_h = output_size.val[0] / float(_input.shape[-2])
-        scales_w = output_size.val[1] / float(_input.shape[-1])
+        # output size is computed using the formula
+        # floor (scale * input_size) in Core ML (and Pytorch)
+        # Thus, when computing the scales from the output size,
+        # add a small positive constant to the output size,
+        # to make sure that the floor formula results in the correct output
+        # size and not 1 unit smaller, due to float precision issues
+        # e.g. if output size = 34 and input size = 2, then scale will be
+        # 17, which can get represented as 16.9999, resulting in an output size of 33
+        # instead of 34, without this correction.
+        scales_h = (output_size.val[0] + 1e-4) / float(_input.shape[-2])
+        scales_w = (output_size.val[1] + 1e-4) / float(_input.shape[-1])
 
     upsample_bilinear = cb.upsample_bilinear(
         x=_input,
@@ -1043,8 +1065,12 @@ def _avg_pool(context, node, inputs):
     pad = np.repeat(pad.val, 2)
     ceil_mode = inputs[4]
     if ceil_mode.val is True:
-        raise ValueError("ceil_mode=True is not supported for avg_pool")
+        rank = len(pad) // 2
+        pad = _adjust_pad_for_ceil_mode(
+            x.shape[-rank:], kernel_sizes.val, strides.val, pad
+        )
     include_pad = inputs[5].val
+
     pool = cb.avg_pool(
         x=x,
         kernel_sizes=kernel_sizes,
@@ -1107,7 +1133,7 @@ def _slice(context, node):
     x = inputs[0]
     dim = inputs[1].val
     start = inputs[2].val
-    end = inputs[3].val
+    end = inputs[3].val if inputs[3] is not None else None
     step = inputs[4].val
 
     begin_array = np.array([0] * len(x.shape))
@@ -1210,14 +1236,6 @@ def implicittensortonum(context, node):
 
 
 @register_torch_op
-def contiguous(context, node):
-    """Contiguous is set as a noOP."""
-    logging.warning("Setting contiguous to no-op.")
-    inputs = _get_inputs(context, node)
-    context.add(inputs[0], node.name)
-
-
-@register_torch_op
 def constantchunk(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
@@ -1259,14 +1277,6 @@ def expand_as(context, node):
     other = inputs[1]
 
     _expand(context, node.name, x, other.shape)
-
-
-@register_torch_op
-def device(context, node):
-    """Device is set as a noOP."""
-    logging.warning("Setting device to no-op.")
-    inputs = _get_inputs(context, node)
-    context.add(inputs[0], node.name)
 
 
 @register_torch_op
@@ -1362,3 +1372,29 @@ def meshgrid(context, node):
         grids.append(expand)
 
     context.add(tuple(grids), node.name)
+
+
+@register_torch_op
+def tanh(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    _input = inputs[0]
+    tanh = cb.tanh(x=_input, name=node.name)
+    context.add(tanh)
+
+
+# Defines all the nodes that are noOps
+@register_torch_op(
+    torch_alias=[
+        "dropout",
+        "dropout_",
+        "feature_dropout",
+        "contiguous",
+        "device",
+        "detach",
+    ]
+)
+def noop(context, node):
+    logging.warning("Setting pytorch op: {} to no-op.".format(node))
+    inputs = _get_inputs(context, node)
+    _input = inputs[0]
+    context.add(_input, torch_name=node.name)

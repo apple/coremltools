@@ -1534,7 +1534,7 @@ class NeuralNetworkBuilder(object):
             raise ValueError('Unsupported linear upsampling mode %s' % linear_upsample_mode)
 
         # Default linear upsample mode is backwards compatible, else set spec to iOS14
-        if linear_upsample_mode is not 'DEFAULT' and self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+        if linear_upsample_mode != 'DEFAULT' and self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
             self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
 
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
@@ -2075,9 +2075,6 @@ class NeuralNetworkBuilder(object):
         --------
         add_pooling3d, add_convolution, add_activation
         """
-        # Update spec version if necessary
-        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
-            self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
 
         # Create spec layer
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
@@ -4700,7 +4697,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.strides.extend(strides)
         spec_layer_params.beginMasks.extend(begin_masks)
         spec_layer_params.endMasks.extend(end_masks)
-        if squeeze_masks is None:
+        if not any(squeeze_masks):
             return spec_layer
 
         if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):

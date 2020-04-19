@@ -1,12 +1,15 @@
 import logging
 from .builder import CoremlBuilder
+from collections import defaultdict
 
 class SSAOpRegistry:
-    ops = {}
+    # ops is 3 nested dicts:
+    # namespace (str) -> {op_type (str) -> {op_class, doc_str}}
+    ops = defaultdict(dict)
     custom_ops = {}
 
     @staticmethod
-    def register_op(doc_str, is_custom_op=False):
+    def register_op(doc_str, is_custom_op=False, namespace='core'):
         """
         Registration routine for NNV2 Program operators
         is_custom_op: (Boolean) [Default=False]
@@ -23,12 +26,22 @@ class SSAOpRegistry:
 
             # Operation specific to custom op
             op_msg = 'Custom op' if is_custom_op else 'op'
-            op_reg = SSAOpRegistry.custom_ops if is_custom_op else SSAOpRegistry.ops
+            op_reg = SSAOpRegistry.custom_ops if is_custom_op else \
+                    SSAOpRegistry.ops[namespace]
 
             logging.debug("Registering {} {}".format(op_msg, op_type))
+
             if op_type in op_reg:
                 raise ValueError(
                         'SSA {} {} already registered.'.format(op_msg, op_type))
+
+            if namespace != 'core':
+                # Check that op_type is prefixed with namespace
+                if op_type[:len(namespace)] != namespace:
+                    msg = 'Op type {} registered under {} namespace must ' +\
+                            'prefix with {}'
+                    raise ValueError(msg.format(op_type, namespace, namespace))
+
             op_reg[op_type] = {
                 'class':    op_cls,
                 'doc_str':  doc_str

@@ -156,7 +156,7 @@ class TestElementwiseBinary:
         v = cb.real_div(x=x, y=y)
         assert is_close(expected_outputs, v.val)
         # real_div should produce float values regardless of input type
-        assert isinstance(v.val[0], float)
+        assert isinstance(v.val[0], (float, np.float32))
         # make sure the dtype is float
         assert builtins.is_float(v.dtype)
         # make sure the symbolic type matches the value type

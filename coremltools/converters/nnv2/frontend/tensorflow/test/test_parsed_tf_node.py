@@ -45,7 +45,3 @@ class TestParsedTFNode(unittest.TestCase):
             self.assertEqual(
                 getattr(parsed_node, prop), getattr(copy, prop),
                 "Mismatch in property {}".format(prop))
-
-
-if __name__ == '__main__':
-    unittest.main()

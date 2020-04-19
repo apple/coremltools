@@ -6,4 +6,4 @@
 from ..._deps import HAS_TF as _HAS_TF
 
 if _HAS_TF:
-    from ._tf_converter import convert
+    from ._tf_converter import convert, SupportedVersion

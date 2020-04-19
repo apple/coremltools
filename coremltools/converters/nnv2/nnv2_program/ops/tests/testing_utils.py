@@ -1,6 +1,6 @@
 import logging
 
-import coremltools.converters.nnv2.converter as converter
+from coremltools.converters.nnv2.testing_reqs import converter
 from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
 from coremltools.converters.nnv2.testing_utils import compare_backend

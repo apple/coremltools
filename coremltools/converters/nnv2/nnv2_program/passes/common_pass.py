@@ -15,8 +15,10 @@ def common_pass(prog):
 
     logging.debug('Program before common passes:\n{}'.format(prog))
 
+    prog.validate()
     for p in passes:
         logging.info('Performing pass: "{}"'.format(p))
         PASS_REGISTRY[p](prog)
+        prog.validate()
 
     logging.debug('Program after common passes:\n{}'.format(prog))

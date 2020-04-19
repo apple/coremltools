@@ -28,13 +28,13 @@ class TestModelInputsOutputs:
     def test_infer_inputs(self):
         x_shape = (3, 4, 5)
 
-        @make_tf_graph({'x': x_shape})
+        @make_tf_graph([x_shape])
         def build_model(x):
-            return tf.nn.relu(x, name='output')
+            return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
         proto = converter.convert(
-            model, outputs=['output'], convert_from=frontend)
+            model, outputs=outputs, convert_from=frontend)
         assert proto is not None
 
         input_values = [random_gen(x_shape, -10., 10.)]
@@ -44,13 +44,14 @@ class TestModelInputsOutputs:
     def test_infer_outputs(self):
         x_shape = (3, 4, 5)
 
-        @make_tf_graph({'x': x_shape})
+        @make_tf_graph([x_shape])
         def build_model(x):
-            return tf.nn.relu(x, name='output')
+            return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
+        input_name = inputs[0] if isinstance(inputs[0], str) else inputs[0].op.name
         proto = converter.convert(
-            model, inputs={'x': (3, 4, 5)}, convert_from=frontend)
+            model, inputs={input_name: (3, 4, 5)}, convert_from=frontend)
         assert MLModel(proto) is not None
 
         input_values = [random_gen(x_shape, -10., 10.)]
@@ -60,9 +61,9 @@ class TestModelInputsOutputs:
     def test_infer_inputs_and_outputs(self):
         x_shape = (3, 4, 5)
 
-        @make_tf_graph({'x': x_shape})
+        @make_tf_graph([x_shape])
         def build_model(x):
-            return tf.nn.relu(x, name='output')
+            return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
         proto = converter.convert(
@@ -76,9 +77,9 @@ class TestModelInputsOutputs:
     def test_invalid_input_names(self):
         x_shape = (3, 4, 5)
 
-        @make_tf_graph({'x': x_shape})
+        @make_tf_graph([x_shape])
         def build_model(x):
-            return tf.nn.relu(x, name='output')
+            return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
 
@@ -90,9 +91,9 @@ class TestModelInputsOutputs:
     def test_invalid_output_names(self):
         x_shape = (3, 4, 5)
 
-        @make_tf_graph({'x': x_shape})
+        @make_tf_graph([x_shape])
         def build_model(x):
-            return tf.nn.relu(x, name='output')
+            return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
 

@@ -11,6 +11,7 @@ from .convert_utils import convert_graph
 
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
+from .ssa_passes.tf_passes import tensorflow_passes
 
 
 # TranscriptionContext maintains a map of tf_node.name --> ssa_var available
@@ -261,4 +262,9 @@ class TFConverter:
         for g_name in self.graph_stack[1:]:
             self.context.add_graph(g_name, self.tfssa.functions[g_name].graph)
         self.convert_main_graph(prog, graph)
+
+        # Apply TF frontend passes on SsaProgram. These passes are different
+        # from passes applied to tfssa.
+        tensorflow_passes(prog)
+
         return prog

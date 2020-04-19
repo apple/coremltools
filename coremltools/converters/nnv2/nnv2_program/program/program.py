@@ -6,11 +6,12 @@ import copy
 import logging
 import numpy as np
 import sympy as sm
+from collections import Counter
 import six
 
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic
-from .var import Var, InternalVar
+from .var import Var, InternalVar, ListVar
 from .input_type import TupleInputType
 from .dot_visitor import DotVisitor
 
@@ -102,6 +103,8 @@ def precondition(allow=ALL):
         return wrapper
     return decorator
 
+
+
 class Operation(object):
     """
     Represents Operation in NNv2.Program.
@@ -137,6 +140,20 @@ class Operation(object):
         if not kwargs.get('no_check_var_types', False):
             self.type_value_inference()
 
+    def get_flattened_inputs(self):
+        """
+        Returns:
+        list[Var]. Flatten all tuple inputs
+        """
+        flat_inputs = []
+        for v in self.inputs.values():
+            if isinstance(v, (list, tuple)):
+                flat_inputs.extend(v)
+            else:
+                flat_inputs.append(v)
+        return flat_inputs
+
+
     def type_value_inference(self, overwrite_output=False):
         """
         Perform type inference and auto_val computation based on new input Vars
@@ -169,11 +186,15 @@ class Operation(object):
             for i, (n, sym_type, sym_val) in enumerate(
                     zip(output_names, output_types, output_vals)):
                 name = self.name + ":" + n if n != '' else self.name
-                new_var = Var(name,
-                              sym_type,
-                              sym_val,
-                              op=self,
-                              op_output_idx=i)
+                if builtins.is_list(sym_type):
+                    new_var = ListVar(name, sym_type.T[0],
+                            op=self, op_output_idx=i)
+                else:
+                    new_var = Var(name,
+                                  sym_type,
+                                  sym_val,
+                                  op=self,
+                                  op_output_idx=i)
                 self._output_vars.append(new_var)
         else:
             # Check new inference result against existing self._output_vars.
@@ -181,12 +202,11 @@ class Operation(object):
                     zip(output_names, output_types, output_vals)):
                 out_var = self._output_vars[i]
                 # Check type inference
-                if sym_type != out_var.sym_type:
-                    if overwrite_output:
-                        out_var._sym_type = sym_type
-                    else:
-                        msg = "Output Var '{}' in op '{}' type changes with new input Vars"
-                        raise ValueError(msg.format(out_var.name, self.name))
+                if overwrite_output:
+                    out_var._sym_type = sym_type
+                elif not builtins.is_subtype(sym_type, out_var.sym_type):
+                    msg = "Output Var {} in op {} type changes with new input Vars"
+                    raise ValueError(msg.format(out_var.name, self.name))
 
                 # Check value inference
                 if sym_val is not None and out_var.sym_val is None:
@@ -314,6 +334,16 @@ class Operation(object):
                 raise RuntimeError("Unknown input {} for op {}".format(
                     key, self.op_type))
 
+        def check_and_detach(v_new, v_old, op, no_check_var_types):
+            # Check new var's sym_type is compatible with the
+            # existing's sym_type.
+            if not builtins.is_subtype(v_new.sym_type, v_old.sym_type) and \
+                    not no_check_var_types:
+                msg = 'New var type {} not a subtype of ' +\
+                        'existing var type {}'
+                raise ValueError(msg.format(v_new.sym_type, v_old.sym_type))
+            v_old.remove_child_op(op, no_check_var_types)
+
         parsed_inputs = self.input_spec.parse_inputs(kwargs)
         for (name, var) in parsed_inputs:
             setattr(self, name, var)
@@ -323,21 +353,11 @@ class Operation(object):
                 if existing_input_var is not None:
                     if isinstance(existing_input_var, (list, tuple)):
                         for v_old, v_new in zip(existing_input_var, var):
-                            if v_old.sym_type != v_new.sym_type:
-                                if not no_check_var_types:
-                                    msg = 'New var type {} != existing var type {}'
-                                    raise ValueError(msg.format(v_new.sym_type,
-                                        v_old.sym_type))
-                            v_old.remove_child_op(self, no_check_var_visibility)
+                            check_and_detach(v_new, v_old, self,
+                                    no_check_var_types)
                     else:
-                        # Check new var's sym_type is compatible with the
-                        # existing's sym_type.
-                        if existing_input_var.sym_type != var.sym_type:
-                            if not no_check_var_types:
-                                msg = 'New var type {} != existing var type {}'
-                                raise ValueError(msg.format(var.sym_type,
-                                    existing_input_var.sym_type))
-                        existing_input_var.remove_child_op(self, no_check_var_visibility)
+                        check_and_detach(var, existing_input_var, self,
+                                no_check_var_types)
 
                 # Set var as input_var
                 if isinstance(var, Var):
@@ -362,7 +382,6 @@ class Operation(object):
 
     def remove_from_block(self):
         """
-
         Remove / detach itself from the enclosing block. See SsaBlock.remove_ops
         for details.
         """
@@ -376,7 +395,9 @@ class Operation(object):
             return "%" + v.name
 
     def indented_str(self, indent=""):
-        s = indent + ", ".join([str(o) for o in self.outputs])
+        s = indent
+        if self.outputs is not None:
+            s += ", ".join([str(o) for o in self.outputs])
         s += " = " + self.op_type + "("
         if self.op_type == 'const':
             if self.mode.val == 'immediate_value':
@@ -411,7 +432,7 @@ class InvalidBlockStateError(Exception):
 class SsaBlock(object):
     __slots__ = [
         "name", "_block_inputs", "_outputs", "operations", "_internal_vars",
-        "outer_op", "_shadowed_vars"
+        "outer_op",
     ]
 
     counter = 0
@@ -444,6 +465,9 @@ class SsaBlock(object):
         # list[Operation]. Topologically sorted.
         self.operations = []
 
+        # Must be set before self.validate()
+        self.outer_op = outer_op
+
         self.set_inputs(block_inputs)
 
         # list[Var]. This is converted to str when generating NNv2 proto.
@@ -453,10 +477,11 @@ class SsaBlock(object):
         # (infinite recursion). They must be considered as always visible.
         self._internal_vars = set()
 
-        self.outer_op = outer_op
         if self.outer_op is None and not isinstance(self, SsaFunction):
             msg = "SsaBlock {} is not SsaFunction and thus outer_op cannot be None"
             raise ValueError(msg.format(self.name))
+
+        self.validate()
 
     def validate(self):
         """
@@ -468,10 +493,23 @@ class SsaBlock(object):
             if op.outputs is None:
                 raise InvalidBlockStateError()
 
+            # Check the input output relationships
+            for ov in op.outputs:
+                child_op_count = Counter(ov.child_ops)
+                for next_op, c in child_op_count.items():
+                    c_actual = next_op.get_flattened_inputs().count(ov)
+                    if c_actual != c:
+                        msg = 'Var {} should be consumed by op {} {}' +\
+                            ' times, but op {} only uses it {} times.\n{}'
+                        raise InvalidBlockStateError(msg.format(ov.name,
+                            next_op.name, c, next_op.name, c_actual, next_op))
+
+
     def set_inputs(self, block_inputs):
         """
-        block_inputs must be a var in enclosing block, which will be shadowed
-        within the block. Example:
+        block_inputs must be a var in enclosing block. We'd duplicate and
+        create a new var with corresponding types but no association with any
+        existing Var or Operation. Example:
 
         #    main(%a: (1, 2, fp32),
         #         %b: (1, 2, fp32),
@@ -491,25 +529,24 @@ class SsaBlock(object):
         #      } -> (%loop:0, %loop:1)
         #    }
 
-        loop_cond block can (%a, %b) which is visible to the block. %a, %b are
-        shadowed and becomes %a.x, %b.x. loop_cond block, however, cannot take
-        %linear as input.
+        `some_op` in `loop_cond` block can access %a, %b, %a.x, %b.x
+        `some_op`, however, cannot take %linear as input.
+
+        Since a duplicate of Var (%a.x for %a) is always created, there will
+        never be any shadowing.
         """
-        self.validate()
         # block_inputs: list[Var]
         if block_inputs is not None:
             self._block_inputs = tuple(copy.deepcopy(v) for v in block_inputs)
             # Keep track the vars we shadow
-            self._shadowed_vars = block_inputs
             for v in self._block_inputs:
                 v._op = None
                 v.op_output_idx = None
-                v._child_ops = set()
+                v._child_ops = list()
                 v.name = v.name + ".x"
                 v._sym_val = None
         else:
             self._block_inputs = tuple()
-            self._shadowed_vars = tuple()
 
     def remove_inputs(self, curr_input_vars):
         """
@@ -519,8 +556,6 @@ class SsaBlock(object):
         self.validate()
         remove_idx = [self._block_inputs.index(v) for v in curr_input_vars]
         self._block_inputs = [v for i, v in enumerate(self._block_inputs) \
-                if i not in remove_idx]
-        self._shadowed_vars = [v for i, v in enumerate(self._shadowed_vars) \
                 if i not in remove_idx]
 
     def find_ops(self, prefix=None, op_type=None):
@@ -565,6 +600,16 @@ class SsaBlock(object):
         """
         if not isinstance(outputs, list):
             raise ValueError("Outputs must be list of Vars")
+
+        self.validate()
+        visible_vars = self._visible_vars_from_enclosing_block()
+        _, visible_vars_in_block = self._visible_vars_in_block()
+        visible_vars.update(visible_vars_in_block)
+        for ov in outputs:
+            if ov not in visible_vars:
+                msg = 'Var {} is not visible in block {} and thus cannot ' +\
+                        'be a block output.\n{}'
+                raise ValueError(msg.format(ov.name, self.name, self))
 
         # Need to copy, or block's output would be completely tied to a var's
         # output and we cannot replace a block output with another var's
@@ -680,9 +725,8 @@ class SsaBlock(object):
              visible_vars = {%a, %b, %c} (function input)
 
         Ex2: self = loop_cond.
-            visible_vars = {%c} (%a, %b are shadowed by %a.x, %b.x)
-                           + {%const1, V0}
-                           (%const2 is not part of the set)
+            visible_vars = {%a, %b, %c, %const1, V0} (Note that %const2 is not
+            part of the set)
         """
         visible_vars = set()
 
@@ -700,15 +744,6 @@ class SsaBlock(object):
             _, visible_vars_in_block = enclosing_block._visible_vars_in_block(
                     self.outer_op, inclusive=False)
             visible_vars.update(visible_vars_in_block)
-
-        if len(self._shadowed_vars) > 0:
-            # Shadow vars.
-            for v in self._shadowed_vars:
-                if v not in visible_vars:
-                    msg = 'Failed to shadow var {} (not in enclosing ' + \
-                            'scope of block {})'
-                    raise ValueError(msg.format(v, self))
-                visible_vars.remove(v)
 
         return visible_vars
 
@@ -788,7 +823,9 @@ class SsaBlock(object):
             op_list = self.operations[start:end_id+1]
 
         for op in op_list:
-            new_inputs = {'no_check_var_visibility': no_check_var_visibility, 'no_check_var_types': no_check_var_types}
+            new_inputs = {
+                    'no_check_var_visibility': no_check_var_visibility,
+                    'no_check_var_types': no_check_var_types}
             affected = False
             for k, v in op.inputs.items():
                 if isinstance(v, (list, tuple)) and old_var in v:
@@ -817,9 +854,8 @@ class SsaBlock(object):
             self._outputs[idx] = new_var
         return num_ops_affected
 
-    def replace_uses_of_var_after_op(self, anchor_op, old_var, new_var, no_check_var_visibility=False,
-                                     end_op=None,
-                                     no_check_var_types=False):
+    def replace_uses_of_var_after_op(self, anchor_op, old_var, new_var,
+            no_check_var_visibility=False, end_op=None, no_check_var_types=False):
         """
         Replace all uses of `old_var` with `new_var` after `anchor_op`,
         and before `end_op` (inclusive).
@@ -896,7 +932,8 @@ class SsaBlock(object):
                  %5 = op3(%2)               # will continue using %2
 
         """
-        self.validate()
+        if not no_check_var_visibility:
+            self.validate()
         # Get visible vars from enclosing block
         visible_vars = self._visible_vars_from_enclosing_block()
 
@@ -980,17 +1017,45 @@ class SsaBlock(object):
             self.operations.pop(idx)
             op.enclosing_block = None
 
-            # an binary op may take the same input, e.g. add(x0, x0)
-            # we should only call remove add from x0 once.
-            unique_inputs = set()
             for v in op.inputs.values():
                 if isinstance(v, (tuple,list)):
                     for vv in v:
-                        unique_inputs.add(vv)
+                        vv.remove_child_op(op)
                 else:
-                    unique_inputs.add(v)
-            for v in unique_inputs:
-                v.remove_child_op(op)
+                    v.remove_child_op(op)
+
+    def operations_for_vars(self, end_vs):
+        """
+        Inputs:
+
+        end_vs: list[Operation].
+
+        Return:
+
+        list[Operation] which are subset of self.operations that are ancestors
+        of `end_vs`. No recursion into nested blocks.
+        """
+        used_vars = set(end_vs)
+        used_ops = []
+        for op in reversed(self.operations):
+            # if none of op's output is used, delete op
+            if not set(op.outputs).intersection(used_vars):
+                continue
+
+            used_ops.append(op) # append in reverse topological order
+
+            # mark all op's inputs to used
+            for _, input_var in op.inputs.items():
+                if isinstance(input_var, (tuple, list)):
+                    used_vars.update(list(input_var))
+                else:
+                    used_vars.add(input_var)
+
+            for b in op.blocks:
+                used_in_block = b.operations_for_vars(b.outputs)
+                used_vars.update(used_in_block)
+
+        return used_ops[::-1]
 
     def indented_str(self, indent=None):
         if indent is None:
@@ -1001,7 +1066,8 @@ class SsaBlock(object):
         for op in self.operations:
             s += op.indented_str(indent + SPACES * 1)
         s += indent + "} -> ("
-        s += ", ".join(["%" + v.name for v in self._outputs])
+        if self._outputs is not None:
+            s += ", ".join(["%" + v.name for v in self._outputs])
         s += ")\n"
         return s
 
@@ -1133,6 +1199,10 @@ class SsaProgram(object):
             raise ValueError(msg.format(found_ops))
         return found_ops
 
+    def validate(self):
+        for f_name, f in self.functions.items():
+            f.validate()
+
     def __getitem__(self, func_name):
         if func_name not in self.functions:
             msg = 'Function {} not found in among functions {}.'
@@ -1197,11 +1267,30 @@ def get_new_variadic_symbol():
     k_num_internal_syms += 1
     return s
 
-def get_new_symbol():
+
+def get_new_symbol(name=None):
+    """
+    Returns a new symbol, optionally named.
+
+    name: str (optional)
+        Optional name that provides more readability. If the name specified is
+        not available, an extra integer will be appended.
+    """
+    global k_used_symbols
     global k_num_internal_syms
-    s = Symbol('is' + str(k_num_internal_syms))
+
+    if name is not None:
+        s = Symbol(name)
+        if s in k_used_symbols:
+            new_name = name + k_num_internal_syms
+            msg = 'Symbol name "{}" already occupied. Renaming to {}'
+            logging.warning(msg.format(name, new_name))
+            s = Symbol(new_name)
+    else:
+        s = Symbol('is' + str(k_num_internal_syms))
     k_num_internal_syms += 1
     return s
+
 
 class Symbol(sm.Symbol):
     def __init__(self, sym_name):

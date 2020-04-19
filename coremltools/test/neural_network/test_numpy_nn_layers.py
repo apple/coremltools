@@ -5171,11 +5171,9 @@ class IOS14SingleLayerTests(CorrectnessTest):
             raise ValueError('The average of the start (%s) and end (%s) padding must be less than half the kernel size (%s / 2 = %s)'
                 % (start_padding, end_padding, kernel_size, kernel_size / 2))
 
-    @pytest.mark.xfail(reason="<rdar://problem/60656796> Fix pool3d tests in test_numpy_nn_layers")
     def test_pool3d_cpu(self):
         self._test_pool3d(cpu_only=True)
 
-    @pytest.mark.xfail(reason="<rdar://problem/60656796> Fix pool3d tests in test_numpy_nn_layers")
     def test_pool3d_gpu(self):
         self._test_pool3d(cpu_only=False)
 

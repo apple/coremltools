@@ -490,9 +490,11 @@ class TestCornerCases(unittest.TestCase):
         )(out)
         keras_model = tf.keras.Model(inpt, out)
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         self._test_model(keras_model=keras_model,
                          model_path=self.model_path,
                          inputs={input_name: (1, 32, 32, 3)},
+                         outputs=[output_name],
                          decimal=2)
 
     def test_batch_norm_node_fusion(self):
@@ -502,9 +504,11 @@ class TestCornerCases(unittest.TestCase):
         out = tf.keras.layers.Activation('relu')(bn)
         keras_model = tf.keras.Model(x, out)
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
-                                 inputs={input_name: (1, 32, 32, 3)})
+                                 inputs={input_name: (1, 32, 32, 3)},
+                                 outputs=[output_name])
         num_batch_norm = 0
         for layer in model.get_spec().neuralNetwork.layers:
             if layer.WhichOneof('layer') == 'batchnorm':
@@ -518,10 +522,12 @@ class TestCornerCases(unittest.TestCase):
         conv = tf.keras.layers.DepthwiseConv2D(kernel_size=1)(conv)
         keras_model = tf.keras.Model(x, conv)
         input_name = keras_model.inputs[0].name.split(':')[0]
+        output_name = keras_model.outputs[0].name.split(':')[0].split('/')[-1]
         model = self._test_model(keras_model=keras_model,
                                  model_path=self.model_path,
                                  decimal=3,
-                                 inputs={input_name: (1, 32, 32, 3)})
+                                 inputs={input_name: (1, 32, 32, 3)},
+                                 outputs=[output_name])
         add_broadcastables = 0
         load_constants = 0
         for layer in model.get_spec().neuralNetwork.layers:
@@ -706,14 +712,3 @@ class TestCornerCases(unittest.TestCase):
         output_types = [layer.WhichOneof('layer') for layer in spec.neuralNetwork.layers]
         expected_types = ['convolution', 'transpose']
         np.testing.assert_array_equal(output_types, expected_types)
-
-
-if __name__ == '__main__':
-    np.random.seed(1984)
-    RUN_ALL_TESTS = True
-    if RUN_ALL_TESTS:
-        unittest.main()
-    else:
-        suite = unittest.TestSuite()
-        suite.addTest(TestCornerCases('test_wrong_out_name_error'))
-        unittest.TextTestRunner().run(suite)

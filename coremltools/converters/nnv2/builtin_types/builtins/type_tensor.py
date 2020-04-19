@@ -2,10 +2,14 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
+
+import numpy as np
+import sympy as sm
+import logging
+
 from .type_spec import Type
 from .get_type_info import get_type_info
-from .type_mapping import promote_types, is_tensor
-import sympy as sm
+from .type_mapping import promote_types, is_tensor, nptype_from_builtin, builtin_to_string, numpy_type_to_builtin_type
 
 
 def memoize(f):
@@ -63,7 +67,7 @@ def tensor(primitive, shape):
         T = [primitive, shape]
 
         def __init__(self):
-            self.val = []
+            self._val = []
 
         @classmethod
         def __type_info__(cls):
@@ -77,6 +81,25 @@ def tensor(primitive, shape):
         @classmethod
         def get_shape(cls):
             return shape
+
+        @property
+        def val(self):
+            return self._val
+
+        @val.setter
+        def val(self, v):
+            if not isinstance(v, np.ndarray):
+                raise ValueError("builtins tensor should have value of type ndarray, got {} instead".format(type(v)))
+
+            v_type = numpy_type_to_builtin_type(v.dtype)
+            promoted_type = promote_types(v_type, primitive)
+            if v_type == primitive:
+                self._val = v
+            elif promoted_type == primitive:
+                self._val = v.astype(nptype_from_builtin(primitive))
+            else:
+                logging.warning("Saving value type of {} into a builtin type of {}, might lose precision!".format(v.dtype, builtin_to_string(primitive)))
+                self._val = v.astype(nptype_from_builtin(primitive))
 
     tensor.__template_name__ = "tensor[" + primitive.__name__ + "," + ",".join(
         str(s) for s in shape) + "]"

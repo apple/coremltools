@@ -76,7 +76,7 @@ class TestParse(unittest.TestCase):
         attr.tensor.int_val.extend([55, 56, 57])
 
         t = parse.parse_attr(attr)
-        self.assertEqual([55, 56, 57], t.val)
+        self.assertEqual([55, 56, 57], t.val.tolist())
         self.assertEqual("tensor", builtins.get_type_info(t).name)
 
         # Note that the result of t.get_primitive() is a function that returns a type
@@ -116,6 +116,3 @@ class TestParse(unittest.TestCase):
         compare(builtins.uint32, types.DataType.DT_UINT32)
         compare(builtins.uint64, types.DataType.DT_UINT64)
 
-
-if __name__ == '__main__':
-    unittest.main()

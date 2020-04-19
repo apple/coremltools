@@ -51,13 +51,13 @@ class TestActivationReLU:
     def test(self, use_cpu_only, backend, rank):
         input_shape = np.random.randint(low=1, high=6, size=rank)
 
-        @make_tf_graph({'x': input_shape})
+        @make_tf_graph([input_shape])
         def build_model(x):
             return tf.nn.relu(x, name='output')
 
         model, inputs, outputs = build_model
 
-        input_values = [random_gen(input_shape, -10., 10.)]
+        input_values = [random_gen(input_shape, -10., 10)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(model, input_dict, outputs,
                        use_cpu_only=use_cpu_only,
@@ -146,6 +146,29 @@ class TestActivationSoftSign:
                            frontend_only=False, backend=backend)
 
 
+class TestActivationSelu:
+    @pytest.mark.parametrize(
+        'use_cpu_only, backend, rank',
+        itertools.product(
+            [True, False],
+            backends,
+            [rank for rank in range(1, 6)]))
+    def test(self, use_cpu_only, backend, rank):
+        input_shape = np.random.randint(low=1, high=6, size=rank)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.selu(x)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -1., 1.)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
+
+
 class TestWhere:
     @pytest.mark.parametrize('use_cpu_only, backend, rank',
                              itertools.product(
@@ -224,7 +247,7 @@ class TestControlFlowCond:
                            frontend_only=False, backend=backend)
 
 
-class TestControlFlowWhileLoop:
+class TestWhileLoop:
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
@@ -370,7 +393,7 @@ class TestConv:
         # We do not support dynamic weight when dilations != 1.
         if dynamic_weights and dilations == (1, 1):
 
-            @make_tf_graph({'x': input_shape, 'W': W_shape})
+            @make_tf_graph([input_shape, W_shape])
             def build_model_dynamic_weights(x, W):
                 if conv_dim == 'conv1d':
                     conv = tf.nn.conv1d(x, W, stride=strides[1], padding=padding,
@@ -386,7 +409,7 @@ class TestConv:
             input_dict = dict(zip(inputs, input_values))
 
         else:
-            @make_tf_graph({'x': input_shape})
+            @make_tf_graph([input_shape])
             def build_model_static_weights(x):
                 W = tf.constant(np.random.rand(*W_shape), tf.float32)
                 if conv_dim == 'conv1d':
@@ -451,7 +474,7 @@ class TestConv3d:
         tf_strides = [1] + list(strides) + [1]
         tf_dilations = [1] + list(dilations) + [1]
 
-        @make_tf_graph({'x': input_shape})
+        @make_tf_graph([input_shape])
         def build_model_static_weights(x):
             W = tf.constant(np.random.rand(*weights_shape), tf.float32)
             return tf.nn.conv3d(
@@ -625,54 +648,59 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
+        if use_cpu_only:
+            dtype = np.float32
+        else:
+            dtype = np.float16
+
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             if mode == 'add':
                 res = tf.add(x, y)
-                x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)
             elif mode == 'floor_div':
                 res = tf.floor_div(x, y)
-                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
             elif mode == 'floor_mod':
                 res = tf.floormod(x, y)
-                x_val = np.random.randint(low=0, high=100, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=0, high=100, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
             elif mode == 'maximum':
                 res = tf.maximum(x, y)
-                x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(dtype)
             elif mode == 'minimum':
                 res = tf.minimum(x, y)
-                x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(dtype)
             elif mode == 'mod':
                 res = tf.mod(x, y)
-                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
             elif mode == 'mul':
                 res = tf.multiply(x, y)
-                x_val = np.random.randint(low=-100, high=100, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=-100, high=100, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=-100, high=100, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=-100, high=100, size=y_shape).astype(dtype)
             elif mode == 'pow':
                 res = tf.pow(x, y)
-                x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(dtype)
             elif mode == 'real_div':
                 res = tf.truediv(x, y)
-                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
             elif mode == 'sub':
                 res = tf.subtract(x, y)
-                x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)
             elif mode == 'squared_difference':
                 if backend == 'nnv2_proto': return  # TODO
                 res = tf.math.squared_difference(x, y)
-                x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(np.float32)
-                y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(np.float32)
+                x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(dtype)
+                y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(dtype)
 
             run_compare_tf(graph, {x: x_val, y: y_val},
                            res, use_cpu_only=use_cpu_only,
@@ -693,12 +721,17 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
+        if use_cpu_only:
+            dtype = np.float32
+        else:
+            dtype = np.float16
+
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
 
@@ -717,12 +750,17 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
+        if use_cpu_only:
+            dtype = np.float32
+        else:
+            dtype = np.float16
+
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.greater(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
 
@@ -741,12 +779,17 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
+        if use_cpu_only:
+            dtype = np.float32
+        else:
+            dtype = np.float16
+
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.greater_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
 
@@ -765,12 +808,17 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
+        if use_cpu_only:
+            dtype = np.float32
+        else:
+            dtype = np.float16
+
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.less(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
 
@@ -789,12 +837,17 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
+        if use_cpu_only:
+            dtype = np.float32
+        else:
+            dtype = np.float16
+
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.less_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
 
@@ -813,12 +866,17 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
+        if use_cpu_only:
+            dtype = np.float32
+        else:
+            dtype = np.float16
+
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=x_shape)
             y = tf.placeholder(tf.float32, shape=y_shape)
             res = tf.not_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(np.float32),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(np.float32)},
+            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
 
@@ -838,6 +896,11 @@ class TestElementWiseUnary:
     def test_unary(self, use_cpu_only, backend, rank, mode):
         atol, rtol = 1e-4, 1e-5
         input_shape = np.random.randint(low=2, high=6, size=rank)
+        if use_cpu_only:
+            dtype = np.float32
+        else:
+            dtype = np.float16
+
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=input_shape)
             if mode == 'abs':
@@ -866,13 +929,13 @@ class TestElementWiseUnary:
                 if not use_cpu_only:
                     eps_from_int = 0.1
                 res = tf.cast(x, dtype=tf.int32)
-                val = random_gen(input_shape, rand_min=-10, rand_max=10, eps_from_int=eps_from_int)
+                val = random_gen(input_shape, rand_min=-10, rand_max=10, eps_from_int=eps_from_int, dtype=dtype)
             elif mode == 'ceil':
                 res = tf.ceil(x)
                 eps_from_int = 0.0
                 if not use_cpu_only:
                     eps_from_int = 0.1
-                val = random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int)
+                val = random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int, dtype=dtype)
             elif mode == 'clip':
                 if backend == 'nnv2_proto':
                     # TODO
@@ -902,8 +965,10 @@ class TestElementWiseUnary:
                 eps_from_int = 0.0
                 if not use_cpu_only:
                     eps_from_int = 0.1
-                val = random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int)
+                val = random_gen(input_shape, rand_min=-100, rand_max=100, eps_from_int=eps_from_int, dtype=dtype)
             elif mode == 'inverse':
+                if backend == 'nnv2_proto':
+                    return  # TODO
                 res = tf.reciprocal(x)
                 val = random_gen(input_shape, rand_min=0.1, rand_max=10)
             elif mode == 'log':
@@ -916,7 +981,7 @@ class TestElementWiseUnary:
                 val = random_gen(input_shape, rand_min=-100., rand_max=100.)
             elif mode == 'round':
                 res = tf.round(x)
-                val = random_gen(input_shape, rand_min=-1000, rand_max=1000)
+                val = random_gen(input_shape, rand_min=-1000, rand_max=1000, dtype=dtype)
             elif mode == 'rsqrt':
                 res = tf.rsqrt(x)
                 val = random_gen(input_shape, rand_min=0.5, rand_max=1000)
@@ -1027,6 +1092,37 @@ class TestImageResizing:
 
         test_dynamic() if dynamic else test_static()
 
+    @pytest.mark.parametrize("use_cpu_only, backend, width, height, strides, sizes, padding,",
+                             list(itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [1, 3, 5, 50],
+                                 [1, 2, 7, 30],
+                                 [(1,1), (2,1), (3,5), (7,13)],
+                                 [(1,1), (1,2), (5,3), (13,7)],
+                                 ['VALID','SAME'],
+                                 ))
+                             )
+    def test_extract_patches(self, use_cpu_only, backend, width, height, strides, sizes, padding):
+        # TODO: theoritically, the current extractpatches code handle batch size rather than 1,
+        # but there seems to have a bug in crop_resize when using GPU and batch_size > 1.
+        # We should test batch_size > 1 after the issue is fixed.
+        # <rdar://problem/61602238>
+        input = np.random.rand(1, height, width, 128)
+        if padding == "VALID":
+            size_h = min(sizes[0], height)
+            size_w = min(sizes[1], width)
+        else:
+            size_h = sizes[0]
+            size_w = sizes[1]
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=input.shape)
+            output = tf.extract_image_patches(images=x,
+                                              ksizes=[1, size_h, size_w, 1],
+                                              strides=[1, strides[0], strides[1], 1],
+                                              rates=[1, 1, 1, 1],
+                                              padding=padding)
+            run_compare_tf(graph, {x: input}, output, use_cpu_only=use_cpu_only, backend=backend)
 
 class TestLinear:
     @pytest.mark.parametrize('use_cpu_only, backend, dim, transpose_a, transpose_b, use_constant',
@@ -1187,7 +1283,7 @@ class TestNormalization:
                            atol=1e-2, rtol=1e-3)
 
 
-class TestPooling:
+class TestPooling1d:
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
                              itertools.product(
                                  [True, False],
@@ -1233,6 +1329,7 @@ class TestPooling:
             run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
                            res, use_cpu_only=use_cpu_only, backend=backend)
 
+class TestPooling2d:
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
                              itertools.product(
                                  [True, False],
@@ -1282,18 +1379,25 @@ class TestPooling3d:
 
 
 class TestRandom:
-    @pytest.mark.parametrize('use_cpu_only, backend, size, rank',
+    @pytest.mark.parametrize('use_cpu_only, backend, size, rank, constant',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [size for size in range(1, 5)],
                                  [rank for rank in range(1, 6)],
+                                 [True, False]
                              ))
-    def test_random_binomial(self, use_cpu_only, backend, size, rank):
+    def test_random_binomial(self, use_cpu_only, backend, size, rank, constant):
+        if not constant and backend == 'nnv2_proto':
+            return  # TODO: rdar://61948178 (NNv2 backend Random op does not support dynamic input shape)
+
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.keras.backend.random_binomial(shape=shape, p=1.0))
+            if constant:
+                ref = tf.add(x, tf.keras.backend.random_binomial(shape=shape, p=1.0))
+            else:
+                ref = tf.add(x, tf.keras.backend.random_binomial(shape=tf.raw_ops.Shape(input=x), p=1.0))
             run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
@@ -1312,59 +1416,84 @@ class TestRandom:
                            ref, use_cpu_only=use_cpu_only,
                            validate_shapes_only=True, backend=backend)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, mean, rank',
+    @pytest.mark.parametrize('use_cpu_only, backend, mean, rank, constant',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [0.],
-                                 [rank for rank in range(1, 6)]
+                                 [rank for rank in range(1, 6)],
+                                 [True, False]
                              ))
-    def test_random_normal(self, use_cpu_only, backend, mean, rank):
+    def test_random_normal(self, use_cpu_only, backend, mean, rank, constant):
+        if not constant and backend == 'nnv2_proto':
+            return  # TODO: rdar://61948178 (NNv2 backend Random op does not support dynamic input shape)
+
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.random.normal(shape=shape, mean=mean, stddev=0.))
+            if constant:
+                ref = tf.add(x, tf.random.normal(shape=shape, mean=mean, stddev=0.))
+            else:
+                ref = tf.add(x, tf.random.normal(shape=tf.raw_ops.Shape(input=x), mean=mean, stddev=0.))
             run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, mean, rank',
+    @pytest.mark.parametrize('use_cpu_only, backend, mean, rank, constant',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [0.],
-                                 [rank for rank in range(1, 6)]
+                                 [rank for rank in range(1, 6)],
+                                 [True, False]
                              ))
-    def test_keras_random_normal(self, use_cpu_only, backend, mean, rank):
+    def test_keras_random_normal(self, use_cpu_only, backend, mean, rank, constant):
+        if not constant and backend == 'nnv2_proto':
+            return  # TODO: rdar://61948178 (NNv2 backend Random op does not support dynamic input shape)
+
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.keras.backend.random_normal(shape=shape, mean=mean, stddev=0.))
+            if constant:
+                ref = tf.add(x, tf.keras.backend.random_normal(shape=shape, mean=mean, stddev=0.))
+            else:
+                ref = tf.add(x, tf.keras.backend.random_normal(shape=tf.raw_ops.Shape(input=x), mean=mean, stddev=0.))
             run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank',
+    @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank, constant',
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [0.], [0.], [rank for rank in range(1, 2)]))
-    def test_random_uniform(self, use_cpu_only, backend, low, high, rank):
+                                 [0.], [0.], [rank for rank in range(1, 2)], [True, False]))
+    def test_random_uniform(self, use_cpu_only, backend, low, high, rank, constant):
+        if not constant and backend == 'nnv2_proto':
+            return  # TODO: rdar://61948178 (NNv2 backend Random op does not support dynamic input shape)
+
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.random.uniform(shape=shape, minval=low, maxval=high))
+            if constant:
+                ref = tf.add(x, tf.random.uniform(shape=shape, minval=low, maxval=high))
+            else:
+                ref = tf.add(x, tf.random.uniform(shape=tf.raw_ops.Shape(input=x), minval=low, maxval=high))
             run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank',
+    @pytest.mark.parametrize('use_cpu_only, backend, low, high, rank, constant',
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [1.], [1.], [rank for rank in range(1, 6)]))
-    def test_keras_random_uniform(self, use_cpu_only, backend, low, high, rank):
+                                 [1.], [1.], [rank for rank in range(1, 6)], [True, False]))
+    def test_keras_random_uniform(self, use_cpu_only, backend, low, high, rank, constant):
+        if not constant and backend == 'nnv2_proto':
+            return  # TODO: rdar://61948178 (NNv2 backend Random op does not support dynamic input shape)
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.add(x, tf.keras.backend.random_uniform(shape=shape, minval=low, maxval=high))
+            if constant:
+                ref = tf.add(x, tf.keras.backend.random_uniform(shape=shape, minval=low, maxval=high))
+            else:
+                ref = tf.add(x, tf.keras.backend.random_uniform(shape=tf.raw_ops.Shape(input=x), minval=low, maxval=high))
             run_compare_tf(graph, {x: np.random.rand(*shape)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
@@ -1684,7 +1813,11 @@ class TestCumSum:
             x = tf.placeholder(tf.float32, shape=input_shape)
             for axis in range(-1, rank):
                 res = tf.math.cumsum(x, axis=axis, reverse=reverse, exclusive=exclusive)
-                run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
+                if use_cpu_only:
+                    dtype = np.float32
+                else:
+                    dtype = np.float16
+                run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100, dtype=dtype)},
                                res, use_cpu_only=use_cpu_only,
                                frontend_only=False, backend=backend)
 
@@ -2075,7 +2208,11 @@ class TestArgSort:
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.argsort(x, axis=axis, direction=direction.upper())
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
+            if use_cpu_only:
+                dtype = np.float32
+            else:
+                dtype = np.float16
+            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100, allow_duplicate=False, dtype=dtype)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
 
@@ -2330,3 +2467,106 @@ class TestBatchToSpaceND:
             ref = tf.batch_to_space(input=x, block_size=block_size, crops=crops)
             run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
                            ref, use_cpu_only=use_cpu_only, backend=backend)
+
+
+class TestList:
+    @pytest.mark.parametrize("use_cpu_only, backend",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             )
+                             )
+    def test_tf_basic(self, use_cpu_only, backend):
+        with tf.Graph().as_default() as graph:
+            elem_shape = (3, 2)
+            x = tf.placeholder(tf.float32, shape=elem_shape)
+            ta = tf.TensorArray(dtype=tf.float32, size=1, dynamic_size=True)
+
+            ta = ta.write(2, x)
+
+            # TensorArray has write-once semantics, and thus we write to a new
+            # index
+            # (https://www.tensorflow.org/api_docs/python/tf/TensorArray)
+            # writing to out of bound index
+            ta = ta.scatter([3], tf.expand_dims(x, 0))
+
+            # writing to in-bound index
+            ta = ta.scatter([0], tf.expand_dims(x, 0))
+
+            res = ta.stack()
+
+            run_compare_tf(graph,
+                            {x: random_gen(elem_shape),},
+                            res, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
+
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             )
+                             )
+    def test_tf_while_loop(self, use_cpu_only, backend):
+        with tf.Graph().as_default() as graph:
+            elem_shape = (3, 2)
+            update = tf.placeholder(tf.float32, shape=elem_shape)
+
+            def body(i, num_iters, ta, update):
+                return i+1, num_iters, ta.write(i, update), update
+
+            def cond(i, num_iters, tensor_list, update):
+                return i < num_iters
+
+            i = 0
+            num_iters = 3
+            ta = tf.TensorArray(dtype=tf.float32, size=1, dynamic_size=True)
+            _, _, new_ta, _ = tf.while_loop(cond, body, [i, num_iters, ta, update])
+            new_ta = new_ta.scatter([num_iters], tf.expand_dims(update, 0))
+
+            res = new_ta.stack()
+
+            run_compare_tf(graph,
+                           {update: random_gen(elem_shape),},
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
+
+
+class TestBroadcastTo:
+    @pytest.mark.parametrize(
+        'use_cpu_only, backend, shapes, is_dynamic',
+        itertools.product(
+            [True, False],
+            backends,
+            [((2,), (2,)), ((1,), (10,)), ((3,), (3, 3)),
+             ((1, 1), (1, 4)), ((1, 1, 5), (3, 4, 4, 4, 5)),
+             ((3,), (1, 3, 2, 1, 3)), ((3, 5), (2, 3, 5)),
+             ((1, 2), (2, 3, 1, 2)), ((1, 3, 1, 4), (8, 3, 32, 4)),
+             ((2, 16), (3, 1, 4, 2, 16))],
+            [False],
+        ))
+    def test(self, use_cpu_only, backend, shapes, is_dynamic):
+        input_shape, output_shape = shapes
+
+        if is_dynamic is False:
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.broadcast_to(x, output_shape)
+        else:  # output / target shape is an input (placeholder)
+            @make_tf_graph([input_shape, (len(output_shape), tf.int32)])
+            def build_model(x, shape):
+                return tf.broadcast_to(x, shape)
+
+        model, inputs, outputs = build_model
+        if is_dynamic is False:
+            input_values = [random_gen(input_shape)]
+        else:
+            input_values = [
+                random_gen(input_shape),
+                np.array(output_shape, dtype=np.int32)
+            ]
+
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)

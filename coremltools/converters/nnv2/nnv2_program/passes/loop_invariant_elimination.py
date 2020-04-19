@@ -9,6 +9,21 @@ import six
 from coremltools.converters.nnv2 import CoremlBuilder as cb
 from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import register_pass
 
+def detect_loop_invariants(while_op):
+    block = while_op.blocks[0]
+    loop_invariant_ids = [] # list of index in op.loop_vars, block.inputs
+    for i, vx_in in enumerate(block.inputs):
+        vx_out = block.outputs[i+1] # first output is cond var.
+        return_input_as_output =  vx_in == vx_out
+        # this block output is a var from outside of the block
+        output_from_outside_of_block = \
+                vx_out in block._visible_vars_from_enclosing_block()
+        if return_input_as_output or output_from_outside_of_block:
+            loop_invariant_ids.append(i)
+
+    # TODO: All outputs that depend on only invariants are invariant. We
+    # need to move computation out of while loop.
+    return loop_invariant_ids
 
 def loop_invariant_elimination_block(block):
 
@@ -28,14 +43,10 @@ def loop_invariant_elimination_block(block):
         if op.op_type != 'while_loop':
             continue
 
-        body_block = op.blocks[1]
-        has_invariant = False
-        for v_in, body_vx_in, body_vx_out, op_out in zip(op.loop_vars,
-                body_block.inputs, body_block.outputs, op.outputs):
-            if body_vx_in == body_vx_out:
-                output_rename.append((v_in, op_out, op))
-                has_invariant = True
-        if has_invariant:
+        loop_invariant_ids = detect_loop_invariants(op)
+        for i in loop_invariant_ids:
+            output_rename.append((op.loop_vars[i], op.outputs[i], op))
+        if len(loop_invariant_ids) > 0:
             # Avoid the following case:
             # %a, %b = while_loop(..., name="b")
             # becomes
@@ -44,7 +55,7 @@ def loop_invariant_elimination_block(block):
             # (two ops with the same name -> name collision)
             op.name = op.name + '_renamed'
 
-    # Phase 2: insert rename
+    # Phase 2: insert rename ops. This changes block.operations
     for v_src, v_tgt, op in output_rename:
         if v_tgt in block.outputs:
             # rename the loop output to existing block output names
@@ -55,56 +66,44 @@ def loop_invariant_elimination_block(block):
 
     # Phase 3: Perform loop invariant elimination without fear!
     for op in list(block.operations):
-        for b in op.blocks:
-            loop_invariant_elimination_block(b)
-
         if op.op_type != 'while_loop':
             continue
-        cond_block = op.blocks[0]
-        body_block = op.blocks[1]
-        loop_invariants = set()
-        body_block_invariants = []  # only contains loop variant inputs
-        cond_block_invariants = []  # only contains loop variant inputs
+        block = op.blocks[0]
+        loop_invariant_ids = detect_loop_invariants(op)
+
         loop_variant_vars = []
-        for i, (v_in, body_vx_in, cond_vx_in, body_vx_out) in enumerate(\
-                zip(op.loop_vars, body_block.inputs, cond_block.inputs,
-                    body_block.outputs)):
-            if body_vx_in == body_vx_out:
-                # body_vx_in != cond_vx_in (SSA property), though
-                # body_vx_in.name == cond_vx_in.name.
-                loop_invariants.add((i, v_in, body_vx_in, cond_vx_in))
-                body_block_invariants.append(body_vx_in)
-                cond_block_invariants.append(cond_vx_in)
-            else:
-                loop_variant_vars.append(v_in)
+
+        # replace uses of loop_invariants with its source from outside of the
+        # while_loop op.
+        for i in loop_invariant_ids:
+            block.replace_uses_of_var_after_op(anchor_op=None,
+                    old_var=block.inputs[i], new_var=op.loop_vars[i])
 
         # replace block inputs
-        body_block.remove_inputs(body_block_invariants)
-        cond_block.remove_inputs(cond_block_invariants)
-
-        # replace occurences of loop_variants within the body and cond blocks.
-        for i, v_in, body_vx_in, cond_vx_in in loop_invariants:
-            body_block.replace_uses_of_var_after_op(anchor_op=None,
-                    old_var=body_vx_in, new_var=v_in)
-            cond_block.replace_uses_of_var_after_op(anchor_op=None,
-                    old_var=cond_vx_in, new_var=v_in)
+        block.remove_inputs([block.inputs[i] for i in loop_invariant_ids])
 
         # remove invariants from while_loop loop_vars
-        original_loop_vars = op.loop_vars
-        op.loop_vars = tuple(loop_variant_vars)
+        for i in loop_invariant_ids:
+            # replace usage of while_loop outputs that we'll eliminate.
+            op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
+                    old_var=op.outputs[i], new_var=op.loop_vars[i])
+
+            # Remove after replacing to ensure program is valid
+            op.loop_vars[i].remove_child_op(op)
+
+        op.loop_vars = tuple(v for i, v in enumerate(op.loop_vars) \
+                if i not in loop_invariant_ids)
         op._input_vars['loop_vars'] = op.loop_vars
 
-        # replace usage of while_loop outputs that we'll eliminate.
-        for i, v_in, _, _ in loop_invariants:
-            op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
-                    old_var=op.outputs[i], new_var=v_in)
-
         # remove invariants from while_loop outputs
-        invariant_ids = set([i for i, _, _, _ in loop_invariants])
-        body_block._outputs = [v for i, v in enumerate(body_block.outputs) \
-                if i not in invariant_ids]
+        # block.outputs[0] is cond var
+        block._outputs = [block.outputs[0]] + \
+                [v for i, v in enumerate(block.outputs[1:]) \
+                if i not in loop_invariant_ids]
+
+        # op._output_vars doesn't include cond var
         op._output_vars = [v for i, v in enumerate(op._output_vars) \
-                if i not in invariant_ids]
+                if i not in loop_invariant_ids]
 
 @register_pass(namespace='common')
 def loop_invariant_elimination(prog):

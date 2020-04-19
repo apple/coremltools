@@ -6,12 +6,32 @@ from coremltools.converters.nnv2.testing_utils import compare_shapes, compare_ba
 from tensorflow.python.framework import dtypes
 
 
-def make_tf2_graph(input_spec):
+def make_tf2_graph(input_types):
+    """
+    Decorator to help construct TensorFlow 2.x model.
+
+    Parameters
+    ----------
+    input_types: list of tuple
+        List of input types. E.g. [(3, 224, 224, tf.int32)] represent 1 input,
+        with shape (3, 224, 224), and the expected data type is tf.int32. The
+        dtype is optional, in case it's missing, tf.float32 will be used.
+
+    Returns
+    -------
+    list of ConcreteFunction, list of str, list of str
+    """
     def wrapper(ops):
         class TensorFlowModule(tf.Module):
-            @tf.function(input_signature=[
-                tf.TensorSpec(shape=s, dtype=tf.float32, name=n)
-                for n, s in input_spec.items()])
+            input_signature = []
+            for input_type in input_types:
+                if isinstance(input_type[-1], dtypes.DType):
+                    shape, dtype = input_type[:-1], input_type[-1]
+                else:
+                    shape, dtype = input_type, tf.float32
+                input_signature.append(tf.TensorSpec(shape=shape, dtype=dtype))
+
+            @tf.function(input_signature=input_signature)
             def __call__(self, *args):
                 return ops(*args)
 

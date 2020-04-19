@@ -1584,9 +1584,3 @@ class TFSingleLayerTest(TFNetworkBatchTest):
                 number_gelu_layers += 1
         self.assertEqual(number_gelu_layers, 1)
 
-
-if __name__ == '__main__':
-    # unittest.main()
-    suite = unittest.TestSuite()
-    suite.addTest(TFSingleLayerTest('test_scalar_input_with_consecutive_expand_dims'))
-    unittest.TextTestRunner().run(suite)

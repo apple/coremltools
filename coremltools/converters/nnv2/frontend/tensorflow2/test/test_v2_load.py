@@ -8,7 +8,6 @@ from coremltools.converters.nnv2.frontend.tensorflow.test.testing_utils import g
 from coremltools.converters.nnv2.frontend.tensorflow.test import testing_utils as tf_testing_utils
 from coremltools.converters.nnv2.frontend.tensorflow2.test.testing_utils import (
     make_tf2_graph, run_compare_tf2,
-
 )
 from coremltools.models import MLModel
 

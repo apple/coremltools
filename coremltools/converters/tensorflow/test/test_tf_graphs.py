@@ -282,10 +282,3 @@ class TFSimpleNetworkTest(TFNetworkTest):
                 y = gelu(x)
                 z = tf.identity(y, name='output')
             self._test_tf_model_constant(graph, {'input': shape}, ['output'])
-
-
-if __name__ == '__main__':
-    unittest.main()
-    # suite = unittest.TestSuite()
-    # suite.addTest(TFSimpleNetworkTest("test_simple_branch"))
-    # unittest.TextTestRunner().run(suite)

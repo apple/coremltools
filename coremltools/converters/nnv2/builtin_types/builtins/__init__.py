@@ -18,7 +18,8 @@ from .type_unknown import unknown
 from .type_tuple import tuple
 from .type_mapping import (is_primitive, is_scalar, is_tensor, is_tuple, is_str,\
         is_builtin, promote_types, numpy_val_to_builtin_val, builtin_to_string, \
-        numpy_type_to_builtin_type, type_to_builtin_type)
+        numpy_type_to_builtin_type, type_to_builtin_type, is_subtype,
+        string_to_builtin,)
 from .annotate import annotate
 from .annotate import class_annotate
 from .annotate import apply_delayed_types

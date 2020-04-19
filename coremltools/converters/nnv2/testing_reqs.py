@@ -11,12 +11,10 @@ from coremltools.converters.nnv2._deps import (
     HAS_TF1, HAS_TF2, HAS_PYTORCH,
     MSG_TF1_NOT_FOUND, MSG_TF2_NOT_FOUND
 )
-import coremltools.converters.nnv2.converter as converter
+from .testing_utils import (
+    ssa_fn, is_close, random_gen, converter
+)
 
-from . import testing_utils as utils
-from .testing_utils import ssa_fn, is_close, random_gen
-
-utils.converter = converter
 backends = converter.ConverterRegistry.backends.keys()
 
 np.random.seed(1984)

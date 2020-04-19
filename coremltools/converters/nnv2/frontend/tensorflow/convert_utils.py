@@ -4,6 +4,7 @@ from coremltools.converters.nnv2.builtin_types.symbolic import (
         is_symbolic, any_variadic)
 from coremltools.converters.nnv2.builtin_types import builtins
 from .tf_op_registry import _TF_OPS_REGISTRY
+from coremltools.converters.nnv2.nnv2_program.program.var import ListVar
 
 def compatible_shapes(tf_shape, inf_shape):
     def compare_elem(dt, ds):
@@ -24,6 +25,9 @@ def check_output_shapes(x, node):
     x: list[Var] or tuple[Var]
     node: ParsedTFNode
     """
+    if isinstance(x, ListVar):
+        # No check on list.
+        return
     if not isinstance(x, (list, tuple)):
         x = [x]
     tf_shapes = node.attr.get('_output_shapes', None)
@@ -91,15 +95,16 @@ def convert_graph(context, graph, outputs=None):
         logging.info("[{}/{}] Converting {} op {}".format(
             i + 1, num_nodes, node.op, node.name))
 
+        if node.op == 'NoOp':
+            continue
         _add_op = _TF_OPS_REGISTRY.get(node.op, None)
         if _add_op is None:
             msg = "Conversion for TF op '{}' not implemented."
             raise NotImplementedError(msg.format(node.op))
         _add_op(context, node)
 
-        if node.op != 'NoOp':
-            x = context[node.name]
-            check_output_shapes(x, node)
+        x = context[node.name]
+        check_output_shapes(x, node)
 
     output_is_list = isinstance(outputs, (tuple, list))
     if not output_is_list:
