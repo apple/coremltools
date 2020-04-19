@@ -507,7 +507,7 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
     
     if (hasNonIOS12Layer && !hasNewArrayShapeMapping && hasMultiArrayInput) {
         return Result(ResultType::INVALID_MODEL_INTERFACE,
-                      "Neural Network Multi-Array input shape mapping cannot be 'RANK5_ARRAY_MAPPING' if the network contains a layer added in version 3 (iOS 13) or later.");
+                      "Neural Network Multi-Array input shape mapping cannot be 'RANK5_ARRAY_MAPPING' if the network contains a layer added in version 4 (iOS 13) or later. Use 'EXACT_ARRAY_MAPPING' instead.");
     }
     
     if (!hasNewArrayShapeMapping && hasNewImageShapeMapping && hasMultiArrayInput) {
