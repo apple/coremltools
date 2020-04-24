@@ -20,10 +20,11 @@ namespace py = pybind11;
 using namespace CoreML::Python;
 
 Model::~Model() {
-    NSError *error = nil;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if (compiledUrl != nil) {
-        [fileManager removeItemAtURL:compiledUrl error:&error];
+    @autoreleasepool {
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        if (compiledUrl != nil) {
+            [fileManager removeItemAtURL:compiledUrl error:NULL];
+        }
     }
 }
 
