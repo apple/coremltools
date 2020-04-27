@@ -62,6 +62,15 @@ namespace CoreML {
                         return result;
                     }
                 }
+                for (auto modelOutputFeature : interface.output()) {
+                    const std::string &modelOutputFeatureName = modelOutputFeature.name();
+                    const auto &visionFeaturePrintOutputNames = visionFeaturePrint.object().output();
+                    if (find(visionFeaturePrintOutputNames.begin(), visionFeaturePrintOutputNames.end(), modelOutputFeatureName) == visionFeaturePrintOutputNames.end()) {
+                        std::stringstream ss;
+                        ss << "Model description declares an output: " << modelOutputFeatureName << " but it is not declared in Vision Feature Print output";
+                        return Result(ResultType::INVALID_MODEL_PARAMETERS, ss.str());
+                    }
+                }
                 break;
             case Specification::CoreMLModels::VisionFeaturePrint::VISIONFEATUREPRINTTYPE_NOT_SET:
                 return Result(ResultType::INVALID_MODEL_PARAMETERS, "Type for vision feature print not set");

@@ -77,6 +77,9 @@ int testVisionFeatureObjectPrintBasic() {
     output1->set_allocated_type(output1FeatureType);
     output2->set_allocated_type(output2FeatureType);
 
+    output1->set_name("a");
+    output2->set_name("b");
+
     Specification::Model model;
     model.set_allocated_description(description);
 
