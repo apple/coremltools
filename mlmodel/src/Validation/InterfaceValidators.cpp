@@ -561,6 +561,9 @@ namespace CoreML {
                 // pipeline has valid optional inputs iff the models inside are valid.
                 // this should be guaranteed by the pipeline validator.
                 break;
+            case Specification::Model::kItemSimilarityRecommender:
+                // allow arbitrary optional in the recommender.  The recommender valiadator catches these.
+                break;
             case Specification::Model::kIdentity:
                 // anything goes for the identity function
                 break;
