@@ -26,6 +26,10 @@ def convert(model_spec, inputs, check_only=False):
         are implemented and which aren't.
     """
 
+    logging.warn(
+        "This API is deprecated. Please use coremltools.converters.nnv2.converter instead."
+    )
+
     if isinstance(model_spec, str):
         filename = os.path.abspath(model_spec)
         torchscript = torch.jit.load(filename)

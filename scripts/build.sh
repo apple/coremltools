@@ -4,12 +4,15 @@ set -e
 
 ##=============================================================================
 ## Main configuration processing
-COREMLTOOLS_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/..
+COREMLTOOLS_HOME=$( cd "$( dirname "$0" )/.." && pwd )
 BUILD_DIR="${COREMLTOOLS_HOME}/build"
 
 # command flag options
+BUILD_MODE="Release"
 NUM_PROCS=1
-PYTHON=$(which python)
+BUILD_PROTO=0
+BUILD_DIST=0
+PYTHON="3.7"
 
 unknown_option() {
   echo "Unknown option $1. Exiting."
@@ -17,12 +20,15 @@ unknown_option() {
 }
 
 print_help() {
-  echo "Builds the release branch and produce a wheel to the targets directory "
+  echo "Builds coremltools and dependent libraries."
   echo
-  echo "Usage: ./make_wheel.sh"
+  echo "Usage: zsh -i build.sh"
   echo
   echo "  --num_procs=n (default 1)       Specify the number of proceses to run in parallel."
   echo "  --python=*                      Python to use for configuration."
+  echo "  --protobuf                      Rebuild & overwrite the protocol buffers in MLModel."
+  echo "  --debug                         Build without optimizations and stripping symbols."
+  echo "  --dist                          Build the distribution (wheel)."
   echo
   exit 1
 } # end of print help
@@ -33,6 +39,9 @@ while [ $# -gt 0 ]
   do case $1 in
     --python=*)          PYTHON=${1##--python=} ;;
     --num-procs=*)       NUM_PROCS=${1##--num-procs=} ;;
+    --protobuf)          BUILD_PROTO=1 ;;
+    --debug)             BUILD_MODE="Debug" ;;
+    --dist)              BUILD_DIST=1 ;;
     --help)              print_help ;;
     *) unknown_option $1 ;;
   esac
@@ -45,10 +54,10 @@ echo "Configuring using python from $PYTHON"
 echo
 echo ${COREMLTOOLS_HOME}
 cd ${COREMLTOOLS_HOME}
-bash -e configure --python=$PYTHON --exclude-test-deps
+zsh -i -e scripts/env_create.sh --python=$PYTHON --exclude-test-deps
 
 # Setup the right python
-source scripts/python_env.sh
+source scripts/env_activate.sh --python=$PYTHON
 echo
 echo "Using python from $(which python)"
 echo
@@ -67,8 +76,18 @@ else
 fi
 
 # Call CMake
-cmake $ADDITIONAL_CMAKE_OPTIONS -DCMAKE_BUILD_TYPE=Release ..
+cmake $ADDITIONAL_CMAKE_OPTIONS \
+  -DCMAKE_BUILD_TYPE=BUILD_MODE \
+  -DPYTHON_EXECUTABLE:FILEPATH=$PYTHON_EXECUTABLE \
+  -DPYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR \
+  -DPYTHON_LIBRARY=$PYTHON_LIBRARY \
+  -DOVERWRITE_PB_SOURCE=$BUILD_PROTO \
+  ${COREMLTOOLS_HOME}
 
 # Make the python wheel
 make -j${NUM_PROCS}
-make dist
+
+if [ $BUILD_DIST -eq 1 ]
+then
+  make dist
+fi

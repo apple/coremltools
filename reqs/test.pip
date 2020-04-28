@@ -10,7 +10,8 @@ olefile==0.44
 onnx==1.6.0
 pandas
 pillow
-pytest
+pytest; python_version < '3.7'
+pytest==5.3.4; python_version >= '3.7'
 pytest-sugar
 scikit-learn==0.19.2
 scipy

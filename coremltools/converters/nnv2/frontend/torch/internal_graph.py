@@ -83,13 +83,7 @@ class InternalTorchIRNode:
     """
 
     def __init__(
-        self,
-        node=None,
-        attr=None,
-        inputs=None,
-        outputs=None,
-        kind=None,
-        blocks=None,
+        self, node=None, attr=None, inputs=None, outputs=None, kind=None, blocks=None,
     ):
         if node:
             self.inputs = [_input.debugName() for _input in node.inputs()]
@@ -196,9 +190,16 @@ class InternalTorchIRGraph:
         return graph_str
 
     def _format_inputs(self, inputs):
+        def tensor_str(x):
+            return "Tensor" + str(list(x.shape))
+
         inp_str = ""
         for k, v in inputs.items():
-            inp_str += "    {} : {},\n".format(_make_ssa_name(k), list(v.shape))
+            if isinstance(v, tuple):
+                shape_str = "({})".format(", ".join([tensor_str(x) for x in v]))
+            else:
+                shape_str = tensor_str(v)
+            inp_str += "    {} : {},\n".format(_make_ssa_name(k), shape_str)
         return inp_str
 
     def __repr__(self):

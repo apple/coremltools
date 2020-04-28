@@ -20,6 +20,10 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Globally ignore "no symbols" warnings during compilation
+SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
+SET(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+
 find_program(HAS_CCACHE ccache)
 if(HAS_CCACHE)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
@@ -103,7 +107,7 @@ if (APPLE)
   set_target_properties(caffeconverter PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
-file(COPY ${CMAKE_SOURCE_DIR}/README.rst DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/README.md DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__init__.py
   DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__main__.py
@@ -163,7 +167,6 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     ${CORE_VIDEO}
     ${CORE_ML}
     ${FOUNDATION}
-    ${PYTHON_LIBRARIES}
   )
 
 if(APPLE)

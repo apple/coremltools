@@ -2,7 +2,7 @@ from coremltools.converters.nnv2 import testing_reqs
 from coremltools.converters.nnv2.testing_reqs import *
 from coremltools.converters.nnv2.testing_utils import get_core_ml_prediction
 
-from .testing_utils import run_compare_builder
+from .testing_utils import UNK_SYM, run_compare_builder
 
 backends = testing_reqs.backends
 
@@ -39,17 +39,22 @@ class TestRandomBernoulli:
                 expected_outputs=expected_outputs,
                 use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, rank, prob',
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, prob, dynamic',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)],
-                                 [1.0, 0.0]))
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, prob):
+                                 [1.0, 0.0],
+                                 [True, False]))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, prob, dynamic):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.], dtype=np.float32)
-        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
-        input_values = {'x': x_val}
+        if dynamic:
+            input_placeholders = {'x': cb.placeholder(shape=x_val.shape), 'dyn_shape': cb.placeholder(shape=shape.shape, dtype=builtins.int32)}
+            input_values = {'x': x_val, 'dyn_shape': shape}
+        else:
+            input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+            input_values = {'x': x_val}
 
         def build(x):
             return [
@@ -57,14 +62,25 @@ class TestRandomBernoulli:
                 cb.random_bernoulli(shape=shape, prob=prob)
             ]
 
+        def build_dyn(x, dyn_shape):
+            return [
+                cb.add(x=x, y=x),
+                cb.random_bernoulli(shape=dyn_shape, prob=prob)
+            ]
+
         expected_outputs = [
             np.array(np.zeros(shape=(1,)), np.float32),
             np.random.binomial(1, prob, shape)
         ]
 
-        expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
+        if dynamic:
+            expected_output_types = [tuple([UNK_SYM for _ in o.shape]) + (builtins.fp32,) for o in expected_outputs]
+        else:
+            expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
 
-        run_compare_builder(build, input_placeholders, input_values, expected_output_types,
+        builder = build_dyn if dynamic else build
+
+        run_compare_builder(builder, input_placeholders, input_values, expected_output_types,
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
@@ -201,17 +217,22 @@ class TestRandomNormal:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, rank, mean',
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, mean, dynamic',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)],
-                                 [1.0, 0.0]))
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, mean):
+                                 [1.0, 0.0],
+                                 [True, False]))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, mean, dynamic):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.], dtype=np.float32)
-        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
-        input_values = {'x': x_val}
+        if dynamic:
+            input_placeholders = {'x': cb.placeholder(shape=x_val.shape), 'dyn_shape': cb.placeholder(shape=shape.shape, dtype=builtins.int32)}
+            input_values = {'x': x_val, 'dyn_shape': shape}
+        else:
+            input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+            input_values = {'x': x_val}
 
         def build(x):
             return [
@@ -219,14 +240,24 @@ class TestRandomNormal:
                 cb.random_normal(shape=shape, mean=mean, stddev=0.)
             ]
 
+        def build_dyn(x, dyn_shape):
+            return [
+                cb.add(x=x, y=x),
+                cb.random_normal(shape=dyn_shape, mean=mean, stddev=0.)
+            ]
+
         expected_outputs = [
             np.array(np.zeros(shape=(1,)), np.float32),
             np.random.normal(loc=mean, scale=0., size=shape)
         ]
 
-        expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
+        if dynamic:
+            expected_output_types = [tuple([UNK_SYM for _ in o.shape]) + (builtins.fp32,) for o in expected_outputs]
+        else:
+            expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
 
-        run_compare_builder(build, input_placeholders, input_values, expected_output_types,
+        builder = build_dyn if dynamic else build
+        run_compare_builder(builder, input_placeholders, input_values, expected_output_types,
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
@@ -261,17 +292,22 @@ class TestRandomUniform:
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, rank, low, high',
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, low, high, dynamic',
                              itertools.product(
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)],
-                                 [0.0], [0.0]))
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, low, high):
+                                 [0.0], [0.0],
+                                 [True, False]))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, low, high, dynamic):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.], dtype=np.float32)
-        input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
-        input_values = {'x': x_val}
+        if dynamic:
+            input_placeholders = {'x': cb.placeholder(shape=x_val.shape), 'dyn_shape': cb.placeholder(shape=shape.shape, dtype=builtins.int32)}
+            input_values = {'x': x_val, 'dyn_shape': shape}
+        else:
+            input_placeholders = {'x': cb.placeholder(shape=x_val.shape)}
+            input_values = {'x': x_val}
 
         def build(x):
             return [
@@ -279,13 +315,23 @@ class TestRandomUniform:
                 cb.random_uniform(shape=shape, low=low, high=high)
             ]
 
+        def build_dyn(x, dyn_shape):
+            return [
+                cb.add(x=x, y=x),
+                cb.random_uniform(shape=dyn_shape, low=low, high=high)
+            ]
+
         expected_outputs = [
             np.array(np.zeros(shape=(1,)), np.float32),
             np.random.uniform(low=low, high=high, size=shape)
         ]
 
-        expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
+        if dynamic:
+            expected_output_types = [tuple([UNK_SYM for _ in o.shape]) + (builtins.fp32,) for o in expected_outputs]
+        else:
+            expected_output_types = [o.shape[:] + (builtins.fp32,) for o in expected_outputs]
 
-        run_compare_builder(build, input_placeholders, input_values, expected_output_types,
+        builder = build_dyn if dynamic else build
+        run_compare_builder(builder, input_placeholders, input_values, expected_output_types,
                             expected_outputs=expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)

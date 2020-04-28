@@ -5,7 +5,6 @@ import pytest
 import torch
 import torch.nn as nn
 
-import coremltools
 from .testing_utils import *
 
 
@@ -191,7 +190,7 @@ class TestTorchNumerical:
             for x in itertools.product(
                 [(10, 10), (1, 1), (20, 20), (2, 3), (190, 170)], [True, False]
             )
-        ]
+        ],
     )
     def test_bilinear2d_interpolate_with_output_size(self, output_size, align_corners):
         input_shape = (1, 3, 10, 10)
@@ -208,14 +207,11 @@ class TestTorchNumerical:
 
     @pytest.mark.parametrize(
         "scales_h, scales_w, align_corners",
-        [
-            x
-            for x in itertools.product(
-                [2, 3, 4.5], [4, 5, 5.5], [True, False]
-            )
-        ]
+        [x for x in itertools.product([2, 3, 4.5], [4, 5, 5.5], [True, False])],
     )
-    def test_bilinear2d_interpolate_with_scales(self, scales_h, scales_w, align_corners):
+    def test_bilinear2d_interpolate_with_scales(
+        self, scales_h, scales_w, align_corners
+    ):
         input_shape = (1, 3, 10, 10)
         model = ModuleWrapper(
             nn.functional.interpolate,

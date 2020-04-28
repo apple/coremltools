@@ -1,5 +1,4 @@
 import argparse
-from collections import namedtuple
 import os
 
 import torch
@@ -7,7 +6,15 @@ import torch
 """
 Convenience class for storing the tracing data shape and model constructor.
 """
-ModelParams = namedtuple("ModelParams", "input_shape, ctor")
+
+
+class ModelParams:
+    def __init__(self, input_shape, ctor, data_generator=None):
+        self.input_shape = input_shape
+        self.ctor = ctor
+        self.data_generator = (
+            data_generator if data_generator is not None else torch.rand
+        )
 
 
 def exporter_parser(description, model_names):
@@ -40,7 +47,7 @@ def trace_and_save_model(name, params, path, datestamp):
         return
 
     model.eval()
-    test_data = torch.rand(params.input_shape)
+    test_data = params.data_generator(params.input_shape)
     trace = torch.jit.trace(model, test_data)
     filename = os.path.join(path, "{}_{}.pt".format(name, datestamp))
     trace.save(filename)

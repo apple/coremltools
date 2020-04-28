@@ -118,7 +118,7 @@ def run_compare_tf(
         frontend='tensorflow', backend='nnv1_proto',
         atol=1e-04, rtol=1e-05, validate_shapes_only=False):
     """
-    Utility function to convert and compare a given TensorFlow 2.x model.
+    Utility function to convert and compare a given TensorFlow 1.x model.
 
     Parameters
     ----------

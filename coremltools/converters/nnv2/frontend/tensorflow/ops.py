@@ -1812,8 +1812,8 @@ def TensorArrayGatherV3(context, node):
 
 @register_tf_op
 def TensorArrayReadV3(context, node):
-    ls = context[node.inputs[0]]
-    idx = context[node.inputs[1]]
+    idx = context[node.inputs[0]]
+    ls = context[node.inputs[1]]
     ls = cb.list_read(ls=ls, index=idx,
             name=node.name)
     context.add(node.name, ls)

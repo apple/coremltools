@@ -4,11 +4,10 @@ set -e
 
 ##=============================================================================
 ## Main configuration processing
-COREMLTOOLS_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/..
-BUILD_DIR="${COREMLTOOLS_HOME}/build"
+COREMLTOOLS_HOME=$( cd "$( dirname "$0" )/.." && pwd )
 
 # command flag options
-PYTHON=$(which python)
+PYTHON="3.7"
 
 unknown_option() {
   echo "Unknown option $1. Exiting."
@@ -18,7 +17,7 @@ unknown_option() {
 print_help() {
   echo "Builds the docs associated with the code"
   echo
-  echo "Usage: ./make_docs.sh"
+  echo "Usage: zsh -i make_docs.sh"
   echo
   echo "  --wheel-path=*          Specify which wheel to use to make docs."
   echo "  --python=*              Python to use for configuration."
@@ -41,10 +40,10 @@ done
 # First configure
 echo ${COREMLTOOLS_HOME}
 pushd ${COREMLTOOLS_HOME}
-bash -e configure --python=$PYTHON --include-docs-deps
+bash -e scripts/env_create.sh --python=$PYTHON --include-docs-deps
 
 # Setup the right python
-source scripts/python_env.sh
+source scripts/env_activate.sh --python=$PYTHON
 echo
 echo "Using python from $(which python)"
 echo

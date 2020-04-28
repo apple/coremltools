@@ -23,14 +23,17 @@ class TestReduction:
         input_placeholders = {'x': cb.placeholder(shape=val.shape)}
         input_values = {'x': val}
 
-        expected_output_types = (2, builtins.fp32)
+        if mode in {'argmax', 'argmin'}:
+            expected_output_types = (2, builtins.int32)
+        else:
+            expected_output_types = (2, builtins.fp32)
 
         if mode == 'argmax':
             build = lambda x: cb.reduce_argmax(x=x, axis=1, keep_dims=False)
-            expected_outputs = np.array([2., 2.], dtype=np.float32)
+            expected_outputs = np.array([2, 2], dtype=np.int32)
         elif mode == 'argmin':
             build = lambda x: cb.reduce_argmin(x=x, axis=1, keep_dims=False)
-            expected_outputs = np.array([0., 0.], dtype=np.float32)
+            expected_outputs = np.array([0, 0], dtype=np.int32)
         elif mode == 'l1_norm':
             build = lambda x: cb.reduce_l1_norm(x=x, axes=[1], keep_dims=False)
             expected_outputs = np.array([6., 15.], dtype=np.float32)
@@ -231,12 +234,12 @@ class TestReduction:
             ]
 
         expected_output_types = [
-            (s0, 1, builtins.fp32),
-            (1, 3, builtins.fp32)
+            (s0, 1, builtins.int32),
+            (1, 3, builtins.int32)
         ]
         expected_outputs = [
-            np.array([[2.], [2.]], dtype=np.float32),
-            np.array([[0.], [0.], [0.]], dtype=np.float32)
+            np.array([[2], [2]], dtype=np.int32),
+            np.array([[0], [0], [0]], dtype=np.int32)
         ]
 
         run_compare_builder(build, input_placeholders, input_values,

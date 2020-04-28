@@ -825,7 +825,7 @@ def random_bernoulli(const_context, builder, op):
     if op.shape.val is None:
         builder.add_random_bernoulli_dynamic(
             name=op.name,
-            input_name=make_input(const_context, builder, op.shape),
+            input_names=make_input(const_context, builder, [op.shape]),
             output_name=op.outputs[0].name,
             prob=op.prob.val,
             seed=op.seed.val,
@@ -857,7 +857,7 @@ def random_normal(const_context, builder, op):
     if op.shape.val is None:
         builder.add_random_normal_dynamic(
             name=op.name,
-            input_name=make_input(const_context, builder, op.shape),
+            input_names=make_input(const_context, builder, [op.shape]),
             output_name=op.outputs[0].name,
             mean=op.mean.val,
             stddev=op.stddev.val,
@@ -879,7 +879,7 @@ def random_uniform(const_context, builder, op):
     if op.shape.val is None:
         builder.add_random_uniform_dynamic(
             name=op.name,
-            input_name=make_input(const_context, builder, op.shape),
+            input_names=make_input(const_context, builder, [op.shape]),
             output_name=op.outputs[0].name,
             minval=op.low.val,
             maxval=op.high.val,

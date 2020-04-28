@@ -703,7 +703,7 @@ class split(Operation):
             num_splits = self.num_splits.val
             if self.split_sizes is None:
                 # Even split
-                if self.x.shape[axis] % num_splits != 0:
+                if not is_symbolic(self.x.shape[axis]) and self.x.shape[axis] % num_splits != 0:
                     msg = 'num_split {} does not divide split ' +\
                             'dim (length = {})'
                     raise ValueError(msg.format(num_splits,

@@ -81,9 +81,26 @@ class ReductionAxis(Operation):
 """
 Reduction op implementations
 """
+@register_op(doc_str='TODO')
+class reduce_arg(ReductionAxis):
+    def __init__(self, **kwargs):
+        super(reduce_arg, self).__init__(**kwargs)
+
+    def type_inference(self):
+        x_shape = self.x.shape
+        axis = self.axis.val
+
+        reduced_shape = list(x_shape)
+        axis = axis if axis >= 0 else axis + len(reduced_shape)
+        if self.keep_dims.val:
+            reduced_shape[axis] = 1
+        else:
+            reduced_shape.pop(axis)
+
+        return builtins.tensor(builtins.int32, tuple(reduced_shape))
 
 @register_op(doc_str='TODO')
-class reduce_argmax(ReductionAxis):
+class reduce_argmax(reduce_arg):
     def __init__(self, **kwargs):
         super(reduce_argmax, self).__init__(**kwargs)
 
@@ -92,7 +109,7 @@ class reduce_argmax(ReductionAxis):
 
 
 @register_op(doc_str='TODO')
-class reduce_argmin(ReductionAxis):
+class reduce_argmin(reduce_arg):
     def __init__(self, **kwargs):
         super(reduce_argmin, self).__init__(**kwargs)
 

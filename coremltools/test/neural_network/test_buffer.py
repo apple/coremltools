@@ -4,7 +4,7 @@ import os
 import shutil
 import pytest
 import numpy as np
-from coremltools import _NeuralNetworkBuffer as NetBuffer
+from coremltools.libcoremlpython import _NeuralNetworkBuffer as NetBuffer
 
 class WeightTest(unittest.TestCase):
 

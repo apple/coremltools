@@ -88,7 +88,8 @@ def loop_invariant_elimination_block(block):
             op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
                     old_var=op.outputs[i], new_var=op.loop_vars[i])
 
-            # Remove after replacing to ensure program is valid
+        # Remove after replacing to ensure program is valid
+        for i in loop_invariant_ids:
             op.loop_vars[i].remove_child_op(op)
 
         op.loop_vars = tuple(v for i, v in enumerate(op.loop_vars) \
@@ -104,6 +105,9 @@ def loop_invariant_elimination_block(block):
         # op._output_vars doesn't include cond var
         op._output_vars = [v for i, v in enumerate(op._output_vars) \
                 if i not in loop_invariant_ids]
+
+        # check healthy state
+        op.enclosing_block.validate()
 
 @register_pass(namespace='common')
 def loop_invariant_elimination(prog):

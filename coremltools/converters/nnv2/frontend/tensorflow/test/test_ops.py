@@ -15,14 +15,20 @@ class TestActivationElu:
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)]))
-    def test_elu(self, use_cpu_only, backend, rank):
+    def test(self, use_cpu_only, backend, rank):
         input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.elu(x)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.elu(x)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestActivationLeakyReLU:
@@ -31,18 +37,23 @@ class TestActivationLeakyReLU:
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)]))
-    def test_leaky_relu(self, use_cpu_only, backend, rank):
+    def test(self, use_cpu_only, backend, rank):
         input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.leaky_relu(x, 0.2)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.leaky_relu(x, 0.2)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestActivationReLU:
-
     @pytest.mark.parametrize('use_cpu_only, backend, rank',
                              itertools.product(
                                  [True, False],
@@ -53,7 +64,7 @@ class TestActivationReLU:
 
         @make_tf_graph([input_shape])
         def build_model(x):
-            return tf.nn.relu(x, name='output')
+            return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
 
@@ -70,14 +81,20 @@ class TestActivationReLU6:
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)]))
-    def test_relu6(self, use_cpu_only, backend, rank):
+    def test(self, use_cpu_only, backend, rank):
         input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.relu6(x)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.relu6(x)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestActivationSigmoid:
@@ -86,14 +103,20 @@ class TestActivationSigmoid:
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)]))
-    def test_sigmoid(self, use_cpu_only, backend, rank):
+    def test(self, use_cpu_only, backend, rank):
         input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.math.sigmoid(x)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.sigmoid(x)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestActivationSoftPlus:
@@ -102,14 +125,20 @@ class TestActivationSoftPlus:
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)]))
-    def test_softplus(self, use_cpu_only, backend, rank):
+    def test(self, use_cpu_only, backend, rank):
         input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.math.softplus(x)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.softplus(x)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestActivationSoftmax:
@@ -117,17 +146,22 @@ class TestActivationSoftmax:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [(rank, tuple(range(-1, rank))) for rank in range(1, 6)]))
-    def test_softmax(self, use_cpu_only, backend, rank_and_axes):
-        rank, axes = rank_and_axes
+                                 [(rank, axis) for rank in range(1, 6) for axis in range(-1,rank)]))
+    def test(self, use_cpu_only, backend, rank_and_axes):
+        rank, axis = rank_and_axes
         input_shape = np.random.randint(low=1, high=6, size=rank)
-        for axis in axes:
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                res = tf.nn.softmax(x, axis=axis)
-                run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                               res, use_cpu_only=use_cpu_only,
-                               frontend_only=False, backend=backend)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.softmax(x, axis=axis)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestActivationSoftSign:
@@ -136,14 +170,20 @@ class TestActivationSoftSign:
                                  [True, False],
                                  backends,
                                  [rank for rank in range(1, 6)]))
-    def test_softsign(self, use_cpu_only, backend, rank):
+    def test(self, use_cpu_only, backend, rank):
         input_shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.math.softsign(x)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-1, rand_max=1)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.softsign(x)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestActivationSelu:
@@ -1245,6 +1285,8 @@ class TestNormalization:
                 x: random_gen(shape=shape, rand_min=-100., rand_max=100.),
             }, ref, use_cpu_only=use_cpu_only, backend=backend, atol=1e-2, rtol=1e-3)
 
+    #FIXME: <rdar://62070514> TF1 Op Test: Investigate test_l2_normalize.
+    @pytest.mark.xfail(reason="Investigate behavior in <rdar://62070514>", run=False)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, axes, epsilon',
                              itertools.product(
                                  [True, False],
@@ -2121,21 +2163,26 @@ class TestConcat:
 
 
 class TestSplit:
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, dynamic",
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [1,2,3,4]
+                                 [1,2,3,4],
+                                 [True, False],
                              )
                              )
-    def test_split(self, use_cpu_only, backend, rank):
+    def test_split(self, use_cpu_only, backend, rank, dynamic):
         input_shape1 = np.random.randint(low=1, high=10, size=rank)
         for axis in range(-rank, rank):
             for split_num in range(1, input_shape1[axis]+1):
                 if input_shape1[axis] % split_num != 0:
                     continue
+                tf_input_shape = list(input_shape1)
+                if dynamic:
+                    axis1 = np.random.randint(low=0, high=rank)
+                    tf_input_shape[axis1] = None
                 with tf.Graph().as_default() as graph:
-                    x = tf.placeholder(tf.float32, shape=input_shape1)
+                    x = tf.placeholder(tf.float32, shape=tf_input_shape)
                     res = tf.split(x, split_num, axis=axis)
                     # TODO (rdar://60358242) If tf.split output is returned, there's no
                     # get_tuple nodes. Some graph pass is needed. Example:

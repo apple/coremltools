@@ -45,6 +45,15 @@ class TensorFlow2Frontend:
         return load(*args, **kwargs)
 
 
+@ConverterRegistry.frontend
+class TorchFrontend:
+    name = "torch"
+
+    def __call__(self, *args, **kwargs):
+        from .frontend.torch import load
+        return load(*args, **kwargs)
+
+
 @ConverterRegistry.backend
 class NNv1ProtoBackend:
     name = "nnv1_proto"

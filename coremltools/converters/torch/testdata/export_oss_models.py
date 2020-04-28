@@ -69,6 +69,17 @@ def tiramisu_ctor():
     return tiramisu.FCDenseNet67(n_classes=12)
 
 
+def bert_ctor():
+    try:
+        from transformers import BertModel
+    except:
+        repo = "https://github.com/huggingface/transformers transformers"
+        _print_import_error(repo)
+        return None
+
+    return BertModel.from_pretrained("bert-base-uncased", torchscript=True)
+
+
 """
 List of open source models that are available for export.
 """
@@ -77,6 +88,9 @@ MODELS = {
     "deeplabv2": ModelParams((1, 3, 256, 256), deeplabv2_ctor),
     "deeplabv3": ModelParams((1, 3, 512, 512), deeplabv3_ctor),
     "xception": ModelParams((1, 3, 229, 229), xception_ctor),
+    "bert": ModelParams(
+        (1, 11), bert_ctor, data_generator=lambda shape: torch.randint(1000, shape)
+    ),
 }
 
 

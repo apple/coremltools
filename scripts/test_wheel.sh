@@ -4,12 +4,12 @@ set -e
 
 ##=============================================================================
 ## Main configuration processing
-COREMLTOOLS_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/..
+COREMLTOOLS_HOME=$( cd "$( dirname "$0" )/.." && pwd )
 BUILD_DIR="${COREMLTOOLS_HOME}/build"
 TEST_DIR=coremltools/test/
 
 # command flag options
-PYTHON=$(which python)
+PYTHON="3.7"
 
 unknown_option() {
   echo "Unknown option $1. Exiting."
@@ -19,7 +19,7 @@ unknown_option() {
 print_help() {
   echo "Test the wheel by running all unit tests"
   echo
-  echo "Usage: ./test_wheel.sh"
+  echo "Usage: zsh -i test_wheel.sh"
   echo
   echo "  --wheel-path=*          Specify which wheel to test."
   echo "  --test-package=*        Test package to run."
@@ -46,15 +46,15 @@ done
 # First configure
 echo ${COREMLTOOLS_HOME}
 cd ${COREMLTOOLS_HOME}
-bash -e configure --python=$PYTHON
+zsh -i -e scripts/env_create.sh --python=$PYTHON
 
 # Setup the right python
-source scripts/python_env.sh
+source scripts/env_activate.sh --python=$PYTHON
 echo
 echo "Using python from $(which python)"
 echo
 
-$PIP_EXECUTABLE install ${WHEEL_PATH} --upgrade
+$PIP_EXECUTABLE install $~WHEEL_PATH --upgrade
 
 # Install dependencies if specified
 if [ ! -z "${REQUIREMENTS}" ]; then
@@ -62,4 +62,5 @@ if [ ! -z "${REQUIREMENTS}" ]; then
 fi
 
 # Now run the tests
+echo "Running tests"
 $PYTEST_EXECUTABLE -ra -m "not slow" --durations=100 --pyargs ${TEST_PACKAGE} -p no:warnings --junitxml=${BUILD_DIR}/py-test-report.xml

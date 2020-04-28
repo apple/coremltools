@@ -1,6 +1,7 @@
 import numpy as np
 import torch
-import coremltools
+from coremltools.converters.nnv2.converter import convert
+from coremltools.models import MLModel
 
 
 def convert_to_coreml_inputs(input_description, inputs):
@@ -10,14 +11,20 @@ def convert_to_coreml_inputs(input_description, inputs):
     coreml_inputs = {str(x): inp.numpy() for x, inp in zip(input_description, inputs)}
     return coreml_inputs
 
+
 def convert_to_mlmodel(model_spec, inputs):
-    return coremltools.converters.torch.convert(model_spec, inputs)
+    proto = convert(
+        model_spec, convert_from="torch", convert_to="nnv1_proto", example_inputs=inputs,
+    )
+    return MLModel(proto, useCPUOnly=True)
+
 
 def generate_input_data(input_size):
     if isinstance(input_size, list):
         return [torch.rand(_size) for _size in input_size]
     else:
         return torch.rand(input_size)
+
 
 def trace_model(model, input_data):
     model.eval()
@@ -26,13 +33,14 @@ def trace_model(model, input_data):
     torch_model = torch.jit.trace(model, input_data)
     return torch_model
 
+
 def convert_and_compare(model_spec, inputs, atol=1e-5):
     if isinstance(model_spec, str):
         torch_model = torch.jit.load(model_spec)
     else:
         torch_model = model_spec
 
-    if not isinstance(inputs, list):
+    if not isinstance(inputs, (list, tuple)):
         inputs = [inputs]
     mlmodel = convert_to_mlmodel(model_spec, inputs)
 
@@ -48,6 +56,7 @@ def convert_and_compare(model_spec, inputs, atol=1e-5):
     np.testing.assert_allclose(
         coreml_result, torch_result, atol=atol,
     )
+
 
 def run_numerical_test(input_shape, model, places=5):
     input_data = generate_input_data(input_shape)

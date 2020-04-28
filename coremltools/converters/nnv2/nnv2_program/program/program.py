@@ -494,16 +494,26 @@ class SsaBlock(object):
                 raise InvalidBlockStateError()
 
             # Check the input output relationships
+            # from outputs -> inputs
             for ov in op.outputs:
                 child_op_count = Counter(ov.child_ops)
                 for next_op, c in child_op_count.items():
                     c_actual = next_op.get_flattened_inputs().count(ov)
                     if c_actual != c:
                         msg = 'Var {} should be consumed by op {} {}' +\
-                            ' times, but op {} only uses it {} times.\n{}'
+                            ' times, but op {} uses it {} times.\n{}'
                         raise InvalidBlockStateError(msg.format(ov.name,
                             next_op.name, c, next_op.name, c_actual, next_op))
 
+            # from inputs -> outputs
+            input_var_count = Counter(op.get_flattened_inputs())
+            for iv, c in input_var_count.items():
+                c_actual = iv.child_ops.count(op)
+                if c_actual != c:
+                    msg = 'Var {} should be consumed by op {} {}' +\
+                        ' times, but op {} uses it {} times.\n{}'
+                    raise InvalidBlockStateError(msg.format(iv.name,
+                        op.name, c_actual, op.name, c, op))
 
     def set_inputs(self, block_inputs):
         """

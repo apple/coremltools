@@ -55,6 +55,5 @@ from . import converters
 from . import proto
 from . import models
 from .models import utils
-from .libcoremlpython import _NeuralNetworkBuffer
 
 from ._scripts.converter import _main

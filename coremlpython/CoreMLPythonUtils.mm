@@ -14,6 +14,7 @@
 
 #else
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 #define PyAnyInteger_Check(name) (PyLong_Check(name) || (_import_array(), PyArray_IsScalar(name, Integer)))
 

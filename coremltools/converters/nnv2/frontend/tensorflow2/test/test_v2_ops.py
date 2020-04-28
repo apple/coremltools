@@ -18,8 +18,15 @@ tf_testing_utils.run_compare_tf = run_compare_tf2
 # -----------------------------------------------------------------------------
 # Import TF 2.x-compatible TF 1.x test cases
 from coremltools.converters.nnv2.frontend.tensorflow.test.test_ops import (
+	TestActivationElu,
+	TestActivationLeakyReLU,
     TestActivationReLU,
+    TestActivationReLU6,
     TestActivationSelu,
+    TestActivationSigmoid,
+    TestActivationSoftmax,
+    TestActivationSoftPlus,
+    TestActivationSoftSign,
     TestBroadcastTo,
     TestConv,
     TestConv3d,

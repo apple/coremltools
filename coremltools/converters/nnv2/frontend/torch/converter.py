@@ -121,10 +121,98 @@ class TorchConverter:
             input_values = [input_values]
 
         self.torchscript = torchscript
-        self.input_values = input_values
         self.context = TranscriptionContext()
         raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
-        self.graph = InternalTorchIRGraph(raw_graph, params_dict, self.input_values)
+        self.graph = InternalTorchIRGraph(raw_graph, params_dict, input_values)
+        self._flatten_input_values()
+        self._flatten_output_values()
+
+    def _flatten_input_values(self):
+        """ CoreML can't handle nested iterables of tensors, so we flatten the
+            inputs of any graph that expects them.
+        """
+        new_graph_inputs = self.graph.inputs
+        all_new_nodes = []
+        changed = True
+        notified = False
+
+        while changed:
+            old_graph_inputs = new_graph_inputs
+            new_graph_inputs = {}
+            new_nodes = []
+            changed = False
+            for _input_name, _input_val in old_graph_inputs.items():
+                if isinstance(_input_val, tuple):
+                    changed = True
+                    if not notified:
+                        notified = True
+                        logging.warn(
+                            "Tuple detected at graph input. This will be flattened in the converted model."
+                        )
+                    # If this input to the graph is a tuple, we want to replace it
+                    # with a flattened version and add an op to construct the tuple.
+                    node_inputs = []
+                    for idx, item in enumerate(_input_val):
+                        name = _input_name + "_{}".format(idx)
+                        new_graph_inputs[name] = item
+                        node_inputs.append(name)
+                    new_nodes.append(
+                        InternalTorchIRNode(
+                            inputs=node_inputs,
+                            outputs=[_input_name],
+                            kind="tupleconstruct",
+                        )
+                    )
+                else:
+                    # This input isn't a tuple, keep it as is.
+                    new_graph_inputs[_input_name] = _input_val
+            all_new_nodes = new_nodes + all_new_nodes
+        self.graph.inputs = new_graph_inputs
+        self.graph.nodes = all_new_nodes + self.graph.nodes
+
+    def _flatten_output_values(self):
+        """ CoreML can't handle nested iterables of tensors, so we flatten the
+            outputs of any graph that produces them.
+        """
+        node_names = [node.name for node in self.graph.nodes]
+        new_graph_outputs = self.graph.outputs
+        changed = True
+        notified = False
+
+        while changed:
+            old_graph_outputs = new_graph_outputs
+            new_graph_outputs = []
+            changed = False
+            for outp in old_graph_outputs:
+                # Find the node that generates this output var.
+                # It is possible to not find the output var in the list of node
+                # names since nodes are named after their first output. In that
+                # case, it means the output var comes from a node that returns
+                # multiple outputs, which means that node cannot be a construct op.
+                try:
+                    node_idx = node_names.index(outp)
+                except:
+                    # @outp doesn't come from a construct op
+                    new_graph_outputs.append(outp)
+                    continue
+                if self.graph.nodes[node_idx].kind in [
+                    "tupleconstruct",
+                    "listconstruct",
+                ]:
+                    # Since this output came from a construct op, we can replace it
+                    # with the inputs to the op.
+                    new_graph_outputs.extend(self.graph.nodes[node_idx].inputs)
+                    changed = True
+                    if not notified:
+                        notified = True
+                        logging.warn(
+                            "Tuple detected at graph output. This will be flattened in the converted model."
+                        )
+                else:
+                    new_graph_outputs.append(outp)
+        # Note: if we flattened outputs, there are likely to be construct ops
+        # that are no longer needed. These will be removed in a later DCE pass.
+        self.graph.outputs = new_graph_outputs
 
     @staticmethod
     def _create_placeholder(_input):
@@ -134,18 +222,29 @@ class TorchConverter:
         dtype = torch_to_proto_types[_input.dtype]
         return cb.placeholder(shape, dtype=dtype)
 
-    def check_ops(self):
-        """Returns the set of ops in @self.graph that are implemented, and
-            the set for which no conversion function is registered."""
+    @staticmethod
+    def _check_ops(graph):
+        """ Returns the set of ops in @graph that are implemented, and the set
+            for which no conversion function is registered. @graph can be
+            either InternalTorchIRGraph or InternalTorchIRBlock."""
         implemented_ops = set()
         missing_ops = set()
-        for node in self.graph.nodes:
+        for node in graph.nodes:
             _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
             if _add_op is None:
                 missing_ops.add(node.kind)
             else:
                 implemented_ops.add(node.kind)
+            for block in node.blocks:
+                _impl, _miss = TorchConverter._check_ops(block)
+                implemented_ops.update(_impl)
+                missing_ops.update(_miss)
         return implemented_ops, missing_ops
+
+    def check_ops(self):
+        """ Returns the set of ops in @self.graph that are implemented, and
+            the set for which no conversion function is registered."""
+        return TorchConverter._check_ops(self.graph)
 
     def convert(self):
 
