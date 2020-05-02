@@ -615,7 +615,7 @@ class NeuralNetworkBuilder(object):
                     pass
 
     def set_categorical_cross_entropy_loss(self, name, input):
-        """
+        r"""
         Categorical Cross Entropy is used for single label categorization (only one category is applicable for each data point).
 
         Parameters

@@ -50,7 +50,7 @@ class Type:
 
 
 class FunctionType:
-    """
+    r"""
     - FunctionType.inputs : A list of Type objects defining the types of the input
     - FunctionType.output: A Type object defining the type of the output
     - FunctionType.python\_function : The original python function implementing 
