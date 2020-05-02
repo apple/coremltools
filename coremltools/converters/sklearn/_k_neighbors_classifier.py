@@ -158,13 +158,13 @@ def _check_algorithm(model):
     """Ensure the kNeighbors algorithm for the given scikit model is a supported type"""
     is_valid = False
     print_name = ''
-    if model.algorithm is 'brute' or model.algorithm is 'kd_tree':
+    if model.algorithm == 'brute' or model.algorithm == 'kd_tree':
         is_valid = True
         print_name = model.algorithm
-    elif model.algorithm is 'auto' and model._fit_method is 'kd_tree':
+    elif model.algorithm == 'auto' and model._fit_method == 'kd_tree':
         is_valid = True
         print_name = 'kd_tree'
-    elif model.algorithm is 'auto' and model._fit_method is 'brute':
+    elif model.algorithm == 'auto' and model._fit_method == 'brute':
         is_valid = True
         print_name = 'brute'
     if not is_valid:
@@ -173,7 +173,7 @@ def _check_algorithm(model):
 def _check_weighting_scheme(model):
     """Simple wrapper to ensure the weighting scheme is valid for CoreML conversion"""
     is_valid = False
-    if model.weights is 'uniform':
+    if model.weights == 'uniform':
         is_valid = True
 
     # Other cases CoreML doesn't support include weighting by distance or a user-provided 'callable' object.
@@ -189,9 +189,9 @@ def _check_weighting_scheme(model):
 def _check_distance_metric(model):
     """Simple wrapper to ensure the distance metric is valid for CoreML conversion"""
     is_valid = False
-    if model.metric is 'euclidean':
+    if model.metric == 'euclidean':
         is_valid = True
-    elif model.metric is 'minkowski' and model.p == 2:
+    elif model.metric == 'minkowski' and model.p == 2:
         is_valid = True
 
     # There are a number of other distance metrics supported by scikit that CoreML doesn't currently support.
@@ -206,11 +206,11 @@ def _check_distance_metric(model):
 
 def _is_algorithm_brute(model):
     """Checks if the algorithm for the scikit model is set to 'brute'."""
-    return model.algorithm is 'brute' or (model.algorithm is 'auto' and model._fit_method is 'brute')
+    return model.algorithm == 'brute' or (model.algorithm == 'auto' and model._fit_method == 'brute')
 
 def _is_algorithm_kd_tree(model):
     """Checks if the algorithm for the scikit model is set to 'kd_tree'."""
-    return model.algorithm is 'kd_tree' or (model.algorithm is 'auto' and model._fit_method is 'kd_tree')
+    return model.algorithm == 'kd_tree' or (model.algorithm == 'auto' and model._fit_method == 'kd_tree')
 
 def _is_printable(obj):
     """Check if the object is a valid text type."""

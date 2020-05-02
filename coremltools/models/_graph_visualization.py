@@ -538,7 +538,7 @@ def _pipeline_component_info(model, info):
         info["shiftValue"] = _json.dumps(str(model.scaler.shiftValue))
         info["scaleValue"] = _json.dumps(str(model.scaler.scaleValue))
         info["desc"] = 'A scaling operation.\n' \
-                       'f(x) = scaleValue \cdot (x + shiftValue)'
+                       r'f(x) = scaleValue \cdot (x + shiftValue)'
     elif model_type == 'supportVectorClassifier':
         info["kernel"] = _json.dumps(str(model.supportVectorClassifier.kernel))
         info["numberOfSupportVectorsPerClass"] = _json.dumps(str(model.supportVectorClassifier.numberOfSupportVectorsPerClass))
