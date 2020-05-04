@@ -78,7 +78,7 @@ class CorrectnessTest(unittest.TestCase):
         np_preds = np_preds.flatten()
         coreml_preds = coreml_preds.flatten()
         if test_metric == 'rel_error':
-            max_arr = np.maximum(np.maximum(np_preds, coreml_preds), 1.0)
+            max_arr = np.maximum(np.abs(np_preds), 1.0)
             all_deltas = np.abs(np_preds / max_arr - coreml_preds / max_arr)
             max_delta = np.amax(all_deltas, initial=0)
             self.assertLessEqual(max_delta, delta, 'Expected %s to be within %s of %s' % (coreml_preds, delta, np_preds))
