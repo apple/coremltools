@@ -463,11 +463,6 @@ Result NeuralNetworkSpecValidator::validateInnerProductLayer(const Specification
 
     const auto& params = layer.innerproduct();
     if (params.int8dynamicquantize()) {
-        if (params.hasbias()) {
-            std::string err = "InnerProduct layer '" + layer.name() + "' cannot have bias "
-            "and dynamic quantization.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
         r = validateInt8Requirements(params.weights(), "InnerProduct", layer.name());
         if (!r.good()) {return r;}
     }
@@ -2195,11 +2190,6 @@ Result NeuralNetworkSpecValidator::validateBatchedMatmulLayer(const Specificatio
     }
 
     if (layer.batchedmatmul().int8dynamicquantize()) {
-        if (layer.batchedmatmul().hasbias()) {
-            std::string err = "BatchedMatMul layer '" + layer.name() + "' cannot have bias "
-            "and dynamic quantization.";
-            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        }
         r = validateInt8Requirements(layer.batchedmatmul().weights(), "BatchedMatMul", layer.name());
         if (!r.good()) {return r;}
     }

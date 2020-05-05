@@ -5,18 +5,19 @@ Pillow
 h5py
 future
 numpy
-libsvm;python_version>="3.4"
+libsvm; python_version >= "3.4"
 olefile==0.44
-onnx==1.6.0
+onnx==1.6.0; python_version <= "3.7"
 pandas
 pillow
 pytest; python_version < '3.7'
 pytest==5.3.4; python_version >= '3.7'
 pytest-sugar
-scikit-learn==0.19.2
+scikit-learn==0.19.2; python_version <= '3.7'
+scikit-learn; python_version > '3.7'
 scipy
 sympy
-tensorflow==1.14.0
+tensorflow==1.14.0; python_version < '3.8'
 torch==1.4.0
 xgboost
 mock

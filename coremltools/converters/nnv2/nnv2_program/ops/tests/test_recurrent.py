@@ -8,7 +8,7 @@ backends = testing_reqs.backends
 
 
 class TestGRU:
-    @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",
                              "batch_size", "input_size", "hidden_size", "has_bias",
                              "output_sequence", "direction", "symbolic"],
@@ -106,7 +106,40 @@ class TestGRU:
 
 
 class TestLSTM:
-    @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.xfail(reason="rdar://62272632")
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_zeros(self, use_cpu_only, backend):
+        seq_len, b, input_dim, hidden_dim = 1, 1, 2, 3
+        t = np.zeros((1, b, input_dim)).astype(np.float32)
+        input_placeholders = {"x": cb.placeholder(shape=t.shape)}
+        input_values = {"x": t}
+
+        def build(x):
+            h_all, ht, ct = cb.lstm(x=x,
+                    initial_h=np.zeros((b, hidden_dim)).astype(np.float32),
+                    initial_c=np.zeros((b, hidden_dim)).astype(np.float32),
+                    weight=np.zeros((input_dim+hidden_dim,
+                        4*hidden_dim)).astype(np.float32),
+                    direction='forward',
+                    bias=np.zeros((2, 4*hidden_dim)).astype(np.float32),
+                    activations=('sigmoid', 'tanh', 'sigmoid'),
+                    )
+            return ht
+        expected_output_types = (b, hidden_dim, builtins.fp32)
+        expected_outputs = np.zeros((b, hidden_dim)).astype(np.float32)
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
+
+
+    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",
                              "batch_size", "input_size", "hidden_size", "has_bias",
                              "output_sequence", "direction", "symbolic"],
@@ -209,7 +242,7 @@ class TestLSTM:
                     use_cpu_only=use_cpu_only, frontend_only=False,
                     backend=backend)
 
-    @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len", "batch_size", "input_size",
                                        "hidden_size", "has_bias", "output_sequence", "symbolic"],
                              argvalues=
@@ -330,7 +363,7 @@ class TestLSTM:
 
 
 class TestRNN:
-    @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",
                              "batch_size", "input_size", "hidden_size", "has_bias",
                              "output_sequence", "direction", "symbolic"],

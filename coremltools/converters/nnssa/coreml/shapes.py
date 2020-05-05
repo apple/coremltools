@@ -1,6 +1,7 @@
 """
 Shape inference functions.
 """
+import copy
 
 
 def _transpose(layer_spec, input_shapes):
@@ -20,7 +21,7 @@ def _get_shape(layer_spec, input_shapes):
 
 
 def _slice_static(layer_spec, input_shapes):
-    params = layer_spec.sliceStatic
+    params = copy.deepcopy(layer_spec.sliceStatic)
     input_shape = input_shapes[0]
     rank = len(input_shape)
     output_shape = [-1] * rank

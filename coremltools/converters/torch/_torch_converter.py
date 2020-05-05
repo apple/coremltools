@@ -27,7 +27,7 @@ def convert(model_spec, inputs, check_only=False):
     """
 
     logging.warn(
-        "This API is deprecated. Please use coremltools.converters.nnv2.converter instead."
+        "This API is deprecated. Please use coremltools.converters.convert() instead."
     )
 
     if isinstance(model_spec, str):

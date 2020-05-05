@@ -86,7 +86,7 @@ class TestNormalizationInstanceNorm:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_PYTORCH, reason='PyTorch not found.')
+    @pytest.mark.skipif(not HAS_TORCH, reason='PyTorch not found.')
     @pytest.mark.parametrize('use_cpu_only, backend, epsilon',
                              itertools.product(
                                  [True, False],
@@ -221,7 +221,7 @@ class TestNormalizationLocalResponseNorm:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_PYTORCH, reason='PyTorch not found.')
+    @pytest.mark.skipif(not HAS_TORCH, reason='PyTorch not found.')
     @pytest.mark.parametrize('use_cpu_only, backend, rank, size, alpha, beta, k',
                              itertools.product(
                                  [True, False],

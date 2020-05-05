@@ -128,6 +128,7 @@ def make_float(width):
         def __neg__(self):
             return double(-self.val)
 
+    double.__name__ = 'fp%d' % double.get_bitwidth()
     return double
 
 

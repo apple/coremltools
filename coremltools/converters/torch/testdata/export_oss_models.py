@@ -1,6 +1,4 @@
-import argparse
 from datetime import datetime
-import os
 import sys
 
 import torch
@@ -20,7 +18,7 @@ def _print_import_error(repo):
 def deeplabv2_ctor():
     try:
         from deeplab_pytorch.libs.models import deeplabv2
-    except:
+    except ModuleNotFoundError:
         repo = "https://github.com/kazuto1011/deeplab-pytorch deeplab_pytorch"
         _print_import_error(repo)
         return None
@@ -33,7 +31,7 @@ def deeplabv2_ctor():
 def deeplabv3_ctor():
     try:
         from deeplab_pytorch.libs.models import deeplabv3
-    except:
+    except ModuleNotFoundError:
         repo = "https://github.com/kazuto1011/deeplab-pytorch deeplab_pytorch"
         _print_import_error(repo)
         return None
@@ -50,7 +48,7 @@ def deeplabv3_ctor():
 def xception_ctor():
     try:
         from pretrained_models.pretrainedmodels.models import xception
-    except:
+    except ModuleNotFoundError:
         repo = "https://github.com/Cadene/pretrained-models.pytorch pretrained_models"
         _print_import_error(repo)
         return None
@@ -61,7 +59,7 @@ def xception_ctor():
 def tiramisu_ctor():
     try:
         from pytorch_tiramisu.models import tiramisu
-    except:
+    except ModuleNotFoundError:
         repo = "https://github.com/bfortuner/pytorch_tiramisu pytorch_tiramisu"
         _print_import_error(repo)
         return None
@@ -72,12 +70,23 @@ def tiramisu_ctor():
 def bert_ctor():
     try:
         from transformers import BertModel
-    except:
+    except ModuleNotFoundError:
         repo = "https://github.com/huggingface/transformers transformers"
         _print_import_error(repo)
         return None
 
     return BertModel.from_pretrained("bert-base-uncased", torchscript=True)
+
+
+def gpt2lm_ctor():
+    try:
+        from transformers import GPT2LMHeadModel
+    except ModuleNotFoundError:
+        repo = "https://github.com/huggingface/transformers transformers"
+        _print_import_error(repo)
+        return None
+
+    return GPT2LMHeadModel.from_pretrained("gpt2", torchscript=True)
 
 
 """
@@ -90,6 +99,9 @@ MODELS = {
     "xception": ModelParams((1, 3, 229, 229), xception_ctor),
     "bert": ModelParams(
         (1, 11), bert_ctor, data_generator=lambda shape: torch.randint(1000, shape)
+    ),
+    "gpt2lm": ModelParams(
+        (1, 15), gpt2lm_ctor, data_generator=lambda shape: torch.randint(1000, shape)
     ),
 }
 

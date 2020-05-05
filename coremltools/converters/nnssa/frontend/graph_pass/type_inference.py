@@ -1738,6 +1738,11 @@ class TypeInferenceVisitor(object):
                 try:
                     begin = list(self.gdict[node.inputs[1]].attr['symbolic_value'].val)
                     begin = to_int(begin)
+                    end = [
+                        (begin[i] + size[i]) if size[i] != -1 else 2147483647 for i in range(len(begin))
+                    ]
+                    node.attr['begin_masks'] = [idx for idx, value in enumerate(begin) if value == 0]
+                    node.attr['end_masks'] = [idx for idx, value in enumerate(end) if value == 2147483647]
                     size = [
                         input_shape[i] - begin[i] if s in (-1, 2147483647) else s
                         for i, s in enumerate(size)

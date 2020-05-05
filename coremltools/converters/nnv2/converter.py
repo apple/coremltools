@@ -81,7 +81,7 @@ class NNv2DummyFrontend:
         return program
 
 
-def convert(model, convert_from='TensorFlow', convert_to='nnv1_proto',
+def _convert(model, convert_from='TensorFlow', convert_to='nnv1_proto',
             converter_registry=ConverterRegistry, **kwargs):
     """
     Convert from an external representation.

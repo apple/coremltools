@@ -66,7 +66,7 @@ class TestCustomMatMul:
                                          x_is_sparse=a_is_sparse, y_is_sparse=b_is_sparse, name=node.name)
         context.add(node.name, x)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
+    @pytest.mark.skipif(not HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, transpose_a, transpose_b,'
                              'a_is_sparse, b_is_sparse',
                              itertools.product(
@@ -151,7 +151,7 @@ class TestCustomTopK:
             ret_shape[axis] = k
             return builtins.tensor(x_type, ret_shape), builtins.tensor(builtins.int32, ret_shape)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
+    @pytest.mark.skipif(not HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, k',
                              itertools.product(
                                  [True],

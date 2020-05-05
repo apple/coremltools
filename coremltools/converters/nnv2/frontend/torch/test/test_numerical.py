@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import torch
 import torch.nn as nn
-
+import sys
 from .testing_utils import *
 
 
@@ -17,7 +17,7 @@ class ModuleWrapper(nn.Module):
     def forward(self, x):
         return self.function(x, **self.kwargs)
 
-
+@pytest.mark.skipif(sys.version_info >= (3,8), reason="Segfault with Python 3.8+")
 class TestTorchNumerical:
     """Class containing numerical correctness tests for TorchIR -> CoreML op
         conversion.
@@ -192,16 +192,11 @@ class TestTorchNumerical:
             )
         ],
     )
-    def test_bilinear2d_interpolate_with_output_size(self, output_size, align_corners):
+    def test_upsample_bilinear2d_with_output_size(self, output_size, align_corners):
         input_shape = (1, 3, 10, 10)
         model = ModuleWrapper(
             nn.functional.interpolate,
-            {
-                "size": output_size,
-                "scale_factor": None,
-                "mode": "bilinear",
-                "align_corners": align_corners,
-            },
+            {"size": output_size, "mode": "bilinear", "align_corners": align_corners,},
         )
         run_numerical_test(input_shape, model)
 
@@ -209,14 +204,11 @@ class TestTorchNumerical:
         "scales_h, scales_w, align_corners",
         [x for x in itertools.product([2, 3, 4.5], [4, 5, 5.5], [True, False])],
     )
-    def test_bilinear2d_interpolate_with_scales(
-        self, scales_h, scales_w, align_corners
-    ):
+    def test_upsample_bilinear2d_with_scales(self, scales_h, scales_w, align_corners):
         input_shape = (1, 3, 10, 10)
         model = ModuleWrapper(
             nn.functional.interpolate,
             {
-                "size": None,
                 "scale_factor": (scales_h, scales_w),
                 "mode": "bilinear",
                 "align_corners": align_corners,
@@ -353,3 +345,112 @@ class TestTorchNumerical:
 
         model = TestNet()
         run_numerical_test((1, 3, 16, 16), model)
+
+    def _pytorch_hidden_to_coreml(self, x):
+        # Split of Direction axis
+        f, b = np.split(x, 2, axis=0)
+        # Concat on Hidden Size axis
+        x = np.concatenate([f, b], axis=2)
+        # NOTE:
+        # We are ommiting a squeeze because the conversion
+        # function for the nnv2 op lstm unsqueezes the num_layers
+        # dimension
+        return x
+
+    def _test_lstm(
+        self,
+        input_size,
+        hidden_size,
+        num_layers,
+        bias,
+        batch_first,
+        dropout,
+        bidirectional,
+    ):
+        model = nn.LSTM(
+            input_size=input_size,
+            hidden_size=hidden_size,
+            num_layers=num_layers,
+            bias=bias,
+            batch_first=batch_first,
+            dropout=dropout,
+            bidirectional=bidirectional,
+        )
+        SEQUENCE_LENGTH = 3
+        BATCH_SIZE = 2
+
+        num_directions = int(bidirectional) + 1
+
+        # (seq_len, batch, input_size)
+        if batch_first:
+            _input = torch.rand(BATCH_SIZE, SEQUENCE_LENGTH, input_size)
+        else:
+            _input = torch.randn(SEQUENCE_LENGTH, BATCH_SIZE, input_size)
+
+        h0 = torch.randn(num_layers * num_directions, BATCH_SIZE, hidden_size)
+        c0 = torch.randn(num_layers * num_directions, BATCH_SIZE, hidden_size)
+
+        model.eval()
+        inputs = (_input, (h0, c0))
+        torch_model = torch.jit.trace(model, inputs)
+        torch_results = flatten_and_detach_torch_results(torch_model(*inputs))
+        # Need to do some output reshaping if bidirectional
+        if bidirectional:
+            torch_results[1] = self._pytorch_hidden_to_coreml(torch_results[1])
+            torch_results[2] = self._pytorch_hidden_to_coreml(torch_results[2])
+        convert_and_compare(
+            torch_model, inputs, expected_results=torch_results, atol=1e-5
+        )
+
+    @pytest.mark.parametrize(
+        "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional",
+        itertools.product([7], [5], [1], [True, False], [False], [0.3], [True, False]),
+    )
+    def test_lstm(
+        self,
+        input_size,
+        hidden_size,
+        num_layers,
+        bias,
+        batch_first,
+        dropout,
+        bidirectional,
+    ):
+        self._test_lstm(
+            input_size,
+            hidden_size,
+            num_layers,
+            bias,
+            batch_first,
+            dropout,
+            bidirectional,
+        )
+
+    @pytest.mark.parametrize(
+        "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional",
+        [
+            (7, 3, 1, True, True, 0.3, True),
+            (7, 3, 2, True, True, 0.3, True),
+            (7, 3, 2, False, False, 0.3, False),
+        ],
+    )
+    def test_lstm_xexception(
+        self,
+        input_size,
+        hidden_size,
+        num_layers,
+        bias,
+        batch_first,
+        dropout,
+        bidirectional,
+    ):
+        with pytest.raises(ValueError):
+            self._test_lstm(
+                input_size,
+                hidden_size,
+                num_layers,
+                bias,
+                batch_first,
+                dropout,
+                bidirectional,
+            )

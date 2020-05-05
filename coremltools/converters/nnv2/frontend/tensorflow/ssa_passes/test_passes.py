@@ -4,6 +4,8 @@ from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import PASS_R
 from coremltools.converters.nnv2.testing_utils import (
         assert_model_is_valid, assert_same_output_names)
 import copy
+import pytest
+pytest.importorskip('tensorflow', minversion='1.14.0')
 
 def test_backfill_make_list_elem_type():
 

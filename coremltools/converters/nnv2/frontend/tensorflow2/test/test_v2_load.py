@@ -3,7 +3,7 @@ import shutil
 import tempfile
 
 import pytest
-from coremltools.converters.nnv2 import converter
+import coremltools.converters as converter
 from coremltools.converters.nnv2.frontend.tensorflow.test.testing_utils import get_tf_keras_io_name
 from coremltools.converters.nnv2.frontend.tensorflow.test import testing_utils as tf_testing_utils
 from coremltools.converters.nnv2.frontend.tensorflow2.test.testing_utils import (
@@ -45,12 +45,12 @@ class TestModelFormats:
             tf.keras.layers.ReLU(input_shape=(4, 5), batch_size=3)
         ])
         input_name, output_name = get_tf_keras_io_name(keras_model)
-        proto = converter.convert(
+        mlmodel = converter.convert(
             keras_model,
-            inputs={input_name: (3, 4, 5)},
+            inputs=[(input_name, (3, 4, 5))],
             outputs=['Identity'],
-            convert_from=frontend)
-        assert MLModel(proto) is not None
+            source=frontend)
+        assert mlmodel is not None
 
     def test_keras_saved_model_file(self):
         keras_model = tf.keras.Sequential([
@@ -58,9 +58,9 @@ class TestModelFormats:
             tf.keras.layers.Dense(10, activation=tf.nn.relu),
         ])
         keras_model.save(self.saved_model_dir, save_format='tf')
-        proto = converter.convert(
-            self.saved_model_dir, outputs='Identity', convert_from=frontend)
-        assert MLModel(proto) is not None
+        mlmodel = converter.convert(
+            self.saved_model_dir, outputs='Identity', source=frontend)
+        assert mlmodel is not None
 
     def test_keras_h5_file(self):
         keras_model = tf.keras.Sequential([
@@ -68,12 +68,12 @@ class TestModelFormats:
         ])
         input_name, output_name = get_tf_keras_io_name(keras_model)
         keras_model.save(self.model_path_h5, save_format='h5')
-        proto = converter.convert(
+        mlmodel = converter.convert(
             self.model_path_h5,
-            inputs={input_name: (3, 4, 5)},
+            inputs=[(input_name, (3, 4, 5))],
             outputs=['Identity'],
-            convert_from=frontend)
-        assert MLModel(proto) is not None
+            source=frontend)
+        assert mlmodel is not None
 
     def test_concrete_function_list_from_tf_low_level_api(self):
         root = tf.train.Checkpoint()
@@ -88,9 +88,9 @@ class TestModelFormats:
         tf_model = tf.saved_model.load(self.saved_model_dir)
         concrete_func = tf_model.signatures[
             tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
-        proto = converter.convert(
-            [concrete_func], outputs='Identity', convert_from=frontend)
-        assert MLModel(proto) is not None
+        mlmodel = converter.convert(
+            [concrete_func], outputs='Identity', source=frontend)
+        assert mlmodel is not None
 
     def test_saved_model_list_from_tf_function(self):
         class build_model(tf.Module):
@@ -101,9 +101,9 @@ class TestModelFormats:
 
         model = build_model()
         tf.saved_model.save(model, self.saved_model_dir)
-        proto = converter.convert(
-            self.saved_model_dir, outputs=['Identity'], convert_from=frontend)
-        assert MLModel(proto) is not None
+        mlmodel = converter.convert(
+            self.saved_model_dir, outputs=['Identity'], source=frontend)
+        assert mlmodel is not None
 
     def test_concrete_function_list_from_tf_function(self):
         class build_model(tf.Module):
@@ -114,20 +114,20 @@ class TestModelFormats:
 
         model = build_model()
         concrete_func = model.__call__.get_concrete_function()
-        proto = converter.convert(
-            [concrete_func], outputs=['Identity'], convert_from=frontend)
-        assert MLModel(proto) is not None
+        mlmodel = converter.convert(
+            [concrete_func], outputs=['Identity'], source=frontend)
+        assert mlmodel is not None
 
     def test_invalid_format_none(self):
         with pytest.raises(NotImplementedError) as e:
-            converter.convert(None, convert_from=frontend)
+            converter.convert(None, source=frontend)
         e.match(r'Expected model format: .* .h5')
 
     def test_invalid_format_invalid_extension(self):
         _, invalid_filename = tempfile.mkstemp(
             suffix='.invalid', prefix=self.saved_model_dir)
         with pytest.raises(NotImplementedError) as e:
-            converter.convert(invalid_filename, convert_from=frontend)
+            converter.convert(invalid_filename, source=frontend)
         e.match(r'Expected model format: .* .h5')
 
     def test_invalid_format_multiple_concrete_functions(self):
@@ -141,23 +141,26 @@ class TestModelFormats:
         cf = model.__call__.get_concrete_function()
         with pytest.raises(NotImplementedError) as e:
             converter.convert(
-                [cf, cf, cf], convert_from=frontend)
+                [cf, cf, cf], source=frontend)
         e.match(r'Only a single concrete function is supported')
 
     def test_invalid_converter_type(self):
-        with pytest.raises(NotImplementedError) as e:
+        with pytest.raises(ValueError) as e:
             converter.convert(
-                None, convert_from='invalid')
-        e.match(r'Frontend converter .* not implemented')
+                None, source='invalid')
+
+        expected_msg = "Unrecognized value of argument \"source\": invalid. " \
+                       "It must be one of \"auto\", \"tensorflow\", \"pytorch\"."
+        e.match(expected_msg)
 
         with pytest.raises(NotImplementedError) as e:
             converter.convert(
-                None, convert_to='invalid', convert_from=frontend)
+                None, convert_to='invalid', source=frontend)
         e.match(r'Backend converter .* not implemented')
 
     def test_invalid_format_non_exist(self):
         non_exist_filename = self.model_path_h5.replace('.h5', '_non_exist.h5')
         with pytest.raises(ValueError) as e:
             converter.convert(
-                non_exist_filename, convert_from=frontend)
+                non_exist_filename, source=frontend)
         e.match(r'Input model .* does not exist')

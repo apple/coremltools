@@ -1,6 +1,6 @@
 import torch
 import torchvision
-from coremltools.converters.nnv2.converter import convert
+from coremltools.converters import convert
 from coremltools.models import MLModel
 
 """
@@ -55,10 +55,9 @@ to expect.
 
 Note that the converter API is still evolving and *will* change in the future.
 """
-proto = convert(
+mlmodel = convert(
     traced_model,
-    convert_from="torch",
-    example_inputs=example_input,
+    inputs=[example_input],
     # debug=True,
     # If conversion fails with a message like 'Pytorch convert function for op x
     # not implemented', that means we haven't yet implemented all ops/layers your
@@ -76,5 +75,5 @@ the conversion failure.
 """
 Now with a conversion complete, we can create an MLModel and run inference.
 """
-mlmodel = MLModel(proto)
+mlmodel.save('/tmp/mobilenet_v2.mlmodel')
 result = mlmodel.predict({"input.1": example_input.numpy()})

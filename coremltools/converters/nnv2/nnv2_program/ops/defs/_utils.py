@@ -146,9 +146,9 @@ def aggregated_pad(
                     num_spatial_dims, len(strides) if strides is not None else "None"
                 )
             )
-        effective_ks = coremltools.converters.nnv2.nnv2_program.ops.defs._utils.effective_kernel(kernel_shape, dilations)
+        effective_ks = effective_kernel(kernel_shape, dilations)
         return [
-            max(0, s * math.ceil(float(i) / float(s)) - i + k - s)
+            int(max(0, s * math.ceil(float(i) / float(s)) - i + k - s))
             for i, k, s in zip(input_shape, effective_ks, strides)
         ]
     if pad_type == "valid":
@@ -213,7 +213,7 @@ def spatial_dimensions_out_shape(
                 len(custom_pad),
             )
         )
-    pad = coremltools.converters.nnv2.nnv2_program.ops.defs._utils.aggregated_pad(
+    pad = aggregated_pad(
         pad_type=pad_type,
         kernel_shape=kernel_shape,
         input_shape=input_shape,
@@ -221,8 +221,8 @@ def spatial_dimensions_out_shape(
         dilations=dilations,
         custom_pad=custom_pad,
     )
-    effective_kernel = coremltools.converters.nnv2.nnv2_program.ops.defs._utils.effective_kernel(kernel_shape, dilations)
+    effective_ks = effective_kernel(kernel_shape, dilations)
     return [
-        (input_shape[r] + pad[r] - effective_kernel[r]) // strides[r] + 1
+        (input_shape[r] + pad[r] - effective_ks[r]) // strides[r] + 1
         for r in range(num_spatial_dims)
     ]

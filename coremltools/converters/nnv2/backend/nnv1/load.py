@@ -16,25 +16,6 @@ from .passes.nnv1_passes import nnv1_backend_passes
 
 from six import string_types as _string_types
 
-def get_image_params(kwargs):
-    image_input_names = kwargs.get('image_input_names', None)
-    if isinstance(image_input_names, _string_types):
-        image_input_names = [image_input_names]
-    is_bgr = kwargs.get('is_bgr', False)
-    red_bias = kwargs.get('red_bias', 0.)
-    green_bias = kwargs.get('green_bias', 0.)
-    blue_bias = kwargs.get('blue_bias', 0.)
-    gray_bias = kwargs.get('gray_bias', 0.)
-    image_scale = kwargs.get('image_scale', 1.)
-    image_format = kwargs.get('image_format', 'NHWC')
-
-    return dict(zip(['image_input_names','is_bgr','red_bias','green_bias','blue_bias',
-                     'gray_bias','image_scale','image_format'],
-                    [image_input_names, is_bgr, red_bias, green_bias, blue_bias,
-                     gray_bias, image_scale, image_format]))
-
-
-
 def load(prog, **kwargs):
     if 'main' not in prog.functions:
         msg = 'main function not found in program {}'
@@ -98,17 +79,6 @@ def load(prog, **kwargs):
     convert_ops(const_context, builder, prog.functions['main'].operations,
             prog.functions['main'].outputs)
 
-    # Add image input
-    image_params = get_image_params(kwargs)
-    builder.set_pre_processing_parameters(image_input_names=image_params['image_input_names'],
-                                          is_bgr=image_params['is_bgr'],
-                                          red_bias=image_params['red_bias'],
-                                          green_bias=image_params['green_bias'],
-                                          blue_bias=image_params['blue_bias'],
-                                          gray_bias=image_params['gray_bias'],
-                                          image_scale=image_params['image_scale'],
-                                          image_format=image_params['image_format'])
-
     # Replace model outputs's name with v1_outputs
     output_names = [x[0] for x in v1_outputs]
     for i, spec_layer in enumerate(builder.nn_spec.layers):
@@ -116,34 +86,6 @@ def load(prog, **kwargs):
             for output_name in output_names:
                 if output_name.split(':')[0] == name:
                     spec_layer.output[j] = output_name
-
-    # Add classifier classes
-    predicted_feature_name = kwargs.get('predicted_feature_name', None)
-    predicted_probabilities_output = kwargs.get('predicted_probabilities_output','')
-    message = 'Class labels must be a list of integers / strings or a file path'
-
-    if is_classifier:
-        classes_in = class_labels
-        if isinstance(classes_in, str):
-            import os
-            if not os.path.isfile(classes_in):
-                raise ValueError("Path to class labels (%s) does not exist." % \
-                                 classes_in)
-                with open(classes_in, 'r') as f:
-                    classes = f.read()
-                classes = classes.splitlines()
-        elif isinstance(classes_in, list):  # list[int or str]
-            classes = classes_in
-            assert(all([isinstance(x, (int, str)) for x in classes])), message
-        else:
-            raise ValueError(message)
-
-        if predicted_feature_name is not None:
-            builder.set_class_labels(
-                classes, predicted_feature_name=predicted_feature_name,
-                prediction_blob=predicted_probabilities_output)
-        else:
-            builder.set_class_labels(classes)
 
     proto = builder.spec
     # Set symbolic input shapes

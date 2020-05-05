@@ -12,10 +12,10 @@ from .get_type_info import get_type_info
 def memoize(f):
     memo = {}
 
-    def helper(x, init_length=None):
+    def helper(x, init_length=None, dynamic_length=True):
         if x not in memo:
-            memo[(x, init_length)] = f(x, init_length)
-        return memo[(x, init_length)]
+            memo[(x, init_length, dynamic_length)] = f(x, init_length, dynamic_length)
+        return memo[(x, init_length, dynamic_length)]
 
     return helper
 
@@ -27,9 +27,9 @@ class empty_list:
 
 
 @memoize
-def list(arg, init_length=None):
+def list(arg, init_length=None, dynamic_length=True):
     class list:
-        T = [arg, init_length]
+        T = [arg, init_length, dynamic_length]
 
         def __init__(self):
             self.val = []

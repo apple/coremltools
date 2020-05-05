@@ -66,7 +66,8 @@ class Var(object):
         Ops that take this Var as an input.
     """
     __slots__ = [
-        "name", "_sym_type", "_sym_val", "_op", "op_output_idx", "_child_ops"
+        "name", "_sym_type", "_sym_val", "_op", "op_output_idx", "_child_ops",
+        "consuming_blocks",
     ]
 
     def __init__(self,
@@ -89,6 +90,11 @@ class Var(object):
         # An op can appear twice if it consumes a var twice (e.g.,
         # add(%1, %1), while_loop(loop_vars=(%1, %1)).
         self._child_ops = list()
+
+        # A variable may not be consumed by any op (i.e. len(self._child_ops)
+        # == 0) but is still used as block output. A var can be output of
+        # multiple blocks (e.g., both current block and nested blocks)
+        self.consuming_blocks = list()
 
     @property
     def sym_type(self):
@@ -159,21 +165,24 @@ class Var(object):
 
 
 class ListVar(Var):
-    __slots__ = ["_elem_type", "init_length"]
+    __slots__ = ["_elem_type", "init_length", "dynamic_length"]
 
-    def __init__(self, name, elem_type=None, init_length=None, **kwargs):
+    def __init__(self, name, elem_type=None, init_length=None,
+            dynamic_length=True, **kwargs):
         """
         elem_type (builtin.tensor)
 
-        # init_length is not used right now
-        #init_length (python:int32): max length. None means the List
-        #size is runtime determined (not necessarily dynamic).
+        init_length (int): initial length
+
+        dynamic_length (bool): True to allow list to grow. False uses
+        init_length as the fixed size (init_length is runtime length).
         """
         super(ListVar, self).__init__(name=name,
-                                      sym_type=builtins.list(elem_type),
+                                      sym_type=builtins.list(elem_type, init_length, dynamic_length),
                                       sym_val=None, **kwargs)
         self._elem_type = elem_type
         self.init_length = init_length
+        self.dynamic_length = dynamic_length
 
     @property
     def shape(self):
@@ -200,15 +209,18 @@ class ListVar(Var):
         return self._elem_type.get_shape()
 
     def shape_str(self):
+        length = '?'
+        if not self.dynamic_length:
+            length = str(self.init_length)
         if self._elem_type == builtins.unknown:
-            return 'List[unknown]'
+            return 'List[{}, unknown]'.format(length)
         elem_shape = self._elem_type.get_shape()
         elem_dtype = self._elem_type.get_primitive()
         shape_str = str(elem_shape)[:-1]  # trim the ")"
         if len(elem_shape) > 1:
             shape_str += ", "
         shape_str += builtins.builtin_to_string(elem_dtype) + ")"
-        return 'List[{}]'.format(shape_str)
+        return 'List[{}, {}]'.format(length, shape_str)
 
 
 class InternalVar(Var):

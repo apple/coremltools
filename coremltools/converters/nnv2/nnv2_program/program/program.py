@@ -6,7 +6,7 @@ import copy
 import logging
 import numpy as np
 import sympy as sm
-from collections import Counter
+from collections import Counter, OrderedDict
 import six
 
 from coremltools.converters.nnv2.builtin_types import builtins
@@ -20,6 +20,7 @@ BLOCK_STACK = []
 
 SPACES = "  "
 
+
 def curr_block():
     if len(BLOCK_STACK) == 0:
         raise ValueError("Must call CoremlBuilder inside an SsaFunction" +
@@ -30,10 +31,13 @@ def curr_block():
 def is_internal_input(arg_name):
     return arg_name[0] == "_"
 
+
 VALUE = 1
 SYMBOL = 2
 NONE = 4
 ALL = 7
+
+
 def precondition(allow=ALL):
     """
     A helper decorator for value_inference method.
@@ -57,16 +61,17 @@ def precondition(allow=ALL):
     ALLOW_VALUE = allow & VALUE
     ALLOW_SYMBOL = allow & SYMBOL
     ALLOW_NONE = allow & NONE
+
     def process(v, has_value, has_symbol, has_none):
         """
         v: Var
 
         Return updated has_value, has_symbol, has_none
         """
-        if v.val is None:
-            return has_value, has_symbol, True
-        elif any_symbolic(v.val):
+        if any_symbolic(v.sym_val):
             return has_value, True, has_none
+        elif v.val is None:
+            return has_value, has_symbol, True
         return True, has_symbol, has_none
 
     def decorator(func):
@@ -102,7 +107,6 @@ def precondition(allow=ALL):
 
         return wrapper
     return decorator
-
 
 
 class Operation(object):
@@ -153,7 +157,6 @@ class Operation(object):
                 flat_inputs.append(v)
         return flat_inputs
 
-
     def type_value_inference(self, overwrite_output=False):
         """
         Perform type inference and auto_val computation based on new input Vars
@@ -187,7 +190,9 @@ class Operation(object):
                     zip(output_names, output_types, output_vals)):
                 name = self.name + ":" + n if n != '' else self.name
                 if builtins.is_list(sym_type):
-                    new_var = ListVar(name, sym_type.T[0],
+                    new_var = ListVar(name, elem_type=sym_type.T[0],
+                            init_length=sym_type.T[1],
+                            dynamic_length=sym_type.T[2],
                             op=self, op_output_idx=i)
                 else:
                     new_var = Var(name,
@@ -429,6 +434,7 @@ class Operation(object):
 class InvalidBlockStateError(Exception):
     pass
 
+
 class SsaBlock(object):
     __slots__ = [
         "name", "_block_inputs", "_outputs", "operations", "_internal_vars",
@@ -471,7 +477,7 @@ class SsaBlock(object):
         self.set_inputs(block_inputs)
 
         # list[Var]. This is converted to str when generating NNv2 proto.
-        self._outputs = None
+        self._outputs = []
 
         # If we create const, whose inputs (mode, val) cannot be const
         # (infinite recursion). They must be considered as always visible.
@@ -514,6 +520,19 @@ class SsaBlock(object):
                         ' times, but op {} uses it {} times.\n{}'
                     raise InvalidBlockStateError(msg.format(iv.name,
                         op.name, c_actual, op.name, c, op))
+
+        # 1 to 1 mapping between SsaBlock outputs and Var.consuming_blocks
+        for op in self.operations:
+            for ov in op.outputs:
+                for b in ov.consuming_blocks:
+                    if ov not in b.outputs:
+                        msg = 'Var {} should be output of block {}: {}'
+                        raise ValueError(msg.format(ov.name, b.name, b))
+
+        for v in self.outputs:
+            if self not in v.consuming_blocks:
+                msg = 'Var {} should be output of block {}: {}'
+                raise ValueError(msg.format(ov.name, b.name, b))
 
     def set_inputs(self, block_inputs):
         """
@@ -621,10 +640,15 @@ class SsaBlock(object):
                         'be a block output.\n{}'
                 raise ValueError(msg.format(ov.name, self.name, self))
 
+        for ov in self._outputs:
+            ov.consuming_blocks.remove(self)
+
         # Need to copy, or block's output would be completely tied to a var's
         # output and we cannot replace a block output with another var's
         # output.
         self._outputs = copy.copy(outputs)
+        for ov in outputs:
+            ov.consuming_blocks.append(self)
 
     def __enter__(self):
         global BLOCK_STACK
@@ -732,7 +756,7 @@ class SsaBlock(object):
         vals (for const).
 
         Ex1: self = block0
-             visible_vars = {%a, %b, %c} (function input)
+            visible_vars = {%a, %b, %c} (function input)
 
         Ex2: self = loop_cond.
             visible_vars = {%a, %b, %c, %const1, V0} (Note that %const2 is not
@@ -811,7 +835,7 @@ class SsaBlock(object):
                 if s not in visible_vars:
                     before_op_name = before_op.name \
                             if before_op is not None else "None"
-                    msg = "Op {} input {}={} is not in scope of {} before {}"
+                    msg = "Op '{}' input {}={} is not in scope of {} before {}"
                     raise ValueError(
                         msg.format(new_op.name, k, s.name, self.name,
                                    before_op_name))
@@ -822,8 +846,9 @@ class SsaBlock(object):
         else:
             self.operations.insert(idx, new_op)
 
-    def _replace_var(self, old_var, new_var, start=0, end_id=-1, no_check_var_visibility=False,
-                     no_check_var_types=False):
+    def _replace_var(self, old_var, new_var, start=0, end_id=-1,
+            no_check_var_visibility=False,
+            no_check_var_types=False):
         """Helper function for replace_uses_of_var_after_op"""
         num_ops_affected = 0
 
@@ -862,10 +887,21 @@ class SsaBlock(object):
         if old_var in self._outputs:
             idx = self._outputs.index(old_var)
             self._outputs[idx] = new_var
+            new_var.consuming_blocks.append(self)
+
+            # This block no longer uses `old_var` as its outputs
+            old_var.consuming_blocks.remove(self)
+
+            #if rename_new_var_if_fn_output:
+            # Ensure output name is consistent
+            if isinstance(self, SsaFunction):
+                new_var.name = old_var.name
         return num_ops_affected
 
+
     def replace_uses_of_var_after_op(self, anchor_op, old_var, new_var,
-            no_check_var_visibility=False, end_op=None, no_check_var_types=False):
+            no_check_var_visibility=False, end_op=None,
+            no_check_var_types=False,):
         """
         Replace all uses of `old_var` with `new_var` after `anchor_op`,
         and before `end_op` (inclusive).
@@ -1023,6 +1059,10 @@ class SsaBlock(object):
                             "that's block {}'s output"
                     raise ValueError(msg.format(op.name, i, v.name, self.name))
 
+            for b in op.blocks:
+                b.set_outputs([])
+                b.remove_ops(b.operations)
+
             # remove the op (in reverse topological order)
             self.operations.pop(idx)
             op.enclosing_block = None
@@ -1087,10 +1127,9 @@ class SsaBlock(object):
     def __str__(self):
         return self.indented_str()
 
-
     def get_dot_string(self, function_name='main', prefix_id=0,
-                       highlight_debug_op_types = [],
-                       highlight_debug_op_names = []):
+                       highlight_debug_op_types=None,
+                       highlight_debug_op_names=None):
         """
         Return the dot string that can be used to show the block
         with dot. Const ops are not added to the dot string.
@@ -1107,6 +1146,10 @@ class SsaBlock(object):
         >>> # OR
         >>> graphviz.Source(block.get_dot_string()).view(filename='graph.pdf')
         """
+        if highlight_debug_op_types is None:
+            highlight_debug_op_types = []
+        if highlight_debug_op_names is None:
+            highlight_debug_op_names = []
 
         dotstring = 'digraph g {\n' + \
                     '\tcompound=true;\n'
@@ -1122,9 +1165,9 @@ class SsaBlock(object):
 
         vis = DotVisitor()
         vis.highlight_nodes(input_var_names, 'yellow') \
-           .highlight_nodes(output_var_names,'goldenrod2') \
-           .highlight_nodes(highlight_debug_op_names,'cyan') \
-           .highlight_nodes(debug_op_types,'green')
+            .highlight_nodes(output_var_names, 'goldenrod2') \
+            .highlight_nodes(highlight_debug_op_names, 'cyan') \
+            .highlight_nodes(debug_op_types, 'green')
 
         vis.visit_all(self, nodename_prefix=str(prefix_id))
         res = vis.get_result('subgraph', 'cluster_' + function_name.replace('/', '_'))
@@ -1142,7 +1185,7 @@ class SsaFunction(SsaBlock):
         """
         self.placeholder_inputs = inputs
         # str -> Var
-        self._input_dict = {}
+        self._input_dict = OrderedDict()
         for k, v in self.placeholder_inputs.items():
             v.set_name(k)  # set to user input name
             self._input_dict[k] = v.outputs[0]

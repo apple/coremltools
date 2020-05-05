@@ -55,7 +55,7 @@ except:
 
 # ---------------------------------------------------------------------------------------
 HAS_TF = True
-HAS_TF_1_14 = True
+HAS_TF_1 = False
 HAS_TF_2 = False
 TF_MIN_VERSION = '1.0.0'
 TF_MAX_VERSION = '1.14.0'
@@ -73,15 +73,19 @@ try:
         _logging.warn('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
                       % (tensorflow.__version__, TF_MAX_VERSION))
 
-    if tf_ver < _StrictVersion('1.14.0'):
-        HAS_TF_1_14 = False
+    if tf_ver < _StrictVersion('2.0.0'):
+        HAS_TF_1 = True
 
     if tf_ver >= _StrictVersion('2.0.0'):
         HAS_TF_2 = True
 except:
     HAS_TF = False
-    HAS_TF_1_14 = False
+    HAS_TF_1 = False
     HAS_TF_2 = False
+
+
+MSG_TF1_NOT_FOUND = 'TensorFlow 1.x not found.'
+MSG_TF2_NOT_FOUND = 'TensorFlow 2.x not found.'
 
 # ---------------------------------------------------------------------------------------
 HAS_KERAS_TF = True
@@ -164,3 +168,10 @@ try:
     import onnx
 except:
     HAS_ONNX = False
+
+# ---------------------------------------------------------------------------------------
+HAS_GRAPHVIZ = True
+try:
+    import graphviz
+except:
+    HAS_GRAPHVIZ = False

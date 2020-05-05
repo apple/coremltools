@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from collections import OrderedDict
 import logging
 
 import torch
@@ -111,10 +112,13 @@ class TorchConverter:
         torchscript: torch.jit.ScriptModule object representing the model to convert.
         input_values: A single torch.Tensor or list of torch.Tensor objects
             representing model inputs.
+        cut_output_names: A list of output name strings. Graph conversion will
+            terminate once these symbols have been generated. For debugging use
+            only.
     """
 
     def __init__(
-        self, torchscript, input_values,
+        self, torchscript, input_values, cut_output_names=None,
     ):
         assert isinstance(torchscript, torch.jit.ScriptModule)
         if isinstance(input_values, torch.Tensor):
@@ -123,7 +127,9 @@ class TorchConverter:
         self.torchscript = torchscript
         self.context = TranscriptionContext()
         raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
-        self.graph = InternalTorchIRGraph(raw_graph, params_dict, input_values)
+        self.graph = InternalTorchIRGraph(
+            raw_graph, params_dict, input_values, cut_output_names
+        )
         self._flatten_input_values()
         self._flatten_output_values()
 
@@ -138,7 +144,7 @@ class TorchConverter:
 
         while changed:
             old_graph_inputs = new_graph_inputs
-            new_graph_inputs = {}
+            new_graph_inputs = OrderedDict()
             new_nodes = []
             changed = False
             for _input_name, _input_val in old_graph_inputs.items():
@@ -253,10 +259,10 @@ class TorchConverter:
         # This will hold the converted model.
         prog = SsaProgram()
 
-        graph_inputs = {
-            name: TorchConverter._create_placeholder(value)
-            for (name, value) in self.graph.inputs.items()
-        }
+        graph_inputs = OrderedDict()
+        for name, value in self.graph.inputs.items():
+            graph_inputs[name] = TorchConverter._create_placeholder(value)
+
         # Initialize the SSA for conversion
         with SsaFunction(graph_inputs) as ssa_func:
 

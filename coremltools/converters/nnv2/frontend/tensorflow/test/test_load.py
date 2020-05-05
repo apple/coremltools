@@ -2,7 +2,7 @@ import os
 import pytest
 import shutil
 import tempfile
-from coremltools.converters.nnv2 import converter
+import coremltools.converters as converter
 from coremltools.converters.nnv2.testing_utils import random_gen
 from coremltools.converters.nnv2.frontend.tensorflow.test.testing_utils import (
     frontend, make_tf_graph, run_compare_tf
@@ -33,9 +33,9 @@ class TestModelInputsOutputs:
             return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
-        proto = converter.convert(
-            model, outputs=outputs, convert_from=frontend)
-        assert proto is not None
+        mlmodel = converter.convert(
+            model, outputs=outputs)
+        assert mlmodel is not None
 
         input_values = [random_gen(x_shape, -10., 10.)]
         input_dict = dict(zip(inputs, input_values))
@@ -50,9 +50,9 @@ class TestModelInputsOutputs:
 
         model, inputs, outputs = build_model
         input_name = inputs[0] if isinstance(inputs[0], str) else inputs[0].op.name
-        proto = converter.convert(
-            model, inputs={input_name: (3, 4, 5)}, convert_from=frontend)
-        assert MLModel(proto) is not None
+        mlmodel = converter.convert(
+            model, inputs=[(input_name, (3, 4, 5))])
+        assert mlmodel is not None
 
         input_values = [random_gen(x_shape, -10., 10.)]
         input_dict = dict(zip(inputs, input_values))
@@ -66,9 +66,9 @@ class TestModelInputsOutputs:
             return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
-        proto = converter.convert(
-            model, convert_from=frontend)
-        assert MLModel(proto) is not None
+        mlmodel = converter.convert(
+            model)
+        assert mlmodel is not None
 
         input_values = [random_gen(x_shape, -10., 10.)]
         input_dict = dict(zip(inputs, input_values))
@@ -85,8 +85,8 @@ class TestModelInputsOutputs:
 
         with pytest.raises(KeyError) as e:
             converter.convert(
-                model, inputs={'invalid_name': x_shape}, convert_from=frontend)
-        e.match(r'Input node name .* does not exist')
+                model, inputs=[('invalid_name', x_shape)])
+        e.match(r'TF var .* not found in context')
 
     def test_invalid_output_names(self):
         x_shape = (3, 4, 5)
@@ -99,7 +99,7 @@ class TestModelInputsOutputs:
 
         with pytest.raises(KeyError) as e:
             converter.convert(
-                model, outputs=['invalid_name'], convert_from=frontend)
+                model, outputs=['invalid_name'])
         e.match(r'Output node name .* does exist')
 
 
@@ -120,9 +120,9 @@ class TestModelFormats:
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(3, 4, 5))
             out = tf.nn.relu(x)
-        proto = converter.convert(
-            graph, inputs={x.op.name: (3, 4, 5)}, outputs=[out.op.name])
-        assert MLModel(proto) is not None
+        mlmodel = converter.convert(
+            graph, inputs=[(x.op.name, (3, 4, 5))], outputs=[out.op.name])
+        assert mlmodel is not None
 
     def test_graph_def_file(self):
         with tf.Graph().as_default() as graph:
@@ -131,41 +131,44 @@ class TestModelFormats:
         tf.io.write_graph(
             graph, self.saved_model_dir,
             self.model_path_pb, as_text=False)
-        proto = converter.convert(
+        mlmodel = converter.convert(
             self.model_path_pb,
-            inputs={x.op.name: (3, 4, 5)},
+            inputs=[(x.op.name, (3, 4, 5))],
             outputs=[out.op.name])
-        assert MLModel(proto) is not None
+        assert mlmodel is not None
 
     def test_invalid_format_none(self):
         with pytest.raises(NotImplementedError) as e:
-            converter.convert(None)
+            converter.convert(None, source='tensorflow')
         e.match(r'Expected model format: .* .pb')
 
     def test_invalid_format_h5(self):
         # we do not support tf.keras model defined in TF 1.x
         with pytest.raises(NotImplementedError) as e:
-            converter.convert(self.model_path_h5)
+            converter.convert(self.model_path_h5, source='tensorflow')
         e.match(r'Expected model format: .* .pb')
 
     def test_invalid_format_invalid_extension(self):
         _, invalid_filename = tempfile.mkstemp(
             suffix='.invalid', prefix=self.saved_model_dir)
         with pytest.raises(NotImplementedError) as e:
-            converter.convert(invalid_filename)
+            converter.convert(invalid_filename, source='tensorflow')
         e.match(r'Expected model format: .* .pb')
 
-    def test_invalid_converter_type(self):
-        with pytest.raises(NotImplementedError) as e:
-            converter.convert(None, convert_from='invalid')
-        e.match(r'Frontend converter .* not implemented')
+    def test_invalid_converter_source(self):
+        with pytest.raises(ValueError) as e:
+            converter.convert(None, source='invalid')
+        expected_msg = "Unrecognized value of argument \"source\": invalid. " \
+                        "It must be one of \"auto\", \"tensorflow\", \"pytorch\"."
+        e.match(expected_msg)
 
+    def test_invalid_converter_target(self):
         with pytest.raises(NotImplementedError) as e:
-            converter.convert(None, convert_to='invalid')
+            converter.convert(None, convert_to='invalid', source='tensorflow')
         e.match(r'Backend converter .* not implemented')
 
     def test_invalid_format_non_exist(self):
         non_exist_filename = self.model_path_pb.replace('.pb', '_non_exist.pb')
         with pytest.raises(ValueError) as e:
-            converter.convert(non_exist_filename)
+            converter.convert(non_exist_filename, source='tensorflow')
         e.match(r'Input model .* does not exist')

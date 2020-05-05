@@ -4702,7 +4702,7 @@ class NeuralNetworkBuilder(object):
 
         if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
             self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
-            spec_layer_params.squeezeMasks.extend(squeeze_masks)
+        spec_layer_params.squeezeMasks.extend(squeeze_masks)
 
         return spec_layer
 

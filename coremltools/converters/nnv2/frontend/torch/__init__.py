@@ -2,4 +2,7 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-from .load import load
+from ....._deps import HAS_TORCH as _HAS_TORCH
+
+if _HAS_TORCH:
+    from .load import load

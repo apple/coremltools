@@ -24,7 +24,7 @@ class RandomDistribution(Operation):
             shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
             return builtins.tensor(builtins.fp32, shape)
 
-        return builtins.tensor(builtins.fp32, tuple(self.shape.val.tolist()))
+        return builtins.tensor(builtins.fp32, tuple(self.shape.sym_val.tolist()))
 
 
 """

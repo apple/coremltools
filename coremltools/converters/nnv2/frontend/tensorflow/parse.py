@@ -103,7 +103,7 @@ def parse_list(t):
 
 
 def parse_func(f):
-    return f.name, {k: parse_attr(v) for k, v in f.attr.items()}
+    return f.name
 
 
 def parse_attr(attr):
@@ -128,10 +128,3 @@ def parse_attr(attr):
     elif attr.HasField('placeholder'):
         raise NotImplementedError("placeholder not yet implemented")
     raise ValueError('unintelligible TFNode attributes')
-
-
-def graph_def_to_dict(gd):
-    ret = {}
-    for node in gd.node:
-        ret[node.name] = ParsedTFNode(node)
-    return ret

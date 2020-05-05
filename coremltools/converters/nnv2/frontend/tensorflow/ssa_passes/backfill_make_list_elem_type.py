@@ -46,6 +46,7 @@ def backfill_make_list_elem_type_block(block):
 
         with block:
             new_list = cb.make_list(init_length=op.init_length,
+                    dynamic_length=op.dynamic_length,
                     # elem_shape cannot be symbolic by definition of list.
                     elem_shape=elem_type.get_shape(),
                     dtype=op.inputs['dtype'], before_op=op,

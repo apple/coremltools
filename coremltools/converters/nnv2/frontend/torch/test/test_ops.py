@@ -20,6 +20,11 @@ from ..internal_graph import InternalTorchIRNode
 class TestTorchOps:
     """Class containing tests for converting TorchIR -> CoreML ops.
 
+    These tests interface with only the InternalTorchIRGraph and do not 
+    build a torch module. Thus, they are much faster then the numerical tests. 
+    However, for some ops it is necessary to use the torch module to verify
+    numerical output so they are placed the numerical tests.
+
     NOTE: Confused where @context is coming from? Its from the pytest fixture defined below.
     """
 
@@ -159,10 +164,7 @@ class TestTorchOps:
 
     @pytest.mark.parametrize(
         "test_input_1, test_input_2",
-        [
-            (np.random.rand(3, 2), np.random.rand(3, 2)),
-            (np.random.rand(3, 2), 5),  # tests `rsub`
-        ],
+        [(np.random.rand(3, 2), np.random.rand(3, 2)), (np.random.rand(3, 2), 5),],
     )
     def test_sub(self, context, test_input_1, test_input_2):
         scale_factor = 1
@@ -175,12 +177,28 @@ class TestTorchOps:
             test_input_1 - test_input_2,
         )
 
+    @pytest.mark.parametrize(
+        "test_input_1, test_input_2",
+        [(np.random.rand(3, 2), np.random.rand(3, 2)), (np.random.rand(3, 2), 5),],
+    )
+    def test_rsub(self, context, test_input_1, test_input_2):
+        scale_factor = 1
+        self._test_elementwise_binary(
+            context,
+            "rsub",
+            ops.sub,
+            [test_input_1, test_input_2, scale_factor],
+            3,
+            # Note the reversal of arg ordering relative to 'sub'
+            test_input_2 - test_input_1,
+        )
+
     def test_mul(self, context):
         test_input_1 = np.random.rand(3, 2)
         test_input_2 = np.random.rand(3, 2)
         self._test_elementwise_binary(
             context,
-            "Sub",
+            "Mul",
             ops.mul,
             [test_input_1, test_input_2],
             2,
@@ -205,7 +223,7 @@ class TestTorchOps:
         self._test_elementwise_binary(
             context,
             "Pow",
-            ops.pow,
+            ops.pow_,
             [test_input_1, test_input_2],
             2,
             np.power(test_input_1, test_input_2),
@@ -219,6 +237,16 @@ class TestTorchOps:
 
         self._test_elementwise_binary(
             context, "Eq", ops.eq, [test_input_1, test_input_2], 2, expected_output
+        )
+
+    def test_ne(self, context):
+        test_input_1 = torch.zeros([2, 3, 4, 5, 6]).float()
+        test_input_2 = torch.ones([2, 3, 4, 5, 6]).float()
+        test_input_2[0][0][0][0][0] = 0
+        expected_output = (test_input_1 != test_input_2).float()
+
+        self._test_elementwise_binary(
+            context, "ne", ops.ne, [test_input_1, test_input_2], 2, expected_output
         )
 
     def test_le(self, context):
@@ -271,8 +299,8 @@ class TestTorchOps:
             ],
         ),
     )
-    def test_arrayconstruct(self, context, size, array_type):
-        constant_vals = list(np.arange(size))
+    def test_arrayconstruct_scalars(self, context, size, array_type):
+        constant_vals = list(range(size))
         array_kind = array_type[0]
         array_op = array_type[1]
         constants, input_list, output_name = self._gen_constants(size, constant_vals)
@@ -283,8 +311,36 @@ class TestTorchOps:
             context, array_op, ac_node, output_name, constants=constants
         )
         expected_val = np.arange(size)
-        assert ssa.shape == (size,)
-        assert np.array_equal(ssa.val, expected_val)
+        np.testing.assert_equal(ssa.shape, (size,))
+        np.testing.assert_array_equal(ssa.val, expected_val)
+
+    @pytest.mark.parametrize(
+        "shape1, shape2, array_type",
+        itertools.product(
+            [(1, 2), (3, 4, 5), (2,)],
+            [(2, 1), (1, 4, 5), (3,)],
+            [
+                ("ListConstruct", ops.listconstruct),
+                ("TupleConstruct", ops.tupleconstruct),
+            ],
+        ),
+    )
+    def test_arrayconstruct_nonscalar(self, context, shape1, shape2, array_type):
+        tensor1 = torch.rand(shape1)
+        tensor2 = torch.rand(shape2)
+        array_kind = array_type[0]
+        array_op = array_type[1]
+        constants, input_list, output_name = self._gen_constants(2, [tensor1, tensor2])
+        ac_node = InternalTorchIRNode(
+            kind=array_kind, inputs=input_list, outputs=[output_name],
+        )
+        ssa = self._construct_test_graph(
+            context, array_op, ac_node, output_name, constants=constants
+        )
+        expected_val = (tensor1.numpy(), tensor2.numpy())
+        np.testing.assert_equal(len(ssa), 2)
+        for x, y in zip(ssa, expected_val):
+            np.testing.assert_allclose(x.val, y)
 
     @pytest.mark.parametrize(
         "input_shape, dim0, dim1",
@@ -912,6 +968,46 @@ class TestTorchOps:
         ).numpy()
         assert np.allclose(expected_result.shape, ssa.shape)
 
+    @pytest.mark.parametrize("axis", [0, 1, 2, 3, 4])
+    def test_stack(self, context, axis):
+        input_shape = (1, 3, 240, 320)
+
+        test_input1 = torch.rand(input_shape)
+        test_input2 = torch.rand(input_shape)
+        const_input = torch.rand(input_shape)
+
+        graph_inputs = {
+            "input1": cb.placeholder(input_shape, dtype=builtins.float),
+            "input2": cb.placeholder(input_shape, dtype=builtins.float),
+        }
+        dim_node = InternalTorchIRNode(
+            attr={"value": axis}, kind="constant", inputs=[], outputs=["0"],
+        )
+        const_tensor_node = InternalTorchIRNode(
+            attr={"value": const_input.numpy()},
+            kind="constant",
+            inputs=[],
+            outputs=["1"],
+        )
+        listconstruct_node = InternalTorchIRNode(
+            kind="listconstruct", inputs=["1", "input1", "input2"], outputs=["2"]
+        )
+        stack_node = InternalTorchIRNode(
+            kind="stack", inputs=["2", "0"], outputs=["output"]
+        )
+
+        with SsaFunction(inputs=graph_inputs) as ssa_func:
+            context.add(ssa_func.inputs["input1"])
+            context.add(ssa_func.inputs["input2"])
+            ops.constant(context, dim_node)
+            ops.constant(context, const_tensor_node)
+            ops.listconstruct(context, listconstruct_node)
+            ops.stack(context, stack_node)
+
+        ssa = context["output"]
+        expected_result = np.stack((const_input, test_input1, test_input2), axis=axis)
+        assert np.allclose(expected_result.shape, ssa.shape)
+
     def test_item(self, context):
         const_val = 0
         constants, input_list, output_name = self._gen_constants(1, [const_val])
@@ -970,53 +1066,6 @@ class TestTorchOps:
         )
         assert ssa.val == None
         assert ssa.shape == input_shape
-
-    @pytest.mark.parametrize(
-        "scales_h, scales_w, output_size, align_corners",
-        [
-            x
-            for x in itertools.product(
-                [None], [None], [(10, 10), (1, 1), (20, 20)], [0, 1]
-            )
-        ]
-        + [x for x in itertools.product([2, 3], [4, 5], [None], [1, 0])],
-    )
-    def test_upsample_bilinear2d(
-        self, context, scales_h, scales_w, output_size, align_corners
-    ):
-        # Does not have value inference so we don't need to a separate constant test
-        test_input = torch.rand((1, 3, 10, 10))
-        graph_inputs = {
-            "input": cb.placeholder(tuple(test_input.shape), dtype=builtins.float)
-        }
-        if scales_h:
-            constants, constant_input_list, output_name = self._gen_constants(
-                4, [output_size, align_corners, scales_h, scales_w]
-            )
-        else:
-            constants, constant_input_list, output_name = self._gen_constants(
-                2, [output_size, align_corners]
-            )
-        upsample_node = InternalTorchIRNode(
-            kind="upsample_bilinear2d",
-            inputs=["input"] + constant_input_list,
-            outputs=[output_name],
-        )
-        ssa = self._construct_test_graph(
-            context,
-            ops.upsample_bilinear2d,
-            upsample_node,
-            output_name,
-            graph_inputs=graph_inputs,
-            constants=constants,
-        )
-        kwargs = {"mode": "bilinear", "align_corners": bool(align_corners)}
-        if output_size:
-            kwargs["size"] = output_size
-        else:
-            kwargs["scale_factor"] = (scales_h, scales_w)
-        expected_shape = nn.functional.interpolate(test_input, **kwargs).shape
-        assert ssa.shape == tuple(expected_shape)
 
     @pytest.mark.parametrize("shape", [(1, 2), (2, 3, 4, 5), (3, 4, 5),])
     def test_ones(self, context, shape):
@@ -1631,3 +1680,24 @@ class TestTorchOps:
         )
         expected_result = torch.tanh(test_input)
         assert np.allclose(expected_result.numpy(), ssa.val)
+
+    @pytest.mark.parametrize(
+        "input_shape, dim, keepdim",
+        itertools.product([(3, 20, 20), (1, 50, 50)], [0, 1, 2], [False]),
+        # TODO: test for @keepdim==True when the backend bug is fixed.
+        # rdar://62566799
+    )
+    def test_argmax(self, context, input_shape, dim, keepdim):
+        test_input = torch.rand(*input_shape)
+
+        constants, input_list, output_name = self._gen_constants(
+            4, [test_input, dim, keepdim, None]
+        )
+        node = InternalTorchIRNode(
+            kind="argmax", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.argmax, node, output_name, constants=constants
+        )
+        expected_result = torch.argmax(test_input, dim, keepdim)
+        np.testing.assert_allclose(expected_result, ssa.val)

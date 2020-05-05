@@ -16,6 +16,15 @@ def connect_edge(g, source, dest):
     dest.inputs.append(source.name)
 
 
+def connect_edge_at_index(g, source, dest, idx):
+    if isinstance(source, six.string_types):
+        source = g[source]
+    if isinstance(dest, six.string_types):
+        dest = g[dest]
+    source.outputs.insert(idx, dest.name)
+    dest.inputs.insert(idx, source.name)
+
+
 def replace_source(g, source, dest, new_source):
     if isinstance(source, six.string_types):
         source = g[source]

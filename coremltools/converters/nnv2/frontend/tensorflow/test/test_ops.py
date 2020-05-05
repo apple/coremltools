@@ -244,24 +244,48 @@ class TestWhere:
                            use_cpu_only=use_cpu_only, backend=backend)
 
 
-class TestControlFlowCond:
+class TestCond:
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+                             itertools.product(
+                                 [True, False],
+                                 ['nnv1_proto'],
+                             ))
+    def test_cond_naive(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
+            return tf.cond(tf.constant(True), lambda: x + y, lambda: x * y)
+
+        model, inputs, outputs = build_model
+        input_values = [
+            np.array([1], dtype=np.float32),
+            np.array([6], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(
+            model, input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend)
+
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
                                  backends,
                              ))
     def test_cond(self, use_cpu_only, backend):
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=(1,))
-            y = tf.placeholder(tf.float32, shape=(1,))
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
             z = tf.multiply(x, y)
             pred = tf.less(tf.math.reduce_mean(x), tf.math.reduce_mean(y))
-            res = tf.cond(pred, lambda: tf.add(x, z), lambda: tf.square(y))
-            run_compare_tf(graph,
-                           {x: np.array([1], dtype=np.float32),
-                            y: np.array([2], dtype=np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            return tf.cond(pred, lambda: tf.add(x, z), lambda: tf.square(y))
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([1], dtype=np.float32),
+                        np.array([2], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
@@ -269,9 +293,53 @@ class TestControlFlowCond:
                                  backends,
                              ))
     def test_cond_multi_returns(self, use_cpu_only, backend):
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=(1,))
-            y = tf.placeholder(tf.float32, shape=(1,))
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
+            z = tf.multiply(x, y)
+            pred = tf.less(tf.math.reduce_mean(x), tf.math.reduce_mean(y))
+
+            def true_fn(): return tf.add(x, z), tf.math.multiply(x, z)
+
+            def false_fn(): return tf.square(y), tf.sqrt(z)
+
+            return tf.cond(pred, true_fn, false_fn)
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([1], dtype=np.float32),
+                        np.array([2], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_cond_with_identity(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
+            z = tf.multiply(x, y)
+            pred = tf.less(tf.math.reduce_mean(x), tf.math.reduce_mean(y))
+            return tf.cond(pred, lambda: z, lambda: tf.square(y))
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([1], dtype=np.float32),
+                        np.array([2], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_cond_multi_returns_with_identity(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
             z = tf.multiply(x, y)
             pred = tf.less(tf.math.reduce_mean(x), tf.math.reduce_mean(y))
 
@@ -279,33 +347,164 @@ class TestControlFlowCond:
 
             def false_fn(): return tf.square(y), z
 
-            res = tf.cond(pred, true_fn, false_fn)
-            run_compare_tf(graph,
-                           {x: np.array([1], dtype=np.float32),
-                            y: np.array([2], dtype=np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            return tf.cond(pred, true_fn, false_fn)
 
+        model, inputs, outputs = build_model
+        input_values = [np.array([1], dtype=np.float32),
+                        np.array([2], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
 
-class TestWhileLoop:
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],
-                                 ['nnv1_proto'],
+                                 backends,
                              ))
-    def test_while_loop(self, use_cpu_only, backend):
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=(1,))
-            y = tf.placeholder(tf.float32, shape=(1,))
+    def test_cond_nested_0(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
+            z = tf.multiply(x, y)
+            t = tf.less(tf.math.reduce_mean(x), tf.math.reduce_mean(y))
+            f = tf.less(tf.math.reduce_mean(z), tf.math.reduce_mean(y))
+            inner_cond = tf.cond(
+                f, lambda: tf.pow(x, y), lambda: tf.math.subtract(x, y))
+            return tf.cond(t, lambda: inner_cond, lambda: tf.square(y))
+
+        model, inputs, outputs = build_model
+
+        input_values = [np.array([2], dtype=np.float32),
+                        np.array([3], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_cond_nested_1(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
+            z = tf.multiply(x, y)
+            t = tf.less(tf.math.reduce_mean(x), tf.math.reduce_mean(y))
+            f = tf.less(tf.math.reduce_mean(z), tf.math.reduce_mean(y))
+            cond_1 = tf.cond(
+                f, lambda: tf.pow(x, y), lambda: tf.math.subtract(x, y))
+            cond_2 = tf.cond(
+                t, lambda: tf.multiply(x, y), lambda: tf.math.mod(x, y))
+            cond_3 = tf.cond(
+                f, lambda: tf.math.divide(x, y), lambda: cond_2)
+            return tf.cond(t, lambda: cond_1, lambda: cond_3)
+
+        model, inputs, outputs = build_model
+
+        input_values = [np.array([2], dtype=np.float32),
+                        np.array([3], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
+class TestWhileLoop:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends))
+    def test_while_loop_0(self, use_cpu_only, backend):
+        @make_tf_graph([(1,)])
+        def build_model(x):
+            c = lambda i: tf.greater(tf.math.reduce_mean(i), 5)
+            b = lambda i: i - 1
+            return tf.while_loop(c, b, [x])
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([10], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends))
+    def test_while_loop_1(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
             c = lambda i, j: \
-                tf.less(tf.math.reduce_mean(i), tf.math.reduce_mean(j))
-            b = lambda i, j: (tf.add(i, 1), j)
-            res = tf.while_loop(c, b, [x, y])
-            run_compare_tf(graph,
-                           {x: np.array([1], dtype=np.float32),
-                            y: np.array([2], dtype=np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                tf.greater(tf.math.reduce_mean(i), tf.math.reduce_mean(j))
+            b = lambda i, j: (tf.add(i, 1), tf.square(j))
+            return tf.while_loop(c, b, [x, y])
+
+        model, inputs, outputs = build_model
+        input_values = [
+            np.array([1], dtype=np.float32),
+            np.array([2], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(
+            model,
+            input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends))
+    def test_while_loop_2(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1, 2)])
+        def build_model(x, y):
+            c = lambda i, j: tf.greater(tf.math.reduce_mean(i), 5)
+            b = lambda i, j: (i - 3, j * 2)
+            return tf.while_loop(c, b, [x, y])
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([10], dtype=np.float32),
+                        np.array([[2, 3]], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends))
+    def test_while_loop_3(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1, 2), (1,)])
+        def build_model(x, y, z):
+            c = lambda i, j, k: tf.greater(tf.math.reduce_mean(i), tf.math.reduce_mean(j))
+            b = lambda i, j, k: (i / 3, j ** 2, k - 2)
+            return tf.while_loop(c, b, [x, y, z])
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([10], dtype=np.float32),
+                        np.array([[2, 3]], dtype=np.float32),
+                        np.array([5], dtype=np.float32)
+                        ]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends))
+    def test_while_loop_4(self, use_cpu_only, backend):
+        @make_tf_graph([(1,), (1, 2), (1,), (2, 1)])
+        def build_model(x, y, z, m):
+            c = lambda i, j, k, l: tf.greater(
+                tf.math.reduce_mean(i), tf.math.reduce_mean(j))
+            b = lambda i, j, k, l: (i / 3, j ** 2, k - 2, l % 2)
+            return tf.while_loop(c, b, [x, y, z, m])
+
+        model, inputs, outputs = build_model
+        input_values = [
+            np.array([10], dtype=np.float32),
+            np.array([[2, 3]], dtype=np.float32),
+            np.array([5], dtype=np.float32),
+            np.array([[2], [3]], dtype=np.float32),
+        ]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
@@ -313,7 +512,8 @@ class TestWhileLoop:
                                  backends,
                              ))
     def test_nested_while_body(self, use_cpu_only, backend):
-        with tf.Graph().as_default() as graph:
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
             # The following while loop:
             #
             # i, j = 0, 10
@@ -321,8 +521,6 @@ class TestWhileLoop:
             #   while 2*i < i+2:
             #     i += 1
             #   i += 2
-            x = tf.placeholder(tf.float32, shape=(1,))
-            y = tf.placeholder(tf.float32, shape=(1,))
 
             def cond2(i):
                 return tf.less(2 * tf.math.reduce_mean(i), tf.math.reduce_mean(i + 2))
@@ -337,12 +535,15 @@ class TestWhileLoop:
                 new_i = tf.while_loop(cond2, body2, [i])
                 return new_i + 2, j
 
-            res = tf.while_loop(cond1, body1, [x, y])
-            run_compare_tf(graph,
-                           {x: np.array([0], dtype=np.float32),
-                            y: np.array([10], dtype=np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            return tf.while_loop(cond1, body1, [x, y])
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([0], dtype=np.float32),
+                        np.array([10], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
@@ -350,7 +551,9 @@ class TestWhileLoop:
                                  backends,
                              ))
     def test_nested_while_cond(self, use_cpu_only, backend):
-        with tf.Graph().as_default() as graph:
+
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
             # The following while loop:
             #
             # def cond(i, j):
@@ -362,8 +565,6 @@ class TestWhileLoop:
             # while cond(i, j):
             #   i += 2
             #   j += 1
-            x = tf.placeholder(tf.float32, shape=(1,))
-            y = tf.placeholder(tf.float32, shape=(1,))
 
             def cond2(i):
                 return tf.less(2 * tf.math.reduce_mean(i), tf.math.reduce_mean(i + 2))
@@ -378,12 +579,15 @@ class TestWhileLoop:
             def body1(i, j):
                 return i + 2, j + 1
 
-            res = tf.while_loop(cond1, body1, [x, y])
-            run_compare_tf(graph,
-                           {x: np.array([0], dtype=np.float32),
-                            y: np.array([10], dtype=np.float32)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+            return tf.while_loop(cond1, body1, [x, y])
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([0], dtype=np.float32),
+                        np.array([10], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
 
 
 class TestConv:
@@ -693,58 +897,63 @@ class TestElementWiseBinary:
         else:
             dtype = np.float16
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            if mode == 'add':
-                res = tf.add(x, y)
-                x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)
-            elif mode == 'floor_div':
-                res = tf.floor_div(x, y)
-                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
-            elif mode == 'floor_mod':
-                res = tf.floormod(x, y)
-                x_val = np.random.randint(low=0, high=100, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
-            elif mode == 'maximum':
-                res = tf.maximum(x, y)
-                x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(dtype)
-            elif mode == 'minimum':
-                res = tf.minimum(x, y)
-                x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(dtype)
-            elif mode == 'mod':
-                res = tf.mod(x, y)
-                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
-            elif mode == 'mul':
-                res = tf.multiply(x, y)
-                x_val = np.random.randint(low=-100, high=100, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=-100, high=100, size=y_shape).astype(dtype)
-            elif mode == 'pow':
-                res = tf.pow(x, y)
-                x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(dtype)
-            elif mode == 'real_div':
-                res = tf.truediv(x, y)
-                x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
-            elif mode == 'sub':
-                res = tf.subtract(x, y)
-                x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)
-            elif mode == 'squared_difference':
-                if backend == 'nnv2_proto': return  # TODO
-                res = tf.math.squared_difference(x, y)
-                x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(dtype)
-                y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(dtype)
+        if mode == 'add':
+            res = tf.math.add
+            x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)
+        elif mode == 'floor_div':
+            res = tf.math.floordiv
+            x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
+        elif mode == 'floor_mod':
+            res = tf.math.floormod
+            x_val = np.random.randint(low=0, high=100, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
+        elif mode == 'maximum':
+            res = tf.math.maximum
+            x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(dtype)
+        elif mode == 'minimum':
+            res = tf.math.minimum
+            x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(dtype)
+        elif mode == 'mod':
+            res = tf.math.mod
+            x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
+        elif mode == 'mul':
+            res = tf.math.multiply
+            x_val = np.random.randint(low=-100, high=100, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=-100, high=100, size=y_shape).astype(dtype)
+        elif mode == 'pow':
+            res = tf.math.pow
+            x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(dtype)
+        elif mode == 'real_div':
+            res = tf.math.truediv
+            x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
+        elif mode == 'sub':
+            res = tf.math.subtract
+            x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)
+        elif mode == 'squared_difference':
+            if backend == 'nnv2_proto': return  # TODO
+            res = tf.math.squared_difference
+            x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(dtype)
+            y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(dtype)
 
-            run_compare_tf(graph, {x: x_val, y: y_val},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+        @make_tf_graph([x_shape, y_shape])
+        def build_model(x, y):
+            return res(x, y)
+
+        model, inputs, outputs = build_model
+
+        input_values = [x_val, y_val]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
@@ -766,14 +975,18 @@ class TestElementWiseBinary:
         else:
             dtype = np.float16
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+        @make_tf_graph([x_shape, y_shape])
+        def build_model(x, y):
+            return tf.equal(x, y)
+
+        model, inputs, outputs = build_model
+
+        input_values = [np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                        np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
@@ -795,14 +1008,18 @@ class TestElementWiseBinary:
         else:
             dtype = np.float16
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.greater(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+        @make_tf_graph([x_shape, y_shape])
+        def build_model(x, y):
+            return tf.greater(x, y)
+
+        model, inputs, outputs = build_model
+
+        input_values = [np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                        np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
@@ -824,14 +1041,18 @@ class TestElementWiseBinary:
         else:
             dtype = np.float16
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.greater_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+        @make_tf_graph([x_shape, y_shape])
+        def build_model(x, y):
+            return tf.greater_equal(x, y)
+
+        model, inputs, outputs = build_model
+
+        input_values = [np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                        np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
@@ -852,15 +1073,19 @@ class TestElementWiseBinary:
             dtype = np.float32
         else:
             dtype = np.float16
+        
+        @make_tf_graph([x_shape, y_shape])
+        def build_model(x, y):
+            return tf.less(x, y)
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.less(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+        model, inputs, outputs = build_model
+
+        input_values = [np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                        np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
@@ -882,14 +1107,18 @@ class TestElementWiseBinary:
         else:
             dtype = np.float16
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.less_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+        @make_tf_graph([x_shape, y_shape])
+        def build_model(x, y):
+            return tf.less_equal(x, y)
+
+        model, inputs, outputs = build_model
+
+        input_values = [np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                        np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
                              itertools.product(
@@ -910,15 +1139,19 @@ class TestElementWiseBinary:
             dtype = np.float32
         else:
             dtype = np.float16
+        
+        @make_tf_graph([x_shape, y_shape])
+        def build_model(x, y):
+            return tf.not_equal(x, y)
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            y = tf.placeholder(tf.float32, shape=y_shape)
-            res = tf.not_equal(x, y)
-            run_compare_tf(graph, {x: np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-                                   y: np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+        model, inputs, outputs = build_model
+
+        input_values = [np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
+                        np.random.randint(low=-5, high=3, size=y_shape).astype(dtype)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestElementWiseUnary:
@@ -1164,6 +1397,7 @@ class TestImageResizing:
                                               padding=padding)
             run_compare_tf(graph, {x: input}, output, use_cpu_only=use_cpu_only, backend=backend)
 
+
 class TestLinear:
     @pytest.mark.parametrize('use_cpu_only, backend, dim, transpose_a, transpose_b, use_constant',
                              itertools.product(
@@ -1176,22 +1410,25 @@ class TestLinear:
     def test_matmul(self, use_cpu_only, backend, dim, transpose_a, transpose_b, use_constant):
         shape_x = np.array([dim, dim])
         shape_y = shape_x if transpose_b else np.flip(shape_x, axis=-1)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape_x)
-            y = tf.placeholder(tf.float32, shape=shape_y)
 
-            if not use_constant:
-                res = tf.linalg.matmul(x, y, transpose_a=transpose_a, transpose_b=transpose_b)
-                run_compare_tf(graph, {
-                    x: random_gen(shape_x, rand_min=-100, rand_max=100),
-                    y: random_gen(shape_y, rand_min=-1., rand_max=1.)},
-                               res, use_cpu_only=use_cpu_only, backend=backend)
-            else:
-                y = tf.constant(np.random.rand(dim, dim).astype(np.float32))
-                res = tf.linalg.matmul(x, y, transpose_a=transpose_a, transpose_b=transpose_b)
-                run_compare_tf(graph, {
-                    x: random_gen(shape_x, rand_min=-100, rand_max=100)},
-                               res, use_cpu_only=use_cpu_only, backend=backend)
+        if not use_constant:
+            @make_tf_graph([shape_x, shape_y])
+            def build_model(x, y):
+                return tf.linalg.matmul(x, y, transpose_a=transpose_a, transpose_b=transpose_b)
+            input_values = [random_gen(shape=shape_x, rand_min=-100, rand_max=100),
+                            random_gen(shape=shape_y, rand_min=-1., rand_max=1.)]
+        else:
+            y = random_gen(shape=shape_y, rand_min=-1., rand_max=1.)
+            @make_tf_graph([shape_x])
+            def build_model(x):
+                return tf.linalg.matmul(x, y, transpose_a=transpose_a, transpose_b=transpose_b)
+            input_values = [random_gen(shape=shape_x, rand_min=-100, rand_max=100)]
+
+        model, inputs, outputs = build_model
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestNormalization:
@@ -1204,30 +1441,32 @@ class TestNormalization:
                                  [1e-1, 1e-10]
                              ))
     def test_batch_norm(self, use_cpu_only, backend, rank, shape_mode, epsilon):
-        shape = np.random.randint(low=1, high=6, size=rank)
+        input_shape = np.random.randint(low=1, high=6, size=rank)
         if shape_mode:
             # same shape with 1 for being normalized over
-            attr_shape = list(shape)
+            attr_shape = list(input_shape)
             attr_shape[1] = 1
             attr_shape[2] = 1
         else:
             # 1D tensor of the same size as channel dimension
-            attr_shape = list(shape)[-1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            m = tf.placeholder(tf.float32, shape=attr_shape)
-            v = tf.placeholder(tf.float32, shape=attr_shape)
-            o = tf.placeholder(tf.float32, shape=attr_shape)
-            s = tf.placeholder(tf.float32, shape=attr_shape)
-            ref = tf.nn.batch_normalization(
+            attr_shape = [list(input_shape)[-1]]
+
+        @make_tf_graph([input_shape, attr_shape, attr_shape, attr_shape, attr_shape])
+        def build_model(x, m, v, o, s):
+            return tf.nn.batch_normalization(
                 x, mean=m, variance=v, offset=o, scale=s, variance_epsilon=epsilon)
-            run_compare_tf(graph, {
-                x: random_gen(shape=shape, rand_min=-100., rand_max=100.),
-                m: random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
-                v: random_gen(shape=attr_shape, rand_min=0., rand_max=10.),
-                o: random_gen(shape=attr_shape, rand_min=1., rand_max=10.),
-                s: random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
-            }, ref, use_cpu_only=use_cpu_only, backend=backend, atol=1e-2, rtol=1e-3)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100., rand_max=100.),
+                        random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
+                        random_gen(shape=attr_shape, rand_min=0., rand_max=10.),
+                        random_gen(shape=attr_shape, rand_min=1., rand_max=10.),
+                        random_gen(shape=attr_shape, rand_min=-1., rand_max=1.)]
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only,backend=backend,
+            atol=1e-2, rtol=1e-3)
 
     @pytest.mark.parametrize('use_cpu_only, backend, rank, shape_mode, epsilon, scale_after_normalization',
                              itertools.product(
@@ -1240,27 +1479,42 @@ class TestNormalization:
                              ))
     def test_batch_norm_with_global_normalization(
             self, use_cpu_only, backend, rank, shape_mode, epsilon, scale_after_normalization):
-        shape = np.random.randint(low=1, high=6, size=rank)
+        input_shape = np.random.randint(low=1, high=6, size=rank)
         if shape_mode:
             # same shape with 1 for being normalized over
-            attr_shape = list(shape)
+            attr_shape = list(input_shape)
             attr_shape[1] = 1
             attr_shape[2] = 1
         else:
             # 1D tensor of the same size as channel dimension
-            attr_shape = list(shape)[-1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            m = tf.placeholder(tf.float32, shape=attr_shape)
-            v = tf.placeholder(tf.float32, shape=attr_shape)
-            ref = tf.nn.batch_norm_with_global_normalization(
-                x, mean=m, variance=v, variance_epsilon=epsilon,
-                scale_after_normalization=scale_after_normalization)
-            run_compare_tf(graph, {
-                x: random_gen(shape=shape, rand_min=-100., rand_max=100.),
-                m: random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
-                v: random_gen(shape=attr_shape, rand_min=0., rand_max=10.),
-            }, ref, use_cpu_only=use_cpu_only, backend=backend, atol=1e-2, rtol=1e-3)
+            attr_shape = [list(input_shape)[-1]]
+
+        if scale_after_normalization:
+            @make_tf_graph([input_shape, attr_shape, attr_shape, attr_shape, attr_shape])
+            def build_model(x, m, v, b, g):
+                return tf.nn.batch_norm_with_global_normalization(
+                    x, mean=m, variance=v, beta=b, gamma=g, variance_epsilon=epsilon,
+                    scale_after_normalization=scale_after_normalization)
+        else:
+            @make_tf_graph([input_shape, attr_shape, attr_shape, attr_shape])
+            def build_model(x, m, v, b):
+                return tf.nn.batch_norm_with_global_normalization(
+                    x, mean=m, variance=v, beta=b, gamma=None, variance_epsilon=epsilon,
+                    scale_after_normalization=scale_after_normalization)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100., rand_max=100.),
+                        random_gen(shape=attr_shape, rand_min=-1., rand_max=1.),
+                        random_gen(shape=attr_shape, rand_min=0., rand_max=10.),
+                        random_gen(shape=attr_shape, rand_min=1., rand_max=10.)]
+        if scale_after_normalization:
+            input_values.append(random_gen(shape=attr_shape, rand_min=-1., rand_max=1.))
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+            atol=1e-2, rtol=1e-3)
 
     @pytest.mark.parametrize('use_cpu_only, backend, epsilon',
                              itertools.product(
@@ -1270,20 +1524,27 @@ class TestNormalization:
                              ))
     def test_fused_batch_norm(self, use_cpu_only, backend, epsilon):
         # TensorFlow's FusedBatchNorm is only for 4D inputs
-        shape = np.random.randint(low=1, high=6, size=4)
-        attr_shape = list(shape)[-1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            m = tf.constant(random_gen(shape=attr_shape, rand_min=-1., rand_max=1.))
-            v = tf.constant(random_gen(shape=attr_shape, rand_min=0., rand_max=10.))
-            o = tf.constant(random_gen(shape=attr_shape, rand_min=1., rand_max=10.))
-            s = tf.constant(random_gen(shape=attr_shape, rand_min=-1., rand_max=1.))
-            ref = tf.nn.fused_batch_norm(x, mean=m, variance=v, offset=o, scale=s,
-                                         epsilon=epsilon, is_training=False)
-            ref = ref[0]
-            run_compare_tf(graph, {
-                x: random_gen(shape=shape, rand_min=-100., rand_max=100.),
-            }, ref, use_cpu_only=use_cpu_only, backend=backend, atol=1e-2, rtol=1e-3)
+        input_shape = np.random.randint(low=1, high=6, size=4)
+        attr_shape = [list(input_shape)[-1]]
+
+        m = random_gen(shape=attr_shape, rand_min=-1., rand_max=1.)
+        v = random_gen(shape=attr_shape, rand_min=0., rand_max=10.)
+        o = random_gen(shape=attr_shape, rand_min=1., rand_max=10.)
+        s = random_gen(shape=attr_shape, rand_min=-1., rand_max=1.)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.compat.v1.nn.fused_batch_norm(x, mean=m, variance=v, offset=o, scale=s,
+                                         epsilon=epsilon, is_training=False)[0]
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100., rand_max=100.)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+        atol=1e-2, rtol=1e-3)
 
     #FIXME: <rdar://62070514> TF1 Op Test: Investigate test_l2_normalize.
     @pytest.mark.xfail(reason="Investigate behavior in <rdar://62070514>", run=False)
@@ -1315,14 +1576,21 @@ class TestNormalization:
                              ))
     def test_local_response_normalization(self, use_cpu_only, backend, size, alpha, beta, k):
         # TensorFlow's local_response_normalization only supports rank 4
-        shape = np.random.randint(low=3, high=6, size=4)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.nn.local_response_normalization(
+        input_shape = np.random.randint(low=3, high=6, size=4)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.local_response_normalization(
                 x, depth_radius=size, bias=k, alpha=alpha, beta=beta)
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend,
-                           atol=1e-2, rtol=1e-3)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100, rand_max=100)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+        atol=1e-2, rtol=1e-3)
 
 
 class TestPooling1d:
@@ -1335,26 +1603,18 @@ class TestPooling1d:
                                  ['same', 'valid']))
     def test_avg_pool_1d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
         input_shape = np.random.randint(low=2, high=6, size=3)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.avg_pool1d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                           res, use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1,), (2,), (1, 1), (1, 2), (2, 2)],
-                                 [(1,), (2,), (1, 1), (1, 2), (2, 2)],
-                                 ['same', 'valid']))
-    def test_avg_pool_2d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        shape = np.random.randint(low=2, high=6, size=4)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.nn.avg_pool(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                           res, use_cpu_only=use_cpu_only, backend=backend)
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.avg_pool1d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100, rand_max=100)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
                              itertools.product(
@@ -1365,11 +1625,18 @@ class TestPooling1d:
                                  ['same', 'valid']))
     def test_max_pool_1d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
         input_shape = np.random.randint(low=2, high=6, size=3)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            res = tf.nn.max_pool1d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                           res, use_cpu_only=use_cpu_only, backend=backend)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.max_pool1d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100, rand_max=100)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
 class TestPooling2d:
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
@@ -1379,13 +1646,42 @@ class TestPooling2d:
                                  [(1,), (2,), (1, 1), (1, 2), (2, 2)],
                                  [(1,), (2,), (1, 1), (1, 2), (2, 2)],
                                  ['same', 'valid']))
+    def test_avg_pool_2d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
+        input_shape = np.random.randint(low=2, high=6, size=4)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.avg_pool(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100, rand_max=100)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(1,), (2,), (1, 1), (1, 2), (2, 2)],
+                                 [(1,), (2,), (1, 1), (1, 2), (2, 2)],
+                                 ['same', 'valid']))
     def test_max_pool_2d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        shape = np.random.randint(low=2, high=6, size=4)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.nn.max_pool(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                           res, use_cpu_only=use_cpu_only, backend=backend)
+        input_shape = np.random.randint(low=2, high=6, size=4)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.max_pool(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100, rand_max=100)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestPooling3d:
@@ -1397,12 +1693,19 @@ class TestPooling3d:
                                  [(1,), (2,), (1, 1, 1), (1, 2, 3), (2, 2, 3), (3, 3, 3)],
                                  ['same', 'valid']))
     def test_avg_pool_3d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        shape = np.random.randint(low=3, high=6, size=5)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.nn.avg_pool3d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                           res, use_cpu_only=use_cpu_only, backend=backend)
+        input_shape = np.random.randint(low=3, high=6, size=5)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.avg_pool3d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100, rand_max=100)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize('use_cpu_only, backend, kernel_sizes, strides, pad_type',
                              itertools.product(
@@ -1412,12 +1715,19 @@ class TestPooling3d:
                                  [(1,), (2,), (1, 1, 1), (1, 2, 3), (2, 2, 3), (3, 3, 3)],
                                  ['same', 'valid']))
     def test_max_pool_3d(self, use_cpu_only, backend, kernel_sizes, strides, pad_type):
-        shape = np.random.randint(low=3, high=6, size=5)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.nn.max_pool3d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                           res, use_cpu_only=use_cpu_only, backend=backend)
+        input_shape = np.random.randint(low=3, high=6, size=5)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.max_pool3d(x, ksize=kernel_sizes[:], strides=strides[:], padding=pad_type.upper())
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape=input_shape, rand_min=-100, rand_max=100)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
 
 class TestRandom:
@@ -1784,10 +2094,32 @@ class TestSlice:
                            x[1],
                            x[:],
                            x[...,::-1],
+                           x[:,:,1]
                         ]
             for res in testcases:
                 run_compare_tf(graph, {x: x_val},
                                 res, use_cpu_only=use_cpu_only, backend=backend)
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 backends
+                                 ))
+    def test_slice_by_index_smoke(self, use_cpu_only, backend):
+
+        def test_two_slice_ops():
+            shape = [1,64,2]
+            x_val = np.random.rand(*shape).astype(np.float32)
+            y_val = np.random.rand(*shape).astype(np.float32)
+            with tf.Graph().as_default() as graph:
+                x = tf.placeholder(tf.float32, shape=shape)
+                y = tf.placeholder(tf.float32, shape=shape)
+                x_slice = x[:,:,0]
+                y_slice = y[:,:,0]
+                res = (x_slice, y_slice)
+                run_compare_tf(graph, {x: x_val, y: y_val},
+                               res, use_cpu_only=use_cpu_only, backend=backend)
+        test_two_slice_ops()
 
     @pytest.mark.parametrize('use_cpu_only, backend, rank, single_size',
                              itertools.product(
@@ -2016,15 +2348,17 @@ class TestPad:
             padding_val[perm[:-2]] = 0
 
         tf_mode = mode.upper()
-        tf.reset_default_graph()
-        input = random_gen(input_shape, rand_min=0.2, rand_max=1000)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            paddings = tf.constant(padding_val)
-            res = tf.pad(x, paddings=paddings, mode=tf_mode)
-            run_compare_tf(graph, {x: input},
-                           res, use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.pad(x, paddings=padding_val, mode=tf_mode)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, rand_min=0.2, rand_max=1000)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestRange:
@@ -2617,3 +2951,104 @@ class TestBroadcastTo:
         run_compare_tf(model, input_dict, outputs,
                        use_cpu_only=use_cpu_only,
                        backend=backend)
+
+class TestLSTMBlockCell:
+    @pytest.mark.parametrize("use_cpu_only, backend, batch, return_hc_only",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [1, 2],
+                                 [True, False],
+                             )
+                             )
+    def test_tf_no_variable(self, use_cpu_only, batch, backend, return_hc_only):
+        """
+        If return_hc_only == True, the op can be mapped to cb.lstm.
+        Otherwise it has to be expanded.
+        """
+        # _lstm_block_cell allows fine-grained control of W, peephole etc
+        from tensorflow.contrib.rnn.python.ops.lstm_ops import _lstm_block_cell
+        actual_len, padded_len = 3, 4
+        input_dim, hidden_dim = 2, 3
+        x_shape = (batch, input_dim)
+        init_h = np.random.rand(batch, hidden_dim).astype(np.float32)
+        init_c = np.random.rand(batch, hidden_dim).astype(np.float32)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=x_shape)
+            res = _lstm_block_cell(x,
+                    tf.constant(init_c),
+                    tf.constant(init_h),
+                    w=tf.constant(np.random.rand(input_dim+hidden_dim,
+                        4*hidden_dim).astype(np.float32)),
+                    b=tf.constant(np.random.rand(4*hidden_dim).astype(np.float32)),
+                    use_peephole=True,
+                    wci=tf.constant(np.random.rand(hidden_dim).astype(np.float32)),
+                    wcf=tf.constant(np.random.rand(hidden_dim).astype(np.float32)),
+                    wco=tf.constant(np.random.rand(hidden_dim).astype(np.float32)),
+                    forget_bias=np.random.rand(),
+                    cell_clip=np.random.rand(),
+                    )
+            if return_hc_only:
+                # All other outputs aren't supported by cb.lstm.
+                res = res[1], res[6]
+
+            run_compare_tf(graph,
+                           {x: np.random.rand(*x_shape).astype(np.float32),},
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
+
+
+    @pytest.mark.parametrize("use_cpu_only, backend, batch",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [1, 2],
+                             )
+                             )
+    def test_tf_lstm_block_cell(self, use_cpu_only, backend, batch):
+        actual_len, padded_len = 3, 4
+        input_dim, hidden_dim = 2, 3
+        # [timelen, batch_size, num_inputs]
+        x_shape = (batch, input_dim)
+        init_h = np.random.rand(batch, hidden_dim).astype(np.float32)
+        init_c = np.random.rand(batch, hidden_dim).astype(np.float32)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=x_shape)
+            rnn_cell = tf.contrib.rnn.LSTMBlockCell(hidden_dim,
+                    use_peephole=True,
+                    forget_bias=np.random.rand())
+            res = rnn_cell(x, (init_h, init_c))
+            cs_new, h_new = res[1][0], res[1][1]
+            res = [h_new, cs_new]
+
+            run_compare_tf(graph,
+                           {x: np.random.rand(*x_shape).astype(np.float32),},
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend,
+                           # variable needs to be frozen
+                           freeze_graph=True)
+
+class TestVariable:
+
+    @pytest.mark.xfail(reason="Investigate get_global <rdar://62623458>", run=False)
+    @pytest.mark.parametrize("use_cpu_only, backend",
+                             itertools.product(
+                                 [True],
+                                 backends,
+                             )
+                             )
+    def test_tf_no_variable(self, use_cpu_only, backend):
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=[1, ], name='input')
+            y = tf.Variable([1.0], dtype=tf.float32, name='y')
+
+            # We set our assign op
+            assign_op = tf.assign(y, y + 10)
+
+            with tf.control_dependencies([assign_op]):
+                res = tf.multiply(x, y, name='output')
+
+            run_compare_tf(graph,
+                           {x: np.random.rand(1).astype(np.float32),},
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)

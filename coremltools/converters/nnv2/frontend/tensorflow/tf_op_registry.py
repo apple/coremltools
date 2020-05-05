@@ -1,8 +1,9 @@
 _TF_OPS_REGISTRY = {}
 
+
 def register_tf_op(_func=None, tf_alias=None, override=False):
     """
-    Registration routine for Tensorflow operators
+    Registration routine for TensorFlow operators
     _func: (TF conversion function) [Default=None]
         TF conversion function to register
 
@@ -18,6 +19,7 @@ def register_tf_op(_func=None, tf_alias=None, override=False):
         function.
         Otherwise, duplicate registration will error out.
     """
+
     def func_wrapper(func):
         f_name = func.__name__
 

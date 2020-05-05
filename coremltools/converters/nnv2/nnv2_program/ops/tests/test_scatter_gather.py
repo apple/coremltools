@@ -35,7 +35,7 @@ class TestScatter:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
+    @pytest.mark.skipif(not HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rankData_rankIndices_axis, accumulate_mode",
                              itertools.product(
                                  [True, False],
@@ -202,7 +202,7 @@ class TestScatterNd:
                             use_cpu_only=use_cpu_only, frontend_only=False,
                             backend=backend)
 
-    @pytest.mark.skipif(not HAS_TF1, reason=MSG_TF1_NOT_FOUND)
+    @pytest.mark.skipif(not HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize("use_cpu_only, backend, rankData_rankIndices, accumulate_mode",
                              itertools.product(
                                  [True, False],

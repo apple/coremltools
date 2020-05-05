@@ -69,18 +69,21 @@ class SSAFunction(object):
         self.graph = gdict
         self.inputs = [] if inputs is None else inputs
         self.outputs = [] if outputs is None else outputs
-
         self.input_types = []
         self.output_types = []
         check_connections(gdict)
-        self.find_inputs_and_outputs()
+
+        # respect TF inputs/outputs if given, otherwise, infer from the graph
+        # in currently implementation: TF1 will always infer from graph. TF2,
+        # on the other hand, respect the inputs/outputs provided.
+        if len(self.inputs) == 0 or len(self.outputs) == 0:
+            self.find_inputs_and_outputs()
+        else:
+            self.inputs, self.outputs = inputs, outputs
+            self.filter_inputs_and_outputs()
 
     def find_inputs_and_outputs(self):
         # solve for input and output vars
-        self.inputs = []
-        self.outputs = []
-        self.input_types = []
-        self.output_types = []
         sorted_keys = sorted(self.graph.keys())
 
         # we use function entry and exit points if available
@@ -113,6 +116,36 @@ class SSAFunction(object):
                 if len(v.outputs) == 0 and v.op != "set_global":
                     self.outputs.append(k)
                     self.output_types.append(v.datatype)
+
+    def filter_inputs_and_outputs(self):
+        """
+        Eliminate invalid input/output nodes in the given list. Should only be
+        invoked if the self.inputs and self.outputs are both provided and we
+        want to respect those when adding SSAFunctions. Only needed for TF2 for
+        now because of the needs to parse multiple functions in graph. TF1 only
+        has one "main" function.
+        """
+        filtered_inputs = []
+        filtered_outputs = []
+        for k in self.inputs:
+            if k not in self.graph.keys():
+                continue
+            v = self.graph[k]
+            if len(v.inputs) == 0 and v.op not in {'Const', 'get_global', 'NoOp'}:
+                filtered_inputs.append(k)
+                self.input_types.append(v.datatype)
+            elif len(v.inputs) != 0 and v.op == "Placeholder":
+                assert len(v.inputs) == 1, "This is not a PlaceholderWithDefault!"
+                filtered_inputs.append(k)
+                self.input_types.append(v.datatype)
+        for k in self.outputs:
+            if k not in self.graph.keys():
+                continue
+            v = self.graph[k]
+            if v.op == 'Placeholder' or (len(v.outputs) == 0 and v.op != "set_global"):
+                filtered_outputs.append(k)
+                self.output_types.append(v.datatype)
+        self.inputs, self.outputs = filtered_inputs, filtered_outputs
 
     def __copy__(self):
         ret = SSAFunction()
@@ -209,7 +242,7 @@ class NetworkEnsemble(object):
 
         Args:
             outputs: The outputs the new function must produce.
-            traget_inputs:
+            target_inputs:
             name: The name of the new function to create. If unspecified, a name will be generated
                   by joining output names.
         Returns:
@@ -398,12 +431,12 @@ class NetworkEnsemble(object):
             vis = DotVisitor(annotation)
             vis.highlight_nodes(v.inputs, 'yellow') \
                .highlight_nodes(const_nodes, 'azure2') \
-               .highlight_nodes(v.outputs,'goldenrod2') \
-               .highlight_nodes(unknown_sized_tensor_ops,'cyan2')
+               .highlight_nodes(v.outputs, 'goldenrod2') \
+               .highlight_nodes(unknown_sized_tensor_ops, 'cyan2')
             if len(highlight_debug_nodes) > 0:
                 vis.highlight_nodes(highlight_debug_nodes, 'green')
             if name_and_op_style:
-                vis.labeller(lambda n: n.name + ': ' + n.op)
+                vis.labeller(lambda n: n.name + ' (' + n.op + ')')
 
             res = vis.visit_all(
                 v.graph,

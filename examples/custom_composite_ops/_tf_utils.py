@@ -4,7 +4,6 @@ import six
 import numpy as np
 import tensorflow as tf
 import coremltools
-import coremltools.converters.nnv2.converter as converter
 from tensorflow.python.framework import dtypes
 
 def get_tf_node_names(tf_nodes, mode='inputs'):
@@ -105,8 +104,8 @@ def convert_tf1(graph, feed_dict, output_nodes):
     output_names = get_tf_node_names(output_nodes, mode='outputs')
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    spec = converter.convert(graph, convert_from='tensorflow',
-                                          inputs=input_names,
+    spec = coremltools.converter.convert(graph,
+                                         inputs=input_names,
                                          outputs=output_names)
     return spec
 
@@ -121,9 +120,7 @@ def convert_tf2(model, output_names):
         name = get_tf_node_names(t)[0]
         outputs.append(name)
 
-    proto = converter.convert(
-        model, convert_from='tensorflow2',
-        inputs=inputs, outputs=outputs)
+    proto = coremltools.converter.convert(model, inputs=inputs, outputs=outputs)
     return proto
     
 def compare_results(proto, tf_model, input_dict, output_names, atol=1e-04, rtol=1e-05):

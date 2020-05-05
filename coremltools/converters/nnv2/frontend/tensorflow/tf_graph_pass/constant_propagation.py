@@ -11,51 +11,49 @@ from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.builtins.type_mapping import numpy_val_to_builtin_val
 
 
-def constant_propagation(tfssa):
-    # we are going to rely on the tensorflow graph to perform constant
-    # propagation. We construct a new graph comprising of only the
-    # constant nodes.
-
+def _get_const_nodes(fn):
     from tensorflow.core.framework import graph_pb2
     from tensorflow.core.framework import node_def_pb2
     new_graph = graph_pb2.GraphDef()
     constant_nodes = set()
     constant_node_num_outputs = {}
-    for f in tfssa.functions.values():
-        generated_nodes = [k for k, v in f.graph.items() if v.original_node is None]
-        const_nodes_in_this_graph = const_determined_nodes(f.graph, set(generated_nodes))
-        # we can only run TF on nodes with outputs since we must evaluate
-        # tensors and not ops
-        const_nodes_in_this_graph = [
-            i for i in const_nodes_in_this_graph if f.graph[i].op != "NoOp"
-        ]
-        constant_nodes = constant_nodes.union(set(const_nodes_in_this_graph))
+    generated_nodes = [k for k, v in fn.graph.items() if v.original_node is None]
+    const_nodes_in_this_graph = const_determined_nodes(fn.graph, set(generated_nodes))
+    # we can only run TF on nodes with outputs since we must evaluate
+    # tensors and not ops
+    const_nodes_in_this_graph = [
+        i for i in const_nodes_in_this_graph if fn.graph[i].op != "NoOp"
+    ]
+    constant_nodes = constant_nodes.union(set(const_nodes_in_this_graph))
 
-        # topological sort const nodes
-        topsort = []
-        topsort_set = set()
-        while len(const_nodes_in_this_graph) > 0:
-            for n in const_nodes_in_this_graph:
-                input_names = f.graph[n].inputs
-                if len(set(input_names).difference(topsort_set)) == 0:
-                    topsort.append(n)
-                    topsort_set.add(n)
+    # topological sort const nodes
+    topsort = []
+    topsort_set = set()
+    while len(const_nodes_in_this_graph) > 0:
+        for n in const_nodes_in_this_graph:
+            input_names = fn.graph[n].inputs
+            if len(set(input_names).difference(topsort_set)) == 0:
+                topsort.append(n)
+                topsort_set.add(n)
 
-            const_nodes_in_this_graph = set(const_nodes_in_this_graph).difference(topsort_set)
+        const_nodes_in_this_graph = set(const_nodes_in_this_graph).difference(topsort_set)
 
-        for node in topsort:
-            new_node = node_def_pb2.NodeDef()
-            new_node.CopyFrom(f.graph[node].original_node)
-            if '_class' in new_node.attr:
-                del new_node.attr['_class']
-            del new_node.input[:]
-            new_node.input.extend(f.graph[node].inputs)
-            if '_output_shapes' in f.graph[node].attr:
-                constant_node_num_outputs[node] = len(f.graph[node].attr['_output_shapes'])
-            else:
-                constant_node_num_outputs[node] = 1
-            new_graph.node.extend([new_node])
-    constant_nodes = list(constant_nodes)
+    for node in topsort:
+        new_node = node_def_pb2.NodeDef()
+        new_node.CopyFrom(fn.graph[node].original_node)
+        if '_class' in new_node.attr:
+            del new_node.attr['_class']
+        del new_node.input[:]
+        new_node.input.extend(fn.graph[node].inputs)
+        if '_output_shapes' in fn.graph[node].attr:
+            constant_node_num_outputs[node] = len(fn.graph[node].attr['_output_shapes'])
+        else:
+            constant_node_num_outputs[node] = 1
+        new_graph.node.extend([new_node])
+    return new_graph, list(constant_nodes), constant_node_num_outputs
+
+
+def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outputs):
     try:
         if len(constant_nodes) > 0:
             with tf.Graph().as_default() as graph:
@@ -81,39 +79,47 @@ def constant_propagation(tfssa):
                         except:
                             logging.warning('[Constant Propagation] Skip "dead" tensor: {}'.format(op))
                             result.update({op: None})
-            for f in tfssa.functions.values():
-                for k, v in f.graph.items():
-                    if k in constant_node_num_outputs:
-                        if constant_node_num_outputs[k] == 1:
-                            result_entry = k + ':0'
-                            try:
-                                v.value, v.datatype = numpy_val_to_builtin_val(result[result_entry])
-                            except:
-                                logging.error(result_entry)
-                                logging.error(result[result_entry])
-                        else:
-                            values = [
-                                result[k + ':' + str(i)]
-                                for i in range(constant_node_num_outputs[k])
-                            ]
-                            try:
-                                npval = [numpy_val_to_builtin_val(i) for i in values]
-                                v.datatype = builtins.tuple(tuple([val[1] for val in npval]))
-                                v.value = v.datatype()
-                                for idx, val in enumerate(npval):
-                                    v.value.val[idx] = val[0]
-                            except:
-                                logging.error(values)
-                for k, v in f.graph.items():
-                    if v.op == 'get_tuple':
-                        inp = f.graph[v.inputs[0]]
-                        idx = v.attr['index']
-                        if inp.value is not None:
-                            v.value = inp.value.val[idx]
-                            v.datatype = inp.datatype.T[idx]
+
+            for k, v in fn.graph.items():
+                if k in constant_node_num_outputs:
+                    if constant_node_num_outputs[k] == 1:
+                        result_entry = k + ':0'
+                        try:
+                            v.value, v.datatype = numpy_val_to_builtin_val(result[result_entry])
+                        except:
+                            logging.error(result_entry)
+                            logging.error(result[result_entry])
+                    else:
+                        values = [
+                            result[k + ':' + str(i)]
+                            for i in range(constant_node_num_outputs[k])
+                        ]
+                        try:
+                            npval = [numpy_val_to_builtin_val(i) for i in values]
+                            v.datatype = builtins.tuple(tuple([val[1] for val in npval]))
+                            v.value = v.datatype()
+                            for idx, val in enumerate(npval):
+                                v.value.val[idx] = val[0]
+                        except:
+                            logging.error(values)
+            for k, v in fn.graph.items():
+                if v.op == 'get_tuple':
+                    inp = fn.graph[v.inputs[0]]
+                    idx = v.attr['index']
+                    if inp.value is not None:
+                        v.value = inp.value.val[idx]
+                        v.datatype = inp.datatype.T[idx]
 
     except Exception as e:
         logging.exception("Constant Propagation pass failed: {}".format(e))
 
 
+def constant_propagation(tfssa):
+    # we are going to rely on the TensorFlow graph to perform constant
+    # propagation. We construct a new graph comprising of only the
+    # constant nodes.
+
+    for f in tfssa.functions.values():
+        const_nodes_info = _get_const_nodes(f)
+        _constant_propagation(f, *const_nodes_info)
     delete_unnecessary_constant_nodes(tfssa)

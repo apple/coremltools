@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from itertools import islice
 
 import torch
@@ -89,7 +90,7 @@ class InternalTorchIRNode:
             self.inputs = [_input.debugName() for _input in node.inputs()]
             self.outputs = [output.debugName() for output in node.outputs()]
             self.name = self.outputs[0]
-            self.kind = node.kind().split("::")[1].lower()
+            self.kind = node.kind().split("::")[-1].lower()
             self.blocks = [InternalTorchIRBlock(raw_block=b) for b in node.blocks()]
             self.attr = {
                 name: getattr(node, node.kindOf(name))(name)
@@ -151,14 +152,16 @@ class InternalTorchIRGraph:
             raw_graph: The torch._C.Graph to convert.
             params_dict: A dictionary mapping graph parameter names to tensors.
             input_values: A list of inputs to the graph.
+            cut_output_names: The list of desired outputs from the graph. Must
+                be present in the graph. For debugging use only.
     """
 
     def __init__(
-        self, raw_graph, params_dict, input_values,
+        self, raw_graph, params_dict, input_values, cut_output_names=None,
     ):
         self.nodes = []
         self.params = {}
-        self.inputs = {}
+        self.inputs = OrderedDict()
         self.outputs = []
 
         # Add nodes
@@ -177,8 +180,11 @@ class InternalTorchIRGraph:
             self.inputs[name] = value
 
         # Add outputs
-        for output in raw_graph.outputs():
-            self.outputs.append(output.debugName())
+        output_names = cut_output_names
+        if output_names is None:
+            output_names = [x.debugName() for x in raw_graph.outputs()]
+        for output in output_names:
+            self.outputs.append(output)
 
     def __str__(self):
         graph_str = "graph(\n"

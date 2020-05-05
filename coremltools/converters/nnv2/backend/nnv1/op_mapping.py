@@ -40,6 +40,8 @@ def convert_ops(const_context, builder, ops, outputs):
 
     for ov in outputs:
         # If block return value is a const, we need to add it.
+        if ov.op is None:
+            continue  # placeholder
         if ov.op.op_type == 'const':
             add_const(const_context, builder, ov.name, ov.val)
 
@@ -185,7 +187,7 @@ def add_const(const_context, builder, name, val):
                 constant_value=val,
                 shape=val.shape)
     const_context[builder].add(name)
-    print('added const {} for builder {}'.format(name, builder))
+    logging.info('added const {} for builder {}'.format(name, builder))
 
 
 # Helper routines for recurrent layers
@@ -932,7 +934,7 @@ def gru(const_context, builder, op):
     # bias format: [2, 3*H]
     # bias[0]: Input-Hidden bias
     # bias[1]: Hidden-Hidden bias
-    # Combine bias into one and split into [Z, R, O] format
+    # Combine bias into one and split into ifoz layout
     b = _split_bias(b, sections=3)
 
     input_size = w_x[0].shape[1]
@@ -1068,16 +1070,17 @@ def lstm(const_context, builder, op):
         # Expand initial_h and initial_c
         _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
         initial_h += '_expanded'
-        _expand_dim(builder, initial_c+'_expanded', initial_c, [2, 3, 4])
-        initial_c += '_expanded'
+        # initial_h may have the same name as initial_c (e.g., same Var).
+        # Append a different string to avoid conflict
+        _expand_dim(builder, initial_c+'_expanded2', initial_c, [2, 3, 4])
+        initial_c += '_expanded2'
 
         # Get weights here
         # weight format: [I+H, 4*H]
         # Split into Input and hidden weights
         # w_x: [I*H, I*H, I*H, I*H]
         # w_h: [H*H, H*H, H*H, H*H]
-        # where format is, [input gate, forget gate, cell gate, output gate]
-        w_x, w_h = _split_weights(w, sections=4)
+        w_x, w_h = _split_weights(w, sections=4) # ifoz layout
         # bias format: [2, 4*H]
         # bias[0]: Input-Hidden bias
         # bias[1]: Hidden-Hidden bias
@@ -1103,9 +1106,9 @@ def lstm(const_context, builder, op):
             input_size=input_size,
             input_names=[input_name, initial_h, initial_c],
             output_names=output_names,
-            inner_activation=activations[0],
-            cell_state_update_activation=activations[1],
-            output_activation=activations[2],
+            inner_activation=activations[0].upper(),
+            cell_state_update_activation=activations[1].upper(),
+            output_activation=activations[2].upper(),
             peep=peephole,
             output_all=output_sequence,
             cell_clip_threshold=clip,
@@ -1124,8 +1127,9 @@ def lstm(const_context, builder, op):
         # Expand initial_h and initial_c
         _expand_dim(builder, initial_h+'_expanded', initial_h, [2, 3, 4])
         initial_h += '_expanded'
-        _expand_dim(builder, initial_c+'_expanded', initial_c, [2, 3, 4])
-        initial_c += '_expanded'
+        # initial_h may have the same name as initial_c (e.g., same Var)
+        _expand_dim(builder, initial_c+'_expanded2', initial_c, [2, 3, 4])
+        initial_c += '_expanded2'
 
         initial_h_f = initial_h + '_forward'
         initial_h_r = initial_h + '_reverse'
@@ -1190,9 +1194,9 @@ def lstm(const_context, builder, op):
             input_size=input_size,
             input_names=[input_name, initial_h_f, initial_c_f, initial_h_r, initial_c_r],
             output_names=output_names,
-            inner_activation=activations[0],
-            cell_state_update_activation=activations[1],
-            output_activation=activations[2],
+            inner_activation=activations[0].upper(),
+            cell_state_update_activation=activations[1].upper(),
+            output_activation=activations[2].upper(),
             peep=f_peephole,
             peep_back=r_peephole,
             output_all=output_sequence,
@@ -1348,10 +1352,9 @@ def reverse(const_context, builder, op):
 
 @register_v2_op
 def reverse_sequence(const_context, builder, op):
-    add_const(const_context, builder, op.lengths.name, op.lengths.val)
     builder.add_reverse_sequence(
         name=op.name,
-        input_names=[op.x.name, op.lengths.name],
+        input_names=make_input(const_context, builder, [op.x, op.lengths]),
         output_name=op.outputs[0].name,
         batch_axis=op.batch_axis.val,
         seq_axis=op.seq_axis.val

@@ -481,7 +481,7 @@ int testInnerProductDynamicQuantizationConversionParameterValidation() {
     // Case 1: has bias
     inner_product_params->set_hasbias(true);
     res = validate<MLModelType_neuralNetwork>(m1);
-    ML_ASSERT_BAD(res);
+    ML_ASSERT_GOOD(res);
     inner_product_params->set_hasbias(false);
 
     // Case 2: Non empty linear quantization bias
@@ -565,7 +565,7 @@ int testBatchedMatMulDynamicQuantizationConversionParameterValidation() {
     // Case 1: has bias
     batch_mat_mul_params->set_hasbias(true);
     res = validate<MLModelType_neuralNetwork>(m1);
-    ML_ASSERT_BAD(res);
+    ML_ASSERT_GOOD(res);
     batch_mat_mul_params->set_hasbias(false);
 
     // Case 2: Non empty linear quantization bias

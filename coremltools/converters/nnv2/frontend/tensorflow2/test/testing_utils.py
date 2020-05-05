@@ -1,6 +1,6 @@
-import coremltools.converters.nnv2.converter as converter
-import coremltools.converters.nnv2.frontend.tensorflow.test.testing_utils as tf_testing_utils
-import tensorflow as tf
+from coremltools.converters import convert
+import pytest
+tf = pytest.importorskip('tensorflow', minversion='2.1.0')
 from coremltools.converters.nnv2.frontend.tensorflow.test.testing_utils import get_tf_node_names
 from coremltools.converters.nnv2.testing_utils import compare_shapes, compare_backend
 from tensorflow.python.framework import dtypes
@@ -82,17 +82,21 @@ def run_compare_tf2(
         name = get_tf_node_names(t)[0]
         outputs.append(name)
 
-    proto = converter.convert(
-        model, convert_from=frontend, convert_to=backend,
-        inputs=inputs, outputs=outputs)
+    # get TensorFlow 2.x output as reference and run comparision
+    tf_input_values = [tf.constant(t) for t in input_dict.values()]
+    tf_outputs = model[0](*tf_input_values)
+    if isinstance(tf_outputs, (tuple, list)):
+        ref = [t.numpy() for t in tf_outputs]
+    else:
+        ref = [tf_outputs.numpy()]
+    expected_outputs = {n: v for n, v in zip(outputs, ref)}
+
+    proto = convert(
+        model, source=frontend, inputs=list(inputs.items()),
+        outputs=outputs, convert_to=backend).get_spec()
 
     if frontend_only:
         return
-
-    # get TensorFlow 2.x output as reference and run comparision
-    tf_input_values = [tf.constant(t) for t in input_dict.values()]
-    ref = [model[0](*tf_input_values).numpy()]
-    expected_outputs = {n: v for n, v in zip(outputs, ref)}
 
     compare_shapes(
         proto, input_dict, expected_outputs, use_cpu_only)
@@ -143,9 +147,8 @@ def run_compare_tf_keras(
         name = get_tf_node_names(t.name)[0]
         outputs.append(name)
 
-    proto = converter.convert(
-        [cf], convert_from=frontend, convert_to=backend,
-        inputs=inputs, outputs=outputs)
+    proto = convert([cf], inputs=list(inputs.items()),
+                    outputs=outputs, convert_to=backend).get_spec()
 
     if frontend_only:
         return

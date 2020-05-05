@@ -1,8 +1,12 @@
 import six
-import tensorflow as tf
+import pytest
+tf = pytest.importorskip('tensorflow', minversion='1.14.0')
 from coremltools.converters.nnv2.testing_utils import compare_shapes, compare_backend
 from coremltools.converters.nnv2.testing_reqs import converter
 from tensorflow.python.framework import dtypes
+import tempfile
+import os
+from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
 
 frontend = 'tensorflow'
 
@@ -105,18 +109,38 @@ def tf_graph_to_proto(graph, feed_dict, output_nodes, backend='nnv1_proto'):
     output_names = get_tf_node_names(output_nodes, mode='outputs')
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    proto = converter.convert(graph, convert_from='tensorflow',
-                              convert_to=backend,
-                              inputs=input_names,
-                              outputs=output_names)
+    mlmodel = converter.convert(
+        graph,
+        inputs=input_names,
+        outputs=output_names,
+        convert_to=backend)
+
+    proto = mlmodel.get_spec()
     return proto, input_values, output_names, output_nodes
 
+def load_tf_pb(pb_file):
+    """
+    Loads a pb file to tf.Graph
+    """
+    # We load the protobuf file from the disk and parse it to retrieve the
+    # unserialized graph_def
+    with tf.io.gfile.GFile(pb_file, "rb") as f:
+        graph_def = tf.compat.v1.GraphDef()
+        graph_def.ParseFromString(f.read())
+
+    # Then, we import the graph_def into a new Graph and returns it
+    with tf.Graph().as_default() as graph:
+        # The name var will prefix every op/nodes in your graph
+        # Since we load everything in a new graph, this is not needed
+        tf.import_graph_def(graph_def, name="")
+    return graph
 
 def run_compare_tf(
         graph, feed_dict, output_nodes,
         use_cpu_only=False, frontend_only=False,
         frontend='tensorflow', backend='nnv1_proto',
-        atol=1e-04, rtol=1e-05, validate_shapes_only=False):
+        atol=1e-04, rtol=1e-05, validate_shapes_only=False,
+        freeze_graph=False):
     """
     Utility function to convert and compare a given TensorFlow 1.x model.
 
@@ -143,13 +167,53 @@ def run_compare_tf(
     validate_shapes_only: bool
         If true, skip element-wise value comparision.
     """
-    proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(graph, feed_dict, output_nodes, backend)
+    proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
+            graph, feed_dict, output_nodes, backend)
 
     if frontend_only:
         return
 
-    tf_outputs = tf.Session(graph=graph).run(output_nodes, feed_dict=feed_dict)
+    if not isinstance(output_nodes, (tuple, list)):
+        output_nodes = [output_nodes]
+
+    if freeze_graph:
+        model_dir = tempfile.mkdtemp()
+        graph_def_file = os.path.join(model_dir, 'tf_graph.pb')
+        checkpoint_file = os.path.join(model_dir, 'tf_model.ckpt')
+        static_model_file = os.path.join(model_dir, 'tf_static.pb')
+        coreml_model_file = os.path.join(model_dir, 'coreml_model.mlmodel')
+
+
+        with tf.Session(graph=graph) as sess:
+            sess.run(tf.global_variables_initializer())
+            tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
+
+            tf.train.write_graph(sess.graph, model_dir, graph_def_file,
+                    as_text=False)
+            saver = tf.train.Saver()
+            saver.save(sess, checkpoint_file)
+            freeze_g(
+                input_graph=graph_def_file,
+                input_saver="",
+                input_binary=True,
+                input_checkpoint=checkpoint_file,
+                output_node_names=",".join([n.op.name for n in output_nodes]),
+                restore_op_name="save/restore_all",
+                filename_tensor_name="save/Const:0",
+                output_graph=static_model_file,
+                clear_devices=True,
+                initializer_nodes="")
+        graph = load_tf_pb(static_model_file)
+
+        # Need to convert again using frozen graph
+        proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
+                graph, feed_dict, output_nodes, backend)
+    else:
+        with tf.Session(graph=graph) as sess:
+            sess.run(tf.global_variables_initializer())
+            tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
     expected_outputs = {name: val for name, val in zip(output_names, tf_outputs)}
+
 
     if validate_shapes_only:
         compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)

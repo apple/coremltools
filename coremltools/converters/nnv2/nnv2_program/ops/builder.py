@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 import copy
+import six
 
 from ..program.program import (curr_block,
         SsaProgram, SsaFunction, Placeholder, is_internal_input)
@@ -9,9 +10,24 @@ from ..program.input_type import (_InputType, InternalStringInputType,
                                  ScalarOrTensorInputType, TupleInputType,
                                  InputSpec, InternalInputType,
                                  PyFunctionInputType)
+import numbers
 from ..program.var import InternalVar, Var
 from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic
+import numpy as np
 
+def get_const_mode(val):
+    # Heuristics to decide between file_value and immediate_value
+    if isinstance(val, (np.ndarray, np.generic)) and val.size > 10:
+        return 'file_value'
+    return 'immediate_value'
+
+def is_python_value(val):
+    return isinstance(val, (np.generic, np.ndarray)) or \
+             isinstance(val, numbers.Number) or \
+             isinstance(val, six.string_types) or \
+             isinstance(val, bool) or \
+             (isinstance(val, (tuple, list)) and \
+             all(is_python_value(v) for v in val))
 
 class CoremlBuilder:
     """
@@ -46,7 +62,9 @@ class CoremlBuilder:
         return kwargs
 
     @classmethod
-    def _add_const_immediate_value(cls, val, name, before_op):
+    def _add_const(cls, val, name, before_op):
+        if not is_python_value(val):
+            raise ValueError('Cannot add const {}'.format(val))
         if any_symbolic(val):
             msg = 'Python native vals (list, tuple), np.array that are' +\
             'operation inputs cannot have symbolic values. Consider feeding' + \
@@ -54,8 +72,9 @@ class CoremlBuilder:
             'operator. Input {}: {}'
             raise ValueError(msg.format(name, val))
         const_name = cls._get_free_name(name)
-        logging.debug("Adding immediate value op {}".format(const_name))
-        output_var = cls.const(mode="immediate_value",
+        mode = get_const_mode(val)
+        logging.debug("Adding const op {}".format(const_name))
+        output_var = cls.const(mode=mode,
                                val=val,
                                name=const_name,
                                before_op=before_op)
@@ -106,10 +125,10 @@ class CoremlBuilder:
                             if isinstance(v, Var):
                                 var.append(v)
                                 continue
-                            var.append(cls._add_const_immediate_value(
+                            var.append(cls._add_const(
                                 v, new_var_name+str(i), before_op))
                     elif isinstance(in_type, ScalarOrTensorInputType):
-                        var = cls._add_const_immediate_value(
+                        var = cls._add_const(
                             val, new_var_name, before_op)
                     else:
                         msg = "Cannot convert input {} of type {} to Var (op: {})"
@@ -127,11 +146,11 @@ class CoremlBuilder:
                     var = InternalVar(in_type.default, name=new_var_name)
                     curr_block().add_internal_var(var)
                 elif isinstance(in_type, TupleInputType):
-                    var = tuple(cls._add_const_immediate_value(
+                    var = tuple(cls._add_const(
                         v, new_var_name+str(i), before_op) \
                                 for i, v in enumerate(in_type.default))
                 else:
-                    var = cls._add_const_immediate_value(
+                    var = cls._add_const(
                         in_type.default, new_var_name, before_op)
                 update_dict[in_name] = var
 

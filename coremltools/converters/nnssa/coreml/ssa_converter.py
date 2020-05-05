@@ -823,13 +823,30 @@ class SSAConverter(object):
         begin_masks = [True if i in node.attr['begin_masks'] else False for i in range(rank)]
         end_masks = [True if i in node.attr['end_masks'] else False for i in range(rank)]
         if 'slice' not in node.attr:
-            assert node.attr["new_axis_mask"] == 0
-            assert len(input_names) >= 4
-            layer = builder.add_slice_dynamic(name=slice_output_name,
-                                              input_names=input_names[:4],
-                                              output_name=slice_output_name,
-                                              begin_masks=begin_masks,
-                                              end_masks=end_masks)
+            assert node.attr.get("new_axis_mask", 0) == 0
+            if len(input_names) >= 4:
+                layer = builder.add_slice_dynamic(name=slice_output_name,
+                                                  input_names=input_names[:4],
+                                                  output_name=slice_output_name,
+                                                  begin_masks=begin_masks,
+                                                  end_masks=end_masks)
+            elif len(input_names) == 3 and node.attr.get("generic_slice", False):
+                end_ids = node.name + "_end_ids"
+                layer = builder.add_elementwise(
+                    name=end_ids,
+                    input_names=input_names[1:3],
+                    output_name=end_ids,
+                    mode="ADD")
+                input_names = input_names[0:2] + [end_ids]
+                layer = builder.add_slice_dynamic(
+                    name=node.name,
+                    input_names=input_names,
+                    output_name=node.name,
+                    begin_masks=begin_masks,
+                    end_masks=end_masks)
+            
+            else:
+                raise ValueError("[SSAConverter] Unsupported slice configuration")
 
             if not has_squeeze and output_shape:
                 self.tensor_shapes[node.name] = output_shape

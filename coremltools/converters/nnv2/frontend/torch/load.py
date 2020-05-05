@@ -24,21 +24,16 @@ def load(model_spec, debug=False, **kwargs):
         if conversion fails due to an unsupported op.
     example_inputs: List of torch.Tensor inputs to the model.
         TODO: Allow @example_inputs to describe variable size inputs.
+    cut_output_names: List of output name strings. Graph conversion will
+        terminate once these symbols have been generated. For debugging use
+        only.
     """
-    if isinstance(model_spec, str):
-        filename = os.path.abspath(model_spec)
-        torchscript = torch.jit.load(filename)
-    elif isinstance(model_spec, torch.jit.ScriptModule):
-        torchscript = model_spec
-    else:
-        raise TypeError(
-            "@model_spec must either be a PyTorch .pt file or a TorchScript object, received: {}".format(
-                type(model_spec)
-            )
-        )
+
+    torchscript = _torchscript_from_model(model_spec)
 
     inputs = kwargs["example_inputs"]
-    converter = TorchConverter(torchscript, inputs)
+    cut_outputs = kwargs.get("cut_output_names", None)
+    converter = TorchConverter(torchscript, inputs, cut_outputs)
 
     try:
         prog = converter.convert()
@@ -54,3 +49,18 @@ def load(model_spec, debug=False, **kwargs):
         raise e
 
     return prog
+
+
+def _torchscript_from_model(model_spec):
+
+    if isinstance(model_spec, str) and model_spec.endswith(".pt"):
+        filename = os.path.abspath(model_spec)
+        return torch.jit.load(filename)
+    elif isinstance(model_spec, torch.jit.ScriptModule):
+        return model_spec
+    else:
+        raise TypeError(
+            "@model must either be a PyTorch .pt file or a TorchScript object, received: {}".format(
+                type(model_spec)
+            )
+        )

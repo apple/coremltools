@@ -2,10 +2,13 @@ import logging
 import numpy as np
 
 import coremltools
-from coremltools.converters.nnv2 import converter
+from coremltools import converters as converter
+from coremltools.converters.nnv2 import converter as _converter
+
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
 
 converter = converter
+_converter = _converter
 
 
 def assert_op_count_match(program, expect, op=None, verbose=False):
@@ -39,8 +42,9 @@ def assert_model_is_valid(program, inputs, backend='nnv1_proto',
     input_dict = dict()
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
-    proto = converter.convert(
-        program, convert_from='NitroSSA', convert_to=backend)
+    proto = _converter._convert(program,
+                                convert_from='NitroSSA',
+                                convert_to=backend)
     model = coremltools.models.MLModel(proto)
     assert model is not None
     if verbose:
@@ -190,7 +194,9 @@ def compare_shapes(
     model = coremltools.models.MLModel(proto, useCPUOnly=use_cpu_only)
     pred = model.predict(input_key_values, useCPUOnly=use_cpu_only)
     for o, expected in expected_outputs.items():
-        assert pred[o].shape == expected.shape
+        msg = 'Output: {}. expected shape {} != actual shape {}'.format(o,
+                expected.shape, pred[o].shape)
+        assert pred[o].shape == expected.shape, msg
 
 
 def get_core_ml_prediction(
@@ -209,8 +215,8 @@ def get_core_ml_prediction(
         ssa_func.set_outputs(output_vars)
         program.add_function('main', ssa_func)
 
-    proto = converter.convert(program,
-                              convert_from='NitroSSA',
-                              convert_to=backend)
+    proto = _converter._convert(program,
+                                convert_from='NitroSSA',
+                                convert_to=backend)
     model = coremltools.models.MLModel(proto, use_cpu_only)
     return model.predict(input_values, useCPUOnly=use_cpu_only)

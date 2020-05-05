@@ -54,8 +54,12 @@ export PYTEST_EXECUTABLE=$PYTHON_ENV/bin/pytest
 export PIP_EXECUTABLE=$PYTHON_ENV/bin/pip
 export PYTHON_LIBRARY=$PYTHON_ENV/lib/libpython${PYTHON}m.dylib
 if [[ ${PYTHON_VERSION:0:1} == "3" ]] ;
-then 
-    export PYTHON_INCLUDE_DIR=$PYTHON_ENV/include/python${PYTHON_VERSION}m/
+then
+    if [[ ${PYTHON_VERSION:2:3} -ge 8 ]]; then
+        export PYTHON_INCLUDE_DIR=$PYTHON_ENV/include/python${PYTHON_VERSION}/
+    else
+        export PYTHON_INCLUDE_DIR=$PYTHON_ENV/include/python${PYTHON_VERSION}m/
+    fi
 else 
     export PYTHON_INCLUDE_DIR=$PYTHON_ENV/include/python${PYTHON_VERSION}/
 fi

@@ -20,6 +20,17 @@ from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 PYTORCH_MAGIC_DEFAULT = 9223372036854775807
 
 
+def _all_outputs_present(context, graph):
+    """ Returns true if all the symbols in the graph's output list are
+        present in context."""
+    for outp in graph.outputs:
+        try:
+            context[outp]
+        except ValueError:
+            return False
+    return True
+
+
 def convert_nodes(context, graph):
     """Iterate over the nodes of a graph or block and convert to NNv2.
 
@@ -37,6 +48,10 @@ def convert_nodes(context, graph):
             )
         else:
             _add_op(context, node)
+
+        # We've generated all the outputs the graph needs, terminate conversion.
+        if _all_outputs_present(context, graph):
+            break
 
 
 def convert_block(context, block, inputs):
@@ -138,11 +153,15 @@ def constant(context, node):
 def _array_construct(context, node, array_type):
     assert len(node.outputs) == 1
     inputs = _get_inputs(context, node)
-    constant_inputs = [inp for inp in inputs if inp.val is not None]
+    scalar_inputs = [
+        inp
+        for inp in inputs
+        if isinstance(inp, Var) and inp.val is not None and len(inp.shape) == 0
+    ]
 
-    if len(constant_inputs) == len(inputs):
-        # All the list items are compile-time constants, so let's create a new
-        # const that concatenates them.
+    if len(scalar_inputs) == len(inputs):
+        # All the list items are compile-time scalar constants, so let's create
+        # a new const that concatenates them.
         mode = "immediate_value"
         val = array_type([inp.val for inp in inputs])
         const = cb.const(mode=mode, val=val, name=node.name)
@@ -168,6 +187,13 @@ def listconstruct(context, node):
 def eq(context, node):
     inputs = _get_inputs(context, node, expected=2)
     equal_to = cb.equal(x=inputs[0], y=inputs[1], name=node.name)
+    context.add(equal_to)
+
+
+@register_torch_op
+def ne(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    equal_to = cb.not_equal(x=inputs[0], y=inputs[1], name=node.name)
     context.add(equal_to)
 
 
@@ -235,8 +261,8 @@ def permute(context, node):
 @register_torch_op
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    matmul = cb.matmul(x=inputs[0], y=inputs[1], name=node.name)
-    context.add(matmul)
+    res = cb.matmul(x=inputs[0], y=inputs[1], name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -365,8 +391,8 @@ def softmax(context, node):
 
     x = inputs[0]
     axis = inputs[1]
-    softmax = cb.softmax(logit=x, axis=axis, name=node.name)
-    context.add(softmax)
+    res = cb.softmax(logit=x, axis=axis, name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -404,8 +430,8 @@ def flatten(context, node):
 def relu(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
-    relu = cb.relu(x=inputs[0], name=node.name)
-    context.add(relu)
+    res = cb.relu(x=inputs[0], name=node.name)
+    context.add(res)
 
 
 def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes):
@@ -428,7 +454,7 @@ def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes
             # NNv2 pooling does not support ceil_mode natively, but we can
             # workaround by padding the input appropriately.
             # rdar://60634390
-            logging.warn("padding adjusted to support ceil_mode=True")
+            logging.warning("padding adjusted to support ceil_mode=True")
             new_pad[2 * idx + 1] += stride - remainder
 
     return new_pad
@@ -471,39 +497,48 @@ def max_pool2d(context, node):
 def div(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
-    div = cb.real_div(x=inputs[0], y=inputs[1], name=node.name)
-    context.add(div)
+    res = cb.real_div(x=inputs[0], y=inputs[1], name=node.name)
+    context.add(res)
 
 
 @register_torch_op
 def mul(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
-    mul = cb.mul(x=inputs[0], y=inputs[1], name=node.name)
-    context.add(mul)
+    res = cb.mul(x=inputs[0], y=inputs[1], name=node.name)
+    context.add(res)
 
 
-@register_torch_op
-def pow(context, node):
+@register_torch_op(torch_alias=["pow"])
+def pow_(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
-    _pow = cb.pow(x=inputs[0], y=inputs[1], name=node.name)
-    context.add(_pow)
+    res = cb.pow(x=inputs[0], y=inputs[1], name=node.name)
+    context.add(res)
 
 
-@register_torch_op(torch_alias="rsub")
+@register_torch_op(torch_alias=["rsub"])
 def sub(context, node):
     inputs = _get_inputs(context, node, expected=3)
     assert len(node.outputs) == 1
 
+    if node.kind == "rsub":
+        # rsub reverses the order of arguments
+        y = inputs[0]
+        x = inputs[1]
+    else:
+        x = inputs[0]
+        y = inputs[1]
+    alpha = inputs[2].val
+
     # TODO (sberardi): 3rd param to aten::sub is a scale factor, need to handle that.
     # out=input-alpha x other
     # rdar://60175736
-    if inputs[2].val != 1:
+    if alpha != 1:
         raise ValueError("SUB does not support scale factor param")
 
-    sub = cb.sub(x=inputs[0], y=inputs[1], name=node.name)
-    context.add(sub)
+    res = cb.sub(x=x, y=y, name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -531,19 +566,19 @@ def mean(context, node):
     # Last input to mean is an optional output tensor. We always expect this to
     # be None or absent.
     assert len(inputs) <= 3 or inputs[3] is None
-    mean = cb.reduce_mean(**kwargs)
-    context.add(mean)
+    res = cb.reduce_mean(**kwargs)
+    context.add(res)
 
 
 @register_torch_op
 def squeeze(context, node):
     inputs = _get_inputs(context, node)
     if len(inputs) == 1:
-        squeeze = cb.squeeze(x=inputs[0], name=node.name)
+        res = cb.squeeze(x=inputs[0], name=node.name)
     elif len(inputs) == 2:
         squeeze_dim = inputs[1].val
-        squeeze = cb.squeeze(x=inputs[0], axes=(squeeze_dim,), name=node.name)
-    context.add(squeeze)
+        res = cb.squeeze(x=inputs[0], axes=(squeeze_dim,), name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -635,7 +670,7 @@ def batch_norm(context, node):
     #   bool cudnn_enabled (8)
     _input = inputs[0]
     weight = inputs[1]
-    bais = inputs[2]
+    bias = inputs[2]
     running_mean = inputs[3]
     running_var = inputs[4]
     eps = inputs[7]
@@ -644,7 +679,7 @@ def batch_norm(context, node):
         mean=running_mean,
         variance=running_var,
         gamma=weight,
-        beta=bais,
+        beta=bias,
         epsilon=eps,
         name=node.name,
     )
@@ -675,7 +710,7 @@ def embedding(context, node):
 def hardtanh_(context, node):
     """Represent hardtanh as a hard sigmoid via the following translation:
 
-        hardtanh(min_val, max_val) = 
+        hardtanh(min_val, max_val) =
             S * hardsigmoid(alpha = 1/S, beta = min_val/S) + min_val
             where S = (max_val - min_val)
     """
@@ -717,6 +752,21 @@ def cat(context, node):
 
     concat = cb.concat(values=values, axis=axis, name=node.name)
     context.add(concat)
+
+
+@register_torch_op
+def stack(context, node):
+    inputs = _get_inputs(context, node)
+
+    values = inputs[0]
+
+    if len(inputs) < 2:
+        axis = 0
+    else:
+        axis = inputs[1]
+
+    res = cb.stack(values=values, axis=axis, name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -784,38 +834,237 @@ def numtotensor(context, node):
     context.add(res)
 
 
+def _ifzo_to_ifoz(weights, name):
+    """
+        i, f, z, o -> i, f, o, z
+        where weights_split[0] == i, ect.
+        Used to transform lstm weights from pytorch
+        to CoreML format 
+    """
+    split_size = weights.shape[0] // 4
+    weights_split = cb.split(x=weights, split_sizes=np.array([split_size] * 4), axis=0)
+    weights_concat = cb.concat(
+        values=[weights_split[0], weights_split[1], weights_split[3], weights_split[2]],
+        axis=0,
+    )
+    # make transpose a noOP for 0/1d tensors
+    return cb.transpose(
+        x=weights_concat, perm=([1, 0] if len(weights.shape) > 1 else [0]), name=name
+    )
+
+
+def _pytorch_hidden_to_coreml_nnv2ops(x, name):
+    """
+        Used to transform lstm state values (hn, cn) 
+        from pytorch to CoreML format. 
+    """
+    split_size = x.shape[0] // 2
+    x_split = cb.split(x=x, split_sizes=np.array([split_size] * 2), axis=0)
+    x_concat = cb.concat(values=[x_split[0], x_split[1]], axis=2,)
+    # (4.) See docstring to @lstm
+    return cb.squeeze(x=x_concat, axes=np.array([0]), name=name)
+
+
+@register_torch_op
+def lstm(context, node):
+    inputs = _get_inputs(context, node, expected=9)
+
+    _input = inputs[0]
+    h0, c0 = inputs[1]
+    weights = inputs[2]
+    bias = inputs[3].val
+    num_layers = inputs[4].val
+    dropout = inputs[5]
+    bidirectional = inputs[7].val
+    batch_first = inputs[8].val
+
+    if num_layers != 1:
+        raise ValueError(
+            "CoreML does not support stacked LSTM layers (LSTM "
+            "with num_layers > 1). Received {}. Redefine as "
+            " multiple layers if this is the desired "
+            "implementation.".format(num_layers)
+        )
+
+    if batch_first:
+        raise ValueError("CoreML does not support LSTM layer with batch_first==True.")
+
+    expected_num_weights = 2 * num_layers * (int(bidirectional) + 1) * (int(bias) + 1)
+    if len(weights) != expected_num_weights:
+        raise ValueError(
+            "Incorrect weights shape for lstm layer: Expected: {}. Recieved {}".format(
+                expected_num_weights, len(weights)
+            )
+        )
+
+    # NOTE:
+    # Most of this code is to transform the tensors into
+    # a shape acceptable by the CoreML implementation of LSTM.
+    # Since this transforming is complicated and unintuitive we include
+    # a description of what is happening:
+
+    # For weights, biases and per direction, pytorch uses two tensors:
+    # (ii, if, ig, io) stacked on top of eachother for each layer (tensor 1)
+    # and (hi, hf, hg, ho) stacked on top of eachother for each layer (tensor 2)
+    # These weights are used in the calculation of the layers found in the torch.nn documentation:
+    # https://pytorch.org/docs/stable/nn.html
+
+    # The CoreML LSTM op expects two tensors, weight and bias. So
+    # the tensors for weight and bias are seperated from pytorch's @weights list (1.).
+    # For each individual weight and bias tensor, the CoreML LSTM op expects the form
+    # ii, if, io, ig and hi, hf, ho, hg, requiring the ifzo_to_ifoz function (2.).
+    # Each seperate weight and bias tensor is concatinated to
+    # form the two weight and bias tensors. (3.)
+    # In the bidirectional case, the forward and backward weights and biases
+    # are stacked on top of eachother instead of stored as seperate tensors in
+    # the @weights list. (4.)
+
+    # In the initial cell and hidden states, pytorch's tensor's 0th
+    # dimension stores each layer and direction.
+    # However, since CoreML's LSTM allows only one layer, the direction is squeezed out the state
+    # tensor. (4.)
+    # In the bidirectional case, the forward and backward state tensors are stacked on top of eachother.
+    # instead of stored in the layer and direction dimension
+    # using @_pytorch_hidden_to_coreml_nnv2ops (5.).
+
+    # For output: The CoreML LSTM op returns the final states with the first dimension: @num_layers
+    # squeezed out. To fit with the rest of the shapes expected down the line in
+    # the TorchIR graph- we unsqueeze that dimension in the final state output. (6.)
+    if bidirectional:
+        if bias:
+            # (1.)
+            biases = weights[2:4] + weights[6:8]
+            weights = weights[0:2] + weights[4:6]
+
+            # (2.)
+            assert len(biases) == 4
+            for index in range(len(biases)):
+                biases[index] = _ifzo_to_ifoz(
+                    biases[index],
+                    name="{}_lstm_bias_reshape_{}".format(node.name, index),
+                )
+
+            # (4.)
+            f_stack = cb.stack(values=biases[0:2], axis=0,)
+            r_stack = cb.stack(values=biases[2:4], axis=0,)
+            # (3.)
+            final_biases = cb.concat(
+                values=(f_stack, r_stack),
+                axis=1,
+                name=node.name + "_lstm_biases_concat",
+            )
+
+        # (4.)
+        forward_concat = cb.concat(
+            values=[weights[0], weights[1]],
+            axis=1,
+            name=node.name + "_lstm_weights_forward_concat",
+        )
+        backward_concat = cb.concat(
+            values=[weights[2], weights[3]],
+            axis=1,
+            name=node.name + "_lstm_weights_backward_concat",
+        )
+        # (2.)
+        forward_transformed = _ifzo_to_ifoz(
+            forward_concat, name=node.name + "_lstm_forward_weights_ifoz_to_ifzo",
+        )
+        backward_transformed = _ifzo_to_ifoz(
+            backward_concat, name=node.name + "_lstm_backward_weights_ifoz_to_ifzo"
+        )
+        # (3.)
+        final_weights = cb.concat(
+            values=[forward_transformed, backward_transformed],
+            axis=1,
+            name=node.name + "_lstm_weights_final_concat",
+        )
+
+        # (5.)
+        h = _pytorch_hidden_to_coreml_nnv2ops(h0, name="_lstm_h0_reshaped")
+        c = _pytorch_hidden_to_coreml_nnv2ops(c0, name="_lstm_c0_reshaped")
+
+    else:
+        if bias:
+            # (1.)
+            biases = weights[len(weights) // 2 :]
+            weights = weights[: len(weights) // 2]
+            ih_b = biases[0]
+            hh_b = biases[1]
+
+            # (2.)
+            ih_b_transformed = _ifzo_to_ifoz(
+                ih_b, name=node.name + "_lstm_ih_bias_transformed",
+            )
+            hh_b_transformed = _ifzo_to_ifoz(
+                hh_b, name=node.name + "_lstm_hh_bias_transformed",
+            )
+
+            # (3.)
+            final_biases = cb.stack(
+                values=(ih_b_transformed, hh_b_transformed),
+                axis=0,
+                name=node.name + "_lstm_bias_stacked",
+            )
+
+        # (3.)
+        weights_concat = cb.concat(
+            values=weights, axis=1, name=node.name + "_lstm_weights_concat"
+        )
+        # (2.)
+        final_weights = _ifzo_to_ifoz(
+            weights_concat, name=node.name + "_lstm_weights_ifoz_to_ifzo",
+        )
+
+        # (4.)
+        h = cb.squeeze(x=h0, axes=np.array([0]), name=node.name + "_lstm_h0_squeeze")
+        c = cb.squeeze(x=c0, axes=np.array([0]), name=node.name + "_lstm_c0_squeeze")
+
+    lstm = cb.lstm(
+        x=_input,
+        initial_h=h,
+        initial_c=c,
+        weight=final_weights,
+        bias=(final_biases if bias else None),
+        direction=("bidirectional" if bidirectional is True else "forward"),
+        output_sequence=True,
+        name=node.name,
+    )
+
+    # (6.)
+    for index, (name, output) in enumerate(zip(node.outputs, lstm)):
+        if index > 0:
+            # Add in @num_layers in first dimension to hn, cn output
+            unsqueeze = cb.expand_dims(x=output, axes=[0], name=name)
+            context.add(unsqueeze)
+        else:
+            context.add(output, name)
+
+
 @register_torch_op
 def upsample_bilinear2d(context, node):
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
     output_size = inputs[1]
     align_corners = bool(inputs[2].val)
-    if len(inputs) == 5:
-        scales_h = inputs[3]
-        scales_w = inputs[4]
-    elif len(inputs) == 3:
-        scales_h = None
-        scales_w = None
-    else:
-        raise ValueError(
-            "Invalid number of args in Pytorch conversion op for node: {}".format(node)
-        )
 
-    assert output_size is None or scales_h is None
+    # @output_size will be a list if scales was provided or a
+    # single var if output size was provided
+    if isinstance(output_size, list):
+        output_size = [output_size[0].val, output_size[1].val]
+    if isinstance(output_size, Var):
+        output_size = [output_size.val[0], output_size.val[1]]
 
-    if output_size:
-        assert len(output_size.val) == 2
-        # output size is computed using the formula
-        # floor (scale * input_size) in Core ML (and Pytorch)
-        # Thus, when computing the scales from the output size,
-        # add a small positive constant to the output size,
-        # to make sure that the floor formula results in the correct output
-        # size and not 1 unit smaller, due to float precision issues
-        # e.g. if output size = 34 and input size = 2, then scale will be
-        # 17, which can get represented as 16.9999, resulting in an output size of 33
-        # instead of 34, without this correction.
-        scales_h = (output_size.val[0] + 1e-4) / float(_input.shape[-2])
-        scales_w = (output_size.val[1] + 1e-4) / float(_input.shape[-1])
+    # output size is computed using the formula
+    # floor (scale * input_size) in Core ML (and Pytorch)
+    # Thus, when computing the scales from the output size,
+    # add a small positive constant to the output size,
+    # to make sure that the floor formula results in the correct output
+    # size and not 1 unit smaller, due to float precision issues
+    # e.g. if output size = 34 and input size = 2, then scale will be
+    # 17, which can get represented as 16.9999, resulting in an output size of 33
+    # instead of 34, without this correction.
+    scales_h = (output_size[0] + 1e-4) / float(_input.shape[-2])
+    scales_w = (output_size[1] + 1e-4) / float(_input.shape[-1])
 
     upsample_bilinear = cb.upsample_bilinear(
         x=_input,
@@ -1324,6 +1573,7 @@ def masked_fill(context, node):
     context.add(res)
 
 
+@register_torch_op
 def meshgrid(context, node):
     """
     For N input tensors, a meshgrid is constructed by viewing each tensor as an N-dimension tensor 
@@ -1398,3 +1648,13 @@ def noop(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     context.add(_input, torch_name=node.name)
+
+
+@register_torch_op
+def argmax(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    axis = inputs[1]
+    keep_dims = inputs[2]
+    res = cb.reduce_argmax(x=x, axis=axis, keep_dims=keep_dims, name=node.name)
+    context.add(res)

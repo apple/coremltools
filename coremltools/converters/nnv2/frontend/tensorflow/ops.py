@@ -2,6 +2,7 @@ import logging
 import six
 import numpy as np
 
+from coremltools.converters.nnv2.nnv2_program.ops import get_const_mode
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
 from coremltools.converters.nnv2.nnv2_program.ops.defs._utils import broadcast_shapes
 from .convert_utils import convert_graph
@@ -188,11 +189,10 @@ def Ceil(context, node):
 
 @register_tf_op
 def Const(context, node):
-    mode = 'immediate_value'
-    # Heuristics to decide between file_value and immediate_value
-    if node.value is not None and isinstance(node.value.val, (np.ndarray, np.generic)) and \
-            node.value.val.size > 10:
-        mode = 'file_value'
+    if node.value is None:
+        raise ValueError('Const node {} cannot have no value'.format(
+            node.name))
+    mode = get_const_mode(node.value.val)
     x = cb.const(val=node.value.val, mode=mode, name=node.name)
     context.add(node.name, x)
 
@@ -966,9 +966,13 @@ def Tan(context, node):
 def get_tuple(context, node):
     x = context[node.inputs[0]]
     if not isinstance(x, (list, tuple)):
-        raise ValueError("Op {} should return multiple output.".format(
+        raise ValueError("Op '{}' should return multiple output.".format(
             node.inputs[0]))
     idx = node.attr['index']
+    if idx >= len(x):
+        msg = "Index {} out of range, op '{}' only has {} outputs: {}"
+        raise IndexError(msg.format(
+            idx, node.inputs[0], len(x), [v.name for v in x]))
     context.add(node.name, x[idx], is_new_var=False)
 
 @register_tf_op
@@ -1522,8 +1526,6 @@ def function_entry(context, node):
 
 @register_tf_op(tf_alias=['while'])
 def While(context, node):
-    # TODO(rdar://60331615): Add/fix TensorFlow 2 control flow
-    #
     # TF while will never have break statement, because break can always be
     # transformed into while and condition. Example:
     #
@@ -1656,7 +1658,6 @@ def Unpack(context, node):
     context.add(node.name, output_vars)
 
 
-
 @register_tf_op
 def SplitV(context, node):
     x = context[node.inputs[0]]
@@ -1773,6 +1774,8 @@ def TensorArrayV3(context, node):
     if 'infer_shape' in node.attr:
         if not node.attr['infer_shape']:
             raise ValueError('Only fixed size TensorArray is supported')
+
+    dynamic_length = node.attr.get('dynamic_size', True)
     elem_shape = node.attr.get('element_shape', None)
     size = node.attr.get('size', None)
     if size is None:
@@ -1781,11 +1784,13 @@ def TensorArrayV3(context, node):
     dtype_str = builtins.builtin_to_string(builtin_dtype)
     if elem_shape is not None:
         ls = cb.make_list(init_length=size, dtype=dtype_str,
-                elem_shape=elem_shape, name=node.name)
+                elem_shape=elem_shape, dynamic_length=dynamic_length,
+                name=node.name)
     else:
         ls = cb.tf_make_list(init_length=size, dtype=dtype_str,
-                name=node.name)
+                dynamic_length=dynamic_length, name=node.name)
     context.add(node.name, ls)
+
 
 @register_tf_op
 def TensorArrayWriteV3(context, node):
@@ -1850,3 +1855,85 @@ def BroadcastTo(context, node):
 
     x = cb.tile(x=x, reps=reps, name=node.name)
     context.add(node.name, x)
+
+@register_tf_op()
+def get_global(context, node):
+    # Design comment: This is only works if variable doesn't cross block
+    # boundary (e.g. while_loop, cond, function)
+    variable_name = node.attr['variable']
+    x = context[variable_name]  # This must've been set by set_global
+    context.add(node.name, x, is_new_var=False)
+
+@register_tf_op()
+def set_global(context, node):
+    x = context[node.inputs[0]]
+    variable_name = node.attr['variable']
+    context.add(variable_name, x, is_new_var=False)
+
+def _get_const_or_raise(variable):
+    if variable.val is None:
+        raise ValueError('Var {} must be const'.format(variable.name))
+    return variable.val
+
+@register_tf_op()
+def LSTMBlockCell(context, node):
+    x = context[node.inputs[0]]  # [batch, input_dim]
+    c_prev = context[node.inputs[1]]  # [b, hidden_dim]
+    h_prev = context[node.inputs[2]]  # [b, hidden_dim]
+    # W layout is ifco
+    W = context[node.inputs[3]]  # [input_dim + hidden_dim, 4*hidden_dim]
+
+    kwargs = {}
+    use_peephole = node.attr['use_peephole']
+    if use_peephole:
+        peep_i = context[node.inputs[4]]  # [hidden_dim,]
+        peep_f = context[node.inputs[5]]  # [hidden_dim,]
+        peep_o = context[node.inputs[6]]  # [hidden_dim,]
+        kwargs['W_peep_i'] = peep_i
+        kwargs['W_peep_f'] = peep_f
+        kwargs['W_peep_o'] = peep_o
+
+    bias = context[node.inputs[7]]  # [4*hidden_dim,]
+
+    forget_bias = node.attr['forget_bias']
+    cell_clip = None
+    if node.attr['cell_clip'] is not None and node.attr['cell_clip'] > 0:
+        cell_clip = node.attr['cell_clip']
+
+    res = cb.tf_lstm_block_cell(x=x, c_prev=c_prev, h_prev=h_prev, W=W,
+            bias=bias,
+            forget_bias=forget_bias, cell_clip=cell_clip,
+            use_peephole=use_peephole, name=node.name, **kwargs)
+    context.add(node.name, res)
+
+
+@register_tf_op()
+def BlockLSTM(context, node):
+    seq_len = context[node.inputs[0]]  # int
+    x = context[node.inputs[1]] # [padded_len, batch, input_dim]
+    init_c = context[node.inputs[2]]  # [1, hidden_dim]
+    init_h = context[node.inputs[3]]  # [1, hidden_dim]
+    W = context[node.inputs[4]]  # [input_dim + hidden_dim, 4*hidden_dim]
+
+    kwargs = {}
+    use_peephole = node.attr['use_peephole']
+    if use_peephole:
+        peep_i = context[node.inputs[5]]  # [hidden_dim,]
+        peep_f = context[node.inputs[6]]  # [hidden_dim,]
+        peep_o = context[node.inputs[7]]  # [hidden_dim,]
+        kwargs['W_peep_i'] = peep_i
+        kwargs['W_peep_f'] = peep_f
+        kwargs['W_peep_o'] = peep_o
+
+    bias = context[node.inputs[8]]  # [4*hidden_dim,]
+
+    forget_bias = node.attr['forget_bias']
+    cell_clip = None
+    if node.attr['cell_clip'] is not None and node.attr['cell_clip'] > 0:
+        cell_clip = node.attr['cell_clip']
+
+    res = cb.tf_lstm_block(seq_len=seq_len, x=x, c_prev=init_c, h_prev=init_h,
+            W=W, bias=bias,
+            forget_bias=forget_bias, cell_clip=cell_clip,
+            use_peephole=use_peephole, name=node.name, **kwargs)
+    context.add(node.name, res)

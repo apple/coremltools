@@ -31,7 +31,7 @@ def test_single_layer_example():
 
     logging.info('prog:\n', prog)
 
-    proto = converter.convert(prog,
+    proto = converter._convert(prog,
                 convert_from="NitroSSA",
                 convert_to="nnv1_proto")
 
@@ -92,7 +92,7 @@ def test_conv_example():
 
         return conv1, conv2, conv3, pool1, pool2, conv4
 
-    proto = converter.convert(prog,
+    proto = converter._convert(prog,
                 convert_from="NitroSSA",
                 convert_to="nnv1_proto")
 
@@ -123,7 +123,7 @@ def test_while_example():
 
     logging.info('prog:\n', prog)
 
-    proto = converter.convert(prog,
+    proto = converter._convert(prog,
                 convert_from="NitroSSA",
                 convert_to="nnv1_proto")
 

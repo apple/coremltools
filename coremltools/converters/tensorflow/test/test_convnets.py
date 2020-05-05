@@ -1,7 +1,6 @@
 import unittest
 import tensorflow.compat.v1 as tf
 import numpy as np
-from coremltools._deps import HAS_TF_1_14
 from coremltools.models.utils import is_macos, macos_version
 import math
 
@@ -1415,7 +1414,6 @@ class TFSingleLayerTest(TFNetworkBatchTest):
         self._test_tf_model_constant(graph, {
             a.op.name: shape, b.op.name: shape, c.op.name: shape}, [out.op.name])
 
-    @unittest.skipIf(not HAS_TF_1_14, 'Missing TF 1.14. Skipping test.')
     def test_where_v2(self):
         shape = [3, 4, 5]
         graph = tf.Graph()

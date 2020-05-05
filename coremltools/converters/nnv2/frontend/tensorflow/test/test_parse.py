@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
-
+import pytest
+pytest.importorskip('tensorflow', minversion='1.14.0')
 from tensorflow.core.framework import attr_value_pb2 as attr_value
 from tensorflow.core.framework import tensor_shape_pb2 as tensor_shape
 from tensorflow.core.framework import types_pb2 as types

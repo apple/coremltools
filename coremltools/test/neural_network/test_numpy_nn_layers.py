@@ -4806,8 +4806,8 @@ class IOS14SingleLayerTests(CorrectnessTest):
         X1 = 11
         X2 = 23
         W = np.random.rand(X1, X2) * 20 - 10  # uniform between [-10, 10]
-        input_shapes = [(X1,), (5, X1), (2, 3, X1), (4, 1, X1), (12, 5, 8, X1),
-                        (2, 3, 1, 5, X1)]
+        b = np.random.rand(X2) * 20 - 10
+        input_shapes = [(X1,), (5, X1), (2, 3, X1), (4, 1, X1)]#, (12, 5, 8, X1), (2, 3, 1, 5, X1)]
 
         W_max = max(np.abs(np.min(W)), np.abs(np.max(W)))
         W_normalized = W / W_max # [-1,1]
@@ -4820,25 +4820,30 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
             input_features = [('data', datatypes.Array(*input_shape))]
             output_features = [('output', None)]
-            builder = neural_network.NeuralNetworkBuilder(
-                input_features, output_features,
-                disable_rank5_shape_mapping=True)
 
-            builder.add_batched_mat_mul(name='batched_mat_mul',
-                                        input_names=['data'],
-                                        output_name='output',
-                                        weight_matrix_rows=X1,
-                                        weight_matrix_columns=X2,
-                                        int_8_dynamic_quantize=True,
-                                        is_quantized_weight=True,
-                                        quantization_type="linear",
-                                        nbits=8,
-                                        W=W_quantized_int8.tobytes(),
-                                        quant_scale=np.array([quant_scale])
-                                        )
-            inputs = {'data': x}
-            expected = {'output': np.matmul(x, W_quantized_int8.astype(np.float) * quant_scale)}
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
+
+            for has_bias in [True, False]:
+                builder = neural_network.NeuralNetworkBuilder(
+                    input_features, output_features,
+                    disable_rank5_shape_mapping=True)
+
+                builder.add_batched_mat_mul(name='batched_mat_mul',
+                                            input_names=['data'],
+                                            output_name='output',
+                                            weight_matrix_rows=X1,
+                                            weight_matrix_columns=X2,
+                                            int_8_dynamic_quantize=True,
+                                            is_quantized_weight=True,
+                                            quantization_type="linear",
+                                            nbits=8,
+                                            W=W_quantized_int8.tobytes(),
+                                            bias = b if has_bias else None,
+                                            quant_scale=np.array([quant_scale])
+                                            )
+                inputs = {'data': x}
+                expected = {'output': np.matmul(x, W_quantized_int8.astype(np.float) * quant_scale)
+                                      +  (b if has_bias else np.zeros(X2))}
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
 
     def test_batched_mat_mul_dynamic_quantization_gpu(self):
         self.test_batched_mat_mul_dynamic_quantization_cpu(cpu_only=False)
@@ -4847,6 +4852,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
         Xin = 24
         Xout = 23
         W = np.random.rand(Xout, Xin)
+        b = np.random.rand(Xout)
         # For rank 4 and 5, the product of the last 3 dimensions must equal Xin
         input_shapes = [(Xin,), (5, Xin), (2, 3, Xin), (4, 1, Xin), (5, 2, 3, 4),
                         (5, 6, 2, 3, 4)]
@@ -4862,41 +4868,42 @@ class IOS14SingleLayerTests(CorrectnessTest):
             x = np.random.rand(*input_shape) * 5
 
             W_for_numpy = W_quantized_int8.astype(np.float) * quant_scale
+            for has_bias in [True, False]:
+                b = b if has_bias else np.zeros(Xout)
+                if rank == 1 or rank == 2 or rank == 3:
+                    np_out = np.matmul(x, np.transpose(W_for_numpy)) + b
+                    expected = {'output': np_out}
+                elif rank == 4:
+                    x_shaped = np.reshape(x, (x.shape[0], np.product(x.shape[1:])))
+                    np_out = np.matmul(x_shaped, np.transpose(W_for_numpy)) + b
+                    expected = {'output': np.reshape(np_out, np_out.shape + (1,1))}
+                elif rank == 5:
+                    x_shaped = np.reshape(x, x.shape[0:2] + (np.product(x.shape[2:]),))
+                    np_out = np.matmul(x_shaped, np.transpose(W_for_numpy)) + b
+                    expected = {'output': np.reshape(np_out, x.shape[0:2] + (np_out.shape[-1],) + (1, 1))}
 
-            if rank == 1 or rank == 2 or rank == 3:
-                np_out = np.matmul(x, np.transpose(W_for_numpy))
-                expected = {'output': np_out}
-            elif rank == 4:
-                x_shaped = np.reshape(x, (x.shape[0], np.product(x.shape[1:])))
-                np_out = np.matmul(x_shaped, np.transpose(W_for_numpy))
-                expected = {'output': np.reshape(np_out, np_out.shape + (1,1))}
-            elif rank == 5:
-                x_shaped = np.reshape(x, x.shape[0:2] + (np.product(x.shape[2:]),))
-                np_out = np.matmul(x_shaped, np.transpose(W_for_numpy))
-                expected = {'output': np.reshape(np_out, x.shape[0:2] + (np_out.shape[-1],) + (1, 1))}
+                input_features = [('data', datatypes.Array(*input_shape))]
+                output_features = [('output', None)]
+                builder = neural_network.NeuralNetworkBuilder(
+                    input_features, output_features,
+                    disable_rank5_shape_mapping=True)
 
-            input_features = [('data', datatypes.Array(*input_shape))]
-            output_features = [('output', None)]
-            builder = neural_network.NeuralNetworkBuilder(
-                input_features, output_features,
-                disable_rank5_shape_mapping=True)
-
-            builder.add_inner_product(name='batched_mat_mul',
-                                      W=W_quantized_int8.tobytes(),
-                                      b=None,
-                                      input_channels=Xin,
-                                      output_channels=Xout,
-                                      has_bias=False,
-                                      input_name='data',
-                                      output_name='output',
-                                      int_8_dynamic_quantize=True,
-                                      is_quantized_weight=True,
-                                      quantization_type="linear",
-                                      nbits=8,
-                                      quant_scale=np.array([quant_scale])
-                                      )
-            inputs = {'data': x}
-            self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
+                builder.add_inner_product(name='ip',
+                                          W=W_quantized_int8.tobytes(),
+                                          b=b if has_bias else None,
+                                          input_channels=Xin,
+                                          output_channels=Xout,
+                                          has_bias=has_bias,
+                                          input_name='data',
+                                          output_name='output',
+                                          int_8_dynamic_quantize=True,
+                                          is_quantized_weight=True,
+                                          quantization_type="linear",
+                                          nbits=8,
+                                          quant_scale=np.array([quant_scale])
+                                          )
+                inputs = {'data': x}
+                self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only, test_metric='SNR', SNR=40)
 
     def test_inner_product_dynamic_quantization_gpu(self):
         self.test_inner_product_dynamic_quantization_cpu(cpu_only=False)
@@ -5098,8 +5105,8 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                             strides=stride)
             total_paddings.reverse()
             for p in total_paddings:
-                before = math.floor(p / 2)
-                after = math.ceil(p / 2)
+                before = int(math.floor(float(p) / 2.0))
+                after = int(math.ceil(float(p) / 2.0))
                 padding_list.append(before)
                 padding_list.append(after)
 

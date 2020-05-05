@@ -3,7 +3,7 @@ from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.builtins.type_mapping import (
         numpy_val_to_builtin_val, is_subtype)
 from coremltools.converters.nnv2.nnv2_program.program.program import (
-        SsaBlock, SYMBOL)
+        SsaBlock, SYMBOL, NONE)
 from coremltools.converters.nnv2.nnv2_program.program.var import Var
 from coremltools.converters.nnv2.nnv2_program.program.program import get_new_symbol
 from ._op_reqs import *
@@ -91,6 +91,10 @@ class const(Operation):
             if value.dtype == np.int64:
                 # We use int32 by default.
                 value = value.astype(np.int32)
+
+            if value.dtype == np.float64:
+                # We use float32 by default.
+                value = value.astype(np.float32)
 
         if not isinstance(value, (np.generic, np.ndarray,
             six.string_types, bool)):
@@ -195,16 +199,20 @@ class while_loop(Operation):
             # Cond func:
             cond_func = self._cond.val
             cond_var = cond_func(*block.inputs)
+            cond_vars = cond_var if isinstance(cond_var, list) else [cond_var]
 
             # Concatenate the outputs
-            block.set_outputs([cond_var] + list(exit_vars))
+            block.set_outputs(cond_vars + list(exit_vars))
             self.blocks.append(block)
 
         # Verify exit_vars has the same types as loop_vars
         for v_in, v_out in zip(self.loop_vars, exit_vars):
-            if  not is_subtype(v_out.sym_type, v_in.sym_type):
-                msg = "loop_vars {} changes in the body while_loop {}"
-                raise ValueError(msg.format(v_in.name, self.name))
+            if not is_subtype(v_out.sym_type, v_in.sym_type):
+                msg = "loop_vars '{}' changes in the body of " \
+                      "while_loop '{}':\n {} -> {}"
+                raise ValueError(msg.format(
+                    v_in.name, self.name,
+                    v_in.sym_type, v_out.sym_type))
 
     def type_inference(self):
         # Skip the conditional var
@@ -233,6 +241,7 @@ class identity(Operation):
 class make_list(Operation):
     input_spec = InputSpec(
         init_length = IntInputType(optional=True, default=1),
+        dynamic_length = BoolInputType(optional=True, default=True),
         elem_shape = TensorInputType(const=True),
         dtype = StringInputType(const=True, optional=True, default='fp32'),
     )
@@ -241,12 +250,12 @@ class make_list(Operation):
         super(make_list, self).__init__(**kwargs)
 
     def type_inference(self):
-        init_length = self.init_length.val
         builtin_dtype = builtins.string_to_builtin(self.dtype.val)
         if builtin_dtype is None:
             raise ValueError('Unsupported dtype {}'.format(self.dtype.val))
         elem_type = builtins.tensor(builtin_dtype, self.elem_shape.sym_val)
-        return builtins.list(elem_type, init_length=init_length)
+        return builtins.list(elem_type, init_length=self.init_length.val,
+                dynamic_length=self.dynamic_length.val)
 
 
 @register_op(doc_str='TODO')
@@ -260,6 +269,12 @@ class list_length(Operation):
 
     def type_inference(self):
         return builtins.int32
+
+    @precondition(allow=VALUE|SYMBOL|NONE)
+    def value_inference(self):
+        if not self.ls.dynamic_length:
+            return self.ls.init_length
+        raise NotImplementedError()
 
 @register_op(doc_str='TODO')
 class list_write(Operation):
@@ -275,13 +290,18 @@ class list_write(Operation):
     def type_inference(self):
         list_elem_type = self.ls.elem_type
         value_type = self.value.sym_type
+        dynamic_length = self.ls.dynamic_length
+        init_length = self.ls.init_length
+
         if list_elem_type is None:
             # fill in the elem type using value's type info.
-            return builtins.list(value_type)
+            return builtins.list(value_type, init_length=init_length,
+                    dynamic_length=dynamic_length)
         if list_elem_type == builtins.unknown:
             msg = 'Input ls elem type unknown. Override with {}'
             logging.warning(msg.format(value_type))
-            return builtins.list(value_type)
+            return builtins.list(value_type, init_length=init_length,
+                    dynamic_length=dynamic_length)
         if not builtins.is_subtype(value_type, list_elem_type):
             msg = 'Elem type mismatch: ls elem type {} vs ' + \
                     'value type {}'
@@ -347,11 +367,15 @@ class list_scatter(Operation):
                 num_values, num_indices))
         list_elem_type = self.ls.elem_type
         value_type = self.value.sym_type
+        dynamic_length = self.ls.dynamic_length
+        init_length = self.ls.init_length
+
         elem_type = builtins.tensor(value_type.get_primitive(),
                 value_type.get_shape()[1:])
         if list_elem_type == builtins.unknown:
             # fill in the elem type using value's type info.
-            return builtins.list(elem_type)
+            return builtins.list(elem_type, dynamic_length=dynamic_length,
+                    init_length=init_length)
         if not builtins.is_subtype(elem_type, list_elem_type):
             msg = 'Elem type mismatch: ls elem type {} vs ' + \
                     'value type {}'

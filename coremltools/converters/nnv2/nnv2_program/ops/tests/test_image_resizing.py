@@ -90,7 +90,7 @@ class TestUpsampleBilinear:
                             backend=backend)
 
     # TODO: enable GPU test: rdar://problem/60309338
-    @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize("use_cpu_only, backend, input_shape, scale_factor, align_corners",
             itertools.product(
                 [True],

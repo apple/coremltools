@@ -70,7 +70,8 @@ class TranscriptionContext:
 
     def get_graph(self, graph_name):
         if graph_name not in self.graphs:
-            raise KeyError('Graph {} not found'.format(graph_name))
+            msg = "Graph '{}' not found in: {}"
+            raise KeyError(msg.format(graph_name, list(self.graphs.keys())))
         return self.graphs[graph_name]
 
     def stack_func_inputs(self, inputs):
@@ -88,16 +89,19 @@ class TranscriptionContext:
 
     def __getitem__(self, tf_name):
         if tf_name not in self.context:
-            raise KeyError("TF var %s not found in context %s" \
-                           % (tf_name, self.name))
+            msg = "TF var {} not found in context {}"
+            raise KeyError(msg.format(tf_name, self.name))
         return self.context[tf_name]
+
+    def __contains__(self, tf_name):
+        return tf_name in self.context
 
 
 class TFConverter:
     def __init__(self, tfssa, inputs=None, outputs=None, **kwargs):
         """
         tfssa: TensorFlow IR.
-        inputs: dict(str: list/tuple) or list of str, optional, defaults to None.
+        inputs: dict[str -> list/tuple] or list[str], optional, defaults to None.
             Dictionary containing {name: shape} for each input or list of input
             names. It None, the converter will try to extract the input information
             by assuming all Placeholder or PlaceholderWithDefault as inputs.
@@ -106,35 +110,37 @@ class TFConverter:
             If None, the converter will try to extract the output information from
             TensorFlow model.
         """
-
         self.tfssa = tfssa
         self.global_type = {}
 
         main_func = tfssa.functions['main']
         graph = main_func.graph
-        self._validate_inputs(graph, inputs)
 
-        # infer inputs (name: shape) if not provided
-        if inputs is None or isinstance(inputs, list):
-            inputs = {}
-            for n in main_func.inputs:
-                shapes = main_func.graph[n].attr.get('_output_shapes', None)
-                if shapes is None:
-                    shapes = main_func.graph[n].attr.get('shape')
-                inputs[n] = shapes[0]
+        # Filter the inputs to only Placeholder names
+        placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
+        if isinstance(inputs, dict):
+            inputs = {name: shape for name, shape in inputs.items() \
+                    if name in placeholder_names}
+        elif isinstance(inputs, list):
+            inputs = [name for name in inputs if name in placeholder_names]
+
+        # Instantiate self.inputs as list[str] of node names
+        if inputs is None:
+            self.inputs = main_func.inputs
+        elif isinstance(inputs, list):  # set given input shape
+            self.inputs = inputs
         elif isinstance(inputs, dict):  # set given input shape
-            placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
-            for n in placeholder_names:
-                if n in inputs:
-                    graph[n].attr['_output_shapes'] = [inputs[n]]
+            self.inputs = list(inputs.keys())
+            for name, shape in inputs.items():
+                node = graph[name]
+                node.attr['_output_shapes'] = [shape] # list of length 1
 
         # infer outputs if not provided
-        self._validate_outputs(graph, outputs)
+        self._validate_outputs(tfssa, outputs)
         outputs = main_func.outputs if outputs is None else outputs
         outputs = outputs if isinstance(outputs, (tuple, list)) else [outputs]
         outputs = [x if isinstance(x, six.string_types) else x.name for x in outputs]
-
-        self.inputs, self.outputs = inputs, outputs
+        self.outputs = outputs
 
         # We would like a stack so that we run conversion sequentially.
         self.graph_stack = self._get_stack(tfssa, root="main")
@@ -149,6 +155,13 @@ class TFConverter:
                 if node.op == 'while':
                     bfunc = node.attr['body_function']
                     cfunc = node.attr['cond_function']
+                    if fname not in dep[bfunc]:
+                        dep[bfunc].append(fname)
+                    if fname not in dep[cfunc]:
+                        dep[cfunc].append(fname)
+                if node.op in {'StatelessWhile', 'While'}:
+                    bfunc = node.attr.get('body')
+                    cfunc = node.attr.get('cond')
                     if fname not in dep[bfunc]:
                         dep[bfunc].append(fname)
                     if fname not in dep[cfunc]:
@@ -178,32 +191,23 @@ class TFConverter:
             shape = tuple(get_new_symbol() if s is None or s < 0 else s for s in shape)
         return cb.placeholder(shape, dtype=dtype)
 
-    def _validate_inputs(self, graph, inputs):
-        if inputs is None:
-            return
-        msg = "Input node name '{}' does not exist. " \
-              "Must be in Placeholders: {}"
-        placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
-        if isinstance(inputs, list):
-            for n in inputs:
-                if n not in placeholder_names:
-                    raise KeyError(msg.format(n, placeholder_names))
-        elif isinstance(inputs, dict):
-            for n in inputs.keys():
-                if n not in placeholder_names:
-                    raise KeyError(msg.format(n, placeholder_names))
-
-    def _validate_outputs(self, graph, outputs):
+    def _validate_outputs(self, tfssa, outputs):
         if outputs is None:
             return
         outputs = outputs if isinstance(outputs, (tuple, list)) else [outputs]
+        output_nodes = []
+        for f in tfssa.functions.values():
+            output_nodes += list(f.outputs)
+        all_nodes = []
+        for f in tfssa.functions.values():
+            all_nodes += list(f.graph.keys())
         for n in outputs:
-            if self._get_tensor_name(n) not in graph.keys():
+            if self._get_tensor_name(n) not in output_nodes + all_nodes:
                 raise KeyError('Output node name "{}" does exist.'.format(n))
 
     def convert_main_graph(self, prog, graph):
         func_inputs = {}
-        for name in self.inputs.keys():
+        for name in self.inputs:
             node = graph[name]
             func_inputs[name] = TFConverter._create_placeholder(node)
 

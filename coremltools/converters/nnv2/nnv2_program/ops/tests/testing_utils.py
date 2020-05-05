@@ -1,6 +1,6 @@
 import logging
 
-from coremltools.converters.nnv2.testing_reqs import converter
+from coremltools.converters.nnv2.testing_reqs import _converter as converter
 from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
 from coremltools.converters.nnv2.testing_utils import compare_backend
@@ -77,7 +77,7 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    proto = converter.convert(
+    proto = converter._convert(
         prog, convert_from="NitroSSA", convert_to=backend)
 
     if frontend_only:

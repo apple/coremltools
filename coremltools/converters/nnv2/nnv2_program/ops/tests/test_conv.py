@@ -8,7 +8,7 @@ backends = testing_reqs.backends
 
 
 class TestConvTranspose:
-    @pytest.mark.skipif(not HAS_PYTORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
             ','.join([
                 'use_cpu_only',

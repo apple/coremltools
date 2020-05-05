@@ -1,6 +1,6 @@
 import copy
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
-from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import PASS_REGISTRY 
+from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.nnv2.testing_utils import assert_model_is_valid
 from coremltools.converters.nnv2.testing_utils import (
         assert_same_output_names)
@@ -34,7 +34,9 @@ def test_commingle_loop_vars():
     assert while_op.blocks[0].inputs[0].name == while_op.outputs[0].name
     assert while_op.blocks[0].inputs[1].name == while_op.outputs[1].name
 
-    assert_model_is_valid(prog, {'a': (1, 2), 'b': (1, 2)})
+    prog.validate()
+
+    # The program is not ssa and thus cannot be converted
 
 
 def test_handle_return_return_inputs_as_outputs():

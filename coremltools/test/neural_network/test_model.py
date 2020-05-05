@@ -8,12 +8,14 @@ import unittest
 import tempfile
 import numpy as np
 from coremltools.proto import Model_pb2
+import PIL.Image
 
 from coremltools.models.utils import rename_feature, save_spec, macos_version,\
                 convert_neural_network_spec_weights_to_fp16, is_macos, \
                 convert_double_to_float_multiarray_type
 from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
+from coremltools.models.neural_network.utils import make_image_input, make_nn_classifier
 
 
 class MLModelTest(unittest.TestCase):
@@ -257,6 +259,59 @@ class MLModelTest(unittest.TestCase):
         convert_double_to_float_multiarray_type(spec)
         self.assertEqual(spec.description.input[0].type.multiArrayType.dataType, Model_pb2.ArrayFeatureType.FLOAT32)
         self.assertEqual(spec.description.output[0].type.multiArrayType.dataType, Model_pb2.ArrayFeatureType.FLOAT32)
+
+
+    def test_multiarray_to_image_input_util(self):
+        H, W, C = 1, 1, 3
+        input_features = [('data', datatypes.Array(C, H, W))]
+        output_features = [('out', datatypes.Array(C, H, W))]
+        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_activation('linear', 'LINEAR', 'data', 'out')
+        spec = builder.spec
+        mlmodel = MLModel(spec)
+        mlmodel = make_image_input(mlmodel, "data",
+                                   red_bias=-5, green_bias=-6, blue_bias=-2.5,
+                                   scale=10.0,
+                                   image_format='NCHW')
+        x = np.array([4, 2, 5], dtype=np.uint8)
+        x = np.reshape(x, (H, W, C))
+        pil_img = PIL.Image.fromarray(x)
+        y = mlmodel.predict({'data': pil_img}, useCPUOnly=True)['out']
+        self.assertEqual(y.shape, (C, H, W))
+        np.testing.assert_almost_equal(y.flatten(), [35.0, 14.0, 47.5])
+
+    def test_multiarray_to_image_input_util_HWC_format(self):
+        H, W, C = 1, 1, 3
+        input_features = [('data', datatypes.Array(H, W, C))]
+        output_features = [('out', datatypes.Array(H, W, C))]
+        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_activation('linear', 'LINEAR', 'data', 'out')
+        spec = builder.spec
+        mlmodel = MLModel(spec)
+        mlmodel = make_image_input(mlmodel, "data",
+                                   red_bias=-5, green_bias=-6, blue_bias=-2.5,
+                                   scale=10.0,
+                                   image_format='NHWC')
+        x = np.array([4, 2, 5], dtype=np.uint8)
+        x = np.reshape(x, (H, W, C))
+        pil_img = PIL.Image.fromarray(x)
+        y = mlmodel.predict({'data': pil_img}, useCPUOnly=True)['out']
+        self.assertEqual(y.shape, (H, W, C))
+        np.testing.assert_almost_equal(y.flatten(), [35.0, 14.0, 47.5])
+
+    def test_nn_classifier_util(self):
+        input_features = [('data', datatypes.Array(3,))]
+        output_features = [('out', datatypes.Array(3, ))]
+        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_activation('linear', 'LINEAR', 'data', 'out')
+        spec = builder.spec
+        mlmodel = MLModel(spec)
+        mlmodel = make_nn_classifier(mlmodel, class_labels=['a', 'b', 'c'],
+                                     predicted_feature_name='out_confidence',
+                                     predicted_probabilities_output='out')
+        out_dict = mlmodel.predict({'data': np.array([4.0, 5.5, 6.0])}, useCPUOnly=True)
+        self.assertEqual(out_dict['out_confidence'], 'c')
+        self.assertEqual(mlmodel.get_spec().WhichOneof("Type"), 'neuralNetworkClassifier')
 
 
 

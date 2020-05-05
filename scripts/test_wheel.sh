@@ -63,4 +63,5 @@ fi
 
 # Now run the tests
 echo "Running tests"
-$PYTEST_EXECUTABLE -ra -m "not slow" --durations=100 --pyargs ${TEST_PACKAGE} -p no:warnings --junitxml=${BUILD_DIR}/py-test-report.xml
+
+$PYTEST_EXECUTABLE -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" -m "not slow" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml

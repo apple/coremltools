@@ -98,9 +98,9 @@ def loop_invariant_elimination_block(block):
 
         # remove invariants from while_loop outputs
         # block.outputs[0] is cond var
-        block._outputs = [block.outputs[0]] + \
+        block.set_outputs([block.outputs[0]] + \
                 [v for i, v in enumerate(block.outputs[1:]) \
-                if i not in loop_invariant_ids]
+                if i not in loop_invariant_ids])
 
         # op._output_vars doesn't include cond var
         op._output_vars = [v for i, v in enumerate(op._output_vars) \

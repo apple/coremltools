@@ -12,9 +12,9 @@ import tensorflow as tf
 
 from .basic_graph_ops import fill_outputs
 from .converter import TFConverter
-from .parse import graph_def_to_dict
 from .tf_graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from .tfssa import NetworkEnsemble, SSAFunction
+from .parse import ParsedTFNode
 
 
 def load(model, debug=False, **kwargs):
@@ -33,7 +33,7 @@ def load(model, debug=False, **kwargs):
         cause graph pass errors to be ignored, forcefully returning a
         NetworkEnsemble object.
     """
-    tf_graph = tf_graph_from_model(model)
+    tf_graph = _tf_graph_from_model(model)
     tf_ssa = tf_ssa_from_graph(tf_graph)
 
     if debug:
@@ -65,7 +65,7 @@ def load(model, debug=False, **kwargs):
         dot_string = tf_ssa.get_dot_string(
             annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
         graphviz.Source(dot_string).view(filename='/tmp/ssa_after_tf_passes', cleanup=True)
-        tf.io.write_graph(tf_graph, '/tmp/', '/tmp/tf_graph.pb', as_text=False)
+        tf.io.write_graph(tf_graph, '/tmp/', '/tmp/graph_def.pb', as_text=False)
 
     else:
         for p in tf_passes:
@@ -77,7 +77,7 @@ def load(model, debug=False, **kwargs):
     return prog
 
 
-def tf_graph_from_model(model):
+def _tf_graph_from_model(model):
     """
     Extract tf.Graph from model created in TensorFlow 1.x
     """
@@ -116,3 +116,10 @@ def tf_ssa_from_graph(graph, main_func_name='main'):
     tf_ssa = NetworkEnsemble()
     tf_ssa.functions[main_func_name] = SSAFunction(graph)
     return tf_ssa
+
+
+def graph_def_to_dict(gd):
+    ret = {}
+    for node in gd.node:
+        ret[node.name] = ParsedTFNode(node)
+    return ret

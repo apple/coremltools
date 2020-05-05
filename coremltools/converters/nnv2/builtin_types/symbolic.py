@@ -24,6 +24,8 @@ def num_symbolic(val):
 def any_symbolic(val):
     if is_symbolic(val):
         return True
+    if isinstance(val, np.ndarray) and val.ndim == 0:
+        return is_symbolic(val[()])
     elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
         return False
     elif isinstance(val, six.string_types): # string is iterable
