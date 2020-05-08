@@ -163,7 +163,7 @@ def convert_tree_ensemble(
 
         # Xgboost sometimes has feature names in there. Sometimes does not.
         if (feature_names is None) and (model.feature_names is None):
-            raise ValueError("Feature names not present in the model. Must be provided during conversion.")
+            raise ValueError("The XGBoost model does not have feature names. They must be provided in convert method.")
             feature_names = model.feature_names
         if feature_names is None:
             feature_names = model.feature_names
@@ -179,7 +179,12 @@ def convert_tree_ensemble(
             raise TypeError("Invalid path %s." % model)
         with open(model) as f:
             xgb_model_str = json.load(f)
-        feature_map = {f:i for i,f in enumerate(feature_names)}
+
+        if feature_names is None:
+            raise ValueError("feature names must be provided in convert method if the model is a path on file system.")
+        else:
+            feature_map = {f: i for i, f in enumerate(feature_names)}
+
     else:
         raise TypeError("Unexpected type. Expecting XGBoost model.")
 
@@ -209,7 +214,14 @@ def convert_tree_ensemble(
             tree_index = xgb_tree_id % n_classes
         else:
             tree_index = 0
-        xgb_tree_json = json.loads(xgb_tree_str)
+
+        try:
+            # this means that the xgb_tree_str is a json dump and needs to be loaded
+            xgb_tree_json = json.loads(xgb_tree_str)
+        except:
+            # this means that the xgb_tree_str is loaded from a path in file system already and does not need to be reloaded
+            xgb_tree_json = xgb_tree_str
+
         recurse_json(mlkit_tree, xgb_tree_json, xgb_tree_id, node_id = 0,
                 feature_map = feature_map, force_32bit_float = force_32bit_float, mode=mode, tree_index=tree_index, n_classes=n_classes)
     return mlkit_tree.spec
