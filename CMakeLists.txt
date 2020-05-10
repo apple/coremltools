@@ -22,7 +22,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Globally ignore "no symbols" warnings during compilation
 SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
-SET(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+if(APPLE)
+    SET(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+endif()
 
 find_program(HAS_CCACHE ccache)
 if(HAS_CCACHE)

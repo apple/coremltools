@@ -31,8 +31,10 @@ from coremltools.converters.nnv2.frontend.tensorflow.test.test_ops import (
     TestActivationSoftSign,
     TestBroadcastTo,
     TestCond,
+    TestConcat, # Redirects to ConcatV2 in TF2
     TestConv,
     TestConv3d,
+    TestDepthwiseConv,
     TestElementWiseBinary,
     TestLinear,
     TestNormalization,
@@ -41,6 +43,8 @@ from coremltools.converters.nnv2.frontend.tensorflow.test.test_ops import (
     TestPooling2d,
     TestPooling3d,
     TestWhileLoop,
+    TestReshape,
+    TestSlice,
 )
 
 del TestWhileLoop.test_nested_while_body  # tf.function() error in TF2

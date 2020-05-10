@@ -1,11 +1,7 @@
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
 from coremltools.converters.nnv2.testing_utils import (
     assert_op_count_match, assert_model_is_valid,
-    assert_same_output_names, assert_same_output_shapes,
-    get_op_types_in_program)
-from coremltools.converters.nnv2.nnv2_program.program import Symbol
-from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import PASS_REGISTRY
-import copy
+    get_op_types_in_program, apply_pass_and_basic_check)
 import unittest
 import pytest
 
@@ -13,15 +9,6 @@ import numpy as np
 
 np.random.seed(1984)
 
-
-def _transform_and_basic_check(prog):
-    prev_prog = copy.deepcopy(prog)
-    PASS_REGISTRY['common::reduce_transposes'](prog)
-    block = prog.functions["main"]
-    prev_block = prev_prog.functions["main"]
-    assert_same_output_names(prev_prog, prog)
-    assert_same_output_shapes(prev_prog, prog)
-    return prev_prog, prev_block, block
 
 class TransposeOptimizationPass(unittest.TestCase):
     """"""
@@ -41,7 +28,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x = cb.relu(x=x)
             return x
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'transpose', 'relu'])
         self.assertEqual(get_op_types_in_program(prog), ['relu'])
         assert_model_is_valid(prog, {'x': (10, 20)},
@@ -65,7 +52,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x = cb.relu(x=x)
             return x
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'relu', 'log', 'transpose', 'relu'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'log', 'relu'])
         assert_model_is_valid(prog, {'x': (1, 2, 3, 4)},
@@ -94,7 +81,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x4 = cb.relu(x=x3)
             return x4, x1
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'relu', 'log', 'transpose', 'relu'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'log', 'relu', 'transpose'])
         assert_model_is_valid(prog, {'x': (1, 2, 3, 4)},
@@ -117,7 +104,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x = cb.transpose(x=x, perm=[0, 2, 3, 1])
             return x
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'relu', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu'])
         assert_model_is_valid(prog, {'x': (1, 2, 3, 4)},
@@ -148,7 +135,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y2 = cb.transpose(x=x3, perm=[0, 2, 1])
             return y1, y2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'relu', 'relu', 'transpose', 'log', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'log'])
 
@@ -184,7 +171,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y2 = cb.transpose(x=x3, perm=[0, 3, 1, 2])
             return y1, y2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'relu', 'relu', 'avg_pool', 'log', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'transpose', 'avg_pool', 'log'])
 
@@ -221,7 +208,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y2 = cb.transpose(x=x3, perm=[0, 2, 1, 3])
             return y1, y2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'relu', 'avg_pool', 'transpose', 'log', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'transpose', 'avg_pool', 'log', 'transpose'])
 
@@ -266,7 +253,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             return y1, y2, y3, y4
 
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['relu', 'transpose', 'transpose', 'relu', 'transpose', 'avg_pool', 'avg_pool'])
         self.assertEqual(get_op_types_in_program(prog),
@@ -304,7 +291,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             return x1, x2
 
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['relu', 'transpose', 'transpose', 'relu'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'transpose'])
 
@@ -332,7 +319,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             out1 = cb.transpose(x=out2, perm=[0, 2, 1, 3])
             return out1, out2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['relu', 'transpose', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'transpose', 'transpose'])
 
@@ -366,7 +353,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y4 = cb.avg_pool(x=x1, kernel_sizes=[1, 1], strides=[1, 1], pad_type='valid')
             return y2, y3, y4
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['relu', 'transpose', 'relu', 'transpose', 'relu', 'avg_pool', 'avg_pool'])
         self.assertEqual(get_op_types_in_program(prog),
@@ -402,7 +389,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y2 = cb.transpose(x=x3, perm=[0, 2, 1])
             return y1, y2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['transpose', 'relu', 'reduce_mean', 'transpose', 'log', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'reduce_mean', 'log'])
@@ -434,7 +421,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y2 = cb.transpose(x=x3, perm=[0, 2, 3, 1])
             return y2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'pad', 'log', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['transpose', 'pad', 'log', 'transpose'])
 
@@ -464,7 +451,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y2 = cb.transpose(x=x3, perm=[0, 1, 3, 2])
             return y2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'pad', 'log', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['pad', 'log'])
 
@@ -494,7 +481,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y2 = cb.transpose(x=x3, perm=[0, 2, 3, 1])
             return y2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'pad', 'log', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['pad', 'log'])
 
@@ -524,7 +511,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x = cb.transpose(x=x, perm=[0,3,1,2])
             return x
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'add', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['add'])
 
@@ -553,7 +540,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x = cb.transpose(x=x, perm=[0, 3, 1, 2])
             return x
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'add', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['add'])
 
@@ -584,7 +571,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y = cb.transpose(x=x3, perm=[0, 3, 1, 2])
             return y
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'relu', 'transpose', 'add', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'add'])
 
@@ -619,7 +606,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             y = cb.transpose(x=x3, perm=[0, 3, 1, 2])
             return y
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'transpose', 'add', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['add'])
 
@@ -653,7 +640,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x4 = cb.transpose(x=x3, perm=[0, 3, 1, 2])
             return x4
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['transpose', 'transpose', 'relu', 'relu', 'concat', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'concat'])
@@ -695,7 +682,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x5 = cb.avg_pool(x=x2, kernel_sizes=[1, 1], strides=[1, 1], pad_type='valid')
             return x4, x5
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['transpose', 'transpose', 'relu', 'relu', 'concat', 'transpose','avg_pool'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'concat', 'transpose', 'avg_pool'])
@@ -738,7 +725,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x5 = cb.relu(x=x2)
             return x4, x5
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['transpose', 'transpose', 'relu', 'relu', 'concat', 'transpose', 'relu'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'concat', 'relu', 'transpose'])
@@ -781,7 +768,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x4 = cb.transpose(x=x3, perm=[0, 3, 1, 2])
             return x4, x2
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['transpose', 'transpose', 'relu', 'relu', 'concat', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'concat', 'transpose'])
@@ -821,7 +808,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x5 = cb.transpose(x=x2, perm=[0, 3, 1, 2])
             return x4, x5
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['transpose', 'transpose', 'relu', 'relu', 'concat', 'transpose', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'concat'])
@@ -854,12 +841,69 @@ class TransposeOptimizationPass(unittest.TestCase):
             x3 = cb.transpose(x=x2, perm=[1,2,0])
             return x3
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'concat', 'transpose'])
         self.assertEqual(get_op_types_in_program(prog), ['concat'])
 
         assert_model_is_valid(prog, {'x': (10, 20, 30)},
                               expected_output_shapes={block.outputs[0].name: (10,25,30)})
+
+
+    """
+    Input graph:
+                                        input2(shape=30,10,20)-----|
+                                                                   |
+    input(shape=10,20,30)--->transpose(axis=[2,0,1])----->relu-----|----->concat(axis=2)------>out1(shape=90,10,20)
+                                                      |            |
+                                                      |-->relu-----|
+                                                      |
+                                                      |-->relu---->transpose(axis=[1,2,0])---->out2(shape=10,20,30)
+                                                      |
+                                                      |-->relu---->transpose(axis=[1,2,0])---->out3(shape=10,20,30)
+                                                      |
+                                                      |-->relu---->transpose(axis=[1,2,0])---->out4(shape=10,20,30)
+
+    Output graph:
+
+                                        input2(shape=30,10,20)-----|
+                                                                   |
+    input(shape=10,20,30)----->relu--->transpose(axis=[2,0,1])-----|----->concat(axis=2)------>out1(shape=90,10,20)
+                           |                                       |
+                           |-->relu--->transpose(axis=[2,0,1])-----|
+                           |
+                           |-->relu---->out2(shape=10,20,30)
+                           |
+                           |-->relu---->out3(shape=10,20,30)
+                           |
+                           |-->relu---->out4(shape=10,20,30)
+
+    Output graph:
+    """
+    def test_concat_pattern_6(self):
+        @cb.program(input_specs=[cb.TensorSpec(shape=(10, 20, 30)), cb.TensorSpec(shape=(30, 10, 20))])
+        def prog(x, y):
+            x1 = cb.transpose(x=x, perm=[2, 0, 1])
+            r1 = cb.relu(x=x1)
+            r2 = cb.relu(x=x1)
+            r3 = cb.relu(x=x1)
+            r4 = cb.relu(x=x1)
+            r5 = cb.relu(x=x1)
+
+            x2 = cb.concat(values=[r1,r2,y],axis=0)
+            x3 = cb.transpose(x=r3, perm=[1,2,0])
+            x4 = cb.transpose(x=r4, perm=[1,2,0])
+            x5 = cb.transpose(x=r5, perm=[1,2,0])
+            return x2,x3,x4,x5
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
+        self.assertEqual(get_op_types_in_program(prev_prog), ['transpose', 'relu', 'relu', 'relu', 'relu', 'relu', 'concat', 'transpose', 'transpose', 'transpose'])
+        self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'relu', 'relu', 'relu', 'transpose', 'transpose', 'concat'])
+
+        assert_model_is_valid(prog, {'x': (10, 20, 30), 'y': (30, 10, 20)},
+                              expected_output_shapes={block.outputs[0].name: (90,10,20),
+                                                      block.outputs[1].name: (10,20,30), 
+                                                      block.outputs[2].name: (10,20,30), 
+                                                      block.outputs[3].name: (10,20,30)})
 
 
     """
@@ -906,7 +950,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x6 = cb.avg_pool(x=x5, kernel_sizes=[1, 1], strides=[1, 1], pad_type='valid')
             return x6
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['transpose', 'relu', 'transpose', 'relu', 'transpose', 'add', 'relu', 'avg_pool'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'add', 'relu', 'transpose', 'avg_pool'])
@@ -962,7 +1006,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x6 = cb.avg_pool(x=x5, kernel_sizes=[1, 1], strides=[1, 1], pad_type='valid')
             return x6
 
-        prev_prog, prev_block, block = _transform_and_basic_check(prog)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::reduce_transposes')
         self.assertEqual(get_op_types_in_program(prev_prog),
                          ['transpose', 'relu', 'transpose', 'relu', 'transpose', 'add', 'transpose', 'relu', 'avg_pool'])
         self.assertEqual(get_op_types_in_program(prog), ['relu', 'relu', 'add', 'relu', 'avg_pool'])

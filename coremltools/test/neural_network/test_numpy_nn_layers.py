@@ -5407,14 +5407,14 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                             )
 
                                             # Depth
-                                            padding[0] = math.floor(pad_d)
-                                            padding[1] = math.ceil(pad_d)
+                                            padding[0] = int(math.floor(pad_d))
+                                            padding[1] = int(math.ceil(pad_d))
                                             # Height
-                                            padding[2] = math.floor(pad_h)
-                                            padding[3] = math.ceil(pad_h)
+                                            padding[2] = int(math.floor(pad_h))
+                                            padding[3] = int(math.ceil(pad_h))
                                             # Width
-                                            padding[4] = math.floor(pad_w)
-                                            padding[5] = math.ceil(pad_w)
+                                            padding[4] = int(math.floor(pad_w))
+                                            padding[5] = int(math.ceil(pad_w))
                                         elif padding_mode == "valid":
                                             # Set to zero for PyTorch padding
                                             padding = [0] * 6
@@ -5430,7 +5430,9 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                         weights_shape = [
                                             output_channels,
                                             int(input_channels / groups),
-                                            kernel,
+                                            kernel[0],
+                                            kernel[1],
+                                            kernel[2],
                                         ]
 
                                         # Init random input
@@ -5549,22 +5551,16 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                             validate_shapes_only=False,
                                         )
 
-    @pytest.mark.xfail(reason="rdar://60649718")  # Espresso grouped conv weight size mismatch
     def test_conv3d_cpu_basic(self):
         self._test_conv3d(cpu_only=True, full_test=False)
 
-    @pytest.mark.xfail(reason="rdar://60649718")  # Espresso grouped conv weight size mismatch
-    @pytest.mark.xfail(reason="rdar://60649022")  # Espresso depth dilation not properly set
     @pytest.mark.slow
     def test_conv3d_cpu_slow(self):
         self._test_conv3d(cpu_only=True, full_test=True)
 
-    @pytest.mark.xfail(reason="rdar://60649718")  # Espresso grouped conv weight size mismatch
     def test_conv3d_gpu_basic(self):
         self._test_conv3d(cpu_only=False, full_test=False)
 
-    @pytest.mark.xfail(reason="rdar://60649718")  # Espresso grouped conv weight size mismatch
-    @pytest.mark.xfail(reason="rdar://60649022")  # Espresso depth dilation not properly set
     @pytest.mark.slow
     def test_conv3d_gpu_slow(self):
         self._test_conv3d(cpu_only=False, full_test=True)

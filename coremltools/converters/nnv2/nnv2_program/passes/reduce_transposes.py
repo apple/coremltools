@@ -864,10 +864,10 @@ class TransposeOptimization(object):
                 ...
         """
         for op, input_var in self.transpose_op_to_materialize_ops.get(starting_transpose_op, []):
-            if op in self.materialized_ops_handled:
+            if (op, input_var) in self.materialized_ops_handled:
                 continue
 
-            self.materialized_ops_handled.add(op)
+            self.materialized_ops_handled.add((op, input_var))
             with self.block:
                 if input_var == starting_transpose_op_out_var:
                     # materialize op is connected to the starting transpose op

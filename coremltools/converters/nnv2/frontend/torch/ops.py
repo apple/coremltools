@@ -1565,9 +1565,14 @@ def masked_fill(context, node):
     x = inputs[0]
     mask = inputs[1]
     value = inputs[2]
-    # cb.select does not properly broadcast scalar input, so as a workaround
+    # @cb.select does not properly broadcast scalar input, so as a workaround
     # we create a full sized tensor.
     # rdar://61463562
+
+    if builtins.is_int(value.dtype):
+        # @cb.fill cannot handle value with dtype integer
+        # so we cast the value.
+        value = cb.cast(x=value, dtype="fp32")
     value = cb.fill(shape=x.shape, value=value, name=node.name + "_value")
     res = cb.select(cond=mask, a=value, b=x, name=node.name)
     context.add(res)
@@ -1641,6 +1646,7 @@ def tanh(context, node):
         "contiguous",
         "device",
         "detach",
+        "clone",
     ]
 )
 def noop(context, node):
@@ -1658,3 +1664,58 @@ def argmax(context, node):
     keep_dims = inputs[2]
     res = cb.reduce_argmax(x=x, axis=axis, keep_dims=keep_dims, name=node.name)
     context.add(res)
+
+
+@register_torch_op
+def zeros(context, node):
+    inputs = _get_inputs(context, node, expected=5)
+    size = inputs[0].val
+    dtype = inputs[1].val
+    # layout = inputs[2] unused
+    # device = inputs[3] unused
+    # pin_memory = inputs[4] unused
+
+    torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
+    zeros_array = torch.zeros(tuple(size)).type(torch_dtype).numpy()
+    const = cb.const(mode="immediate_value", val=zeros_array, name=node.name)
+    context.add(const)
+
+
+@register_torch_op
+def exp(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    exp = cb.exp(x=inputs[0], name=node.name)
+    context.add(exp)
+
+@register_torch_op
+def max(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    _input = inputs[0]
+    dim = inputs[1].val
+    keepdim = inputs[2].val
+
+    values = cb.reduce_max(x=_input, axes=[dim], keep_dims=keepdim)
+    indices = cb.reduce_argmax(x=_input, axis=dim, keep_dims=keepdim)
+    assert len(node.outputs) == 2
+    values_name = node.outputs[0]
+    indices_name = node.outputs[1]
+    context.add(values, torch_name=values_name)
+    context.add(indices, torch_name=indices_name)
+
+
+@register_torch_op
+def sort(context, node):
+    inputs = _get_inputs(context, node)
+    _input = inputs[0]
+    axis = inputs[1].val
+    descending = inputs[2].val
+    # NOTE: This is actually descending
+    # rdar://62901267 (argsort ascending is actually descending)
+    indices = cb.argsort(x=_input, axis=axis, ascending=descending)
+    values = cb.gather_along_axis(x=_input, indices=indices, axis=axis)
+
+    values_name = node.outputs[0]
+    indices_name = node.outputs[1]
+    context.add(values, torch_name=values_name)
+    context.add(indices, torch_name=indices_name)
+

@@ -8,6 +8,7 @@ from coremltools.converters.nnv2.nnv2_program.ops.defs._utils import broadcast_s
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
 from coremltools.converters.nnv2.builtin_types import builtins
+from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic
 
 def _transpose_NHWC_to_NCHW(x):
     return cb.transpose(x=x, perm=[0, 3, 1, 2])
@@ -686,7 +687,7 @@ def _pool_pads_or_strides(tf_spec, data_format, d_rank):
     return d_spec
 
 
-@register_tf_op(tf_alias=['BatchMatMul'])
+@register_tf_op(tf_alias=['BatchMatMul', 'BatchMatMulV2'])
 def MatMul(context, node):
     a = context[node.inputs[0]]
     b = context[node.inputs[1]]
@@ -1152,6 +1153,28 @@ def Select(context, node):
     cond = context[node.inputs[0]]
     a = context[node.inputs[1]]
     b = context[node.inputs[2]]
+
+    # check shapes
+    cond_shape = cond.shape
+    a_shape = a.shape
+    b_shape = b.shape
+
+    if len(a_shape) == len(cond_shape):
+        if not all([is_symbolic(x) or is_symbolic(y) or x == y for x,y in zip(a_shape, cond_shape)]):
+            raise ValueError('Shape mismatch {} vs. {}'.format(a_shape, cond_shape))
+    else:
+        if len(cond_shape) != 1:
+            raise ValueError("Invalid shape for 'cond'.")
+        if a_shape[0] != cond_shape[0] and not is_symbolic(a_shape[0]) and not is_symbolic(cond_shape[0]):
+            raise ValueError("Invalid shape for 'cond'.")
+
+    # broadcast vector type cond
+    rank_cond = cond.rank
+    rank_a = a.rank
+    if rank_cond == 1 and rank_a > 1:
+        axes = [-i - 1 for i in range(rank_a - rank_cond)]
+        cond = cb.expand_dims(x=cond, axes=axes)
+
     x = cb.select(cond=cond, a=a, b=b, name=node.name)
     context.add(node.name, x)
 

@@ -75,7 +75,12 @@ setup(name='coremltools',
       install_requires=[
           'numpy >= 1.14.5',
           'protobuf >= 3.1.0',
-          'six>=1.10.0'
+          'six>=1.10.0',
+          'attr',
+          'attrs',
+          'sympy',
+          'scipy',
+          'enum34;python_version < "3.4"',
       ],
       entry_points={
           'console_scripts': ['coremlconverter = coremltools:_main']

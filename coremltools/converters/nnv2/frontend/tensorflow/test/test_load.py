@@ -1,4 +1,5 @@
 import os
+import six
 import pytest
 import shutil
 import tempfile
@@ -49,7 +50,7 @@ class TestModelInputsOutputs:
             return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
-        input_name = inputs[0] if isinstance(inputs[0], str) else inputs[0].op.name
+        input_name = inputs[0] if isinstance(inputs[0], six.string_types) else inputs[0].op.name
         mlmodel = converter.convert(
             model, inputs=[(input_name, (3, 4, 5))])
         assert mlmodel is not None

@@ -348,9 +348,9 @@ class TestTorchNumerical:
 
     def _pytorch_hidden_to_coreml(self, x):
         # Split of Direction axis
-        f, b = np.split(x, 2, axis=0)
+        f, b = torch.split(x, [1] * x.shape[0], dim=0)
         # Concat on Hidden Size axis
-        x = np.concatenate([f, b], axis=2)
+        x = torch.cat((f, b), dim=2)
         # NOTE:
         # We are ommiting a squeeze because the conversion
         # function for the nnv2 op lstm unsqueezes the num_layers
@@ -390,17 +390,14 @@ class TestTorchNumerical:
         h0 = torch.randn(num_layers * num_directions, BATCH_SIZE, hidden_size)
         c0 = torch.randn(num_layers * num_directions, BATCH_SIZE, hidden_size)
 
-        model.eval()
         inputs = (_input, (h0, c0))
-        torch_model = torch.jit.trace(model, inputs)
-        torch_results = flatten_and_detach_torch_results(torch_model(*inputs))
+        expected_results = model(*inputs)
         # Need to do some output reshaping if bidirectional
         if bidirectional:
-            torch_results[1] = self._pytorch_hidden_to_coreml(torch_results[1])
-            torch_results[2] = self._pytorch_hidden_to_coreml(torch_results[2])
-        convert_and_compare(
-            torch_model, inputs, expected_results=torch_results, atol=1e-5
-        )
+            ex_hn = self._pytorch_hidden_to_coreml(expected_results[1][0])
+            ex_cn = self._pytorch_hidden_to_coreml(expected_results[1][1])
+            expected_results = (expected_results[0], (ex_hn, ex_cn))
+        run_numerical_test(inputs, model, expected_results, input_as_shape=False)
 
     @pytest.mark.parametrize(
         "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional",
@@ -454,3 +451,23 @@ class TestTorchNumerical:
                 dropout,
                 bidirectional,
             )
+
+    @pytest.mark.parametrize(
+        "input_shape, dim, keepdim",
+        itertools.product([(2, 2), (1, 1)], [0, 1], [True, False]),
+    )
+    def test_max(self, input_shape, dim, keepdim):
+        class TestMax(nn.Module):
+            def __init__(self):
+                super(TestMax, self).__init__()
+
+            def forward(self, x):
+                return torch.max(x, dim=dim, keepdim=keepdim)
+
+        input_data = torch.rand(input_shape)
+        model = TestMax()
+        # TODO: Expected results are flipped due to naming issue:
+        # rdar://62681982 (Determine the output names of MLModels)
+        expected_results = model(input_data)[::-1]
+        run_numerical_test(input_data, model, expected_results=expected_results, input_as_shape=False)
+

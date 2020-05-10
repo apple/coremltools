@@ -87,7 +87,7 @@ class TestTorchOps:
 
     @staticmethod
     def _construct_test_graph(
-        context, test_op, test_node, output_name, graph_inputs=None, constants=None
+        context, test_op, test_node, output_name=None, graph_inputs=None, constants=None
     ):
         """ Construct an SsaFunction for the given @graph_inputs, @constants,
             and @test_node. Returns the output of the graph, which is the ssa
@@ -105,7 +105,9 @@ class TestTorchOps:
                 ops.constant(context, node)
             test_op(context, test_node)
 
-        ssa = context[output_name]
+        ssa = None
+        if output_name:
+            ssa = context[output_name]
         return ssa
 
     def _test_elementwise_binary(
@@ -1681,11 +1683,11 @@ class TestTorchOps:
         expected_result = torch.tanh(test_input)
         assert np.allclose(expected_result.numpy(), ssa.val)
 
+    # TODO: test for @keepdim==True when the backend bug is fixed.
+    # rdar://62566799
     @pytest.mark.parametrize(
         "input_shape, dim, keepdim",
         itertools.product([(3, 20, 20), (1, 50, 50)], [0, 1, 2], [False]),
-        # TODO: test for @keepdim==True when the backend bug is fixed.
-        # rdar://62566799
     )
     def test_argmax(self, context, input_shape, dim, keepdim):
         test_input = torch.rand(*input_shape)
@@ -1701,3 +1703,70 @@ class TestTorchOps:
         )
         expected_result = torch.argmax(test_input, dim, keepdim)
         np.testing.assert_allclose(expected_result, ssa.val)
+
+    @pytest.mark.parametrize(
+        "size, dtype", itertools.product([(1, 2, 3, 4), (1,)], [11, 0, 1, 6]),
+    )
+    def test_zeros(self, context, size, dtype):
+        layout = 0  # unused
+        device = 0  # unused
+        pin_memory = 0  # unused
+        constants, input_list, output_name = self._gen_constants(
+            5, [size, dtype, layout, device, pin_memory]
+        )
+        node = InternalTorchIRNode(
+            kind="zeros", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.zeros, node, output_name, constants=constants
+        )
+        expected_result = torch.zeros(size, dtype=ops.NUM_TO_TORCH_DTYPE[dtype])
+        np.testing.assert_allclose(expected_result, ssa.val)
+
+    # TODO: Reduce rtol
+    # rdar://62868763 (Numerical discrepancy between torch.exp and coreml NNv2 exp operation)
+    @pytest.mark.parametrize("input_size", [(1, 2, 3, 4), (1,)])
+    def test_exp(self, context, input_size):
+        test_input = torch.rand(input_size)
+        constants, input_list, output_name = self._gen_constants(1, test_input)
+        node = InternalTorchIRNode(kind="exp", inputs=input_list, outputs=[output_name])
+        ssa = self._construct_test_graph(
+            context, ops.exp, node, output_name, constants=constants
+        )
+        expected_result = torch.exp(test_input)
+        np.testing.assert_allclose(expected_result, ssa.val, rtol=1e-06)
+
+    @pytest.mark.parametrize(
+        "input_size, dim, keepdim",
+        itertools.product([(1, 2, 3, 4)], [0, 1, 2], [True, False]),
+    )
+    def test_max(self, context, input_size, dim, keepdim):
+        test_input = torch.rand(input_size)
+        constants, input_list, _ = self._gen_constants(3, [test_input, dim, keepdim])
+        node = InternalTorchIRNode(
+            kind="max", inputs=input_list, outputs=["out1", "out2"],
+        )
+        ssa = self._construct_test_graph(context, ops.max, node, constants=constants)
+        index_result = context["out1"].val
+        max_result = context["out2"].val
+        expected_index, expected_max = torch.max(test_input, dim=dim, keepdim=keepdim)
+
+
+    @pytest.mark.parametrize(
+        "input_size, dim, descending",
+        itertools.product([(2, 3, 4), (1, 2, 3, 4)], [0, 1, 2], [True, False]),
+    )
+    def test_sort(self, context, input_size, dim, descending):
+        test_input = torch.rand(input_size)
+        constants, input_list, output_name = self._gen_constants(
+            3, [test_input, dim, descending]
+        )
+        node = InternalTorchIRNode(
+            kind="sort", inputs=input_list, outputs=["out1", "out2"],
+        )
+        ssa = self._construct_test_graph(context, ops.sort, node, constants=constants)
+        expected_sort, expected_index = torch.sort(test_input, dim=dim, descending=descending)
+        sort_result = context["out1"].val
+        index_result = context["out2"].val
+        np.testing.assert_allclose(expected_sort, sort_result)
+        np.testing.assert_allclose(expected_index, index_result)

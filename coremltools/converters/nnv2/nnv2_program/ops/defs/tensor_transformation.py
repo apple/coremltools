@@ -436,8 +436,9 @@ class transpose(Operation):
         x_type = self.x.dtype
         perm = self.perm.val
         x_shape = np.array(self.x.shape)
-        if len(perm) != len(x_shape):
-            raise ValueError("perm should have the same length as rank(x).")
+        if len(perm) != self.x.rank:
+            msg = "perm should have the same length as rank(x): {} != {}"
+            raise ValueError(msg.format(len(perm), self.x.rank))
         if self.x.rank == 0:
             return self.x.sym_type  # scalar cannot be transposed
         if any_variadic(self.x.shape):

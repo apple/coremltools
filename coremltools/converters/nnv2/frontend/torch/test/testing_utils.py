@@ -28,10 +28,8 @@ def convert_to_coreml_inputs(input_description, inputs):
 def convert_to_mlmodel(model_spec, inputs):
     if isinstance(inputs, tuple):
         inputs = list(inputs)
-        
-    mlmodel = convert(
-        model_spec, inputs=inputs,
-    )
+
+    mlmodel = convert(model_spec, inputs=inputs,)
     return mlmodel
 
 
@@ -50,10 +48,22 @@ def trace_model(model, input_data):
     return torch_model
 
 
-def run_numerical_test(input_shape, model, places=5):
-    input_data = generate_input_data(input_shape)
-    torch_model = trace_model(model, input_data)
-    convert_and_compare(torch_model, input_data, atol=10.0 ** -places)
+def run_numerical_test(
+    input_data, model, expected_results=None, places=5, input_as_shape=True
+):
+    """
+        Traces a model and runs a numerical test.
+        Args:
+            input_as_shape <bool>: If true generates random input data with shape.
+            expected_results <iterable, optional>: Expected result from running pytorch model.
+    """
+    model.eval()
+    if input_as_shape:
+        input_data = generate_input_data(input_data)
+    model_spec = trace_model(model, input_data)
+    convert_and_compare(
+        input_data, model_spec, expected_results=expected_results, atol=10.0 ** -places
+    )
 
 
 def flatten_and_detach_torch_results(torch_results):
@@ -63,7 +73,7 @@ def flatten_and_detach_torch_results(torch_results):
     return [torch_results.detach().numpy()]
 
 
-def convert_and_compare(model_spec, inputs, expected_results=None, atol=1e-5):
+def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5):
     """
         If expected results is not set, it will by default 
         be set to the flattened output of the torch model.
@@ -73,19 +83,19 @@ def convert_and_compare(model_spec, inputs, expected_results=None, atol=1e-5):
     else:
         torch_model = model_spec
 
-    if not isinstance(inputs, (list, tuple)):
-        inputs = [inputs]
+    if not isinstance(input_data, (list, tuple)):
+        input_data = [input_data]
 
     if not expected_results:
-        expected_results = flatten_and_detach_torch_results(torch_model(*inputs))
-
-    mlmodel = convert_to_mlmodel(model_spec, inputs)
-    coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, inputs)
+        expected_results = torch_model(*input_data)
+    expected_results = flatten_and_detach_torch_results(expected_results)
+    mlmodel = convert_to_mlmodel(model_spec, input_data)
+    coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
     coreml_results = mlmodel.predict(coreml_inputs)
     sorted_coreml_results = [
         coreml_results[key] for key in sorted(coreml_results.keys())
     ]
-
+    
     for torch_result, coreml_result in zip(expected_results, sorted_coreml_results):
         np.testing.assert_equal(coreml_result.shape, torch_result.shape)
         np.testing.assert_allclose(coreml_result, torch_result, atol=atol)

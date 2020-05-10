@@ -1,11 +1,13 @@
 import logging
 import numpy as np
+import copy
 
 import coremltools
 from coremltools import converters as converter
 from coremltools.converters.nnv2 import converter as _converter
 
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
+from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import PASS_REGISTRY
 
 converter = converter
 _converter = _converter
@@ -45,12 +47,12 @@ def assert_model_is_valid(program, inputs, backend='nnv1_proto',
     proto = _converter._convert(program,
                                 convert_from='NitroSSA',
                                 convert_to=backend)
-    model = coremltools.models.MLModel(proto)
-    assert model is not None
     if verbose:
         from coremltools.models.neural_network.printer import print_network_spec
         print_network_spec(proto, style='coding')
 
+    model = coremltools.models.MLModel(proto)
+    assert model is not None
     prediction = model.predict(input_dict, useCPUOnly=True)
     assert prediction is not None
     if expected_output_shapes is not None:
@@ -220,3 +222,15 @@ def get_core_ml_prediction(
                                 convert_to=backend)
     model = coremltools.models.MLModel(proto, use_cpu_only)
     return model.predict(input_values, useCPUOnly=use_cpu_only)
+
+def apply_pass_and_basic_check(prog, pass_name):
+    """
+    Apply pass to the program
+    """
+    prev_prog = copy.deepcopy(prog)
+    PASS_REGISTRY[pass_name](prog)
+    block = prog.functions["main"]
+    prev_block = prev_prog.functions["main"]
+    assert_same_output_names(prev_prog, prog)
+    assert_same_output_shapes(prev_prog, prog)
+    return prev_prog, prev_block, block

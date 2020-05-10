@@ -4,7 +4,7 @@ import tempfile
 
 import pytest
 import coremltools.converters as converter
-from coremltools.converters.nnv2.frontend.tensorflow.test.testing_utils import get_tf_keras_io_name
+from coremltools.converters.nnv2.frontend.tensorflow.test.testing_utils import get_tf_keras_io_names
 from coremltools.converters.nnv2.frontend.tensorflow.test import testing_utils as tf_testing_utils
 from coremltools.converters.nnv2.frontend.tensorflow2.test.testing_utils import (
     make_tf2_graph, run_compare_tf2,
@@ -44,10 +44,10 @@ class TestModelFormats:
         keras_model = tf.keras.Sequential([
             tf.keras.layers.ReLU(input_shape=(4, 5), batch_size=3)
         ])
-        input_name, output_name = get_tf_keras_io_name(keras_model)
+        input_names, output_names = get_tf_keras_io_names(keras_model)
         mlmodel = converter.convert(
             keras_model,
-            inputs=[(input_name, (3, 4, 5))],
+            inputs=[(input_names[0], (3, 4, 5))],
             outputs=['Identity'],
             source=frontend)
         assert mlmodel is not None
@@ -66,11 +66,11 @@ class TestModelFormats:
         keras_model = tf.keras.Sequential([
             tf.keras.layers.ReLU(input_shape=(4, 5), batch_size=3)
         ])
-        input_name, output_name = get_tf_keras_io_name(keras_model)
+        input_names, output_names = get_tf_keras_io_names(keras_model)
         keras_model.save(self.model_path_h5, save_format='h5')
         mlmodel = converter.convert(
             self.model_path_h5,
-            inputs=[(input_name, (3, 4, 5))],
+            inputs=[(input_names[0], (3, 4, 5))],
             outputs=['Identity'],
             source=frontend)
         assert mlmodel is not None

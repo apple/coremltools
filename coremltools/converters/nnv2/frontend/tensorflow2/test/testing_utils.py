@@ -2,6 +2,7 @@ from coremltools.converters import convert
 import pytest
 tf = pytest.importorskip('tensorflow', minversion='2.1.0')
 from coremltools.converters.nnv2.frontend.tensorflow.test.testing_utils import get_tf_node_names
+
 from coremltools.converters.nnv2.testing_utils import compare_shapes, compare_backend
 from tensorflow.python.framework import dtypes
 
@@ -21,6 +22,7 @@ def make_tf2_graph(input_types):
     -------
     list of ConcreteFunction, list of str, list of str
     """
+
     def wrapper(ops):
         class TensorFlowModule(tf.Module):
             input_signature = []
@@ -127,36 +129,20 @@ def run_compare_tf_keras(
     rtol: float
         The relative tolerance parameter.
     """
-    # construct model and convert
-    tf_keras_model = tf.function(lambda x: model(x))
 
-    input_tensor_spec = []
-    for i in range(len(model.inputs)):
-        input_tensor_spec.append(
-            tf.TensorSpec(model.inputs[i].shape, model.inputs[i].dtype))
+    proto = convert(model, source=frontend, convert_to=backend).get_spec()
 
-    cf = tf_keras_model.get_concrete_function(*input_tensor_spec)
-
-    inputs = {}
-    cf_inputs = [t for t in cf.inputs if t.dtype != dtypes.resource]
-    for t in cf_inputs:
-        name = get_tf_node_names(t.name)[0]
-        inputs[name] = list(t.get_shape())
-    outputs = []
-    for t in cf.outputs:
-        name = get_tf_node_names(t.name)[0]
-        outputs.append(name)
-
-    proto = convert([cf], inputs=list(inputs.items()),
-                    outputs=outputs, convert_to=backend).get_spec()
+    # assumes conversion preserve the i/o names
+    inputs = sorted([str(i.name) for i in proto.description.input])
+    outputs = [str(o.name) for o in proto.description.output]
 
     if frontend_only:
         return
 
     # get tf.keras model output as reference and run comparision
-    ref = [model(*input_values).numpy()]
+    ref = [model(input_values).numpy()]
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
-    input_key_values = {n: v for n, v in zip(inputs.keys(), input_values)}
+    input_key_values = {n: v for n, v in zip(inputs, input_values)}
     compare_shapes(
         proto, input_key_values, expected_outputs, use_cpu_only)
     compare_backend(

@@ -60,7 +60,7 @@ def make_input(const_context, builder, variables):
         return variables
 
     v = variables # variables is Var
-    if v.op is not None and v.op.op_type == 'const' and not v.name in const_context:
+    if v.op is not None and v.op.op_type == 'const' and not v.name in const_context[builder]:
         add_const(const_context, builder, v.name, v.val)
     return v.name
 
@@ -1060,7 +1060,8 @@ def lstm(const_context, builder, op):
     output_sequence = op.output_sequence.val
     activations = [v.val for v in op.activations]
     peephole = op.peephole.val if op.peephole is not None else None
-    clip = op.clip.val
+    # High enough clip value to be ineffective!
+    clip = 500.0 if op.clip is None else op.clip.val
 
     # Add expand dims for input, in
     _expand_dim(builder, input_name+'_expanded', input_name, [3, 4])

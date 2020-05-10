@@ -63,9 +63,17 @@ def try_replace_with_core_lstm(op):
         batch = op.x.shape[0]
     else:  # tf_lstm_block
         batch = op.x.shape[1]
-    # rdar://62475041: Input batch size > 1 causes error in core lstm
-    if batch != 1:
+
+    # Check for unsupported configuration
+    # 1. Peephole is present
+    # TODO: rdar://62913058 ([LSTM] Incorrect output when pass peephole values to LSTM/rnn_arch)
+    if op.use_peephole.val:
         return False
+    # 2. Clip is provided
+    # TODO: rdar://62913148 ([LSTM] Incorrect output when clip is used for LSTM/rnn_arch)
+    if op.cell_clip is not None:
+        return False
+
     # Check if tf_lstm_block_cell can be replaced with lstm op
     i, cs, f, o, ci, co, h = op.outputs
     if op.op_type == 'tf_lstm_block_cell':

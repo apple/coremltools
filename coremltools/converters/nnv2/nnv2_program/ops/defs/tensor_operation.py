@@ -100,7 +100,7 @@ A tensor.
 class fill(Operation):
     input_spec = InputSpec(
         shape=IntTensorInputType(),
-        value=FloatInputType(const=True, default=0.),
+        value=IntOrFloatInputType(const=True, default=0.),
     )
 
     def __init__(self, **kwargs):
@@ -113,10 +113,10 @@ class fill(Operation):
 
         # shape has fixed length here.
         if self.shape.sym_val is None:
-            shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
-            return builtins.tensor(builtins.fp32, shape)
+            ret_shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
+            return builtins.tensor(builtins.fp32, ret_shape)
 
-        return builtins.tensor(builtins.fp32, tuple(self.shape.sym_val.tolist()))
+        return builtins.tensor(self.value.dtype, tuple(self.shape.sym_val.tolist()))
 
     @precondition(allow=VALUE)
     def value_inference(self):

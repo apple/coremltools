@@ -43,17 +43,20 @@ def make_tf_graph(input_types):
     return wrapper
 
 
-def get_tf_keras_io_name(model):
+def get_tf_keras_io_names(model):
     """
-    Utility function to get tf.keras inputs/outputs names from a keras model.
+    Utility function to get tf.keras inputs/outputs names from a tf.keras model.
 
     Parameter
     ---------
     model: tf.keras.Model
     """
-    input_name = model.inputs[0].name.split(':')[0]
-    output_name = model.outputs[0].name.split(':')[0].split('/')[-1]
-    return input_name, output_name
+    input_names, output_names = [], []
+    for i in model.inputs:
+        input_names.append(i.name.split(":")[0])
+    for o in model.outputs:
+        output_names.append(o.name.split(":")[0].split("/")[-1])
+    return input_names, output_names
 
 
 def get_tf_node_names(tf_nodes, mode='inputs'):

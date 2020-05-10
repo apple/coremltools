@@ -102,6 +102,8 @@ def _tf_graph_from_model(model):
     """
     Extract tf.Graph from model created in TensorFlow 2.x
     """
+    logging.info("Loading model '{}'".format(model))
+
     msg = 'Expected model format: ' \
           '[SavedModel | [concrete_function] | tf.keras.Model | .h5], got {}'
     if isinstance(model, tf.Graph) and hasattr(model, 'as_graph_def'):

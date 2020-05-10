@@ -47,8 +47,6 @@ class gru(Operation):
 
 @register_op(doc_str='TODO')
 class lstm(Operation):
-    # Setting clip threshold in range signed 32-bit Integer range
-    CLIP_DEFAULT_VAL = 2147483647.0
     input_spec = InputSpec(
             x = TensorInputType(),
             initial_h = TensorInputType(),
@@ -59,7 +57,7 @@ class lstm(Operation):
             output_sequence = BoolInputType(const=True, default=False),
             activations = TupleInputType(const=True, default=("sigmoid", "tanh", "tanh")),
             peephole = TensorInputType(const=True, optional=True, default=None),
-            clip = FloatInputType(const=True, default=CLIP_DEFAULT_VAL)
+            clip = FloatInputType(const=True, optional=True, default=None)
             )
 
     def __init__(self, **kwargs):

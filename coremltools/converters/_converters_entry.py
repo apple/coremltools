@@ -10,7 +10,6 @@ if HAS_TF_2:
     from coremltools.converters.nnv2.frontend.tensorflow2.load import _tf_graph_from_model as tf2_load
 
 
-
 def convert(model,
             source="auto",
             inputs=None,

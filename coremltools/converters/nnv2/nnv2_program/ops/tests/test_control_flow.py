@@ -34,6 +34,34 @@ class TestSelect:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_builder_to_backend_smoke_broadcast(self, use_cpu_only, backend):
+        cond_val = np.array([[1], [0], [2]], dtype=np.float32)
+        a_val = np.array([[3, 1, 1], [1, 4, 1], [5, 6, 1]], dtype=np.float32)
+        b_val = np.array([[3, 2, 2], [2, 4, 2], [5, 6, 2]], dtype=np.float32)
+        input_placeholders = {
+            'cond': cb.placeholder(shape=cond_val.shape),
+            'a': cb.placeholder(shape=a_val.shape),
+            'b': cb.placeholder(shape=b_val.shape),
+        }
+        input_values = {'cond': cond_val, 'a': a_val, 'b': b_val}
+
+        def build(cond, a, b):
+            return [cb.select(cond=cond, a=a, b=b)]
+
+        expected_output_types = [(3, 3, builtins.fp32)]
+        expected_outputs = [
+            np.array([[3., 1., 1.], [2., 4., 2.], [5., 6., 1.]], dtype=np.float32)
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
     @ssa_fn
     def test_builder_eval(self):
         cond = np.random.randint(low=0, high=2, size=(6, 1, 7))
@@ -41,6 +69,14 @@ class TestSelect:
         b = random_gen(shape=(6, 1, 7), rand_min=0., rand_max=1964.)
         res = cb.select(cond=cond, a=a, b=b)
         assert is_close(np.where(cond, a, b), res.val)
+
+    @ssa_fn
+    def test_builder_eval_broadcast(self):
+        cond = np.array([[1],[0],[1]])
+        a = np.array([[1,2],[3,4],[5,6]], dtype=np.float32)
+        b = np.array([[7,8],[9,10],[11,12]], dtype=np.float32)
+        res = cb.select(cond=cond, a=a, b=b)
+        assert is_close(np.array([[1,2],[9,10],[5,6]], dtype=np.float32), res.val)
 
 
 class TestCond:
