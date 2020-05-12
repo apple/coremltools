@@ -496,6 +496,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
     // - Non-zero values for optional inputs
     // - VisionFeaturePrint.Object
     // - Float32 input/output for Non-Maximum Suppression
+    // - Apple Word Tagger using transfer learning (revision == 3)
 
     bool result = false;
     switch (model.Type_case()) {
@@ -525,6 +526,8 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
             break;
         case Specification::Model::kSerializedModel:
             return true;
+        case Specification::Model::kWordTagger:
+            return model.wordtagger().revision() == 3;
         default:
             return (hasIOS14NeuralNetworkFeatures(model) || hasObjectPrint(model) || hasFloat32InputsOrOutputsForNonmaxSuppression(model));
     }
