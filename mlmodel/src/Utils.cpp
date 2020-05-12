@@ -463,11 +463,39 @@ bool CoreML::hasNonZeroOptionalValues(const Specification::Model& model) {
     return false;
 }
 
+bool CoreML::hasFloat32InputsOrOutputsForNonmaxSuppression(const Specification::Model& model) {
+    if (!hasNonmaxSuppression(model)) {
+        // not NMS.
+        return false;
+    }
+
+    auto inputs = model.description().input();
+    for (const auto& input: inputs) {
+        if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
+            if (input.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT32) {
+                return true;
+            }
+        }
+    }
+
+    auto outputs = model.description().output();
+    for (const auto& output: outputs) {
+        if (output.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
+            if (output.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT32) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 bool CoreML::hasIOS14Features(const Specification::Model& model) {
     // New IOS14 features:
     // - new layers in Neural Network
     // - Non-zero values for optional inputs
     // - VisionFeaturePrint.Object
+    // - Float32 input/output for Non-Maximum Suppression
 
     bool result = false;
     switch (model.Type_case()) {
@@ -498,7 +526,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
         case Specification::Model::kSerializedModel:
             return true;
         default:
-            return (hasIOS14NeuralNetworkFeatures(model) || hasObjectPrint(model));
+            return (hasIOS14NeuralNetworkFeatures(model) || hasObjectPrint(model) || hasFloat32InputsOrOutputsForNonmaxSuppression(model));
     }
     return false;
 }

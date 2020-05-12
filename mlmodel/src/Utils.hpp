@@ -126,6 +126,7 @@ namespace CoreML {
     bool hasIOS13NeuralNetworkFeatures(const Specification::Model& model);
     bool hasIOS14NeuralNetworkFeatures(const Specification::Model& model);
     bool hasNonZeroOptionalValues(const Specification::Model& model);
+    bool hasFloat32InputsOrOutputsForNonmaxSuppression(const Specification::Model& model);
 
     bool hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc);
 

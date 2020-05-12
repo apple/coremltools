@@ -813,3 +813,7 @@ def convert_double_to_float_multiarray_type(spec):
 
     for feature in spec.description.trainingInput:
         _convert_to_float(feature)
+
+    if spec.WhichOneof('Type') == 'pipeline':
+        for model_spec in spec.pipeline.models:
+            convert_double_to_float_multiarray_type(model_spec)

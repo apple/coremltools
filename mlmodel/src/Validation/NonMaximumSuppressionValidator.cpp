@@ -7,6 +7,8 @@
 #include "Validators.hpp"
 #include "ValidatorUtils-inl.hpp"
 #include "../build/format/Model.pb.h"
+#include "DataType.hpp"
+#include "Globals.hpp"
 
 namespace CoreML {
     
@@ -183,25 +185,49 @@ namespace CoreML {
         const auto& coordinates_in = description.input()[coordinatesInputIndex];
         const auto& confidence_out = description.output()[confidenceOutputIndex];
         const auto& coordinates_out = description.output()[coordinatesOutputIndex];
-        
-        if (confidence_in.type().multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
-            return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                          "Input 'confidence' must have dataType DOUBLE");
+
+        const auto confidence_in_type = confidence_in.type().multiarraytype().datatype();
+        const auto confidence_out_type = confidence_out.type().multiarraytype().datatype();
+        const auto coordinates_in_type = coordinates_in.type().multiarraytype().datatype();
+        const auto coordinates_out_type = coordinates_out.type().multiarraytype().datatype();
+
+        if (confidence_in_type != confidence_out_type ||
+            confidence_in_type != coordinates_in_type ||
+            confidence_in_type != coordinates_out_type) {
+            std::stringstream ss;
+            ss << "'confidence' and 'coordinates' must use a same element type, but ";
+            ss << "'input confidence' is " <<  FeatureType(confidence_in.type()).toString() << ", ";
+            ss << "'output confidence' is " <<  FeatureType(confidence_out.type()).toString() << ", ";
+            ss << "'input coordinates' are " <<  FeatureType(coordinates_in.type()).toString() << ", ";
+            ss << "and 'output coordinates' are " <<  FeatureType(coordinates_out.type()).toString() << ".";
+
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, ss.str());
         }
-        
-        if (confidence_out.type().multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
-            return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                          "Output 'confidence' must have dataType DOUBLE");
-        }
-        
-        if (coordinates_in.type().multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
-            return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                          "Input 'coordinates' must have dataType DOUBLE");
-        }
-        
-        if (coordinates_out.type().multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
-            return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                          "Output 'coordinates' must have dataType DOUBLE");
+
+        if (format.specificationversion() >= MLMODEL_SPECIFICATION_VERSION_IOS14) {
+            if (confidence_in_type != Specification::ArrayFeatureType_ArrayDataType_DOUBLE &&
+                confidence_in_type != Specification::ArrayFeatureType_ArrayDataType_FLOAT32) {
+                std::stringstream ss;
+                ss << "The element data type of 'confidence' and 'coordinates' must be either MultiArray<DOUBLE> or MultiArray<FLOAT32>, but ";
+                ss << "'input confidence' is " <<  FeatureType(confidence_in.type()).toString() << ", ";
+                ss << "'output confidence' is " <<  FeatureType(confidence_out.type()).toString() << ", ";
+                ss << "'input coordinates' are " <<  FeatureType(coordinates_in.type()).toString() << ", ";
+                ss << "and 'output coordinates' are " <<  FeatureType(coordinates_out.type()).toString() << ".";
+
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, ss.str());
+            }
+        } else {
+            if (confidence_in_type != Specification::ArrayFeatureType_ArrayDataType_DOUBLE) {
+                std::stringstream ss;
+                ss << "The element data type of 'confidence' and 'coordinates' must be MultiArray<DOUBLE> for model specification version earlier than " << MLMODEL_SPECIFICATION_VERSION_IOS14 << ", but ";
+                ss << "'input confidence' is " <<  FeatureType(confidence_in.type()).toString() << ", ";
+                ss << "'output confidence' is " <<  FeatureType(confidence_out.type()).toString() << ", ";
+                ss << "'input coordinates' are " <<  FeatureType(coordinates_in.type()).toString() << ", ";
+                ss << "and 'output coordinates' are " <<  FeatureType(coordinates_out.type()).toString() << ". ";
+                ss << "To enable MultiArray<FLOAT32>, use the model specification version " << MLMODEL_SPECIFICATION_VERSION_IOS14 << " or later.";
+
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, ss.str());
+            }
         }
 
         auto rankOfFlexibleShape = [] (const CoreML::Specification::ArrayFeatureType &marray) -> size_t {
