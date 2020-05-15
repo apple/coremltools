@@ -862,7 +862,7 @@ class NeuralNetworkBuilder(object):
         for i, alayer in enumerate(self.nn_spec.layers[::-1]):
             if i >= last:
                 break
-            layer_type, name, in_blobs, out_blobs, params_info = summarize_network_layer_info(alayer)
+            layer_type, name, in_blobs, out_blobs, params_info = _summarize_network_layer_info(alayer)
             print('[Id: {}], Name: {} (Type: {})'.format(n_layers - i - 1, name, layer_type))
             print(' ' * 10 + 'Updatable: {}'.format(alayer.isUpdatable))
             print(' ' * 10 + 'Input blobs: {}'.format(in_blobs))
@@ -924,7 +924,7 @@ class NeuralNetworkBuilder(object):
         """
         for _, layer in enumerate(self.nn_spec.layers[::-1]):
             if layer.isUpdatable:
-                layer_type, name, in_blobs, out_blobs, _ = summarize_network_layer_info(layer)
+                layer_type, name, in_blobs, out_blobs, _ = _summarize_network_layer_info(layer)
                 print('Name: {} (Type: {})'.format(name, layer_type))
                 print(' ' * 10 + 'Input blobs: {}'.format(in_blobs))
                 print(' ' * 10 + 'Output blobs: {}'.format(out_blobs))

@@ -12,6 +12,7 @@ from ..utils import _get_feature, _get_nn_layers, _get_input_names
 from ... import _MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION
 from ... import _MINIMUM_NDARRAY_SPEC_VERSION
 from ..model import NeuralNetworkShaper
+from coremltools.models._deprecation import deprecated
 
 _SEQUENCE_KEY = 'S'
 _BATCH_KEY = 'B'
@@ -701,7 +702,7 @@ def add_multiarray_ndshape_enumeration(spec, feature_name, enumerated_shapes):
     spec.specificationVersion = max(_MINIMUM_NDARRAY_SPEC_VERSION,
                                     spec.specificationVersion)
 
-
+@deprecated
 def get_allowed_shape_ranges(spec):
     """
     For a given model specification, returns a dictionary with a shape range object for each input feature name.
@@ -717,7 +718,7 @@ def get_allowed_shape_ranges(spec):
     return output
 
 
-
+@deprecated
 def can_allow_multiple_input_shapes(spec):
     """
     Examines a model specification and determines if it can compute results for more than one output shape.

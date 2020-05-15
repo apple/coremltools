@@ -16,6 +16,7 @@ from .utils import load_spec as _load_spec
 from .utils import macos_version as _macos_version
 from .utils import save_spec as _save_spec
 from ..proto import Model_pb2 as _Model_pb2
+from coremltools.models._deprecation import deprecated
 
 _MLMODEL_FULL_PRECISION = 'float32'
 _MLMODEL_HALF_PRECISION = 'float16'
@@ -113,7 +114,7 @@ def _get_proxy_and_spec(filename, use_cpu_only=False):
 
     return None, specification
 
-
+@deprecated
 class NeuralNetworkShaper(object):
     """
     This class computes the intermediate tensor shapes for a neural network model.
@@ -358,6 +359,7 @@ class MLModel(object):
             else:
                 raise Exception('Unable to load CoreML.framework. Cannot make predictions.')
 
+    @deprecated
     def visualize_spec(self, port=None, input_shape_dict=None, title='CoreML Graph Visualization'):
         """
         Visualize the model.

@@ -178,7 +178,7 @@ def convert(model, image_input_names=[], is_bgr=False,
 
     """
     from ...models import MLModel
-    from ...models.utils import convert_neural_network_weights_to_fp16 as convert_neural_network_weights_to_fp16
+    from ...models.utils import _convert_neural_network_weights_to_fp16
 
     if model_precision not in _VALID_MLMODEL_PRECISION_TYPES:
         raise RuntimeError('Model precision {} is not valid'.format(model_precision))
@@ -197,7 +197,7 @@ def convert(model, image_input_names=[], is_bgr=False,
         pass
 
     if model_precision == _MLMODEL_HALF_PRECISION and model is not None:
-        model = convert_neural_network_weights_to_fp16(model)
+        model = _convert_neural_network_weights_to_fp16(model)
 
     return model
 

@@ -31,6 +31,8 @@ from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
 from ... import (_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
                  _MINIMUM_FP16_SPEC_VERSION)
 
+from coremltools.models._deprecation import deprecated
+
 
 class QuantizedLayerSelector(object):
     """ This is the base class to implement custom selectors to skip certain
@@ -752,7 +754,12 @@ def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
             raise Exception('Unknown layer ' + layer_type + ' to be quantized')
 
 
+@deprecated(suffix="instead use 'quantize_weights'.")
 def quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
+    return _quantize_spec_weights(spec, nbits, quantization_mode, **kwargs)
+
+
+def _quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
 
     nn_model_types = ['neuralNetwork', 'neuralNetworkClassifier',
                       'neuralNetworkRegressor']
@@ -784,10 +791,10 @@ def quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
     # Recursively convert all pipeline models
     elif spec.WhichOneof('Type') == 'pipeline':
         for model_spec in spec.pipeline.models:
-            quantize_spec_weights(model_spec, nbits, quantization_mode, **kwargs)
+            _quantize_spec_weights(model_spec, nbits, quantization_mode, **kwargs)
 
     elif spec.WhichOneof('Type') in ['pipelineClassifier', 'pipelineRegressor']:
-        quantize_spec_weights(spec.pipeline, nbits, quantization_mode, **kwargs)
+        _quantize_spec_weights(spec.pipeline, nbits, quantization_mode, **kwargs)
 
     return spec
 
@@ -1149,7 +1156,7 @@ def quantize_weights(full_precision_model,
 
     print("Quantizing using {} quantization".format(quantization_mode))
     spec = full_precision_model.get_spec()
-    qspec = quantize_spec_weights(spec, nbits, qmode, **kwargs)
+    qspec = _quantize_spec_weights(spec, nbits, qmode, **kwargs)
 
     if macos_version() < (10, 14):
         print("WARNING! Unable to return a quantized MLModel instance since"
