@@ -20,12 +20,13 @@ def register_v2_op(func):
 
 def convert_ops(const_context, builder, ops, outputs):
     """
-    const_context: set of str: const name for v1 & v2 (the same)
+    const_context: list[set of str]: const name for v1 & v2 (the same)
     builder: neural_network.NeuralNetworkBuilder
     ops: list[Operation], usually from SsaBlock.operations.
     outputs: list[Var]. block outputs
     """
 
+    const_context.append(set())
     custom_ops = SSAOpRegistry.custom_ops
     for op in ops:
         if op.op_type in custom_ops:
@@ -44,6 +45,7 @@ def convert_ops(const_context, builder, ops, outputs):
             continue  # placeholder
         if ov.op.op_type == 'const':
             add_const(const_context, builder, ov.name, ov.val)
+    const_context.pop()
 
 def make_input(const_context, builder, variables):
     """
@@ -60,7 +62,7 @@ def make_input(const_context, builder, variables):
         return variables
 
     v = variables # variables is Var
-    if v.op is not None and v.op.op_type == 'const' and not v.name in const_context[builder]:
+    if v.op is not None and v.op.op_type == 'const' and not v.name in const_context[-1]:
         add_const(const_context, builder, v.name, v.val)
     return v.name
 
@@ -155,7 +157,7 @@ def _try_convert_global_pool(const_context, builder, op, mode):
 
 def add_const(const_context, builder, name, val):
     """
-    const_context (set(str)): const names added to v1 builder. Const names are
+    const_context (list of set of str): const names added to v1 builder. Const names are
     identical between v2 and v1
 
     name (str): name of const. Should be the same for v1 and v2.
@@ -168,9 +170,10 @@ def add_const(const_context, builder, name, val):
              If we really need a const scalar, we upcast it to rank-1.
 
     """
-    if name in const_context[builder]:
-        logging.warning('Const {} was already added.'.format(name))
-        return
+    for const_set in const_context:
+        if name in const_set:
+            logging.warning('Const {} was already added.'.format(name))
+            return
     if not isinstance(val, (np.ndarray, np.generic)):
         val = np.array([val])
     rank = len(val.shape)
@@ -186,7 +189,7 @@ def add_const(const_context, builder, name, val):
                 output_name=name,
                 constant_value=val,
                 shape=val.shape)
-    const_context[builder].add(name)
+    const_context[-1].add(name)
     logging.info('added const {} for builder {}'.format(name, builder))
 
 
@@ -247,6 +250,30 @@ def avg_pool(const_context, builder, op):
         mode='average',
         exclude_padding_from_average=op.exclude_padding_from_average.val)
 
+@register_v2_op
+def addn(const_context, builder, op):
+    input_names = make_input(const_context, builder, op.values)
+    if len(input_names) == 1:
+        builder.add_copy(
+        name=op.name,
+        input_name=input_names[0],
+        output_name=op.outputs[0].name)
+    else:
+        prev_name = input_names[0]
+        for i, input in enumerate(input_names[1:-1]):
+            builder.add_elementwise(
+                name=op.name + input,
+                input_names=[prev_name, input],
+                mode='ADD',
+                output_name=op.name + input,
+            )
+            prev_name = op.name + input
+        builder.add_elementwise(
+            name=op.name,
+            input_names=[prev_name, input_names[-1]],
+            mode='ADD',
+            output_name=op.outputs[0].name,
+        )
 
 @register_v2_op
 def band_part(const_context, builder, op):
@@ -2079,7 +2106,7 @@ def while_loop(const_context, builder, op):
     for vx_in, vx_out in zip(block.inputs, block.outputs[1:]):
         if vx_in.name == vx_out.name:
             msg = 'Loop invariant var {} detected in block {}'
-            logging.warning(msg.format(vx_in.name, body_block))
+            logging.warning(msg.format(vx_in.name, block.name))
             continue
         body_builder.add_copy(
                     name=vx_in.name+'_ret_copy',
@@ -2255,11 +2282,36 @@ def make_list(const_context, builder, op):
     # op.elem_shape is technically optional but ssa passes ensures it's
     # always there
     elem_shape = op.elem_shape.val
+    has_static_elem_shape = all([dim > 0 for dim in elem_shape])
 
     # Set a default initial size
-    array_shape = [op.init_length.val] + list(elem_shape)
-    add_const(const_context, builder, op.outputs[0].name,
-            val=np.zeros(array_shape, dtype='float'))
+    size = op.init_length.val
+    if size is not None and has_static_elem_shape:
+        array_size = size if size > 0 else 1
+        array_shape = [array_size] + list(elem_shape)
+        add_const(const_context, builder, op.outputs[0].name,
+                val=np.zeros(array_shape, dtype='float'))
+    elif has_static_elem_shape:
+        if len(elem_shape) > 0:
+            node_es_name = op.name + '_element_shape'
+            add_const(const_context, builder, node_es_name,
+                val=np.array(elem_shape, dtype='float'))
+
+            # Concatenate list length (the input, should be a constant vector of size 1) with element shape
+            node_arr_shape_name = op.name + '_arr_shape'
+            layer = builder.add_concat_nd(
+                name=node_arr_shape_name,
+                input_names=[op.init_length.name, node_es_name],
+                output_name=node_arr_shape_name,
+                axis=0)
+        else:
+            node_es_name = op.init_length.name
+        builder.add_fill_dynamic(
+            name=op.name,
+            input_name=node_arr_shape_name,
+            output_name=op.outputs[0].name)
+    else:
+        raise ValueError('TensorArray cannot determine element shapes statically')
 
 def _realloc_list(const_context, builder, ls_var, index_var):
     # If index_var >= len(ls_var), reallocate the array and copy over existing

@@ -70,11 +70,10 @@ def load(prog, **kwargs):
     # const in V2 are added lazily to V1 by each op whenever needed.
     # `const_context` stores the const names we've added so far and avoid
     # adding a const more than once.
-    # const_context: builder object -> set[str] (const name for v1 & v2
-    # (the same)). Note that layers in different builders are not visible to
-    # each other, and thus we segregate constant sets by builder
-    const_context = defaultdict(set)
-
+    # const_context: list[set of str] (const name for v1 & v2
+    # (the same)). Note that in NNV1 in outer layer is visible from the inner
+    # layer, so the const_context is simply a stack of set.
+    const_context = []
     # Iterate through ops and add to builder
     convert_ops(const_context, builder, prog.functions['main'].operations,
             prog.functions['main'].outputs)

@@ -1,3 +1,6 @@
+import pytest
+tf = pytest.importorskip('tensorflow', minversion='1.14.0')
+
 import unittest
 import sys, os, shutil, tempfile
 import tensorflow as tf
@@ -8,7 +11,7 @@ from os.path import dirname
 from tensorflow.python.tools.freeze_graph import freeze_graph
 import coremltools.converters.tensorflow as tf_converter
 
-from coremltools._deps import HAS_KERAS2_TF
+from coremltools._deps import HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND
 
 if HAS_KERAS2_TF:
     from keras import backend as K
@@ -232,7 +235,7 @@ class TFNetworkTest(unittest.TestCase):
             shutil.rmtree(model_dir)
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
 class KerasBasicNumericCorrectnessTest(TFNetworkTest):
     def test_dense_softmax(self):
         np.random.seed(1987)

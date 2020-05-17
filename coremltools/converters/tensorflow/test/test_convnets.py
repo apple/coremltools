@@ -1,6 +1,8 @@
 import unittest
-import tensorflow.compat.v1 as tf
 import numpy as np
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
+if HAS_TF:
+    import tensorflow as tf
 from coremltools.models.utils import is_macos, macos_version
 import math
 
@@ -18,7 +20,7 @@ def conv_cell(inp, conv_weights, bias=None, activation=None, pooling=None, has_b
     x = tf.nn.conv2d(inp, conv_weights, conv_config['strides'], conv_config['padding'], data_format=data_format)
     return x
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFConvNetTest(TFNetworkBatchTest):
     @classmethod
     def setUpClass(self):
@@ -194,7 +196,7 @@ class TFConvNetTest(TFNetworkBatchTest):
             self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
                                 output_name, batch_sizes=[1, 4])
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFSingleLayerTest(TFNetworkBatchTest):
     """
     Small models from tensorflow.layers

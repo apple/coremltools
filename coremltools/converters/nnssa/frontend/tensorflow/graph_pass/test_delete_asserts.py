@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
 import coremltools.converters.nnssa.commons.builtins as builtins
 import coremltools.converters.nnssa.builder as builder
 import numpy as np
 import unittest
+if HAS_TF:
+    from coremltools.converters.nnssa.frontend.tensorflow.graph_pass.delete_asserts import delete_asserts
 
-from coremltools.converters.nnssa.frontend.tensorflow.graph_pass.delete_asserts import delete_asserts
-
-
+@unittest.skipUnless(HAS_TF, MSG_TF1_NOT_FOUND)
 class TestDeleteAsserts(unittest.TestCase):
     def _add_assert(self, builder, input, name='assert', op='Assert'):
         node = builder.add_identity(input, name=name)

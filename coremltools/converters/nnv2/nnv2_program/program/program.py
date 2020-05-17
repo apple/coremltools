@@ -217,9 +217,7 @@ class Operation(object):
                 if sym_val is not None and out_var.sym_val is None:
                     if overwrite_output:
                         out_var._sym_val = sym_val
-                    else:
-                        msg = 'value_inference failed with new inputs for op {}'
-                        raise ValueError(msg.format(self.name))
+
                 if sym_val is not None and out_var.sym_val is not None:
                     if np.any(sym_val.val != out_var.sym_val):
                         if overwrite_output:
@@ -566,7 +564,7 @@ class SsaBlock(object):
         """
         # block_inputs: list[Var]
         if block_inputs is not None:
-            self._block_inputs = tuple(copy.deepcopy(v) for v in block_inputs)
+            self._block_inputs = tuple(copy.copy(v) for v in block_inputs)
             # Keep track the vars we shadow
             for v in self._block_inputs:
                 v._op = None
@@ -574,6 +572,7 @@ class SsaBlock(object):
                 v._child_ops = list()
                 v.name = v.name + ".x"
                 v._sym_val = None
+                v.consuming_blocks = list()
         else:
             self._block_inputs = tuple()
 
@@ -1083,7 +1082,7 @@ class SsaBlock(object):
         Return:
 
         list[Operation] which are subset of self.operations that are ancestors
-        of `end_vs`. No recursion into nested blocks.
+        of `end_vs`. Also do recursion into nested blocks.
         """
         used_vars = set(end_vs)
         used_ops = []
@@ -1094,16 +1093,20 @@ class SsaBlock(object):
 
             used_ops.append(op) # append in reverse topological order
 
-            # mark all op's inputs to used
-            for _, input_var in op.inputs.items():
-                if isinstance(input_var, (tuple, list)):
-                    used_vars.update(list(input_var))
-                else:
-                    used_vars.add(input_var)
-
+            # recursively search for nested blocks
+            ops_to_check = []
             for b in op.blocks:
-                used_in_block = b.operations_for_vars(b.outputs)
-                used_vars.update(used_in_block)
+                ops_to_check += b.operations_for_vars(b.outputs)
+            ops_to_check.append(op)
+
+            # mark used vars
+            for op_to_check in ops_to_check:
+                # mark all op's inputs to used
+                for _, input_var in op_to_check.inputs.items():
+                    if isinstance(input_var, (tuple, list)):
+                        used_vars.update(list(input_var))
+                    else:
+                        used_vars.add(input_var)
 
         return used_ops[::-1]
 

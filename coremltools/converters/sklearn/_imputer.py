@@ -15,8 +15,8 @@ from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
 if _HAS_SKLEARN:
     import sklearn
     from sklearn.preprocessing import Imputer
-    model_type = 'transformer'
     sklearn_class = sklearn.preprocessing.Imputer
+    model_type = 'transformer'
 
 def convert(model, input_features, output_features):
     """Convert a DictVectorizer model to the protobuf spec.

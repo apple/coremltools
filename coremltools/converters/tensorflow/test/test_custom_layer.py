@@ -1,15 +1,16 @@
-import pytest
 import unittest
 import tempfile
-import tensorflow as tf
 import numpy as np
 import os
-
-from coremltools.converters.tensorflow import convert
-from tensorflow.python.tools.freeze_graph import freeze_graph
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
+if HAS_TF:
+    import tensorflow as tf
+    from tensorflow.python.tools.freeze_graph import freeze_graph
+    from coremltools.converters.tensorflow import convert
 from coremltools.proto import NeuralNetwork_pb2
 from coremltools.converters.nnssa.coreml import shapes as custom_shape_update
 
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class CustomLayerTest(unittest.TestCase):
 
     @classmethod
@@ -80,6 +81,7 @@ class CustomLayerTest(unittest.TestCase):
         return coreml_model
 
 # Custom Layer Tests
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TestCustomLayer(CustomLayerTest):
     # Test custom layer with conversion function
     def test_custom_topk(self):

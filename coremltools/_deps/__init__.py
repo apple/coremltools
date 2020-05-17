@@ -22,6 +22,7 @@ def __get_version(version):
 HAS_SKLEARN = True
 SKLEARN_VERSION = None
 SKLEARN_MIN_VERSION = '0.17'
+SKLEARN_MAX_VERSION = '0.19.2'
 def __get_sklearn_version(version):
     # matching 0.15b, 0.16bf, etc
     version_regex = '^\d+\.\d+'
@@ -31,13 +32,15 @@ def __get_sklearn_version(version):
 try:
     import sklearn
     SKLEARN_VERSION = __get_sklearn_version(sklearn.__version__)
-    if SKLEARN_VERSION < _StrictVersion(SKLEARN_MIN_VERSION):
+    if SKLEARN_VERSION < _StrictVersion(SKLEARN_MIN_VERSION) or SKLEARN_VERSION > _StrictVersion(SKLEARN_MAX_VERSION):
         HAS_SKLEARN = False
         _logging.warn(('scikit-learn version %s is not supported. Minimum required version: %s. '
+                       'Maximum required version: %s. '
                       'Disabling scikit-learn conversion API.')
-                      % (sklearn.__version__, SKLEARN_MIN_VERSION) )
+                      % (sklearn.__version__, SKLEARN_MIN_VERSION, SKLEARN_MAX_VERSION) )
 except:
     HAS_SKLEARN = False
+MSG_SKLEARN_NOT_FOUND = 'Sklearn not found.'
 
 # ---------------------------------------------------------------------------------------
 HAS_LIBSVM = True
@@ -45,6 +48,7 @@ try:
     from libsvm import svm
 except:
     HAS_LIBSVM = False
+MSG_LIBSVM_NOT_FOUND = 'Libsvm not found.'
 
 # ---------------------------------------------------------------------------------------
 HAS_XGBOOST = True
@@ -92,6 +96,8 @@ HAS_KERAS_TF = True
 HAS_KERAS2_TF = True
 KERAS_MIN_VERSION = '1.2.2'
 KERAS_MAX_VERSION = '2.2.4'
+MSG_KERAS1_NOT_FOUND = 'Keras 1 not found.'
+MSG_KERAS2_NOT_FOUND = 'Keras 2 not found.'
 
 try:
     # Prevent keras from printing things that are not errors to standard error.
@@ -175,3 +181,4 @@ try:
     import graphviz
 except:
     HAS_GRAPHVIZ = False
+MSG_ONNX_NOT_FOUND = 'ONNX not found.'

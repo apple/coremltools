@@ -12,7 +12,7 @@ import pytest
 
 from coremltools.models.utils import evaluate_classifier,\
     evaluate_classifier_with_probabilities, macos_version, is_macos
-from coremltools._deps import HAS_LIBSVM, HAS_SKLEARN
+from coremltools._deps import HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND, HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
 
 if HAS_LIBSVM:
     from libsvm import svm, svmutil
@@ -26,7 +26,7 @@ if HAS_SKLEARN:
     from coremltools.converters import sklearn as scikit_converter
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class NuSvcScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -132,7 +132,8 @@ class NuSvcScikitTest(unittest.TestCase):
             spec = scikit_converter.convert(model, 'data', 'out')
 
 
-@unittest.skipIf(not HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
+@unittest.skipIf(not HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND)
+@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class NuSVCLibSVMTest(unittest.TestCase):
     # Model parameters for testing
     base_param = '-s 1 -q' # model type C-SVC and quiet mode

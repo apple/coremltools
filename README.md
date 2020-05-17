@@ -1,109 +1,186 @@
-[![Build Status](https://travis-ci.com/apple/coremltools.svg?branch=master)](#)
-[![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
-[![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
+**(This is the readme for Apple internal release of coremltools)**
 
-Core ML Community Tools
-=======================
 
-Core ML community tools contains all supporting tools for Core ML model
-conversion, editing and validation. This includes deep learning frameworks like
-TensorFlow, Keras, Caffe as well as classical machine learning frameworks like
-LIBSVB, scikit-learn, and XGBoost.
+External (Github) coremltools readme is [here](https://github.com/apple/coremltools)
 
-To get the latest version of coremltools:
+To install the latest wheels:
 
-```shell
-pip install --upgrade coremltools
+```bash
+pip install coremltools==4.0a5 -i https://pypi.apple.com/simple
 ```
 
-For the latest changes please see the [release notes](https://github.com/apple/coremltools/releases/).
+coremltools package contains the following converters:
 
-# Table of Contents
+```python
+import coremltools
 
-* [Neural network conversion](#Neural-network-conversion)
-* [Core ML specification](#Core-ML-specification)
-* [coremltools user guide and examples](#user-guide-and-examples)
-* [Installation from Source](#Installation)
+# libsvm
+coremltools.converters.libsvm.convert(...)
 
+# sklearn
+coremltools.converters.sklearn.convert(...)
 
-## Neural Network Conversion
+# xgboost
+coremltools.converters.xgboost.convert(...)
 
-[Link](examples/NeuralNetworkGuide.md) to the detailed NN conversion guide.
-
-There are several `converters` available to translate neural networks trained
-in various frameworks into the Core ML model format.  Following formats can be
-converted to the Core ML `.mlmodel` format through the coremltools python
-package (this repo):
-
-- Caffe V1 (`.prototxt`, `.caffemodel` format)
-- Keras API (2.2+) (`.h5` format)
-- TensorFlow 1 (1.13+) (`.pb` frozen graph def format)
-- TensorFlow 2 (`.h5` and `SavedModel` formats)
-
-In addition, there are two more neural network converters build on top of `coremltools`:
-- [onnx-coreml](https://github.com/onnx/onnx-coreml): to convert `.onnx` model format. Several frameworks such as PyTorch, MXNet, CaffeV2 etc
-provide native export to the ONNX format.
-- [tfcoreml](https://github.com/tf-coreml/tf-coreml): to convert TensorFlow models. For producing Core ML models targeting iOS 13 or later,
-tfcoreml defers to the TensorFlow converter implemented inside coremltools.
-For iOS 12 or earlier, the code path is different and lives entirely in the [tfcoreml](https://github.com/tf-coreml/tf-coreml) package.
-
-To get an overview on how to use the converters and features such as
-post-training quantization using coremltools, please see the [neural network
-guide](examples/NeuralNetworkGuide.md).
-
-## Core ML Specification
-
-- Core ML specification is fully described in a set of protobuf files.
-They are all located in the folder `mlmodel/format/`
-- For an overview of the Core ML framework API, see [here](https://developer.apple.com/documentation/coreml).
-- To find the list of model types supported by Core ML, see [this](https://github.com/apple/coremltools/blob/1fcac9eb087e20bcc91b41bc938112fa91b4e5a8/mlmodel/format/Model.proto#L229)
-portion of the `model.proto` file.
-- To find the list of neural network layer types supported see [this](https://github.com/apple/coremltools/blob/1fcac9eb087e20bcc91b41bc938112fa91b4e5a8/mlmodel/format/NeuralNetwork.proto#L472)
-portion of the `NeuralNetwork.proto` file.
-- Auto-generated documentation for all the protobuf files can be found at this [link](https://apple.github.io/coremltools/coremlspecification/)
+# Tensorflow and Pytorch [NEW API in coremltools 4.x, not present in coremltools 3.x]
+coremltools.converters.convert(...)
 
 
-## User Guide and Examples
+# keras [for models defined directly using the keras.io api, NOT for tf.keras]
+coremltools.converters.keras.convert(...)
 
-- [API documentation](https://apple.github.io/coremltools)
-- [Updatable models](examples/updatable_models)
-- [Neural network inference examples](examples/neural_network_inference)
-- [Neural network guide](examples/NeuralNetworkGuide.md)
-- [Miscellaneous How-to code snippets](examples/APIExamples.md)
-
-## Installation
-
-We recommend using virtualenv to use, install, or build coremltools. Be
-sure to install virtualenv using your system pip.
-
-```shell
-pip install virtualenv
+# onnx
+coremltools.converters.onnx.convert(...)
 ```
 
-The method for installing `coremltools` follows
-[standard python package installation steps](https://packaging.python.org/installing/).
-To create a Python virtual environment called `pythonenv` follow these steps:
 
-```shell
-# Create a folder for your virtualenv
-mkdir mlvirtualenv
-cd mlvirtualenv
+## Tensorlfow and Pytorch Converters
 
-# Create a Python virtual environment for your Core ML project
-virtualenv pythonenv
+
+For coremltools 3.x converters see [here](https://github.com/apple/coremltools/blob/master/examples/NeuralNetworkGuide.md)
+
+For coremltools 4.x new converters, use the following: 
+
+```python
+
+import coremltools
+
+coremltools.converters.convert(model,
+                               source="auto",
+                               inputs=None,
+                               outputs=None)
 ```
 
-To activate your new virtual environment and install `coremltools` in this
-environment, follow these steps:
+    
+   
+
+Method to convert neural networks represented in Tensorflow or Pytorch formats to the Core ML model format.
+
+#### Parameters
+
+- model:  
+    an object representing a neural network model defined in one of Tensorflow 1, Tensorflow 2 or Pytorch formats
+
+Depending on the source framework, type of model is one of the following:
+
+For Tensorflow versions 1.x:  
+    - frozen tf.Graph object  
+    - path to a frozen .pb file  
+    
+For Tensorflow versions 2.x:  
+    - tf.Graph object  
+    - tf.keras model object    
+    - path to a .h5 saved keras model file  
+    - path to a saved model directory  
+    - list of concrete functions  
+
+For Pytorch:  
+    - a TorchScript object  
+    - path to a .pt file  
+
+- source: str (optional)  
+    one of "auto" (default), "tensorflow", "pytorch"  
+
+- inputs: list (optional)  
+    For Tensorflow:  
+        list of tuples or list of strings  
+        - If [tuple] : each tuple contains input tensor name and shape  
+        - If [str]: each string is the name of the Placeholder input op in the TF graph
+          
+    For Pytorch  
+        a list of example inputs, in torch.tensor format  
+
+- outputs: list[str] (optional)  
+    For Tensorflow:  
+        (required)  
+        list of output op names  
+        
+    For Pytorch:  
+        (not required)  
+
+#### Returns
+
+model: MLModel
+A Core ML MLModel object
+
+### Examples
+
+Tensorflow 1:
+
+```python
+
+mlmodel = coremltools.converters.convert(model='frozen_model_mobilenet.pb',
+                                         inputs=[('input', (1, 224, 224, 3))],
+                                         outputs=['Softmax'])
+
+mlmodel.save('model_mobilenet.mlmodel')
 
 ```
-# Active your virtual environment
-source pythonenv/bin/activate
 
 
-# Install coremltools in the new virtual environment, pythonenv
-(pythonenv) pip install -U coremltools
+
+
+Tensorflow 2:  
+
+```python
+mlmodel = coremltools.converters.convert(model='frozen_model_mobilenet.h5',
+                                         outputs=['Softmax'])
+
+mlmodel.save('model_mobilenet.mlmodel')
+
 ```
 
-The package [documentation](https://apple.github.io/coremltools) contains
-more details on how to use coremltools.
+
+
+Pytorch :  
+
+```python
+model = torchvision.models.mobilenet_v2()
+model.eval()
+example_input = torch.rand(1, 3, 256, 256)
+traced_model = torch.jit.trace(model, example_input)
+
+mlmodel = coremltools.converters.convert(traced_model,
+                                        inputs=[example_input])
+
+mlmodel.save('mobilenetv2.mlmodel') 
+
+```
+
+
+    
+  
+
+### Other utilities:
+
+```python
+import coremltools
+
+mlmodel = coremltools.converters.convert(model='frozen_model_mobilenet.pb',
+                                                 inputs=[('input', (1, 224, 224, 3))],
+                                                 outputs=['Softmax'])
+                                                 
+# To convert input type from multi-array to image                                          
+from coremltools.models.neural_network.utils import make_image_input
+
+mlmodel = make_image_input(mlmodel, "input",
+                           red_bias=-5, green_bias=-6, blue_bias=-2.5,
+                           scale=10.0,
+                           image_format='NCHW')
+                           
+mlmodel.save("/tmp/image_input_model.mlmodel")
+                           
+
+# To convert neural network model to a classifier model
+from coremltools.models.neural_network.utils import make_nn_classifier
+
+mlmodel = make_nn_classifier(mlmodel, class_labels=['a', 'b', 'c'],
+                             predicted_feature_name='Softmax',
+                             predicted_probabilities_output='output_class_prob')
+                            
+mlmodel.save("/tmp/classifier_model.mlmodel")               
+```
+
+
+   

@@ -592,9 +592,6 @@ class concat(Operation):
         # Validate values have the same rank
         rank = self.values[0].rank
         for v in self.values:
-            if not builtins.is_tensor(v.sym_type):
-                msg = 'Concat encounter non-tensor input {} of type {}'
-                raise ValueError(msg.format(v.name, v.sym_type))
             if v.rank != rank:
                 msg = 'Input {} has rank {} != other inputs rank {}'
                 raise ValueError(msg.format(v.name, v.rank, rank))
@@ -603,7 +600,7 @@ class concat(Operation):
         concat_axis = self.axis.val
         if concat_axis < 0:
             concat_axis += rank
-        if concat_axis < 0 or concat_axis >= rank:
+        if rank > 0 and (concat_axis < 0 or concat_axis >= rank):
             msg = 'In {} of op_type {}: axis out of bound for input '+\
                 '(rank {})'
             raise ValueError(msg.format(self.name, self.op_type, rank))
@@ -631,13 +628,19 @@ class concat(Operation):
         # Get length of concat dim
         concat_dim_len = 0
         for v in self.values:
-            taxis = v.shape[concat_axis]
+            if len(v.shape) == 0:
+                taxis = 1
+            else:
+                taxis = v.shape[concat_axis]
             if is_symbolic(taxis):
                 concat_dim_len = get_new_symbol()
                 break
             concat_dim_len += taxis
 
-        retshape[concat_axis] = concat_dim_len
+        if len(retshape) == 0:
+            retshape = [concat_dim_len]
+        else:
+            retshape[concat_axis] = concat_dim_len
 
         return builtins.tensor(dtype, retshape)
 
@@ -650,7 +653,12 @@ class concat(Operation):
                 break
         if has_values:
             values = [v.val for v in self.values]
-            return np.concatenate(values, axis=self.axis.val)
+            if not isinstance(values[0], np.ndarray):
+                return np.stack(values, axis=self.axis.val)
+            elif values[0].shape == ():
+                return np.stack(values, axis=self.axis.val)
+            else:
+                return np.concatenate(values, axis=self.axis.val)
 
         # If input shapes are small, we create symbolic values from symbols.
         ret_shape = self.type_inference().get_shape()
@@ -774,3 +782,35 @@ class stack(Operation):
     def value_inference(self):
         values = [v.val for v in self.values]
         return np.stack(values, self.axis.val)
+
+@register_op(doc_str='TODO')
+class addn(Operation):
+    input_spec = InputSpec(
+        values = TupleInputType(),
+    )
+
+    def __init__(self, **kwargs):
+        super(addn, self).__init__(**kwargs)
+
+    def type_inference(self):
+        num_tensors = len(self.values)
+        if num_tensors == 0:
+            raise ValueError('Cannot addn 0 tensors.')
+
+        t_shape = self.values[0].shape
+        t_type = self.values[0].dtype
+
+        for t in self.values[1:]:
+            if t.shape != t_shape:
+                msg = 'Component tensor {} has shape {}, others have {}'
+                raise ValueError(msg.format(t.name, t.shape, t_shape))
+            if t.dtype != t_type:
+                msg = 'Component tensor {} has dtype {}, others have {}'
+                raise ValueError(msg.format(t.name, t.dtype, t_type))
+
+        return builtins.tensor(t_type, list(t_shape))
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        inputs = np.array([v.val for v in self.values])
+        return np.sum(inputs, axis=0)

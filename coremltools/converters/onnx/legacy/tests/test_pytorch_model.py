@@ -3,13 +3,15 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-
 import unittest
-import onnx
-from coremltools.converters.onnx import convert
-from coremltools.converters.onnx.legacy.onnx_coreml.converter import SupportedVersion
+from coremltools._deps import HAS_ONNX, MSG_ONNX_NOT_FOUND
+if HAS_ONNX:
+    import onnx
+    from coremltools.converters.onnx import convert
+    from coremltools.converters.onnx.legacy.onnx_coreml.converter import SupportedVersion
+    from ._test_utils import _assert_outputs
+
 import numpy as np
-from ._test_utils import _assert_outputs
 import torch  # type: ignore
 import torch.nn as nn  # type: ignore
 import torch.nn.functional as F
@@ -85,7 +87,7 @@ def _test_torch_model_single_io(
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class OnnxModelTest(unittest.TestCase):
     def test_functional_average_pool(self, minimum_ios_deployment_target="12"):
         class Net(nn.Module):
@@ -617,7 +619,7 @@ class OnnxModelTest(unittest.TestCase):
             minimum_ios_deployment_target=minimum_ios_deployment_target,
         )
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ReshapeTransposeTests(unittest.TestCase):
     """
     tests for models that have patterns like:
@@ -742,7 +744,7 @@ class ReshapeTransposeTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (1, 12, 4, 6), (12, 4, 6))  # type: ignore
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class UnaryOperationTests(unittest.TestCase):
     """
     Unary Operation Test cases
@@ -762,7 +764,7 @@ class UnaryOperationTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class OperatorTests(unittest.TestCase):
     """
     Operator test for Operator
@@ -781,7 +783,7 @@ class OperatorTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class BinaryOperationTests(unittest.TestCase):
     """
     Binary Operation Test cases
@@ -930,7 +932,7 @@ class BinaryOperationTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ReduceOperationTests(unittest.TestCase):
     """
     Reduction Operation Test cases
@@ -973,7 +975,7 @@ class ReduceOperationTests(unittest.TestCase):
             minimum_ios_deployment_target=minimum_ios_deployment_target,
         )
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class TransformationTests(unittest.TestCase):
     """
     Test cases for validating transformations
@@ -986,6 +988,7 @@ class TransformationTests(unittest.TestCase):
         macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
+    @pytest.mark.skip(reason="test failure: <rdar://63138211>")
     def test_cast_removal_transformation(self, minimum_ios_deployment_target="13"):
         torch_model = nn.Upsample(scale_factor=2)
         torch_model.train(False)

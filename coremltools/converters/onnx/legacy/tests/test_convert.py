@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from coremltools._deps import HAS_ONNX, MSG_ONNX_NOT_FOUND
 import unittest
 import numpy as np
 import numpy.testing as npt  # type: ignore
@@ -10,10 +11,12 @@ import numpy.random as npr
 
 from PIL import Image  # type: ignore
 
-from coremltools.converters.onnx import convert
-from ._test_utils import _onnx_create_single_node_model
+if HAS_ONNX:
+    import onnx
+    from coremltools.converters.onnx import convert
+    from ._test_utils import _onnx_create_single_node_model
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ConvertTest(unittest.TestCase):
     def setUp(self):  # type: () -> None
         self.img_arr = np.uint8(npr.rand(224, 224, 3) * 255)  # type: ignore

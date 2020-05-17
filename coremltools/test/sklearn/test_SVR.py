@@ -10,9 +10,7 @@ import tempfile
 import unittest
 import pytest
 
-from coremltools._deps import HAS_LIBSVM
-from coremltools._deps import HAS_SKLEARN
-
+from coremltools._deps import HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND, HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
 from coremltools.models.utils import evaluate_regressor, macos_version, is_macos
 
 if HAS_LIBSVM:
@@ -27,7 +25,7 @@ if HAS_SKLEARN:
     from sklearn.preprocessing import OneHotEncoder
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class SvrScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn sklearn_converter.
@@ -116,7 +114,8 @@ class SvrScikitTest(unittest.TestCase):
                 break
 
 
-@unittest.skipIf(not HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
+@unittest.skipIf(not HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND)
+@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class EpsilonSVRLibSVMTest(unittest.TestCase):
     """
     Unit test class for testing the libsvm sklearn converter.

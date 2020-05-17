@@ -1176,6 +1176,48 @@ class TestStack:
         v = cb.stack(values=values, axis=2)
         assert is_close(np.stack(values, 2), v.val)
 
+class TestAddN:
+
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+            ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        t1 = np.array([1, 2, 3], dtype=np.float32)
+        t2 = np.array([7, 8, 9], dtype=np.float32)
+        t3 = np.array([1, 1, 1], dtype=np.float32)
+
+        input_placeholders = {
+                "x": cb.placeholder(shape=t1.shape),
+                "y": cb.placeholder(shape=t2.shape),
+                "z": cb.placeholder(shape=t3.shape),
+                }
+        input_values = {"x": t1, "y": t2, "z": t3}
+
+        def build(x, y, z):
+            return cb.addn(values=(x, y, z)),
+
+        expected_output_types = [
+                (3, builtins.fp32),
+                ]
+        expected_outputs = [
+                np.array([9, 11, 13], dtype=np.float32),
+                ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+    @ssa_fn
+    def test_builder_eval(self):
+        values = [np.random.rand(1, 1, 3, 2).astype(np.float32),
+                  np.random.rand(1, 1, 3, 2).astype(np.float32),
+                  np.random.rand(1, 1, 3, 2).astype(np.float32),]
+        v = cb.addn(values=values)
+        assert is_close(values[0] + values[1] + values[2], v.val)
+
 
 class TestArgSort:
 

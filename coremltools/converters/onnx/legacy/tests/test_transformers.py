@@ -3,27 +3,34 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import pytest
+onnx = pytest.importorskip('onnx')
+
 import unittest
 import numpy as np
 import numpy.testing as npt  # type: ignore
 
-from onnx import helper, numpy_helper, TensorProto
+from coremltools._deps import HAS_ONNX, MSG_ONNX_NOT_FOUND
+if HAS_ONNX:
+    import onnx
+    from onnx import helper, numpy_helper, TensorProto
 
-from coremltools.converters.onnx import convert
-from coremltools.converters.onnx.legacy.onnx_coreml._graph import Graph
-from coremltools.converters.onnx.legacy.onnx_coreml._transformers import (
-    ConvAddFuser,
-    DropoutRemover,
-    ImageScalerRemover,
-)
-from ._test_utils import (
-    _onnx_create_model,
-    _test_onnx_model,
-    _conv_pool_output_size,
-    _random_array,
-)
+    from coremltools.converters.onnx import convert
+    from coremltools.converters.onnx.legacy.onnx_coreml._graph import Graph
+    from coremltools.converters.onnx.legacy.onnx_coreml._transformers import (
+        ConvAddFuser,
+        DropoutRemover,
+        ImageScalerRemover,
+    )
+    from ._test_utils import (
+        _onnx_create_model,
+        _test_onnx_model,
+        _conv_pool_output_size,
+        _random_array,
+    )
 
 
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ConvAddFuserTest(unittest.TestCase):
     def test_fuse_conv_without_bias(self):  # type: () -> None
         kernel_shape = (3, 2)
@@ -125,6 +132,7 @@ class ConvAddFuserTest(unittest.TestCase):
         self.assertEqual(fused_graph.nodes[0].outputs[0], outputs[0][0])
 
 
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class NodeRemoverTests(unittest.TestCase):
     def test_dropout_remover(self):  # type: () -> None
         inputs = [("input", (1, 3, 50, 50))]
@@ -222,6 +230,7 @@ class NodeRemoverTests(unittest.TestCase):
         self.assertEqual(spec.neuralNetwork.preprocessing[1].scaler.grayBias, -13.0)
 
 
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class PixelShuffleFuserTest(unittest.TestCase):
     def test_pixel_shuffle(self):  # type: () -> None
         scale_factor = 2

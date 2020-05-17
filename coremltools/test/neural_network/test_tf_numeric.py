@@ -5,12 +5,15 @@ import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
 from coremltools.models import MLModel
 from coremltools.models.utils import is_macos, macos_version
-import tensorflow as tf
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
+if HAS_TF:
+    import tensorflow as tf
 import itertools
 
 np.random.seed(10)
 np.set_printoptions(precision=4, suppress=True)
 
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class CorrectnessTest(unittest.TestCase):
     
     def _compare_shapes(self, ref_preds, coreml_preds):

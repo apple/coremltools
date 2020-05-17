@@ -41,7 +41,7 @@ while [ $# -gt 0 ]
   shift
 done
 
-if [[ $DEV == 1 ]] then
+if [[ $DEV == 1 ]]; then
     PYTHON_ENV="${ENV_DIR}/${COREMLTOOLS_NAME}-dev-py${PYTHON}"
 else
     PYTHON_ENV="${ENV_DIR}/${COREMLTOOLS_NAME}-py${PYTHON}"
@@ -53,7 +53,7 @@ export PYTHON_VERSION=$($PYTHON_EXECUTABLE -c 'import sys; print(".".join(map(st
 export PYTEST_EXECUTABLE=$PYTHON_ENV/bin/pytest
 export PIP_EXECUTABLE=$PYTHON_ENV/bin/pip
 export PYTHON_LIBRARY=$PYTHON_ENV/lib/libpython${PYTHON}m.dylib
-if [[ ${PYTHON_VERSION:0:1} == "3" ]] ;
+if [[ ${PYTHON_VERSION:0:1} == "3" ]];
 then
     if [[ ${PYTHON_VERSION:2:3} -ge 8 ]]; then
         export PYTHON_INCLUDE_DIR=$PYTHON_ENV/include/python${PYTHON_VERSION}/

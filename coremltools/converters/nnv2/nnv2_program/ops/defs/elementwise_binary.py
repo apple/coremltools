@@ -41,7 +41,7 @@ class elementwise_binary(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return self.get_operator()(self.x.val, self.y.val)
+        return self._cast_check_value_inferene(self.x.val, self.y.val)
 
     def get_operator(self):
         """
@@ -56,6 +56,13 @@ class elementwise_binary(Operation):
         """
         return promoted_dtype
 
+    def _cast_check_value_inferene(self, a, b):
+        """
+        If one of the input is tensor, cast the result to tensor.
+        """
+        to_cast = any([isinstance(x, np.ndarray) for x in [a,b]])
+        result = self.get_operator()(a,b)
+        return result if not to_cast else np.array(result)
 
 """
 Elementwise Binary Op Implmentation(s)

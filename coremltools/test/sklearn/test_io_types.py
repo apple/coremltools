@@ -4,17 +4,19 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import coremltools
-from coremltools._deps import HAS_KERAS2_TF
+from coremltools._deps import HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND, HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
 from coremltools.models.utils import macos_version, is_macos
-import keras
-import sklearn
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
-from sklearn.linear_model import LinearRegression
-from sklearn.svm import SVC, SVR
+if HAS_KERAS2_TF:
+    import keras
+if HAS_SKLEARN:
+    import sklearn
+    from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+    from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+    from sklearn.linear_model import LinearRegression
+    from sklearn.svm import SVC, SVR
+    from sklearn.datasets import load_boston
 import unittest
 import numpy as np
-from sklearn.datasets import load_boston
 import pytest
 import PIL.Image
 
@@ -35,6 +37,7 @@ def create_model(spec):
 
 @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
                      'Only supported on macOS 10.13+')
+@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class TestIODataTypes(unittest.TestCase):
     """
     This class tests for different I/O feature data types for an .mlmodel
@@ -218,7 +221,7 @@ class TestIODataTypes(unittest.TestCase):
             except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
     @pytest.mark.keras2
     def test_keras_dense_model(self):
         model = keras.models.Sequential()

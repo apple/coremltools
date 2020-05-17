@@ -1,17 +1,17 @@
 import unittest
 import tempfile
 import numpy as np
-import tensorflow as tf
 import coremltools
 import os
+import pytest
 import shutil
 from . test_utils import generate_data
-from coremltools._deps import HAS_TF_2
+from coremltools._deps import HAS_TF_2, MSG_TF2_NOT_FOUND
+if HAS_TF_2:
+    import tensorflow as tf
 import math
-import pytest
 
-
-@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestKerasFashionMnist(unittest.TestCase):
 
     def setUp(self):
@@ -99,7 +99,7 @@ class TestKerasFashionMnist(unittest.TestCase):
         )
 
 
-@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestModelFormats(unittest.TestCase):
 
     def setUp(self):
@@ -202,7 +202,7 @@ class TestModelFormats(unittest.TestCase):
 
 
 @unittest.skipIf(False, 'skipping slow full model conversion tests.')
-@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestKerasApplications(unittest.TestCase):
 
     def setUp(self):
@@ -411,7 +411,7 @@ class TestKerasApplications(unittest.TestCase):
             outputs=[output_name])
 
 
-@unittest.skipUnless(HAS_TF_2, 'missing TensorFlow 2+.')
+@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestCornerCases(unittest.TestCase):
 
     def setUp(self):

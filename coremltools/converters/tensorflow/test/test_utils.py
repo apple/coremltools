@@ -5,8 +5,12 @@ from __future__ import absolute_import as _
 
 import numpy as np
 
+def _convert_to_fp16_precision(x):
+    x = (x*1000).astype(np.int32)
+    x = (x/1000.).astype(np.float32)
+    return x
 
-def generate_data(shape, mode='random_zero_mean'):
+def generate_data(shape, mode='random_zero_mean', use_cpu_only=False):
     """
     Generate some random data according to a shape.
     """
@@ -33,6 +37,8 @@ def generate_data(shape, mode='random_zero_mean'):
         x = np.array(x).reshape(shape)
     else:
         raise ValueError("invalid data mode: '{}'.".format(mode))
+    if not use_cpu_only:
+        x = _convert_to_fp16_precision(x)
     return x
 
 

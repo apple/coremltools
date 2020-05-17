@@ -31,7 +31,7 @@ def make_tf_graph(input_types):
             inputs = []
             for input_type in input_types:
                 input_type = tuple(input_type)
-                if isinstance(input_type[-1], dtypes.DType):
+                if len(input_type) > 0 and isinstance(input_type[-1], dtypes.DType):
                     shape, dtype = input_type[:-1], input_type[-1]
                 else:
                     shape, dtype = input_type, tf.float32

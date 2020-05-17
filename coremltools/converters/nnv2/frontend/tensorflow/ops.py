@@ -10,6 +10,14 @@ from .tf_op_registry import register_tf_op
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.symbolic import is_symbolic
 
+def _is_scalar(type_):
+    if type_ is None:
+        return False
+    result = builtins.is_int(type_) or builtins.is_float(type_) or builtins.is_bool(type_)
+    if builtins.is_tensor(type_) and (len(type_.get_shape()) == 0):
+        result = True
+    return result
+
 def _transpose_NHWC_to_NCHW(x):
     return cb.transpose(x=x, perm=[0, 3, 1, 2])
 
@@ -153,6 +161,11 @@ def AvgPool3D(context, node):
 
     context.add(node.name, x)
 
+@register_tf_op
+def AddN(context, node):
+    values = [context[name] for name in node.inputs]
+    x = cb.addn(values=values, name=node.name)
+    context.add(node.name, x)
 
 @register_tf_op
 def BatchToSpaceND(context, node):
@@ -382,8 +395,7 @@ def LogicalAnd(context, node):
 @register_tf_op
 def LogicalNot(context, node):
     x = context[node.inputs[0]]
-    y = context[node.inputs[1]]
-    x = cb.logical_not(x=x, y=y, name=node.name)
+    x = cb.logical_not(x=x, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op
@@ -660,6 +672,10 @@ def Identity(context, node):
         context.add(node.name, x, is_new_var=False)
 
 @register_tf_op
+def Print(context, node):
+    Identity(context, node)
+
+@register_tf_op
 def Placeholder(context, node):
     # no-op as we add Placeholder separately.
     pass
@@ -870,8 +886,8 @@ def StridedSlice(context, node):
         # check if inputs can be determined
         begin_cache = begin
         end_cache = end
-        begin = [] if begin.sym_val is None else begin.sym_val.tolist()
-        end = [] if end.sym_val is None else end.sym_val.tolist()
+        begin = [] if begin.val is None else begin.val.tolist()
+        end = [] if end.val is None else end.val.tolist()
         stride = [] if stride is None else stride.val.tolist()
 
         # pad masks function
@@ -923,10 +939,12 @@ def StridedSlice(context, node):
                 end_mask[i] = True
                 stride[i] = 1
 
-        # return if begin and end are run-time determined
-        if begin == [] and end == []:
+        # convert begin and end back to cache value if they are run-time determined
+        if begin == []:
             begin = begin_cache
-            end   = end_cache
+
+        if end == []:
+            end = end_cache
 
         # check which mask is adding by our default value
         # This happens when the given index is less than the tensor rank,
@@ -1040,7 +1058,7 @@ def MirrorPad(context, node):
 def Pad(context, node):
     x = context[node.inputs[0]]
     pad = context[node.inputs[1]]
-    if pad is None:
+    if pad.val is None:
         raise ValueError("TF `paddings` in Pad op must be const.")
 
     mode = node.attr.get('mode', 'constant').lower()
@@ -1052,6 +1070,34 @@ def Pad(context, node):
 
     pad = pad.val.reshape(-1)
     x = cb.pad(x=x, pad=pad, name=node.name, mode=mode, constant_val=constant_val)
+    context.add(node.name, x)
+
+@register_tf_op
+def PadV2(context, node):
+    # compared to tf.raw_ops.Pad, tf.raw_ops.PadV2 allow constant values rather than 0.
+    x = context[node.inputs[0]]
+    pad = context[node.inputs[1]]
+    constant_val = context[node.inputs[2]]
+
+    if pad.val is None or constant_val.val is None:
+        raise NotImplementedError("TF `paddings`, `constant_values` in PadV2 op must be const.")
+    if constant_val.shape != ():
+        raise NotImplementedError("TF `constant_values` in PadV2 op must be const scalar.")
+    in_rank = x.rank
+    if in_rank > 5:
+        raise ValueError('Unsupported Pad configuration!')
+
+    pad = pad.val.reshape(-1)
+    constant_val = constant_val.val
+    if constant_val == -np.inf:
+        INT_MIN = - np.iinfo(np.int64).max - 1
+        constant_val = np.float(INT_MIN)
+
+    if constant_val == np.inf:
+        INT_MAX = np.iinfo(np.int64).max
+        constant_val = np.float(INT_MAX)
+
+    x = cb.pad(x=x, pad=pad, name=node.name, mode='constant', constant_val=constant_val)
     context.add(node.name, x)
 
 @register_tf_op
@@ -1663,7 +1709,20 @@ def Pack(context, node):
     if axis < 0:
         # TF axis = -1 creates new dim at the end
         axis += values[0].rank + 1
-    x = cb.stack(values=values, axis=axis, name=node.name)
+    if len(values) == 1:
+        # for example:
+        # y = tf.raw_ops.Pack(values=[2], axis=0).
+        # or y = tf.raw_ops.Pack(values=[tf.constant([1,2])], axis=0)
+        input_type = values[0].sym_type
+        if _is_scalar(input_type):
+            x = cb.mul(x=np.array([1], dtype=np.int32), y=values[0], name=node.name)
+        else:
+            x = cb.expand_dims(x=values[0], axes=[axis], name=node.name)
+    else:
+        if all([_is_scalar(input.sym_type) for input in values]):
+            x = cb.concat(values=values, axis=axis, name=node.name)
+        else:
+            x = cb.stack(values=values, axis=axis, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op

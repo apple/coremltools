@@ -3,13 +3,15 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-import tensorflow as tf
 import numpy as np
 import unittest
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
+if HAS_TF:
+    import tensorflow as tf
 
 from . test_base import TFNetworkTest
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFDynRNNTest(TFNetworkTest):
 
     # Allows you to override common test entry for this class

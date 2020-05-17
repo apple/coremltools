@@ -7,8 +7,8 @@ import shutil
 import os
 
 import coremltools
-from coremltools._deps import HAS_KERAS_TF
-from coremltools._deps import HAS_TF
+from coremltools._deps import HAS_KERAS_TF, MSG_KERAS1_NOT_FOUND
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
 from coremltools.models.utils import get_custom_layer_names, \
     replace_custom_layer_name, macos_version, is_macos
 from coremltools.proto import Model_pb2
@@ -26,7 +26,7 @@ if HAS_TF:
     tf.compat.v1.disable_eager_execution()
 
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not HAS_KERAS_TF, MSG_KERAS1_NOT_FOUND)
 @pytest.mark.keras1
 class KerasBasicNumericCorrectnessTest(unittest.TestCase):
 
@@ -142,7 +142,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
                 self.assertAlmostEquals(fullOutputs['middle_layer_output'][i], partialOutput['output2'][i], 2)
 
 # Base class for basic TF conversions
-@unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TfConversionTestBase(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
@@ -199,7 +199,7 @@ class TfConversionTestBase(unittest.TestCase):
         raise NotImplementedError
 
 # Converting TF models with convolution layers
-@unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFBasicConversionTest(TfConversionTestBase):
     # Basic NN using convolutions
     def _get_network(self):
@@ -214,7 +214,9 @@ class TFBasicConversionTest(TfConversionTestBase):
     def _get_input_shape(self):
         return [1, self.image_size, self.image_size, 3]
 
-    def my_conv_2d(self, input, weight_shape, num_filters, strides, name, activation_fn=tf.nn.relu, with_bias_add=True):
+    def my_conv_2d(self, input, weight_shape, num_filters, strides, name, activation_fn=None, with_bias_add=True):
+        if not activation_fn:
+            activation_fn = tf.nn.relu # Necessary to compile when no TF installed
         my_weights = tf.get_variable(name=name + 'weights', shape=weight_shape)
         if with_bias_add:
             my_bias = tf.get_variable(name=name + 'bias', shape=num_filters)
@@ -292,7 +294,7 @@ class TFConversionTestWithSimpleModelBase(TfConversionTestBase):
         probabilities = tf.nn.softmax(net, name='Softmax')
         return (i_placeholder, probabilities)
 
-@unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFConversionTestWithSimpleNHWCModel(TFConversionTestWithSimpleModelBase):
     # Use NHWC format
     def _get_input_shape(self):
@@ -326,7 +328,7 @@ class TFConversionTestWithSimpleNHWCModel(TFConversionTestWithSimpleModelBase):
                 outputs=['Softmax'],
                 tf_image_format='NCHW')
 
-@unittest.skipIf(not HAS_TF, 'Missing TF. Skipping tests.')
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFConversionTestWithSimpleNCHWModel(TFConversionTestWithSimpleModelBase):
     # Use NHWC format
     def _get_input_shape(self):

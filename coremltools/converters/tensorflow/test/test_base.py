@@ -4,13 +4,14 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 import os, sys
-import tensorflow.compat.v1 as tf
 import numpy as np
-import pytest
 import unittest
 import shutil, tempfile
-from tensorflow.python.tools.freeze_graph import freeze_graph
-from tensorflow.tools.graph_transforms import TransformGraph
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
+if HAS_TF:
+    import tensorflow as tf
+    from tensorflow.python.tools.freeze_graph import freeze_graph
+    from tensorflow.tools.graph_transforms import TransformGraph
 
 import coremltools
 
@@ -32,7 +33,7 @@ def _parse_coreml_name_to_tf(coreml_name):
         tf_name = coreml_name
     return tf_name
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFNetworkTest(unittest.TestCase):
 
     @classmethod
@@ -129,7 +130,7 @@ class TFNetworkTest(unittest.TestCase):
 
         if input_refs is None:
             feed_dict = {
-                self._get_tf_tensor_name(graph, name): generate_data(input_shapes[name], data_mode)
+                self._get_tf_tensor_name(graph, name): generate_data(input_shapes[name], data_mode, use_cpu_only)
                 for name in input_shapes
             }
         else:
@@ -269,7 +270,7 @@ class TFNetworkTest(unittest.TestCase):
 
         feed_input_shapes = { k : tuple([i if i > 0 else 10 for i in ashape]) for (k,ashape) in input_shapes.items()}
         feed_dict = {
-            self._get_tf_tensor_name(graph, name): generate_data(feed_input_shapes[name], data_mode)
+            self._get_tf_tensor_name(graph, name): generate_data(feed_input_shapes[name], data_mode, use_cpu_only)
             for name in feed_input_shapes
         }
 

@@ -4,10 +4,12 @@ import tarfile
 import zipfile
 import numpy as np
 import PIL.Image
-import tensorflow as tf
-from tensorflow.core.framework import graph_pb2
-import coremltools.converters.tensorflow as tf_converter
-from coremltools.converters.tensorflow import SupportedVersion
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
+if HAS_TF:
+    import tensorflow as tf
+    from tensorflow.core.framework import graph_pb2
+    import coremltools.converters.tensorflow as tf_converter
+    from coremltools.converters.tensorflow import SupportedVersion
 from coremltools.models.utils import macos_version
 
 try:
@@ -133,7 +135,7 @@ def _tf_transpose(x, is_sequence=False):
     else:
         return x
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class CorrectnessTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -287,7 +289,7 @@ class CorrectnessTest(unittest.TestCase):
         coreml_out_flatten = coreml_out.flatten()
         self._compare_tf_coreml_outputs(tf_out_flatten, coreml_out_flatten)
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TestModels(CorrectnessTest):
     def test_inception_v3_slim(self):
         # Download model

@@ -42,6 +42,7 @@ from coremltools.converters.nnv2.frontend.tensorflow.test.test_ops import (
     TestPooling1d,
     TestPooling2d,
     TestPooling3d,
+    TestSeparableConv,
     TestWhileLoop,
     TestReshape,
     TestSlice,
@@ -181,7 +182,9 @@ mark = pytest.mark.parametrize("use_cpu_only, backend, rank",
                                ))
 TestElementWiseBinary.test_not_equal.pytestmark[0] = mark
 
-
+import sys
+@pytest.mark.skipif(sys.version_info<(3,7),
+    reason = "<rdar://problem/63238439> test_wheel_nnv2_tf2_macOS16_py2.7 seems to fail on TestCond tests")
 class TestControlFlowFromAutoGraph:
 
     @pytest.mark.parametrize(

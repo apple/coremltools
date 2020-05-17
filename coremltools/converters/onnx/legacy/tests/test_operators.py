@@ -5,19 +5,20 @@ from __future__ import unicode_literals
 
 import unittest
 import numpy as np
-from onnx.numpy_helper import from_array
-import onnx
-from coremltools.converters.onnx import convert
+from coremltools._deps import HAS_ONNX, MSG_ONNX_NOT_FOUND
+if HAS_ONNX:
+    import onnx
+    from onnx.numpy_helper import from_array
+    from coremltools.converters.onnx import convert
+    from ._test_utils import (
+        _onnx_create_single_node_model,
+        _test_single_node,
+        _random_array,
+        _conv_pool_output_size,
+        _assert_outputs,
+    )
 
 from typing import Text
-
-from ._test_utils import (
-    _test_single_node,
-    _random_array,
-    _conv_pool_output_size,
-    _onnx_create_single_node_model,
-    _assert_outputs,
-)
 
 from coremltools.models.utils import macos_version
 
@@ -25,7 +26,7 @@ MIN_MACOS_VERSION_10_15 = (10, 15)
 
 ONNX_SHAPE_INFERENCE_FAILS = True
 
-
+@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class SingleOperatorTest(unittest.TestCase):
     def test_conv(self):  # type: () -> None
         kernel_shape = (3, 2)

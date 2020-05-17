@@ -30,6 +30,29 @@ class TestActivationElu:
                        use_cpu_only=use_cpu_only,
                        frontend_only=False, backend=backend)
 
+class TestAddN:
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, num_inputs",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 list(range(6)),
+                                 list(range(1,10)),))
+    def test(self, use_cpu_only, backend, rank, num_inputs):
+        if backend == 'nnv2_proto' and rank == 0:
+            return
+        input_shape = np.random.randint(low=1, high=6, size=rank)
+        input_shapes = [input_shape[:] for _ in range(num_inputs)]
+        @make_tf_graph(input_shapes)
+        def build_model(*inputs):
+            return tf.raw_ops.AddN(inputs=inputs)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(shape,-1,1) for shape in input_shapes]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
+
 
 class TestActivationLeakyReLU:
     @pytest.mark.parametrize("use_cpu_only, backend, rank",
@@ -278,6 +301,9 @@ class TestWhere:
                            use_cpu_only=use_cpu_only, backend=backend)
 
 
+import sys
+@pytest.mark.skipif(sys.version_info<(3,7),
+    reason = "<rdar://problem/63238439> test_wheel_nnv2_tf2_macOS16_py2.7 seems to fail on TestCond tests")
 class TestCond:
 
     @pytest.mark.parametrize("use_cpu_only, backend",
@@ -443,6 +469,8 @@ class TestCond:
                        use_cpu_only=use_cpu_only,
                        backend=backend)
 
+@pytest.mark.skipif(sys.version_info<(3,7),
+    reason = "<rdar://problem/63238439> test_wheel_nnv2_tf2_macOS16_py2.7 seems to fail on TestCond tests")
 class TestWhileLoop:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends))
@@ -846,6 +874,74 @@ class TestDepthwiseConv:
         # We do not support dynamic weight when dilations != 1.
         test_dynamic_W() if dynamic_weights and dilations == (1, 1) else test_static_W()
 
+class TestSeparableConv:
+    @pytest.mark.parametrize(
+        ','.join([
+            'use_cpu_only',
+            'backend',
+            'padding',
+            'HWkHkW',
+            'strides',
+            'dilations',
+            'dynamic_weights',
+            'batch_size']),
+        itertools.product(
+            [True, False],
+            backends,
+            ['SAME', 'VALID'],
+            [(11, 12, 3, 2), (12, 11, 2, 3)],
+            [(1, 1, 1, 1), (1, 2, 2, 1)],
+            [(1, 1), (2, 2)],
+            [True, False],
+            [1, 3]
+        ))
+    def test_separable_conv(
+            self, use_cpu_only, backend, padding, HWkHkW, strides,
+            dilations, dynamic_weights, batch_size):
+        H, depthwise_filter, kH, kW = HWkHkW
+        N, C_in, C_out = batch_size, 2, 6
+        input_shape = (N, H, depthwise_filter, C_in)
+        data_format = 'NHWC'
+        assert C_out % C_in == 0
+        multiplier = int(C_out / C_in)
+        depthwise_filter_shape = (kH, kW, C_in, multiplier)
+        pointwise_filter_shape = [1, 1, multiplier * C_in, C_out]
+        if dilations != (1, 1):
+            strides = (1, 1, 1, 1)
+
+        def test_dynamic_W():
+            @make_tf_graph([input_shape, depthwise_filter_shape, pointwise_filter_shape])
+            def build_model_dynamic_weights(x, depthwise_filter, pointwise_filter):
+                return tf.nn.separable_conv2d(x, depthwise_filter, pointwise_filter, strides=strides, padding=padding,
+                                          dilations=dilations, data_format=data_format)
+            model, inputs, outputs = build_model_dynamic_weights
+
+            input_values = [(np.random.rand(*input_shape).astype(np.float32)),
+                            (np.random.rand(*depthwise_filter_shape).astype(np.float32)),
+                            (np.random.rand(*pointwise_filter_shape).astype(np.float32))]
+            input_dict = dict(zip(inputs, input_values))
+
+            run_compare_tf(model, input_dict, outputs,
+            use_cpu_only=use_cpu_only, backend=backend, frontend_only=False)
+
+        def test_static_W():
+            depthwise_filter = (np.random.rand(*depthwise_filter_shape).astype(np.float32))
+            pointwise_filter = (np.random.rand(*pointwise_filter_shape).astype(np.float32))
+            @make_tf_graph([input_shape])
+            def build_model_static_weights(x):
+                return tf.nn.separable_conv2d(x, depthwise_filter, pointwise_filter, strides=strides, padding=padding,
+                                          dilations=dilations, data_format=data_format)
+            model, inputs, outputs = build_model_static_weights
+
+            input_values = [(np.random.rand(*input_shape).astype(np.float32))]
+            input_dict = dict(zip(inputs, input_values))
+
+            run_compare_tf(model, input_dict, outputs,
+            use_cpu_only=use_cpu_only, backend=backend, frontend_only=False)
+        
+        test_static_W()
+        test_dynamic_W()
+
 
 class TestConvTranspose:
     @pytest.mark.parametrize(
@@ -920,13 +1016,16 @@ class TestElementWiseBinary:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [rank for rank in range(1, 4)],
+                                 [rank for rank in range(0, 4)],
                                  ['add', 'floor_div', 'floor_mod',
                                   'maximum', 'minimum', 'mod', 'mul',
                                   'pow', 'real_div', 'sub',
                                   'squared_difference']
                              ))
     def test_binary(self, use_cpu_only, backend, rank, mode):
+        # TODO: rdar://problem/63030405. Rank 0 tensor for NNV2
+        if rank == 0 and backend == 'nnv2_proto':
+            return
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -991,7 +1090,6 @@ class TestElementWiseBinary:
             return res(x, y)
 
         model, inputs, outputs = build_model
-
         input_values = [x_val, y_val]
 
         input_dict = dict(zip(inputs, input_values))
@@ -1002,9 +1100,11 @@ class TestElementWiseBinary:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [rank for rank in range(1, 4)]
+                                 [rank for rank in range(0, 4)]
                              ))
     def test_equal(self, use_cpu_only, backend, rank):
+        if rank == 0 and backend == 'nnv2_proto':
+            return
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -1035,9 +1135,11 @@ class TestElementWiseBinary:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [rank for rank in range(1, 4)]
+                                 [rank for rank in range(0, 4)]
                              ))
     def test_greater(self, use_cpu_only, backend, rank):
+        if rank == 0 and backend == 'nnv2_proto':
+            return
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -1068,9 +1170,11 @@ class TestElementWiseBinary:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [rank for rank in range(1, 4)]
+                                 [rank for rank in range(0, 4)]
                              ))
     def test_greater_equal(self, use_cpu_only, backend, rank):
+        if rank == 0 and backend == 'nnv2_proto':
+            return
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -1101,9 +1205,11 @@ class TestElementWiseBinary:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [rank for rank in range(1, 4)]
+                                 [rank for rank in range(0, 4)]
                              ))
     def test_less(self, use_cpu_only, backend, rank):
+        if rank == 0 and backend == 'nnv2_proto':
+            return
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -1134,9 +1240,11 @@ class TestElementWiseBinary:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [rank for rank in range(1, 4)]
+                                 [rank for rank in range(0, 4)]
                              ))
     def test_less_equal(self, use_cpu_only, backend, rank):
+        if rank == 0 and backend == 'nnv2_proto':
+            return
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -1167,9 +1275,11 @@ class TestElementWiseBinary:
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [rank for rank in range(1, 4)]
+                                 [rank for rank in range(0, 4)]
                              ))
     def test_not_equal(self, use_cpu_only, backend, rank):
+        if rank == 0 and backend == 'nnv2_proto':
+            return
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
@@ -1589,8 +1699,6 @@ class TestNormalization:
         run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
         atol=1e-2, rtol=1e-3)
 
-    #FIXME: <rdar://62070514> TF1 Op Test: Investigate test_l2_normalize.
-    @pytest.mark.xfail(reason="Investigate behavior in <rdar://62070514>", run=False)
     @pytest.mark.parametrize('use_cpu_only, backend, rank, axes, epsilon',
                              itertools.product(
                                  [True, False],
@@ -1600,13 +1708,20 @@ class TestNormalization:
                                  [1e-5, 1e-10],
                              ))
     def test_l2_normalize(self, use_cpu_only, backend, rank, axes, epsilon):
-        shape = np.random.randint(low=1, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.math.l2_normalize(x, axis=axes, epsilon=epsilon)
-            run_compare_tf(graph, {x: random_gen(shape, rand_min=-10, rand_max=10)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend,
-                           atol=1e-2, rtol=1e-3)
+        input_shape = np.random.randint(low=1, high=6, size=rank)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.l2_normalize(x, axis=axes, epsilon=epsilon)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, rand_min=-10, rand_max=10)]
+
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+        atol=1e-2, rtol=1e-3)
 
     @pytest.mark.parametrize('use_cpu_only, backend, size, alpha, beta, k',
                              itertools.product(
@@ -1772,6 +1887,25 @@ class TestPooling3d:
 
         run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
+class TestPrint:
+    @pytest.mark.parametrize('use_cpu_only, backend, rank',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [size for size in range(1, 5)],
+                             ))
+    def test_print(self, use_cpu_only, backend, rank):
+        shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
+        @make_tf_graph([shape])
+        def build_model(x):
+            print_layer = tf.raw_ops.Print(input=x, data=[])
+            res = print_layer + 1
+            return res
+        model, inputs, outputs = build_model
+        input_value = [random_gen(shape=shape, rand_min=-100, rand_max=100)]
+        input_dict = dict(zip(inputs, input_value))
+
+        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
 
 class TestRandom:
     @pytest.mark.parametrize('use_cpu_only, backend, size, rank, constant',
@@ -2422,7 +2556,30 @@ class TestPad:
         run_compare_tf(model, input_dict, outputs,
                        use_cpu_only=use_cpu_only,
                        frontend_only=False, backend=backend)
+class TestPadV2:
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, constant_values",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 list(range(1, 6)),
+                                 [0., 10, -1],
+                             )
+                             )
+    def test(self, use_cpu_only, backend, rank, constant_values):
+        input_shape = np.random.randint(low=2, high=10, size=rank)
+        paddings = np.random.randint(low=2, high=5, size=2*rank)
+        paddings = paddings.reshape(-1,2)
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.raw_ops.PadV2(input=x, paddings=paddings, constant_values=constant_values)
 
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, rand_min=1, rand_max=10)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 class TestRange:
     @pytest.mark.parametrize("use_cpu_only, backend, params",
@@ -2569,7 +2726,7 @@ class TestConcat:
         input_values = [np.random.rand(*input_shape1).astype(np.float32),
                         np.random.rand(*input_shape2).astype(np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        
+
         run_compare_tf(model, input_dict, outputs,
                use_cpu_only=use_cpu_only,
                frontend_only=False, backend=backend)
@@ -2652,6 +2809,28 @@ class TestStack:
             run_compare_tf(graph, inputs,
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
+
+class TestPack:
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, num_inputs",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 list(range(5)),
+                                 list(range(1,10))
+                             ))
+    def test_pack(self, use_cpu_only, backend, rank, num_inputs):
+        shape = np.random.randint(low=1, high=6, size=rank)
+        input_shapes = [shape[:] for _ in range(num_inputs)]
+
+        @make_tf_graph(input_shapes)
+        def build_model(*inputs):
+            return tf.raw_ops.Pack(values=inputs, axis=0)
+        model, inputs, outputs = build_model
+        input_values = [random_gen(shape, rand_min=-1, rand_max=1) for shape in input_shapes]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestArgSort:

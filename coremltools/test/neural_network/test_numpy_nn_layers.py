@@ -12,8 +12,9 @@ import pytest
 from packaging import version
 
 import numpy as np
-import pytest
-import tensorflow as tf
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
+if HAS_TF:
+    import tensorflow as tf
 import torch
 
 import coremltools
@@ -2234,7 +2235,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_topk_gpu(self):
         self.test_topk_cpu(cpu_only=False)
 
-
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_const_pad_cpu(self, cpu_only=True):
 
         def get_reference(data, pads, value):
@@ -2292,7 +2293,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_const_pad_gpu(self):
         self.test_const_pad_cpu(cpu_only=False)
 
-
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_const_pad_mode2_cpu(self, cpu_only=True):
 
         def get_reference(data, output_shape, value, left_pad=False):
@@ -2386,6 +2387,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             iou = intersection_area / union_area
             return iou
 
+        @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
         def _nms_TF(boxes, scores, iou_threshold, score_threshold, per_class_suppression, M):
             # boxes is (B,N,4), in order [center_w, center_h, width, height]
             # scores is (B,N,C)
@@ -3897,6 +3899,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reduce_logsumexp_gpu(self):
         self.test_reduce_logsumexp_cpu(cpu_only=False)
 
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_reverse_sequence_cpu(self, cpu_only=True):
         for rank in range(2, 6):
             for i in range(20):
@@ -4035,6 +4038,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_gather_along_axis_gpu(self):
         self.test_gather_along_axis_cpu(cpu_only=False)
 
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_gather_nd_cpu(self, cpu_only=True):
         for params_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(1, 6)]:
             params_shape = np.random.randint(low=2, high=8, size=params_rank)
@@ -4075,6 +4079,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_gather_nd_gpu(self):
         self.test_gather_nd_cpu(cpu_only=False)
 
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_scatter_cpu(self, cpu_only=True):
         for ref_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(1, 6)]:
             for accumulate_mode in ["UPDATE", "ADD", "SUB", "MUL", "DIV", "MAX", "MIN"]:
@@ -4202,6 +4207,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_scatter_along_axis_gpu(self):
         self.test_scatter_along_axis_cpu(cpu_only=False)
 
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_scatter_nd_cpu(self, cpu_only=True):
         for ref_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(2, 6)]:
             ref_shape = np.random.randint(low=2, high=8, size=ref_rank)
@@ -4753,7 +4759,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
 @unittest.skipIf(macos_version() < LAYERS_10_16_MACOS_VERSION,
                  'macOS 10.16+ required. Skipping tests.')
 class IOS14SingleLayerTests(CorrectnessTest):
-
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_onehot_layer_cpu(self, cpu_only=True):
         ctr = 0
         params_dict = dict(
@@ -4912,6 +4918,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
     def test_onehot_layer_gpu(self):
         self.test_onehot_layer_cpu(cpu_only=False)
 
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_cumsum_layer_cpu(self, cpu_only = True):
         ctr = 0
         params_dict = dict(
@@ -5378,32 +5385,32 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                             pad_d = max(
                                                 0,
                                                 (
-                                                    stride[0] * math.ceil(in_shape[2] / stride[0])
+                                                    stride[0] * math.ceil(in_shape[2] / float(stride[0]))
                                                     - in_shape[2]
                                                     + dilated_kernel[0]
                                                     - stride[0]
                                                 )
-                                                / 2,
+                                                / 2.,
                                             )
                                             pad_h = max(
                                                 0,
                                                 (
-                                                    stride[1] * math.ceil(in_shape[3] / stride[1])
+                                                    stride[1] * math.ceil(in_shape[3] / float(stride[1]))
                                                     - in_shape[3]
                                                     + dilated_kernel[1]
                                                     - stride[1]
                                                 )
-                                                / 2,
+                                                / 2.,
                                             )
                                             pad_w = max(
                                                 0,
                                                 (
-                                                    stride[2] * math.ceil(in_shape[4] / stride[2])
+                                                    stride[2] * math.ceil(in_shape[4] / float(stride[2]))
                                                     - in_shape[4]
                                                     + dilated_kernel[2]
                                                     - stride[2]
                                                 )
-                                                / 2,
+                                                / 2.,
                                             )
 
                                             # Depth
@@ -5420,7 +5427,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                             padding = [0] * 6
                                         elif padding_mode == "custom":
                                             # No-op: valid ignores padding and custom uses the
-                                            # specifed padding
+                                            # specified padding
                                             pass
 
                                         input_features = [("data", datatypes.Array(*in_shape))]
@@ -5448,20 +5455,6 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                         else:
                                             bias_tensor = None
                                             bias_torch = None
-
-                                        print(
-                                            test_case_format_str.format(
-                                                in_shape,
-                                                output_channels,
-                                                groups,
-                                                weights_shape,
-                                                stride,
-                                                padding,
-                                                padding_mode,
-                                                dilation,
-                                                has_bias,
-                                            )
-                                        )
 
                                         builder = neural_network.NeuralNetworkBuilder(
                                             input_features,
@@ -5541,15 +5534,30 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                                 model[0].bias = torch.nn.Parameter(bias_torch)
                                         torch_expected = model(padded_input)
 
-                                        self._test_model(
-                                            builder.spec,
-                                            {"data": input_tensor},
-                                            {"output": torch_expected.detach().numpy()},
-                                            useCPUOnly=cpu_only,
-                                            test_metric="SNR",
-                                            SNR=40,
-                                            validate_shapes_only=False,
+                                        test_case = test_case_format_str.format(
+                                            in_shape,
+                                            output_channels,
+                                            groups,
+                                            weights_shape,
+                                            stride,
+                                            padding,
+                                            padding_mode,
+                                            dilation,
+                                            has_bias,
                                         )
+                                        try:
+                                            self._test_model(
+                                                builder.spec,
+                                                {"data": input_tensor},
+                                                {"output": torch_expected.detach().numpy()},
+                                                useCPUOnly=cpu_only,
+                                                test_metric="SNR",
+                                                SNR=40,
+                                                validate_shapes_only=False,
+                                            )
+                                        except AssertionError as e:
+                                            print(test_case)
+                                            raise
 
     def test_conv3d_cpu_basic(self):
         self._test_conv3d(cpu_only=True, full_test=False)
@@ -5585,6 +5593,7 @@ class ReorganizeDataTests(CorrectnessTest):
         elif to_rank == 5:
             return np.reshape(x, [1] + list(x.shape))
 
+    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
     def test_depth_to_space_cpu(self, cpu_only=True):
 
         params_dict = {

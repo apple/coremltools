@@ -582,6 +582,7 @@ class TestNormalization:
             [True, False]))
     def test_instance_normalization(
             self, use_cpu_only, backend, rank, axis, epsilon, center, scale):
+        tensorflow_addons = pytest.importorskip("tensorflow_addons")
         from tensorflow_addons.layers import InstanceNormalization
         shape = np.random.randint(low=2, high=6, size=rank)
         model = tf.keras.Sequential([
@@ -606,6 +607,7 @@ class TestNormalization:
             [True, False]))
     def test_group_normalization(
             self, use_cpu_only, backend, rank, groups, axis, epsilon, center, scale):
+        tensorflow_addons = pytest.importorskip("tensorflow_addons")
         from tensorflow_addons.layers import GroupNormalization
         shape = np.random.randint(low=2, high=6, size=rank)
         shape[-1] = shape[-1] * groups  # groups must be a multiple of channels

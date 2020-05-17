@@ -1,16 +1,21 @@
+import pytest
+tf = pytest.importorskip('tensorflow', minversion='1.14.0')
+
 import unittest
 import shutil
 import tempfile
 import os
-import tensorflow as tf
-import tensorflow.contrib.slim as slim
 import numpy as np
 from coremltools.proto import NeuralNetwork_pb2
+from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
 
-from tensorflow.python.tools.freeze_graph import freeze_graph
-from tensorflow.tools.graph_transforms import TransformGraph
-import coremltools.converters.tensorflow as tf_converter
-from coremltools.converters.tensorflow import SupportedVersion
+if HAS_TF:
+    import tensorflow as tf
+    import tensorflow.contrib.slim as slim
+    from tensorflow.python.tools.freeze_graph import freeze_graph
+    from tensorflow.tools.graph_transforms import TransformGraph
+    import coremltools.converters.tensorflow as tf_converter
+    from coremltools.converters.tensorflow import SupportedVersion
 from coremltools.models.utils import macos_version
 from coremltools.converters.nnssa.coreml import shapes as custom_shape_update
 
@@ -107,7 +112,7 @@ def _generate_data(input_shape, mode="random"):
         X = np.random.rand(*input_shape) - 0.5
     return X
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFNetworkTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -732,7 +737,7 @@ class TFSimpleNetworkTest(TFNetworkTest):
                 delta=0.05,
             )
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFSingleLayersTest(TFNetworkTest):
     """ Small models from tensorflow.layers
   """
@@ -1284,7 +1289,7 @@ class TFSingleLayersTest(TFNetworkTest):
     def test_space_to_depth(self):
         self._test_reorganize_data(tf.space_to_depth, [1, 2, 2, 1])
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFSlimTest(TFNetworkTest):
     """Small models for tf.slim layers
   """
@@ -1574,7 +1579,7 @@ class TFSlimTest(TFNetworkTest):
             graph, {"test_slim_unit_norm/input:0": [1, 8]}, output_name, delta=1e-2
         )
 
-
+@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFCustomLayerTest(TFNetworkTest):
     """
   Test the arguments "add_custom_layers" and "custom_conversion_functions",

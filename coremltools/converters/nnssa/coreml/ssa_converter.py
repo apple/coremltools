@@ -844,7 +844,7 @@ class SSAConverter(object):
                     output_name=node.name,
                     begin_masks=begin_masks,
                     end_masks=end_masks)
-            
+
             else:
                 raise ValueError("[SSAConverter] Unsupported slice configuration")
 

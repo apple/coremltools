@@ -41,15 +41,26 @@ class slice_by_index(Operation):
 
         # solve for shape inference
         for idx in range(len(x_shape)):
-            num = np.ceil(float(x_shape[idx])/abs(stride[idx])).astype(np.int32)
-
             # skip if we want to squeeze the dimension
             if squeeze_mask[idx]:
                 continue
 
             # for those a[:] cases
             if begin_mask[idx] and end_mask[idx]:
-                ret_shape.append(num)
+                if is_symbolic(x_shape[idx]):
+                    if stride[idx] == -1 or stride[idx] == 1:
+                        ret_shape.append(x_shape[idx])
+                    else:
+                        ret_shape.append(get_new_symbol())
+                    continue
+                else:
+                    num = np.ceil(float(x_shape[idx])/abs(stride[idx])).astype(np.int32)
+                    ret_shape.append(num)
+                    continue
+
+            # for symbolic case
+            if is_symbolic(x_shape[idx]):
+                ret_shape.append(get_new_symbol())
                 continue
 
             # when begin and end are not determined
