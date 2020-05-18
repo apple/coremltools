@@ -619,6 +619,7 @@ class SSAConverter(object):
                 assert ashape.get_shape() == element_shape
             shape = [-1] + list(element_shape)
         else:
+            import pdb;pdb.set_trace()
             shape = None
         return shape
 
@@ -683,6 +684,8 @@ class SSAConverter(object):
             for ashape in type_.T:
                 assert ashape.get_shape() == element_shape
             inferred_shape = [-1] + list(element_shape)
+        elif builtins.is_tuple(type_):
+            inferred_shape = type_.T[0].get_shape()
         else:
             raise ValueError('[SSAConverter] Failed to infer shape for tensor %s' % name)
 
@@ -2577,6 +2580,8 @@ class SSAConverter(object):
 
             # If any of the input is dynamic, cannot add Elementwise operator
             for _input in input_types:
+                if not builtins.is_tensor(_input):
+                    return False
                 if -1 in self._get_tensor_shape_from_type(_input):
                     return False
 
