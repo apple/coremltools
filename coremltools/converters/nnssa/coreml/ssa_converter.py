@@ -619,7 +619,6 @@ class SSAConverter(object):
                 assert ashape.get_shape() == element_shape
             shape = [-1] + list(element_shape)
         else:
-            import pdb;pdb.set_trace()
             shape = None
         return shape
 
