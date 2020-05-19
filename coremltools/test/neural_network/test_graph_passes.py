@@ -9,6 +9,7 @@ from coremltools.converters.nnssa.coreml.graph_pass.mlmodel_passes import \
 import copy
 import pytest
 from sys import platform
+from coremltools.models.utils import macos_version
 
 DEBUG = False
 np.random.seed(100)
@@ -205,6 +206,7 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal('crop', spec.layers[3].WhichOneof('layer'))
 
 
+@unittest.skipIf(platform != 'darwin' or macos_version() < (10, 15), "Requires MacOS 10.15 or later")
 class Redundant_Transposees_Test(unittest.TestCase):
 
     def _test_builder(self, builder, input_shape, expected_layer_num=None):
@@ -230,7 +232,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         np.testing.assert_almost_equal(output_before, output_after, decimal=3)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_output_edge_case(self):
 
         # For now for safety purpose, the node which are output should't be merged
@@ -249,7 +250,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         self._test_builder(builder, input_shape, 2)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_output_edge_case_2(self):
 
         # For now for safety purpose, the node which are output should't be merged
@@ -264,7 +264,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         self._test_builder(builder, input_shape, 1)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_remove_single_identity_transpose(self):
 
         # A single identity transpose (like 0,1,2) should also be removed
@@ -283,7 +282,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         self._test_builder(builder, input_shape, 1)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_remove_three_transpose(self):
 
         # Three transpose layer which can be removed
@@ -309,7 +307,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         self._test_builder(builder, input_shape, 1)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_remove_thousands_identity_transpose(self):
 
         '''
@@ -357,7 +354,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         self._test_builder(builder, input_shape, 1)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_remove_thousands_identity_transpose_with_activation_between(self):
         '''
                INPUT
@@ -423,7 +419,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
                                output_name='out')
         self._test_builder(builder, input_shape, 2)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_remove_thousands_random_transpose_layers(self):
         '''
                INPUT
@@ -487,7 +482,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
                                output_name='out')
         self._test_builder(builder, input_shape, None)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_remove_thousands_random_transpose_layers_case_2(self):
         '''
         Same test as the previous one, but add more layers and dimension.
@@ -519,7 +513,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
                                output_name='out')
         self._test_builder(builder, input_shape, None)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_branch_structure(self):
         '''
                 INPUT
@@ -577,7 +570,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
                                output_name='dumpy')
         self._test_builder(builder, input_shape, 2)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_branch_case_2(self):
         '''
                 INPUT
@@ -619,7 +611,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
                                output_name='dumpy')
         self._test_builder(builder, input_shape, 4)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_fork_structure_case_3(self):
         '''
                 INPUT
@@ -692,7 +683,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
         self._test_builder(builder, input_shape, 4)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_fork(self):
         '''
                    INPUT
@@ -755,7 +745,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
                                output_name='out_branch_2')
         self._test_builder(builder, input_shape, 2)
 
-    @unittest.skipIf(platform != 'darwin', "Requires MacOS")
     def test_fork_and_add(self):
         '''
                    INPUT
