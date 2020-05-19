@@ -93,7 +93,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         # result in 0 quantization error.
 
         coreml_spec = coreml_model.get_spec()
-        quantization_utils.quantize_spec_weights(
+        quantization_utils._quantize_spec_weights(
             spec=coreml_spec,
             nbits=self.qbits,
             quantization_mode=self.qmode,
@@ -105,7 +105,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         full_precision_model_spec = coreml_spec
 
         # Quantize model from another copy
-        quantized_model_spec = quantization_utils.quantize_spec_weights(
+        quantized_model_spec = quantization_utils._quantize_spec_weights(
             spec=coreml_model.get_spec(),
             nbits=self.qbits,
             quantization_mode=self.qmode,

@@ -13,6 +13,7 @@ import six as _six
 import warnings
 import sys
 from coremltools.proto import Model_pb2 as _Model_pb2
+from coremltools.models._deprecation import deprecated
 
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
 
@@ -190,19 +191,22 @@ def _wp_to_fp16wp(wp):
     del wp.floatValue[:]
 
 
-def convert_neural_network_spec_weights_to_fp16(fp_spec):
-    nn_model_types = ['neuralNetwork', 'neuralNetworkClassifier',
-                      'neuralNetworkRegressor']
 
-    from .neural_network.quantization_utils import quantize_spec_weights
+def convert_neural_network_spec_weights_to_fp16(fp_spec):
+    return _convert_neural_network_spec_weights_to_fp16(fp_spec)
+
+def _convert_neural_network_spec_weights_to_fp16(fp_spec):
+    from .neural_network.quantization_utils import _quantize_spec_weights
     from .neural_network.quantization_utils import _QUANTIZATION_MODE_LINEAR_QUANTIZATION
 
-    qspec = quantize_spec_weights(fp_spec, 16, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
-
+    qspec = _quantize_spec_weights(fp_spec, 16, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
     return qspec
 
 
 def convert_neural_network_weights_to_fp16(full_precision_model):
+    return _convert_neural_network_weights_to_fp16(full_precision_model)
+
+def _convert_neural_network_weights_to_fp16(full_precision_model):
     """
     Utility function to convert a full precision (float) MLModel to a
     half precision MLModel (float16).
@@ -227,7 +231,7 @@ def convert_neural_network_weights_to_fp16(full_precision_model):
         >>> half_precision_model = coremltools.utils.convert_neural_network_weights_to_fp16(model)
     """
     spec = full_precision_model.get_spec()
-    return _get_model(convert_neural_network_spec_weights_to_fp16(spec))
+    return _get_model(_convert_neural_network_spec_weights_to_fp16(spec))
 
 
 def _get_model(spec):
@@ -668,7 +672,11 @@ def has_custom_layer(spec):
     return False
 
 
+@deprecated
 def get_custom_layer_names(spec):
+    return _get_custom_layer_names(spec)
+
+def _get_custom_layer_names(spec):
     """
 
     Returns a list of className fields which appear in the given protobuf spec
@@ -691,8 +699,11 @@ def get_custom_layer_names(spec):
 
     return layers_out
 
-
+@deprecated
 def get_custom_layers(spec):
+    return _get_custom_layers(spec)
+
+def _get_custom_layers(spec):
     """
 
     Returns a list of all neural network custom layers in the spec.
@@ -715,7 +726,11 @@ def get_custom_layers(spec):
     return layers_out
 
 
+@deprecated
 def replace_custom_layer_name(spec, oldname, newname):
+    return _replace_custom_layer_name(spec, oldname, newname)
+
+def _replace_custom_layer_name(spec, oldname, newname):
     """
 
     Substitutes newname for oldname in the className field of custom layers. If there are no custom layers, or no
@@ -735,7 +750,7 @@ def replace_custom_layer_name(spec, oldname, newname):
     An mlmodel spec.
 
     """
-    layers = get_custom_layers(spec)
+    layers = _get_custom_layers(spec)
     for layer in layers:
         if layer.custom.className == oldname:
             layer.custom.className = newname
