@@ -121,7 +121,7 @@ class CorrectnessTest(unittest.TestCase):
 
         # If we want to test the half precision case
         if model_precision == _MLMODEL_HALF_PRECISION:
-            model = coremltools.utils.convert_neural_network_weights_to_fp16(
+            model = coremltools.utils._convert_neural_network_weights_to_fp16(
                 model)
 
         try:

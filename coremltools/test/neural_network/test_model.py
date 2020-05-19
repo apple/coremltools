@@ -10,7 +10,7 @@ import numpy as np
 from coremltools.proto import Model_pb2
 
 from coremltools.models.utils import rename_feature, save_spec, macos_version,\
-                convert_neural_network_spec_weights_to_fp16, is_macos, \
+                _convert_neural_network_spec_weights_to_fp16, is_macos, \
                 convert_double_to_float_multiarray_type
 from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
@@ -190,7 +190,7 @@ class MLModelTest(unittest.TestCase):
             output_name='out'
         )
         model = MLModel(builder.spec)
-        spec = convert_neural_network_spec_weights_to_fp16(model.get_spec())
+        spec = _convert_neural_network_spec_weights_to_fp16(model.get_spec())
         self.assertIsNotNone(spec)
 
         # simple network without quantization layer
@@ -207,7 +207,7 @@ class MLModelTest(unittest.TestCase):
             k=8
         )
         model = MLModel(builder.spec)
-        spec = convert_neural_network_spec_weights_to_fp16(model.get_spec())
+        spec = _convert_neural_network_spec_weights_to_fp16(model.get_spec())
         self.assertIsNotNone(spec)
 
     @unittest.skip

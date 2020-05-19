@@ -9,8 +9,8 @@ import os
 import coremltools
 from coremltools._deps import HAS_KERAS_TF
 from coremltools._deps import HAS_TF
-from coremltools.models.utils import get_custom_layer_names, \
-    replace_custom_layer_name, macos_version, is_macos
+from coremltools.models.utils import _get_custom_layer_names, \
+    _replace_custom_layer_name, macos_version, is_macos
 from coremltools.proto import Model_pb2
 
 if HAS_KERAS_TF:
@@ -400,12 +400,12 @@ class CustomLayerUtilsTest(unittest.TestCase):
         self.spec = spec
 
     def test_get_custom_names(self):
-        names = get_custom_layer_names(self.spec)
+        names = _get_custom_layer_names(self.spec)
         self.assertEqual(names, {'name1', 'name2'})
 
     def test_change_custom_name(self):
-        replace_custom_layer_name(self.spec, 'name1', 'notname1')
-        names = get_custom_layer_names(self.spec)
+        _replace_custom_layer_name(self.spec, 'name1', 'notname1')
+        names = _get_custom_layer_names(self.spec)
         self.assertEqual(names, {'notname1', 'name2'})
         # set it back for future tests
-        replace_custom_layer_name(self.spec, 'notname1', 'name1')
+        _replace_custom_layer_name(self.spec, 'notname1', 'name1')
