@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; coremltools 3.3 documentation</title>
+  <title>Utilities &mdash; coremltools 3.4 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                3.3
+                3.4
               </div>
             
           
@@ -199,40 +199,6 @@ to float multiarrays</p>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">spec</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="coremltools.models.utils.convert_neural_network_weights_to_fp16">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">convert_neural_network_weights_to_fp16</code><span class="sig-paren">(</span><em>full_precision_model</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.convert_neural_network_weights_to_fp16" title="Permalink to this definition">¶</a></dt>
-<dd><p>Utility function to convert a full precision (float) MLModel to a
-half precision MLModel (float16).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>full_precision_model: MLModel</strong></dt>
-<dd><p class="first last">Model which will be converted to half precision. Currently conversion
-for only neural network models is supported. If a pipeline model is
-passed in then all embedded neural network models embedded within
-will be converted.</p>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt>model: MLModel</dt>
-<dd><p class="first last">The converted half precision MLModel</p>
-</dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">half_precision_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">convert_neural_network_weights_to_fp16</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -400,54 +366,6 @@ version of MLModel.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="coremltools.models.utils.get_custom_layer_names">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">get_custom_layer_names</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.get_custom_layer_names" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of className fields which appear in the given protobuf spec</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>spec: mlmodel spec</strong></dt>
-<dd></dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt>set(str) A set of unique className fields of custom layers that appear in the model.</dt>
-<dd></dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="coremltools.models.utils.get_custom_layers">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">get_custom_layers</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.get_custom_layers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of all neural network custom layers in the spec.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>spec: mlmodel spec</strong></dt>
-<dd></dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt>[NN layer] A list of custom layer implementations</dt>
-<dd></dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="coremltools.models.utils.has_custom_layer">
 <code class="descclassname">coremltools.models.utils.</code><code class="descname">has_custom_layer</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.has_custom_layer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns true if the given protobuf specification has a custom layer, and false otherwise.</p>
@@ -559,35 +477,6 @@ features)</p>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">rename_feature</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;old_feature&#39;</span><span class="p">,</span> <span class="s1">&#39;new_feature_name&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="function">
-<dt id="coremltools.models.utils.replace_custom_layer_name">
-<code class="descclassname">coremltools.models.utils.</code><code class="descname">replace_custom_layer_name</code><span class="sig-paren">(</span><em>spec</em>, <em>oldname</em>, <em>newname</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.replace_custom_layer_name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Substitutes newname for oldname in the className field of custom layers. If there are no custom layers, or no
-layers with className=oldname, then the spec is unchanged.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>spec: mlmodel spec</strong></dt>
-<dd></dd>
-<dt><strong>oldname: str The custom layer className to be replaced.</strong></dt>
-<dd></dd>
-<dt><strong>newname: str The new className value to replace oldname</strong></dt>
-<dd></dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt>An mlmodel spec.</dt>
-<dd></dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">
