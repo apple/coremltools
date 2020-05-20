@@ -5,13 +5,14 @@ import coremltools
 import os
 import shutil
 
-from coremltools._deps import HAS_TF_2, HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND
+from coremltools._deps import HAS_TF, HAS_TF_2, HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND
 from . test_utils import generate_data, tf_transpose
-if HAS_TF_2 and HAS_KERAS2_TF:
+if (HAS_TF or HAS_TF_2) and HAS_KERAS2_TF:
+    import tensorflow as tf
     from tensorflow.keras import backend as _keras
     from tensorflow.keras import layers
 
-@unittest.skipIf(not HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
+@unittest.skipUnless(HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
 class TensorFlowKerasTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
