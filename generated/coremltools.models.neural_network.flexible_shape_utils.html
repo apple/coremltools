@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coremltools.models.neural_network.flexible_shape_utils &mdash; coremltools 3.3 documentation</title>
+  <title>coremltools.models.neural_network.flexible_shape_utils &mdash; coremltools 3.4 documentation</title>
   
 
   
@@ -64,7 +64,7 @@
             
             
               <div class="version">
-                3.3
+                3.4
               </div>
             
           
@@ -196,10 +196,10 @@ Only available in coremltools 2.0b1 and onwards</p>
 <tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration" title="coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_multiarray_ndshape_enumeration</span></code></a>(spec,&nbsp;…)</td>
 <td>Annotate an input or output MLMultiArray feature in a Neural Network spec to accommodate a range of shapes.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes" title="coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">can_allow_multiple_input_shapes</span></code></a>(spec)</td>
+<tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes" title="coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">can_allow_multiple_input_shapes</span></code></a>(\*args,&nbsp;…)</td>
 <td>Examines a model specification and determines if it can compute results for more than one output shape.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges" title="coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_allowed_shape_ranges</span></code></a>(spec)</td>
+<tr class="row-odd"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges" title="coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_allowed_shape_ranges</span></code></a>(\*args,&nbsp;\*\*kwargs)</td>
 <td>For a given model specification, returns a dictionary with a shape range object for each input feature name.</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range" title="coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_multiarray_ndshape_range</span></code></a>(spec,&nbsp;…)</td>
@@ -438,7 +438,7 @@ list of shapes, where each shape is specified as a tuple of integers.</li>
 
 <dl class="function">
 <dt id="coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes">
-<code class="descclassname">coremltools.models.neural_network.flexible_shape_utils.</code><code class="descname">can_allow_multiple_input_shapes</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.neural_network.flexible_shape_utils.</code><code class="descname">can_allow_multiple_input_shapes</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.can_allow_multiple_input_shapes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Examines a model specification and determines if it can compute results for more than one output shape.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -456,7 +456,7 @@ Returns True if the model can allow multiple input shapes, False otherwise.</td>
 
 <dl class="function">
 <dt id="coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges">
-<code class="descclassname">coremltools.models.neural_network.flexible_shape_utils.</code><code class="descname">get_allowed_shape_ranges</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">coremltools.models.neural_network.flexible_shape_utils.</code><code class="descname">get_allowed_shape_ranges</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.neural_network.flexible_shape_utils.get_allowed_shape_ranges" title="Permalink to this definition">¶</a></dt>
 <dd><p>For a given model specification, returns a dictionary with a shape range object for each input feature name.</p>
 </dd></dl>
 
