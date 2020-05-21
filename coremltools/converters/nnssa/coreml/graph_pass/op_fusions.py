@@ -7,7 +7,7 @@ import numpy as np
 from ...commons import builtins
 from ...commons.symbolic import *
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
-    delete_node, replace_node, connect_dests, topsort
+    delete_node, replace_node, connect_dests, topsort, replace_source
 from ...nnssa import ParsedNode
 
 ELEMENTWISE_OPS = {
@@ -894,9 +894,10 @@ def spatial_reduce_to_global_pool(nnssa):
                 pooling_node.datatype = current_node.datatype
                 graph[pooling_node.name] = pooling_node
 
+                for output in output_nodes:
+                    replace_source(graph, current_node.name, output, pooling_node.name)
                 delete_node(graph, current_node.name)
                 connect_edge(graph, previous_node, pooling_node.name)
-                connect_dests(graph, pooling_node.name, output_nodes)
 
                 count += 1
 
