@@ -10,7 +10,7 @@ from collections import Counter, OrderedDict
 import six
 
 from coremltools.converters.nnv2.builtin_types import builtins
-from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic
+from coremltools.converters.nnv2.builtin_types.symbolic import any_symbolic, is_symbolic
 from .var import Var, InternalVar, ListVar
 from .input_type import TupleInputType
 from .dot_visitor import DotVisitor
@@ -31,6 +31,36 @@ def curr_block():
 def is_internal_input(arg_name):
     return arg_name[0] == "_"
 
+def _is_compatible_symbolic_array(a, b):
+    """
+    A helper function which check if two numpy array with symbolic value.
+    For instance, a = np.array([is0, 1])
+                  b = np.array([is1, 1])
+    are considered compatible.
+                  a = np.array([is0, 1])
+                  b = np.array([is1, -1])
+    are not.
+    """
+    assert any_symbolic(a) and any_symbolic(b)
+    if not a.shape == b.shape:
+        return False
+    a = a.flatten()
+    b = b.flatten()
+    for t, v in zip(a,b):
+        if not is_symbolic(t) and not is_symbolic(v):
+            if t != v:
+                return False
+        elif not is_symbolic(t) or not is_symbolic(v):
+            return False
+        if t != v:
+            logging.warning("Try to replace var with different symbolic values.")
+    return True
+
+def _check_is_compatible_type(type1, type2):
+    if not builtins.is_subtype(type1, type2):
+        is_comp, _ = builtins.is_tensor_and_is_compatible(type1, type2)
+        return is_comp
+    return True
 
 VALUE = 1
 SYMBOL = 2
@@ -209,7 +239,7 @@ class Operation(object):
                 # Check type inference
                 if overwrite_output:
                     out_var._sym_type = sym_type
-                elif not builtins.is_subtype(sym_type, out_var.sym_type):
+                elif not _check_is_compatible_type(sym_type, out_var.sym_type):
                     msg = "Output Var {} in op {} type changes with new input Vars"
                     raise ValueError(msg.format(out_var.name, self.name))
 
@@ -224,7 +254,10 @@ class Operation(object):
                             out_var._sym_val = sym_val
                         else:
                             msg = 'value_inference differs for var {} in op {}'
-                            raise ValueError(msg.format(out_var.name, self.name))
+                            if not any_symbolic(sym_val.val):
+                                raise ValueError(msg.format(out_var.name, self.name))
+                            elif not _is_compatible_symbolic_array(sym_val.val, out_var.sym_val):
+                                raise ValueError(msg.format(out_var.name, self.name))
 
     def _auto_val(self, output_types):
         """
@@ -334,13 +367,13 @@ class Operation(object):
 
         for key in kwargs.keys():
             if key not in legal_args:
-                raise RuntimeError("Unknown input {} for op {}".format(
+                raise RuntimeError("Unknown input '{}' for op '{}'".format(
                     key, self.op_type))
 
         def check_and_detach(v_new, v_old, op, no_check_var_types):
             # Check new var's sym_type is compatible with the
             # existing's sym_type.
-            if not builtins.is_subtype(v_new.sym_type, v_old.sym_type) and \
+            if not _check_is_compatible_type(v_new.sym_type, v_old.sym_type) and \
                     not no_check_var_types:
                 msg = 'New var type {} not a subtype of ' +\
                         'existing var type {}'

@@ -13,9 +13,11 @@ from coremltools.converters.nnv2.builtin_types.symbolic import (
 from .op_mapping import convert_ops
 from coremltools.models.neural_network.flexible_shape_utils import set_multiarray_ndshape_range
 from .passes.nnv1_passes import nnv1_backend_passes
+from coremltools.converters._profile_utils import profile
 
 from six import string_types as _string_types
 
+@profile
 def load(prog, **kwargs):
     if 'main' not in prog.functions:
         msg = 'main function not found in program {}'

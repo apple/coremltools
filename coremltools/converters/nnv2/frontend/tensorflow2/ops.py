@@ -7,6 +7,7 @@ from coremltools.converters.nnv2.frontend.tensorflow.ops import (
 # (separated from TF 1.x registry). Overwrite might needed in case the op
 # semantics are different between TF 1.x and TF 2.x.
 from coremltools.converters.nnv2.frontend.tensorflow.ops import *
+from coremltools.converters.nnv2.frontend.tensorflow.dialect_ops import *
 from coremltools.converters.nnv2.frontend.tensorflow.tf_op_registry import register_tf_op
 
 
@@ -88,4 +89,100 @@ def StatelessWhile(context, node):
     # wraps x as tuple for get_tuple that always follow the while node.
     x = (x,) if not isinstance(x, (tuple, list)) else x
 
+    context.add(node.name, x)
+
+
+@register_tf_op
+def TensorListFromTensor(context, node):
+    value = context[node.inputs[0]]
+    element_shape = context[node.inputs[1]]
+    element_dtype = node.attr.get('element_dtype')
+    dtype_str = builtins.builtin_to_string(element_dtype)
+
+    length = value.shape[0]
+    if is_symbolic(length):
+        msg = "element_shape {} cannot be symbolic in op '{}'."
+        raise ValueError(msg.format(element_shape, node.name))
+
+    ls = cb.make_list(init_length=length, dtype=dtype_str,
+                      elem_shape=element_shape, dynamic_length=False)
+    indices = cb.range_1d(end=length, start=0, step=1)
+    ls = cb.list_scatter(ls=ls, indices=indices, value=value, name=node.name)
+    context.add(node.name, ls)
+
+
+@register_tf_op
+def TensorListGather(context, node):
+    ls = context[node.inputs[0]]
+    indices = context[node.inputs[1]]
+    tensor = cb.list_gather(
+        ls=ls, indices=indices, name=node.name)
+    context.add(node.name, tensor)
+
+
+@register_tf_op
+def TensorListGetItem(context, node):
+    ls = context[node.inputs[0]]
+    index = context[node.inputs[1]]
+    new_ls = cb.list_read(ls=ls, index=index, name=node.name)
+    context.add(node.name, new_ls)
+
+
+@register_tf_op
+def TensorListLength(context, node):
+    ls = context[node.inputs[0]]
+    length = cb.list_length(ls=ls, name=node.name)
+    context.add(node.name, length)
+
+
+@register_tf_op
+def TensorListResize(context, node):
+    # skip here as the list will be dynamically resized when
+    # necessary in downstream list_write or list_scatter ops
+    Identity(context, node)
+
+
+@register_tf_op
+def TensorListReserve(context, node):
+    element_shape = context[node.inputs[0]]
+    num_elements = context[node.inputs[1]]
+    element_dtype = node.attr.get('element_dtype')
+    dtype = builtins.builtin_to_string(element_dtype)
+
+    shape = np.atleast_1d(element_shape.val)
+    if element_shape is not None and not all(shape == -1):
+        ls = cb.make_list(
+            init_length=num_elements,
+            elem_shape=element_shape,
+            dtype=dtype, name=node.name)
+    else:
+        ls = cb.tf_make_list(
+            init_length=num_elements, dtype=dtype, name=node.name)
+    context.add(node.name, ls)
+
+
+@register_tf_op
+def TensorListScatterIntoExistingList(context, node):
+    ls = context[node.inputs[0]]
+    value = context[node.inputs[1]]
+    indices = context[node.inputs[2]]
+    ls = cb.list_scatter(ls=ls, indices=indices, value=value, name=node.name)
+    context.add(node.name, ls)
+
+
+@register_tf_op
+def TensorListSetItem(context, node):
+    ls = context[node.inputs[0]]
+    index = context[node.inputs[1]]
+    value = context[node.inputs[2]]
+    new_ls = cb.list_write(ls=ls, index=index, value=value, name=node.name)
+    context.add(node.name, new_ls)
+
+
+@register_tf_op
+def TensorListStack(context, node):
+    ls = context[node.inputs[0]]
+    length = cb.list_length(ls=ls)
+    indices = cb.range_1d(end=length, start=0, step=1)
+    x = cb.list_gather(ls=ls, indices=indices, name=node.name)
     context.add(node.name, x)

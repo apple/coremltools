@@ -4,14 +4,10 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import json as _json
 import os
-import os as _os
 import tempfile as _tempfile
 import warnings
 from copy import deepcopy as _deepcopy
 
-from ._graph_visualization import \
-    _neural_network_nodes_and_edges, \
-    _pipeline_nodes_and_edges, _start_server
 from .utils import has_custom_layer as _has_custom_layer
 from .utils import load_spec as _load_spec
 from .utils import macos_version as _macos_version
@@ -112,35 +108,6 @@ def _get_proxy_and_spec(filename, use_cpu_only=False):
             return (None, specification, e)
 
     return (None, specification, None)
-
-
-class NeuralNetworkShaper(object):
-    """
-    This class computes the intermediate tensor shapes for a neural network model.
-    """
-
-    def __init__(self, model, useInputAndOutputShapes=True):
-
-        from ..libcoremlpython import _NeuralNetworkShaperProxy
-
-        path = ''
-        if isinstance(model, str):
-            self._spec = _load_spec(model)
-            path = model
-        elif isinstance(model, _Model_pb2.Model):
-            self._spec = model
-            filename = _tempfile.mktemp(suffix='.mlmodel')
-            _save_spec(model, filename)
-            path = filename
-        else:
-            raise TypeError("Expected argument to be a path to a .mlmodel file or a Model_pb2.Model object")
-
-        self._shaper = _NeuralNetworkShaperProxy(path, useInputAndOutputShapes)
-
-    def shape(self, name):
-        strname = str(name)
-        shape_dict = self._shaper.shape(strname)
-        return shape_dict
 
 
 class MLModel(object):
@@ -359,139 +326,3 @@ class MLModel(object):
                     raise self.framework_error
                 else:
                     raise Exception('Unable to load CoreML.framework. Cannot make predictions.')
-
-    def visualize_spec(self, port=None, input_shape_dict=None, title='CoreML Graph Visualization'):
-        """
-        Visualize the model.
-
-        Parameters
-        ----------
-        port: int
-            if server is to be hosted on specific localhost port
-
-        input_shape_dict: dict
-            The shapes are calculated assuming the batch and sequence
-            are 1 i.e. (1, 1, C, H, W). If either is not 1, then provide
-            full input shape
-
-        title: str
-            Title for the visualized model
-
-        Returns
-        -------
-        None
-
-        Examples
-        --------
-        >>> model = coreml.models.MLModel('HousePricer.mlmodel')
-        >>> model.visualize_spec()
-        """
-
-        spec = self._spec
-        model_type = spec.WhichOneof('Type')
-        model_description = spec.description
-        input_spec = model_description.input
-        output_spec = model_description.output
-
-        spec_inputs = []
-        for model_input in input_spec:
-            spec_inputs.append((model_input.name, str(model_input.type)))
-
-        spec_outputs = []
-        for model_output in output_spec:
-            spec_outputs.append((model_output.name, str(model_output.type)))
-
-        cy_nodes = []
-        cy_edges = []
-
-        cy_nodes.append({
-            'data': {
-                'id': 'input_node',
-                'name': '',
-                'info': {
-                    'type': 'input node'
-                },
-                'classes': 'input',
-
-            }
-        })
-
-        for model_input, input_type in spec_inputs:
-            cy_nodes.append({
-                'data': {
-                    'id': str(model_input),
-                    'name': str(model_input),
-                    'info': {
-                        'type': "\n".join(str(input_type).split("\n")),
-                        'inputs': str([]),
-                        'outputs': str([model_input])
-                    },
-                    'parent': 'input_node'
-                },
-                'classes': 'input'
-            })
-
-        if model_type == 'pipeline':
-            pipeline_spec = spec.pipeline
-            cy_data = _pipeline_nodes_and_edges(cy_nodes,
-                                                cy_edges,
-                                                pipeline_spec,
-                                                spec_outputs
-                                                )
-        elif model_type == 'pipelineRegressor':
-            pipeline_spec = spec.pipelineRegressor.pipeline
-            cy_data = _pipeline_nodes_and_edges(cy_nodes,
-                                                cy_edges,
-                                                pipeline_spec,
-                                                spec_outputs
-                                                )
-        elif model_type == 'pipelineClassifier':
-            pipeline_spec = spec.pipelineClassifier.pipeline
-            cy_data = _pipeline_nodes_and_edges(cy_nodes,
-                                                cy_edges,
-                                                pipeline_spec,
-                                                spec_outputs
-                                                )
-        elif model_type == 'neuralNetwork':
-            nn_spec = spec.neuralNetwork
-            cy_data = _neural_network_nodes_and_edges(nn_spec,
-                                                      cy_nodes,
-                                                      cy_edges,
-                                                      spec_outputs,
-                                                      input_spec,
-                                                      input_shape_dict=input_shape_dict
-                                                      )
-        elif model_type == 'neuralNetworkClassifier':
-            nn_spec = spec.neuralNetworkClassifier
-            cy_data = _neural_network_nodes_and_edges(nn_spec,
-                                                      cy_nodes,
-                                                      cy_edges,
-                                                      spec_outputs,
-                                                      input_spec,
-                                                      input_shape_dict=input_shape_dict
-                                                      )
-        elif model_type == 'neuralNetworkRegressor':
-            nn_spec = spec.neuralNetworkRegressor
-            cy_data = _neural_network_nodes_and_edges(nn_spec,
-                                                      cy_nodes,
-                                                      cy_edges,
-                                                      spec_outputs,
-                                                      input_spec,
-                                                      input_shape_dict=input_shape_dict
-                                                      )
-        else:
-            print("Model is not of type Pipeline or Neural Network "
-                  "and cannot be visualized")
-            return
-
-        import coremltools
-        web_dir = _os.path.join(_os.path.dirname(coremltools.__file__),
-                                'graph_visualization')
-        with open('{}/model.json'.format(web_dir), 'w') as file:
-            model_data = {
-                'title': title,
-                'cy_data': cy_data,
-            }
-            _json.dump(model_data, file)
-
-        _start_server(port, web_dir)

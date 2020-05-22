@@ -34,8 +34,12 @@ class TestModelInputsOutputs:
             return tf.nn.relu(x)
 
         model, inputs, outputs = build_model
+        if not isinstance(outputs, (tuple,list)):
+            outputs = [outputs]
+
+        output_names = [j if isinstance(j, six.string_types) else j.op.name for j in outputs]
         mlmodel = converter.convert(
-            model, outputs=outputs)
+            model, outputs=output_names)
         assert mlmodel is not None
 
         input_values = [random_gen(x_shape, -10., 10.)]
@@ -98,10 +102,10 @@ class TestModelInputsOutputs:
 
         model, inputs, outputs = build_model
 
-        with pytest.raises(KeyError) as e:
+        with pytest.raises(AssertionError) as e:
             converter.convert(
-                model, outputs=['invalid_name'])
-        e.match(r'Output node name .* does exist')
+                model, outputs=['invalid_name'], source = "tensorflow")
+        e.match(r'.* is not in graph')
 
 
 class TestModelFormats:

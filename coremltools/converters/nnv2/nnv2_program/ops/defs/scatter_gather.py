@@ -1,3 +1,4 @@
+from coremltools.converters.nnv2.nnv2_program.program.program import (SYMBOL, VALUE)
 from ._op_reqs import *
 
 @register_op(doc_str="TODO")
@@ -11,9 +12,9 @@ class gather(Operation):
     def __init__(self, **kwargs):
         super(gather, self).__init__(**kwargs)
 
-    @precondition(allow=VALUE)
+    @precondition(allow=VALUE|SYMBOL)
     def value_inference(self):
-        x = self.x.val
+        x = self.x.sym_val
         indices = self.indices.val
         axis = self.axis.val
         return np.take(x, indices, axis)

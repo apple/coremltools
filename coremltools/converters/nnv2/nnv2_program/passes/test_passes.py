@@ -1,15 +1,17 @@
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
 from coremltools.converters.nnv2.testing_utils import (
-        assert_op_count_match, assert_model_is_valid,
-        assert_same_output_names)
+    assert_op_count_match, assert_model_is_valid,
+    assert_same_output_names)
 from coremltools.converters.nnv2.nnv2_program.program import Symbol
 from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import PASS_REGISTRY
+from coremltools.converters.nnv2.builtin_types import builtins
 import copy
 
 import numpy as np
 
 np.random.seed(1984)
 validate_model = True
+
 
 # TODO: rdar://58993652 (Add recursive block test cases for graph pass tests)
 
@@ -59,11 +61,11 @@ def test_dead_code_elimination():
         input_specs=[
             cb.TensorSpec(shape=(2, 4)),
             cb.TensorSpec(shape=(2, 4)),
-            ])
+        ])
     def program0(x, y):
         # following three unused op should be eliminated
-        a = cb.const(val=np.zeros(shape=(1, )), mode='immediate_value')
-        b = cb.const(val=np.zeros(shape=(1, )), mode='immediate_value')
+        a = cb.const(val=np.zeros(shape=(1,)), mode='immediate_value')
+        b = cb.const(val=np.zeros(shape=(1,)), mode='immediate_value')
         _ = cb.add(x=a, y=b)
         return cb.add(x=x, y=y)
 
@@ -97,10 +99,12 @@ def test_dead_code_elimination():
     if validate_model:
         assert_model_is_valid(program1, {'x': (2, 4)})
 
+
 def test_remove_symbolic_reshape():
     sym_b = Symbol('s0')
     original_shape = (sym_b, Symbol('s1'), 2)
     reshape_name = 'reshape'
+
     @cb.program(input_specs=[cb.TensorSpec(shape=(sym_b, 4))])
     def prog(x):
         # const cannot represent symbolic values. Use _const_symbolic
@@ -108,7 +112,7 @@ def test_remove_symbolic_reshape():
         return cb.reshape(x=x, shape=shape, name=reshape_name)
 
     reshape_op = prog.find_ops(prefix=reshape_name, op_type='reshape',
-            exactly_one=True)[0]
+                               exactly_one=True)[0]
     shape_var = reshape_op.shape
     reshaped_var = reshape_op.outputs[0]
     assert np.all(shape_var.sym_val == original_shape)
@@ -121,7 +125,7 @@ def test_remove_symbolic_reshape():
     assert curr_outputs == prev_outputs
 
     reshape_op = prog.find_ops(prefix=reshape_name, op_type='reshape',
-            exactly_one=True)[0]
+                               exactly_one=True)[0]
     shape_var = reshape_op.shape
     reshaped_var = reshape_op.outputs[0]
     # shape param cannot be symbolic after the pass
@@ -137,6 +141,7 @@ def test_loop_invariant_elimination1():
     """
     Invariant pattern: Block input vars are returned as block output vars.
     """
+
     def body(a, b):
         return cb.add(x=a, y=b), b
 
@@ -146,9 +151,9 @@ def test_loop_invariant_elimination1():
         return cb.less(x=a_mean, y=b_mean)
 
     @cb.program(input_specs=[
-        cb.TensorSpec(shape=(1,2)),
-        cb.TensorSpec(shape=(1,2)),
-        ])
+        cb.TensorSpec(shape=(1, 2)),
+        cb.TensorSpec(shape=(1, 2)),
+    ])
     def prog(a, b):
         # b is loop invariant
         return cb.while_loop(_cond=cond, _body=body, loop_vars=(a, b))
@@ -173,15 +178,16 @@ def test_loop_invariant_elimination1():
     if validate_model:
         assert_model_is_valid(prog, {'a': (1, 2), 'b': (1, 2)})
 
+
 def test_loop_invariant_elimination2():
     """
     Invariant pattern: Block outputs var from outside of the block
     """
 
     @cb.program(input_specs=[
-        cb.TensorSpec(shape=(1,2)),
-        cb.TensorSpec(shape=(1,2)),
-        ])
+        cb.TensorSpec(shape=(1, 2)),
+        cb.TensorSpec(shape=(1, 2)),
+    ])
     def prog(a, b):
         def body(a, bx):
             return cb.add(x=a, y=b), b
@@ -190,6 +196,7 @@ def test_loop_invariant_elimination2():
             a_mean = cb.reduce_mean(x=a, axes=[0, 1])
             b_mean = cb.reduce_mean(x=bx, axes=[0, 1])
             return cb.less(x=a_mean, y=b_mean)
+
         # b is loop invariant
         return cb.while_loop(_cond=cond, _body=body, loop_vars=(a, b))
 

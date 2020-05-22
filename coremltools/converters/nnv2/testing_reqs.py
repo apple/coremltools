@@ -22,7 +22,7 @@ np.random.seed(1984)
 if HAS_TF_1 or HAS_TF_2:
     import tensorflow as tf
 
-    tf.set_random_seed(1234) if HAS_TF_1 else tf.random.set_seed(1234)
+    tf.compat.v1.set_random_seed(1234) if HAS_TF_1 else tf.random.set_seed(1234)
 
 if HAS_TORCH:
     import torch

@@ -71,7 +71,7 @@ def promote_types(dtype1, dtype2):
     Args:
         dtype1 (apple_nitro.builtin):
         dtype2 (apple_nitro.builtin):
-    
+
     Returns:
         A Nitro builtin datatype or None.
     """

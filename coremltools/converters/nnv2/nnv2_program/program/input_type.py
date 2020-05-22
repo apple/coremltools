@@ -147,6 +147,16 @@ class ScalarOrTensorInputType(_InputType):
         return builtins.is_scalar(v.dtype) or builtins.is_tensor(v.dtype)
 
 
+class ListOrScalarOrTensorInputType(_InputType):
+    def __init__(self, **kwargs):
+        super(ListOrScalarOrTensorInputType, self).__init__(**kwargs)
+
+    def _is_compatible(self, v):
+        return builtins.is_list(v.sym_type) or \
+               builtins.is_scalar(v.dtype) or \
+               builtins.is_tensor(v.dtype)
+
+
 class IntInputType(ScalarOrTensorInputType):
     """
     Int input with _sym_type == builtins.int32 or _sym_type == builtins.int64

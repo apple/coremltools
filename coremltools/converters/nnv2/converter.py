@@ -1,5 +1,5 @@
 from .nnv2_program.passes.common_pass import common_pass
-
+from coremltools.converters._profile_utils import profile
 
 class ConverterRegistry:
     frontends = {}
@@ -80,7 +80,7 @@ class NNv2DummyFrontend:
     def __call__(self, program, *args, **kwargs):
         return program
 
-
+@profile
 def _convert(model, convert_from='TensorFlow', convert_to='nnv1_proto',
             converter_registry=ConverterRegistry, **kwargs):
     """

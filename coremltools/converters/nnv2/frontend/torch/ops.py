@@ -837,7 +837,7 @@ def numtotensor(context, node):
 def _ifzo_to_ifoz(weights, name):
     """
         i, f, z, o -> i, f, o, z
-        where weights_split[0] == i, ect.
+        where weights_split[0] == i, etc.
         Used to transform lstm weights from pytorch
         to CoreML format 
     """

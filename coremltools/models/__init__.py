@@ -28,6 +28,4 @@ from .model import (
     _LUT_BASED_QUANTIZATION,
     _QUANTIZATION_MODE_DEQUANTIZE)
 
-from .model import NeuralNetworkShaper
-
 from . import neural_network

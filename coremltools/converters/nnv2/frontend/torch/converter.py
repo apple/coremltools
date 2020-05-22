@@ -110,30 +110,86 @@ class TorchConverter:
 
     Arguments:
         torchscript: torch.jit.ScriptModule object representing the model to convert.
-        input_values: A single torch.Tensor or list of torch.Tensor objects
-            representing model inputs.
-        cut_output_names: A list of output name strings. Graph conversion will
+        inputs: Input values and optional names. See kwarg in load.py for full description.
+        outputs: Names of the graph's outputs. See kwarg in load.py for full description.
+        cut_at_symbols: A list of internal symbol name strings. Graph conversion will
             terminate once these symbols have been generated. For debugging use
-            only.
+            only. See kwarg in load.py.
     """
 
     def __init__(
-        self, torchscript, input_values, cut_output_names=None,
+        self, torchscript, inputs, outputs=None, cut_at_symbols=None,
     ):
         assert isinstance(torchscript, torch.jit.ScriptModule)
-        if isinstance(input_values, torch.Tensor):
-            input_values = [input_values]
-
+        _tensorified_inputs = self._tensorify_inputs(inputs)
+        self.inputs = self._remove_names(_tensorified_inputs)
+        self.input_names = self._extract_names(_tensorified_inputs)
         self.torchscript = torchscript
+        self.output_names = outputs
         self.context = TranscriptionContext()
         raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
         self.graph = InternalTorchIRGraph(
-            raw_graph, params_dict, input_values, cut_output_names
+            raw_graph, params_dict, self.inputs, cut_at_symbols
         )
-        self._flatten_input_values()
-        self._flatten_output_values()
+        self._flatten_graph_input_values()
+        self._flatten_graph_output_values()
 
-    def _flatten_input_values(self):
+    def _extract_names(self, inputs):
+        """
+            Recursively search for named tuples and extract them into a flattened list.
+            Filling in unnamed tensors with None.
+        """
+        names = []
+        for _input in inputs:
+            if isinstance(_input, list):
+                names.extend(self._extract_names(_input))
+            elif isinstance(_input, tuple):
+                if isinstance(_input[0], str):
+                    # this is a named tensor
+                    name = _input[0]
+                    if isinstance(_input[1], tuple):
+                        raise ValueError(
+                            "You cannot name a tuple of input tensors/shapes, "
+                            "only one tensor/shape can be named. "
+                            "Violating name: {}".format(name)
+                        )
+                    names.append(_input[0])
+                else:
+                    names.extend(self._extract_names(_input))
+            else:
+                names.append(None)
+        return names
+
+    def _remove_names(self, inputs):
+        """
+            Recursively search for named tuples and remove the name from
+            the tuple.
+        """
+        if isinstance(inputs, list):
+            return [self._remove_names(x) for x in inputs]
+        elif isinstance(inputs, tuple):
+            if isinstance(inputs[0], str):
+                # this is a named tensor, remove the name
+                if len(inputs) > 2:
+                    return tuple(self._remove_names(x) for x in inputs[1:])
+                else:
+                    return inputs[-1]
+        return inputs
+
+    def _tensorify_inputs(self, inputs):
+        """ 
+            Recursivly searches for size tuples and turns them into tensors.
+        """
+        if isinstance(inputs, list):
+            return [self._tensorify_inputs(x) for x in inputs]
+        if isinstance(inputs, tuple):
+            if all([isinstance(x, int) for x in inputs]):
+                return torch.zeros(inputs, dtype=torch.float32)
+            else:
+                return tuple((self._tensorify_inputs(x) for x in inputs))
+        return inputs
+
+    def _flatten_graph_input_values(self):
         """ CoreML can't handle nested iterables of tensors, so we flatten the
             inputs of any graph that expects them.
         """
@@ -176,7 +232,7 @@ class TorchConverter:
         self.graph.inputs = new_graph_inputs
         self.graph.nodes = all_new_nodes + self.graph.nodes
 
-    def _flatten_output_values(self):
+    def _flatten_graph_output_values(self):
         """ CoreML can't handle nested iterables of tensors, so we flatten the
             outputs of any graph that produces them.
         """
@@ -221,14 +277,6 @@ class TorchConverter:
         self.graph.outputs = new_graph_outputs
 
     @staticmethod
-    def _create_placeholder(_input):
-        """Converts a torch.Tensor into a Placeholder.
-        """
-        shape = _input.shape
-        dtype = torch_to_proto_types[_input.dtype]
-        return cb.placeholder(shape, dtype=dtype)
-
-    @staticmethod
     def _check_ops(graph):
         """ Returns the set of ops in @graph that are implemented, and the set
             for which no conversion function is registered. @graph can be
@@ -247,6 +295,14 @@ class TorchConverter:
                 missing_ops.update(_miss)
         return implemented_ops, missing_ops
 
+    @staticmethod
+    def _create_placeholder(_input):
+        """Converts a torch.Tensor into a Placeholder.
+        """
+        shape = _input.shape
+        dtype = torch_to_proto_types[_input.dtype]
+        return cb.placeholder(shape, dtype=dtype)
+
     def check_ops(self):
         """ Returns the set of ops in @self.graph that are implemented, and
             the set for which no conversion function is registered."""
@@ -259,16 +315,30 @@ class TorchConverter:
         # This will hold the converted model.
         prog = SsaProgram()
 
+        # Construct placeholder for input to graph
+        # This is where input renaming occurs
         graph_inputs = OrderedDict()
-        for name, value in self.graph.inputs.items():
-            graph_inputs[name] = TorchConverter._create_placeholder(value)
+        internal_graph_names = [name for name in self.graph.inputs.keys()]
+        for index, (name, value) in enumerate(self.graph.inputs.items()):
+            placeholder = self._create_placeholder(value)
+            if self.input_names[index] is not None:
+                # set graph input name to user defined name
+                name = self.input_names[index]
+            else:
+                # set graph input name to internal graph name
+                name = internal_graph_names[index]
+            graph_inputs[name] = placeholder
 
         # Initialize the SSA for conversion
         with SsaFunction(graph_inputs) as ssa_func:
 
-            # Add inputs and params to the context
-            for name in self.graph.inputs.keys():
-                self.context.add(ssa_func.inputs[name])
+            # Map internal @self.graph.inputs to user specified @graph_inputs
+            # If @self.graph.inputs == graph_inputs this just adds the inputs
+            # to the context.
+            for internal_name, users_name in zip(
+                self.graph.inputs.keys(), graph_inputs.keys()
+            ):
+                self.context.add(ssa_func.inputs[users_name], torch_name=internal_name)
             for name, val in self.graph.params.items():
                 mode = decide_immediate_or_file(val)
                 const = cb.const(val=val, mode=mode, name=name)
@@ -278,6 +348,12 @@ class TorchConverter:
             convert_nodes(self.context, self.graph)
 
             graph_outputs = [self.context[name] for name in self.graph.outputs]
+            # Output renaming occurs
+            if self.output_names:
+                for index, var in enumerate(graph_outputs):
+                    output_rename = self.output_names[index]
+                    var.name = output_rename
+
             ssa_func.set_outputs(graph_outputs)
             prog.add_function("main", ssa_func)
 

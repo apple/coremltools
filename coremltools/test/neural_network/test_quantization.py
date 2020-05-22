@@ -11,7 +11,7 @@ import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network
 import coremltools.models.neural_network.quantization_utils as quantization_utils
 from coremltools.models.neural_network.quantization_utils import (
-    activate_int8_int8_matrix_multiplications, MatrixMultiplyLayerSelector, quantize_spec_weights
+    activate_int8_int8_matrix_multiplications, MatrixMultiplyLayerSelector, _quantize_spec_weights
 )
 
 from coremltools._deps import HAS_KERAS2_TF
@@ -101,7 +101,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         # result in 0 quantization error.
 
         coreml_spec = coreml_model.get_spec()
-        quantization_utils.quantize_spec_weights(
+        quantization_utils._quantize_spec_weights(
             spec=coreml_spec,
             nbits=self.qbits,
             quantization_mode=self.qmode,
@@ -113,7 +113,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         full_precision_model_spec = coreml_spec
 
         # Quantize model from another copy
-        quantized_model_spec = quantization_utils.quantize_spec_weights(
+        quantized_model_spec = quantization_utils._quantize_spec_weights(
             spec=coreml_model.get_spec(),
             nbits=self.qbits,
             quantization_mode=self.qmode,
@@ -935,7 +935,7 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             weight_matrix_columns=self.Cout,
             W=self.W,
         )
-        quantize_spec_weights(self.builder.spec, 8, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+        _quantize_spec_weights(self.builder.spec, 8, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
         self.compare()
 
     def test_batched_matmul_4bit_weight_quantized(self):
@@ -949,7 +949,7 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             weight_matrix_columns=self.Cout,
             W=self.W,
         )
-        quantize_spec_weights(self.builder.spec, 4, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+        _quantize_spec_weights(self.builder.spec, 4, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
         self.compare()
 
     def test_batched_matmul_2bit_weight_quantized(self):
@@ -963,7 +963,7 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             weight_matrix_columns=self.Cout,
             W=self.W,
         )
-        quantize_spec_weights(self.builder.spec, 2, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+        _quantize_spec_weights(self.builder.spec, 2, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
         self.compare()
 
     def test_batched_matmul_1bit_weight_quantized(self):
@@ -977,5 +977,5 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             weight_matrix_columns=self.Cout,
             W=self.W,
         )
-        quantize_spec_weights(self.builder.spec, 1, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+        _quantize_spec_weights(self.builder.spec, 1, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
         self.compare()

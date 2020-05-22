@@ -5,6 +5,7 @@ from __future__ import print_function as _
 
 import logging
 import os
+import gc
 
 import six
 
@@ -15,8 +16,9 @@ from .converter import TFConverter
 from .tf_graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from .tfssa import NetworkEnsemble, SSAFunction
 from .parse import ParsedTFNode
+from coremltools.converters._profile_utils import profile
 
-
+@profile
 def load(model, debug=False, **kwargs):
     """
     Loads a NetworkEnsemble from a TensorFlow model.
@@ -33,8 +35,18 @@ def load(model, debug=False, **kwargs):
         cause graph pass errors to be ignored, forcefully returning a
         NetworkEnsemble object.
     """
-    tf_graph = _tf_graph_from_model(model)
+
+    outputs = kwargs.get("outputs", None)
+    tf_graph = _tf_graph_from_model(model, outputs)
+
+    if len(tf_graph.node) == 0:
+        msg = "tf.Graph should have at least 1 node, Got empty graph."
+        raise ValueError(msg)
+
     tf_ssa = tf_ssa_from_graph(tf_graph)
+
+    del tf_graph
+    gc.collect()
 
     if debug:
         import graphviz
@@ -77,13 +89,19 @@ def load(model, debug=False, **kwargs):
     return prog
 
 
-def _tf_graph_from_model(model):
+def _tf_graph_from_model(model, outputs=None):
     """
     Extract tf.Graph from model created in TensorFlow 1.x
     """
     msg = 'Expected model format: [tf.Graph | .pb], got {}'
     if isinstance(model, tf.Graph) and hasattr(model, 'as_graph_def'):
-        return model.as_graph_def(add_shapes=True)
+        gdef = model.as_graph_def(add_shapes=True)
+        if outputs is not None:
+            outputs = [i.split(":")[0] for i in outputs]
+            gdef = tf.compat.v1.graph_util.extract_sub_graph(
+                gdef, outputs
+            )
+        return gdef
     elif isinstance(model, six.string_types):
         if not os.path.exists(model):
             raise ValueError('Input model "{}" does not exist'.format(model))
@@ -91,6 +109,11 @@ def _tf_graph_from_model(model):
             with tf.io.gfile.GFile(model, 'rb') as f:
                 g = tf.GraphDef()
                 g.ParseFromString(f.read())
+                if outputs is not None:
+                    outputs = [i.split(":")[0] for i in outputs]
+                    g = tf.compat.v1.graph_util.extract_sub_graph(
+                        g, outputs
+                    )
             with tf.Graph().as_default() as graph:
                 tf.graph_util.import_graph_def(g, name='')
             return graph.as_graph_def(add_shapes=True)

@@ -3,7 +3,7 @@ import logging
 import six
 from coremltools.models import neural_network as neural_network
 from coremltools.proto import NeuralNetwork_pb2
-from coremltools.converters.nnv2.builtin_types.symbolic import is_variadic
+from coremltools.converters.nnv2.builtin_types.symbolic import is_variadic, any_symbolic
 from coremltools.converters.nnv2.nnv2_program.var import Var
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.nnv2_program.ops.registry import SSAOpRegistry
@@ -775,7 +775,55 @@ def slice_by_index(const_context, builder, op):
 
 @register_v2_op
 def slice_by_size(const_context, builder, op):
-    size = op.size.val
+
+    """
+    A block of ops achieving slice_by_size with dynamic input x and size.
+    """
+
+    # get the end_index of input x
+    # for instance, x with shape [2,3,4] results in [2,3,4]
+    end_index_name = op.name+'_end_index'
+    builder.add_get_shape(
+        name=end_index_name,
+        input_name=make_input(const_context, builder, op.x),
+        output_name=end_index_name)
+
+    # get the mask where size = -1
+    # for instance, size = [-1,1,2] results in [1,0,0]
+    const_name = op.name+'_const_name'
+    add_const(const_context, builder, const_name, np.array([-1]*op.x.rank))
+
+    is_end_mask_name = op.name+'_is_end_mask'
+    builder.add_equal(
+           name=is_end_mask_name,
+           input_names=make_input(const_context, builder,
+                [const_name, op.size]),
+           output_name=is_end_mask_name)
+
+    # get the mask where size != -1
+    # for instance, size = [-1,1,2] results in [0,1,1]
+    is_not_end_mask_name = op.name+'_is_not_end_mask'
+    builder.add_not_equal(
+           name=is_not_end_mask_name,
+           input_names=make_input(const_context, builder,
+                [const_name, op.size]),
+           output_name=is_not_end_mask_name)
+
+    # get the end index for dimensions i where size[i] = -1
+    # for size[i] != -1, just make it 0
+    # for instance, x with shape [2,3,4] and size = [-1,1,2]
+    # results in [2,0,0]
+    end_index_with_mask_name = op.name+'_end_index_with_mask'
+    builder.add_elementwise(
+            name=end_index_with_mask_name,
+            input_names=[end_index_name, is_end_mask_name],
+            output_name=end_index_with_mask_name,
+            mode="MULTIPLY")
+
+    # get the end index for dimension i where size[i] != -1
+    # for size[i] = 1, just make it 0
+    # for instance, x with shape [2,3,4], size = [-1,1,2],
+    # begin = [0,1,1] results in [0,2,3]
     end_ids = op.name+"_end_ids"
     builder.add_elementwise(
             name=end_ids,
@@ -783,13 +831,31 @@ def slice_by_size(const_context, builder, op):
                 [op.begin, op.size]),
             output_name=end_ids,
             mode="ADD")
+
+    end_index_without_mask_name = op.name+'_end_index_without_mask'
+    builder.add_elementwise(
+            name=end_index_without_mask_name,
+            input_names=make_input(const_context, builder,
+                [is_not_end_mask_name, end_ids]),
+            output_name=end_index_without_mask_name,
+            mode="MULTIPLY")
+
+    # add two end index array together to get the final index
+    final_end_index_name = op.name+"_final_index"
+    builder.add_elementwise(
+            name=final_end_index_name,
+            input_names=make_input(const_context, builder,
+                [end_index_with_mask_name,
+                 end_index_without_mask_name]),
+            output_name=final_end_index_name,
+            mode="ADD")
+
     input_names = make_input(const_context, builder,
-                             [op.x, op.begin, end_ids])
+                             [op.x, op.begin, final_end_index_name])
     builder.add_slice_dynamic(
             name=op.name,
             input_names=input_names,
-            output_name=op.outputs[0].name,
-            end_masks=[True if s == -1 else False for s in size])
+            output_name=op.outputs[0].name)
 
 @register_v2_op
 def sqrt(const_context, builder, op):
@@ -2405,8 +2471,7 @@ def _realloc_list(const_context, builder, ls_var, index_var):
     true_builder.add_copy(
             name=ls_var.name + '_assign',
             input_name=new_list_name,
-            output_name=ls_var.name
-            )
+            output_name=ls_var.name)
 
 @register_v2_op
 def list_write(const_context, builder, op):

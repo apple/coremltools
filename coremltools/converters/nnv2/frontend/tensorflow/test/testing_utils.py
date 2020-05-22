@@ -221,5 +221,6 @@ def run_compare_tf(
     if validate_shapes_only:
         compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)
     else:
+        compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)
         compare_backend(proto, input_key_values, expected_outputs,
                         use_cpu_only, atol=atol, rtol=rtol)

@@ -11,7 +11,6 @@ Only available in coremltools 2.0b1 and onwards
 from ..utils import _get_feature, _get_nn_layers, _get_input_names
 from ... import _MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION
 from ... import _MINIMUM_NDARRAY_SPEC_VERSION
-from ..model import NeuralNetworkShaper
 
 _SEQUENCE_KEY = 'S'
 _BATCH_KEY = 'B'
@@ -700,54 +699,3 @@ def add_multiarray_ndshape_enumeration(spec, feature_name, enumerated_shapes):
     # Bump up specification version
     spec.specificationVersion = max(_MINIMUM_NDARRAY_SPEC_VERSION,
                                     spec.specificationVersion)
-
-
-def get_allowed_shape_ranges(spec):
-    """
-    For a given model specification, returns a dictionary with a shape range object for each input feature name.
-    """
-
-    shaper = NeuralNetworkShaper(spec, False)
-    inputs = _get_input_names(spec)
-    output = {}
-
-    for input in inputs:
-        output[input] = shaper.shape(input)
-
-    return output
-
-
-
-def can_allow_multiple_input_shapes(spec):
-    """
-    Examines a model specification and determines if it can compute results for more than one output shape.
-
-    :param spec: MLModel
-        The protobuf specification of the model.
-
-    :return: Bool
-        Returns True if the model can allow multiple input shapes, False otherwise.
-    """
-
-    # First, check that the model actually has a neural network in it
-    try:
-        layers = _get_nn_layers(spec)
-    except:
-        raise Exception('Unable to verify that this model contains a neural network.')
-
-    try:
-        shaper = NeuralNetworkShaper(spec, False)
-    except:
-        raise Exception('Unable to compute shapes for this neural network.')
-
-    inputs = _get_input_names(spec)
-
-    for name in inputs:
-
-        shape_dict = shaper.shape(name)
-        shape = NeuralNetworkMultiArrayShapeRange(shape_dict)
-
-        if (shape.isFlexible()):
-            return True
-
-    return False

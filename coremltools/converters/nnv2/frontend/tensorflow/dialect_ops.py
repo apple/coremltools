@@ -33,7 +33,7 @@ class tf_make_list(Operation):
             return builtins.list(builtins.unknown,
                     init_length=init_length,
                     dynamic_length=self.dynamic_length.val)
-        builtin_dtype = builtins.string_to_builtin(dtype.val)
+        builtin_dtype = builtins.string_to_builtin(self.dtype.val)
         if builtin_dtype is None:
             raise ValueError('Unsupported dtype {}'.format(self.dtype.val))
         elem_type = builtins.tensor(builtin_dtype, self.elem_shape.sym_val)

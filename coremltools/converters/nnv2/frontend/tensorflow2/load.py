@@ -26,7 +26,7 @@ from coremltools.converters.nnv2.frontend.tensorflow.tf_graph_pass import (
     delete_disconnected_nodes,
 )
 from coremltools.converters.nnv2.frontend.tensorflow2.tf_graph_pass import (
-    flatten_while_loop_namespaces, rewrite_control_flow_functions
+    flatten_sub_graph_namespaces, rewrite_control_flow_functions
 )
 from coremltools.converters.nnv2.frontend.tensorflow.tfssa import NetworkEnsemble, SSAFunction
 from coremltools.converters.nnv2.frontend.tensorflow.parse import ParsedTFNode
@@ -54,6 +54,10 @@ def load(model, debug=False, **kwargs):
     if debug:
         tf.io.write_graph(graph_def, '/tmp/', '/tmp/graph_def.pb', as_text=False)
 
+    if len(graph_def.node) == 0:
+        msg = "tf.Graph should have at least 1 node, Got empty graph."
+        raise ValueError(msg)
+
     tf_ssa = _tf_ssa_from_graph_def(graph_def)
 
     if debug:
@@ -65,12 +69,12 @@ def load(model, debug=False, **kwargs):
     # Notes:
     # - "flatten_while_loop_namespaces" should be after "constant_propagation"
     #   as it changes node names which constant propagation pass is relying on
-    #   to feed into session.run().
+    #   to perform session.run(), renamed nodes are not understandable for TF.
     tf_passes = [
         # delete_asserts,  # FIXME: rdar://62472804
         constant_propagation,
-        flatten_while_loop_namespaces,
         rewrite_control_flow_functions,
+        flatten_sub_graph_namespaces,
         remove_variable_nodes
     ]
 
@@ -81,6 +85,7 @@ def load(model, debug=False, **kwargs):
             except Exception as e:
                 logging.exception('Exception in pass "{}": {}'.format(tf_pass, e))
                 logging.info("Ignoring exception and continuing to next pass")
+                raise(e)
 
     else:
         for tf_pass in tf_passes:
@@ -104,8 +109,8 @@ def _tf_graph_from_model(model):
     """
     logging.info("Loading model '{}'".format(model))
 
-    msg = 'Expected model format: ' \
-          '[SavedModel | [concrete_function] | tf.keras.Model | .h5], got {}'
+    msg = 'Expected model format: [SavedModel | [concrete_function] | ' \
+          'tf.keras.Model | .h5 | tf.Graph], got {}'
     if isinstance(model, tf.Graph) and hasattr(model, 'as_graph_def'):
         return model.as_graph_def(add_shapes=True)
     elif isinstance(model, list) or \
@@ -122,13 +127,15 @@ def _tf_graph_from_model(model):
         elif isinstance(model, six.string_types):
             if not os.path.exists(model):
                 raise ValueError('Input model "{}" does not exist'.format(model))
+            # serialized tf.keras model in HDF5 format on disk
             elif os.path.isfile(model) and model.endswith('.h5'):
                 keras_model = tf.keras.models.load_model(model)
                 input_signature = saving_utils.model_input_signature(
                     keras_model, keep_original_batch_size=True)
                 func = saving_utils.trace_model_call(keras_model, input_signature)
                 cfs = [func.get_concrete_function()]
-            elif os.path.isdir(model):  # SavedModel directory
+            # SavedModel directory
+            elif os.path.isdir(model):
                 saved_model = tf.saved_model.load(model)
                 signatures = saved_model.signatures
                 signature_values = signatures.values()
@@ -182,7 +189,7 @@ def _tf_ssa_from_graph_def(graph_def, fn_name='main'):
         tf_graph, tf_graph._functions)
 
     # get graph_dict and sub-graphs' inputs / outputs
-    graph_dict, inputs, outputs = _dict_from_graph(
+    graph_dict, inputs, outputs, ret = _dict_from_graph(
         tf_graph, fn_name, sg_input_shapes)
 
     tf_ssa = NetworkEnsemble()
@@ -193,7 +200,7 @@ def _tf_ssa_from_graph_def(graph_def, fn_name='main'):
         if name == 'main':  # skip for sub-graphs as input can be also output
             delete_disconnected_nodes(graph)
         tf_ssa.functions[name] = SSAFunction(
-            graph, inputs=inputs[name], outputs=outputs[name])
+            graph, inputs=inputs[name], outputs=outputs[name], ret=ret[name])
 
     return tf_ssa
 
@@ -272,6 +279,7 @@ def _dict_from_graph(graph, fn_name='main', sg_input_shapes=None):
     graph_dict = {fn_name: {}}
     graph_inputs = {fn_name: []}
     graph_outputs = {fn_name: []}
+    graph_ret = {fn_name: {}}
 
     for op in graph.get_operations():
         graph_dict[fn_name].update({op.name: ParsedTFNode(op.node_def)})
@@ -281,6 +289,7 @@ def _dict_from_graph(graph, fn_name='main', sg_input_shapes=None):
         input_shapes = sg_input_shapes[name]
         input_shapes = input_shapes[-len(sg_def.signature.input_arg):]
         fn_graph = function_def_to_graph(sg_def, input_shapes=input_shapes)
+
         graph_dict.update(
             _dict_from_graph(fn_graph, name, sg_input_shapes)[0])
         graph_inputs.update(
@@ -288,4 +297,10 @@ def _dict_from_graph(graph, fn_name='main', sg_input_shapes=None):
         graph_outputs.update(
             {name: [t.name.split(':')[0] for t in fn_graph.outputs]})
 
-    return graph_dict, graph_inputs, graph_outputs
+        # ret is a mapping from the output arg names from `signature` to the
+        # outputs from `node_def` that should be returned by the function.
+        sg_def_ret = sg_def.ret
+        sg_def_ret['identity_0'] = sg_def_ret.pop('identity')
+        graph_ret.update({name: sg_def_ret})
+
+    return graph_dict, graph_inputs, graph_outputs, graph_ret

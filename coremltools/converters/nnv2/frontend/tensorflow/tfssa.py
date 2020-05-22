@@ -61,9 +61,9 @@ class ParsedNode(object):
 
 
 class SSAFunction(object):
-    __slots__ = ["graph", "inputs", "input_types", "outputs", "output_types"]
+    __slots__ = ["graph", "inputs", "input_types", "outputs", "output_types", "ret"]
 
-    def __init__(self, gdict=None, inputs=None, outputs=None):
+    def __init__(self, gdict=None, inputs=None, outputs=None, ret=None):
         if gdict is None:
             gdict = {}
         self.graph = gdict
@@ -71,6 +71,16 @@ class SSAFunction(object):
         self.outputs = [] if outputs is None else outputs
         self.input_types = []
         self.output_types = []
+
+        # ret is a mapping from the output arg names from `signature` to the
+        # outputs from `node_def` that should be returned by the function.
+        # Only used in TF2 for getting indices when generating get_tuple ops
+        # for control flow ops. Because the sub-graph's outputs and control
+        # flow node's outputs mapping is defined in `ret` dict. See usages in
+        # tf_graph_pass: rewrite_control_flow_functions for details.
+        # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/framework/function.proto
+        self.ret = [] if ret is None else ret
+
         check_connections(gdict)
 
         # respect TF inputs/outputs if given, otherwise, infer from the graph

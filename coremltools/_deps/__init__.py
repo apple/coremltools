@@ -62,7 +62,7 @@ HAS_TF = True
 HAS_TF_1 = False
 HAS_TF_2 = False
 TF_MIN_VERSION = '1.0.0'
-TF_MAX_VERSION = '1.14.0'
+TF_MAX_VERSION = '2.2.0'
 
 try:
     import tensorflow

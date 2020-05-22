@@ -23,7 +23,7 @@ tf_testing_utils.run_compare_tf = run_compare_tf2
 # Import TF 2.x-compatible TF 1.x test cases
 from coremltools.converters.nnv2.frontend.tensorflow.test.test_load import (
     frontend,
-    TestModelInputsOutputs
+    # TestModelInputsOutputs   <rdar://problem/63032120> TF2: Extract sub-graph from TF graph
 )
 
 

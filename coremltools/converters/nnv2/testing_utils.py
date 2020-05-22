@@ -150,6 +150,18 @@ def is_close(expected, actual, atol=1e-04, rtol=1e-05):
     return True
 
 
+def run_core_ml_predict(proto, input_key_values, use_cpu_only=False):
+    model = coremltools.models.MLModel(proto, useCPUOnly=use_cpu_only)
+    input_key_values = dict(
+        [
+            (k, v.astype(np.float32)
+            if not np.isscalar(v) and not v.shape == ()
+            else np.array([v], dtype=np.float32))
+            for k, v in input_key_values.items()
+        ])
+    return model.predict(input_key_values, useCPUOnly=use_cpu_only)
+
+
 def compare_backend(
         proto, input_key_values, expected_outputs,
         use_cpu_only=False, atol=1e-04, rtol=1e-05):
@@ -165,11 +177,7 @@ def compare_backend(
 
         - use_cpu_only: True/False.
     """
-    model = coremltools.models.MLModel(proto, useCPUOnly=use_cpu_only)
-    input_key_values = dict(
-        [(k, v.astype(np.float32) if not np.isscalar(v) and not v.shape == () else np.array([v], dtype=np.float32)) for k, v in
-         input_key_values.items()])
-    pred = model.predict(input_key_values, useCPUOnly=use_cpu_only)
+    pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
     if not use_cpu_only:
         atol = min(atol * 100., 1e-1)
         rtol = min(rtol * 100., 1e-2)
@@ -193,11 +201,14 @@ def compare_shapes(
 
         - use_cpu_only: True/False.
     """
-    model = coremltools.models.MLModel(proto, useCPUOnly=use_cpu_only)
-    pred = model.predict(input_key_values, useCPUOnly=use_cpu_only)
+    pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
     for o, expected in expected_outputs.items():
-        msg = 'Output: {}. expected shape {} != actual shape {}'.format(o,
-                expected.shape, pred[o].shape)
+        msg = 'Output: {}. expected shape {} != actual shape {}'.format(
+            o, expected.shape, pred[o].shape)
+        # Core ML does not support scalar as output
+        # remove this special case when support is added
+        if expected.shape == () and pred[o].shape == (1,):
+            continue
         assert pred[o].shape == expected.shape, msg
 
 

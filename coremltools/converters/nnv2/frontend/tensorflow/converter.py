@@ -12,6 +12,11 @@ from .convert_utils import convert_graph
 from coremltools.converters.nnv2.nnv2_program.ops import CoremlBuilder as cb
 from coremltools.converters.nnv2.nnv2_program.program import SsaProgram, SsaFunction
 from .ssa_passes.tf_passes import tensorflow_passes
+from coremltools.converters._profile_utils import profile
+
+# make tensorflow_passes a variable because it could be overwritten
+# later on. E.g., TF2 uses different set of graph passes then TF1.
+tensorflow_passes = tensorflow_passes
 
 
 # TranscriptionContext maintains a map of tf_node.name --> ssa_var available
@@ -152,20 +157,22 @@ class TFConverter:
         dep = {x: [] for x in tfssa.functions}
         for fname in tfssa.functions:
             for node in tfssa.functions[fname].graph.values():
-                if node.op == 'while':
-                    bfunc = node.attr['body_function']
-                    cfunc = node.attr['cond_function']
-                    if fname not in dep[bfunc]:
-                        dep[bfunc].append(fname)
-                    if fname not in dep[cfunc]:
-                        dep[cfunc].append(fname)
-                if node.op in {'StatelessWhile', 'While'}:
-                    bfunc = node.attr.get('body')
-                    cfunc = node.attr.get('cond')
-                    if fname not in dep[bfunc]:
-                        dep[bfunc].append(fname)
-                    if fname not in dep[cfunc]:
-                        dep[cfunc].append(fname)
+                func_x, func_y = None, None
+
+                if node.op in {'StatelessIf', 'If'}:
+                    func_x = node.attr.get('then_branch')
+                    func_y = node.attr.get('else_branch')
+                elif node.op in {'StatelessWhile', 'While'}:
+                    func_x = node.attr.get('body')
+                    func_y = node.attr.get('cond')
+                elif node.op == 'while':
+                    func_x = node.attr['body_function']
+                    func_y = node.attr['cond_function']
+
+                if func_x and fname not in dep[func_x]:
+                    dep[func_x].append(fname)
+                if func_y and fname not in dep[func_y]:
+                    dep[func_y].append(fname)
 
         assert (len(dep[root]) == 0)
         graph_stack = simple_topsort(dep)
@@ -251,17 +258,18 @@ class TFConverter:
 
         for v_o, out_name in zip(prog['main'].outputs, self.outputs):
             if v_o.name != out_name:
-                logging.info('Renaming output var: {} -> {}'.format(
+                logging.info("Renaming output var: '{}' -> '{}'".format(
                     v_o.name, out_name))
                 v_o.name = out_name
 
+    @profile
     def convert(self):
         prog = SsaProgram()
         if len(self.graph_stack) == 0:
             raise ValueError('At least one TF function must be present')
         if self.graph_stack[0] != 'main':
             msg = 'TF root graph must be named \'main\'. Got {}'
-            raise ValueError(msg.self.graph_stack[0])
+            raise ValueError(msg.format(self.graph_stack[0]))
         graph = self.tfssa.functions['main'].graph
         for g_name in self.graph_stack[1:]:
             self.context.add_graph(g_name, self.tfssa.functions[g_name].graph)

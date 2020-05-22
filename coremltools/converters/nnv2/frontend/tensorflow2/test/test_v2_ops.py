@@ -31,7 +31,7 @@ from coremltools.converters.nnv2.frontend.tensorflow.test.test_ops import (
     TestActivationSoftSign,
     TestBroadcastTo,
     TestCond,
-    TestConcat, # Redirects to ConcatV2 in TF2
+    TestConcat,  # Redirects to ConcatV2 in TF2
     TestConv,
     TestConv3d,
     TestDepthwiseConv,
@@ -43,6 +43,7 @@ from coremltools.converters.nnv2.frontend.tensorflow.test.test_ops import (
     TestPooling2d,
     TestPooling3d,
     TestSeparableConv,
+    TestTensorArray,
     TestWhileLoop,
     TestReshape,
     TestSlice,
@@ -182,9 +183,7 @@ mark = pytest.mark.parametrize("use_cpu_only, backend, rank",
                                ))
 TestElementWiseBinary.test_not_equal.pytestmark[0] = mark
 
-import sys
-@pytest.mark.skipif(sys.version_info<(3,7),
-    reason = "<rdar://problem/63238439> test_wheel_nnv2_tf2_macOS16_py2.7 seems to fail on TestCond tests")
+
 class TestControlFlowFromAutoGraph:
 
     @pytest.mark.parametrize(
@@ -301,6 +300,129 @@ class TestControlFlowFromAutoGraph:
 
         model, inputs, outputs = build_model
         input_values = [np.array([9.], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model, input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend)
+
+
+class TestTensorList:
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, size_dynamic_shape",
+        itertools.product(
+            [True, False],
+            backends,
+            [(1, True, None), (1, True, (1,)), (2, False, (1,))]
+        ))
+    def test_write_read_and_stack(
+            self, use_cpu_only, backend, size_dynamic_shape):
+        size, dynamic_size, element_shape = size_dynamic_shape
+
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
+            ta = tf.TensorArray(
+                tf.float32, size=size,
+                dynamic_size=dynamic_size,
+                element_shape=element_shape)
+            ta = ta.write(0, x)
+            ta = ta.write(1, y)
+            return ta.read(0), ta.read(1), ta.stack()
+
+        model, inputs, outputs = build_model
+        input_values = [
+            np.array([3.14], dtype=np.float32),
+            np.array([6.17], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model, input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, size_dynamic_shape",
+        itertools.product(
+            [True, False],
+            backends,
+            [(0, True, None), (1, True, (1,)), (3, False, (1,))]
+        ))
+    def test_unstack_and_read(
+            self, use_cpu_only, backend, size_dynamic_shape):
+        size, dynamic_size, element_shape = size_dynamic_shape
+
+        @make_tf_graph([(3, 1)])
+        def build_model(x):
+            ta = tf.TensorArray(
+                tf.float32, size=size,
+                dynamic_size=dynamic_size,
+                element_shape=element_shape)
+            ta = ta.unstack(x)
+            return ta.read(0), ta.read(1), ta.read(2)
+
+        model, inputs, outputs = build_model
+        input_values = [
+            np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model, input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, size_dynamic_shape",
+        itertools.product(
+            [True, False],
+            backends,
+            [(2, True, None), (1, True, (1,)), (3, False, (1,))]
+        ))
+    def test_write_and_gather(
+            self, use_cpu_only, backend, size_dynamic_shape):
+        size, dynamic_size, element_shape = size_dynamic_shape
+
+        @make_tf_graph([(1,), (1,)])
+        def build_model(x, y):
+            ta = tf.TensorArray(
+                tf.float32, size=size,
+                dynamic_size=dynamic_size,
+                element_shape=element_shape)
+            ta = ta.write(0, x)
+            ta = ta.write(1, y)
+            return ta.gather(indices=[0, 1])
+
+        model, inputs, outputs = build_model
+        input_values = [
+            np.array([3.14], dtype=np.float32),
+            np.array([6.17], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model, input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, size_dynamic_shape",
+        itertools.product(
+            [True, False],
+            backends,
+            [(2, True, None), (1, True, (1,)), (3, False, (1,))]
+        ))
+    def test_scatter_and_read(
+            self, use_cpu_only, backend, size_dynamic_shape):
+        size, dynamic_size, element_shape = size_dynamic_shape
+
+        @make_tf_graph([(3, 1)])
+        def build_model(x):
+            ta = tf.TensorArray(
+                tf.float32, size=size,
+                dynamic_size=dynamic_size,
+                element_shape=element_shape)
+            ta = ta.scatter(indices=[0, 1, 2], value=x)
+            return ta.read(0), ta.read(1), ta.read(2)
+
+        model, inputs, outputs = build_model
+        input_values = [
+            np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
             model, input_dict, outputs,

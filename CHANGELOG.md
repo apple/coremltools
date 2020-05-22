@@ -1,6 +1,12 @@
 ## Changelog  
   
 Changes of note, other than bug fixes  
+
+
+### coremltools 4.0a6
+  
+- added ability for user to specify input and output names of mlmodels for pytorch model conversion.
+- added ability for user to pass in shape tuples instead of tensors as input for pytorch model conversion.
   
 ### coremltools 4.0a5  
   

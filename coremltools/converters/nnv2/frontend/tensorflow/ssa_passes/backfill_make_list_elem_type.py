@@ -40,8 +40,8 @@ def backfill_make_list_elem_type_block(block):
         list_var = op.outputs[0]
         elem_type = infer_elem_type(list_var)  # builtins.tensor
         if elem_type is None:
-            msg = 'No list_write or list_scatter op to infer make_list {}' +\
-                    'elem type. Block:\n{}'
+            msg = "No list_write or list_scatter op to infer make_list " + \
+                  "'{}' element type. Block:\n{}"
             raise ValueError(msg.format(op.name, op.enclosing_block))
 
         with block:

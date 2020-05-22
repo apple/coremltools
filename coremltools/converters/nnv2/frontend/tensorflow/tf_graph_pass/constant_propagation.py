@@ -4,12 +4,12 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 import logging
 import tensorflow as tf
-
+import gc
 from .delete_constant import delete_unnecessary_constant_nodes
 from ..basic_graph_ops import const_determined_nodes, delete_node, disconnect_edge
 from coremltools.converters.nnv2.builtin_types import builtins
 from coremltools.converters.nnv2.builtin_types.builtins.type_mapping import numpy_val_to_builtin_val
-
+from coremltools.converters._profile_utils import profile
 
 def _get_const_nodes(fn):
     from tensorflow.core.framework import graph_pb2
@@ -50,9 +50,11 @@ def _get_const_nodes(fn):
         else:
             constant_node_num_outputs[node] = 1
         new_graph.node.extend([new_node])
+        del new_node
+    gc.collect()
     return new_graph, list(constant_nodes), constant_node_num_outputs
 
-
+@profile
 def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outputs):
     try:
         if len(constant_nodes) > 0:
@@ -113,11 +115,11 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
     except Exception as e:
         logging.exception("Constant Propagation pass failed: {}".format(e))
 
-
+@profile
 def constant_propagation(tfssa):
     # we are going to rely on the TensorFlow graph to perform constant
-    # propagation. We construct a new graph comprising of only the
-    # constant nodes.
+    # propagation. For each graph, we construct a new graph comprising
+    # only a subset of nodes that are constant nodes.
 
     for f in tfssa.functions.values():
         const_nodes_info = _get_const_nodes(f)

@@ -3,7 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-from coremltools.converters.nnv2 import CoremlBuilder as cb
+from coremltools.converters.nnv2.nnv2_program import Var
 from coremltools.converters.nnv2.nnv2_program.passes.pass_registry import register_pass
 from coremltools.converters.nnv2.builtin_types import builtins
 import logging
@@ -38,7 +38,7 @@ def alert_return_type_cast(prog):
     """
     for f_name, f in prog.functions.items():
         for v in f.outputs:
-            if v.dtype != builtins.fp32:
+            if isinstance(v, Var) and v.dtype != builtins.fp32:
                 msg = 'Output var {} of type {} in function {} is ' + \
                         'cast to type fp32'
                 logging.warning(msg.format(v.name,

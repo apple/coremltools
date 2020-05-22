@@ -224,8 +224,7 @@ class while_loop(Operation):
 @register_op(doc_str='TODO')
 class identity(Operation):
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            )
+        x=ListOrScalarOrTensorInputType())
 
     def __init__(self, **kwargs):
         super(identity, self).__init__(**kwargs)
@@ -236,6 +235,7 @@ class identity(Operation):
     @precondition(allow=VALUE|SYMBOL)
     def value_inference(self):
         return self.x.sym_val
+
 
 @register_op(doc_str='TODO')
 class make_list(Operation):

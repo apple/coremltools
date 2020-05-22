@@ -1,15 +1,22 @@
+from __future__ import absolute_import
+
+import gc
 import coremltools
+
 from coremltools.converters.nnv2.converter import _convert
 from coremltools._deps import HAS_TORCH, HAS_TF_1, HAS_TF_2
+from coremltools.converters._profile_utils import profile
 
 if HAS_TORCH:
     from coremltools.converters.nnv2.frontend.torch.load import _torchscript_from_model as pytorch_load
+    import torch
 if HAS_TF_1:
     from coremltools.converters.nnv2.frontend.tensorflow.load import _tf_graph_from_model as tf1_load
 if HAS_TF_2:
     from coremltools.converters.nnv2.frontend.tensorflow2.load import _tf_graph_from_model as tf2_load
 
 
+@profile
 def convert(model,
             source="auto",
             inputs=None,
@@ -18,7 +25,9 @@ def convert(model,
     """
 
     Method to convert neural networks represented in Tensorflow or Pytorch formats
-    to the Core ML model format.
+    to the Core ML model format. This method will choose a convert method based on
+    the type of model passed in. For kwargs specific to a model type (Tensorflow, Torch etc.), 
+    look in the load.py of the converter for that model type.
 
     Parameters
     ----------
@@ -50,7 +59,10 @@ def convert(model,
             If [tuple] : each tuple contains input tensor name and shape
             If [str]: each string is the name of the Placeholder input op in the TF graph
         For Pytorch
-            a list of example inputs, in torch.tensor format
+            a list of example inputs, which are any of:
+            1. tensor
+            2. tuple shape
+            3. tuple of (name, (1. or 2.))
 
     outputs: list[str] (optional)
         For Tensorflow:
@@ -58,6 +70,7 @@ def convert(model,
             list of output op names
         For Pytorch:
             (not required)
+            list of output op names
 
     Returns
     -------
@@ -92,7 +105,8 @@ def convert(model,
         traced_model = torch.jit.trace(model, example_input)
 
         mlmodel = coremltools.converters.convert(traced_model,
-                                                inputs=[example_input])
+                                                inputs=[('input_name',example_input)]
+                                                outputs=['output_name'])
 
         mlmodel.save('mobilenetv2.mlmodel')
 
@@ -109,7 +123,7 @@ def convert(model,
 
     if source == "auto" and HAS_TF_1:
         try:
-            tf1_load(model)
+            tf1_load(model, outputs=outputs)
             source = "tensorflow"
         except:
             pass
@@ -139,7 +153,7 @@ def convert(model,
 
     elif source == "tensorflow":
 
-        if inputs is not None and isinstance(inputs[0], tuple):
+        if inputs is not None and len(inputs) > 0 and isinstance(inputs[0], tuple):
             inputs = dict(inputs)
 
         if HAS_TF_1:
@@ -168,11 +182,28 @@ def convert(model,
             msg = "Unexpected argument \"example_inputs\" found"
             raise ValueError(msg)
 
+        if inputs is not None:
+            if not isinstance(inputs, list):
+                msg = "\"inputs\" must be of type list. Recieved: {}".format(inputs)
+                raise ValueError(msg)
+            if not all([isinstance(_input, (torch.Tensor, tuple)) for _input in inputs]):
+                msg = "\"inputs\" list must contain torch.Tensors or tuples. Recieved: {}".format(inputs)
+                raise ValueError(msg)
+
+        if outputs is not None:
+            if not isinstance(outputs, list):
+                msg = "\"outputs\" must be of type list. Recieved: {}".format(outputs)
+                raise ValueError(msg)
+            if not all([isinstance(output, str) for output in outputs]):
+                msg = "\"inputs\" list must contain strings. Recieved: {}".format(outputs)
+                raise ValueError(msg)
+
         proto_spec = _convert(
                     model,
                     convert_from="torch",
                     convert_to=convert_to,
                     example_inputs=inputs,
+                    outputs=outputs,
                     **kwargs
                     )
 
@@ -182,6 +213,8 @@ def convert(model,
         raise ValueError(msg.format(source))
 
     mlmodel = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
+    del proto_spec
+    gc.collect()
     return mlmodel
 
 

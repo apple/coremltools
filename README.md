@@ -88,8 +88,12 @@ For Pytorch:
         - If [tuple] : each tuple contains input tensor name and shape  
         - If [str]: each string is the name of the Placeholder input op in the TF graph
           
-    For Pytorch  
-        a list of example inputs, in torch.tensor format  
+    For Pytorch
+        a list of example inputs, which are any of:
+        1. tensor
+        2. tuple shape
+        3. tuple of (string name, (1. or 2.))
+
 
 - outputs: list[str] (optional)  
     For Tensorflow:  
@@ -97,7 +101,8 @@ For Pytorch:
         list of output op names  
         
     For Pytorch:  
-        (not required)  
+        (not required)
+        list of output op names    
 
 #### Returns
 
@@ -136,15 +141,17 @@ mlmodel.save('model_mobilenet.mlmodel')
 Pytorch :  
 
 ```python
+
 model = torchvision.models.mobilenet_v2()
 model.eval()
 example_input = torch.rand(1, 3, 256, 256)
 traced_model = torch.jit.trace(model, example_input)
 
 mlmodel = coremltools.converters.convert(traced_model,
-                                        inputs=[example_input])
+                                        inputs=[('input_name', example_input)]
+                                        outputs=['output_name'])
 
-mlmodel.save('mobilenetv2.mlmodel') 
+mlmodel.save('mobilenetv2.mlmodel')
 
 ```
 

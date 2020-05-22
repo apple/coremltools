@@ -117,6 +117,7 @@ def connect_global_initializer(graph):
             get_node.control_inputs.append(node_name)
             node.control_outputs.append(get_node.name)
 
+
 def convert_graph(context, graph, outputs=None):
     """
     Construct Core ML ops corresponding to `graph`.
@@ -156,7 +157,7 @@ def convert_graph(context, graph, outputs=None):
         node = graph[node_name]
         if node.op == 'return':
             continue
-        logging.info("[{}/{}] Converting {} op {}".format(
+        logging.info("[{}/{}] Converting {} op '{}'".format(
             i + 1, num_nodes, node.op, node.name))
 
         if node.op == 'NoOp':

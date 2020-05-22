@@ -64,7 +64,7 @@ the rank of `x`.
 """)
 class expand_dims(Operation):
     input_spec = InputSpec(
-        x=TensorInputType(),
+        x=ScalarOrTensorInputType(),
         axes=IntTensorInputType(const=True),
     )
 
@@ -304,7 +304,7 @@ class slice_by_size(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         begin=IntTensorInputType(),
-        size=IntTensorInputType(const=True),
+        size=IntTensorInputType(),
     )
 
     def __init__(self, **kwargs):
@@ -322,8 +322,14 @@ class slice_by_size(Operation):
 
         x_shape = self.x.shape
         ret_shape = []
-        for idx, s in enumerate(self.size.val):
-            if s != -1:
+        if self.size.sym_val is None:
+            ret_shape = [get_new_symbol() for _ in range(self.x.rank)]
+            return builtins.tensor(self.x.dtype, tuple(ret_shape))
+
+        for idx, s in enumerate(self.size.sym_val):
+            if is_symbolic(s):
+                ret_shape.append(s)
+            elif s != -1:
                 ret_shape.append(s)
             elif self.begin.sym_val is not None:
                 ret_shape.append(x_shape[idx]-self.begin.sym_val[idx])
@@ -334,7 +340,9 @@ class slice_by_size(Operation):
 
     @precondition(allow=VALUE|SYMBOL)
     def value_inference(self):
-        if any_symbolic(self.begin.val):
+        if any_symbolic(self.begin.sym_val):
+            return None
+        if any_symbolic(self.size.sym_val):
             return None
         slices = []
         for i in range(self.x.rank):

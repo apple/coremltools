@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import coremltools
+import pytest
 import unittest
 import tempfile
 import numpy as np
@@ -11,7 +12,7 @@ from coremltools.proto import Model_pb2
 import PIL.Image
 
 from coremltools.models.utils import rename_feature, save_spec, macos_version,\
-                convert_neural_network_spec_weights_to_fp16, is_macos, \
+                _convert_neural_network_spec_weights_to_fp16, is_macos, \
                 convert_double_to_float_multiarray_type
 from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
@@ -192,7 +193,7 @@ class MLModelTest(unittest.TestCase):
             output_name='out'
         )
         model = MLModel(builder.spec)
-        spec = convert_neural_network_spec_weights_to_fp16(model.get_spec())
+        spec = _convert_neural_network_spec_weights_to_fp16(model.get_spec())
         self.assertIsNotNone(spec)
 
         # simple network without quantization layer
@@ -209,7 +210,7 @@ class MLModelTest(unittest.TestCase):
             k=8
         )
         model = MLModel(builder.spec)
-        spec = convert_neural_network_spec_weights_to_fp16(model.get_spec())
+        spec = _convert_neural_network_spec_weights_to_fp16(model.get_spec())
         self.assertIsNotNone(spec)
 
     @unittest.skip
@@ -313,6 +314,20 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(out_dict['out_confidence'], 'c')
         self.assertEqual(mlmodel.get_spec().WhichOneof("Type"), 'neuralNetworkClassifier')
 
+    @pytest.mark.xfail(reason='rdar://63451440')
+    def test_nn_classifier_util_file(self):
+        input_features = [('data', datatypes.Array(3,))]
+        output_features = [('out', datatypes.Array(3, ))]
+        builder = NeuralNetworkBuilder(input_features, output_features, disable_rank5_shape_mapping=True)
+        builder.add_activation('linear', 'LINEAR', 'data', 'out')
+        spec = builder.spec
+        mlmodel = MLModel(spec)
+        mlmodel = make_nn_classifier(mlmodel, class_labels="class_label_sample.txt",
+                                     predicted_feature_name='out_confidence',
+                                     predicted_probabilities_output='out')
+        out_dict = mlmodel.predict({'data': np.array([4.0, 5.5, 6.0])}, useCPUOnly=True)
+        self.assertEqual(out_dict['out_confidence'], 'c')
+        self.assertEqual(mlmodel.get_spec().WhichOneof("Type"), 'neuralNetworkClassifier')
 
 
 if __name__ == '__main__':

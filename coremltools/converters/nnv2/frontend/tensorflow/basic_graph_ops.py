@@ -263,7 +263,8 @@ def const_determined_nodes(gd, assume_variable_nodes=None):
             vis[node.name] = False
         elif 'Placeholder' in node.op:
             vis[node.name] = False
-        elif 'TensorArray' in node.op:
+        # TF1 uses TensorArray* while TF2 uses TensorList* ops
+        elif 'TensorArray' in node.op or 'TensorList' in node.op:
             vis[node.name] = False
         elif "function" in node.op:
             vis[node.name] = False

@@ -57,3 +57,12 @@ from . import models
 from .models import utils
 
 from ._scripts.converter import _main
+
+
+# Time profiling for functions in coremltools package, decorated with @profile
+import os, sys
+from .converters._profile_utils import profiler
+_ENABLE_PROFILING = os.environ.get("ENABLE_PROFILING", False)
+
+if _ENABLE_PROFILING:
+    sys.setprofile(profiler)

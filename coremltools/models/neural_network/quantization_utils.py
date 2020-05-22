@@ -1066,7 +1066,7 @@ def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
             raise Exception("Unknown layer " + layer_type + " to be quantized")
 
 
-def quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
+def _quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
     nn_model_types = [
         "neuralNetwork",
         "neuralNetworkClassifier",
@@ -1103,10 +1103,10 @@ def quantize_spec_weights(spec, nbits, quantization_mode, **kwargs):
     # Recursively convert all pipeline models
     elif spec.WhichOneof("Type") == "pipeline":
         for model_spec in spec.pipeline.models:
-            quantize_spec_weights(model_spec, nbits, quantization_mode, **kwargs)
+            _quantize_spec_weights(model_spec, nbits, quantization_mode, **kwargs)
 
     elif spec.WhichOneof("Type") in ["pipelineClassifier", "pipelineRegressor"]:
-        quantize_spec_weights(spec.pipeline, nbits, quantization_mode, **kwargs)
+        _quantize_spec_weights(spec.pipeline, nbits, quantization_mode, **kwargs)
 
     return spec
 
@@ -1433,7 +1433,7 @@ def activate_int8_int8_matrix_multiplications(spec, selector=None):
             selector = MatrixMultiplyLayerSelector()
 
         # Dequantize all the selected matrix multiplication layers
-        spec = quantize_spec_weights(
+        spec = _quantize_spec_weights(
             spec,
             nbits=None,
             quantization_mode=_QUANTIZATION_MODE_DEQUANTIZE,
@@ -1610,7 +1610,7 @@ def quantize_weights(
 
     print("Quantizing using {} quantization".format(quantization_mode))
     spec = full_precision_model.get_spec()
-    qspec = quantize_spec_weights(spec, nbits, qmode, **kwargs)
+    qspec = _quantize_spec_weights(spec, nbits, qmode, **kwargs)
 
     if macos_version() < (10, 14):
         print(

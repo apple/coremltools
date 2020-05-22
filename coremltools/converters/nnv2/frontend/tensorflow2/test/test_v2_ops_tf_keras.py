@@ -442,6 +442,7 @@ class TestDense:
 
 
 class TestEmbedding:
+    @pytest.mark.xfail(reason='rdar://63414784')
     @pytest.mark.parametrize(
         'use_cpu_only, backend, dims, batch_size, input_length',
         itertools.product(
@@ -893,3 +894,4 @@ class TestUpSampling:
         run_compare_tf_keras(
             model, [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only, backend=backend)
+

@@ -152,12 +152,13 @@ class InternalTorchIRGraph:
             raw_graph: The torch._C.Graph to convert.
             params_dict: A dictionary mapping graph parameter names to tensors.
             input_values: A list of inputs to the graph.
-            cut_output_names: The list of desired outputs from the graph. Must
-                be present in the graph. For debugging use only.
+            cut_at_symbols: The list of desired outputs from the graph. Must
+                be present in the graph. For debugging use only. 
+                See kwarg in load.py for more information. 
     """
 
     def __init__(
-        self, raw_graph, params_dict, input_values, cut_output_names=None,
+        self, raw_graph, params_dict, input_values, cut_at_symbols=None,
     ):
         self.nodes = []
         self.params = {}
@@ -176,11 +177,11 @@ class InternalTorchIRGraph:
         # Add inputs
         for index, _input in enumerate(islice(raw_graph.inputs(), len(input_values))):
             name = _input.debugName()
-            value = input_values[index]
+            value = value = input_values[index]
             self.inputs[name] = value
 
-        # Add outputs
-        output_names = cut_output_names
+        # Add outputs, cutting if @cut_at_symbols is set
+        output_names = cut_at_symbols
         if output_names is None:
             output_names = [x.debugName() for x in raw_graph.outputs()]
         for output in output_names:
@@ -197,7 +198,7 @@ class InternalTorchIRGraph:
 
     def _format_inputs(self, inputs):
         def tensor_str(x):
-            return "Tensor" + str(list(x.shape))
+            return "Tensor" + str(list(x))
 
         inp_str = ""
         for k, v in inputs.items():

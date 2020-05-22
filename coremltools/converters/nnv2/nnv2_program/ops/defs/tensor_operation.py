@@ -569,7 +569,9 @@ class shape(Operation):
 
     def value_inference(self):
         if any_symbolic(self.x.shape):
-            return np.array(self.x.shape)
+            # convert elements in shape to int32
+            res = [x if is_symbolic(x) else np.int32(x) for x in self.x.shape]
+            return np.array(res)
         else:
             return np.array(self.x.shape).astype(np.int32)
 
@@ -646,30 +648,20 @@ class concat(Operation):
 
     @precondition(allow=VALUE|SYMBOL|NONE)
     def value_inference(self):
-        has_values = True
-        for v in self.values:
-            if v.sym_val is None:
-                has_values = False
-                break
-        if has_values:
-            values = [v.val for v in self.values]
-            if not isinstance(values[0], np.ndarray):
-                return np.stack(values, axis=self.axis.val)
-            elif values[0].shape == ():
-                return np.stack(values, axis=self.axis.val)
-            else:
-                return np.concatenate(values, axis=self.axis.val)
 
-        # If input shapes are small, we create symbolic values from symbols.
-        ret_shape = self.type_inference().get_shape()
-        num_elems = np.prod(ret_shape)
-        if any_symbolic(ret_shape):
-            # Don't know the exact shape.
+        is_all_rank_zero = all([v.rank == 0 for v in self.values])
+        values = [v.sym_val if v.sym_val is not None else get_new_symbol() for v in self.values]
+
+        # we only infer values for values whose ranks are all zero,
+        # or don't have symbolic values.
+        # Note that cases like values = [[1, is0], [2]] aren't in such case.
+        if any([is_symbolic(v) for v in values]) and not is_all_rank_zero:
             return None
-        if num_elems > 5:
-            return None
-        arr = np.array([get_new_symbol() for _ in range(num_elems)])
-        return arr.reshape(ret_shape)
+
+        if not isinstance(values[0], np.ndarray) or values[0].shape == ():
+            return np.stack(values, axis=self.axis.val)
+
+        return np.concatenate(values, axis=self.axis.val)
 
 @register_op(doc_str='TODO')
 class split(Operation):
@@ -778,9 +770,15 @@ class stack(Operation):
         ret_shape.insert(self.axis.val, num_tensors)
         return builtins.tensor(self.values[0].dtype, ret_shape)
 
-    @precondition(allow=VALUE|SYMBOL)
+    @precondition(allow=VALUE|SYMBOL|NONE)
     def value_inference(self):
-        values = [v.val for v in self.values]
+
+        is_all_rank_zero = all([v.rank == 0 for v in self.values])
+        values = [v.sym_val if v.sym_val is not None else get_new_symbol() for v in self.values]
+
+        if any([is_symbolic(v) for v in values]) and not is_all_rank_zero:
+            return None
+
         return np.stack(values, self.axis.val)
 
 @register_op(doc_str='TODO')
