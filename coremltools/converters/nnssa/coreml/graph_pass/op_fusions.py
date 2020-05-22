@@ -281,7 +281,7 @@ def transform_nhwc_to_nchw(nnssa):
                         )
 
             # Insert NHWC -> NCHW transpose
-            for i, inp_node_name in enumerate(node.inputs.copy()):
+            for i, inp_node_name in enumerate(list(node.inputs)):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
                 symbolic_value = graph[inp_node_name].attr['symbolic_value']
                 if (graph[inp_node_name].op == 'Const' or
@@ -295,7 +295,7 @@ def transform_nhwc_to_nchw(nnssa):
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
 
             # Insert NCHW -> NHWC transpose
-            for i, out_node_name in enumerate(node.outputs.copy()):
+            for i, out_node_name in enumerate(list(node.outputs)):
                 out_node_format = graph[out_node_name].attr.get('data_format')
                 if out_node_format != 'NHWC_format_inserted':
                     _insert_transpose_from_nchw(graph, node, graph[out_node_name])
