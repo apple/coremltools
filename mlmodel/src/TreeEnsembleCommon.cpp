@@ -162,7 +162,7 @@ namespace CoreML { namespace TreeEnsembles {
         ////////////////////////////////////////////////////////////////////////////////
 
         // Get the full list of nodes from the spec.
-        auto nodes = tes.nodes();
+        const auto& nodes = tes.nodes();
 
         /**  Stage 1: Translation.
          *
