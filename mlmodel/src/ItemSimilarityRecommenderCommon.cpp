@@ -56,7 +56,7 @@ namespace CoreML { namespace Recommender {
         throw std::invalid_argument("Only integer item ids or string item ids can be specified in the same model.");
       }
       
-      num_items = size_t(isr.itemint64ids().vector_size());
+      num_items = uint64_t(isr.itemint64ids().vector_size());
 
       if(num_items <= max_item) {
         throw std::invalid_argument("List of integer item ids specified must be "
@@ -66,10 +66,10 @@ namespace CoreML { namespace Recommender {
       }
 
 
-      integer_id_values.resize(num_items);
-      for(size_t i = 0; i < num_items; ++i) {
-        integer_id_values[i] = isr.itemint64ids().vector(int(i));
-      }
+      const auto& itemint64idsVector = isr.itemint64ids().vector();
+      integer_id_values.reserve(static_cast<size_t>(num_items));
+      std::copy(itemint64idsVector.begin(), itemint64idsVector.end(), std::back_inserter(integer_id_values));
+
       if(std::set<int64_t>(integer_id_values.begin(), integer_id_values.end()).size() != num_items) {
         throw std::invalid_argument("List of integer item ids specified must be "
                                     "unique; list contains duplicates.");
@@ -86,10 +86,10 @@ namespace CoreML { namespace Recommender {
                                     " only " + std::to_string(num_items) + " item ids given.");
       }
 
-      string_id_values.resize(num_items);
-      for(size_t i = 0; i < num_items; ++i) {
-        string_id_values[i] = isr.itemstringids().vector(int(i));
-      }
+      const auto& itemstringidsVector = isr.itemstringids().vector();
+      string_id_values.reserve(static_cast<size_t>(num_items));
+      std::copy(itemstringidsVector.begin(), itemstringidsVector.end(), std::back_inserter(string_id_values));
+
       if(std::set<std::string>(string_id_values.begin(), string_id_values.end()).size() != num_items) {
         throw std::invalid_argument("List of string item ids specified must be "
                                     "unique; list contains duplicates.");

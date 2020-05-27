@@ -2647,7 +2647,7 @@ Result NeuralNetworkSpecValidator::validateSplitNDLayer(const Specification::Neu
     if (params.splitsizes_size() > 0) {
         numSplits = static_cast<size_t>(params.splitsizes_size());
     } else {
-        numSplits = params.numsplits();
+        numSplits = static_cast<size_t>(params.numsplits());
     }
     if (numSplits == 0) {
         const std::string err = "Either split_sizes or num_splits should be provided for '" + layer.name() + "' layer.";
