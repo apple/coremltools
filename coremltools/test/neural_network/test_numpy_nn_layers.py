@@ -19,7 +19,7 @@ import torch
 
 import coremltools
 import coremltools.models.datatypes as datatypes
-from coremltools.converters.nnv2.nnv2_program.ops.defs._utils import aggregated_pad
+from coremltools.converters.mil.mil.ops.defs._utils import aggregated_pad
 from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION
 from coremltools.models import neural_network as neural_network
 from coremltools.models.neural_network import flexible_shape_utils

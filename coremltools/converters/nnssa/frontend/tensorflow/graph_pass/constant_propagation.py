@@ -62,7 +62,7 @@ def constant_propagation(nnssa):
         topsort_set = set()
         while len(const_nodes_in_this_graph) > 0:
             for n in const_nodes_in_this_graph:
-                if Features.new_ssa() or Features.nnv2_ssa():
+                if Features.new_ssa() or Features.mil_ssa():
                     input_names = [v.name for v in f.graph[n].inputs]
                 else:
                     input_names = f.graph[n].inputs
@@ -78,7 +78,7 @@ def constant_propagation(nnssa):
             if '_class' in new_node.attr:
                 del new_node.attr['_class']
             del new_node.input[:]
-            if Features.new_ssa() or Features.nnv2_ssa():
+            if Features.new_ssa() or Features.mil_ssa():
                 input_names = [v.name for v in f.graph[node].inputs]
                 new_node.input.extend(input_names)
             else:
@@ -121,7 +121,7 @@ def constant_propagation(nnssa):
                             result_entry = k + ':0'
                             try:
                                 v.value, v.datatype = numpy_val_to_builtin_val(result[result_entry])
-                                if Features.new_ssa() or Features.nnv2_ssa():
+                                if Features.new_ssa() or Features.mil_ssa():
                                     v.value = result[result_entry]
                             except:
                                 logging.error(result_entry)
@@ -142,7 +142,7 @@ def constant_propagation(nnssa):
     except Exception as e:
         logging.exception("Constant Propagation pass failed: {}".format(e))
 
-    if not Features.new_ssa() and not Features.nnv2_ssa():
+    if not Features.new_ssa() and not Features.mil_ssa():
         # We do not delete constant nodes for new ssa since the new philosophy
         # is to maintain user intent for the very first phase of conversion.
         delete_unnecessary_constant_nodes(nnssa)

@@ -9,13 +9,13 @@ import os.path
 import torch
 
 from ...models import MLModel
-from ..nnv2 import converter as NNV2_converter
-from ..nnv2.frontend.torch.converter import TorchConverter
+from ..mil import converter as MIL_converter
+from ..mil.frontend.torch.converter import TorchConverter
 
 
 def convert(model_spec, inputs, check_only=False):
     """
-    Convert Pytorch .pt file to nnv2 CoreML format.
+    Convert Pytorch .pt file to mil CoreML format.
 
     model_spec: String path to .pt file, or a TorchScript object representing
         the model to convert.
@@ -54,7 +54,7 @@ def convert(model_spec, inputs, check_only=False):
         print("\n".join(["  " + str(x) for x in sorted(missing)]))
     else:
         prog = converter.convert()
-        proto = NNV2_converter.convert(
-            prog, convert_from="NitroSSA", convert_to="nnv1_proto"
+        proto = MIL_converter.convert(
+            prog, convert_from="NitroSSA", convert_to="nn_proto"
         )
         return MLModel(proto, useCPUOnly=True)

@@ -3,17 +3,18 @@ from __future__ import absolute_import
 import gc
 import coremltools
 
-from coremltools.converters.nnv2.converter import _convert
-from coremltools._deps import HAS_TORCH, HAS_TF_1, HAS_TF_2
+from coremltools.converters.mil.converter import _convert
+from coremltools.converters.mil.mil import Program
+from coremltools._deps import HAS_TORCH, HAS_TF, HAS_TF_2
 from coremltools.converters._profile_utils import profile
 
 if HAS_TORCH:
-    from coremltools.converters.nnv2.frontend.torch.load import _torchscript_from_model as pytorch_load
     import torch
-if HAS_TF_1:
-    from coremltools.converters.nnv2.frontend.tensorflow.load import _tf_graph_from_model as tf1_load
+    from coremltools.converters.mil.frontend.torch.load import _torchscript_from_model as pytorch_load
+if HAS_TF:
+    from coremltools.converters.mil.frontend.tensorflow.load import _tf_graph_from_model as tf1_load
 if HAS_TF_2:
-    from coremltools.converters.nnv2.frontend.tensorflow2.load import _tf_graph_from_model as tf2_load
+    from coremltools.converters.mil.frontend.tensorflow2.load import _tf_graph_from_model as tf2_load
 
 
 @profile
@@ -113,25 +114,23 @@ def convert(model,
     """
 
     source = source.lower()
-    if source.startswith('tensorflow'):
-        source = 'tensorflow'
 
     if inputs is not None:
         if not isinstance(inputs, list):
             msg = "\"inputs\" must be of type list"
             raise ValueError(msg)
 
-    if source == "auto" and HAS_TF_1:
+    if source == "auto" and HAS_TF:
         try:
             tf1_load(model, outputs=outputs)
             source = "tensorflow"
         except:
             pass
 
-    if source == "auto" and HAS_TF_2:
+    if source in {"auto", "tensorflow"} and HAS_TF_2:
         try:
             tf2_load(model)
-            source = "tensorflow"
+            source = "tensorflow2"
         except:
             pass
 
@@ -141,8 +140,11 @@ def convert(model,
             source = "pytorch"
         except:
             pass
+            
+    if source == "auto" and isinstance(model, Program):
+        source = "mil"
 
-    convert_to = kwargs.get('convert_to', 'nnv1_proto')
+    convert_to = kwargs.get('convert_to', 'nn_proto')
     kwargs.pop('convert_to', None)
 
     if source == "auto":
@@ -151,31 +153,24 @@ def convert(model,
               "\"tensorflow\", \"pytorch\"."
         raise ValueError(msg)
 
-    elif source == "tensorflow":
+    elif source in {"tensorflow", "tensorflow2"}:
+
+        if not HAS_TF:
+            raise ValueError('Converter was called with source=tensorflow, but missing tensorflow package')
+        if source == "tensorflow2" and not HAS_TF_2:
+            raise ValueError('Converter was called with source=tensorflow2, but missing tensorflow2 package')
 
         if inputs is not None and len(inputs) > 0 and isinstance(inputs[0], tuple):
             inputs = dict(inputs)
 
-        if HAS_TF_1:
-            proto_spec = _convert(
-                        model,
-                        convert_from="tensorflow",
-                        convert_to=convert_to,
-                        inputs=inputs,
-                        outputs=outputs,
-                        **kwargs
-                        )
-        elif HAS_TF_2:
-            proto_spec = _convert(
-                        model,
-                        convert_from='tensorflow2',
-                        convert_to=convert_to,
-                        inputs=inputs,
-                        outputs=outputs,
-                        **kwargs
-                        )
-        else:
-            raise ValueError('Converter was called with source=tensorflow, but missing tensorflow package')
+        proto_spec = _convert(
+                    model,
+                    convert_from=source,
+                    convert_to=convert_to,
+                    inputs=inputs,
+                    outputs=outputs,
+                    **kwargs
+                    )
 
     elif source == "pytorch":
         if 'example_inputs' in kwargs:
@@ -204,6 +199,19 @@ def convert(model,
                     convert_to=convert_to,
                     example_inputs=inputs,
                     outputs=outputs,
+                    **kwargs
+                    )
+    
+    elif source == "mil":
+        if not isinstance(model, Program):
+            msg = "Converter was asked to convert MIL input, but input is not a MIL program!"
+            raise ValueError(msg)
+
+        proto_spec = _convert(
+                    model,
+                    convert_from="mil",
+                    convert_to=convert_to,
+                    example_inputs=inputs,
                     **kwargs
                     )
 

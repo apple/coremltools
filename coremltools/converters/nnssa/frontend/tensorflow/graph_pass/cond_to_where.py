@@ -27,7 +27,7 @@ def compute_max_rank(graph):
         changes = False
         for v in graph.keys():
             if len(graph[v].inputs) > 0:
-                if Features.new_ssa() or Features.nnv2_ssa():
+                if Features.new_ssa() or Features.mil_ssa():
                     rank = max(ret[i.name] for i in graph[v].inputs) + 1
                 else:
                     rank = max(ret[i] for i in graph[v].inputs) + 1
