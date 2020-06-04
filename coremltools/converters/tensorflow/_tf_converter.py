@@ -223,7 +223,7 @@ def _graph_def_from_saved_model_or_keras_model(filename):
               raise ValueError('Unable to load a model with no signatures provided.')
             if len(signatures) >= 2:
               raise ValueError('Unable to load a model with multiple signatures')
-            concrete_func = signatures.values()[0]
+            concrete_func = list(signatures.values())[0]
         frozen_func = _convert_to_constants.convert_variables_to_constants_v2(concrete_func)
         graph_def = frozen_func.graph.as_graph_def(add_shapes=True)
     except ImportError as e:
