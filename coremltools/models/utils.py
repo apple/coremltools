@@ -182,6 +182,29 @@ def _fp32_to_fp16_byte_array(fp32_arr):
         return _fp32_to_reversed_fp16_byte_array(fp32_arr)
 
 
+def _fp16_to_reversed_fp32_byte_array(fp16_arr):
+    raw_fp32 = _np.float32(fp16_arr)
+    x = ''
+    for fp32 in raw_fp32:
+        all_bytes = _np.fromstring(fp32.tobytes(), dtype='int8')
+        x += all_bytes[3].tobytes()
+        x += all_bytes[2].tobytes()
+        x += all_bytes[1].tobytes()
+        x += all_bytes[0].tobytes()
+    return x
+
+
+def _fp16_to_fp32_byte_array(fp16_arr):
+    import sys
+    if sys.byteorder == 'little':
+        if type(fp16_arr) == str:
+            return _np.float32(_np.fromstring(fp16_arr, dtype='float16')).tobytes()
+        else:
+            return _np.float32(fp16_arr).tobytes()
+    else:
+        return _fp32_to_reversed_fp16_byte_array(fp32_arr)
+
+
 def _wp_to_fp16wp(wp):
     assert wp
     # If the float32 field is empty do nothing.
@@ -189,6 +212,14 @@ def _wp_to_fp16wp(wp):
         return
     wp.float16Value = _fp32_to_fp16_byte_array(wp.floatValue)
     del wp.floatValue[:]
+
+def _fp16wp_to_fp32wp(wp):
+    assert wp
+    # If the float16 field is empty do nothing.
+    if len(wp.float16Value) == 0:
+        return
+    wp.floatValue = _fp16_to_fp32_byte_array(wp.float16Value)
+    del wp.float16Value[:]
 
 
 
@@ -233,6 +264,37 @@ def _convert_neural_network_weights_to_fp16(full_precision_model):
     spec = full_precision_model.get_spec()
     return _get_model(_convert_neural_network_spec_weights_to_fp16(spec))
 
+
+def convert_neural_network_spec_weights_to_fp32(fp16_spec):
+    nn_model_types = ['neuralNetwork', 'neuralNetworkClassifier',
+                      'neuralNetworkRegressor']
+
+    from .neural_network.quantization_utils import quantize_spec_weights
+    from .neural_network.quantization_utils import _QUANTIZATION_MODE_LINEAR_QUANTIZATION
+
+    qspec = quantize_spec_weights(fp16_spec, 32, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+
+    return qspec
+
+
+def convert_neural_network_weights_to_fp32(fp16_model):
+    """ 
+    Utility function to convert a 16 bit FP model in MLModel to full precision
+    by extending the weights to be float (32 bit)
+    Parameters
+    ----------
+    half_precision_model: MLModel
+        Model which will be converted to full precision. Currently conversion
+        for only neural network models is supported. If a pipeline model is
+        passed in then all embedded neural network models embedded within
+        will be converted.
+
+    Returns -------
+    model: MLModel
+        Thehalf converted full precision MLModel
+    """
+    spec = fp16_model.get_spec()
+    return _get_model(convert_neural_network_spec_weights_to_fp32(spec))
 
 def _get_model(spec):
     """

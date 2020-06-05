@@ -10,7 +10,6 @@ Only available in coremltools 2.0b1 and onwards
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-
 import numpy as _np
 import sys, os
 from .optimization_utils import _optimize_nn
@@ -26,7 +25,7 @@ from coremltools.models import (
     _LUT_BASED_QUANTIZATION
 )
 
-from ..utils import _get_nn_layers, _wp_to_fp16wp, _get_model, macos_version
+from ..utils import _get_nn_layers, _wp_to_fp16wp, _fp16wp_to_fp32wp, _get_model, macos_version
 from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
 from ... import (_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
                  _MINIMUM_FP16_SPEC_VERSION)
@@ -394,8 +393,10 @@ def _quantize_wp(wp, nbits, qm, axis=0, **kwargs):
     else:
         raise NotImplementedError(
             'Quantization method "{}" not supported'.format(qm))
-
-    quantized_wp = _np.uint8(qw)
+    if nbits <= 8:
+        quantized_wp = _np.uint8(qw)
+    elif nbits == 32:
+        quantized_wp = _np.float32(qw)
     return scale, bias, lut, quantized_wp
 
 
@@ -417,21 +418,29 @@ def _quantize_wp_field(wp, nbits, qm, shape, axis=0, **kwargs):
     lut_function: (``callable function``)
         Python callable representing a LUT table function
     """
-
     # De-quantization
     if qm == _QUANTIZATION_MODE_DEQUANTIZE:
         return _dequantize_wp(wp, shape, axis)
 
+    # Half precision to full precision extension
+    if nbits == 32:
+        # If the weights are stored in a float16 byte array as a string, we can read it and convert
+        # to a float32 numpy array before populating the field for the weightparam since we cannot
+        # directly assign to this field.
+        if len(wp.float16Value) > 0:
+            wp.floatValue.extend(_np.float32(_np.fromstring(wp.float16Value, dtype='float16')))
+            wp.float16Value = ''
+            return
+        if len(wp.floatValue) > 0:
+            return
+    
     # If the float32 field is empty do nothing and return
     if len(wp.floatValue) == 0:
         return
-
+    
     # Half precision (16-bit) quantization
     if nbits == 16:
         return _wp_to_fp16wp(wp)
-
-    if nbits > 8:
-        raise Exception('Only 8-bit and lower quantization is supported')
 
     if qm not in _SUPPORTED_QUANTIZATION_MODES:
         raise Exception('Quantization mode {} not supported'.format(qm))
@@ -469,7 +478,9 @@ def _quantize_wp_field(wp, nbits, qm, shape, axis=0, **kwargs):
     else:
         wp.rawValue += _convert_array_to_nbit_quantized_bytes(uint8_weights,
             nbits).tobytes()
-    del wp.floatValue[:]
+    # Delete the field for 32bit float if not converting to 32bit
+    if nbits != 32:
+        del wp.floatValue[:]
 
 
 def unpack_to_bytes(byte_arr, num_weights, nbits):
@@ -562,7 +573,7 @@ def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
     if qm != _QUANTIZATION_MODE_DEQUANTIZE:
         if nbits is None:
             raise Exception('Missing argument "nbits"')
-        if not (nbits > 0 and nbits <= 8 or nbits == 16):
+        if not (nbits > 0 and nbits <= 8 or nbits == 16 or nbits==32):
             raise Exception('Only half precision (16-bit), 1 to 8-bit '
                     'quantization is supported')
 
