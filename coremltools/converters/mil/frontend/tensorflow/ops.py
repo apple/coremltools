@@ -72,11 +72,11 @@ def All(context, node):
 @register_tf_op
 def Any(context, node):
     x = context[node.inputs[0]]
-    axes = context[node.inputs[1]]
+    axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get('keep_dims', False)
-    x = mb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
+    x = mb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims)
+    x = mb.greater(x=x, y=0., name=node.name)
     context.add(node.name, x)
-
 
 @register_tf_op
 def ArgMax(context, node):
@@ -204,7 +204,7 @@ def Ceil(context, node):
 @register_tf_op
 def Const(context, node):
     if node.value is None:
-        raise ValueError('Const node {} cannot have no value'.format(
+        raise ValueError("Const node '{}' cannot have no value".format(
             node.name))
     mode = get_const_mode(node.value.val)
     x = mb.const(val=node.value.val, mode=mode, name=node.name)
@@ -602,7 +602,7 @@ def ExpandDims(context, node):
     context.add(node.name, x)
 
 
-@register_tf_op(tf_alias=['FusedBatchNormV2'])
+@register_tf_op(tf_alias=['FusedBatchNormV2', 'FusedBatchNormV3'])
 def FusedBatchNorm(context, node):
     # Get attributes
     data_format = node.attr.get('data_format', 'NHWC')
@@ -930,9 +930,9 @@ def StridedSlice(context, node):
 
         # pad begin and end if they are determined during compile time
         if begin != []:
-            begin = pad_array(begin, max_rank, idx, 0)
+            begin = pad_array(begin, rank, idx, 0)
         if end != []:
-            end = pad_array(end, max_rank, idx, 0)
+            end = pad_array(end, rank, idx, 0)
 
         # make sure begin_mask, end_mask, and stride are consistent with ellipsis mask
         # begin_mask and end_mask should be True, and stride should be 1.
@@ -953,7 +953,6 @@ def StridedSlice(context, node):
         # This happens when the given index is less than the tensor rank,
         # for instance, indexing a 3D tensor A with A[:1, :1] is equivalent to
         # A[:1, :1, :]. In this case we should append True to begin_mask and end_mask
-
         if ellipsis_mask == [False]*x_rank:
             for i in range(max_rank, x_rank):
                 begin_mask[i] = True
@@ -1757,6 +1756,31 @@ def SplitV(context, node):
         x = mb.split(x=x, num_splits=num_splits, split_sizes=split_sizes,
                 axis=axis, name=node.name)
         context.add(node.name, x)
+
+@register_tf_op
+def ScatterNd(context, node):
+    indices = context[node.inputs[0]]
+    updates = context[node.inputs[1]]
+    shape = context[node.inputs[2]]
+    x = mb.fill(shape=shape, value=0)
+    x = mb.scatter_nd(data=x, indices=indices, updates=updates, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def ZerosLike(context, node):
+    x = context[node.inputs[0]]
+    if x.rank == 0:
+        x = mb.const(val=0., name=node.name)
+    else:
+        shape = mb.shape(x=x)
+        x = mb.fill(shape=shape, value=0, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def IsFinite(context, node):
+    x = context[node.inputs[0]]
+    x = mb.isfinite(x=x, name=node.name)
+    context.add(node.name, x)
 
 @register_tf_op
 def Split(context, node):

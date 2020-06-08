@@ -107,7 +107,7 @@ class Builder:
             if in_name in kwargs and isinstance(kwargs[in_name], Var):
                 # check const
                 if in_type.const and kwargs[in_name].val is None:
-                    msg = "Input {} of op {} ({}) must be const at compile time."
+                    msg = "Input '{}' of op '{}' ({}) must be const at compile time."
                     raise ValueError(
                         msg.format(in_name, op_name, op_cls.__name__))
 

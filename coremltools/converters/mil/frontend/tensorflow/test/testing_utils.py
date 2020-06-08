@@ -1,4 +1,5 @@
 import six
+from coremltools import TensorType
 import pytest
 tf = pytest.importorskip('tensorflow', minversion='1.14.0')
 from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
@@ -87,7 +88,8 @@ def get_tf_node_names(tf_nodes, mode='inputs'):
             names.append(name)
     return names
 
-def tf_graph_to_proto(graph, feed_dict, output_nodes, backend='nn_proto'):
+
+def tf_graph_to_proto(graph, feed_dict, output_nodes, frontend='tensorflow', backend='nn_proto'):
     """
     Parameters
     ----------
@@ -97,6 +99,8 @@ def tf_graph_to_proto(graph, feed_dict, output_nodes, backend='nn_proto'):
         Dict of placeholder and value pairs representing inputs.
     output_nodes: tf.node or list[tf.node]
         List of names representing outputs.
+    frontend: str
+        Frontend to convert from.
     backend: str
         Backend to convert to.
     -----------
@@ -112,10 +116,12 @@ def tf_graph_to_proto(graph, feed_dict, output_nodes, backend='nn_proto'):
     output_names = get_tf_node_names(output_nodes, mode='outputs')
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
+    inputs = [TensorType(name=input_name) for input_name in input_names]
     mlmodel = converter.convert(
         graph,
-        inputs=input_names,
+        inputs=inputs,
         outputs=output_names,
+        source=frontend,
         convert_to=backend)
 
     proto = mlmodel.get_spec()
@@ -126,7 +132,7 @@ def load_tf_pb(pb_file):
     Loads a pb file to tf.Graph
     """
     # We load the protobuf file from the disk and parse it to retrieve the
-    # unserialized graph_def
+    # unsterilized graph_def
     with tf.io.gfile.GFile(pb_file, "rb") as f:
         graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
@@ -171,7 +177,7 @@ def run_compare_tf(
         If true, skip element-wise value comparision.
     """
     proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
-            graph, feed_dict, output_nodes, backend)
+            graph, feed_dict, output_nodes, frontend, backend)
 
     if frontend_only:
         return
@@ -185,7 +191,6 @@ def run_compare_tf(
         checkpoint_file = os.path.join(model_dir, 'tf_model.ckpt')
         static_model_file = os.path.join(model_dir, 'tf_static.pb')
         coreml_model_file = os.path.join(model_dir, 'coreml_model.mlmodel')
-
 
         with tf.Session(graph=graph) as sess:
             sess.run(tf.global_variables_initializer())
@@ -210,13 +215,12 @@ def run_compare_tf(
 
         # Need to convert again using frozen graph
         proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
-                graph, feed_dict, output_nodes, backend)
+                graph, feed_dict, output_nodes, frontend, backend)
     else:
         with tf.Session(graph=graph) as sess:
             sess.run(tf.global_variables_initializer())
             tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
     expected_outputs = {name: val for name, val in zip(output_names, tf_outputs)}
-
 
     if validate_shapes_only:
         compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)
@@ -224,3 +228,5 @@ def run_compare_tf(
         compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)
         compare_backend(proto, input_key_values, expected_outputs,
                         use_cpu_only, atol=atol, rtol=rtol)
+
+    return proto

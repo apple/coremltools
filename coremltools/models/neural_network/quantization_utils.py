@@ -1465,11 +1465,6 @@ def activate_int8_int8_matrix_multiplications(spec, selector=None):
                 layer_type = layer.WhichOneof("layer")
                 if not selector.do_quantize(layer):
                     continue
-                print(
-                    "Modifying layer {} to use Int8 * Int8 matrix multiplication".format(
-                        layer.name
-                    )
-                )
 
                 if layer_type == "branch":
                     _process_nn_layers(layer.branch.ifBranch)
@@ -1499,6 +1494,12 @@ def activate_int8_int8_matrix_multiplications(spec, selector=None):
                         continue
                     else:
                         qw, qs = _quantized_weight_and_scale(wp.floatValue)
+
+                    print(
+                        "Modifying layer {} with size of weights {}, to use Int8 * Int8 matrix multiplication".format(
+                            layer.name, qw.size
+                        )
+                    )
 
                     matmul_layer.int8DynamicQuantize = True
                     wp.quantization.numberOfBits = 8

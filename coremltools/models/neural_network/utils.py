@@ -57,7 +57,7 @@ def make_image_input(model,
 def make_nn_classifier(model,
                        class_labels,
                        predicted_feature_name=None,
-                       predicted_probabilities_output=""):
+                       predicted_probabilities_output=None):
 
     '''
     Convert a model of type "neuralNetwork" to type "neuralNetworkClassifier"
@@ -111,12 +111,12 @@ def make_nn_classifier(model,
     else:
         raise ValueError(message)
 
+    kwargs = {}
     if predicted_feature_name is not None:
-        builder.set_class_labels(
-            classes, predicted_feature_name=predicted_feature_name,
-            prediction_blob=predicted_probabilities_output)
-    else:
-        builder.set_class_labels(classes)
+        kwargs['predicted_feature_name'] = predicted_feature_name
+    if predicted_probabilities_output is not None:
+        kwargs['prediction_blob'] = predicted_probabilities_output
+    builder.set_class_labels(classes, **kwargs)
 
     return _get_model(spec)
 

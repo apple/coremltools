@@ -4,12 +4,12 @@ import tempfile
 
 import pytest
 import coremltools.converters as converter
+from coremltools.converters.mil.input_types import TensorType
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import get_tf_keras_io_names
 from coremltools.converters.mil.frontend.tensorflow.test import testing_utils as tf_testing_utils
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
     make_tf2_graph, run_compare_tf2,
 )
-from coremltools.models import MLModel
 
 tf = pytest.importorskip('tensorflow', minversion='2.1.0')
 
@@ -23,11 +23,11 @@ tf_testing_utils.run_compare_tf = run_compare_tf2
 # Import TF 2.x-compatible TF 1.x test cases
 from coremltools.converters.mil.frontend.tensorflow.test.test_load import (
     frontend,
-    # TestModelInputsOutputs   <rdar://problem/63032120> TF2: Extract sub-graph from TF graph
+    TestTf1ModelInputsOutputs as TestTf2ModelInputsOutputs
 )
 
 
-class TestModelFormats:
+class TestTf2ModelFormats:
 
     def setup(self):
         self.saved_model_dir = tempfile.mkdtemp()
@@ -47,7 +47,7 @@ class TestModelFormats:
         input_names, output_names = get_tf_keras_io_names(keras_model)
         mlmodel = converter.convert(
             keras_model,
-            inputs=[(input_names[0], (3, 4, 5))],
+            inputs=[TensorType(input_names[0], (3, 4, 5))],
             outputs=['Identity'],
             source=frontend)
         assert mlmodel is not None
@@ -70,7 +70,7 @@ class TestModelFormats:
         keras_model.save(self.model_path_h5, save_format='h5')
         mlmodel = converter.convert(
             self.model_path_h5,
-            inputs=[(input_names[0], (3, 4, 5))],
+            inputs=[TensorType(input_names[0], (3, 4, 5))],
             outputs=['Identity'],
             source=frontend)
         assert mlmodel is not None

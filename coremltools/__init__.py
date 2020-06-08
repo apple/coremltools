@@ -58,6 +58,9 @@ from .models import utils
 
 from ._scripts.converter import _main
 
+# expose unified converter in coremltools package level
+from .converters import convert
+from .converters import ClassifierConfig, TensorType, ImageType, RangeDim, Shape, EnumeratedShapes
 
 # Time profiling for functions in coremltools package, decorated with @profile
 import os, sys

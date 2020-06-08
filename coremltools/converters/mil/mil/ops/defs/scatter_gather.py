@@ -1,4 +1,5 @@
 from coremltools.converters.mil.mil import (SYMBOL, VALUE)
+from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
 from ._op_reqs import *
 
 @register_op(doc_str="TODO")
@@ -176,5 +177,5 @@ class scatter_nd(Operation):
     def type_inference(self):
         assert self.indices.shape[-1] <= self.data.rank
         expected_updates_shape = self.indices.shape[:-1] + self.data.shape[self.indices.shape[-1]:]
-        assert self.updates.shape == tuple(expected_updates_shape)
+        assert is_compatible_symbolic_vector(self.updates.shape, tuple(expected_updates_shape))
         return self.data.sym_type

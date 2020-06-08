@@ -51,12 +51,12 @@ class lstm(Operation):
             x = TensorInputType(),
             initial_h = TensorInputType(),
             initial_c = TensorInputType(),
-            weight = TensorInputType(const=True),
-            bias = TensorInputType(const=True, optional=True, default=None),
+            weight = TensorInputType(const=True), # ifoz layout
+            bias = TensorInputType(const=True, optional=True, default=None), # ifoz layout
             direction = StringInputType(const=True, default="forward"),
             output_sequence = BoolInputType(const=True, default=False),
             activations = TupleInputType(const=True, default=("sigmoid", "tanh", "tanh")),
-            peephole = TensorInputType(const=True, optional=True, default=None),
+            peephole = TensorInputType(const=True, optional=True, default=None), # ifo layout
             clip = FloatInputType(const=True, optional=True, default=None)
             )
 

@@ -36,18 +36,18 @@ class TestScatter:
                             backend=backend)
 
     @pytest.mark.skipif(not HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
-    @pytest.mark.parametrize("use_cpu_only, backend, rankData_rankIndices_axis, accumulate_mode",
+    @pytest.mark.parametrize("use_cpu_only, backend, rankData_rankIndices, accumulate_mode",
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [(1,2,-1), (2,1,0), (3,2,-2), (2,3,1), (2,2,1), (1,1,0),
-                                  (3,3,-2), (3,3,2), (3,3,0), (1,3,-1), (3,1,2), (3,1,-1)],
+                                 [(1,2), (2,1), (3,2), (2,3), (2,2), (1,1),
+                                  (3,3), (3,3), (3,3), (1,3), (3,1), (3,1)],
                                  ["update", "add", "sub", "mul", "div", "max", "min"]
                              )
                              )
     def test_builder_to_backend_programmatic(self, use_cpu_only, backend,
-                                             rankData_rankIndices_axis, accumulate_mode):
-        data_rank, indices_rank, axis = rankData_rankIndices_axis
+                                             rankData_rankIndices, accumulate_mode):
+        data_rank, indices_rank = rankData_rankIndices
         data_shape = np.random.randint(low=2, high=5, size=data_rank)
         indices_shape = np.random.randint(low=2, high=5, size=indices_rank)
         updates_shape = list(indices_shape) + list(data_shape[1:])

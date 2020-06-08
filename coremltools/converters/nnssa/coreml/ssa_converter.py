@@ -95,9 +95,11 @@ def ssa_convert(ssa,
       Optional and valid if image_input_names is also set. Specify either 'NCHW' or 'NHWC' to set or
       override the image format. If not set, tries to use hints from the graph which may be present in convolution or
       other image-specific layers. Ultimately defaults to NHWC.
-    optional_inputs: Dict of str -> float
+    optional_inputs: Dict of str -> float / None
         Specify the name of inputs which are optional and their default fill value to be used in case those inputs are
         not provided.
+        With CoreML 4, you can set default value to fill optional input with. But, if you intend to work with CoreML 3 or less,
+        instead pass None instead of setting default fill value.
     """
     if not custom_conversion_functions:
         custom_conversion_functions = dict()
@@ -354,11 +356,7 @@ class SSAConverter(object):
                 set_multiarray_ndshape_range(self.spec, input_name, lower_bounds=lower_bounds, upper_bounds=upper_bounds)
 
             if is_input_optional[idx]:
-                self.spec.description.input[idx].type.isOptional = True
-                if use_float_arraytype:
-                    self.spec.description.input[idx].type.multiArrayType.floatDefaultValue = optional_inputs[top_input_names[idx]]
-                else:
-                    self.spec.description.input[idx].type.multiArrayType.doubleDefaultValue = optional_inputs[top_input_names[idx]]
+                self.top_builder.set_optional_input(idx, optional_inputs[top_input_names[idx]], 'float' if use_float_arraytype else 'double')
 
         self.CONVERT_FUNCTION_MAP = {
             'Abs': self._convert_unary_common,

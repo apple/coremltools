@@ -162,8 +162,6 @@ int testNNValidatorBadOutput2() {
     return 0;
 }
 
-
-
 int testNNValidatorAllOptional() {
 
     Specification::Model m1;
@@ -173,6 +171,9 @@ int testNNValidatorAllOptional() {
     auto type = topIn->mutable_type();
     type->mutable_multiarraytype();
     type->set_isoptional(true);
+    auto arr = type->mutable_multiarraytype();
+    arr->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_INT32);
+    arr->set_floatdefaultvalue(2.0);
 
     auto *out = m1.mutable_description()->add_output();
     out->set_name("B");
@@ -241,6 +242,158 @@ int testInvalidDefaultOptionalValue() {
     ML_ASSERT_BAD(res);
     ML_ASSERT(res.message().find("mistmatch between dataType and the type") != std::string::npos);
 
+    return 0;
+}
+
+int testDefaultOptionalValueZeroIfNotSet() {
+
+    Specification::Model m;
+
+    auto *in1 = m.mutable_description()->add_input();
+    in1->set_name("input1");
+    auto *inShape1 = in1->mutable_type()->mutable_multiarraytype();
+    inShape1->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+
+    inShape1->add_shape(3);
+    inShape1->add_shape(5);
+    inShape1->add_shape(2);
+
+    auto *in2 = m.mutable_description()->add_input();
+    in2->set_name("input2");
+    auto type = in2->mutable_type();
+    type->set_isoptional(true);
+    auto arr = type->mutable_multiarraytype();
+    arr->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_INT32);
+    // Not set default value which should raise error!
+
+    arr->add_shape(3);
+    arr->add_shape(5);
+    arr->add_shape(2);
+
+    auto *out = m.mutable_description()->add_output();
+    out->set_name("output");
+    auto *outShape = out->mutable_type()->mutable_multiarraytype();
+    outShape->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    outShape->add_shape(3);
+    outShape->add_shape(5);
+    outShape->add_shape(1);
+
+    const auto nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    auto *layers = nn->add_layers();
+    layers->add_input("input1");
+    layers->add_output("output");
+    layers->add_inputtensor()->set_rank(3);
+
+    auto *params = layers->mutable_stack();
+    params->set_axis(2);
+
+    m.set_specificationversion(5);
+    ML_ASSERT(m.description().input(1).type().multiarraytype().intdefaultvalue() == 0);
+    return 0;
+}
+
+int testDefaultOptionalValueOnUnsupportedSpec() {
+
+    Specification::Model m;
+
+    auto *in1 = m.mutable_description()->add_input();
+    in1->set_name("input1");
+    auto *inShape1 = in1->mutable_type()->mutable_multiarraytype();
+    inShape1->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+
+    inShape1->add_shape(3);
+    inShape1->add_shape(5);
+    inShape1->add_shape(2);
+
+    auto *in2 = m.mutable_description()->add_input();
+    in2->set_name("input2");
+    auto type = in2->mutable_type();
+    type->set_isoptional(true);
+    auto arr = type->mutable_multiarraytype();
+    arr->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_INT32);
+    arr->set_intdefaultvalue(2);
+    arr->add_shape(3);
+    arr->add_shape(5);
+    arr->add_shape(2);
+
+    auto *out = m.mutable_description()->add_output();
+    out->set_name("output");
+    auto *outShape = out->mutable_type()->mutable_multiarraytype();
+    outShape->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    outShape->add_shape(3);
+    outShape->add_shape(5);
+    outShape->add_shape(1);
+
+    const auto nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    auto *layers = nn->add_layers();
+    layers->add_input("input1");
+    layers->add_output("output");
+    layers->add_inputtensor()->set_rank(3);
+
+    auto *params = layers->mutable_stack();
+    params->set_axis(2);
+
+    m.set_specificationversion(4);
+    // axis should be in range [-(rank + 1), rank + 1)
+    Result res = Model::validate(m);
+    ML_ASSERT_BAD(res);
+    ML_ASSERT(res.message().find("Default value for optional inputs is supported from specification 5 (iOS 14)") != std::string::npos);
+
+    return 0;
+}
+
+int testDefaultOptionalValueGood() {
+
+    Specification::Model m;
+
+    auto *in1 = m.mutable_description()->add_input();
+    in1->set_name("input1");
+    auto *inShape1 = in1->mutable_type()->mutable_multiarraytype();
+    inShape1->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    inShape1->add_shape(3);
+    inShape1->add_shape(5);
+    inShape1->add_shape(2);
+
+    auto *in2 = m.mutable_description()->add_input();
+    in2->set_name("input2");
+    auto type = in2->mutable_type();
+    type->set_isoptional(true);
+    auto arr = type->mutable_multiarraytype();
+    arr->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_INT32);
+    arr->set_intdefaultvalue(2);
+    arr->add_shape(3);
+    arr->add_shape(5);
+    arr->add_shape(2);
+
+    auto *out = m.mutable_description()->add_output();
+    out->set_name("output");
+    auto *outShape = out->mutable_type()->mutable_multiarraytype();
+    outShape->set_datatype(Specification::ArrayFeatureType::ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    outShape->add_shape(3);
+    outShape->add_shape(5);
+    outShape->add_shape(1);
+
+    const auto nn = m.mutable_neuralnetwork();
+    nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
+
+    auto *layers = nn->add_layers();
+    layers->add_input("input1");
+    layers->add_input("input2");
+    layers->add_output("output");
+    layers->add_inputtensor()->set_rank(3);
+    layers->add_inputtensor()->set_rank(3);
+
+    auto *params = layers->mutable_stack();
+    params->set_axis(2);
+
+    m.set_specificationversion(5);
+    // axis should be in range [-(rank + 1), rank + 1)
+    Result res = Model::validate(m);
+    ML_ASSERT_GOOD(res);
     return 0;
 }
 

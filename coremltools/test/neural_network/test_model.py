@@ -314,7 +314,6 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(out_dict['out_confidence'], 'c')
         self.assertEqual(mlmodel.get_spec().WhichOneof("Type"), 'neuralNetworkClassifier')
 
-    @pytest.mark.xfail(reason='rdar://63451440')
     def test_nn_classifier_util_file(self):
         input_features = [('data', datatypes.Array(3,))]
         output_features = [('out', datatypes.Array(3, ))]
@@ -322,9 +321,14 @@ class MLModelTest(unittest.TestCase):
         builder.add_activation('linear', 'LINEAR', 'data', 'out')
         spec = builder.spec
         mlmodel = MLModel(spec)
-        mlmodel = make_nn_classifier(mlmodel, class_labels="class_label_sample.txt",
-                                     predicted_feature_name='out_confidence',
-                                     predicted_probabilities_output='out')
+
+        class_labels=['a', 'b', 'c']
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt') as f:
+            f.write('\n'.join(class_labels))
+            f.flush()
+            mlmodel = make_nn_classifier(mlmodel, class_labels=f.name,
+                                         predicted_feature_name='out_confidence',
+                                         predicted_probabilities_output='out')
         out_dict = mlmodel.predict({'data': np.array([4.0, 5.5, 6.0])}, useCPUOnly=True)
         self.assertEqual(out_dict['out_confidence'], 'c')
         self.assertEqual(mlmodel.get_spec().WhichOneof("Type"), 'neuralNetworkClassifier')

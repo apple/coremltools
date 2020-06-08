@@ -23,3 +23,4 @@ xgboost
 mock
 wrapt
 pyyaml
+tqdm

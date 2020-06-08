@@ -1,5 +1,5 @@
 import math
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic, is_compatible_symbolic_vector
 from coremltools.converters.mil.mil import (
     get_new_symbol, get_new_variadic_symbol, SYMBOL, VALUE, NONE)
 from ._op_reqs import *
@@ -757,13 +757,22 @@ class stack(Operation):
         super(stack, self).__init__(**kwargs)
 
     def type_inference(self):
+
         num_tensors = len(self.values)
         if num_tensors == 0:
             raise ValueError('Cannot stack 0 tensor')
 
-        t_shape = self.values[0].shape
-        for t in self.values[1:]:
-            if t.shape != t_shape:
+        # get the first value without symbolic shape
+        t_shape = None
+        for value in self.values:
+            if not any_symbolic(value.shape):
+                t_shape = value.shape
+                break
+        t_shape = self.values[0].shape if t_shape is None else t_shape
+
+        # compare all shape
+        for t in self.values:
+            if not is_compatible_symbolic_vector(t.shape, t_shape):
                 msg = 'Component tensor {} has shape {}, others have {}'
                 raise ValueError(msg.format(t.name, t.shape, t_shape))
         ret_shape = list(t_shape)
@@ -812,3 +821,19 @@ class addn(Operation):
     def value_inference(self):
         inputs = np.array([v.val for v in self.values])
         return np.sum(inputs, axis=0)
+
+@register_op(doc_str="TODO")
+class isfinite(Operation):
+    input_spec = InputSpec(
+        x = ScalarOrTensorInputType(),
+    )
+
+    def __init__(self, **kwargs):
+        super(isfinite, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return types.tensor(types.bool, list(self.x.shape))
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        return np.isfinite(self.x.val)

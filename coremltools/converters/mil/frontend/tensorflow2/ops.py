@@ -8,7 +8,6 @@ from coremltools.converters.mil.frontend.tensorflow.ops import (
 # semantics are different between TF 1.x and TF 2.x.<
 from coremltools.converters.mil.frontend.tensorflow.ops import *
 from coremltools.converters.mil.frontend.tensorflow.dialect_ops import *
-from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import register_tf_op
 
 
 @register_tf_op(override=True)

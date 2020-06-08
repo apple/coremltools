@@ -4,6 +4,7 @@ import logging
 from . import SPACES, types
 from .var import Var, InternalVar
 from .visitors.dot_visitor import DotVisitor
+from .types.symbolic import k_used_symbols, k_num_internal_syms
 
 # BLOCK_STACK[-1] is the current block
 BLOCK_STACK = []
@@ -1214,6 +1215,15 @@ class Function(Block):
             v.set_name(k)  # set to user input name
             self._input_dict[k] = v.outputs[0]
         self.function_inputs = tuple(self._input_dict.values())
+
+        global k_used_symbols
+        global k_num_internal_syms
+        for inp in self.function_inputs:
+            if types.is_tensor(inp.dtype):
+                shapes = inp.dtype.get_shape()
+                for s in shapes:
+                    if is_symbolic(s):
+                        k_used_symbols.add(s)
         super(Function, self).__init__()
 
     # Override Block's input

@@ -94,10 +94,18 @@ class TestMatMul:
                 mb.matmul(x=x_val, y=y),
                 mb.matmul(x=x,y=y_val),
                 mb.matmul(x=x, y=y),
-                mb.matmul(x=x, y=y, transpose_x=True, transpose_y=True)
+                mb.matmul(x=x, y=y, transpose_x=True, transpose_y=True),
+                mb.matmul(x=x_val, y=y, transpose_x=True, transpose_y=True),
+                mb.matmul(x=x, y=y_val, transpose_x=True, transpose_y=True),
+                mb.matmul(x=x, y=y_val, transpose_x=True, transpose_y=False),
+                mb.matmul(x=x, y=y_val, transpose_x=False, transpose_y=True)
             ]
 
         expected_output_types = [
+            (2, 2, types.fp32),
+            (2, 2, types.fp32),
+            (2, 2, types.fp32),
+            (2, 2, types.fp32),
             (2, 2, types.fp32),
             (2, 2, types.fp32),
             (2, 2, types.fp32),
@@ -107,7 +115,11 @@ class TestMatMul:
             np.array([[-17., -76.], [-12., -51.]], dtype=np.float32),
             np.array([[-17., -76.], [-12., -51.]], dtype=np.float32),
             np.array([[-17., -76.], [-12., -51.]], dtype=np.float32),
-            np.array([[17., 28.], [-50., -85.]], dtype=np.float32)
+            np.array([[17., 28.], [-50., -85.]], dtype=np.float32),
+            np.array([[17., 28.], [-50., -85.]], dtype=np.float32),
+            np.array([[17., 28.], [-50., -85.]], dtype=np.float32),
+            np.array([[-1., 52.], [4., -163.]], dtype=np.float32),
+            np.array([[-95., -100.],[-66., -69.]], dtype=np.float32)
         ]
 
         run_compare_builder(build, input_placeholders, input_values,

@@ -7,9 +7,12 @@ import sympy as sm
 from . import types
 from .block import Function
 from .var import Var
+from .types.symbolic import k_used_symbols, k_num_internal_syms
+from coremltools.converters.mil.input_types import InputType
 
 class Program(object):
     def __init__(self):
+        self.main_input_types = {}
         self.functions = {}
         self.parameters = {}
 
@@ -20,6 +23,13 @@ class Program(object):
 
     def add_parameters(self, name, ssa_val):
         raise NotImplementedError()
+
+    def set_main_input_types(self, inputs):
+        if not isinstance(inputs, tuple):
+            raise ValueError("main inputs should be tuple of TensorType or ImageType")
+        elif not all([isinstance(inp, InputType) for inp in inputs]):
+            raise ValueError("main inputs should be tuple of InputSpec")
+        self.main_input_types = inputs
 
     def find_ops(self, prefix=None, op_type=None, exactly_one=False):
         """
@@ -101,9 +111,6 @@ class Placeholder(object):
         return str(self.outputs[0])
 
 
-k_used_symbols = set()
-k_num_internal_syms = 0
-
 def get_new_variadic_symbol():
     global k_num_internal_syms
     s = Symbol('*is' + str(k_num_internal_syms))
@@ -149,6 +156,7 @@ class Symbol(sm.Symbol):
         if not (sym_name[0].isalpha() or sym_name[0] == '*'):
             msg = 'Symbol name must start with a letter or *. Got {}'
             raise ValueError(msg.format(sym_name))
+        global k_used_symbols
         if sym_name in k_used_symbols:
             msg = 'Symbol `{}` is used already.'
             raise ValueError(msg.format(sym_name))

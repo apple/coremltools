@@ -149,7 +149,7 @@ class TestTorchOps:
             context, op_func, node, output_name, constants=constants
         )
         expected_result = torch_func(test_input).numpy()
-        assert np.allclose(expected_result, ssa.val, atol=atol)
+        np.testing.assert_allclose(expected_result, ssa.val, atol=atol)
 
     def test_add(self, context):
         test_input_1 = np.random.rand(2, 3)
@@ -915,7 +915,7 @@ class TestTorchOps:
         assert ssa.shape == tuple(test_input.shape)
 
     @pytest.mark.parametrize(
-        "min_val, max_val", [(-1.0, 1.0), (0, 0.1), (1.0, 3.0), (-1.0, 6.0),]
+        "min_val, max_val", [(-1.0, 1.0), (0.0, 0.1), (1.0, 3.0), (-1.0, 6.0),]
     )
     def test_hardtanh(self, context, min_val, max_val):
         self._test_activation(

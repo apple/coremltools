@@ -5,6 +5,7 @@ import logging
 
 import torch
 
+from coremltools.converters.mil.input_types import InputType, ImageType
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import (
@@ -18,11 +19,13 @@ from .internal_graph import *
 from .ops import *
 from .torch_op_registry import _TORCH_OPS_REGISTRY
 
-torch_to_proto_types = {
+torch_to_mil_types = {
     torch.float32: types.fp32,
     torch.int32: types.int32,
     torch.int64: types.int64,
 }
+
+mil_to_torch_types = {v: k for k, v in torch_to_mil_types.items()}
 
 
 class TranscriptionContext:
@@ -121,9 +124,12 @@ class TorchConverter:
         self, torchscript, inputs, outputs=None, cut_at_symbols=None,
     ):
         assert isinstance(torchscript, torch.jit.ScriptModule)
-        _tensorified_inputs = self._tensorify_inputs(inputs)
-        self.inputs = self._remove_names(_tensorified_inputs)
-        self.input_names = self._extract_names(_tensorified_inputs)
+        self.inputs = self._tensorify_inputs(inputs)
+        self.input_names = self._extract_names(inputs)
+        self.input_types = self._flatten_inputs(inputs)
+        for idx, inp in enumerate(self.input_types):
+            if isinstance(inp, ImageType):
+                self.input_types[idx].channel_first = True
         self.torchscript = torchscript
         self.output_names = outputs
         self.context = TranscriptionContext()
@@ -134,60 +140,55 @@ class TorchConverter:
         self._flatten_graph_input_values()
         self._flatten_graph_output_values()
 
+    def _flatten_inputs(self, inputs):
+        """
+            Recursively flatten input into a list.
+        """
+        input_type = []
+        for _input in inputs:
+            if isinstance(_input, (list, tuple)):
+                input_type.extend(self._flatten_inputs(_input))
+            elif isinstance(_input, InputType):
+                input_type.append(_input)
+            else:
+                raise ValueError(
+                    "Unknown type {} for flattening into InputType.".format(
+                        type(_input)
+                    )
+                )
+        return input_type
+
     def _extract_names(self, inputs):
         """
-            Recursively search for named tuples and extract them into a flattened list.
+            Recursively search for names and extract them into a flattened list.
             Filling in unnamed tensors with None.
         """
         names = []
         for _input in inputs:
-            if isinstance(_input, list):
+            if isinstance(_input, (list, tuple)):
                 names.extend(self._extract_names(_input))
-            elif isinstance(_input, tuple):
-                if isinstance(_input[0], str):
-                    # this is a named tensor
-                    name = _input[0]
-                    if isinstance(_input[1], tuple):
-                        raise ValueError(
-                            "You cannot name a tuple of input tensors/shapes, "
-                            "only one tensor/shape can be named. "
-                            "Violating name: {}".format(name)
-                        )
-                    names.append(_input[0])
-                else:
-                    names.extend(self._extract_names(_input))
+            elif isinstance(_input, InputType):
+                names.append(_input.name)
             else:
-                names.append(None)
+                raise ValueError(
+                    "Unknown type {} for extracting name.".format(type(_input))
+                )
         return names
-
-    def _remove_names(self, inputs):
-        """
-            Recursively search for named tuples and remove the name from
-            the tuple.
-        """
-        if isinstance(inputs, list):
-            return [self._remove_names(x) for x in inputs]
-        elif isinstance(inputs, tuple):
-            if isinstance(inputs[0], str):
-                # this is a named tensor, remove the name
-                if len(inputs) > 2:
-                    return tuple(self._remove_names(x) for x in inputs[1:])
-                else:
-                    return inputs[-1]
-        return inputs
 
     def _tensorify_inputs(self, inputs):
         """ 
-            Recursivly searches for size tuples and turns them into tensors.
+            Recursivly searches for Specs and turns them into tensors.
         """
         if isinstance(inputs, list):
             return [self._tensorify_inputs(x) for x in inputs]
-        if isinstance(inputs, tuple):
-            if all([isinstance(x, int) for x in inputs]):
-                return torch.zeros(inputs, dtype=torch.float32)
-            else:
-                return tuple((self._tensorify_inputs(x) for x in inputs))
-        return inputs
+        elif isinstance(inputs, tuple):
+            return tuple([self._tensorify_inputs(x) for x in inputs])
+        elif isinstance(inputs, InputType):
+            return torch.zeros(
+                inputs.shape.default, dtype=mil_to_torch_types[inputs.dtype]
+            )
+        else:
+            raise ValueError("Unknown type {} for tensorify.".format(type(inputs)))
 
     def _flatten_graph_input_values(self):
         """ CoreML can't handle nested iterables of tensors, so we flatten the
@@ -277,14 +278,6 @@ class TorchConverter:
         self.graph.outputs = new_graph_outputs
 
     @staticmethod
-    def _create_placeholder(_input):
-        """Converts a torch.Tensor into a Placeholder.
-        """
-        shape = _input.shape
-        dtype = torch_to_proto_types[_input.dtype]
-        return mb.placeholder(shape, dtype=dtype)
-
-    @staticmethod
     def _check_ops(graph):
         """ Returns the set of ops in @graph that are implemented, and the set
             for which no conversion function is registered. @graph can be
@@ -308,7 +301,7 @@ class TorchConverter:
         """Converts a torch.Tensor into a Placeholder.
         """
         shape = _input.shape
-        dtype = torch_to_proto_types[_input.dtype]
+        dtype = torch_to_mil_types[_input.dtype]
         return mb.placeholder(shape, dtype=dtype)
 
     def check_ops(self):
@@ -323,28 +316,30 @@ class TorchConverter:
         # This will hold the converted model.
         prog = Program()
 
-        # Construct placeholder for input to graph
+        # Construct placeholder for input to ssa function
         # This is where input renaming occurs
-        graph_inputs = OrderedDict()
+        ssa_func_inputs = OrderedDict()
         internal_graph_names = [name for name in self.graph.inputs.keys()]
         for index, (name, value) in enumerate(self.graph.inputs.items()):
             placeholder = self._create_placeholder(value)
             if self.input_names[index] is not None:
-                # set graph input name to user defined name
+                # set ssa function input name to user defined name
                 name = self.input_names[index]
             else:
-                # set graph input name to internal graph name
+                # set ssa function input name to internal graph name
                 name = internal_graph_names[index]
-            graph_inputs[name] = placeholder
+                self.input_types[index].name = name
+            ssa_func_inputs[name] = placeholder
+        prog.set_main_input_types(tuple(self.input_types))
 
         # Initialize the SSA for conversion
-        with Function(graph_inputs) as ssa_func:
+        with Function(ssa_func_inputs) as ssa_func:
 
-            # Map internal @self.graph.inputs to user specified @graph_inputs
-            # If @self.graph.inputs == graph_inputs this just adds the inputs
+            # Map internal @self.graph.inputs to user specified @ssa_func_inputs
+            # If @self.graph.inputs == @ssa_func_inputs this just adds the inputs
             # to the context.
             for internal_name, users_name in zip(
-                self.graph.inputs.keys(), graph_inputs.keys()
+                self.graph.inputs.keys(), ssa_func_inputs.keys()
             ):
                 self.context.add(ssa_func.inputs[users_name], torch_name=internal_name)
             for name, val in self.graph.params.items():

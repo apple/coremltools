@@ -75,6 +75,7 @@ setup(name='coremltools',
           'sympy',
           'scipy',
           'enum34;python_version < "3.4"',
+          'tqdm',
       ],
       entry_points={
           'console_scripts': ['coremlconverter = coremltools:_main']

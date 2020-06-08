@@ -436,25 +436,15 @@ bool CoreML::hasIOS13Features(const Specification::Model& model) {
     return false;
 }
 
-bool CoreML::hasNonZeroOptionalValues(const Specification::Model& model) {
+bool CoreML::hasDefaultValueForOptionalInputs(const Specification::Model& model) {
+    // Checks if default optional value has been set or not
     for (const auto& input: model.description().input()) {
         if (input.type().isoptional()){
             switch (input.type().multiarraytype().defaultOptionalValue_case()) {
                 case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
-                    if (input.type().multiarraytype().doubledefaultvalue() != 0.0){
-                        return true;
-                    }
-                    break;
                 case CoreML::Specification::ArrayFeatureType::kFloatDefaultValue:
-                    if (input.type().multiarraytype().floatdefaultvalue() != 0.0){
-                        return true;
-                    }
-                    break;
                 case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
-                    if (input.type().multiarraytype().intdefaultvalue() != 0){
                         return true;
-                    }
-                    break;
                 default:
                     break;
             }
@@ -510,7 +500,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
             break;
         case Specification::Model::kPipelineRegressor:
             for (auto &m : model.pipelineregressor().pipeline().models()) {
-                result = result ||hasIOS14Features(m);
+                result = result || hasIOS14Features(m);
                 if (result) {
                     return true;
                 }
@@ -783,7 +773,7 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
     // Return True if the model has the new Neural network features added in
     // ios 14
 
-    if (hasNonZeroOptionalValues(model)) {
+    if (hasDefaultValueForOptionalInputs(model)) {
         return true;
     }
 

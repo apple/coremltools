@@ -11,17 +11,21 @@ import time
 
 from datetime import date
 from onnx_coreml import convert as onnx_convert
+import sys
+import os
 
-# NOTE: Useful function below to append to sys path to get imports from
-# elsewhere on your machine.
-# import sys
-# sys.path.append("/Users/paul_curry/onnx_conversion/deeplab-pytorch")
+pwd = os.getcwd()
+split = pwd.split("/")
+coreml_folder = "/".join(split[0 : split.index("coremltools")]) + "/"
+sys.path.append(pwd + "pytorch_tiramisu/")
+sys.path.append(pwd + "deeplab-pytorch/")
+sys.path.append(pwd + "pretrained-models.pytorch/")
+sys.path.append(coreml_folder)
 try:
     from libs.models import DeepLabV2, DeepLabV3
-    from pytorch.pretrainedmodels.models import xception
+    from pretrainedmodels.models import xception
     from pytorch_tiramisu.models.tiramisu import FCDenseNet
-    from CoreMLConversion_tests.perf_extension import TestRecipeGenerator
-except:
+except Exception as e:
     print(
         """please clone the following repos and make sure they are in your python path:\n
         https://github.com/kazuto1011/deeplab-pytorch\n
@@ -29,26 +33,31 @@ except:
         https://github.com/bfortuner/pytorch_tiramisu\n
         """
     )
+    raise e
+from CoreMLConversion_tests.perf_extension import TestRecipeGenerator
 
 
 def DeepLabV2DefaultInstantiation():
     return DeepLabV2(n_classes=21, n_blocks=[3, 4, 23, 3], atrous_rates=[6, 12, 18, 24])
 
 
+# NOTE: Sizes here must be the same as the *last* size
+# specified in the e2e tests.
 MODEL_TO_INPUT = {
-    DeepLabV2DefaultInstantiation: torch.rand(1, 3, 224, 224),
-    xception: torch.rand(1, 3, 224, 224),
+    # NOTE: Only works for (224, 224) due to added adaptive pool2d layer.
+    models.vgg16: torch.rand(1, 3, 224, 224),
+    models.shufflenet_v2_x1_0: torch.rand(1, 3, 512, 512),
     models.mobilenet_v2: torch.rand(1, 3, 224, 224),
     models.mnasnet1_0: torch.rand(1, 3, 224, 224),
     models.alexnet: torch.rand(1, 3, 224, 224),
     models.densenet161: torch.rand(1, 3, 224, 224),
     models.googlenet: torch.rand(1, 3, 224, 224),
-    models.inception_v3: torch.rand(1, 3, 229, 229),
+    models.inception_v3: torch.rand(1, 3, 224, 224),
     models.resnet18: torch.rand(1, 3, 224, 224),
-    models.shufflenet_v2_x1_0: torch.rand(1, 3, 224, 224),
     models.squeezenet1_0: torch.rand(1, 3, 224, 224),
     models.vgg19_bn: torch.rand(1, 3, 224, 224),
-    models.vgg16: torch.rand(1, 3, 224, 224),
+    DeepLabV2DefaultInstantiation: torch.rand(1, 3, 224, 224),
+    xception: torch.rand(1, 3, 224, 224),
 }
 
 SAVE_PATH = "converted_models"
@@ -82,7 +91,7 @@ def get_name(model):
     today = date.today()
     stripped_classname = str(type(model))[8:-2].replace(".", "_")
 
-    # NOTE: Edge case: We need to disciminate between the two VGGs
+    # NOTE: Edge case: We need to discriminate between the two VGGs
     if stripped_classname == "torchvision_models_vgg_VGG":
         num_modules = len([x for x in model.modules()])
         if num_modules == 64:

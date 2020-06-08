@@ -1,12 +1,14 @@
 import six
 import logging
+from coremltools.converters.mil.input_types import InputType, TensorType, ImageType, RangeDim, _get_shaping_class
+from coremltools.converters.mil.input_types import Shape as InputShape
 from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.mil import get_new_symbol
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 from coremltools.converters.mil.mil import types
 from .basic_graph_ops import topsort, simple_topsort
 
-from .ops import *  # register the ops
 from .convert_utils import convert_graph
 
 from coremltools.converters.mil.mil import Builder as mb
@@ -14,10 +16,6 @@ from coremltools.converters.mil.mil import Program
 from coremltools.converters.mil.mil import Function
 from .ssa_passes.tf_passes import tensorflow_passes
 from coremltools.converters._profile_utils import profile
-
-# make tensorflow_passes a variable because it could be overwritten
-# later on. E.g., TF2 uses different set of graph passes then TF1.
-tensorflow_passes = tensorflow_passes
 
 
 # TranscriptionContext maintains a map of tf_node.name --> ssa_var available
@@ -107,10 +105,7 @@ class TFConverter:
     def __init__(self, tfssa, inputs=None, outputs=None, **kwargs):
         """
         tfssa: TensorFlow IR.
-        inputs: dict[str -> list/tuple] or list[str], optional, defaults to None.
-            Dictionary containing {name: shape} for each input or list of input
-            names. It None, the converter will try to extract the input information
-            by assuming all Placeholder or PlaceholderWithDefault as inputs.
+        inputs: list of TensorType or ImageType, optional, defaults to None.
         outputs: list of str or str, optional, defaults to None.
             A list of names of the output nodes or a str for single output name.
             If None, the converter will try to extract the output information from
@@ -118,28 +113,75 @@ class TFConverter:
         """
         self.tfssa = tfssa
         self.global_type = {}
+        self.inputs = None
 
         main_func = tfssa.functions['main']
         graph = main_func.graph
 
         # Filter the inputs to only Placeholder names
         placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
-        if isinstance(inputs, dict):
-            inputs = {name: shape for name, shape in inputs.items() \
-                    if name in placeholder_names}
-        elif isinstance(inputs, list):
-            inputs = [name for name in inputs if name in placeholder_names]
+        if inputs is not None:
+            if not isinstance(inputs, (list, tuple)):
+                raise ValueError("Type of inputs should be list or tuple, got {} instead.".format(type(inputs)))
+            if not all([isinstance(i, InputType) for i in inputs]):
+                raise ValueError("Type of inputs should be list or tuple of TensorType or ImageType, got {} instead.".format([type(i) for i in inputs]))
 
-        # Instantiate self.inputs as list[str] of node names
-        if inputs is None:
-            self.inputs = main_func.inputs
-        elif isinstance(inputs, list):  # set given input shape
-            self.inputs = inputs
-        elif isinstance(inputs, dict):  # set given input shape
-            self.inputs = list(inputs.keys())
-            for name, shape in inputs.items():
-                node = graph[name]
-                node.attr['_output_shapes'] = [shape] # list of length 1
+        # Filter the inputs to only Placeholder names
+        tf_placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
+        placeholder_names = []
+        if inputs is not None:
+            # We fill in shapes for user-specified input that doesn't have shape
+            for inp in inputs:
+                if inp.shape is None:
+                    if graph[inp.name].attr.get('_output_shapes', None) is not None:
+                        shape = graph[inp.name].attr['_output_shapes'][0]
+                        if shape is None:
+                            # Scalar is given as None
+                            shape = []
+                    elif graph[inp.name].attr.get('shape', None) is not None:
+                        shape = graph[inp.name].attr['shape']
+                    else:
+                        raise ValueError("Can't extract shape from attribute of ({})".format(inp.name))
+                    inp.shape = _get_shaping_class(shape)
+
+            # Extract placeholders that users didn't specify.
+            user_input_names = [inp.name for inp in inputs]
+            for name in tf_placeholder_names:
+                if name not in user_input_names:
+                    placeholder_names.append(name)
+        else:
+            inputs = []
+            placeholder_names = tf_placeholder_names
+
+        placeholder_inputs = {}
+        for inp in main_func.inputs:
+            if inp not in placeholder_names:
+                continue
+            if graph[inp].attr.get('_output_shapes', None) is not None:
+                placeholder_inputs.update({inp: graph[inp].attr['_output_shapes'][0]})
+            elif graph[inp].attr.get('shape', None) is not None:
+                placeholder_inputs.update({inp: graph[inp].attr['shape']})
+            else:
+                raise ValueError("Can't find input shape for ({})".format(inp))
+
+        if len(placeholder_inputs) > 0:
+            logging.info("Adding Input not specified by users: '{}'".format(placeholder_inputs))
+
+        for k, v in placeholder_inputs.items():
+            inputs.append(TensorType(name=k, shape=v))
+        for idx, inp in enumerate(inputs):
+            if isinstance(inp, ImageType):
+                inputs[idx].channel_first = False
+        self.inputs = tuple(inputs)
+
+        for inputtype in self.inputs:
+            if not isinstance(inputtype.shape, InputShape):
+                continue
+            if any([isinstance(s, RangeDim) for s in inputtype.shape.shape]):
+                continue
+            node = graph[inputtype.name]
+            shape = [-1 if is_symbolic(s) else s for s in inputtype.shape.shape]
+            node.attr['_output_shapes'] = [shape] # list of length 1
 
         # infer outputs if not provided
         self._validate_outputs(tfssa, outputs)
@@ -151,6 +193,7 @@ class TFConverter:
         # We would like a stack so that we run conversion sequentially.
         self.graph_stack = self._get_stack(tfssa, root="main")
         self.context = TranscriptionContext()
+        self.tensorflow_passes = tensorflow_passes
 
     def _get_stack(self, tfssa, root="main"):
         # We're trying to get a order of how to loop through the graphs.
@@ -160,13 +203,7 @@ class TFConverter:
             for node in tfssa.functions[fname].graph.values():
                 func_x, func_y = None, None
 
-                if node.op in {'StatelessIf', 'If'}:
-                    func_x = node.attr.get('then_branch')
-                    func_y = node.attr.get('else_branch')
-                elif node.op in {'StatelessWhile', 'While'}:
-                    func_x = node.attr.get('body')
-                    func_y = node.attr.get('cond')
-                elif node.op == 'while':
+                if node.op == 'while':
                     func_x = node.attr['body_function']
                     func_y = node.attr['cond_function']
 
@@ -215,9 +252,10 @@ class TFConverter:
 
     def convert_main_graph(self, prog, graph):
         func_inputs = {}
-        for name in self.inputs:
-            node = graph[name]
-            func_inputs[name] = TFConverter._create_placeholder(node)
+        for input_type in self.inputs:
+            node = graph[input_type.name]
+            func_inputs[input_type.name] = TFConverter._create_placeholder(node)
+        prog.set_main_input_types(self.inputs)
 
         with Function(func_inputs) as ssa_func:
             # Get the input Var
@@ -278,6 +316,6 @@ class TFConverter:
 
         # Apply TF frontend passes on Program. These passes are different
         # from passes applied to tfssa.
-        tensorflow_passes(prog)
+        self.tensorflow_passes(prog)
 
         return prog

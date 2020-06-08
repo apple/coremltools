@@ -3,9 +3,10 @@ import logging
 import six
 from coremltools.models import neural_network as neural_network
 from coremltools.proto import NeuralNetwork_pb2
-from coremltools.converters.mil.mil.types.symbolic import is_variadic
+from coremltools.converters.mil.mil.types.symbolic import is_variadic, any_symbolic
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
+from tqdm import tqdm
 
 V2_TO_V1_OP_REGISTRY = {}
 
@@ -27,7 +28,7 @@ def convert_ops(const_context, builder, ops, outputs):
 
     const_context.append(set())
     custom_ops = SSAOpRegistry.custom_ops
-    for op in ops:
+    for op in tqdm(ops, desc="Translating MIL to mlmodel", unit="ops"):
         if op.op_type in custom_ops:
             mapper = V2_TO_V1_OP_REGISTRY['custom_op']
         elif op.op_type in V2_TO_V1_OP_REGISTRY:
@@ -218,7 +219,7 @@ def _split(x, sections, axis):
 
 # Split weights into given number of sections
 # This method should be used when weights are combined into
-# one matrix for several nodes e.g. Input, forget, cell and output gate
+# one matrix for several nodes e.g. Input, forget, output and cell gate
 # of LSTM
 def _split_weights(w, sections):
     hidden_size = w.shape[-1] // sections
@@ -230,7 +231,7 @@ def _split_weights(w, sections):
 
 # Split bias into given number of sections
 # This method should be used when biases are combined into
-# one matrix for several nodes e.g. Input, forget, cell and output gate
+# one matrix for several nodes e.g. Input, forget, output and cell gate
 # of LSTM
 def _split_bias(b, sections):
     if b is None:
@@ -1108,14 +1109,42 @@ def linear(const_context, builder, op):
 
 @register_v2_op
 def matmul(const_context, builder, op):
+    weight = None
+    rows, columns = 0, 0
 
-    input_names = make_input(const_context, builder, [op.x, op.y])
+    if (op.y.val is not None and op.y.rank == 2 and
+        len(op.y.child_ops) == 1 and len(op.y.consuming_blocks) == 0):
+
+        weight = op.y.val
+        if op.transpose_y.val:
+            weight = weight.transpose((1, 0))
+
+        rows, columns = weight.shape
+        input_names = make_input(const_context, builder, [op.x])
+
+        if op.transpose_x.val:
+            perm = [i for i in range(op.x.rank)]
+            perm[-1], perm[-2] = perm[-2], perm[-1]
+            name = op.name + "_x_transpose"
+            builder.add_transpose(
+                name=name,
+                axes=perm,
+                input_name=input_names[0],
+                output_name=name)
+            input_names = [name]
+
+    else:
+        input_names = make_input(const_context, builder, [op.x, op.y])
+
     builder.add_batched_mat_mul(
         name=op.name,
         input_names=input_names,
         output_name=op.outputs[0].name,
         transpose_a=op.transpose_x.val,
         transpose_b=op.transpose_y.val,
+        W = weight,
+        weight_matrix_rows=rows,
+        weight_matrix_columns=columns
     )
 
 
@@ -1177,7 +1206,7 @@ def lstm(const_context, builder, op):
         # bias format: [2, 4*H]
         # bias[0]: Input-Hidden bias
         # bias[1]: Hidden-Hidden bias
-        b = _split_bias(b, sections=4)
+        b = _split_bias(b, sections=4) # ifoz layout
         # peephole format: [3*H]
         # where format is, [input gate, forget gate, output gate]
         peephole = _split(peephole, sections=3, axis=0)
@@ -1346,11 +1375,12 @@ def reshape(const_context, builder, op):
             # Does not support 0 in shape
             msg = 'Use 0 in shape only if len(shape) == x.rank. Report bug.'
             raise ValueError(msg)
+        output_shape = op.shape.val if len(op.shape.val) != 0 else (1,)
         builder.add_reshape_static(
                 name=op.name,
                 input_name=make_input(const_context, builder, op.x),
                 output_name=op.outputs[0].name,
-                output_shape=op.shape.val)
+                output_shape=output_shape)
 
 @register_v2_op
 def reduce_argmax(const_context, builder, op):
@@ -2556,3 +2586,61 @@ def list_length(const_context, builder, op):
         begin_masks=[False],
         end_masks=[False],
         strides=[1])
+
+@register_v2_op
+def isfinite(const_context, builder, op):
+    int_max = np.iinfo(np.int64).max
+    int_min = -np.iinfo(np.int64).max - 1
+    const_name_max = op.name+'_const_name_max'
+    const_name_min = op.name+'_const_name_min'
+    if any_symbolic(op.x.shape):
+        shape_name = op.name+'_shape'
+        builder.add_get_shape(
+            name=shape_name,
+            input_name=make_input(const_context, builder, op.x),
+            output_name=shape_name
+        )
+        builder.add_fill_dynamic(
+            name=const_name_max,
+            input_name=shape_name,
+            output_name=const_name_max,
+            value=int_max,
+        )
+        builder.add_fill_dynamic(
+            name=const_name_min,
+            input_name=shape_name,
+            output_name=const_name_min,
+            value=int_min,
+        )
+    else:
+        shape = [1] if op.x.shape == () else op.x.shape
+        builder.add_fill_static(
+            name=const_name_max,
+            output_name=const_name_max,
+            output_shape=shape,
+            value=int_max,
+        )
+        builder.add_fill_static(
+            name=const_name_min,
+            output_name=const_name_min,
+            output_shape=shape,
+            value=int_min,
+        )
+    smaller_than_name = op.name+'_smaller'
+    greater_than_name = op.name+'_greater'
+    builder.add_less_than(
+           name=smaller_than_name,
+           input_names=make_input(const_context, builder,
+                                  [op.x, const_name_max]),
+           output_name=smaller_than_name)
+    builder.add_greater_than(
+           name=greater_than_name,
+           input_names=make_input(const_context, builder,
+                                  [op.x, const_name_min]),
+           output_name=greater_than_name)
+    builder.add_logical(
+            name=op.name,
+            input_names=[smaller_than_name, greater_than_name],
+            output_name=op.outputs[0].name,
+            mode="AND")
+

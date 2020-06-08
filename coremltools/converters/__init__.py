@@ -11,3 +11,4 @@ from . import keras
 from . import caffe
 from . import tensorflow
 from ._converters_entry import convert
+from .mil import ClassifierConfig, TensorType, ImageType, RangeDim, Shape, EnumeratedShapes

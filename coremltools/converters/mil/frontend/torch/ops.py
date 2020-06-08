@@ -2,7 +2,7 @@ import logging
 
 import math
 import numpy as np
-import torch
+from tqdm import tqdm
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil import Builder as mb
@@ -39,7 +39,7 @@ def convert_nodes(context, graph):
                 assign node outputs.
             graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
     """
-    for node in graph.nodes:
+    for node in tqdm(graph.nodes, desc='Converting to MIL', unit='ops'):
         _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
         logging.debug("Converting op {}".format(node.kind))
         if _add_op is None:
@@ -706,30 +706,13 @@ def embedding(context, node):
 
 @register_torch_op
 def hardtanh_(context, node):
-    """Represent hardtanh as a hard sigmoid via the following translation:
-
-        hardtanh(min_val, max_val) =
-            S * hardsigmoid(alpha = 1/S, beta = min_val/S) + min_val
-            where S = (max_val - min_val)
-    """
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
     min_val = inputs[1].val
     max_val = inputs[2].val
 
-    beta = mb.const(val=0.0)
-    scalar = mb.const(val=max_val - min_val, name=node.name + "_scalar")
-    alpha = mb.const(val=1 / (max_val - min_val), name=node.name + "_alpha")
-    beta = mb.const(val=-min_val / (max_val - min_val), name=node.name + "_beta")
-    offset = mb.const(val=min_val, name=node.name + "_offset")
-
-    sig = mb.sigmoid_hard(
-        x=_input, alpha=alpha, beta=beta, name=node.name + "_hard_sigmoid"
-    )
-
-    scaled = mb.mul(x=sig, y=scalar, name=node.name + "_scaled")
-    offset = mb.add(x=scaled, y=offset, name=node.name)
-    context.add(offset)
+    res = mb.clip(x=_input, alpha=min_val, beta=max_val, name=node.name)
+    context.add(res)
 
 
 @register_torch_op

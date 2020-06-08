@@ -562,6 +562,39 @@ class NeuralNetworkBuilder(object):
             # assume it's the last blob produced in the network
             nn_spec.labelProbabilityLayerName = nn_spec.layers[-1].output[0]
 
+    def set_optional_input(self, input_idx, value=None, format='float'):
+        """
+        Marks given input as optional input.
+        Optionally, sets default value for optional input if value is not None
+
+        Parameters
+        ----------
+        input_idx: int
+            Index of input to be marked and fill with default value
+        value: int/double/float/None
+            Value to be fill as default value
+        format: str
+            Format of default value
+            Must be one of 'float', 'double' or 'int'
+        """
+        if input_idx >= len(self.spec.description.input):
+            msg = str(input_idx) + " out of " + str(len(self.spec.description.input)) + " inputs!"
+            raise ValueError("Setting invalid input as optional! {}".format(msg))
+        self.spec.description.input[input_idx].type.isOptional = True
+        if value is None:
+            return
+        # Default value is supported from CoreML 4 onwards.
+        self.spec.specificationVersion = max(self.spec.specificationVersion, SPECIFICATION_VERSION_IOS_14)
+        format = format.lower()
+        if format == 'float':
+            self.spec.description.input[input_idx].type.multiArrayType.floatDefaultValue = value
+        elif format == 'double':
+            self.spec.description.input[input_idx].type.multiArrayType.doubleDefaultValue = value
+        elif format == 'int':
+            self.spec.description.input[input_idx].type.multiArrayType.intDefaultValue = value
+        else:
+            raise ValueError("Incorrect format for optional inputs! Expecting int/float/double, got {}!".format(format))
+
     def add_optionals(self, optionals_in, optionals_out):
         """
         Add optional inputs and outputs to the model spec.

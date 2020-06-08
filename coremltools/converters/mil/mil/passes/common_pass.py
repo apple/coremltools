@@ -1,6 +1,7 @@
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import logging
 from coremltools.converters._profile_utils import profile
+from tqdm import tqdm
 
 @profile
 def common_pass(prog):
@@ -19,7 +20,7 @@ def common_pass(prog):
     logging.debug('Program before common passes:\n{}'.format(prog))
 
     prog.validate()
-    for p in passes:
+    for p in tqdm(passes, desc='Invoking MIL optimization passes', unit='passes'):
         logging.info('Performing pass: "{}"'.format(p))
         PASS_REGISTRY[p](prog)
         prog.validate()

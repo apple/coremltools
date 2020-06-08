@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from coremltools import TensorType
 from coremltools.converters import convert
 from coremltools.models import MLModel
 
@@ -25,11 +26,18 @@ def convert_to_coreml_inputs(input_description, inputs):
     return coreml_inputs
 
 
-def convert_to_mlmodel(model_spec, inputs):
-    if isinstance(inputs, tuple):
-        inputs = list(inputs)
+def convert_to_mlmodel(model_spec, tensor_inputs):
+    def _convert_to_inputtype(inputs):
+        if isinstance(inputs, list):
+            return [_convert_to_inputtype(x) for x in inputs]
+        elif isinstance(inputs, tuple):
+            return tuple([_convert_to_inputtype(x) for x in inputs])
+        elif isinstance(inputs, torch.Tensor):
+            return TensorType(shape=inputs.shape)
+        else:
+            raise ValueError("Unable to parse type {} into InputType.".format(type(inputs)))
 
-    mlmodel = convert(model_spec, inputs=inputs,)
+    mlmodel = convert(model_spec, inputs=list(_convert_to_inputtype(tensor_inputs)))
     return mlmodel
 
 

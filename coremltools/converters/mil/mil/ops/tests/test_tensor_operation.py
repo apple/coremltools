@@ -1255,3 +1255,41 @@ class TestArgSort:
         x_val = random_gen(shape=(1, 3, 2, 2), rand_min=-100, rand_max=100)
         res = mb.argsort(x=x_val, axis=-3)
         assert is_close(np.argsort(x_val, axis=-3), res.val)
+
+class TestIsFinite:
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        val = np.array([[np.inf, -np.inf, 0], [-np.inf, 5, 6]], dtype=np.float32)
+        input_placeholders = {'x': mb.placeholder(shape=val.shape)}
+        input_values = {'x': val}
+
+        def build(x):
+            return [
+                mb.isfinite(x=x)
+            ]
+
+        expected_output_types = [
+            (2, 3, types.bool)
+        ]
+        expected_outputs = [
+            np.array([[False, False, True], [False, True, True]], dtype=np.bool)
+        ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, backend=backend)
+
+    @ssa_fn
+    def test_builder_eval(self):
+        shape = (3, 3, 3, 3)
+        x_val = random_gen(shape=shape, rand_min=-1, rand_max=1)
+        random_map = np.random.choice([np.inf, -np.inf, 0], size=shape)
+        x_val[np.where(random_map==np.inf)] = np.inf
+        x_val[np.where(random_map==-np.inf)] = -np.inf
+        res = mb.isfinite(x=x_val)
+        assert is_close(np.isfinite(x_val), res.val)

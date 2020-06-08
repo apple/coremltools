@@ -1,7 +1,6 @@
 from coremltools.converters._profile_utils import profile
 from .mil.passes.common_pass import common_pass
 
-
 class ConverterRegistry:
     frontends = {}
     backends = {}
@@ -39,8 +38,9 @@ class TensorFlowFrontend:
     name = 'tensorflow'
 
     def __call__(self, *args, **kwargs):
-        from .frontend.tensorflow import load
-        return load(*args, **kwargs)
+        from .frontend.tensorflow.load import TF1Loader
+        tf1_loader = TF1Loader(*args, **kwargs)
+        return tf1_loader.load()
 
 
 @ConverterRegistry.frontend
@@ -48,8 +48,9 @@ class TensorFlow2Frontend:
     name = 'tensorflow2'
 
     def __call__(self, *args, **kwargs):
-        from .frontend.tensorflow2 import load
-        return load(*args, **kwargs)
+        from .frontend.tensorflow2.load import TF2Loader
+        tf2_loader = TF2Loader(*args, **kwargs)
+        return tf2_loader.load()
 
 
 @ConverterRegistry.frontend

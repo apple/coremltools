@@ -473,12 +473,12 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
     // ndArrayInterpretation == True ==>  Tensors can have any rank (including 5).
     
     bool ndArrayInterpretation = false;
-    
+
     bool hasNonIOS12Layer = false;
     bool hasNewArrayShapeMapping = false;
     bool hasNewImageShapeMapping = false;
     bool hasMultiArrayInput = false;
-    
+
     for (const auto& input: interface.input()) {
         if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
             hasMultiArrayInput = true;

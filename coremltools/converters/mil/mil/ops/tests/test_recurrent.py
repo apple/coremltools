@@ -106,6 +106,164 @@ class TestGRU:
 
 
 class TestLSTM:
+
+    @pytest.mark.parametrize(
+            ','.join([
+                'use_cpu_only',
+                'backend',
+                'input_dims',
+                'output_dim',
+                'activation',
+                'inner_activation',
+                'outer_activation',
+                'return_seq',
+                'has_bias',
+                'forget_bias',
+                'has_peephole',
+                'coupled_input_forget'
+            ]),
+            itertools.product(
+                [True, False],
+                backends,
+                [[8, 32, 32]],
+                [1, 4],
+                ['SIGMOID'],
+                ['TANH'],
+                ['TANH', 'SIGMOID'],
+                [False, True],
+                [False, True],
+                [False, True],
+                [False], # rdar://63508253 (Follow up on LSTM clip, peephole with tests in CoreML)
+                [False], # We have not exposed this option yet!
+            ))
+    def test_numpy_numerical(self, use_cpu_only, backend, input_dims, output_dim,
+            activation, inner_activation, outer_activation, return_seq,
+            has_bias, forget_bias, has_peephole, coupled_input_forget):
+
+        def _apply_act(x, option):
+            if option == 'TANH':
+                return np.tanh(x)
+            elif option == 'RELU':
+                return np.maximum(0, x)
+            elif option == 'SIGMOID':
+                return 1. / (1 + np.exp(-x))
+            elif option == 'SIGMOID_HARD':
+                return np.minimum(np.maximum(0.2 * x + 0.5, 0), 1)
+            elif option == 'LINEAR':
+                return x
+            else:
+                raise ValueError("activation invalid")
+
+        def _clip(x, threshold=500.0):
+            return np.maximum(np.minimum(x, threshold), -threshold)
+
+        def _get_numpy_prediction_lstm(Weights, X):
+            # X : (batch, seq_len, channel)
+            batch, _ , _ = X.shape
+            out = []
+            for i in range(batch):
+                out.append(_get_numpy_prediction_lstm_single_batch(Weights, np.expand_dims(X[i,:,:], axis=0)))
+            return np.stack(out, axis=0)
+
+        def _get_numpy_prediction_lstm_single_batch(Weights, X):
+
+            batch_size, seq_len, input_size = X.shape
+            X = X[0, :, :]
+            hidden_size = output_dim
+
+            b = Weights["b"]
+            b = b[0] + b[1]
+            Wx_i, Wx_f, Wx_o, Wx_g = np.split(Weights["W_x"], 4)
+            Wh_i, Wh_f, Wh_o, Wh_g = np.split(Weights["W_h"], 4)
+            b_i, b_f, b_o, b_g = np.split(b, 4)
+            p_i, p_f, p_o = np.split(Weights["p"], 3)
+
+            act1 = activation
+            act2 = inner_activation
+            act3 = outer_activation
+
+            h = np.zeros((hidden_size))
+            c = np.zeros((hidden_size))
+            np_out = np.zeros((seq_len, hidden_size))
+            for k in range(seq_len):
+                x = X[k, :]
+                i = _apply_act(_clip(np.dot(Wx_i, x) + np.dot(Wh_i, h) + b_i + c * p_i), act1)
+                f = _apply_act(_clip(np.dot(Wx_f, x) + np.dot(Wh_f, h) + b_f + c * p_f), act1)
+                g = _apply_act(_clip(np.dot(Wx_g, x) + np.dot(Wh_g, h) + b_g), act2)
+                if coupled_input_forget:
+                    c = c * (1 - i) + i * g
+                else:
+                    c = c * f + i * g
+                c = _clip(c)
+                o = _apply_act(_clip(np.dot(Wx_o, x) + np.dot(Wh_o, h) + b_o + c * p_o), act1)
+                h = o * _apply_act(c, act3)
+                np_out[k, :] = h
+
+            if return_seq:
+                np_out_final = np_out
+            else:
+                np_out_final = np_out[-1, :]
+            return np_out_final
+
+        batch = input_dims[0]
+        seq_len = input_dims[1]
+        input_size = input_dims[2]
+        hidden_size = output_dim
+
+        # define random weights
+        W_x = np.random.rand(4 * hidden_size, input_size)
+        W_h = np.random.rand(4 * hidden_size, hidden_size)
+
+        if has_bias:
+            b = np.random.rand(2, 4 * hidden_size)-0.5
+            if forget_bias:
+                b = b + 1
+        else:
+            b = np.zeros((2, 4 * hidden_size))
+
+        if has_peephole:
+            p = np.random.rand(3 * hidden_size)-0.5
+        else:
+            p = np.zeros((3 * hidden_size))
+
+        Weights= {}
+        Weights["W_x"] = W_x
+        Weights["W_h"] = W_h
+        Weights["b"] = b
+        Weights["p"] = p
+
+        input_data = np.random.rand(batch, seq_len, input_size)
+        numpy_preds = _get_numpy_prediction_lstm(Weights, input_data)
+        if return_seq:
+            numpy_preds = np.transpose(numpy_preds, [1, 0, 2])
+
+        coreml_input_data = np.transpose(input_data, [1, 0, 2])
+        input_placeholders = {"x": mb.placeholder(shape=coreml_input_data.shape)}
+        input_values = {"x": coreml_input_data}
+
+        weights = np.concatenate([W_x, W_h], axis=1).transpose()
+        def build(x):
+            h_all, ht, ct = mb.lstm(x=x,
+                                    initial_h=np.zeros((batch, hidden_size)).astype(np.float32),
+                                    initial_c=np.zeros((batch, hidden_size)).astype(np.float32),
+                                    weight=weights,
+                                    direction='forward',
+                                    bias=b,
+                                    output_sequence=return_seq,
+                                    activations=(activation, inner_activation, outer_activation)
+                                    )
+            return h_all
+        expected_output_types = (seq_len if return_seq else 1, batch, hidden_size, types.fp32)
+        expected_outputs = numpy_preds
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend,
+                            # rdar://63839623 ([GITLAB-CI] precision issue on various tests on gitlab ci)
+                            atol=1e-3, rtol=1e-3)
+
+
     @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.xfail(reason="rdar://62272632")
     @pytest.mark.parametrize("use_cpu_only, backend",

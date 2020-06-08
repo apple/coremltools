@@ -3,18 +3,20 @@ from __future__ import absolute_import
 import gc
 import coremltools
 
+from coremltools.converters.mil.input_types import InputType, ClassifierConfig
 from coremltools.converters.mil.converter import _convert
 from coremltools.converters.mil.mil import Program
-from coremltools._deps import HAS_TORCH, HAS_TF, HAS_TF_2
+from coremltools._deps import HAS_TORCH, HAS_TF_1, HAS_TF_2
 from coremltools.converters._profile_utils import profile
+
+if HAS_TF_1:
+    from coremltools.converters.mil.frontend.tensorflow.load import TF1Loader
+if HAS_TF_2:
+    from coremltools.converters.mil.frontend.tensorflow2.load import TF2Loader
 
 if HAS_TORCH:
     import torch
     from coremltools.converters.mil.frontend.torch.load import _torchscript_from_model as pytorch_load
-if HAS_TF:
-    from coremltools.converters.mil.frontend.tensorflow.load import _tf_graph_from_model as tf1_load
-if HAS_TF_2:
-    from coremltools.converters.mil.frontend.tensorflow2.load import _tf_graph_from_model as tf2_load
 
 
 @profile
@@ -22,12 +24,13 @@ def convert(model,
             source="auto",
             inputs=None,
             outputs=None,
+            classifier_config=None,
             **kwargs):
     """
 
     Method to convert neural networks represented in Tensorflow or Pytorch formats
     to the Core ML model format. This method will choose a convert method based on
-    the type of model passed in. For kwargs specific to a model type (Tensorflow, Torch etc.), 
+    the type of model passed in. For kwargs specific to a model type (Tensorflow, Torch etc.),
     look in the load.py of the converter for that model type.
 
     Parameters
@@ -55,23 +58,21 @@ def convert(model,
         one of "auto" (default), "tensorflow", "pytorch"
 
     inputs: list (optional)
-        For Tensorflow:
-            list of tuples or list of strings
-            If [tuple] : each tuple contains input tensor name and shape
-            If [str]: each string is the name of the Placeholder input op in the TF graph
-        For Pytorch
-            a list of example inputs, which are any of:
-            1. tensor
-            2. tuple shape
-            3. tuple of (name, (1. or 2.))
+        If inputs is provided, it should be a list of TensorType or ImageType
 
     outputs: list[str] (optional)
-        For Tensorflow:
+        For Tensorflow 1:
             (required)
+            list of output op names
+        For Tensorflow 2:
+            (not required)
             list of output op names
         For Pytorch:
             (not required)
             list of output op names
+
+    classifier_config: ClassifierConfig class (optional)
+        The configuration if the mlmodel is intended to be a classifier.
 
     Returns
     -------
@@ -84,17 +85,18 @@ def convert(model,
 
     Tensorflow 1:
 
-        mlmodel = coremltools.converters.convert(model='frozen_model_mobilenet.pb',
-                                                 inputs=[('input', (1, 224, 224, 3)),
-                                                 outputs=['Softmax']]
+        input = coremltools.TensorType(name='input', shape=(1, 224, 224, 3))
+        mlmodel = coremltools.convert(model='frozen_model_mobilenet.pb',
+                                      inputs=[input],
+                                      outputs=['Softmax']]
 
         mlmodel.save('model_mobilenet.mlmodel')
 
 
     Tensorflow 2:
 
-        mlmodel = coremltools.converters.convert(model='frozen_model_mobilenet.h5',
-                                                 outputs=['Softmax']]
+        mlmodel = coremltools.convert(model='frozen_model_mobilenet.h5',
+                                      outputs=['Softmax']]
 
         mlmodel.save('model_mobilenet.mlmodel')
 
@@ -105,14 +107,41 @@ def convert(model,
         example_input = torch.rand(1, 3, 256, 256)
         traced_model = torch.jit.trace(model, example_input)
 
-        mlmodel = coremltools.converters.convert(traced_model,
-                                                inputs=[('input_name',example_input)]
+        input = coremltools.TensorType(name='input_name', shape=(1, 3, 256, 256))
+        mlmodel = coremltools.convert(traced_model,
+                                                inputs=[input]
                                                 outputs=['output_name'])
 
         mlmodel.save('mobilenetv2.mlmodel')
 
-    """
+    Unknown/Flexible Shapes:
 
+        from coremltools import TensorType
+        flexible_input = TensorType(name='input', shape=(1, -1, -1, 3))
+        mlmodel = coremltools.convert(model='frozen_style_transfer.pb',
+                                                 inputs=[flexible_input],
+                                                 outputs=['Softmax'])
+
+    Ranged Shapes:
+
+        from coremltools import TensorType, RangeDim
+        range_input = TensorType(name=input, shape=(1, RangeDim(220, 230), -1, 3))
+        mlmodel = coremltools.convert(model='frozen_style_transfer.pb',
+                                                 inputs=[range_input],
+                                                 outputs=['Softmax'])
+
+    Enumerated Shapes:
+
+        from coremltools import TensorType, EnumeratedShapes
+        shape_1 = (1, 224, 224, 3)
+        shape_2 = (1, 225, 225, 3)
+        shape_3 = (1, 300, 300, 3)
+        enumerated_shapes = EnumeratedShapes(shape=[shape1, shape2, shape3])
+        enumerated_inputs = TensorType(name='input', shape=enumerated_shapes)
+        mlmodel = coremltools.convert(model='frozen_style_transfer.pb',
+                                                 inputs=[enumerated_input],
+                                                 outputs=['Softmax'])
+    """
     source = source.lower()
 
     if inputs is not None:
@@ -120,16 +149,26 @@ def convert(model,
             msg = "\"inputs\" must be of type list"
             raise ValueError(msg)
 
-    if source == "auto" and HAS_TF:
+    if classifier_config is not None:
+        if not isinstance(classifier_config, ClassifierConfig):
+            msg = "\"classfier_config\" must be of type ClassifierConfig"
+            raise ValueError(msg)
+
+    if source == "tensorflow" and HAS_TF_2:
+        source = "tensorflow2"
+
+    if source == "auto" and HAS_TF_1:
         try:
-            tf1_load(model, outputs=outputs)
+            loader = TF1Loader(model, outputs=outputs)
+            loader._graph_def_from_model(outputs=outputs)
             source = "tensorflow"
         except:
             pass
 
-    if source in {"auto", "tensorflow"} and HAS_TF_2:
+    if source == "auto" and HAS_TF_2:
         try:
-            tf2_load(model)
+            loader = TF2Loader(model, outputs=outputs)
+            loader._graph_def_from_model(outputs=outputs)
             source = "tensorflow2"
         except:
             pass
@@ -140,7 +179,7 @@ def convert(model,
             source = "pytorch"
         except:
             pass
-            
+
     if source == "auto" and isinstance(model, Program):
         source = "mil"
 
@@ -155,42 +194,47 @@ def convert(model,
 
     elif source in {"tensorflow", "tensorflow2"}:
 
-        if not HAS_TF:
+        if source == 'tensorflow' and not HAS_TF_1:
             raise ValueError('Converter was called with source=tensorflow, but missing tensorflow package')
         if source == "tensorflow2" and not HAS_TF_2:
             raise ValueError('Converter was called with source=tensorflow2, but missing tensorflow2 package')
 
-        if inputs is not None and len(inputs) > 0 and isinstance(inputs[0], tuple):
-            inputs = dict(inputs)
+        if inputs is not None and not all([isinstance(_input, InputType) for _input in inputs]):
+            raise ValueError('Input should be a list of TensorType or ImageType')
 
-        proto_spec = _convert(
-                    model,
-                    convert_from=source,
-                    convert_to=convert_to,
-                    inputs=inputs,
-                    outputs=outputs,
-                    **kwargs
-                    )
+        proto_spec = _convert(model,
+                              convert_from=source,
+                              convert_to=convert_to,
+                              inputs=inputs,
+                              outputs=outputs,
+                              classifier_config=classifier_config,
+                              **kwargs
+                              )
 
     elif source == "pytorch":
         if 'example_inputs' in kwargs:
             msg = "Unexpected argument \"example_inputs\" found"
             raise ValueError(msg)
 
-        if inputs is not None:
-            if not isinstance(inputs, list):
-                msg = "\"inputs\" must be of type list. Recieved: {}".format(inputs)
-                raise ValueError(msg)
-            if not all([isinstance(_input, (torch.Tensor, tuple)) for _input in inputs]):
-                msg = "\"inputs\" list must contain torch.Tensors or tuples. Recieved: {}".format(inputs)
-                raise ValueError(msg)
+        def _flatten_list(_inputs):
+            ret = []
+            for _input in _inputs:
+                if isinstance(_input, (list, tuple)):
+                    ret.extend(_flatten_list(_input))
+                elif isinstance(_input, InputType):
+                    ret.append(_input)
+                else:
+                    raise ValueError("Unknown type {} for flattening into InputType.".format(type(_input)))
+            return ret
 
+        if inputs is not None and not all([isinstance(_input, InputType) for _input in _flatten_list(inputs)]):
+            raise ValueError('Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType')
         if outputs is not None:
             if not isinstance(outputs, list):
-                msg = "\"outputs\" must be of type list. Recieved: {}".format(outputs)
+                msg = "\"outputs\" must be of type list. Received: {}".format(outputs)
                 raise ValueError(msg)
             if not all([isinstance(output, str) for output in outputs]):
-                msg = "\"inputs\" list must contain strings. Recieved: {}".format(outputs)
+                msg = "\"inputs\" list must contain strings. Received: {}".format(outputs)
                 raise ValueError(msg)
 
         proto_spec = _convert(
@@ -199,9 +243,10 @@ def convert(model,
                     convert_to=convert_to,
                     example_inputs=inputs,
                     outputs=outputs,
+                    classifier_config=classifier_config,
                     **kwargs
                     )
-    
+
     elif source == "mil":
         if not isinstance(model, Program):
             msg = "Converter was asked to convert MIL input, but input is not a MIL program!"
@@ -212,6 +257,7 @@ def convert(model,
                     convert_from="mil",
                     convert_to=convert_to,
                     example_inputs=inputs,
+                    classifier_config=classifier_config,
                     **kwargs
                     )
 
@@ -224,6 +270,3 @@ def convert(model,
     del proto_spec
     gc.collect()
     return mlmodel
-
-
-

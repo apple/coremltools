@@ -123,7 +123,7 @@ def reshape_with_symbol(v, shape):
 @register_op(doc_str='TODO')
 class reshape(Operation):
     input_spec = InputSpec(
-            x = TensorInputType(),
+            x = ScalarOrTensorInputType(),
             shape = IntTensorInputType(),
             )
 
@@ -150,7 +150,7 @@ class reshape(Operation):
     def _get_type_val(self):
         x_type = self.x.dtype
         x_shape = self.x.shape
-        x_vol = functools.reduce(lambda a,b : a*b, x_shape)
+        x_vol = np.prod(x_shape)
         # shape is const, and thus sym_val is not None
         sym_shape = self.shape.sym_val
         sym_shape = [get_new_symbol() if d == -1 else d for d in sym_shape]
@@ -343,6 +343,8 @@ class slice_by_size(Operation):
         if any_symbolic(self.begin.sym_val):
             return None
         if any_symbolic(self.size.sym_val):
+            return None
+        if self.x.val is None:
             return None
         slices = []
         for i in range(self.x.rank):

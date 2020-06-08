@@ -479,42 +479,35 @@ namespace CoreML {
     }
 
     inline Result validateDefaultOptionalValues(const Specification::Model& format) {
-        // just need to check that only neural networks use default optional values.
+        // - Validate default optional values for NN Model that
+        //   - Has default value set if input is optional and spec 5 model
+        // - Error out if model is not Neural Network
         const Specification::ModelDescription& description = format.description();
+
         for (const auto& input : description.input()) {
             if (input.type().isoptional()) {
                 switch (input.type().multiarraytype().defaultOptionalValue_case()) {
                     case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
-                        if (format.Type_case() != Specification::Model::kNeuralNetwork &&
-                            format.Type_case() != Specification::Model::kNeuralNetworkRegressor &&
-                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier){
-                            return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                                          "Default optional values are only allowed for neural networks.");
-                        }
-                        break;
                     case CoreML::Specification::ArrayFeatureType::kFloatDefaultValue:
+                    case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
+                        // Default value for optional inputs is applicable
+                        // only for NeuralNetwork models with Spec 5 (iOS 14) onwards.
                         if (format.Type_case() != Specification::Model::kNeuralNetwork &&
                             format.Type_case() != Specification::Model::kNeuralNetworkRegressor &&
-                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier){
+                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier) {
                             return Result(ResultType::INVALID_MODEL_PARAMETERS,
                                           "Default optional values are only allowed for neural networks.");
                         }
-                        break;
-                    case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
-                        if (format.Type_case() != Specification::Model::kNeuralNetwork &&
-                            format.Type_case() != Specification::Model::kNeuralNetworkRegressor &&
-                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier){
-                            return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                                          "Default optional values are only allowed for neural networks.");
+                        if (format.specificationversion() < MLMODEL_SPECIFICATION_VERSION_IOS14) {
+                            return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                          "Default value for optional inputs is supported from specification 5 (iOS 14) onwards!");
                         }
                         break;
                     default:
                         break;
                 }
-
             }
         }
-
         return Result();
     }
 
@@ -537,7 +530,7 @@ namespace CoreML {
         Result r;
         r = validateDefaultOptionalValues(format);
 
-        if (!r.good()){
+        if (!r.good()) {
             return r;
         }
 

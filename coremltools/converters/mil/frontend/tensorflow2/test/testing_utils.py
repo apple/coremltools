@@ -3,6 +3,7 @@ import pytest
 tf = pytest.importorskip('tensorflow', minversion='2.1.0')
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import get_tf_node_names
 
+from coremltools.converters.mil.input_types import TensorType
 from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
 from tensorflow.python.framework import dtypes
 
@@ -27,7 +28,7 @@ def make_tf2_graph(input_types):
         class TensorFlowModule(tf.Module):
             input_signature = []
             for input_type in input_types:
-                if isinstance(input_type[-1], dtypes.DType):
+                if len(input_type) > 0 and isinstance(input_type[-1], dtypes.DType):
                     shape, dtype = input_type[:-1], input_type[-1]
                 else:
                     shape, dtype = input_type, tf.float32
@@ -74,11 +75,11 @@ def run_compare_tf2(
     rtol: float
         The relative tolerance parameter.
     """
-    inputs = {}
+    inputs = []
     cf_inputs = [t for t in model[0].inputs if t.dtype != dtypes.resource]
     for t in cf_inputs:
         name = get_tf_node_names(t.name)[0]
-        inputs[name] = list(t.get_shape())
+        inputs.append(TensorType(name=name, shape=list(t.get_shape())))
     outputs = []
     for t in output_names:
         name = get_tf_node_names(t)[0]
@@ -94,7 +95,7 @@ def run_compare_tf2(
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
 
     proto = convert(
-        model, source=frontend, inputs=list(inputs.items()),
+        model, source=frontend, inputs=inputs,
         outputs=outputs, convert_to=backend).get_spec()
 
     if frontend_only:
@@ -104,6 +105,8 @@ def run_compare_tf2(
         proto, input_dict, expected_outputs, use_cpu_only)
     compare_backend(
         proto, input_dict, expected_outputs, use_cpu_only, atol=atol, rtol=rtol)
+
+    return proto
 
 
 def run_compare_tf_keras(
@@ -148,3 +151,5 @@ def run_compare_tf_keras(
     compare_backend(
         proto, input_key_values, expected_outputs,
         use_cpu_only, atol=atol, rtol=rtol)
+
+    return proto
