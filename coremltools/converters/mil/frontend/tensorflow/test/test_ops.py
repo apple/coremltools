@@ -2365,7 +2365,37 @@ class TestSlice:
             run_compare_tf(model, input_dict, outputs,
                    use_cpu_only=use_cpu_only,
                    frontend_only=False, backend=backend)
+
+        def test_slice_new_axis():
+            input_shape = [4, 5, 64]
+            val = np.random.rand(*input_shape).astype(np.float32)
+            num_cases = 8
+
+            @make_tf_graph([input_shape]*num_cases)
+            def build_model(*args):
+                a,b,c,d,e,f,g,h = args
+                slice_0 = a[:1,tf.newaxis,:3, :]
+                slice_1 = b[:,tf.newaxis]
+                slice_2 = c[..., tf.newaxis]
+                slice_3 = d[..., tf.newaxis, :, 10]
+                slice_4 = e[:, 2, tf.newaxis, ...]
+                slice_5 = f[2, ..., :, tf.newaxis]
+                slice_6 = g[tf.newaxis, ..., tf.newaxis]
+                slice_7 = h[tf.newaxis, 2, tf.newaxis, ...]
+
+                return (slice_0, slice_1, slice_2, slice_3,
+                        slice_4, slice_5, slice_6, slice_7)
+
+            model, inputs, outputs = build_model
+
+            input_values = [val]*num_cases
+            input_dict = dict(zip(inputs, input_values))
+            run_compare_tf(model, input_dict, outputs,
+                   use_cpu_only=use_cpu_only,
+                   frontend_only=False, backend=backend)
+
         test_two_slice_ops()
+        test_slice_new_axis()
 
     @pytest.mark.parametrize('use_cpu_only, backend, rank, single_size, dynamic_size',
                              itertools.product(

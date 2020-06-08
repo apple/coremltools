@@ -878,8 +878,9 @@ def StridedSlice(context, node):
     end_mask = bitmask_to_array(node.attr.get('end_mask', 0))
     squeeze_mask = bitmask_to_array(node.attr.get('shrink_axis_mask', 0))
     ellipsis_mask = bitmask_to_array(node.attr.get('ellipsis_mask', 0))
+    new_axis_mask = bitmask_to_array(node.attr.get("new_axis_mask", 0))
 
-    def _pad_mask(x, begin, end, stride, begin_mask, end_mask, squeeze_mask, ellipsis_mask):
+    def _pad_mask(x, begin, end, stride, begin_mask, end_mask, squeeze_mask, ellipsis_mask, new_axis_mask):
         # This function pad the masks, stride, begin and end to the same rank as the input tensor.
         if begin.rank != 1:
             raise ValueError("begin should be 1-D tensor, got {}-D tensor instead".format(begin.rank))
@@ -894,7 +895,12 @@ def StridedSlice(context, node):
         stride = [] if stride is None else stride.val.tolist()
 
         # pad masks function
-        x_rank = x.rank
+        new_dims = sum(i==True for i in new_axis_mask)
+        if new_dims > 0:
+            x_rank = x.rank + new_dims
+        else:
+            x_rank = x.rank
+
         def pad_array(arr, max_rank, idx, default_value):
             '''
             This function pads the arr to x_rank with default_value.
@@ -910,7 +916,7 @@ def StridedSlice(context, node):
                 new_mask += [mask[i]]*num
             return new_mask
 
-        mask_list = [begin_mask, end_mask, squeeze_mask, ellipsis_mask, stride, begin, end]
+        mask_list = [begin_mask, end_mask, squeeze_mask, ellipsis_mask, new_axis_mask, stride, begin, end]
         max_rank = max([len(arr) for arr in mask_list])
 
         # If ellipsis_mask is given, the last element of it would be True
@@ -926,6 +932,7 @@ def StridedSlice(context, node):
         end_mask = pad_array(end_mask, rank, idx, False)
         squeeze_mask = pad_array(squeeze_mask, rank, idx, False)
         ellipsis_mask = pad_array(ellipsis_mask, rank, idx, False)
+        new_axis_mask = pad_array(new_axis_mask, rank, idx, False)
         stride = pad_array(stride, rank, idx, 1)
 
         # pad begin and end if they are determined during compile time
@@ -937,6 +944,14 @@ def StridedSlice(context, node):
         # make sure begin_mask, end_mask, and stride are consistent with ellipsis mask
         # begin_mask and end_mask should be True, and stride should be 1.
         for i, mask in enumerate(ellipsis_mask):
+            if mask:
+                begin_mask[i] = True
+                end_mask[i] = True
+                stride[i] = 1
+
+        # make sure begin_mask, end_mask, and stride are consistent with new axis mask
+        # begin_mask and end_mask should be True, and stride should be 1.
+        for i, mask in enumerate(new_axis_mask):
             if mask:
                 begin_mask[i] = True
                 end_mask[i] = True
@@ -958,10 +973,14 @@ def StridedSlice(context, node):
                 begin_mask[i] = True
                 end_mask[i] = True
 
-        return begin, end, stride, begin_mask, end_mask, squeeze_mask
+        return begin, end, stride, begin_mask, end_mask, squeeze_mask, new_axis_mask
 
-    begin, end, stride, begin_mask, end_mask, squeeze_mask =  \
-    _pad_mask(x, begin, end, stride, begin_mask, end_mask, squeeze_mask, ellipsis_mask)
+    begin, end, stride, begin_mask, end_mask, squeeze_mask, new_axis_mask =  \
+    _pad_mask(x, begin, end, stride, begin_mask, end_mask, squeeze_mask, ellipsis_mask, new_axis_mask)
+
+    if sum(i==True for i in new_axis_mask) > 0:
+        axes = [i for i,val in enumerate(new_axis_mask) if val == True ]
+        x = mb.expand_dims(x=x, axes=axes, name=node.name + "_new_axes")
 
     x = mb.slice_by_index(x=x, name=node.name, begin=begin, end=end, stride=stride,
                           begin_mask=begin_mask, end_mask=end_mask, squeeze_mask=squeeze_mask)

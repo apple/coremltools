@@ -423,7 +423,7 @@ class squeeze(Operation):
 
         return types.tensor(x_type, tuple(squeezed_shape))
 
-    @precondition(allow=VALUE|SYMBOL)
+    @precondition(allow=VALUE)
     def value_inference(self):
         if self.axes is None:
             return np.squeeze(self.x.val)
