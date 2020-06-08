@@ -164,8 +164,8 @@ def convert_graph(context, graph, outputs=None):
             continue
         _add_op = _TF_OPS_REGISTRY.get(node.op, None)
         if _add_op is None:
-            msg = "Conversion for TF op '{}' not implemented."
-            raise NotImplementedError(msg.format(node.op))
+            msg = "Conversion for TF op '{0}' not implemented.\n \n{1}".format(node.op, node.original_node)
+            raise NotImplementedError(msg)
         _add_op(context, node)
 
         if len(node.outputs) > 0:
