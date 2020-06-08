@@ -14,8 +14,8 @@ import warnings
 import sys
 from coremltools.proto import Model_pb2 as _Model_pb2
 from coremltools.models._deprecation import deprecated
-
 from .._deps import HAS_SKLEARN as _HAS_SKLEARN
+
 
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
@@ -59,10 +59,6 @@ def save_spec(spec, filename, auto_set_specification_version=False):
     else:
         if ext != '.mlmodel':
             raise Exception("Extension must be .mlmodel (not {})".format(ext))
-
-    # set model coremltools version
-    from coremltools import __version__
-    spec.description.metadata.userDefined['coremltoolsVersion'] = __version__
 
     spec = spec.SerializeToString()
     if auto_set_specification_version:

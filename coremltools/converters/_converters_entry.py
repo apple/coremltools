@@ -8,10 +8,15 @@ from coremltools.converters.mil.converter import _convert
 from coremltools.converters.mil.mil import Program
 from coremltools._deps import HAS_TORCH, HAS_TF_1, HAS_TF_2
 from coremltools.converters._profile_utils import profile
+from coremltools import __version__ as ct_version
+from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
+
 
 if HAS_TF_1:
+    import tensorflow as tf
     from coremltools.converters.mil.frontend.tensorflow.load import TF1Loader
 if HAS_TF_2:
+    import tensorflow as tf
     from coremltools.converters.mil.frontend.tensorflow2.load import TF2Loader
 
 if HAS_TORCH:
@@ -27,7 +32,6 @@ def convert(model,
             classifier_config=None,
             **kwargs):
     """
-
     Method to convert neural networks represented in Tensorflow or Pytorch formats
     to the Core ML model format. This method will choose a convert method based on
     the type of model passed in. For kwargs specific to a model type (Tensorflow, Torch etc.),
@@ -266,7 +270,20 @@ def convert(model,
               "It must be one of \"auto\", \"tensorflow\", \"pytorch\"."
         raise ValueError(msg.format(source))
 
-    mlmodel = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
+    model = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
+
     del proto_spec
     gc.collect()
-    return mlmodel
+
+    # recording metadata: coremltools version, source framework and version
+    if source in {'tensorflow', 'tensorflow2'} and (HAS_TF_1 or HAS_TF_2):
+        src_pkg_version = "tensorflow=={0}".format(tf.__version__)
+    elif source == 'pytorch' and HAS_TORCH:
+        src_pkg_version = "torch=={0}".format(torch.__version__)
+    else:
+        src_pkg_version = 'unknown'
+
+    model.user_defined_metadata[_METADATA_VERSION] = ct_version
+    model.user_defined_metadata[_METADATA_SOURCE] = src_pkg_version
+
+    return model

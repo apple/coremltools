@@ -4,7 +4,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from ...models.tree_ensemble import TreeEnsembleRegressor as _TreeEnsembleRegressor, TreeEnsembleClassifier
-
 from ..._deps import HAS_XGBOOST as _HAS_XGBOOST
 
 import numpy as _np
@@ -224,4 +223,5 @@ def convert_tree_ensemble(
 
         recurse_json(mlkit_tree, xgb_tree_json, xgb_tree_id, node_id = 0,
                 feature_map = feature_map, force_32bit_float = force_32bit_float, mode=mode, tree_index=tree_index, n_classes=n_classes)
+
     return mlkit_tree.spec

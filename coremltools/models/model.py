@@ -46,6 +46,9 @@ _LUT_BASED_QUANTIZATION = [_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
                            _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
                            _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE]
 
+_METADATA_VERSION = 'com.github.apple.coremltools.version'
+_METADATA_SOURCE = 'com.github.apple.coremltools.source'
+
 
 class _FeatureDescription(object):
     def __init__(self, fd_spec):

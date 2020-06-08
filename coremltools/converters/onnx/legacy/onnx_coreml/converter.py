@@ -23,7 +23,8 @@ from coremltools import (
     _MINIMUM_CUSTOM_MODEL_SPEC_VERSION as IOS_12_SPEC_VERSION,
 )  # iOS 12.0
 from coremltools import _MINIMUM_NDARRAY_SPEC_VERSION as IOS_13_SPEC_VERSION  # iOS 13.0
-
+from coremltools import __version__ as ct_version
+from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
 from typing import Tuple
 
 from ._operators import (
@@ -907,4 +908,6 @@ def convert(
                 )
             )
 
+    mlmodel.user_defined_metadata[_METADATA_VERSION] = ct_version
+    mlmodel.user_defined_metadata[_METADATA_SOURCE] = 'onnx=={0}'.format(onnx.__version__)
     return mlmodel

@@ -252,6 +252,17 @@ class TestTf1ModelFormats:
             source=frontend)
         assert mlmodel is not None
 
+    def test_model_metadata(self):
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=(3, 4, 5))
+            out = tf.nn.relu(x)
+        mlmodel = converter.convert(
+            graph, inputs=[TensorType(x.op.name, (3, 4, 5))], outputs=[out.op.name])
+        metadata_keys = mlmodel.get_spec().description.metadata.userDefined
+        assert 'com.github.apple.coremltools.version' in metadata_keys
+        assert 'com.github.apple.coremltools.source' in metadata_keys
+        assert 'tensorflow==1.' in metadata_keys['com.github.apple.coremltools.source']
+
     def test_invalid_format_none(self):
         with pytest.raises(NotImplementedError) as e:
             converter.convert(None, source='tensorflow')

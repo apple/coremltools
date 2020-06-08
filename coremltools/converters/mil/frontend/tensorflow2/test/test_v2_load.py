@@ -118,6 +118,21 @@ class TestTf2ModelFormats:
             [concrete_func], outputs=['Identity'], source=frontend)
         assert mlmodel is not None
 
+    def test_model_metadata(self):
+        keras_model = tf.keras.Sequential([
+            tf.keras.layers.ReLU(input_shape=(4, 5), batch_size=3)
+        ])
+        input_names, output_names = get_tf_keras_io_names(keras_model)
+        mlmodel = converter.convert(
+            keras_model,
+            inputs=[TensorType(input_names[0], (3, 4, 5))],
+            outputs=['Identity'],
+            source=frontend)
+        metadata_keys = mlmodel.get_spec().description.metadata.userDefined
+        assert 'com.github.apple.coremltools.version' in metadata_keys
+        assert 'com.github.apple.coremltools.source' in metadata_keys
+        assert 'tensorflow==2.' in metadata_keys['com.github.apple.coremltools.source']
+
     def test_invalid_format_none(self):
         with pytest.raises(NotImplementedError) as e:
             converter.convert(None, source=frontend)

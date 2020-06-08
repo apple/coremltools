@@ -5,6 +5,8 @@
 
 from ... import SPECIFICATION_VERSION
 from ..._deps import HAS_LIBSVM
+from coremltools import __version__ as ct_version
+from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
 
 
 def _infer_min_num_features(model):
@@ -50,7 +52,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     """
     if not(HAS_LIBSVM):
         raise RuntimeError('libsvm not found. libsvm conversion API is disabled.')
-    
+
     from libsvm import svm as _svm
     from ...proto import SVM_pb2
     from ...proto import Model_pb2
@@ -173,4 +175,11 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
             cur_node.value = libsvm_model.SV[i][j].value
             j += 1
 
-    return MLModel(export_spec)
+    model = MLModel(export_spec)
+
+    from libsvm import __version__ as libsvm_version
+    libsvm_version = 'libsvm=={0}'.format(libsvm_version)
+    model.user_defined_metadata[_METADATA_VERSION] = ct_version
+    model.user_defined_metadata[_METADATA_SOURCE] = libsvm_version
+
+    return model

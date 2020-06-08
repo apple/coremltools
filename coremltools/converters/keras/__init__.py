@@ -14,9 +14,3 @@ if _HAS_KERAS_TF or _HAS_KERAS2_TF:
         _HAS_KERAS_TF = False
         _HAS_KERAS2_TF = False
         _logging.warn('Currently, only Keras models with TensorFlow backend can be converted to CoreML.')
-
-# if _HAS_KERAS_TF:
-#     from ._keras_converter import convert
-#
-# if _HAS_KERAS2_TF:
-#     from ._keras2_converter import convert

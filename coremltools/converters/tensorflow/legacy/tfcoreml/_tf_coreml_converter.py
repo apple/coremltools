@@ -3,10 +3,12 @@ from six import string_types as _string_types
 
 import numpy as np
 import tensorflow as tf
-import coremltools
 from tensorflow.python.util import compat
 from coremltools.models.neural_network import NeuralNetworkBuilder
-from coremltools.models import datatypes, utils, MLModel
+from coremltools.models import datatypes, utils, MLModel, _METADATA_VERSION, _METADATA_SOURCE
+from coremltools import __version__ as ct_version
+from tensorflow import __version__ as tf_version
+
 from warnings import warn
 from ._ops_to_layers import convert_ops_to_layers
 from . import _ops_to_layers
@@ -694,7 +696,7 @@ def convert(
     if tf_image_format is not None:
         warn("tf_image_format not honored when minimum_ios_deployment_target < 13")
 
-    return _convert_pb_to_mlmodel(
+    model = _convert_pb_to_mlmodel(
         tf_model_path,
         mlmodel_path,
         output_feature_names,
@@ -712,3 +714,7 @@ def convert(
         add_custom_layers=add_custom_layers,
         custom_conversion_functions=custom_conversion_functions,
     )
+
+    model.user_defined_metadata[_METADATA_VERSION] = ct_version
+    model.user_defined_metadata[_METADATA_SOURCE] = "tensorflow=={0}".format(tf_version)
+    return model

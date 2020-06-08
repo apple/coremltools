@@ -8,13 +8,15 @@ from six import string_types as _string_types
 from ...models.neural_network import NeuralNetworkBuilder as _NeuralNetworkBuilder
 from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from collections import OrderedDict as _OrderedDict
-from ...models import datatypes
+from ...models import datatypes, _METADATA_VERSION, _METADATA_SOURCE
 from ...models import MLModel as _MLModel
 from ...models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, _VALID_MLMODEL_PRECISION_TYPES
 from ...models.utils import _convert_neural_network_spec_weights_to_fp16
 
 from ..._deps import HAS_KERAS_TF as _HAS_KERAS_TF
 from ..._deps import HAS_KERAS2_TF as _HAS_KERAS2_TF
+from coremltools import __version__ as ct_version
+
 
 if _HAS_KERAS_TF:
     import keras as _keras
@@ -802,4 +804,10 @@ def convert(model,
                          respect_trainable=respect_trainable,
                          use_float_arraytype=use_float_arraytype)
 
-    return _MLModel(spec)
+    model = _MLModel(spec)
+
+    from keras import __version__ as keras_version
+    model.user_defined_metadata[_METADATA_VERSION] = ct_version
+    model.user_defined_metadata[_METADATA_SOURCE] = "keras=={0}".format(keras_version)
+
+    return model

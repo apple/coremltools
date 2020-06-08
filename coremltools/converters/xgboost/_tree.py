@@ -5,6 +5,9 @@
 
 from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
 from ...models import MLModel as _MLModel
+from coremltools import __version__ as ct_version
+from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
+
 
 def convert(
         model,
@@ -67,7 +70,7 @@ def convert(
 		# Saving the Core ML model to a file.
 		>>> coremltools.save('my_model.mlmodel')
     """
-    return _MLModel(_convert_tree_ensemble(
+    model = _MLModel(_convert_tree_ensemble(
         model,
         feature_names,
         target,
@@ -76,3 +79,9 @@ def convert(
         class_labels=class_labels,
         n_classes=n_classes,
     ))
+
+    from xgboost import __version__ as xgboost_version
+    model.user_defined_metadata[_METADATA_VERSION] = ct_version
+    model.user_defined_metadata[_METADATA_SOURCE] = "xgboost=={0}".format(xgboost_version)
+
+    return model
