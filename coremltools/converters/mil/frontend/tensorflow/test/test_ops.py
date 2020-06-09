@@ -957,10 +957,10 @@ class TestConvTranspose:
             [True, False],
             backends,
             ['conv1d', 'conv2d'],
-            ['VALID', 'SAME'],
+            ['SAME', 'VALID'],
             ['NHWC'],  # NCHW not supported by TF
-            [(12, 12, 2, 2), (5, 5, 3, 3)],
-            [(1, 1), (2, 2)],
+            [(12, 12, 2, 2), (2, 2, 2, 3), (5, 5, 3, 3)],
+            [(1, 1), (1, 2)],
             [(1, 1)]  # Dilation > 1 not supported by TF
         ))
     def test_conv_transpose(self, use_cpu_only, backend, conv_dim,
@@ -988,7 +988,7 @@ class TestConvTranspose:
                 data_format = 'NCW'
             output_shape = [N, C_out, oH] if conv_dim == 'conv1d' else [N, C_out, oH, oW]
 
-        w_shape = (kW, C_out, C_in) if conv_dim == 'conv1d' \
+        w_shape = (kH, C_out, C_in) if conv_dim == 'conv1d' \
             else (kH, kW, C_out, C_in)
 
         def test_static_W():
@@ -1008,7 +1008,6 @@ class TestConvTranspose:
                                frontend_only=False, backend=backend)
 
         test_static_W()
-
 
 class TestElementWiseBinary:
     @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",

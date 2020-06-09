@@ -8,13 +8,13 @@ class conv(Operation):
     input_spec = InputSpec(
             x = TensorInputType(),
             weight = TensorInputType(),
-            strides = IntTensorInputType(const=True, optional=True),
-            pad_type = StringInputType(const=True),
-            pad = IntTensorInputType(const=True, optional=True),
-            dilations = IntTensorInputType(const=True, optional=True),
-            group = IntInputType(const=True, default=1),
-            bias = TensorInputType(const=True, optional=True),
-            )
+            bias = TensorInputType(const=True, optional=True, default=None),
+            strides = IntTensorInputType(const=True, optional=True, default=None),
+            pad_type = StringInputType(const=True, optional=True, default='valid'),
+            pad = IntTensorInputType(const=True, optional=True, default=None),
+            dilations = IntTensorInputType(const=True, optional=True, default=None),
+            groups = IntInputType(const=True, optional=True, default=1)
+        )
 
     def __init__(self, **kwargs):
         super(conv, self).__init__(**kwargs)
@@ -24,14 +24,18 @@ class conv(Operation):
         f_shape = self.weight.shape
         kernel_shape = f_shape[2:]
         num_dims = len(inshape) - 2
+        C_out = f_shape[0]
         C_in = self.x.shape[1]
-        group = self.group.val
-        if C_in % group != 0:
-            msg = '# of input channels {} not divisible by group {}'
-            raise ValueError(msg.format(C_in, group))
-        if C_in // group != self.weight.shape[1]:
-            msg = 'C_in / group = {}/{} != weight[1] ({})'
-            raise ValueError(msg.format(C_in, group, self.weight.shape[1]))
+        groups = self.groups.val
+
+        if self.bias is not None and self.bias.val.shape[0] != C_out:
+            msg = '# of bias values {} not equal to # output channels {}'
+        if C_in % groups != 0:
+            msg = '# of input channels {} not divisible by groups {}'
+            raise ValueError(msg.format(C_in, groups))
+        if C_in // groups != self.weight.shape[1]:
+            msg = 'C_in / groups = {}/{} != weight[1] ({})'
+            raise ValueError(msg.format(C_in, groups, self.weight.shape[1]))
 
         strides = [1]*num_dims if self.strides is None else self.strides.val
         dilations = [1]*num_dims if self.dilations is None \
@@ -54,45 +58,48 @@ class conv(Operation):
 @register_op(doc_str='TODO')
 class conv_transpose(Operation):
     input_spec = InputSpec(
-        x = TensorInputType(),
-        weight = TensorInputType(const=True),
-        bias = TensorInputType(const=True, optional=True),
-        pad = IntTensorInputType(const=True, optional=True),
-        output_shape = IntTensorInputType(const=True, optional=True),
-        pad_type = StringInputType(const=True, default='valid'),
-        strides = TensorInputType(const=True, default=[1, 1]),
-        dilations = TensorInputType(const=True, default=[1, 1]),
-        group = IntInputType(const=True, default=1),
+        x = TensorInputType(), # [n, C_in, spatial_dims]
+        weight = TensorInputType(const=True), # [C_out, C_in, spatial_dims]
+        bias = TensorInputType(const=True, optional=True, default=None),
+        pad = IntTensorInputType(const=True, optional=True, default=None),
+        output_shape = IntTensorInputType(const=True, optional=True, default=None),
+        pad_type = StringInputType(const=True, optional=True, default='valid'),
+        strides = TensorInputType(const=True, optional=True, default=None),
+        dilations = TensorInputType(const=True, optional=True, default=None),
+        groups = IntInputType(const=True, optional=True, default=1),
         )
 
     def __init__(self, **kwargs):
         super(conv_transpose, self).__init__(**kwargs)
 
     def type_inference(self):
-        # Input shape is [N, C_in, H, W]
+        # Input shape is [n, C_in, spatial_dims]
         in_shape = self.x.shape
-        # Weight shape is [H, W, C_out, C_in]
+        # Weight shape is [C_out, C_in, spatial_dims]
         f_shape = self.weight.shape
-        kernel_shape = f_shape[:2]
+        kernel_shape = f_shape[2:]
         spatial_dim_rank = len(in_shape) - 2
         N = in_shape[0]
         C_in = self.x.shape[1]
-        C_out = f_shape[-2]
-        group = self.group.val
-        if C_out % group != 0:
-            msg = '# of input channels {} not divisible by group {}'
-            raise ValueError(msg.format(C_in, group))
+        groups = self.groups.val
+        C_out = f_shape[0] * groups
+
+        if self.bias is not None and self.bias.val.shape[0] != C_out:
+            msg = '# of bias values {} not equal to # output channels {}'
+            raise ValueError(msg.format(self.bias.val.shape[0], C_out))
+        if C_out % groups != 0:
+            msg = '# of input channels {} not divisible by groups {}'
+            raise ValueError(msg.format(C_in, groups))
 
         # If output shape is given, return it
         if self.output_shape is not None:
-            output_shape = self.output_shape.val
-            return types.tensor(self.x.dtype, tuple([N, C_out, output_shape[0], output_shape[1]]))
+            return types.tensor(self.x.dtype, tuple([N, C_out] + list(self.output_shape.val)))
 
         strides = [1] * spatial_dim_rank if self.strides is None else self.strides.val
         dilations = [1] * spatial_dim_rank if self.dilations is None else self.dilations.val
         kernel_shape = [(kernel_shape[r] -1) * dilations[r] + 1 for r in range(spatial_dim_rank)]
 
-        D_in = in_shape[2:]  # spatial dimensions
+        D_in = in_shape[2:] # spatial dimensions
 
         # Deconv's output shape is non-deterministic, we follow TF shape logic here.
         if self.pad_type.val == 'same':

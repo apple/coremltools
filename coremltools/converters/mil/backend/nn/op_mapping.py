@@ -313,8 +313,10 @@ def const(const_context, builder, op):
 
 @register_v2_op
 def conv(const_context, builder, op):
-    # v2 x: (n, C_in/group, *D_in)
+    # v2 x: (n, C_in/groups, spatial_dims)
     x_name = make_input(const_context, builder, op.x)
+    out_name = op.outputs[0].name
+
     is_conv1d = op.x.rank == 3
     is_conv2d = op.x.rank == 4
     is_conv3d = op.x.rank == 5
@@ -326,22 +328,23 @@ def conv(const_context, builder, op):
             )
         )
     if is_conv1d:
-        x_name = op.name + "expand_dim"
+        x_name = op.name + "_expand_dim"
+        out_name += "_expanded"
         builder.add_expand_dims(
             name=x_name,
             input_name=op.x.name,
             output_name=x_name,
-            axes=3,
+            axes=[3],
         )
-    # `x_name` is guaranteed to be (n, C_in/group, H, W) for 1D and 2D convolution
 
+    # `x_name` is guaranteed to be (n, C_in/groups, spatial_dims) for 1D and 2D convolution
     # W_v1 wil be np.ndarray (if W is const at compile time) or None
     # (if W is not known at compile time).
     weights = None
-    input_names = make_input(const_context, builder, [op.x])
+    input_names = [x_name]
     if op.weight.val is not None:
-        # v2 convolution (conv3d) expects weights to have shape (C_out, C_in/group, spatial_dims)
-        # v1 convolution expects (H, W, C_in/group, C_out) or (D, H, W, C_in/group, C_out)
+        # v2 convolution (conv3d) expects weights to have shape (C_out, C_in/groups, spatial_dims)
+        # v1 convolution expects (H, W, C_in/groups, C_out) or (D, H, W, C_in/groups, C_out)
         weights = op.weight.val
         if is_conv1d:
             weights = np.expand_dims(op.weight.val, 3)
@@ -350,7 +353,7 @@ def conv(const_context, builder, op):
     else:
         # op.weight is not const at compile time.
         # When weight is dynamic, v1 convolution expects weight to be
-        # (C_out, C_in/group, H, W)
+        # (C_out, C_in/groups, H, W)
         # TODO 3D convolution doesn't support dynamic weights:
         if is_conv3d:
             raise ValueError("3D Convolution doesn't support dynamic weights.")
@@ -361,42 +364,59 @@ def conv(const_context, builder, op):
                 name=weights_name,
                 input_name=op.weight.name,
                 output_name=weights_name,
-                axes=3,
+                axes=[3],
             )
         input_names.append(weights_name)
 
     # padding
-    padding_mode = op.pad_type.val
+    padding_mode = 'valid' if op.pad_type is None else op.pad_type.val
     pad = {}
-    if padding_mode == "custom":
-        padding_mode = "valid"
-        pad["padding_top"] = op.pad.val[0]
-        pad["padding_bottom"] = op.pad.val[1]
-        if is_conv2d or is_conv3d:
-            pad["padding_left"] = op.pad.val[2]
-            pad["padding_right"] = op.pad.val[3]
-        if is_conv3d:
-            pad["padding_front"] = op.pad.val[4]
-            pad["padding_back"] = op.pad.val[5]
+    if padding_mode == "custom" or op.pad:
+        if not is_conv3d:
+            padding_mode = "valid"
+            pad["padding_top"] = op.pad.val[0]
+            pad["padding_bottom"] = op.pad.val[1]
+            if is_conv2d or is_conv3d:
+                pad["padding_left"] = op.pad.val[2]
+                pad["padding_right"] = op.pad.val[3]
+        else:
+            pad["padding_front"] = op.pad.val[0]
+            pad["padding_back"] = op.pad.val[1]
+            pad["padding_top"] = op.pad.val[2]
+            pad["padding_bottom"] = op.pad.val[3]
+            pad["padding_left"] = op.pad.val[4]
+            pad["padding_right"] = op.pad.val[5]
 
     # This doesn't work till builder fills in all optional values
     # (rdar://59280101)
-    #has_bias = np.sum(np.abs(op.bias.val)) > 0
     has_bias = op.bias is not None
-    groups = op.group.val
-    dilations = op.dilations.val.tolist()
+    groups = op.groups.val
+
+    rank_factor = 1
+    if is_conv2d:
+        rank_factor = 2
+    elif is_conv3d:
+        rank_factor =  3
+    strides = [1] * rank_factor
+    dilations = [1] * rank_factor
+
+    if op.strides.val is not None:
+        strides = op.strides.val.tolist()
+    if op.dilations.val is not None:
+        dilations = op.dilations.val.tolist()
     if is_conv1d:
         dilations = dilations + [1]
+        strides = strides + [1]
 
     if is_conv1d or is_conv2d:
         builder.add_convolution(
-            name=op.name,
+            name=out_name,
             kernel_channels=op.weight.shape[1],
             output_channels=op.weight.shape[0],
             height=op.weight.shape[2],
             width=1 if is_conv1d else op.weight.shape[3],
-            stride_height=op.strides.val[0],
-            stride_width=1 if is_conv1d else op.strides.val[1],
+            stride_height=strides[0],
+            stride_width=strides[1],
             border_mode=padding_mode,
             groups=groups,
             W=weights,
@@ -404,10 +424,20 @@ def conv(const_context, builder, op):
             has_bias=has_bias,
             is_deconv=False,
             input_name=input_names,
-            output_name=op.outputs[0].name,
+            output_name=out_name,
             dilation_factors=dilations,
             **pad  # Python 2.7.16 will fail with a syntax error if a comma is included after `**pad`
         )
+
+        # Squeeze added `Width` dimension for 1d case
+        if is_conv1d:
+            x_name = op.name+'expand_dim'
+            builder.add_squeeze(
+                name=op.name,
+                input_name=out_name,
+                output_name=op.outputs[0].name,
+                axes=[3])
+
     if is_conv3d:
         builder.add_convolution3d(
             name=op.name,
@@ -416,19 +446,19 @@ def conv(const_context, builder, op):
             depth=op.weight.shape[2],
             height=op.weight.shape[3],
             width=op.weight.shape[4],
-            W=weights,
+            W=op.weight.val,
             b=op.bias.val if has_bias else None,
             has_bias=has_bias,
             groups=groups,
-            stride_depth=op.strides.val[0],
-            stride_height=op.strides.val[1],
-            stride_width=op.strides.val[2],
+            stride_depth=strides[0],
+            stride_height=strides[1],
+            stride_width=strides[2],
             dilation_depth=dilations[0],
             dilation_height=dilations[1],
             dilation_width=dilations[2],
             padding_mode=padding_mode,
             input_name=input_names,
-            output_name=op.name,
+            output_name=out_name,
             **pad  # Python 2.7.16 will fail with a syntax error if a comma is included after `**pad`
         )
 
@@ -1934,6 +1964,7 @@ def conv_transpose(const_context, builder, op):
 
     # Special handling for 1d conv transpose
     is_conv_transpose_1d = op.x.rank == 3
+
     if is_conv_transpose_1d:
         x_name = op.name + '_expand_dim'
         out_name = op.name + '_expanded'
@@ -1946,33 +1977,44 @@ def conv_transpose(const_context, builder, op):
     # Input names to be used
     input_names = [x_name]
 
-    # Kernel shape
-    # 2D: [H, W, C_out, C_in]
-    # 1D: [H, C_out, C_in]
+    # Kernel shape: [C_out, C_in, D, H, W]
     weight = op.weight.val
+    kernel_channels = weight.shape[1]
+    output_channels = weight.shape[0] * op.groups.val
 
+    # DeConvolution 2D/1D expects (spatial_dims, C_in, C_out/groups)
     if is_conv_transpose_1d:
-        weight = np.expand_dims(op.weight.val, 1)
+        weight = np.expand_dims(weight, 3)
+    weight = np.transpose(weight, [2, 3, 1, 0])
 
     # padding
     border_mode = 'valid' if op.pad_type is None else op.pad_type.val
-    pad = [0] * 4
+    pad = {}
     if border_mode == 'custom' or op.pad is not None:
         border_mode = 'valid'
-        pad[0] = op.pad.val[0] # Top
-        pad[1] = op.pad.val[1] # Bottom
+        pad['padding_top'] = op.pad.val[0] # Top
+        pad['padding_bottom'] = op.pad.val[1] # Bottom
         if not is_conv_transpose_1d:
-            pad[2] = op.pad.val[2] # Left
-            pad[3] = op.pad.val[3] # Right
+            pad['padding_left'] = op.pad.val[2] # Left
+            pad['padding_right'] = op.pad.val[3] # Right
 
-    strides = [op.strides.val[0], 1 if is_conv_transpose_1d else op.strides.val[1]]
-    group = op.group.val
+    groups = op.groups.val
     has_bias = op.bias is not None
-    dilations = [op.dilations.val[0], 1 if is_conv_transpose_1d else op.dilations.val[1]]
     # Get H and W from output shape
     output_shape = None if op.output_shape is None else tuple(op.output_shape.val)
-    kernel_channels = weight.shape[3]
-    output_channels = weight.shape[2]
+
+    # Adjust for Deconv1D case
+    rank_factor = 1 if is_conv_transpose_1d else 2
+    strides = [1] * rank_factor
+    dilations = [1] * rank_factor
+
+    if op.strides.val is not None:
+        strides = op.strides.val.tolist()
+    if op.dilations.val is not None:
+        dilations = op.dilations.val.tolist()
+    if is_conv_transpose_1d:
+        dilations = dilations + [1]
+        strides = strides + [1]
 
     builder.add_convolution(
             name=out_name,
@@ -1983,8 +2025,8 @@ def conv_transpose(const_context, builder, op):
             stride_height=strides[0],
             stride_width=strides[1],
             border_mode=border_mode,
-            groups=group,
-            W=np.transpose(weight, (0, 1, 3, 2)),
+            groups=groups,
+            W=weight,
             b=op.bias.val if has_bias else None,
             has_bias=has_bias,
             is_deconv=True,
@@ -1992,11 +2034,8 @@ def conv_transpose(const_context, builder, op):
             input_name=input_names,
             output_name=out_name,
             dilation_factors=dilations,
-            padding_top=pad[0],
-            padding_bottom=pad[1],
-            padding_left=pad[2],
-            padding_right=pad[3],
-            )
+            **pad
+        )
 
     # Squeeze added `Width` dimension for 1d case
     if is_conv_transpose_1d:
@@ -2006,7 +2045,6 @@ def conv_transpose(const_context, builder, op):
                 input_name=out_name,
                 output_name=op.outputs[0].name,
                 axes=[3])
-
 
 @register_v2_op
 def range_1d(const_context, builder, op):

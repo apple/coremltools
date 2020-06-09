@@ -487,7 +487,7 @@ def DepthwiseConv2dNative(context, node):
     shape_hw1o = list(W_hwim.shape[:2]) + [1, W_hwim.shape[2]*W_hwim.shape[3]]
     W_hw1o = mb.reshape(x=W_hwim, shape=shape_hw1o)
     # [C_in * multipler, 1, kH, kW]. Note that C_in * multiplier = C_out in
-    # MIL. C_in / group = 1 in depthwise conv.
+    # MIL. C_in / groups = 1 in depthwise conv.
     W_o1hw = mb.transpose(x=W_hw1o, perm=[3, 2, 0, 1])
     data_format = node.attr.get('data_format', 'NHWC')
     HW_dilations = _conv2d3d_strides_or_dilations(
@@ -507,7 +507,7 @@ def DepthwiseConv2dNative(context, node):
     # Only the last op should have the same name as node.name
     conv_name = node.name + 'x' if data_format == 'NHWC' else node.name
     x = mb.conv(x=x, weight=W_o1hw, pad_type=pad_type, strides=HW_strides,
-            dilations=HW_dilations, group=C_in, name=conv_name)
+            dilations=HW_dilations, groups=C_in, name=conv_name)
     if data_format == "NHWC":
         x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
@@ -565,6 +565,7 @@ def Conv3D(context, node):
         # Convert input back to NDHWC (from NCDHW)
         x = _transpose_NCDHW_to_NDHWC(x, node.name)
     context.add(node.name, x)
+
 
 @register_tf_op
 def DepthToSpace(context, node):
@@ -1383,7 +1384,8 @@ def Conv2DBackpropInput(context, node):
     # Output shape: [N, H_out, W_out, C_out]
     output_shape = context[node.inputs[0]].val
     # Weight shape: [H, W, C_out, C_in]
-    weight = context[node.inputs[1]]
+    W_hwoi = context[node.inputs[1]]
+    W_oihw = mb.transpose(x=W_hwoi, perm=[2, 3, 0, 1])
     # Input shape: [N, H_in, W_in, C_in]
     x = context[node.inputs[2]]
 
@@ -1412,7 +1414,7 @@ def Conv2DBackpropInput(context, node):
     # Only the last op should have the same name as node.name
     conv_name = node.name + 'x' if data_format == 'NHWC' else node.name
     # add Conv Tranpose
-    x = mb.conv_transpose(x=x, weight=weight, pad_type=pad_type, output_shape=output_shape, strides=HW_strides,
+    x = mb.conv_transpose(x=x, weight=W_oihw, pad_type=pad_type, output_shape=output_shape, strides=HW_strides,
                           dilations=HW_dilations, name=conv_name)
 
     # Convert NCHW output back to NHWC format

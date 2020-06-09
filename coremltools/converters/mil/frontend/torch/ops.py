@@ -357,7 +357,7 @@ def _convolution(context, node):
         "pad_type": "custom",
         "pad": pad,
         "dilations": dilations,
-        "group": group,
+        "groups": group,
         "name": node.name,
     }
 
@@ -369,9 +369,9 @@ def _convolution(context, node):
         # Transposed convolution
 
         # PyTorch weight ordering [Cin, Cout, H, W]
-        # MIL expects [H, W, Cout, Cin]
+        # MIL expects [Cout, Cin, H, W]
         weight_transpose = mb.transpose(
-            x=weight, perm=[2, 3, 1, 0], name=weight.name + "_transpose"
+            x=weight, perm=[1, 0, 2, 3], name=weight.name + "_transpose"
         )
         kwargs["weight"] = weight_transpose
         conv = mb.conv_transpose(**kwargs)

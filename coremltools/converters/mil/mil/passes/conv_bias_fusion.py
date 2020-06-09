@@ -81,12 +81,9 @@ def try_to_transform(conv_op, add_op, block):
         if np.prod(bias_value.shape) == 1:
             # its a scalar bias
             # need to find the value of Cout to form a new bias
-            if conv_op.inputs['weight'].val is None:
+            if conv_op.weight.val is None:
                 return False
-            if conv_op.op_type == 'conv':
-                Cout = conv_op.inputs['weight'].val.shape[0]
-            else:
-                Cout = conv_op.inputs['weight'].val.shape[-2]
+            Cout = conv_op.weight.val.shape[0]
             new_bias_value = np.broadcast_to(bias_value, (Cout,))
         else:
             new_bias_value = bias_value

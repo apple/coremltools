@@ -66,7 +66,7 @@ class TestElementwiseOptimizationPasses:
             W = np.random.rand(Cout, Cin, 1)
         elif conv_dim == 2:
             input_shape = (1, Cin, D, D)
-            W = np.random.rand(Cout, Cin, 1, 1) if not use_conv_transpose else np.random.rand(1, 1, Cout, Cin)
+            W = np.random.rand(Cout, Cin, 1, 1)
             const = np.expand_dims(const, axis=-1)
         elif conv_dim == 3:
             input_shape = (1, Cin, D, D, D)
