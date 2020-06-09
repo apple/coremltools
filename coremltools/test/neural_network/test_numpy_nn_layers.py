@@ -2008,6 +2008,27 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_tile_gpu(self):
         self.test_tile_cpu(cpu_only=False)
 
+    def test_dynamic_tile_cpu(self, cpu_only=True):
+        for rank in range(1, 6):
+            input_shape = np.random.randint(low=2, high=5, size=rank)
+            for rep_rank in range(1,rank+1):
+                reps = np.random.randint(low=1, high=9, size=rep_rank)
+                input_features = [('data', datatypes.Array(*input_shape)), ('reps', datatypes.Array(*reps.shape))]
+                output_features = [('output', None)]
+
+                builder = neural_network.NeuralNetworkBuilder(
+                    input_features, output_features,
+                    disable_rank5_shape_mapping=True
+                )
+
+                builder.add_tile('Tile', ['data', 'reps'], 'output')
+
+                x = np.random.rand(*input_shape)
+                input = {'data': x, 'reps': reps.astype(np.float32)}
+                expected = {'output': np.tile(x, list(reps))}
+
+                self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
+
     def test_sliding_windows_cpu(self, cpu_only=True):
         def numpy_sliding_windows(a, np_axis, np_size, np_step):
             n = (a.shape[np_axis] - np_size) // np_step + 1
@@ -3272,6 +3293,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(model, inputs, expected, useCPUOnly=True,
                              output_name_shape_dict={'output': prediction['output'].shape})
 
+    @pytest.mark.xfail(reason='rdar://64153463 ([GitLab CI] test_categorical_distribution_cpu_probs failing)')
     def test_categorical_distribution_cpu_probs(self):
 
         def softmax(data):
@@ -5693,11 +5715,3 @@ class ReorganizeDataTests(CorrectnessTest):
                      'macOS 10.16+ required. Skipping tests.')
     def test_pixel_shuffle_gpu(self):
         self.test_pixel_shuffle_cpu(cpu_only=False)
-
-
-if __name__ == '__main__':
-    unittest.main()
-    #suite = unittest.TestSuite()
-    # suite.addTest(NewLayersSimpleTest("test_softmax_nan_bug_cpu"))
-    # #suite.addTest(SimpleNetworkTest("test_power_iteration_cpu"))
-    #unittest.TextTestRunner().run(suite)

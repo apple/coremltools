@@ -4739,7 +4739,7 @@ class NeuralNetworkBuilder(object):
 
         return spec_layer
 
-    def add_tile(self, name, input_name, output_name, reps):
+    def add_tile(self, name, input_name, output_name, reps=[]):
         """
         Add a tile layer to the model that construct a tensor by repeating the
         input tensor multiple number of times.
@@ -4749,21 +4749,36 @@ class NeuralNetworkBuilder(object):
         ----------
         name: str
             The name of this layer.
-        input_name: str
+        input_name: str or list[str]
             The input blob name of this layer.
+            If second input is provided, reps parameter is ignored.
         output_name: str
             The output blob name of this layer.
         reps: list of int or tuple of int
             Number of times to replicate.
+            If `input_name` provides two inputs, second input is used as
+            reps and this parameter is ignored.
 
         See Also
         --------
         add_stack, add_concat_nd
         """
-
-        spec_layer = self._add_generic_layer(name, [input_name], [output_name])
+        if isinstance(input_name, tuple):
+            input_names = list(input_name)
+        elif isinstance(input_name, list):
+            input_names = input_name
+        else:
+            input_names = [input_name]
+        spec_layer = self._add_generic_layer(name, input_names, [output_name])
 
         spec_layer_params = spec_layer.tile
+        # If two inputs are provided,
+        # ignore reps attribute.
+        if len(input_names) == 2:
+            reps = []
+            if self.spec and (
+                not self.spec.specificationVersion or self.spec.specificationVersion < SPECIFICATION_VERSION_IOS_14):
+                self.spec.specificationVersion = SPECIFICATION_VERSION_IOS_14
         assert all([i > 0 for i in reps])
         spec_layer_params.reps.extend(reps)
         return spec_layer

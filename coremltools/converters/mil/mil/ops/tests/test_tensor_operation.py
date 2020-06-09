@@ -795,6 +795,49 @@ class TestTile:
         assert is_close(np.tile(x, reps = (2,)), v.val)
 
 
+class TestDynamicTile:
+    @pytest.mark.parametrize("use_cpu_only, backend",
+            itertools.product(
+                [True, False],
+                backends,
+                ))
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        x = np.array([[1, 2, 3],[4, 5, 6]], dtype=np.float32)
+        rep1 = np.array([1, 1]).astype(np.int32)
+        rep2 = np.array([2, 1]).astype(np.int32)
+        rep3 = np.array([2, 3]).astype(np.int32)
+        input_placeholders = {"x": mb.placeholder(shape=x.shape),
+                              "reps1": mb.placeholder(shape=rep1.shape),
+                              "reps2": mb.placeholder(shape=rep2.shape),
+                              "reps3": mb.placeholder(shape=rep3.shape)
+                              }
+
+        input_values = {"x": x, "reps1":rep1, "reps2":rep2, "reps3":rep3}
+        def build(x, reps1, reps2, reps3):
+            return [mb.tile(x=x, reps=reps1),
+                    mb.tile(x=x, reps=reps2),
+                    mb.tile(x=x, reps=reps3)
+                    ]
+
+        expected_output_types = [
+                (UNK_SYM, UNK_SYM, types.fp32),
+                (UNK_SYM, UNK_SYM, types.fp32),
+                (UNK_SYM, UNK_SYM, types.fp32),
+                ]
+
+        expected_outputs = [
+                x,
+                np.array([[1, 2, 3],[4, 5, 6], [1, 2, 3],[4, 5, 6]], dtype=np.float32),
+                np.array([[1, 2, 3, 1, 2, 3, 1, 2, 3],[4, 5, 6, 4, 5, 6, 4, 5, 6],
+                          [1, 2, 3, 1, 2, 3, 1, 2, 3],[4, 5, 6, 4, 5, 6, 4, 5, 6]], dtype=np.float32)
+                ]
+
+        run_compare_builder(build, input_placeholders, input_values,
+                            expected_output_types, expected_outputs,
+                            use_cpu_only=use_cpu_only, frontend_only=False,
+                            backend=backend)
+
+
 class TestTopK:
     @pytest.mark.parametrize('use_cpu_only, backend',
                              itertools.product(

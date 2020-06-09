@@ -5896,10 +5896,14 @@ message SliceDynamicLayerParams {
  * A layer that constructs a tensor by repeating the input tensor multiple
  * number of times.
  *
- * Requires 1 input and produces 1 output.
+ * Requires 1 or 2 inputs and produces 1 output.
  * Output rank is same as the input rank.
  *
- * Length of the "reps" parameter must be at least 1 and
+ * If two inputs are provided, second input is used as "reps"
+ * and "reps" parameter is ignored.
+ *
+ * If only one input is provided,
+ * length of the "reps" parameter must be at least 1 and
  * not greater than the rank of the input.
  * If it is less than the input rank, it is made equal to the input rank by prepending 1's to it.
  *
@@ -5913,6 +5917,11 @@ message SliceDynamicLayerParams {
  * reps = (6)
  * reps after prepending ones = (1, 1, 6)
  * output shape = (2, 4, 12)
+ *
+ * input shape = (2, 4, 2)
+ * second input = [1, 2, 6] -> shape: (3,)
+ * reps = N/A [Ignored]
+ * output shape = (2, 8, 12)
  *
  */
 message TileLayerParams {

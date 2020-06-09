@@ -1655,10 +1655,13 @@ def scatter_nd(const_context, builder, op):
 
 @register_v2_op
 def tile(const_context, builder, op):
+    inputs = [make_input(const_context, builder, op.x)]
+    if op.reps.val is None:
+        inputs.append(op.reps.name)
     builder.add_tile(
             name=op.name,
             reps=op.reps.val,
-            input_name=make_input(const_context, builder, op.x),
+            input_name=inputs,
             output_name=op.outputs[0].name)
 
 @register_v2_op

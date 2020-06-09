@@ -2746,6 +2746,25 @@ class TestTile:
                            res, use_cpu_only=use_cpu_only,
                            frontend_only=False, backend=backend)
 
+class TestDynamicTile:
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [1, 2, 3, 4, 5]
+                             ))
+    def test_tile(self, use_cpu_only, backend, rank):
+        x_shape = np.random.randint(low=2, high=5, size=rank)
+        reps_val = np.random.randint(low=1, high=10, size=rank)
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=x_shape)
+            reps = tf.placeholder(tf.int32, shape=reps_val.shape)
+            res = tf.tile(x, multiples=reps)
+            run_compare_tf(graph,
+                           {x: np.random.rand(*x_shape), reps:reps_val},
+                           res, use_cpu_only=use_cpu_only,
+                           frontend_only=False, backend=backend)
+
 
 class TestTopK:
     @pytest.mark.parametrize('use_cpu_only, backend, rank, k',

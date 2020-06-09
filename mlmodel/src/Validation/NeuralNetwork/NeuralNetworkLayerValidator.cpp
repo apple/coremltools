@@ -2760,7 +2760,7 @@ Result NeuralNetworkSpecValidator::validateSliceDynamicLayer(const Specification
 
 Result NeuralNetworkSpecValidator::validateTileLayer(const Specification::NeuralNetworkLayer& layer) {
     Result r;
-    r = validateInputCount(layer, 1, 1);
+    r = validateInputCount(layer, 1, 2);
     if (r.good()) {
         r = validateOutputCount(layer, 1, 1);
     }

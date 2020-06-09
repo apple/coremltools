@@ -349,7 +349,8 @@ class range_1d(Operation):
 class tile(Operation):
     input_spec = InputSpec(
             x = TensorInputType(),
-            reps = IntTensorInputType(const=True),
+            # TODO: rdar://63481891 (IntTensorInputType not compatible for Tile layer)
+            reps = TensorInputType(),
             )
 
     def __init__(self, **kwargs):
@@ -359,6 +360,10 @@ class tile(Operation):
         x_type = self.x.dtype
         x_shape = np.array(self.x.shape)
         reps = self.reps.val
+        if reps is None:
+            out_shape = tuple([get_new_symbol() for _ in range(self.x.rank)])
+            return types.tensor(x_type, out_shape)
+
         if len(reps) == 0 or len(reps) > self.x.rank:
             msg = "Length of the reps ({}) must be at least 1, and " \
                   "not greater than the rank of the input x ({})"
@@ -376,6 +381,9 @@ class tile(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
+        # Infer only if don't have symbolic values.
+        if self.reps.val is None:
+            return None
         return np.tile(self.x.val, reps=self.reps.val)
 
 
