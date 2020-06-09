@@ -16,7 +16,6 @@ six
 snowballstemmer
 sphinx-rtd-theme
 sphinxcontrib-websupport
-sphinxtogithub
 sympy
 typing
 urllib3

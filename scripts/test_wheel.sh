@@ -45,7 +45,7 @@ done
 
 # First configure
 echo ${COREMLTOOLS_HOME}
-cd ${COREMLTOOLS_HOME}
+pushd ${COREMLTOOLS_HOME}
 zsh -i -e scripts/env_create.sh --python=$PYTHON
 
 # Setup the right python
