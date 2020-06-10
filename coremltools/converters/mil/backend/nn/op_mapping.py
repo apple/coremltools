@@ -1826,10 +1826,25 @@ def clamped_relu(const_context, builder, op):
 
 @register_v2_op
 def relu6(const_context, builder, op):
-    builder.add_clip(name=op.name,
-                     input_name=make_input(const_context, builder, op.x),
-                     output_name=op.outputs[0].name,
-                     min_value=0.0, max_value=6.0)
+    builder.add_activation(name=op.name+"__relu6_relu__",
+                           input_name=make_input(const_context, builder, op.x),
+                           output_name=op.name+"__relu6_relu__",
+                           non_linearity="RELU")
+    builder.add_activation(name=op.name+"__relu6_neg__",
+                           input_name=op.name+"__relu6_relu__",
+                           output_name=op.name+"__relu6_neg__",
+                           non_linearity="LINEAR",
+                           params=[-1,0])
+    builder.add_unary(name=op.name+"__relu6_threshold6__",
+                      input_name=op.name+"__relu6_neg__",
+                      output_name=op.name+"__relu6_threshold6__",
+                      mode="threshold",
+                      alpha=-6)
+    builder.add_activation(name=op.name,
+                           input_name=op.name+"__relu6_threshold6__",
+                           output_name=op.name,
+                           non_linearity="LINEAR",
+                           params=[-1,0])
 
 @register_v2_op
 def prelu(const_context, builder, op):
