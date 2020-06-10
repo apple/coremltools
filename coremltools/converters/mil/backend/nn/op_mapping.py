@@ -1363,19 +1363,19 @@ def lstm(const_context, builder, op):
         # 1, Batch_Size, Hidden_Size, 1, 1
         # Concat to make it
         # 1, Batch_Size, 2*Hidden_Size, 1, 1
-        builder.add_concat_nd(
+        builder.add_elementwise(
             name=op.outputs[1].name + '_5d',
             input_names=[output_names[1], output_names[3]],
             output_name=op.outputs[1].name + '_5d',
-            axis=2
+            mode="CONCAT"
         )
         # Output C is of format
         # 1, Batch_Size, Hidden_Size, 1, 1
-        builder.add_concat_nd(
+        builder.add_elementwise(
             name=op.outputs[2].name + '_5d',
             input_names=[output_names[2], output_names[4]],
             output_name=op.outputs[2].name + '_5d',
-            axis=2
+            mode="CONCAT"
         )
 
         # Squeeze Output H and Output C
@@ -1759,12 +1759,20 @@ def softplus(const_context, builder, op):
 
 @register_v2_op
 def softmax(const_context, builder, op):
-    builder.add_softmax_nd(
-        name=op.name,
-        input_name=op.logit.name,
-        output_name=op.outputs[0].name,
-        axis=op.axis.val
-    )
+    rank = op.logit.rank
+    if op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank-3:
+        builder.add_softmax(
+            name=op.name,
+            input_name=op.logit.name,
+            output_name=op.outputs[0].name,
+        )
+    else:
+        builder.add_softmax_nd(
+            name=op.name,
+            input_name=op.logit.name,
+            output_name=op.outputs[0].name,
+            axis=op.axis.val
+        )
 
 @register_v2_op
 def softplus_parametric(const_context, builder, op):
@@ -2258,11 +2266,21 @@ def identity(const_context, builder, op):
 
 @register_v2_op
 def concat(const_context, builder, op):
-    builder.add_concat_nd(
-            name=op.name,
-            input_names=make_input(const_context, builder, op.values),
-            output_name=op.outputs[0].name,
-            axis=op.axis.val)
+    rank = op.values[0].rank
+    input_names = make_input(const_context, builder, op.values)
+
+    if op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank-3:
+        builder.add_elementwise(
+                name=op.name,
+                input_names=input_names,
+                output_name=op.outputs[0].name,
+                mode="CONCAT")
+    else:
+        builder.add_concat_nd(
+                name=op.name,
+                input_names=input_names,
+                output_name=op.outputs[0].name,
+                axis=op.axis.val)
 
 @register_v2_op
 def stack(const_context, builder, op):
