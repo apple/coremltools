@@ -28,7 +28,7 @@ def convert_ops(const_context, builder, ops, outputs):
 
     const_context.append(set())
     custom_ops = SSAOpRegistry.custom_ops
-    for op in tqdm(ops, desc="Translating MIL to mlmodel", unit="ops"):
+    for op in tqdm(ops, desc="Translating MIL ==> MLModel Ops", unit=" ops"):
         if op.op_type in custom_ops:
             mapper = V2_TO_V1_OP_REGISTRY['custom_op']
         elif op.op_type in V2_TO_V1_OP_REGISTRY:
@@ -2198,7 +2198,8 @@ def cond(const_context, builder, op):
             )
     true_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=branch_layer.branch.ifBranch,
-            disable_rank5_shape_mapping=True)
+            disable_rank5_shape_mapping=True,
+            use_float_arraytype=True)
     convert_ops(const_context, true_builder, true_block.operations,
             true_block.outputs)
 
@@ -2213,7 +2214,8 @@ def cond(const_context, builder, op):
 
     false_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=branch_layer.branch.elseBranch,
-            disable_rank5_shape_mapping=True)
+            disable_rank5_shape_mapping=True,
+            use_float_arraytype=True)
     convert_ops(const_context, false_builder, false_block.operations,
             false_block.outputs)
 
@@ -2245,7 +2247,8 @@ def while_loop(const_context, builder, op):
     # Construct while_loop condition
     cond_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=loop_layer.loop.conditionNetwork,
-            disable_rank5_shape_mapping=True)
+            disable_rank5_shape_mapping=True,
+            use_float_arraytype=True)
     convert_ops(const_context, cond_builder,
             block.operations_for_vars(block.outputs[:1]),
             block.outputs[:1])
@@ -2255,7 +2258,8 @@ def while_loop(const_context, builder, op):
     # while_loop body produces [cond_var] + loop_vars
     body_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=loop_layer.loop.bodyNetwork,
-            disable_rank5_shape_mapping=True)
+            disable_rank5_shape_mapping=True,
+            use_float_arraytype=True)
     convert_ops(const_context, body_builder,
             block.operations_for_vars(block.outputs[1:]),
             block.outputs[1:])
@@ -2526,7 +2530,8 @@ def _realloc_list(const_context, builder, ls_var, index_var):
 
     true_builder = neural_network.NeuralNetworkBuilder(
             nn_spec=layer.branch.ifBranch,
-            disable_rank5_shape_mapping=True)
+            disable_rank5_shape_mapping=True,
+            use_float_arraytype=True)
 
     # alloc_length_name0 = index - list_length
     alloc_length_name0 = ls_var.name + '_extra_length0'

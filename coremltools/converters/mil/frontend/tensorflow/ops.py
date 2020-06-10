@@ -1874,7 +1874,7 @@ def CropAndResize(context, node):
     method_map = {'bilinear':'ALIGN_CORNERS'}
     if method not in method_map:
         raise ValueError(
-            '\"\CropResize\" op: Unsupported method {}. Supports {}'.format(method, method_map.keys()))
+            'CropResize op: Unsupported method {}. Supports {}'.format(method, method_map.keys()))
     method = method_map[method]
 
     # TF input format: [B, h_in, w_in, C]

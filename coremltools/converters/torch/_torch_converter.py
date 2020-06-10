@@ -7,7 +7,7 @@ import logging
 import os.path
 
 import torch
-
+from six import string_types
 from ...models import MLModel
 from ..mil import converter as MIL_converter
 from ..mil.frontend.torch.converter import TorchConverter
@@ -26,11 +26,11 @@ def convert(model_spec, inputs, check_only=False):
         are implemented and which aren't.
     """
 
-    logging.warn(
+    logging.warning(
         "This API is deprecated. Please use coremltools.converters.convert() instead."
     )
 
-    if isinstance(model_spec, str):
+    if isinstance(model_spec, string_types):
         filename = os.path.abspath(model_spec)
         torchscript = torch.jit.load(filename)
     elif isinstance(model_spec, torch.jit.ScriptModule):

@@ -4,7 +4,7 @@ import logging
 import os.path
 
 import torch
-
+from six import string_types
 from .converter import TorchConverter
 from coremltools.converters.mil.mil import Program
 
@@ -65,7 +65,7 @@ def load(model_spec, debug=False, **kwargs):
 
 def _torchscript_from_model(model_spec):
 
-    if isinstance(model_spec, str) and model_spec.endswith(".pt"):
+    if isinstance(model_spec, string_types) and model_spec.endswith(".pt"):
         filename = os.path.abspath(model_spec)
         return torch.jit.load(filename)
     elif isinstance(model_spec, torch.jit.ScriptModule):

@@ -13,6 +13,7 @@ from __future__ import absolute_import as _
 
 import numpy as _np
 import sys, os
+from six import string_types
 from .optimization_utils import _optimize_nn
 
 from coremltools.models import (
@@ -211,7 +212,7 @@ class MatrixMultiplyLayerSelector(QuantizedLayerSelector):
 
         if not (
             isinstance(self.include_layers_with_names, (list, tuple))
-            and all([isinstance(s, str) for s in self.include_layers_with_names])
+            and all([isinstance(s, string_types) for s in self.include_layers_with_names])
         ):
             raise ValueError(
                 "Property 'include_layers_with_names' must be a list/tuple of str objects"
@@ -1368,7 +1369,7 @@ def compare_models(full_precision_model, quantized_model, sample_data):
 
     spec = full_precision_model.get_spec()
     num_inputs = len(spec.description.input)
-    if isinstance(sample_data, str):
+    if isinstance(sample_data, string_types):
         input_type = spec.description.input[0].type.WhichOneof("Type")
         if num_inputs != 1 or input_type != "imageType":
             raise Exception(

@@ -20,7 +20,7 @@ def common_pass(prog):
     logging.debug('Program before common passes:\n{}'.format(prog))
 
     prog.validate()
-    for p in tqdm(passes, desc='Invoking MIL optimization passes', unit='passes'):
+    for p in tqdm(passes, desc='Running MIL optimization passes', unit=' passes'):
         logging.info('Performing pass: "{}"'.format(p))
         PASS_REGISTRY[p](prog)
         prog.validate()

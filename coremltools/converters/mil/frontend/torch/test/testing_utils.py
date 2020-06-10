@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+
+from six import string_types
 from coremltools import TensorType
 from coremltools.converters import convert
 from coremltools.models import MLModel
@@ -83,10 +85,10 @@ def flatten_and_detach_torch_results(torch_results):
 
 def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5):
     """
-        If expected results is not set, it will by default 
+        If expected results is not set, it will by default
         be set to the flattened output of the torch model.
     """
-    if isinstance(model_spec, str):
+    if isinstance(model_spec, string_types):
         torch_model = torch.jit.load(model_spec)
     else:
         torch_model = model_spec
@@ -103,7 +105,7 @@ def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5
     sorted_coreml_results = [
         coreml_results[key] for key in sorted(coreml_results.keys())
     ]
-    
+
     for torch_result, coreml_result in zip(expected_results, sorted_coreml_results):
         np.testing.assert_equal(coreml_result.shape, torch_result.shape)
         np.testing.assert_allclose(coreml_result, torch_result, atol=atol)

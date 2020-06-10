@@ -172,7 +172,8 @@ def load(prog, **kwargs):
     # create neural network builder
     builder = neural_network.NeuralNetworkBuilder(
         v1_inputs, v1_outputs,
-        disable_rank5_shape_mapping=True)
+        disable_rank5_shape_mapping=True,
+        use_float_arraytype=True)
 
     # const in V2 are added lazily to V1 by each op whenever needed.
     # `const_context` stores the const names we've added so far and avoid

@@ -2,6 +2,7 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
+from six import string_types
 
 
 class delay_type_cls:
@@ -103,7 +104,7 @@ def apply_delayed_types(type_map=annotated_class_list,
     # type name is a dict from str to type
     for func in fnlist:
         if hasattr(func, 'return_type') and \
-                isinstance(func.return_type, str) and \
+                isinstance(func.return_type, string_types) and \
                 func.return_type in type_map:
             func.return_type = type_map[func.return_type]
         if hasattr(func, 'type_annotations'):

@@ -7,6 +7,7 @@ import os
 import tempfile as _tempfile
 import warnings
 from copy import deepcopy as _deepcopy
+from six import string_types
 
 from .utils import has_custom_layer as _has_custom_layer
 from .utils import load_spec as _load_spec
@@ -181,7 +182,7 @@ class MLModel(object):
         >>> loaded_model = MLModel('my_model_file.mlmodel')
         """
 
-        if isinstance(model, str):
+        if isinstance(model, string_types):
             self.__proxy__, self._spec, self.framework_error = _get_proxy_and_spec(model, useCPUOnly)
         elif isinstance(model, _Model_pb2.Model):
             filename = _tempfile.mktemp(suffix='.mlmodel')

@@ -14,7 +14,7 @@ import re as _re
 
 def __get_version(version):
     # matching 1.6.1, and 1.6.1rc, 1.6.1.dev
-    version_regex = '^\d+\.\d+\.\d+'
+    version_regex = r'^\d+\.\d+\.\d+'
     version = _re.search(version_regex, str(version)).group(0)
     return _StrictVersion(version)
 
@@ -25,7 +25,7 @@ SKLEARN_MIN_VERSION = '0.17'
 SKLEARN_MAX_VERSION = '0.19.2'
 def __get_sklearn_version(version):
     # matching 0.15b, 0.16bf, etc
-    version_regex = '^\d+\.\d+'
+    version_regex = r'^\d+\.\d+'
     version = _re.search(version_regex, str(version)).group(0)
     return _StrictVersion(version)
 
@@ -34,7 +34,7 @@ try:
     SKLEARN_VERSION = __get_sklearn_version(sklearn.__version__)
     if SKLEARN_VERSION < _StrictVersion(SKLEARN_MIN_VERSION) or SKLEARN_VERSION > _StrictVersion(SKLEARN_MAX_VERSION):
         HAS_SKLEARN = False
-        _logging.warn(('scikit-learn version %s is not supported. Minimum required version: %s. '
+        _logging.warning(('scikit-learn version %s is not supported. Minimum required version: %s. '
                        'Maximum required version: %s. '
                       'Disabling scikit-learn conversion API.')
                       % (sklearn.__version__, SKLEARN_MIN_VERSION, SKLEARN_MAX_VERSION) )
@@ -70,11 +70,11 @@ try:
 
     # TensorFlow
     if tf_ver < _StrictVersion(TF_MIN_VERSION):
-        _logging.warn(('TensorFlow version %s is not supported. Minimum required version: %s .'
+        _logging.warning(('TensorFlow version %s is not supported. Minimum required version: %s .'
                       'TensorFlow conversion will be disabled.')
                       % (tensorflow.__version__, TF_MIN_VERSION))
     if tf_ver > _StrictVersion(TF_MAX_VERSION):
-        _logging.warn('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
+        _logging.warning('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
                       % (tensorflow.__version__, TF_MAX_VERSION))
 
     if tf_ver < _StrictVersion('2.0.0'):
@@ -128,13 +128,13 @@ try:
     if k_ver < _StrictVersion(KERAS_MIN_VERSION):
         HAS_KERAS_TF = False
         HAS_KERAS2_TF = False
-        _logging.warn(('Keras version %s is not supported. Minimum required version: %s .'
+        _logging.warning(('Keras version %s is not supported. Minimum required version: %s .'
                       'Keras conversion will be disabled.')
                       % (keras.__version__, KERAS_MIN_VERSION))
     # keras version too new
     if k_ver > _StrictVersion(KERAS_MAX_VERSION):
         HAS_KERAS_TF = False
-        _logging.warn(('Keras version %s detected. Last version known to be fully compatible of Keras is %s .')
+        _logging.warning(('Keras version %s detected. Last version known to be fully compatible of Keras is %s .')
                       % (keras.__version__, KERAS_MAX_VERSION))
     # Using Keras 2 rather than 1
     if k_ver >= _StrictVersion('2.0.0'):
@@ -147,7 +147,7 @@ try:
     if keras.backend.backend() != 'tensorflow':
         HAS_KERAS_TF = False
         HAS_KERAS2_TF = False
-        _logging.warn(('Unsupported Keras backend (only TensorFlow is currently supported). '
+        _logging.warning(('Unsupported Keras backend (only TensorFlow is currently supported). '
                       'Keras conversion will be disabled.'))
 
 except:

@@ -6,6 +6,7 @@ from ._op_reqs import *
 Random Op Superclass
 """
 
+
 class RandomDistribution(Operation):
     input_spec = InputSpec(
         shape=IntTensorInputType(),
@@ -28,10 +29,11 @@ class RandomDistribution(Operation):
 
 
 """
-Random Op Implmentation(s)
+Random Op Implementation(s)
 """
 
-@register_op(doc_str="""
+
+@register_op(doc_str=r"""
 Returns a tensor with specified shape with random values from a Bernoulli distribution.
 
 .. math::
@@ -70,7 +72,7 @@ class random_bernoulli(RandomDistribution):
         super(random_bernoulli, self).__init__(**kwargs)
 
 
-@register_op(doc_str="""
+@register_op(doc_str=r"""
 Returns random values from a categorical distribution.
 
 Parameters
@@ -110,7 +112,7 @@ class random_categorical(Operation):
         return types.tensor(types.fp32, output_shape)
 
 
-@register_op(doc_str="""
+@register_op(doc_str=r"""
 Returns a tensor with specified shape with random values from a normal distribution.
 
 .. math::
@@ -151,7 +153,7 @@ class random_normal(RandomDistribution):
         super(random_normal, self).__init__(**kwargs)
 
 
-@register_op(doc_str="""
+@register_op(doc_str=r"""
 Returns a tensor with specified shape with random values from a normal distribution.
 
 .. math::

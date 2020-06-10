@@ -149,7 +149,7 @@ def _insert_get_tuple(fn, name, idx):
 
 
 def _rewrite_cond_functions(tf_ssa, fn):
-    """
+    r"""
     Rewrite tf.cond's sub-graphs with get_tuple, make_tuple, function_entry and
     return ops. This rewrite is required in order to convert functional form
     control flow v2 nodes 'StatelessIf' and 'If'.

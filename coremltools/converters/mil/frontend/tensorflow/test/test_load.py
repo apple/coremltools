@@ -5,6 +5,7 @@ import pytest
 import shutil
 import tempfile
 import coremltools.converters as converter
+import coremltools.proto.FeatureTypes_pb2 as ft
 from coremltools import TensorType, RangeDim, EnumeratedShapes
 from coremltools.converters.mil.testing_utils import random_gen
 from coremltools.converters.mil.frontend.tensorflow.converter import TFConverter
@@ -180,6 +181,22 @@ class TestTf1ModelInputsOutputs:
             input_values = [random_gen((2, 4, 5), -10., 10.)]
             input_dict = {input_name: input_values[0]}
             ret = mlmodel.predict(input_dict)
+
+    def test_default_data_types(self):
+        @make_tf_graph([(2, 2)])
+        def build_model(x):
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+        mlmodel = converter.convert(model)
+        assert mlmodel is not None
+        spec = mlmodel.get_spec()
+
+        # Defaults should be FLOAT32 instead of DOUBLE
+        it = spec.description.input[0].type.multiArrayType.dataType
+        assert it == ft.ArrayFeatureType.ArrayDataType.Value('FLOAT32')
+        ot = spec.description.output[0].type.multiArrayType.dataType
+        assert ot == ft.ArrayFeatureType.ArrayDataType.Value('FLOAT32')
 
 
 class TestTf1ModelFormats:

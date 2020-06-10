@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import gc
 import coremltools
+from six import string_types
 
 from coremltools.converters.mil.input_types import InputType, ClassifierConfig
 from coremltools.converters.mil.converter import _convert
@@ -237,7 +238,7 @@ def convert(model,
             if not isinstance(outputs, list):
                 msg = "\"outputs\" must be of type list. Received: {}".format(outputs)
                 raise ValueError(msg)
-            if not all([isinstance(output, str) for output in outputs]):
+            if not all([isinstance(output, string_types) for output in outputs]):
                 msg = "\"inputs\" list must contain strings. Received: {}".format(outputs)
                 raise ValueError(msg)
 

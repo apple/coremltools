@@ -21,12 +21,14 @@ import numpy as np
 from .quantization_utils import unpack_to_bytes, _convert_array_to_nbit_quantized_bytes
 from .spec_inspection_utils import *
 from .update_optimizer_utils import AdamParams, SgdParams
+from six import string_types
 import math
 
 _SUPPORTED_UPDATABLE_LAYERS = ['innerProduct', 'convolution']
 
+
 def _set_recurrent_activation(param, activation):
-    activation = activation.upper() if isinstance(activation, str) else activation
+    activation = activation.upper() if isinstance(activation, string_types) else activation
     if activation == 'SIGMOID':
         param.sigmoid.MergeFromString(b'')
     elif activation == 'TANH':
@@ -533,7 +535,7 @@ class NeuralNetworkBuilder(object):
         if len(class_labels) == 0:
             return
         class_type = type(class_labels[0])
-        if class_type not in [int, str]:
+        if not isinstance(class_labels[0], (int, string_types)):
             raise TypeError("Class labels must be of type Integer or String. (not %s)" % class_type)
 
         spec.description.predictedProbabilitiesName = probOutput.name
@@ -685,7 +687,7 @@ class NeuralNetworkBuilder(object):
                     pass
 
     def set_categorical_cross_entropy_loss(self, name, input):
-        """
+        r"""
         Categorical Cross Entropy is used for single label categorization (only one category is applicable for each data point).
 
         Parameters
@@ -785,7 +787,7 @@ class NeuralNetworkBuilder(object):
             raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
 
         (fname, ftype) = input_feature
-        if not isinstance(fname, str):
+        if not isinstance(fname, string_types):
             raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
         if not isinstance(ftype, datatypes.Array):
             raise ValueError('Loss layer input must be a tuple of type (string, datatype)')
@@ -1378,7 +1380,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.activation
 
         # Fill in the parameters
-        non_linearity = non_linearity.upper() if isinstance(non_linearity, str) else non_linearity
+        non_linearity = non_linearity.upper() if isinstance(non_linearity, string_types) else non_linearity
         if non_linearity == 'RELU':
             spec_layer_params.ReLU.MergeFromString(b'')
 
@@ -1490,7 +1492,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
 
         # add one of the following layers
-        mode = mode.upper() if isinstance(mode, str) else mode
+        mode = mode.upper() if isinstance(mode, string_types) else mode
         if mode == 'CONCAT':
             spec_layer.concat.sequenceConcat = False
         elif mode == 'SEQUENCE_CONCAT':
@@ -1559,8 +1561,8 @@ class NeuralNetworkBuilder(object):
 
         """
 
-        mode = mode.upper() if isinstance(mode, str) else mode
-        linear_upsample_mode = linear_upsample_mode.upper() if isinstance(linear_upsample_mode, str) else linear_upsample_mode
+        mode = mode.upper() if isinstance(mode, string_types) else mode
+        linear_upsample_mode = linear_upsample_mode.upper() if isinstance(linear_upsample_mode, string_types) else linear_upsample_mode
         if not mode in ['NN', 'BILINEAR']:
             raise ValueError('Unsupported upsampling mode %s' % mode)
         if not linear_upsample_mode in ['DEFAULT', 'ALIGN_CORNERS_TRUE', 'ALIGN_CORNERS_FALSE']:
@@ -1849,9 +1851,9 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.stride.append(stride_height)
         spec_layer_params.stride.append(stride_width)
 
-        border_mode = border_mode.lower() if isinstance(border_mode, str) else border_mode
+        border_mode = border_mode.lower() if isinstance(border_mode, string_types) else border_mode
         same_padding_asymmetry_mode = same_padding_asymmetry_mode.upper() \
-            if isinstance(same_padding_asymmetry_mode, str) else same_padding_asymmetry_mode
+            if isinstance(same_padding_asymmetry_mode, string_types) else same_padding_asymmetry_mode
 
         if border_mode == 'valid':
             height_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
@@ -2117,9 +2119,9 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.type = \
             _NeuralNetwork_pb2.PoolingLayerParams.PoolingType.Value(layer_type.upper())
 
-        padding_type = padding_type.upper() if isinstance(padding_type, str) else padding_type
+        padding_type = padding_type.upper() if isinstance(padding_type, string_types) else padding_type
         same_padding_asymmetry_mode = same_padding_asymmetry_mode.upper() \
-            if isinstance(same_padding_asymmetry_mode, str) else same_padding_asymmetry_mode
+            if isinstance(same_padding_asymmetry_mode, string_types) else same_padding_asymmetry_mode
 
         if padding_type == 'VALID':
             height_border = spec_layer_params.valid.paddingAmounts.borderAmounts.add()
@@ -2310,7 +2312,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.padding
 
         # Set the parameters
-        padding_type = padding_type.lower() if isinstance(padding_type, str) else padding_type
+        padding_type = padding_type.lower() if isinstance(padding_type, string_types) else padding_type
         if padding_type == 'constant':
             spec_layer_params.constant.value = value
         elif padding_type == 'reflection':
@@ -2924,7 +2926,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.endIndex = end_index
         spec_layer_params.stride = stride
 
-        axis = axis.lower() if isinstance(axis, str) else axis
+        axis = axis.lower() if isinstance(axis, string_types) else axis
         if axis == 'channel':
             spec_layer_params.axis = \
                 _NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Value('CHANNEL_AXIS')
@@ -3023,7 +3025,7 @@ class NeuralNetworkBuilder(object):
             raise ValueError("Invalid block_size value %d. Must be greater than 1." % block_size)
         spec_layer_params.blockSize = block_size
 
-        mode = mode.upper() if isinstance(mode, str) else mode
+        mode = mode.upper() if isinstance(mode, string_types) else mode
         if mode == 'SPACE_TO_DEPTH':
             spec_layer_params.mode = \
                 _NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value('SPACE_TO_DEPTH')
@@ -3230,7 +3232,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.reduce
         spec_layer_params.epsilon = epsilon
 
-        mode = mode.lower() if isinstance(mode, str) else mode
+        mode = mode.lower() if isinstance(mode, string_types) else mode
         if mode == 'sum':
             spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value('SUM')
         elif mode == 'avg':
@@ -3254,7 +3256,7 @@ class NeuralNetworkBuilder(object):
         else:
             raise NotImplementedError('Unknown reduction operation %s.' % mode)
 
-        axis = axis.upper() if isinstance(axis, str) else axis
+        axis = axis.upper() if isinstance(axis, string_types) else axis
         if axis == 'CHW':
             spec_layer_params.axis = _NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value('CHW')
         elif axis == 'HW':
@@ -3413,7 +3415,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.shift = shift
         spec_layer_params.scale = scale
 
-        mode = mode.lower() if isinstance(mode, str) else mode
+        mode = mode.lower() if isinstance(mode, string_types) else mode
         if mode == 'sqrt':
             spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value('SQRT')
         elif mode == 'rsqrt':
@@ -3559,7 +3561,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.resizeBilinear
         spec_layer_params.targetSize.append(target_height)
         spec_layer_params.targetSize.append(target_width)
-        mode = mode.upper() if isinstance(mode, str) else mode
+        mode = mode.upper() if isinstance(mode, string_types) else mode
         if mode == 'ALIGN_ENDPOINTS_MODE':
 
             spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('ALIGN_ENDPOINTS_MODE')
@@ -3638,8 +3640,8 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.normalizedCoordinates = normalized_roi
         spec_layer_params.spatialScale = spatial_scale
 
-        mode = mode.upper() if isinstance(mode, str) else mode
-        box_indices_mode = box_indices_mode.upper() if isinstance(box_indices_mode, str) else box_indices_mode
+        mode = mode.upper() if isinstance(mode, string_types) else mode
+        box_indices_mode = box_indices_mode.upper() if isinstance(box_indices_mode, string_types) else box_indices_mode
 
         if mode == 'ALIGN_ENDPOINTS_MODE':
             spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value('ALIGN_ENDPOINTS_MODE')
@@ -3710,7 +3712,7 @@ class NeuralNetworkBuilder(object):
         if not image_input_names:
             return  # nothing to do here
 
-        image_format = image_format.upper() if isinstance(image_format, str) else image_format
+        image_format = image_format.upper() if isinstance(image_format, string_types) else image_format
         if image_format != 'NCHW' and image_format != 'NHWC':
             raise ValueError("Input image format must be either 'NCHW' or 'NHWC'. Provided {}".format(image_format))
 
@@ -5035,7 +5037,7 @@ class NeuralNetworkBuilder(object):
         add_equal, add_not_equal, add_less_than
         """
 
-        if isinstance(input_names, str):
+        if isinstance(input_names, string_types):
             input_names = [input_names]
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         if use_greater_than_equal:
@@ -5075,7 +5077,7 @@ class NeuralNetworkBuilder(object):
         add_equal, add_not_equal, add_greater_than
         """
 
-        if isinstance(input_names, str):
+        if isinstance(input_names, string_types):
             input_names = [input_names]
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         if use_less_than_equal:
@@ -5110,7 +5112,7 @@ class NeuralNetworkBuilder(object):
         add_not_equal, add_greater_than, add_less_than
         """
 
-        if isinstance(input_names, str):
+        if isinstance(input_names, string_types):
             input_names = [input_names]
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.equal.MergeFromString(b'')
@@ -5140,7 +5142,7 @@ class NeuralNetworkBuilder(object):
         add_equal, add_greater_than, add_less_than
         """
 
-        if isinstance(input_names, str):
+        if isinstance(input_names, string_types):
             input_names = [input_names]
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer.notEqual.MergeFromString(b'')
@@ -5168,7 +5170,7 @@ class NeuralNetworkBuilder(object):
             Logical operation mode in [AND | OR | XOR | NOT].
         """
 
-        if isinstance(input_names, str):
+        if isinstance(input_names, string_types):
             input_names = [input_names]
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
@@ -5343,7 +5345,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.scatter
         spec_layer_params.axis = axis
 
-        mode = mode.upper() if isinstance(mode, str) else mode
+        mode = mode.upper() if isinstance(mode, string_types) else mode
         if mode == 'UPDATE':
             spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value('SCATTER_UPDATE')
         elif mode == 'ADD':
@@ -5420,7 +5422,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.scatterAlongAxis
         spec_layer_params.axis = axis
 
-        mode = mode.upper() if isinstance(mode, str) else mode
+        mode = mode.upper() if isinstance(mode, string_types) else mode
         if mode == 'UPDATE':
             spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value('SCATTER_UPDATE')
         elif mode == 'ADD':
@@ -5497,7 +5499,7 @@ class NeuralNetworkBuilder(object):
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer_params = spec_layer.scatterND
 
-        mode = mode.upper() if isinstance(mode, str) else mode
+        mode = mode.upper() if isinstance(mode, string_types) else mode
         if mode == 'UPDATE':
             spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value('SCATTER_UPDATE')
         elif mode == 'ADD':

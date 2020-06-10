@@ -10,6 +10,7 @@ import unittest
 import uuid
 import pytest
 from packaging import version
+from six import string_types
 
 import numpy as np
 from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
@@ -106,7 +107,7 @@ class CorrectnessTest(unittest.TestCase):
         def get_moment(data, k):
             return np.mean(np.power(data - np.mean(data), k))
 
-        if isinstance(model, str):
+        if isinstance(model, string_types):
             model = coremltools.models.MLModel(model)
 
         model = coremltools.models.MLModel(model, useCPUOnly=use_cpu_only)
@@ -139,7 +140,7 @@ class CorrectnessTest(unittest.TestCase):
 
         model_dir = None
         # if we're given a path to a model
-        if isinstance(model, str):
+        if isinstance(model, string_types):
             model = coremltools.models.MLModel(model)
 
         # If we're passed in a specification, save out the model
@@ -3260,7 +3261,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {input_name: x}
 
             model = builder.spec
-            if isinstance(model, str):
+            if isinstance(model, string_types):
                 model = coremltools.models.MLModel(model)
 
             model = coremltools.models.MLModel(model, useCPUOnly=True)
@@ -3327,7 +3328,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {input_name: np.reshape(probs, shape)}
 
             model = builder.spec
-            if isinstance(model, str):
+            if isinstance(model, string_types):
                 model = coremltools.models.MLModel(model)
 
             model = coremltools.models.MLModel(model, useCPUOnly=True)

@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 from collections import OrderedDict
+from six import string_types
 import logging
-
 import torch
 
 from coremltools.converters.mil.input_types import InputType, ImageType
@@ -107,9 +107,9 @@ class TorchConverter:
     """Class that handles conversion of pytorch models represented in TorchScript
     format to the MIL format.
 
-    Models passed to the @TorchConverter go from: 
+    Models passed to the @TorchConverter go from:
     TorchScript -> Expanded/Optimized Torch IR -> Internal Graph -> CoreML SSA
-    The internal graph representation was added to make testing easier. 
+    The internal graph representation was added to make testing easier.
 
     Arguments:
         torchscript: torch.jit.ScriptModule object representing the model to convert.
@@ -176,7 +176,7 @@ class TorchConverter:
         return names
 
     def _tensorify_inputs(self, inputs):
-        """ 
+        """
             Recursivly searches for Specs and turns them into tensors.
         """
         if isinstance(inputs, list):
@@ -209,7 +209,7 @@ class TorchConverter:
                     changed = True
                     if not notified:
                         notified = True
-                        logging.warn(
+                        logging.warning(
                             "Tuple detected at graph input. This will be flattened in the converted model."
                         )
                     # If this input to the graph is a tuple, we want to replace it
@@ -268,7 +268,7 @@ class TorchConverter:
                     changed = True
                     if not notified:
                         notified = True
-                        logging.warn(
+                        logging.warning(
                             "Tuple detected at graph output. This will be flattened in the converted model."
                         )
                 else:
@@ -367,7 +367,7 @@ class TorchConverter:
     @staticmethod
     def _expand_and_optimize_ir(torchscript):
         """Given a torch.jit.ScriptModule, convert it to a optimized
-        torch._C.Graph and dict of model parameter's names to tensors.        
+        torch._C.Graph and dict of model parameter's names to tensors.
         """
 
         graph, params = torch._C._jit_pass_lower_graph(

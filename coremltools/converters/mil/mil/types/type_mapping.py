@@ -77,12 +77,12 @@ def promote_types(dtype1, dtype2):
     """
     nptype1 = nptype_from_builtin(dtype1)
     nptype2 = nptype_from_builtin(dtype2)
-    # Circumvent the undesriable np type promotion:
+    # Circumvent the undesirable np type promotion:
     # >> np.promote_types(np.float32, np.int)
     # dtype('float64')
-    if np.issubdtype(nptype1, np.float) and np.issubdtype(nptype2, np.int):
+    if np.issubdtype(nptype1, np.floating) and np.issubdtype(nptype2, np.signedinteger):
         nppromoted = nptype1
-    elif np.issubdtype(nptype2, np.float) and np.issubdtype(nptype1, np.int):
+    elif np.issubdtype(nptype2, np.floating) and np.issubdtype(nptype1, np.signedinteger):
         nppromoted = nptype2
     else:
         nppromoted = np.promote_types(nptype1, nptype2)
@@ -192,7 +192,7 @@ def type_to_builtin_type(type):
         return types_fp32
     else:
         raise TypeError("Could not determine builtin type for " \
-                        + str(scalar))
+                        + str(type))
 
 
 def numpy_val_to_builtin_val(npval):
