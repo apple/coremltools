@@ -7350,6 +7350,18 @@ class Convolution3DLayerParams : public ::google::protobuf::MessageLite /* @@pro
 
   // accessors -------------------------------------------------------
 
+  // repeated uint64 outputShape = 87;
+  int outputshape_size() const;
+  void clear_outputshape();
+  static const int kOutputShapeFieldNumber = 87;
+  ::google::protobuf::uint64 outputshape(int index) const;
+  void set_outputshape(int index, ::google::protobuf::uint64 value);
+  void add_outputshape(::google::protobuf::uint64 value);
+  const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
+      outputshape() const;
+  ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
+      mutable_outputshape();
+
   // .CoreML.Specification.WeightParams weights = 60;
   bool has_weights() const;
   void clear_weights();
@@ -7446,6 +7458,12 @@ class Convolution3DLayerParams : public ::google::protobuf::MessageLite /* @@pro
   bool hasbias() const;
   void set_hasbias(bool value);
 
+  // bool isDeconvolution = 86;
+  void clear_isdeconvolution();
+  static const int kIsDeconvolutionFieldNumber = 86;
+  bool isdeconvolution() const;
+  void set_isdeconvolution(bool value);
+
   // .CoreML.Specification.Convolution3DLayerParams.PaddingType paddingType = 70;
   void clear_paddingtype();
   static const int kPaddingTypeFieldNumber = 70;
@@ -7492,6 +7510,8 @@ class Convolution3DLayerParams : public ::google::protobuf::MessageLite /* @@pro
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::uint64 > outputshape_;
+  mutable int _outputshape_cached_byte_size_;
   ::CoreML::Specification::WeightParams* weights_;
   ::CoreML::Specification::WeightParams* bias_;
   ::google::protobuf::int32 outputchannels_;
@@ -7507,6 +7527,7 @@ class Convolution3DLayerParams : public ::google::protobuf::MessageLite /* @@pro
   ::google::protobuf::int32 dilationheight_;
   ::google::protobuf::int32 dilationwidth_;
   bool hasbias_;
+  bool isdeconvolution_;
   int paddingtype_;
   ::google::protobuf::int32 custompaddingfront_;
   ::google::protobuf::int32 custompaddingback_;
@@ -33297,6 +33318,50 @@ inline void Convolution3DLayerParams::set_custompaddingright(::google::protobuf:
   
   custompaddingright_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.customPaddingRight)
+}
+
+// bool isDeconvolution = 86;
+inline void Convolution3DLayerParams::clear_isdeconvolution() {
+  isdeconvolution_ = false;
+}
+inline bool Convolution3DLayerParams::isdeconvolution() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.isDeconvolution)
+  return isdeconvolution_;
+}
+inline void Convolution3DLayerParams::set_isdeconvolution(bool value) {
+  
+  isdeconvolution_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.isDeconvolution)
+}
+
+// repeated uint64 outputShape = 87;
+inline int Convolution3DLayerParams::outputshape_size() const {
+  return outputshape_.size();
+}
+inline void Convolution3DLayerParams::clear_outputshape() {
+  outputshape_.Clear();
+}
+inline ::google::protobuf::uint64 Convolution3DLayerParams::outputshape(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.outputShape)
+  return outputshape_.Get(index);
+}
+inline void Convolution3DLayerParams::set_outputshape(int index, ::google::protobuf::uint64 value) {
+  outputshape_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.outputShape)
+}
+inline void Convolution3DLayerParams::add_outputshape(::google::protobuf::uint64 value) {
+  outputshape_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.Convolution3DLayerParams.outputShape)
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
+Convolution3DLayerParams::outputshape() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.Convolution3DLayerParams.outputShape)
+  return outputshape_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
+Convolution3DLayerParams::mutable_outputshape() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.Convolution3DLayerParams.outputShape)
+  return &outputshape_;
 }
 
 // -------------------------------------------------------------------

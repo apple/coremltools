@@ -568,6 +568,51 @@ def Conv3D(context, node):
 
 
 @register_tf_op
+def Conv3DBackpropInputV2(context, node):
+    # Output shape: [N, D_out, H_out, W_out, C_out]
+    output_shape = context[node.inputs[0]].val
+    # Weight shape: [D, H, W, C_out, C_in]
+    W_dhwoi = context[node.inputs[1]]
+    W_oidhw = mb.transpose(x=W_dhwoi, perm=[3, 4, 0, 1, 2])
+    # Input shape: [N, D_in, H_in, W_in, C_in]
+    x = context[node.inputs[2]]
+
+    data_format = node.attr.get("data_format", "NDHWC")
+    DHW_dilations = _conv2d3d_strides_or_dilations(
+            "dilations", node.attr.get("dilations"), data_format)
+    DHW_strides = _conv2d3d_strides_or_dilations(
+            "strides", node.attr.get("strides"), data_format)
+    pad_type = node.attr.get("padding", None)
+
+    if pad_type is None:
+        raise ValueError("Padding type not specified for op: {}".format(node.name))
+
+    if not isinstance(pad_type, six.string_types):
+        pad_type = "custom"
+        raise NotImplementedError("Custom padding not implemented for TF")
+    pad_type = pad_type.lower()
+
+    if data_format == "NDHWC":
+        # Convert input to NCDHW
+        x = _transpose_NDHWC_to_NCDHW(x)
+        if output_shape is not None:
+            output_shape = [output_shape[1], output_shape[2], output_shape[3]]
+    else:
+        if output_shape is not None:
+            output_shape = [output_shape[2], output_shape[3], output_shape[4]]
+
+    # Only the last op should have the same name as node.name
+    conv_name = node.name + "_x" if data_format == "NDHWC" else node.name
+    # Pass output shape provided above
+    # TODO: rdar://63968613 ([deconv3d] Deconv_3d top_shapes_for_bottom_shapes does not sets output channel if output shape is provided)
+    x = mb.conv_transpose(x=x, weight=W_oidhw, pad_type=pad_type, strides=DHW_strides,
+            output_shape=None, dilations=DHW_dilations, name=conv_name)
+    if data_format == "NDHWC":
+        # Convert input back to NDHWC (from NCDHW)
+        x = _transpose_NCDHW_to_NDHWC(x, node.name)
+    context.add(node.name, x)
+
+@register_tf_op
 def DepthToSpace(context, node):
     x = context[node.inputs[0]]
     block_size = node.attr.get('block_size')
@@ -1413,7 +1458,7 @@ def Conv2DBackpropInput(context, node):
 
     # Only the last op should have the same name as node.name
     conv_name = node.name + 'x' if data_format == 'NHWC' else node.name
-    # add Conv Tranpose
+    # Pass output shape provided above
     x = mb.conv_transpose(x=x, weight=W_oihw, pad_type=pad_type, output_shape=output_shape, strides=HW_strides,
                           dilations=HW_dilations, name=conv_name)
 

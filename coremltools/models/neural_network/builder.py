@@ -1934,6 +1934,7 @@ class NeuralNetworkBuilder(object):
                             W, b, has_bias, groups=1,
                             stride_depth=1, stride_height=1, stride_width=1,
                             dilation_width=1, dilation_height=1, dilation_depth=1,
+                            is_deconv=False, output_shape=None,
                             padding_mode='valid',
                             padding_front=0, padding_back=0,
                             padding_top=0, padding_bottom=0,
@@ -1960,8 +1961,11 @@ class NeuralNetworkBuilder(object):
             Width of each kernel.
         W: numpy.array or bytes()
             Weight of the convolution kernels.
-            - W should have shape (output_channels, kernel_channels, depth, height, width), where
+            - W should have shape:
+            - If deconv is False: (output_channels, kernel_channels, depth, height, width), where
               kernel_channels = input_channels / groups
+            - If deconv is True: (output_channels / groups, kernel_channels, depth, height, width)
+              where kernel_channels = input_channels
         b: numpy.array
             Biases of the convolution kernels. b should have shape (outputChannels, ).
         has_bias: boolean
@@ -1977,6 +1981,12 @@ class NeuralNetworkBuilder(object):
         dilation_depth, dilation_width, dilation_height: int
             Dilation factors across depth, height, and width directions. Must all be positive
             integers. Defaults to 1 in each dimension.
+        is_deconv: bool
+            True if this is Convolution Transpose, otherwise False.
+        output_shape: None or Tuple of int
+            Applicable only for Deconvolution layer.
+            None if Convolution.
+            Tuple of length 3 if Convolution Transpose.
         padding_mode: str
             Option for the padding type and output blob shape. Can be 'custom', 'valid', or 'same'.
             Defaults to 'valid'. Case-insensitive.
@@ -2019,6 +2029,7 @@ class NeuralNetworkBuilder(object):
 
         # Set the layer params
         spec_layer_params = spec_layer.convolution3d
+        spec_layer_params.isDeconvolution = is_deconv
         spec_layer_params.nGroups = groups
 
         spec_layer_params.outputChannels = output_channels
@@ -2031,6 +2042,11 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.strideDepth = stride_depth
         spec_layer_params.strideHeight = stride_height
         spec_layer_params.strideWidth = stride_width
+
+        if is_deconv and output_shape:
+            spec_layer_params.outputShape.append(output_shape[0])
+            spec_layer_params.outputShape.append(output_shape[1])
+            spec_layer_params.outputShape.append(output_shape[2])
 
         supported_padding_modes = {'CUSTOM', 'VALID', 'SAME'}
         if padding_mode.upper() not in supported_padding_modes:
@@ -2048,6 +2064,12 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.dilationDepth = dilation_depth
         spec_layer_params.dilationHeight = dilation_height
         spec_layer_params.dilationWidth = dilation_width
+
+        # Weight alignment: MLModel Spec requires following weight arrangement:
+        # is_deconv == False ==> (output_channels, kernel_channels, depth, height, width), where kernel_channel = input_channels / groups
+        # is_deconv == True ==> (kernel_channels, output_channels / groups, height, width), where kernel_channel = input_channels
+        if is_deconv:
+            W = W.transpose((1, 0, 2, 3, 4))
 
         # Assign weights
         weights = spec_layer_params.weights

@@ -1009,6 +1009,61 @@ class TestConvTranspose:
 
         test_static_W()
 
+    @pytest.mark.parametrize(
+        ','.join([
+            'use_cpu_only',
+            'backend',
+            'padding',
+            'data_format',
+            'DHWkDkHkW',
+            'strides',
+            'dilations']),
+        itertools.product(
+            [True, False],
+            backends,
+            ['SAME'], # VALID padding requires padding due to different output shape computation
+            # and blocked by rdar://63245116 ([deconv3d] Deconv 3d with deconv_out* parameter executes
+            # deconvolution kernel instead of deconv3d kernel on CPU)
+            ['NDHWC'],
+            [(10, 12, 14, 2, 3, 5), (4, 4, 4, 2, 3, 1), (6, 6, 6, 3, 3, 3), (5, 5, 5, 2, 4, 2)],
+            [(1, 1, 1), (1, 2, 3)],
+            [(1, 1, 1)]  # Dilation > 1 not supported by TF
+        ))
+    def test_conv3d_transpose(self, use_cpu_only, backend, padding,
+                        data_format, DHWkDkHkW, strides, dilations):
+        D, H, W, kD, kH, kW = DHWkDkHkW
+        N, C_in, C_out = 2, 1, 2
+
+        if padding == 'SAME':
+            oD = D * strides[0]
+            oH = H * strides[1]
+            oW = W * strides[2]
+        else:
+            oD = (D - 1) * strides[0] + (kD - 1) * dilations[0] + 1
+            oH = (H - 1) * strides[1] + (kH - 1) * dilations[1] + 1
+            oW = (W - 1) * strides[2] + (kW - 1) * dilations[2] + 1
+        if data_format == 'NDHWC':
+            input_shape = (N, D, H, W, C_in)
+            output_shape = [N, oD, oH, oW, C_out]
+        else:  # 'NCDHW'
+            input_shape = (N, C_in, D, H, W)
+            output_shape = [N, C_out, oD, oH, oW]
+
+        w_shape = (kD, kH, kW, C_out, C_in)
+        x_input = np.random.randn(*input_shape)
+        w_val = np.random.randn(*w_shape)
+
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=input_shape)
+            w = tf.constant(w_val, tf.float32)
+            conv = tf.nn.conv3d_transpose(x, w, output_shape=output_shape, strides=strides, padding=padding,
+                                                dilations=dilations, data_format=data_format)
+
+            run_compare_tf(graph, {x: x_input},
+                            conv, use_cpu_only=use_cpu_only,
+                            frontend_only=False, backend=backend)
+
+
 class TestElementWiseBinary:
     @pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
                              itertools.product(

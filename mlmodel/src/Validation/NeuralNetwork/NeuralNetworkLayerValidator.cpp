@@ -298,6 +298,17 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
         }
     }
 
+    bool is_deconv = params.isdeconvolution();
+
+    if (params.outputshape_size() != 0) {
+        if (!is_deconv) {
+            std::string err = "Deconvolution3D Layer '" + layer.name() + "' Output Shape is supported for Deconvolution layer.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        } else if (params.outputshape_size() != 3) {
+            std::string err = "Deconvolution3D layer: '" + layer.name() + "' , if set, output shape must be of length 3.";
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        }
+    }
     // Manually check if weights are quantized--we don't currently support them and
     // `validateGeneralWeightParams` allows them
     if (weightsValueType == QUINT) {
@@ -306,7 +317,12 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
         r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         return r;
     }
-    uint64_t expected_weight_size = uint64_t(outputChannels * (inputChannels / nGroups) * kernelDepth * kernelHeight * kernelWidth);
+    uint64_t expected_weight_size = 0;
+    if (is_deconv) {
+        expected_weight_size = static_cast<uint64_t>((outputChannels / nGroups) * inputChannels * kernelDepth * kernelHeight * kernelWidth);
+    } else {
+        expected_weight_size = static_cast<uint64_t>(outputChannels * (inputChannels / nGroups) * kernelDepth * kernelHeight * kernelWidth);
+    }
     r = validateGeneralWeightParams(params.weights(), expected_weight_size, uint64_t(outputChannels),
                                     "Convolution3D ", layer.name(), "weights");
     if (!r.good()) { return r; }

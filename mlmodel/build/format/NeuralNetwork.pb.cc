@@ -28650,6 +28650,8 @@ const int Convolution3DLayerParams::kCustomPaddingTopFieldNumber;
 const int Convolution3DLayerParams::kCustomPaddingBottomFieldNumber;
 const int Convolution3DLayerParams::kCustomPaddingLeftFieldNumber;
 const int Convolution3DLayerParams::kCustomPaddingRightFieldNumber;
+const int Convolution3DLayerParams::kIsDeconvolutionFieldNumber;
+const int Convolution3DLayerParams::kOutputShapeFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 Convolution3DLayerParams::Convolution3DLayerParams()
@@ -28663,6 +28665,7 @@ Convolution3DLayerParams::Convolution3DLayerParams()
 Convolution3DLayerParams::Convolution3DLayerParams(const Convolution3DLayerParams& from)
   : ::google::protobuf::MessageLite(),
       _internal_metadata_(NULL),
+      outputshape_(from.outputshape_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   if (from.has_weights()) {
@@ -28721,6 +28724,7 @@ Convolution3DLayerParams* Convolution3DLayerParams::New(::google::protobuf::Aren
 
 void Convolution3DLayerParams::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.Convolution3DLayerParams)
+  outputshape_.Clear();
   if (GetArenaNoVirtual() == NULL && weights_ != NULL) {
     delete weights_;
   }
@@ -29048,6 +29052,38 @@ bool Convolution3DLayerParams::MergePartialFromCodedStream(
         break;
       }
 
+      // bool isDeconvolution = 86;
+      case 86: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(688u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &isdeconvolution_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated uint64 outputShape = 87;
+      case 87: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(698u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, this->mutable_outputshape())));
+        } else if (static_cast< ::google::protobuf::uint8>(tag) ==
+                   static_cast< ::google::protobuf::uint8>(696u)) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitiveNoInline<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 2, 698u, input, this->mutable_outputshape())));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0 ||
@@ -29188,12 +29224,42 @@ void Convolution3DLayerParams::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt32(85, this->custompaddingright(), output);
   }
 
+  // bool isDeconvolution = 86;
+  if (this->isdeconvolution() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(86, this->isdeconvolution(), output);
+  }
+
+  // repeated uint64 outputShape = 87;
+  if (this->outputshape_size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteTag(87, ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED, output);
+    output->WriteVarint32(_outputshape_cached_byte_size_);
+  }
+  for (int i = 0, n = this->outputshape_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64NoTag(
+      this->outputshape(i), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.Convolution3DLayerParams)
 }
 
 size_t Convolution3DLayerParams::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.Convolution3DLayerParams)
   size_t total_size = 0;
+
+  // repeated uint64 outputShape = 87;
+  {
+    size_t data_size = ::google::protobuf::internal::WireFormatLite::
+      UInt64Size(this->outputshape_);
+    if (data_size > 0) {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::Int32Size(data_size);
+    }
+    int cached_size = ::google::protobuf::internal::ToCachedSize(data_size);
+    GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+    _outputshape_cached_byte_size_ = cached_size;
+    GOOGLE_SAFE_CONCURRENT_WRITES_END();
+    total_size += data_size;
+  }
 
   // .CoreML.Specification.WeightParams weights = 60;
   if (this->has_weights()) {
@@ -29298,6 +29364,11 @@ size_t Convolution3DLayerParams::ByteSizeLong() const {
     total_size += 2 + 1;
   }
 
+  // bool isDeconvolution = 86;
+  if (this->isdeconvolution() != 0) {
+    total_size += 2 + 1;
+  }
+
   // .CoreML.Specification.Convolution3DLayerParams.PaddingType paddingType = 70;
   if (this->paddingtype() != 0) {
     total_size += 2 +
@@ -29365,6 +29436,7 @@ void Convolution3DLayerParams::MergeFrom(const Convolution3DLayerParams& from) {
   ::google::protobuf::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
+  outputshape_.MergeFrom(from.outputshape_);
   if (from.has_weights()) {
     mutable_weights()->::CoreML::Specification::WeightParams::MergeFrom(from.weights());
   }
@@ -29410,6 +29482,9 @@ void Convolution3DLayerParams::MergeFrom(const Convolution3DLayerParams& from) {
   if (from.hasbias() != 0) {
     set_hasbias(from.hasbias());
   }
+  if (from.isdeconvolution() != 0) {
+    set_isdeconvolution(from.isdeconvolution());
+  }
   if (from.paddingtype() != 0) {
     set_paddingtype(from.paddingtype());
   }
@@ -29449,6 +29524,7 @@ void Convolution3DLayerParams::Swap(Convolution3DLayerParams* other) {
   InternalSwap(other);
 }
 void Convolution3DLayerParams::InternalSwap(Convolution3DLayerParams* other) {
+  outputshape_.InternalSwap(&other->outputshape_);
   std::swap(weights_, other->weights_);
   std::swap(bias_, other->bias_);
   std::swap(outputchannels_, other->outputchannels_);
@@ -29464,6 +29540,7 @@ void Convolution3DLayerParams::InternalSwap(Convolution3DLayerParams* other) {
   std::swap(dilationheight_, other->dilationheight_);
   std::swap(dilationwidth_, other->dilationwidth_);
   std::swap(hasbias_, other->hasbias_);
+  std::swap(isdeconvolution_, other->isdeconvolution_);
   std::swap(paddingtype_, other->paddingtype_);
   std::swap(custompaddingfront_, other->custompaddingfront_);
   std::swap(custompaddingback_, other->custompaddingback_);
@@ -29837,6 +29914,50 @@ void Convolution3DLayerParams::set_custompaddingright(::google::protobuf::int32 
   
   custompaddingright_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.customPaddingRight)
+}
+
+// bool isDeconvolution = 86;
+void Convolution3DLayerParams::clear_isdeconvolution() {
+  isdeconvolution_ = false;
+}
+bool Convolution3DLayerParams::isdeconvolution() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.isDeconvolution)
+  return isdeconvolution_;
+}
+void Convolution3DLayerParams::set_isdeconvolution(bool value) {
+  
+  isdeconvolution_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.isDeconvolution)
+}
+
+// repeated uint64 outputShape = 87;
+int Convolution3DLayerParams::outputshape_size() const {
+  return outputshape_.size();
+}
+void Convolution3DLayerParams::clear_outputshape() {
+  outputshape_.Clear();
+}
+::google::protobuf::uint64 Convolution3DLayerParams::outputshape(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Convolution3DLayerParams.outputShape)
+  return outputshape_.Get(index);
+}
+void Convolution3DLayerParams::set_outputshape(int index, ::google::protobuf::uint64 value) {
+  outputshape_.Set(index, value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.Convolution3DLayerParams.outputShape)
+}
+void Convolution3DLayerParams::add_outputshape(::google::protobuf::uint64 value) {
+  outputshape_.Add(value);
+  // @@protoc_insertion_point(field_add:CoreML.Specification.Convolution3DLayerParams.outputShape)
+}
+const ::google::protobuf::RepeatedField< ::google::protobuf::uint64 >&
+Convolution3DLayerParams::outputshape() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.Convolution3DLayerParams.outputShape)
+  return outputshape_;
+}
+::google::protobuf::RepeatedField< ::google::protobuf::uint64 >*
+Convolution3DLayerParams::mutable_outputshape() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.Convolution3DLayerParams.outputShape)
+  return &outputshape_;
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

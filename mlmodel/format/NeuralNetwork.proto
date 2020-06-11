@@ -1634,8 +1634,11 @@ message Convolution3DLayerParams {
     /**
      * Weights associated with this layer.
      * Weights have the shape
+     * if deconvolution == False
      * ``[outputChannels, kernelChannels, kernelDepth, kernelHeight, kernelWidth]``, where
      * kernelChannels == inputChannels / nGroups
+     * else if deconvolution == True
+     * ``[outputChannels / nGroups, kernelChannels, kernelDepth, kernelHeight, kernelWidth]``, where
      */
     WeightParams weights = 60;
 
@@ -1698,6 +1701,18 @@ message Convolution3DLayerParams {
      * Used when the `PaddingType` is `CustomPadding`, otherwise ignored by other padding types.
      */
     int32 customPaddingRight = 85;
+    
+    /* Flag to specify if this is Convolution Transpose or not.
+     */
+    bool isDeconvolution = 86;
+    
+    /*
+     * The output shape, which has length 3 ``[D_out, H_out, W_out]``.
+     * This is used only for deconvolution (``isDeconvolution == true``).
+     * If not set, the deconvolution output shape is calculated
+     * based on ``PaddingType``.
+     */
+    repeated uint64 outputShape = 87;
 
 }
 
