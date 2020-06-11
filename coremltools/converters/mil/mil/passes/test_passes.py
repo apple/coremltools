@@ -34,6 +34,31 @@ def test_const_elimination():
         assert_model_is_valid(prog, {'x': (2, 4)})
 
 
+def test_divide_to_multiply():
+    @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+    def prog(x):
+        div_val = np.random.rand(2, 4).astype(np.float32)
+        div_const = mb.const(val=div_val, mode='immediate_value')
+
+        div_val_1 = np.random.rand(2, 4).astype(np.float32)
+        div_const_1 = mb.const(val=div_val_1, mode='immediate_value')
+
+        real_div = mb.real_div(x=x, y=div_const)
+
+        return mb.real_div(x=real_div, y=div_const_1)
+
+    assert_op_count_match(prog, expect=2, op='real_div')
+    assert_op_count_match(prog, expect=0, op='mul')
+    prev_prog = copy.deepcopy(prog)
+    PASS_REGISTRY['common::divide_to_multiply'](prog)
+    assert_same_output_names(prev_prog, prog)
+    assert_op_count_match(prog, expect=0, op='real_div')
+    assert_op_count_match(prog, expect=2, op='mul')
+
+    if validate_model:
+        assert_model_is_valid(prog, {'x': (2, 4)})
+
+
 def test_fuse_matmul_weight_bias():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
     def prog(x):
