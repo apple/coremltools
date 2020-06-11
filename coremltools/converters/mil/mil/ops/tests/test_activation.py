@@ -132,27 +132,47 @@ class TestGeLU:
     @ssa_fn
     def test_builder_eval(self):
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        v = mb.gelu(x=x_val)
 
-        out = 0.5 * x_val * (1 + scipy.special.erf(x_val / np.sqrt(2)))
-
+        mode = 'TANH_APPROXIMATION'
+        v = mb.gelu(x=x_val, mode=mode)
+        a = np.sqrt(2 / np.pi) * (x_val + .044715 * np.power(x_val, 3))
+        out =  0.5 * x_val * (1 + np.tanh(a))
         assert is_close(out, v.val)
 
-    @pytest.mark.parametrize('use_cpu_only, backend, dim',
+        mode = 'SIGMOID_APPROXIMATION'
+        v = mb.gelu(x=x_val, mode=mode)
+        out = x_val * (1/(1 + np.exp(-(1.702 * x_val))))
+        assert is_close(out, v.val)
+
+        v = mb.gelu(x=x_val)
+        out = 0.5 * x_val * (1 + scipy.special.erf(x_val / np.sqrt(2)))
+        assert is_close(out, v.val)
+
+    @pytest.mark.parametrize('use_cpu_only, backend, dim, mode',
                              itertools.product(
                                  [True, False],
                                  backends,
-                                 [2, 4, 8]))
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, dim):
+                                 [2, 6],
+                                 ['EXACT', 'TANH_APPROXIMATION', 'SIGMOID_APPROXIMATION']
+                             ))
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, dim, mode):
         shape = np.array([dim, dim])
         x_val = np.random.rand(*shape)
         input_placeholders = {'x': mb.placeholder(shape=x_val.shape)}
         input_values = {'x': x_val}
 
         def build(x):
-            return [mb.gelu(x=x)]
+            return [mb.gelu(x=x, mode=mode)]
 
-        expected_outputs = [0.5 * x_val * (1 + scipy.special.erf(x_val / np.sqrt(2)))]
+        if mode == 'TANH_APPROXIMATION':
+            a = np.sqrt(2 / np.pi) * (x_val + .044715 * np.power(x_val, 3))
+            out = 0.5 * x_val * (1 + np.tanh(a))
+        elif mode == 'SIGMOID_APPROXIMATION':
+            out = x_val * (1 / (1 + np.exp(-(1.702 * x_val))))
+        else:
+            out = 0.5 * x_val * (1 + scipy.special.erf(x_val / np.sqrt(2)))
+
+        expected_outputs = [out]
         expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
 
         run_compare_builder(build, input_placeholders, input_values, expected_output_types,

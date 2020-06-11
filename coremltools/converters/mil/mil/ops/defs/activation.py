@@ -72,18 +72,40 @@ Returns the elementwise gaussian error linear unit activation on x.
 Parameters
 ----------
 x: <*, f32>, required
+mode : const<str> : default = "EXACT", can take values 
+"EXACT" : f(x) = 0.5x\left ( 1+\rm{erf}\left ( \frac{x}{\sqrt{2}} \right ) \right )
+"TANH_APPROXIMATION" : f(x) = 0.5x\left ( 1+\rm{tanh}\left ( \sqrt{2/\pi}\left ( x + 0.044715x^3 \right ) \right ) \right )
+"SIGMOID_APPROXIMATION" : f(x) = x*\rm{sigmoid}(1.702x)
 
 Returns
 -------
 <*, f32>, a tensor of the same shape as x.
 """)
-class gelu(elementwise_unary):
+class gelu(Operation):
+    input_spec = InputSpec(
+            x = ScalarOrTensorInputType(),
+            mode = StringInputType(const=True, default="EXACT"),
+        )
+
     def __init__(self, **kwargs):
       super(gelu, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return 0.5 * self.x.val * (1 + scipy.special.erf(self.x.val / np.sqrt(2)))
+        if self.mode.val == "TANH_APPROXIMATION":
+            a = np.sqrt(2/np.pi) * (self.x.val + .044715 * np.power(self.x.val, 3))
+            return 0.5 * self.x.val * (1 + np.tanh(a))
+        elif self.mode.val == "SIGMOID_APPROXIMATION":
+            return self.x.val * (1/(1 + np.exp(-(1.702 * self.x.val))))
+        else:
+            return 0.5 * self.x.val * (1 + scipy.special.erf(self.x.val / np.sqrt(2)))
+
+    def type_inference(self):
+        allowed_values = {"EXACT", "TANH_APPROXIMATION", "SIGMOID_APPROXIMATION"}
+        if self.mode.val not in allowed_values:
+            msg = "\"gelu\" op: unrecognized value of mode: \"{}\". Allowed values are {}"
+            raise ValueError(msg.format(self.mode.val, allowed_values))
+        return self.x.sym_type
 
 
 @register_op(doc_str="""

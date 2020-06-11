@@ -18,7 +18,7 @@ from .tf_graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-
 from .tfssa import NetworkEnsemble, SSAFunction
 from .parse import ParsedTFNode
 from coremltools.converters._profile_utils import profile
-
+from tqdm import tqdm
 
 class TFLoader:
     """Abstract class for TensorFlow model loader."""
@@ -178,14 +178,14 @@ class TF1Loader(TFLoader):
         ]
 
         if self.debug:
-            for tf_pass in tf_passes:
+            for tf_pass in tqdm(tf_passes, desc='TF Frontend passes', unit='passes'):
                 try:
                     tf_pass(self._tf_ssa)
                 except Exception as e:
                     logging.exception('Exception in pass "{}": {}'.format(tf_pass, e))
                     logging.info("Ignoring exception and continuing to next pass")
         else:
-            for tf_pass in tf_passes:
+            for tf_pass in tqdm(tf_passes, desc='TF Frontend passes', unit='passes'):
                 tf_pass(self._tf_ssa)
 
         if self.debug:

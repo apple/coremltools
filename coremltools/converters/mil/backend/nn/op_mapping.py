@@ -3,7 +3,7 @@ import logging
 import six
 from coremltools.models import neural_network as neural_network
 from coremltools.proto import NeuralNetwork_pb2
-from coremltools.converters.mil.mil.types.symbolic import is_variadic, any_symbolic
+from coremltools.converters.mil.mil.types.symbolic import is_variadic, any_symbolic, is_symbolic
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from tqdm import tqdm
@@ -1605,11 +1605,42 @@ def transpose(const_context, builder, op):
 
 @register_v2_op
 def gather(const_context, builder, op):
-    builder.add_gather(
-            name=op.name,
-            input_names=make_input(const_context, builder, [op.x, op.indices]),
-            output_name=op.outputs[0].name,
-            axis=op.axis.val)
+    is_embedding = False
+
+    if op.x.val is not None:
+        W = op.x.val
+        if len(W.shape) == 2:
+            if op.axis.val == 0 or op.axis.val == -2:
+                if len(op.x.child_ops) == 1:
+                    # the constant feeding into the gather doesn't go to any other op
+                    is_embedding = True
+
+    if is_embedding:
+        """"
+        The following:
+            %3 = gather(%1, %2, axis=0) # %1 is a constant matrix of shape (vocab_size, embedding_size)
+        can be mapped to:
+            %2_e = expand_dims(%2, axis=-1)
+            %3 = embeddingND(%2_e, weight=%1)  
+        """
+        builder.add_expand_dims(
+            name=op.name + '_expand_dims',
+            input_name=make_input(const_context, builder, op.indices),
+            output_name=op.name + '_expand_dims', axes=[-1])
+
+        builder.add_embedding_nd(name=op.name,
+                                 input_name=op.name+'_expand_dims',
+                                 output_name=op.name,
+                                 vocab_size=W.shape[0],
+                                 embedding_size=W.shape[1],
+                                 W=np.transpose(W))
+
+    else:
+        builder.add_gather(
+                name=op.name,
+                input_names=make_input(const_context, builder, [op.x, op.indices]),
+                output_name=op.outputs[0].name,
+                axis=op.axis.val)
 
 @register_v2_op
 def scatter(const_context, builder, op):
@@ -1747,6 +1778,7 @@ def gelu(const_context, builder, op):
         name=op.name,
         input_name=make_input(const_context, builder, op.x),
         output_name=op.outputs[0].name,
+        mode=op.mode.val
     )
 
 @register_v2_op
@@ -1932,13 +1964,14 @@ def l2_norm(const_context, builder, op):
 
 @register_v2_op
 def layer_norm(const_context, builder, op):
-    input_shape = list(op.x.shape)
+    input_shape_full = list(op.x.shape)
+    input_shape = [-1 if is_symbolic(s) else s for s in input_shape_full]
     axes = None if op.axes is None else op.axes.val
     normalized_shape = input_shape[-len(axes):]
     gamma = np.ones(normalized_shape) if op.gamma is None else op.gamma.val
     beta = np.zeros(normalized_shape) if op.beta is None else op.beta.val
-    if len(input_shape) in [2, 3] and len(axes) == 1 and axes[0] == len(input_shape) - 1:
-        # Performance enhancement for some models with layer-norm
+    if len(input_shape) in [2, 3] and len(axes) == 1 and axes[0] == len(input_shape) - 1 \
+            and input_shape.count(-1) < 2:
         builder.add_reshape_static(name=op.name + '_reshape',
                                    input_name=make_input(const_context,
                                        builder, op.x),

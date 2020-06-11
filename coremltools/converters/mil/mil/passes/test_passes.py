@@ -2,10 +2,11 @@
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
         assert_op_count_match, assert_model_is_valid,
-        assert_same_output_names)
-from coremltools.converters.mil.mil import Symbol
+        assert_same_output_names, get_op_types_in_program, apply_pass_and_basic_check)
+from coremltools.converters.mil.mil import Symbol, types
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import copy
+import pytest
 
 import numpy as np
 
@@ -33,7 +34,7 @@ def test_const_elimination():
         assert_model_is_valid(prog, {'x': (2, 4)})
 
 
-def test_matmul_to_linear():
+def test_fuse_matmul_weight_bias():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
     def prog(x):
         weights_val = np.random.rand(2, 4).T.astype(np.float32)
@@ -47,7 +48,7 @@ def test_matmul_to_linear():
     assert_op_count_match(prog, expect=1, op='matmul')
     assert_op_count_match(prog, expect=0, op='linear')
     prev_prog = copy.deepcopy(prog)
-    PASS_REGISTRY['common::matmul_to_linear'](prog)
+    PASS_REGISTRY['common::fuse_matmul_weight_bias'](prog)
     assert_same_output_names(prev_prog, prog)
     assert_op_count_match(prog, expect=0, op='matmul')
     assert_op_count_match(prog, expect=1, op='linear')
@@ -217,3 +218,129 @@ def test_loop_invariant_elimination2():
 
     if validate_model:
         assert_model_is_valid(prog, {'a': (1, 2), 'b': (1, 2)})
+
+def test_gelu_tanh_approximation():
+    """
+    Detect gelu tanh approx pattern, found in the TF bert model.
+    y = ( tanh((.0447)x^3 + x ) * (sqrt(2/pi)) + 1 ) * 0.5 * x
+    """
+
+    @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+    def prog(x):
+        x1 = mb.pow(x=x, y=3)
+        x1 = mb.mul(x=.044715, y=x1)
+        x1 = mb.add(x=x1, y=x)
+        x1 = mb.mul(x=x1, y=np.sqrt(2/np.pi))
+        x1 = mb.tanh(x=x1)
+        x1 = mb.add(x=1, y=x1)
+        x1 = mb.mul(x=0.5, y=x1)
+        x1 = mb.mul(x=x, y=x1)
+        return x1
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::fuse_gelu_tanh_approximation')
+    assert get_op_types_in_program(prev_prog) == ['pow','mul','add','mul','tanh','add','mul','mul']
+    assert get_op_types_in_program(prog) == ['gelu']
+    assert_model_is_valid(prog, {'x': (3, 5, 6)},
+                          expected_output_shapes={block.outputs[0].name: (3, 5, 6)})
+
+@pytest.mark.parametrize("axes_size", [1, 2, 3])
+def test_layernorm_fusion(axes_size):
+    """
+    Detect layer norm pattern, found in the TF bert model.
+    y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
+
+    where mean and variance are computed along axes [-1] or [-1,-2] and so on
+    and gamma and beta are constants with rank equal to the length of the axes parameter.
+    """
+    shape = (3, 5, 6)
+    rank = len(shape)
+    axes = list(range(rank - axes_size, rank))
+
+    @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+    def prog(x):
+        x1 = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
+        x2 = mb.sub(x=x, y=x1)
+        x2 = mb.square(x=x2)
+        x2 = mb.reduce_mean(x=x2, axes=axes, keep_dims=True)
+        x2 = mb.add(x=x2, y=1e-5)
+        x2 = mb.rsqrt(x=x2)
+        x3 = mb.mul(x=np.random.rand(*shape[-len(axes):]), y=x2)
+        x4 = mb.mul(x=x3, y=x1)
+        x5 = mb.mul(x=x, y=x3)
+        x4 = mb.sub(x=np.random.rand(*shape[-len(axes):]), y=x4)
+        y = mb.add(x=x4, y=x5)
+        return y
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::fuse_layernorm_or_instancenorm')
+    assert get_op_types_in_program(prev_prog) == ['reduce_mean', 'sub', 'square', 'reduce_mean', \
+                                                  'add', 'rsqrt', 'mul', 'mul', 'mul', \
+                                                  'sub', 'add']
+    assert get_op_types_in_program(prog) == ['layer_norm']
+    assert_model_is_valid(prog, {'x': shape},
+                          expected_output_shapes={block.outputs[0].name: shape})
+
+
+
+def test_instancenorm_fusion():
+    """
+    Detect instance norm pattern
+    y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
+
+    where input is rank 4, (N,C,H,W), axis=[2, 3], along which reduction happens,
+    and gamma and beta are of shape (1,C,1,1)
+    """
+    shape = (3, 5, 6, 7)
+
+    @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+    def prog(x):
+        x1 = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=True)
+        x2 = mb.sub(x=x, y=x1)
+        x2 = mb.square(x=x2)
+        x2 = mb.reduce_mean(x=x2, axes=[2, 3], keep_dims=True)
+        x2 = mb.add(x=x2, y=1e-5)
+        x2 = mb.rsqrt(x=x2)
+        x3 = mb.mul(x=np.random.rand(1, shape[1], 1, 1), y=x2)
+        x4 = mb.mul(x=x3, y=x1)
+        x5 = mb.mul(x=x, y=x3)
+        x4 = mb.sub(x=np.random.rand(1, shape[1], 1, 1), y=x4)
+        y = mb.add(x=x4, y=x5)
+        return y
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::fuse_layernorm_or_instancenorm')
+    assert get_op_types_in_program(prev_prog) == ['reduce_mean', 'sub', 'square', 'reduce_mean', \
+                                                  'add', 'rsqrt', 'mul', 'mul', 'mul', \
+                                                  'sub', 'add']
+    assert get_op_types_in_program(prog) == ['instance_norm']
+    assert_model_is_valid(prog, {'x': shape},
+                          expected_output_shapes={block.outputs[0].name: shape})
+
+
+@pytest.mark.parametrize("rank", [1, 2, 3, 4])
+def test_onehot_matmul_to_gather_fusion(rank):
+    """
+    Input:
+        %2 = one_hot(%1, on_value=1, off_value=0, axis=-1)
+        %3 = const() # rank 2
+        %4  = matmul(%2, %3)
+
+    Output:
+        %4 = gather(%3, %2, axis=0)
+    """
+    rank4_shape = (10, 3, 6, 7)
+    input_shape = rank4_shape[-rank:]
+    vocab_size = 15
+    embedding_size = 12
+
+    @mb.program(input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.int32)])
+    def prog(x):
+        x = mb.one_hot(indices=x, on_value=1, off_value=0, axis=-1, one_hot_vector_size=vocab_size)
+        x = mb.matmul(x=x, y=np.random.rand(vocab_size, embedding_size))
+        return x
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(prog, 'common::fuse_onehot_matmul_to_gather')
+    assert get_op_types_in_program(prev_prog) == ['one_hot', 'matmul']
+    assert get_op_types_in_program(prog) == ['gather']
+    assert_model_is_valid(prog, {'x': input_shape},
+                          expected_output_shapes={block.outputs[0].name: input_shape + (embedding_size,)})
+
+

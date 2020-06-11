@@ -3,6 +3,7 @@ from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph, run_compare_tf
 )
+import math
 
 backends = testing_reqs.backends
 
@@ -121,6 +122,30 @@ class TestActivationReLU6:
         run_compare_tf(model, input_dict, outputs,
                        use_cpu_only=use_cpu_only,
                        frontend_only=False, backend=backend)
+
+class TestGeluTanhApproximation:
+    @pytest.mark.parametrize("use_cpu_only, backend, rank",
+                             itertools.product(
+                                 [True],
+                                 backends,
+                                 [rank for rank in range(2, 3)]))
+    def test(self, use_cpu_only, backend, rank):
+        input_shape = np.random.randint(low=1, high=6, size=rank)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            a = 0.5 * (1.0 + tf.tanh((math.sqrt(2 / math.pi) * (x + 0.044715 * tf.pow(x, 3)))))
+            return a * x
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(input_shape, -5, 5)]
+        input_dict = dict(zip(inputs, input_values))
+        spec = run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
+        assert len(spec.neuralNetwork.layers) == 1
+        assert spec.neuralNetwork.layers[0].WhichOneof('layer') == 'gelu'
 
 
 class TestActivationSigmoid:

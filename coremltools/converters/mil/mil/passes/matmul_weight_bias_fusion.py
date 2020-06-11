@@ -33,10 +33,10 @@ def transpose(v, before_op):
 def try_to_transform(matmul_op, add_op, block):
     if matmul_op.x.val is None and matmul_op.y.val is None:
         # This is a dynamic matmul.
-        return
+        return False
     if add_op.x.val is None and add_op.y.val is None:
         # This is a dynamic add.
-        return
+        return False
 
     x_is_weight = matmul_op.x.val is not None
     if x_is_weight:
@@ -50,7 +50,7 @@ def try_to_transform(matmul_op, add_op, block):
 
     if linear_x.rank < 2 or weight.rank != 2:
         # We don't support these cases yet.
-        return
+        return False
 
     d_out = weight.shape[1] if not transpose_weight else weight.shape[0]
     bias = add_op.x if add_op.x.val is not None else add_op.y
@@ -89,27 +89,31 @@ def try_to_transform(matmul_op, add_op, block):
             old_var=add_op.outputs[0], new_var=x)
     # Remove all the ops at once
     block.remove_ops([matmul_op, add_op])
+    return True
 
-
-def matmul_to_linear_block(block):
-    # shallow copy hides changes on f.operations during the loop
+def fuse_matmul_weight_bias_block(block):
+    fusion_status = False
     for op in list(block.operations):
         for b in op.blocks:
-            matmul_to_linear_block(b)
+            block_changed = True
+            while block_changed:
+                block_changed = fuse_matmul_weight_bias_block(b)
         if len(op.blocks) > 0:
-            # This op can't be matmul.
+            # This op can't be matmul
             continue
 
         add_op = match_pattern(op)
         if add_op is not None:
             with block:
-                try_to_transform(op, add_op, block)
+                fusion_status = try_to_transform(op, add_op, block)
             # has to break as the downstream iterator is affected.
-            break
+            if fusion_status:
+                return fusion_status
+    return fusion_status
 
 
 @register_pass(namespace='common')
-def matmul_to_linear(prog):
+def fuse_matmul_weight_bias(prog):
     """
     Convert matmul + add/sub to linear whenever possible.
 
@@ -128,4 +132,6 @@ def matmul_to_linear(prog):
         prog: Program
     """
     for f_name, f in prog.functions.items():
-        matmul_to_linear_block(f)
+        block_changed = True
+        while block_changed:
+            block_changed = fuse_matmul_weight_bias_block(f)

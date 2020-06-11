@@ -61,7 +61,7 @@ class resize_bilinear(Operation):
             raise ValueError("input to the \"resize_bilinear\" op must have rank at least 3")
 
         if self.sampling_mode.val not in {"STRICT_ALIGN_CORNERS", "ALIGN_CORNERS", "DEFAULT", "OFFSET_CORNERS"}:
-            raise ValueError("\"resize_bilinear\" op: unrecognized sampling mode \"{}\"".format(self.sampling_mode))
+            raise ValueError("\"resize_bilinear\" op: unrecognized sampling mode \"{}\"".format(self.sampling_mode.val))
 
         ret_shape = list(self.x.shape)
         ret_shape[-1] = self.target_size_width.val

@@ -92,7 +92,7 @@ class _InputType(object):
             If default is not None, optional will be set to True
 
         default:
-            Default value of optional input. InputType is optional iff a default
+            Default value of optional input. InputType is optional if a default
             is provided or optional == True.  default can be int, float,
             string, np.ndarray etc depending on subclass.
 
