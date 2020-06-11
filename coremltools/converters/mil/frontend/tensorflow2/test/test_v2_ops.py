@@ -23,7 +23,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestActivationElu,
     TestActivationLeakyReLU,
     TestActivationReLU,
-    # TestActivationReLU6,  # FIXME: [Unit test failure for ReLU6](rdar://64227939)
+    TestActivationReLU6,
     TestActivationSelu,
     TestActivationSigmoid,
     TestActivationSoftmax,

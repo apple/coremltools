@@ -1875,7 +1875,7 @@ def relu6(const_context, builder, op):
                       alpha=-6)
     builder.add_activation(name=op.name,
                            input_name=op.name+"__relu6_threshold6__",
-                           output_name=op.name,
+                           output_name=op.outputs[0].name,
                            non_linearity="LINEAR",
                            params=[-1,0])
 
