@@ -3789,24 +3789,57 @@ class NeuralNetworkBuilder(object):
                         # If input format is 'NHWC' for TF model, it will be
                         # 'NCHW' for CoreML model. Therefore, add transpose to
                         # NHWC after the input and replace all use of input
-                        axes = [1, 2, 0]
-                        if len(array_shape) == 4:
-                            axes = [0, 2, 3, 1]
-                        input_transpose = input_.name + '_to_nhwc'
-                        transpose_layer = self.add_transpose(
-                            name=input_transpose,
-                            axes=axes,
-                            input_name=input_.name,
-                            output_name=input_transpose
-                        )
                         layers = self.nn_spec.layers
-                        layers.insert(0, layers.pop())
+                        complement_transpose = True
+                        transpose_names = set()
+                        transpose_outputs = []
                         for layer_ in layers:
-                            for i in range(len(layer_.input)):
-                                if layer_.name == input_transpose:
-                                    continue
-                                if layer_.input[i] == input_.name:
-                                    layer_.input[i] = input_transpose
+                            if layer_.HasField("transpose") and layer_.input[0] == input_.name:
+                                transpose_order = list(layer_.transpose.axes)
+                                if transpose_order == [0, 3, 1, 2] or transpose_order == [2, 0, 1]:
+                                    transpose_names.add(layer_.name)
+                                    transpose_outputs += list(layer_.output)
+                                else:
+                                    complement_transpose = False
+                                    break 
+                            else:
+                                for i in layer_.input:
+                                    if i == input_.name:
+                                        complement_transpose = False
+                                        break
+                        if complement_transpose:
+                            for layer_ in layers:
+                                for i in range(len(layer_.input)):
+                                    if layer_.input[i] in transpose_names:
+                                        layer_.input[i] = input_.name
+                            for layer_ in layers:
+                                if layer_.name == input_.name:
+                                    del layer_.output[:]
+                                    layer_.output.extend(transpose_outputs)
+                                    break
+                            while len(transpose_names) > 0:
+                                for idx, layer_ in enumerate(layers):
+                                    if layer_.name in transpose_names:
+                                        del layers[idx]
+                                        transpose_names.remove(layer_.name)
+                        else: 
+                            axes = [1, 2, 0]
+                            if len(array_shape) == 4:
+                                axes = [0, 2, 3, 1]
+                            input_transpose = input_.name + '_to_nhwc'
+                            transpose_layer = self.add_transpose(
+                                name=input_transpose,
+                                axes=axes,
+                                input_name=input_.name,
+                                output_name=input_transpose
+                            )
+                            layers.insert(0, layers.pop())
+                            for layer_ in layers:
+                                for i in range(len(layer_.input)):
+                                    if layer_.name == input_transpose:
+                                        continue
+                                    if layer_.input[i] == input_.name:
+                                        layer_.input[i] = input_transpose
 
                     # TODO: If input is not rank 3 or 4, then accordingly handle
                     # e.g. for rank-2 input, squeeze additional dimension in case of Gray scale image
