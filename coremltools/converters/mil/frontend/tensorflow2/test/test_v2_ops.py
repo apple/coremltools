@@ -29,6 +29,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestActivationSoftmax,
     TestActivationSoftPlus,
     TestActivationSoftSign,
+    TestAddN,
     TestBroadcastTo,
     TestCond,
     TestConcat,  # Redirects to ConcatV2 in TF2
@@ -36,9 +37,11 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestConv3d,
     TestDepthwiseConv,
     TestElementWiseBinary,
+    TestIsFinite,
     TestLinear,
     TestNormalization,
     TestPad,
+    TestPack,
     TestPooling1d,
     TestPooling2d,
     TestPooling3d,
@@ -46,7 +49,9 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestTensorArray,
     TestWhileLoop,
     TestReshape,
+    TestSelect,
     TestSlice,
+    TestZerosLike,
 )
 
 del TestWhileLoop.test_nested_while_body  # tf.function() error in TF2
@@ -423,6 +428,34 @@ class TestTensorList:
         model, inputs, outputs = build_model
         input_values = [
             np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model, input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, size_dynamic_shape",
+        itertools.product(
+            [True, False],
+            backends,
+            [(2, False, (None, 8))]
+        ))
+    def test_partial_element_shape(
+            self, use_cpu_only, backend, size_dynamic_shape):
+        size, dynamic_size, element_shape = size_dynamic_shape
+
+        @make_tf_graph([(3, 1, 8)])
+        def build_model(x):
+            ta = tf.TensorArray(
+                tf.float32, size=size,
+                dynamic_size=dynamic_size,
+                element_shape=element_shape)
+            ta = ta.scatter(indices=[0, 1, 2], value=x)
+            return ta.read(0), ta.read(1), ta.read(2)
+
+        model, inputs, outputs = build_model
+        input_values = [np.random.rand(3, 1, 8).astype(np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
             model, input_dict, outputs,

@@ -1267,20 +1267,6 @@ def Select(context, node):
     a = context[node.inputs[1]]
     b = context[node.inputs[2]]
 
-    # check shapes
-    cond_shape = cond.shape
-    a_shape = a.shape
-    b_shape = b.shape
-
-    if len(a_shape) == len(cond_shape):
-        if not all([is_symbolic(x) or is_symbolic(y) or x == y for x,y in zip(a_shape, cond_shape)]):
-            raise ValueError('Shape mismatch {} vs. {}'.format(a_shape, cond_shape))
-    else:
-        if len(cond_shape) != 1:
-            raise ValueError("Invalid shape for 'cond'.")
-        if a_shape[0] != cond_shape[0] and not is_symbolic(a_shape[0]) and not is_symbolic(cond_shape[0]):
-            raise ValueError("Invalid shape for 'cond'.")
-
     # broadcast vector type cond
     rank_cond = cond.rank
     rank_a = a.rank
@@ -1832,21 +1818,25 @@ def ScatterNd(context, node):
     x = mb.scatter_nd(data=x, indices=indices, updates=updates, name=node.name)
     context.add(node.name, x)
 
+
 @register_tf_op
 def ZerosLike(context, node):
     x = context[node.inputs[0]]
     if x.rank == 0:
-        x = mb.const(val=0., name=node.name)
+        np_type = types.nptype_from_builtin(x.sym_type)
+        x = mb.const(val=np_type(0), name=node.name)
     else:
-        shape = mb.shape(x=x)
-        x = mb.fill(shape=shape, value=0, name=node.name)
+        np_type = types.nptype_from_builtin(x.sym_type.get_primitive())
+        x = mb.fill(shape=mb.shape(x=x), value=np_type(0), name=node.name)
     context.add(node.name, x)
+
 
 @register_tf_op
 def IsFinite(context, node):
     x = context[node.inputs[0]]
     x = mb.isfinite(x=x, name=node.name)
     context.add(node.name, x)
+
 
 @register_tf_op
 def Split(context, node):

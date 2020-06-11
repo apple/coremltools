@@ -4,7 +4,6 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 from coremltools.converters.mil.mil import types
-from .parsed_tf_node import ParsedTFNode
 from tensorflow.core.framework.types_pb2 import DataType
 from tensorflow.python.framework.dtypes import _TF_TO_NP
 
@@ -48,21 +47,21 @@ def parse_tensor(t):
 
     retval = None
     if len(t.half_val) > 0:
-        retval = np.array(t.half_val).astype(_TF_TO_NP[t.dtype])
+        retval = np.array(t.half_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.float_val) > 0:
-        retval = np.array(t.float_val).astype(_TF_TO_NP[t.dtype])
+        retval = np.array(t.float_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.double_val) > 0:
-        retval = np.array(t.double_val).astype(_TF_TO_NP[t.dtype])
+        retval = np.array(t.double_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.int_val) > 0:
-        retval = np.array(t.int_val).astype(_TF_TO_NP[t.dtype])
+        retval = np.array(t.int_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.int64_val) > 0:
-        retval = np.array(t.int64_val).astype(_TF_TO_NP[t.dtype])
+        retval = np.array(t.int64_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.bool_val) > 0:
-        retval = np.array(t.bool_val).astype(_TF_TO_NP[t.dtype])
+        retval = np.array(t.bool_val, dtype=_TF_TO_NP[t.dtype])
     elif hasattr(t, 'uint32_val') and len(t.uint32_val) > 0:
-        retval = np.array(t.uint32_val).astype(_TF_TO_NP[t.dtype])
+        retval = np.array(t.uint32_val, dtype=_TF_TO_NP[t.dtype])
     elif hasattr(t, 'uint64_val') and len(t.uint64_val) > 0:
-        retval = np.array(t.uint64_val).astype(_TF_TO_NP[t.dtype])
+        retval = np.array(t.uint64_val, dtype=_TF_TO_NP[t.dtype])
 
     if not t.tensor_shape.unknown_rank and len(shape) == 0:
         retobj = typ()

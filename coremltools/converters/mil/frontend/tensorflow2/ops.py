@@ -103,8 +103,16 @@ def TensorListFromTensor(context, node):
         msg = "element_shape {} cannot be symbolic in op '{}'."
         raise ValueError(msg.format(element_shape, node.name))
 
-    ls = mb.make_list(init_length=length, dtype=dtype_str,
-                      elem_shape=element_shape, dynamic_length=False)
+    if element_shape is not None and \
+            all(np.atleast_1d(element_shape.val) != -1):
+        ls = mb.make_list(
+            init_length=length,
+            elem_shape=element_shape,
+            dtype=dtype_str)
+    else:
+        ls = mb.tf_make_list(
+            init_length=length, dtype=dtype_str)
+
     indices = mb.range_1d(end=length, start=0, step=1)
     ls = mb.list_scatter(ls=ls, indices=indices, value=value, name=node.name)
     context.add(node.name, ls)
@@ -148,8 +156,8 @@ def TensorListReserve(context, node):
     element_dtype = node.attr.get('element_dtype')
     dtype = types.builtin_to_string(element_dtype)
 
-    shape = np.atleast_1d(element_shape.val)
-    if element_shape is not None and not all(shape == -1):
+    if element_shape is not None and \
+            all(np.atleast_1d(element_shape.val) != -1):
         ls = mb.make_list(
             init_length=num_elements,
             elem_shape=element_shape,

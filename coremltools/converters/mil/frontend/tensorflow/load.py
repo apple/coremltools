@@ -16,7 +16,7 @@ from .basic_graph_ops import fill_outputs
 from .converter import TFConverter
 from .tf_graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from .tfssa import NetworkEnsemble, SSAFunction
-from .parse import ParsedTFNode
+from .parsed_tf_node import ParsedTFNode
 from coremltools.converters._profile_utils import profile
 from tqdm import tqdm
 

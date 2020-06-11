@@ -259,6 +259,7 @@ class TestActivationSelu:
                        use_cpu_only=use_cpu_only,
                        frontend_only=False, backend=backend)
 
+
 class TestSelect:
     @pytest.mark.parametrize('use_cpu_only, backend, rank, broadcast, dynamic',
                              itertools.product(
@@ -272,7 +273,7 @@ class TestSelect:
         shape = np.random.randint(low=1, high=4, size=rank)
         cond_shape = np.array([shape[0]]) if broadcast else shape
 
-        cond_val = np.random.randint(low=0, high=2, size=cond_shape).astype(np.int32)
+        cond_val = np.random.randint(low=0, high=2, size=cond_shape).astype(np.bool)
         a_val = random_gen(shape=shape, rand_min=-1962., rand_max=0.)
         b_val = random_gen(shape=shape, rand_min=0., rand_max=1964.)
 
@@ -1796,7 +1797,7 @@ class TestNormalization:
                                  [1e-5, 1e-10],
                              ))
     def test_l2_normalize(self, use_cpu_only, backend, rank, axes, epsilon):
-        if use_cpu_only and rank is 5 and axes is 15 and epsilon is 1e-10:
+        if use_cpu_only is True and rank == 5:
             # TODO: <rdar://63680019> Specific failure on CI
             return
 
@@ -3616,10 +3617,10 @@ class TestIsFinite:
             res = random_gen(input_shape, rand_min=-1, rand_max=1)
             random_map = np.random.choice([np.inf,-np.inf,0],size=input_shape)
             if len(input_shape) == 0:
-                return random_map
+                return random_map.astype(np.float32)
             res[np.where(random_map==np.inf)] = np.inf
             res[np.where(random_map==-np.inf)] = -np.inf
-            return res
+            return res.astype(np.float32)
 
         input_shape = np.random.randint(low=2, high=6, size=rank)
         input_value = _generate_num_with_inf(input_shape)
@@ -3627,14 +3628,14 @@ class TestIsFinite:
             reshape_shape = [2, tf.int32]
 
             if len(input_shape) == 0:
-                reshape_value = np.array([1,1])
+                reshape_value = np.array([1,1], dtype=np.int32)
             else:
-                reshape_value = np.array([input_shape[0],np.prod(input_shape[1:])])
+                reshape_value = np.array([input_shape[0],np.prod(input_shape[1:])], dtype=np.int32)
 
             @make_tf_graph([input_shape, reshape_shape])
             def build_model(x, reshape):
                 x = tf.reshape(x, reshape)
-                x =  tf.raw_ops.IsFinite(x=x)
+                x = tf.raw_ops.IsFinite(x=x)
                 return tf.raw_ops.Cast(x=x, DstT=tf.float32)
 
             model, inputs, outputs = build_model
@@ -3644,7 +3645,7 @@ class TestIsFinite:
 
             @make_tf_graph([input_shape])
             def build_model(x):
-                x =  tf.raw_ops.IsFinite(x=x)
+                x = tf.raw_ops.IsFinite(x=x)
                 return tf.raw_ops.Cast(x=x, DstT=tf.float32)
 
             model, inputs, outputs = build_model

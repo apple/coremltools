@@ -52,7 +52,8 @@ def make_tf2_graph(input_types):
 def run_compare_tf2(
         model, input_dict, output_names,
         use_cpu_only=False, frontend_only=False,
-        frontend='tensorflow2', backend='nn_proto', atol=1e-04, rtol=1e-05):
+        frontend='tensorflow2', backend='nn_proto',
+        debug=False, atol=1e-04, rtol=1e-05):
     """
     Parameters
     ----------
@@ -70,6 +71,8 @@ def run_compare_tf2(
         Frontend to convert from.
     backend: str
         Backend to convert to.
+    debug: bool
+        If true, print verbose information and plot intermediate graphs.
     atol: float
         The absolute tolerance parameter.
     rtol: float
@@ -96,7 +99,7 @@ def run_compare_tf2(
 
     proto = convert(
         model, source=frontend, inputs=inputs,
-        outputs=outputs, convert_to=backend).get_spec()
+        outputs=outputs, convert_to=backend, debug=debug).get_spec()
 
     if frontend_only:
         return

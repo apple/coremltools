@@ -186,16 +186,16 @@ class ListVar(Var):
 
     @property
     def shape(self):
-        raise ValueError("shape not applicable to ListVar {}.".format(
+        raise ValueError("shape not applicable to ListVar '{}'.".format(
             self.name))
 
     @property
     def rank(self):
-        raise ValueError("rank not applicable to ListVar {}".format(self.name))
+        raise ValueError("rank not applicable to ListVar '{}'".format(self.name))
 
     @property
     def dtype(self):
-        raise ValueError("dtype not applicable to ListVar {}".format(
+        raise ValueError("dtype not applicable to ListVar '{}'".format(
             self.name))
 
     @property

@@ -209,6 +209,7 @@ def numpy_val_to_builtin_val(npval):
         ret.val = npval
         return ret, ret_type
 
+
 def is_subtype(type1, type2):
     """
     Return True if type1 is a subtype of type2. False otherwise.

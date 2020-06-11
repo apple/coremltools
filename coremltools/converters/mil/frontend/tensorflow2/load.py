@@ -29,7 +29,7 @@ from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
     flatten_sub_graph_namespaces, rewrite_control_flow_functions
 )
 from coremltools.converters.mil.frontend.tensorflow.tfssa import NetworkEnsemble, SSAFunction
-from coremltools.converters.mil.frontend.tensorflow.parse import ParsedTFNode
+from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
 from coremltools.converters.mil.frontend.tensorflow.load import TFLoader
 
 

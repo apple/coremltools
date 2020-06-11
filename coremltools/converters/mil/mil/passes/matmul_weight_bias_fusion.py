@@ -3,6 +3,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
+import numpy as np
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 
@@ -53,12 +54,19 @@ def try_to_transform(matmul_op, add_op, block):
         return False
 
     d_out = weight.shape[1] if not transpose_weight else weight.shape[0]
-    bias = add_op.x if add_op.x.val is not None else add_op.y
-    if bias.rank != 1 or bias.shape[0] != d_out:
-        raise ValueError("bias {} mismatch D_out {}".format(bias.shape, d_out))
+    bias = add_op.x.val if add_op.x.val is not None else add_op.y.val
+    if len(bias.shape) > 1:
+        if any([d != 1 for d in bias.shape[:-1]]):
+            return  # cannot transform
+
+        # squeeze leading dims of size 1
+        bias = np.squeeze(bias)
+
+    if len(bias.shape) != 1 or bias.shape[0] != d_out:
+        return  # cannot transform
 
     if add_op.op_type == 'sub':
-        bias = mb.neg(x=bias)
+        bias = -bias
     out_name = add_op.outputs[0].name
 
     if x_is_weight:

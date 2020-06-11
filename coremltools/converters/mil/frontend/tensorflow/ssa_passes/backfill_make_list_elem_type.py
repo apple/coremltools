@@ -66,21 +66,21 @@ def infer_elem_type(list_var):
 
     main(%update: (2,fp32)) {
       block0() {
-	%list: List[unknown] = tf_make_list(...) # unknown elem type
-	%while_loop_0:0: (i32), %while_loop_0:1: List[(2,fp32)] = while_loop(loop_vars=(...))
-	  while_loop_0_body(...) {
-	    %list_write_0: List[(2,fp32)] = list_write(index=..., ls=%list, value=%update)
-	  } -> (%add_0, %list_write_0)
+        %list: List[unknown] = tf_make_list(...) # unknown elem type
+        %while_loop_0:0: (i32), %while_loop_0:1: List[(2,fp32)] = while_loop(loop_vars=(...))
+          while_loop_0_body(...) {
+            %list_write_0: List[(2,fp32)] = list_write(index=..., ls=%list, value=%update)
+          } -> (%add_0, %list_write_0)
 
-    Result:
+        Result:
 
-    main(%update: (2,fp32)) {
-      block0() {
-	%list: List[(2,fp32)] = tf_make_list(...) # Get the elem type from list_write
-	%while_loop_0:0: (i32), %while_loop_0:1: List[(2,fp32)] = while_loop(loop_vars=(...))
-	  while_loop_0_body(...) {
-	    %list_write_0: List[(2,fp32)] = list_write(index=..., ls=%list, value=%update)
-	  } -> (%add_0, %list_write_0)
+        main(%update: (2,fp32)) {
+          block0() {
+        %list: List[(2,fp32)] = tf_make_list(...) # Get the elem type from list_write
+        %while_loop_0:0: (i32), %while_loop_0:1: List[(2,fp32)] = while_loop(loop_vars=(...))
+          while_loop_0_body(...) {
+            %list_write_0: List[(2,fp32)] = list_write(index=..., ls=%list, value=%update)
+          } -> (%add_0, %list_write_0)
     """
     # Search for child op that have informative element types
     for o in list_var.child_ops:
