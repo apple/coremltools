@@ -399,9 +399,9 @@ def conv(const_context, builder, op):
     strides = [1] * rank_factor
     dilations = [1] * rank_factor
 
-    if op.strides.val is not None:
+    if op.strides is not None:
         strides = op.strides.val.tolist()
-    if op.dilations.val is not None:
+    if op.dilations is not None:
         dilations = op.dilations.val.tolist()
     if is_conv1d:
         dilations = dilations + [1]
@@ -2024,9 +2024,9 @@ def conv_transpose(const_context, builder, op):
     strides = [1] * rank_factor
     dilations = [1] * rank_factor
 
-    if op.strides.val is not None:
+    if op.strides is not None:
         strides = op.strides.val.tolist()
-    if op.dilations.val is not None:
+    if op.dilations is not None:
         dilations = op.dilations.val.tolist()
     if is_conv_transpose_1d:
         dilations = dilations + [1]

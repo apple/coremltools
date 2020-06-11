@@ -43,7 +43,6 @@ def test_single_layer_example():
     prediction = model.predict(feed_dict)
     assert len(prediction) == 1
 
-@pytest.mark.xfail # to be fixed in eng/PR-59740053 PR
 def test_conv_example():
     batch, C_in, C_out, H, W = 2, 2, 3, 7, 10
     kH, kW = 3, 5
@@ -88,7 +87,7 @@ def test_conv_example():
 
         # Test 4: provide only required arguments for 1D.
         conv4 = mb.conv(x=seq, weight=W_1d, pad_type="valid")
-    
+
         logging.info("conv4 shape: {}".format(conv4.shape))
 
         return conv1, conv2, conv3, pool1, pool2, conv4
@@ -104,7 +103,7 @@ def test_conv_example():
     model = models.MLModel(proto)
     assert model is not None
     prediction = model.predict(feed_dict)
-    assert len(prediction) == 2
+    assert len(prediction) == 6
 
 def test_while_example():
     def body(a, b):
