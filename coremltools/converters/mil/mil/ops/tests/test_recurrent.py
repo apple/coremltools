@@ -120,7 +120,8 @@ class TestLSTM:
                 'has_bias',
                 'forget_bias',
                 'has_peephole',
-                'coupled_input_forget'
+                'coupled_input_forget',
+                'clip',
             ]),
             itertools.product(
                 [True, False],
@@ -133,12 +134,13 @@ class TestLSTM:
                 [False, True],
                 [False, True],
                 [False, True],
-                [False], # rdar://63508253 (Follow up on LSTM clip, peephole with tests in CoreML)
+                [True, False],
                 [False], # We have not exposed this option yet!
+                [50., 0.2, 0.01]
             ))
     def test_numpy_numerical(self, use_cpu_only, backend, input_dims, output_dim,
             activation, inner_activation, outer_activation, return_seq,
-            has_bias, forget_bias, has_peephole, coupled_input_forget):
+            has_bias, forget_bias, has_peephole, coupled_input_forget, clip):
 
         def _apply_act(x, option):
             if option == 'TANH':
@@ -187,15 +189,15 @@ class TestLSTM:
             np_out = np.zeros((seq_len, hidden_size))
             for k in range(seq_len):
                 x = X[k, :]
-                i = _apply_act(_clip(np.dot(Wx_i, x) + np.dot(Wh_i, h) + b_i + c * p_i), act1)
-                f = _apply_act(_clip(np.dot(Wx_f, x) + np.dot(Wh_f, h) + b_f + c * p_f), act1)
-                g = _apply_act(_clip(np.dot(Wx_g, x) + np.dot(Wh_g, h) + b_g), act2)
+                i = _apply_act(np.dot(Wx_i, x) + np.dot(Wh_i, h) + b_i + c * p_i, act1)
+                f = _apply_act(np.dot(Wx_f, x) + np.dot(Wh_f, h) + b_f + c * p_f, act1)
+                g = _apply_act(np.dot(Wx_g, x) + np.dot(Wh_g, h) + b_g, act2)
                 if coupled_input_forget:
                     c = c * (1 - i) + i * g
                 else:
                     c = c * f + i * g
-                c = _clip(c)
-                o = _apply_act(_clip(np.dot(Wx_o, x) + np.dot(Wh_o, h) + b_o + c * p_o), act1)
+                c = _clip(c, clip)
+                o = _apply_act(np.dot(Wx_o, x) + np.dot(Wh_o, h) + b_o + c * p_o, act1)
                 h = o * _apply_act(c, act3)
                 np_out[k, :] = h
 
@@ -247,10 +249,12 @@ class TestLSTM:
                                     initial_h=np.zeros((batch, hidden_size)).astype(np.float32),
                                     initial_c=np.zeros((batch, hidden_size)).astype(np.float32),
                                     weight=weights,
+                                    peephole=p,
                                     direction='forward',
                                     bias=b,
                                     output_sequence=return_seq,
-                                    activations=(activation, inner_activation, outer_activation)
+                                    activations=(activation, inner_activation, outer_activation),
+                                    clip=clip
                                     )
             return h_all
         expected_output_types = (seq_len if return_seq else 1, batch, hidden_size, types.fp32)
@@ -262,40 +266,6 @@ class TestLSTM:
                             frontend_only=False, backend=backend,
                             # rdar://63839623 ([GITLAB-CI] precision issue on various tests on gitlab ci)
                             atol=1e-3, rtol=1e-3)
-
-
-    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
-    @pytest.mark.xfail(reason="rdar://62272632")
-    @pytest.mark.parametrize("use_cpu_only, backend",
-            itertools.product(
-                [True, False],
-                backends,
-                ))
-    def test_builder_to_backend_zeros(self, use_cpu_only, backend):
-        seq_len, b, input_dim, hidden_dim = 1, 1, 2, 3
-        t = np.zeros((1, b, input_dim)).astype(np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            h_all, ht, ct = mb.lstm(x=x,
-                    initial_h=np.zeros((b, hidden_dim)).astype(np.float32),
-                    initial_c=np.zeros((b, hidden_dim)).astype(np.float32),
-                    weight=np.zeros((input_dim+hidden_dim,
-                        4*hidden_dim)).astype(np.float32),
-                    direction='forward',
-                    bias=np.zeros((2, 4*hidden_dim)).astype(np.float32),
-                    activations=('sigmoid', 'tanh', 'sigmoid'),
-                    )
-            return ht
-        expected_output_types = (b, hidden_dim, types.fp32)
-        expected_outputs = np.zeros((b, hidden_dim)).astype(np.float32)
-
-        run_compare_builder(build, input_placeholders, input_values,
-                            expected_output_types, expected_outputs,
-                            use_cpu_only=use_cpu_only,
-                            frontend_only=False, backend=backend)
-
 
     @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",
