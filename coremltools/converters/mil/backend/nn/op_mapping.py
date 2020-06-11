@@ -2321,6 +2321,7 @@ def while_loop(const_context, builder, op):
             nn_spec=loop_layer.loop.conditionNetwork,
             disable_rank5_shape_mapping=True,
             use_float_arraytype=True)
+    cond_builder.rank_dict = {k.name: builder.rank_dict[k.name] for k in block.inputs}
     convert_ops(const_context, cond_builder,
             block.operations_for_vars(block.outputs[:1]),
             block.outputs[:1])
@@ -2332,6 +2333,7 @@ def while_loop(const_context, builder, op):
             nn_spec=loop_layer.loop.bodyNetwork,
             disable_rank5_shape_mapping=True,
             use_float_arraytype=True)
+    body_builder.rank_dict = {k.name: builder.rank_dict[k.name] for k in block.inputs}
     convert_ops(const_context, body_builder,
             block.operations_for_vars(block.outputs[1:]),
             block.outputs[1:])

@@ -12,6 +12,7 @@ from coremltools.converters.mil.mil import (
     Placeholder,
     Function,
     Program,
+    get_new_symbol,
 )
 from coremltools.converters.mil.mil import Var
 
@@ -21,6 +22,7 @@ from .torch_op_registry import _TORCH_OPS_REGISTRY
 
 torch_to_mil_types = {
     torch.float32: types.fp32,
+    torch.float64: types.fp64,
     torch.int32: types.int32,
     torch.int64: types.int64,
 }
@@ -124,12 +126,10 @@ class TorchConverter:
         self, torchscript, inputs, outputs=None, cut_at_symbols=None,
     ):
         assert isinstance(torchscript, torch.jit.ScriptModule)
-        self.inputs = self._tensorify_inputs(inputs)
-        self.input_names = self._extract_names(inputs)
-        self.input_types = self._flatten_inputs(inputs)
-        for idx, inp in enumerate(self.input_types):
+        self.inputs = inputs
+        for idx, inp in enumerate(self.inputs):
             if isinstance(inp, ImageType):
-                self.input_types[idx].channel_first = True
+                self.inputs[idx].channel_first = True
         self.torchscript = torchscript
         self.output_names = outputs
         self.context = TranscriptionContext()
@@ -139,56 +139,6 @@ class TorchConverter:
         )
         self._flatten_graph_input_values()
         self._flatten_graph_output_values()
-
-    def _flatten_inputs(self, inputs):
-        """
-            Recursively flatten input into a list.
-        """
-        input_type = []
-        for _input in inputs:
-            if isinstance(_input, (list, tuple)):
-                input_type.extend(self._flatten_inputs(_input))
-            elif isinstance(_input, InputType):
-                input_type.append(_input)
-            else:
-                raise ValueError(
-                    "Unknown type {} for flattening into InputType.".format(
-                        type(_input)
-                    )
-                )
-        return input_type
-
-    def _extract_names(self, inputs):
-        """
-            Recursively search for names and extract them into a flattened list.
-            Filling in unnamed tensors with None.
-        """
-        names = []
-        for _input in inputs:
-            if isinstance(_input, (list, tuple)):
-                names.extend(self._extract_names(_input))
-            elif isinstance(_input, InputType):
-                names.append(_input.name)
-            else:
-                raise ValueError(
-                    "Unknown type {} for extracting name.".format(type(_input))
-                )
-        return names
-
-    def _tensorify_inputs(self, inputs):
-        """
-            Recursivly searches for Specs and turns them into tensors.
-        """
-        if isinstance(inputs, list):
-            return [self._tensorify_inputs(x) for x in inputs]
-        elif isinstance(inputs, tuple):
-            return tuple([self._tensorify_inputs(x) for x in inputs])
-        elif isinstance(inputs, InputType):
-            return torch.zeros(
-                inputs.shape.default, dtype=mil_to_torch_types[inputs.dtype]
-            )
-        else:
-            raise ValueError("Unknown type {} for tensorify.".format(type(inputs)))
 
     def _flatten_graph_input_values(self):
         """ CoreML can't handle nested iterables of tensors, so we flatten the
@@ -205,7 +155,7 @@ class TorchConverter:
             new_nodes = []
             changed = False
             for _input_name, _input_val in old_graph_inputs.items():
-                if isinstance(_input_val, tuple):
+                if isinstance(_input_val, (tuple, list)):
                     changed = True
                     if not notified:
                         notified = True
@@ -232,6 +182,7 @@ class TorchConverter:
             all_new_nodes = new_nodes + all_new_nodes
         self.graph.inputs = new_graph_inputs
         self.graph.nodes = all_new_nodes + self.graph.nodes
+        self.inputs = [v for v in self.graph.inputs.values()]
 
     def _flatten_graph_output_values(self):
         """ CoreML can't handle nested iterables of tensors, so we flatten the
@@ -298,10 +249,10 @@ class TorchConverter:
 
     @staticmethod
     def _create_placeholder(_input):
-        """Converts a torch.Tensor into a Placeholder.
+        """Converts an InputType torch.Tensor into a Placeholder.
         """
-        shape = _input.shape
-        dtype = torch_to_mil_types[_input.dtype]
+        shape = _input.shape.shape
+        dtype = _input.dtype
         return mb.placeholder(shape, dtype=dtype)
 
     def check_ops(self):
@@ -319,18 +270,14 @@ class TorchConverter:
         # Construct placeholder for input to ssa function
         # This is where input renaming occurs
         ssa_func_inputs = OrderedDict()
-        internal_graph_names = [name for name in self.graph.inputs.keys()]
-        for index, (name, value) in enumerate(self.graph.inputs.items()):
-            placeholder = self._create_placeholder(value)
-            if self.input_names[index] is not None:
-                # set ssa function input name to user defined name
-                name = self.input_names[index]
-            else:
-                # set ssa function input name to internal graph name
-                name = internal_graph_names[index]
-                self.input_types[index].name = name
+        for index, (name, spec) in enumerate(self.graph.inputs.items()):
+            placeholder = self._create_placeholder(spec)
+            # Set ssa function input name to user defined name if provided.
+            if spec.name is not None:
+                name = spec.name
+            self.inputs[index].name = name
             ssa_func_inputs[name] = placeholder
-        prog.set_main_input_types(tuple(self.input_types))
+        prog.set_main_input_types(tuple(self.inputs))
 
         # Initialize the SSA for conversion
         with Function(ssa_func_inputs) as ssa_func:
@@ -370,27 +317,50 @@ class TorchConverter:
         torch._C.Graph and dict of model parameter's names to tensors.
         """
 
+        # Recursively replaces all attribute accesses with the sub-graphs of
+        # those modules. The resulting graph will be self-contained and will
+        # not reference into other modules. Params will contain the "trainable"
+        # inputs to the graph.
         graph, params = torch._C._jit_pass_lower_graph(
             torchscript.forward.graph, torchscript._c
         )
 
+        # From PyTorch code: Inline function and method calls.
         torch._C._jit_pass_inline(graph)
+        # From PyTorch code: This inlines the forked section in the fork()
+        # callsite and replaces uses of the result of wait() calls with the
+        # values produced from the (now-inlined) forked section.
         torch._C._jit_pass_inline_fork_wait(graph)
+        # Starting from the return node, marks all nodes that feed into the
+        # output, as well as nodes with side effects. Any nodes not marked are
+        # eliminated.
         torch._C._jit_pass_dce(graph)
+        # From PyTorch code: checks well-formedness and invariants of graph.
         torch._C._jit_pass_lint(graph)
+        # From PyTorch code: remove all in-place ops and replace them with
+        # out-of-place equivalents.
+        # e.g.
+        #   %foo = aten::add_(%foo, %n)
+        # becomes
+        #   %foo.2 = aten::add(%foo, %n)
         torch._C._jit_pass_remove_inplace_ops(graph)
         torch._C._jit_pass_dce(graph)
         torch._C._jit_pass_lint(graph)
+        # Replaces a couple specific ops patterns (add, sub, mul, div, chunk).
         torch._C._jit_pass_canonicalize_ops(graph)
         torch._C._jit_pass_lint(graph)
-        torch._C._jit_pass_peephole(graph, True)
+        # From PyTorch code: This pass catches all of the small, easy to catch
+        # peephole optimizations you might be interested in doing.
+        #     Eliminate no-op 'expand' nodes
+        #     Simplify x.t().t() to x
+        torch._C._jit_pass_peephole(graph, addmm_fusion_enabled=False)
         torch._C._jit_pass_lint(graph)
-        torch._C._jit_pass_dce_allow_deleting_nodes_with_side_effects(graph)
-        torch._C._jit_pass_lint(graph)
+        # From PyTorch docs: Renumber the graph so that all structurally
+        # equivalent graphs have same numbers.
         graph = torch._C._jit_pass_canonicalize(graph)
         torch._C._jit_pass_lint(graph)
         torch._C._jit_pass_constant_propagation(graph)
-        torch._C._jit_pass_dce(graph)
+        # NOTE: Don't need another DCE, it's included in constant propagation.
         torch._C._jit_pass_lint(graph)
 
         input_and_param_names = [val.debugName() for val in graph.inputs()]

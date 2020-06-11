@@ -1,7 +1,6 @@
 import torch
 import torchvision
-from coremltools.converters import convert
-from coremltools.models import MLModel
+import coremltools as ct
 
 """
 In this example, we'll instantiate a PyTorch classification model and convert
@@ -55,9 +54,9 @@ to expect.
 
 Note that the converter API is still evolving and *will* change in the future.
 """
-mlmodel = convert(
+mlmodel = ct.convert(
     traced_model,
-    inputs=[example_input],
+    inputs=[ct.TensorType(name="input", shape=example_input.shape)],
     # debug=True,
     # If conversion fails with a message like 'Pytorch convert function for op x
     # not implemented', that means we haven't yet implemented all ops/layers your
@@ -76,4 +75,4 @@ the conversion failure.
 Now with a conversion complete, we can create an MLModel and run inference.
 """
 mlmodel.save('/tmp/mobilenet_v2.mlmodel')
-result = mlmodel.predict({"input.1": example_input.numpy()})
+result = mlmodel.predict({"input": example_input.numpy()})

@@ -1,12 +1,13 @@
 from coremltools.converters.mil.mil import (SYMBOL, VALUE)
 from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
 from ._op_reqs import *
+import numbers
 
 @register_op(doc_str="TODO")
 class gather(Operation):
     input_spec = InputSpec(
             x = TensorInputType(),
-            indices = IntTensorInputType(),
+            indices = IntOrIntTensorInputType(),
             axis = IntInputType(const=True, default=0)
             )
 
@@ -17,7 +18,19 @@ class gather(Operation):
     def value_inference(self):
         x = self.x.sym_val
         indices = self.indices.val
+        if indices is None:
+            # only allow x to be symbolic. indices cannot.
+            return None
+        scalar_indices = isinstance(indices, numbers.Integral)
         axis = self.axis.val
+        if scalar_indices:
+            res = np.take(x, [indices], axis)
+            res2 = np.squeeze(res, axis=axis)
+            if isinstance(res2, np.ndarray) and len(res2.shape) == 0:
+                # res2 is a scalar, but represented as np.array(symbol,
+                # dtype=np.object) which np.squeeze can't remove.
+                return res2.item()
+            return res2
         return np.take(x, indices, axis)
 
     def type_inference(self):
@@ -28,6 +41,11 @@ class gather(Operation):
             raise IndexError(
                 'Axis value {} is out of bounds for {} node {}'.format(
                     self.axis.val, self.op_type, self.name))
+
+        output_rank = self.x.rank - 1 + self.indices.rank
+        if output_rank == 0:
+            # output scalar
+            return out_type
 
         axis = self.axis.val
         axis = axis if axis >= 0 else axis + self.x.rank

@@ -4,9 +4,11 @@ import logging
 import os.path
 
 import torch
+
 from six import string_types
-from .converter import TorchConverter
-from coremltools.converters.mil.mil import Program
+from .converter import TorchConverter, torch_to_mil_types
+from coremltools.converters.mil.input_types import InputType, TensorType
+from coremltools.converters.mil.mil import Program, types
 
 
 def load(model_spec, debug=False, **kwargs):
@@ -22,15 +24,14 @@ def load(model_spec, debug=False, **kwargs):
         for diagnosing conversion errors. Setting this flag to True will
         print the list of supported and unsupported ops found in the model
         if conversion fails due to an unsupported op.
-    example_inputs: Can be a singular element or list of elements of the following form
-        1. tuple of size
-        2. torch.Tensor (only shape will be used)
-        3. tuple of (name, (1. or 2.))
+    inputs: Can be a singular element or list of elements of the following form
+        1. Any subclass of InputType
+        2. torch.Tensor (only shape and dtype will be used)
+        3. list of (1. or 2.)
         Inputs are parsed in the flattened order that the model accepts them. 
         If names are not specified: input keys for calling predict on the converted model
         will be internal symbols of the input to the graph. 
         User can specify a subset of names.    
-        TODO: Allow @example_inputs to describe variable size inputs.
     outputs (optional): List of output name strings. If specified: keys of output dictionary 
         will be these names in order of flattened returned outputs. If not specified:
         output dictionary keys will be the internal output symbols in the graph. 
@@ -42,7 +43,24 @@ def load(model_spec, debug=False, **kwargs):
 
     torchscript = _torchscript_from_model(model_spec)
 
-    inputs = kwargs["example_inputs"]
+    def _convert_to_inputtype(inputs):
+        input_type = []
+        for _input in inputs:
+            if isinstance(_input, (list, tuple)):
+                input_type.append(_convert_to_inputtype(_input))
+            elif isinstance(_input, InputType):
+                input_type.append(_input)
+            elif isinstance(_input, torch.Tensor):
+                input_type.append(TensorType(shape=_input.shape, dtype=torch_to_mil_types[_input.dtype]))
+            else:
+                raise ValueError(
+                    "Unknown type {} for conversion to InputType.".format(
+                        type(_input)
+                    )
+                )
+        return input_type
+
+    inputs = _convert_to_inputtype(kwargs["inputs"])
     outputs = kwargs.get("outputs", None)
     cut_at_symbols = kwargs.get("cut_at_symbols", None)
     converter = TorchConverter(torchscript, inputs, outputs, cut_at_symbols)

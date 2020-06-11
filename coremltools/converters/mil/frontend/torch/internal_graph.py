@@ -151,14 +151,15 @@ class InternalTorchIRGraph:
         Arguments:
             raw_graph: The torch._C.Graph to convert.
             params_dict: A dictionary mapping graph parameter names to tensors.
-            input_values: A list of inputs to the graph.
+            input_spec: A list of InputType objects, describing the name,
+                shape, and dtype of graph inputs.
             cut_at_symbols: The list of desired outputs from the graph. Must
                 be present in the graph. For debugging use only. 
                 See kwarg in load.py for more information. 
     """
 
     def __init__(
-        self, raw_graph, params_dict, input_values, cut_at_symbols=None,
+        self, raw_graph, params_dict, input_spec, cut_at_symbols=None,
     ):
         self.nodes = []
         self.params = {}
@@ -175,10 +176,10 @@ class InternalTorchIRGraph:
             self.params[name] = value
 
         # Add inputs
-        for index, _input in enumerate(islice(raw_graph.inputs(), len(input_values))):
+        for index, _input in enumerate(islice(raw_graph.inputs(), len(input_spec))):
             name = _input.debugName()
-            value = value = input_values[index]
-            self.inputs[name] = value
+            spec = input_spec[index]
+            self.inputs[name] = spec
 
         # Add outputs, cutting if @cut_at_symbols is set
         output_names = cut_at_symbols
@@ -189,20 +190,22 @@ class InternalTorchIRGraph:
 
     def __str__(self):
         graph_str = "graph(\n"
-        graph_str += self._format_inputs(self.inputs)
+        graph_str += self._format_inputs(self.inputs, unpack=True)
         graph_str += self._format_inputs(self.params)
         graph_str += "):\n"
         graph_str += "\n".join([str(x) for x in self.nodes]) + "\n"
         graph_str += "return ({})".format(", ".join(_ssa_name_list(self.outputs)))
         return graph_str
 
-    def _format_inputs(self, inputs):
+    def _format_inputs(self, inputs, unpack=False):
         def tensor_str(x):
-            return "Tensor" + str(list(x))
+            return "Tensor{}".format(
+                tuple(list(x.shape.shape if unpack else x.shape) + [str(x.dtype)])
+            )
 
         inp_str = ""
         for k, v in inputs.items():
-            if isinstance(v, tuple):
+            if isinstance(v, (tuple, list)):
                 shape_str = "({})".format(", ".join([tensor_str(x) for x in v]))
             else:
                 shape_str = tensor_str(v)

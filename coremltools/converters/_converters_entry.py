@@ -246,7 +246,7 @@ def convert(model,
                     model,
                     convert_from="torch",
                     convert_to=convert_to,
-                    example_inputs=inputs,
+                    inputs=inputs,
                     outputs=outputs,
                     classifier_config=classifier_config,
                     **kwargs

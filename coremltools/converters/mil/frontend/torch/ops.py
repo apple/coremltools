@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.var import Var
-from coremltools.converters.mil.mil import Placeholder
+from coremltools.converters.mil.mil.var import Var, ListVar
+from coremltools.converters.mil.mil import Placeholder, Symbol
 from .internal_graph import *
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 
@@ -41,7 +41,7 @@ def convert_nodes(context, graph):
     """
     for node in tqdm(graph.nodes, desc='Converting to MIL', unit='ops'):
         _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
-        logging.debug("Converting op {}".format(node.kind))
+        logging.info("Converting op {} : {}".format(node.name, node.kind))
         if _add_op is None:
             raise RuntimeError(
                 "Pytorch convert function for op {} not implemented".format(node.kind)
@@ -118,6 +118,19 @@ def _get_inputs(context, node, expected=None):
             )
         )
     return inputs
+
+
+def _list_select(ls, index):
+    """ Sometimes we need to select a specific item from a list. If that item
+        is known at compile time, extract it as a const. Otherwise, if it's
+        symbolic, use gather.
+    """
+    # TODO: gather doesn't work when the shape is known size.
+    if ls.sym_val is not None and not isinstance(ls.sym_val[index], Symbol):
+        res = mb.const(val=ls.sym_val[index])
+    else:
+        res = mb.gather(x=ls, indices=index)
+    return res
 
 
 def _construct_constant(val, name):
@@ -267,13 +280,13 @@ def matmul(context, node):
 
 @register_torch_op
 def add(context, node):
-    add_inputs = _get_inputs(context, node, expected=3)
+    add_inputs = _get_inputs(context, node)
     assert len(node.outputs) == 1
 
     # TODO (sberardi): 3rd param to aten::add is a scale factor, need to handle that.
     # out=input+alpha x other
     # rdar://60175736
-    if add_inputs[2].val != 1:
+    if len(add_inputs) > 2 and add_inputs[2].val != 1:
         raise ValueError("ADD does not support scale factor param")
 
     add_node = mb.add(x=add_inputs[0], y=add_inputs[1], name=node.name)
@@ -458,7 +471,7 @@ def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes
             # MIL pooling does not support ceil_mode natively, but we can
             # workaround by padding the input appropriately.
             # rdar://60634390
-            logging.warning("padding adjusted to support ceil_mode=True")
+            logging.warning("pooling padding adjusted to support ceil_mode=True")
             new_pad[2 * idx + 1] += stride - remainder
 
     return new_pad
@@ -605,18 +618,23 @@ def size(context, node):
 
     # Get the shape of the tensor.
     shape_node = mb.shape(x=inputs[0], name=node.name + "_shape")
-    context.add(shape_node)
     # Get the size of the tensor along the input dimension.
-    dim = inputs[1]
-    size_node = mb.const(val=shape_node.val[dim.val], name=node.name)
-    context.add(size_node)
+    dim = inputs[1].val
+    size_node = _list_select(shape_node, dim)
+    context.add(size_node, node.name)
 
 
 @register_torch_op(torch_alias=["reshape"])
 def view(context, node):
     inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    shape = inputs[1]
 
-    view = mb.reshape(x=inputs[0], shape=inputs[1], name=node.name)
+    if isinstance(shape, ListVar):
+        length = mb.list_length(ls=shape)
+        indices = mb.range_1d(start=0, end=length, step=1)
+        shape = mb.list_gather(ls=shape, indices=indices)
+    view = mb.reshape(x=x, shape=shape, name=node.name)
     context.add(view)
 
 
@@ -702,16 +720,24 @@ def embedding(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     indices = inputs[1]
-    if len(inputs) > 2:
+
+    padding_idx = -1
+    scale_grad_by_freq = False
+    sparse = False
+    if len(inputs) >= 3:
+        padding_idx = inputs[2].val
+    if len(inputs) >= 4:
+        scale_grad_by_freq = inputs[3].val
+    if len(inputs) >= 5:
+        sparse = inputs[4].val
+
+    if padding_idx != -1 or scale_grad_by_freq or sparse:
         logging.warning(
             "CoreML embedding (gather) layer does not support any "
             "inputs besides the weights and indices. Those given "
             "will be ignored."
         )
-    # inputs skipped:
-    #  padding_idx (2)
-    #  scale_grad_by_freq (3)
-    #  sparse (4)
+
     #  Changing the axis from 0 is not an option in torch, so we don't expose it
     gather = mb.gather(x=_input, indices=indices, name=node.name)
     context.add(gather)
@@ -767,12 +793,41 @@ def stack(context, node):
 def item(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
-    # Item is used to convert a rank 1 tensor to a scalar. MIL ops that
-    # reduce already output a scalar, so this is a NOP. But to make sure,
-    # check that it actually is a scalar.
-    if inputs[0].shape != ():
-        raise ValueError("expected input to be a scalar")
-    context.add(inputs[0], torch_name=node.name)
+    if inputs[0].shape == ():
+        # MIL ops that reduce already output a scalar, so no need to do
+        # anything.
+        res = inputs[0]
+    elif np.all([d == 1 for d in inputs[0].shape]):
+        # Item only makes sense when called on a length 1 tensor. We use
+        # reduce_max as a workaround for not having a way to extract a scalar
+        # from a symbolic tensor.
+        res = mb.reduce_max(x=inputs[0], name=node.name)
+    else:
+        raise ValueError("expected input to be a scalar or a length 1 tensor")
+    context.add(res, node.name)
+
+
+def _cast(context, node, dtype, dtype_name):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    # Input must either be a scalar or a (1 x 1 x ... x 1) tensor
+    if not (len(x.shape) == 0 or np.all([d == 1 for d in x.shape])):
+        raise ValueError("input to cast must be either a scalar or a length 1 tensor")
+
+    if x.val is not None:
+        # If x is a compile-time constant, directly cast it to @dtype if it's
+        # not one already.
+        if not isinstance(x.val, dtype):
+            res = mb.const(val=dtype(x.val), name=node.name)
+        else:
+            res = x
+    else:
+        if len(x.shape) > 0:
+            # TODO: There's no MIL op to extract a value from a symbolic tensor,
+            # so as a workaround we use reduce_max to convert it to a scalar.
+            x = mb.reduce_max(x=x, name=node.name + "_item")
+        res = mb.cast(x=x, dtype=dtype_name, name=node.name)
+    context.add(res, node.name)
 
 
 @register_torch_op(torch_alias=["bool"])
@@ -780,8 +835,8 @@ def _bool(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
     x = inputs[0]
-    # TODO: this is a hack, we'll be able to use the cast op once it is
-    # complete (rdar://problem/61168016)
+    # TODO: this is a hack and should be replaced once MIL supports cast to
+    # bool.
     if x.val is not None and not isinstance(x.val, bool):
         x = mb.const(val=bool(x.val), name=node.name)
     context.add(x, node.name)
@@ -789,14 +844,7 @@ def _bool(context, node):
 
 @register_torch_op(torch_alias=["int"])
 def _int(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-
-    x = inputs[0]
-    # TODO: this is a hack, we'll be able to use the cast op once it is
-    # complete (rdar://problem/61168016)
-    if x.val is not None and not isinstance(x.val, int):
-        x = mb.const(val=int(x.val), name=node.name)
-    context.add(x, node.name)
+    _cast(context, node, int, "int32")
 
 
 @register_torch_op
@@ -823,9 +871,13 @@ def layer_norm(context, node):
 def numtotensor(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
-    assert x.shape == ()
-    res = mb.const(val=[x.val], name=node.name)
-    context.add(res)
+    if x.shape != ():
+        raise ValueError("numtotensor expected scalar input, got tensor with shape {}".format(x.shape))
+    if isinstance(x.sym_val, Symbol):
+        context.add(x, node.name)
+    else:
+        res = mb.const(val=[x.sym_val], name=node.name)
+        context.add(res)
 
 
 def _ifzo_to_ifoz(weights, name):
@@ -1083,6 +1135,8 @@ def tupleunpack(context, node):
     # Node input could have been turned into constant array in @tupleconstruct
     if not isinstance(values, tuple) and not isinstance(values, list):
         values = values.val
+    if len(values) != len(node.outputs):
+        raise ValueError("unpack node expected {} outputs, got {}".format(len(node.outputs), len(values)))
     assert len(values) == len(node.outputs)
     # @value is either a numpy primitive or a Var object
     for value, output in zip(values, node.outputs):
@@ -1164,11 +1218,29 @@ def loop(context, node):
         else:
             return mb.identity(x=cond)
 
+    def _shapes_are_equivalent(shape1, shape2):
+        """ Compares two sets of tensor shapes and returns True if they are
+            equivalent. That is, they are the same rank, and each dimension
+            is the same or symbolic.
+        """
+        if len(shape1) != len(shape2):
+            return False
+
+        # Each dimension must have the same integer length, or else be
+        # symbolic.
+        all_equivalent = [s1 == s2 or (isinstance(s1, Symbol) and isinstance(s2, Symbol)) for s1, s2 in zip(shape1, shape2)]
+        return all_equivalent
+
     def _loop_body(*loop_vars):
         block = node.blocks[0]
         iter_var = loop_vars[0]
         inputs = (iter_var,) + loop_vars[2:]
         res = convert_block(context, block, inputs)
+
+        for input_var, output_var in zip(loop_vars[2:], res[1:]):
+            if not _shapes_are_equivalent(input_var.shape, output_var.shape):
+                logging.warning("detected change in shape of loop variable. this could lead to incorrect inference results!")
+                logging.warning("{}:{} -> {}:{}".format(input_var.name, input_var.shape, output_var.name, output_var.shape))
 
         # Update the iteration count if we're keeping track.
         if has_iter_count:
@@ -1263,13 +1335,16 @@ def select(context, node):
     # NOTE:
     # Each index in @begin_array/@end_array corresponds to a dimension of @_input
     # Each val of those arrays corresponds to the start/end index to slice in that dimension
-    begin_array = np.array([0] * len(_input.shape))
+    begin_array = [0] * len(_input.shape)
     begin_array[dim] = index
-    end_array = np.array(_input.shape)
-    end_array[dim] = index + 1
+    end_array = [s if isinstance(s, int) else 0 for s in _input.shape]
+    end_mask = [True] * len(_input.shape)
+    if index != -1:
+        end_array[dim] = index + 1
+        end_mask[dim] = False
 
     slice_by_index = mb.slice_by_index(
-        x=_input, begin=begin_array, end=end_array, name=node.name + "_slice_by_index"
+        x=_input, begin=begin_array, end=end_array, end_mask=end_mask, name=node.name + "_slice_by_index"
     )
     # Now we squeeze the dimension we have selected from to remove it
     squeeze = mb.squeeze(
@@ -1381,17 +1456,24 @@ def _slice(context, node):
     inputs = _get_inputs(context, node, expected=5)
     x = inputs[0]
     dim = inputs[1].val
-    start = inputs[2].val
+    start = inputs[2].val if inputs[2].val is not None else 0
     end = inputs[3].val if inputs[3] is not None else None
     step = inputs[4].val
 
-    begin_array = np.array([0] * len(x.shape))
-    begin_array[dim] = start
-    end_array = np.array(x.shape)
-    if end != None:
-        end_array[dim] = end
+    if start == 0 and end is None and step is 1:
+        # Handling x[:], just pass through the tensor.
+        context.add(x, node.name)
+        return
 
-    kwargs = {"x": x, "begin": begin_array, "end": end_array, "name": node.name}
+    begin_array = [0] * len(x.shape)
+    begin_array[dim] = start
+    end_array = [s if isinstance(s, int) else 0 for s in x.shape]
+    end_mask = [True] * len(x.shape)
+    if end is not None:
+        end_array[dim] = end
+        end_mask[dim] = False
+
+    kwargs = {"x": x, "begin": begin_array, "end": end_array, "end_mask": end_mask, "name": node.name}
 
     if step != 1:
         stride_array = np.array([1] * len(x.shape))
@@ -1407,15 +1489,28 @@ def split(context, node):
     inputs = _get_inputs(context, node, expected=3)
     x = inputs[0]
     split_sizes = inputs[1]
-    dim = inputs[2]
+    dim = inputs[2].val
 
     if not isinstance(split_sizes.val, np.ndarray):
-        # MIL needs the size of each split to be given explicitly.
-        num_whole_splits = x.shape[dim.val] // split_sizes.val
-        remainder = x.shape[dim.val] % split_sizes.val
-        split_sizes = [split_sizes.val] * num_whole_splits
-        if remainder > 0:
-            split_sizes += [remainder]
+        shape = mb.shape(x=x)
+        dim_size = _list_select(shape, dim)
+        # MIL split op needs the size of each split to be given explicitly.
+        num_whole_splits = mb.floor_div(x=dim_size, y=split_sizes)
+        remainder = mb.mod(x=dim_size, y=split_sizes)
+
+        # MIL doesn't have a way of turning a scalar into a tensor (list write
+        # only supports tensors). As a workaround, we create a constant [1]
+        # tensor and multiply it by the scalar value, thus creating a tensor
+        # with the scalar value in it.
+        tmp = mb.const(val=[1])
+        whole_sizes = mb.mul(x=tmp, y=split_sizes)
+        reps = mb.mul(x=tmp, y=num_whole_splits)
+        whole_sizes = mb.tile(x=whole_sizes, reps=reps)
+        if remainder.val == 0:
+            split_sizes = whole_sizes
+        else:
+            partial_size = mb.mul(x=tmp, y=remainder)
+            split_sizes = mb.concat(values=[whole_sizes, partial_size], axis=0)
     res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
     context.add(res, torch_name=node.name)
 
@@ -1542,14 +1637,14 @@ def arange(context, node):
         step = 1
     elif len(inputs) == 6:
         # inputs are [start, end, dtype, layout, device, pin_memory]
-        start = inputs[0].val
-        end = inputs[1].val
+        start = inputs[0]
+        end = inputs[1]
         step = 1
     elif len(inputs) == 7:
         # inputs are [start, end, step, dtype, layout, device, pin_memory]
-        start = inputs[0].val
-        end = inputs[1].val
-        step = inputs[2].val
+        start = inputs[0]
+        end = inputs[1]
+        step = inputs[2]
     else:
         raise ValueError(
             "arange must have exactly 5, 6, or 7 inputs, got {}".format(len(inputs))
@@ -1686,6 +1781,7 @@ def exp(context, node):
     inputs = _get_inputs(context, node, expected=1)
     exp = mb.exp(x=inputs[0], name=node.name)
     context.add(exp)
+
 
 @register_torch_op
 def max(context, node):

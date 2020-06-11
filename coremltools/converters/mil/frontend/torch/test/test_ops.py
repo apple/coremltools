@@ -123,7 +123,7 @@ class TestTorchOps:
         ssa = self._construct_test_graph(
             context, op, eb_node, output_name, constants=constants
         )
-        assert np.allclose(expected_result, ssa.val)
+        np.testing.assert_allclose(expected_result, ssa.val, atol=1e-7)
 
     def _test_cast(self, context, test_val, op_kind, op_func, python_type):
         constants, input_list, output_name = self._gen_constants(1, [test_val])
@@ -161,6 +161,18 @@ class TestTorchOps:
             ops.add,
             [test_input_1, test_input_2, scale_factor],
             3,
+            test_input_1 + test_input_2,
+        )
+
+    def test_add_no_scale_factor(self, context):
+        test_input_1 = np.random.rand(2, 3)
+        test_input_2 = np.random.rand(2, 3)
+        self._test_elementwise_binary(
+            context,
+            "Add",
+            ops.add,
+            [test_input_1, test_input_2],
+            2,
             test_input_1 + test_input_2,
         )
 
@@ -832,6 +844,27 @@ class TestTorchOps:
         assert expected_result == ssa.val
 
     @pytest.mark.parametrize(
+        "dim", [0, 1],
+    )
+    def test_size_symbolic(self, context, dim):
+        test_shape = (3, get_new_symbol())
+        graph_inputs = {"input": mb.placeholder(shape=test_shape, dtype=types.float)}
+        constants, input_list, output_name = self._gen_constants(1, [dim])
+        size_node = InternalTorchIRNode(
+            kind="size", inputs=["input"] + input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context,
+            ops.size,
+            size_node,
+            output_name,
+            constants=constants,
+            graph_inputs=graph_inputs,
+        )
+        expected_result = test_shape[dim]
+        assert expected_result == ssa.sym_val
+
+    @pytest.mark.parametrize(
         "input_size, shape",
         itertools.product([(5, 12), (1, 4, 15), (3, 5, 4)], [(3, 20), (-1, 6), (60,)],),
     )
@@ -1034,7 +1067,7 @@ class TestTorchOps:
         assert ssa.val == const_val
 
     def test_item_exception(self, context):
-        const_val = [0]
+        const_val = [0, 1]
         constants, input_list, output_name = self._gen_constants(1, [const_val])
         item_node = InternalTorchIRNode(
             kind="item", inputs=input_list, outputs=[output_name]
@@ -1115,7 +1148,7 @@ class TestTorchOps:
 
     @pytest.mark.parametrize(
         "input_size, dim, index",
-        itertools.product([(13, 43, 10), (39, 14, 11, 9)], [0, 1, 2], [0, 1, 3, 8],),
+        itertools.product([(13, 43, 10), (39, 14, 11, 9)], [0, 1, 2], [0, 1, 3, 8, -1],),
     )
     def test_select(self, context, input_size, dim, index):
         graph_inputs = {"input1": mb.placeholder(input_size, dtype=types.float)}
@@ -1135,9 +1168,12 @@ class TestTorchOps:
             graph_inputs=graph_inputs,
             constants=constants,
         )
+        select_index = index
+        if index < 0:
+            select_index += input_size[dim]
         expected_shape = tuple(
             torch.rand(input_size)
-            .index_select(dim, torch.tensor([index]))
+            .index_select(dim, torch.tensor([select_index]))
             .squeeze(dim)
             .shape
         )

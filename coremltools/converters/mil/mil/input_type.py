@@ -251,6 +251,21 @@ class IntTensorInputType(ScalarOrTensorInputType):
                v.dtype in {types.int32, types.int64}
 
 
+class IntOrIntTensorInputType(ScalarOrTensorInputType):
+    """
+    builtins.in32 or Tensor with int values, _sym_type == builtins.int32 or
+    _sym_type == builtins.int64
+
+    Raise error when value set is not integer.
+    """
+
+    def __init__(self, **kwargs):
+        super(IntOrIntTensorInputType, self).__init__(**kwargs)
+
+    def _is_compatible(self, v):
+        return v.dtype in {types.int32, types.int64}
+
+
 class BoolTensorInputType(ScalarOrTensorInputType):
     def __init__(self, **kwargs):
         super(BoolTensorInputType, self).__init__(**kwargs)
