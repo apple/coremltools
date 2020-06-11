@@ -219,6 +219,18 @@ class TestTorchOps:
             np.divide(test_input_1, test_input_2),
         )
 
+    def test_floor_divide(self, context):
+        test_input_1 = np.random.randint(low=1, high=100, size=(3, 2))
+        test_input_2 = np.random.randint(low=1, high=100, size=(3, 2))
+        self._test_elementwise_binary(
+            context,
+            "floor_divide",
+            ops.floor_divide,
+            [test_input_1, test_input_2],
+            2,
+            np.floor_divide(test_input_1, test_input_2),
+        )
+
     def test_pow(self, context):
         test_input_1 = np.random.rand(3, 2)
         test_input_2 = np.random.rand(3, 2)

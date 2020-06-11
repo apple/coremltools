@@ -314,10 +314,10 @@ def addmm(context, node):
     context.add(addmm_node)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["conv2d"])
 def _convolution(context, node):
 
-    inputs = _get_inputs(context, node, expected=12)
+    inputs = _get_inputs(context, node)
 
     x = inputs[0]
     weight = inputs[1]
@@ -342,14 +342,20 @@ def _convolution(context, node):
         )
 
     dilations = inputs[5]
-    transposed = inputs[6]
-    out_pad = inputs[7]  # unused
-    group = inputs[8]
+    if len(inputs) == 12:
+        transposed = inputs[6].val
+        out_pad = inputs[7]  # unused
+        group = inputs[8]
 
-    if any([v != 0 for v in out_pad.val]):
-        raise ValueError(
-            "convolution does not support output_padding (given {})".format(out_pad)
-        )
+        if any([v != 0 for v in out_pad.val]):
+            raise ValueError(
+                "convolution does not support output_padding (given {})".format(out_pad)
+            )
+    elif len(inputs) == 7:
+        transposed = False
+        group = inputs[6]
+    else:
+        raise ValueError("unexpected number of inputs for node {} ({}): {}".format(node.name, node.kind, len(inputs)))
 
     kwargs = {
         "x": x,
@@ -365,7 +371,7 @@ def _convolution(context, node):
     if bias is not None:
         kwargs["bias"] = bias
 
-    if transposed.val is True:
+    if transposed is True:
         # Transposed convolution
 
         # PyTorch weight ordering [Cin, Cout, H, W]
@@ -500,6 +506,13 @@ def div(context, node):
 
 
 @register_torch_op
+def floor_divide(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    res = mb.floor_div(x=inputs[0], y=inputs[1], name=node.name)
+    context.add(res)
+
+
+@register_torch_op
 def mul(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
@@ -599,7 +612,7 @@ def size(context, node):
     context.add(size_node)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["reshape"])
 def view(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
@@ -1023,29 +1036,35 @@ def lstm(context, node):
 
 @register_torch_op
 def upsample_bilinear2d(context, node):
-    inputs = _get_inputs(context, node, expected=3)
+    inputs = _get_inputs(context, node)
     _input = inputs[0]
     output_size = inputs[1]
     align_corners = bool(inputs[2].val)
 
-    # @output_size will be a list if scales was provided or a
-    # single var if output size was provided
-    if isinstance(output_size, list):
-        output_size = [output_size[0].val, output_size[1].val]
-    if isinstance(output_size, Var):
-        output_size = [output_size.val[0], output_size.val[1]]
+    if len(inputs) == 5:
+        # For torch==1.5.0, upsample_bilinear2d has 5 inputs.
+        scales_h = inputs[3]
+        scales_w = inputs[4]
 
-    # output size is computed using the formula
-    # floor (scale * input_size) in Core ML (and Pytorch)
-    # Thus, when computing the scales from the output size,
-    # add a small positive constant to the output size,
-    # to make sure that the floor formula results in the correct output
-    # size and not 1 unit smaller, due to float precision issues
-    # e.g. if output size = 34 and input size = 2, then scale will be
-    # 17, which can get represented as 16.9999, resulting in an output size of 33
-    # instead of 34, without this correction.
-    scales_h = (output_size[0] + 1e-4) / float(_input.shape[-2])
-    scales_w = (output_size[1] + 1e-4) / float(_input.shape[-1])
+    if output_size is not None:
+        # @output_size will be a list if scales was provided or a
+        # single var if output size was provided
+        if isinstance(output_size, list):
+            output_size = [output_size[0].val, output_size[1].val]
+        if isinstance(output_size, Var):
+            output_size = [output_size.val[0], output_size.val[1]]
+
+        # output size is computed using the formula
+        # floor (scale * input_size) in Core ML (and Pytorch)
+        # Thus, when computing the scales from the output size,
+        # add a small positive constant to the output size,
+        # to make sure that the floor formula results in the correct output
+        # size and not 1 unit smaller, due to float precision issues
+        # e.g. if output size = 34 and input size = 2, then scale will be
+        # 17, which can get represented as 16.9999, resulting in an output size of 33
+        # instead of 34, without this correction.
+        scales_h = (output_size[0] + 1e-4) / float(_input.shape[-2])
+        scales_w = (output_size[1] + 1e-4) / float(_input.shape[-1])
 
     upsample_bilinear = mb.upsample_bilinear(
         x=_input,
@@ -1125,7 +1144,7 @@ def loop(context, node):
 
     # Magic default signals this is a while-only loop, so no iteration count
     # is needed.
-    has_iter_count = max_iter_count is not None and max_iter_count.val >= 0
+    has_iter_count = max_iter_count is not None
 
     # Create an interation count. This will only be used if this is a for loop.
     iter_count = mb.const(val=0, name=node.name + "_iter")
@@ -1631,7 +1650,7 @@ def tanh(context, node):
     ]
 )
 def noop(context, node):
-    logging.warning("Setting pytorch op: {} to no-op.".format(node))
+    logging.info("Setting pytorch op: {} to no-op.".format(node))
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     context.add(_input, torch_name=node.name)
