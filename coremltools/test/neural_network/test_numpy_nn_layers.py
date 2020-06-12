@@ -3230,6 +3230,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             self._test_model(builder.spec, inputs, expected, useCPUOnly=True, validate_shapes_only=True)
 
+    @pytest.mark.xfail(reason="rdar://64153463 ([GitLab CI] test_categorical_distribution_cpu_probs failing)")
     def test_categorical_distribution_cpu_logits(self):
 
         def softmax(data):
