@@ -98,10 +98,8 @@ def TensorListFromTensor(context, node):
     element_dtype = node.attr.get('element_dtype')
     dtype_str = types.builtin_to_string(element_dtype)
 
-    length = value.shape[0]
-    if is_symbolic(length):
-        msg = "element_shape {} cannot be symbolic in op '{}'."
-        raise ValueError(msg.format(element_shape, node.name))
+    length = mb.shape(x=value)
+    length = mb.slice_by_index(x=length, begin=[0], end=[1], squeeze_mask=[True])
 
     if element_shape is not None and \
             all(np.atleast_1d(element_shape.val) != -1):
