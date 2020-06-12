@@ -61,27 +61,39 @@ except:
 HAS_TF = True
 HAS_TF_1 = False
 HAS_TF_2 = False
-TF_MIN_VERSION = '1.0.0'
-TF_MAX_VERSION = '2.2.0'
+TF_1_MIN_VERSION = '1.0.0'
+TF_1_MAX_VERSION = '1.15.0'
+TF_2_MIN_VERSION = '2.1.0'
+TF_2_MAX_VERSION = '2.2.0'
 
 try:
     import tensorflow
     tf_ver = __get_version(tensorflow.__version__)
 
     # TensorFlow
-    if tf_ver < _StrictVersion(TF_MIN_VERSION):
-        _logging.warning(('TensorFlow version %s is not supported. Minimum required version: %s .'
-                      'TensorFlow conversion will be disabled.')
-                      % (tensorflow.__version__, TF_MIN_VERSION))
-    if tf_ver > _StrictVersion(TF_MAX_VERSION):
-        _logging.warning('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
-                      % (tensorflow.__version__, TF_MAX_VERSION))
-
     if tf_ver < _StrictVersion('2.0.0'):
         HAS_TF_1 = True
 
     if tf_ver >= _StrictVersion('2.0.0'):
         HAS_TF_2 = True
+
+    if HAS_TF_1:
+        if tf_ver < _StrictVersion(TF_1_MIN_VERSION):
+            _logging.warn(('TensorFlow version %s is not supported. Minimum required version: %s .'
+                          'TensorFlow conversion will be disabled.')
+                          % (tensorflow.__version__, TF_1_MIN_VERSION))
+        elif tf_ver > _StrictVersion(TF_1_MAX_VERSION):
+            _logging.warn('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
+                          % (tensorflow.__version__, TF_1_MAX_VERSION))
+    elif HAS_TF_2:
+        if tf_ver < _StrictVersion(TF_2_MIN_VERSION):
+            _logging.warn(('TensorFlow version %s is not supported. Minimum required version: %s .'
+                          'TensorFlow conversion will be disabled.')
+                          % (tensorflow.__version__, TF_2_MIN_VERSION))
+        elif tf_ver > _StrictVersion(TF_2_MAX_VERSION):
+            _logging.warn('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
+                          % (tensorflow.__version__, TF_2_MAX_VERSION))
+
 except:
     HAS_TF = False
     HAS_TF_1 = False
