@@ -52,7 +52,7 @@ def make_tf2_graph(input_types):
 def run_compare_tf2(
         model, input_dict, output_names,
         use_cpu_only=False, frontend_only=False,
-        frontend='tensorflow2', backend='nn_proto',
+        frontend='tensorflow', backend='nn_proto',
         debug=False, atol=1e-04, rtol=1e-05):
     """
     Parameters
@@ -114,7 +114,7 @@ def run_compare_tf2(
 
 def run_compare_tf_keras(
         model, input_values, use_cpu_only=False, frontend_only=False,
-        frontend='tensorflow2', backend='nn_proto', atol=1e-04, rtol=1e-05):
+        frontend='tensorflow', backend='nn_proto', atol=1e-04, rtol=1e-05):
     """
     Parameters
     ----------

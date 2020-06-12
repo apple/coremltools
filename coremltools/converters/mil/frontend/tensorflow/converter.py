@@ -119,19 +119,27 @@ class TFConverter:
         graph = main_func.graph
 
         # Filter the inputs to only Placeholder names
-        placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
+        tf_placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
+        placeholder_names = []
         if inputs is not None:
+            # Check inputs format
             if not isinstance(inputs, (list, tuple)):
                 raise ValueError("Type of inputs should be list or tuple, got {} instead.".format(type(inputs)))
             if not all([isinstance(i, InputType) for i in inputs]):
                 raise ValueError("Type of inputs should be list or tuple of TensorType or ImageType, got {} instead.".format([type(i) for i in inputs]))
 
-        # Filter the inputs to only Placeholder names
-        tf_placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
-        placeholder_names = []
-        if inputs is not None:
+            # Special case: if there's only 1 input and 1 placeholder, we match them.
+            if len(tf_placeholder_names) == 1 and len(inputs) == 1:
+                if inputs[0].name is None:
+                    inputs[0].name = tf_placeholder_names[0]
+
             # We fill in shapes for user-specified input that doesn't have shape
             for inp in inputs:
+                # Check inputs existence
+                if inp.name is None:
+                    raise ValueError("Unable to infer input's name or input name was not provided")
+                if inp.name not in tf_placeholder_names:
+                    raise ValueError("Input ({}) provided is not found in given tensorflow graph. Placeholders in graph are: {}".format(inp.name, tf_placeholder_names))
                 if inp.shape is None:
                     if graph[inp.name].attr.get('_output_shapes', None) is not None:
                         shape = graph[inp.name].attr['_output_shapes'][0]
@@ -170,7 +178,9 @@ class TFConverter:
         for k, v in placeholder_inputs.items():
             inputs.append(TensorType(name=k, shape=v))
         for idx, inp in enumerate(inputs):
-            if isinstance(inp, ImageType):
+            # We set the default image format in TF as NHWC, since NHWC is used
+            # for TF unless GPU is specified as device.
+            if isinstance(inp, ImageType) and inputs[idx].channel_first is None:
                 inputs[idx].channel_first = False
         self.inputs = tuple(inputs)
 

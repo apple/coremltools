@@ -6,7 +6,7 @@ import shutil
 import tempfile
 import coremltools.converters as converter
 import coremltools.proto.FeatureTypes_pb2 as ft
-from coremltools import TensorType, RangeDim, EnumeratedShapes
+from coremltools import TensorType, ImageType, RangeDim, EnumeratedShapes
 from coremltools.converters.mil.testing_utils import random_gen
 from coremltools.converters.mil.frontend.tensorflow.converter import TFConverter
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
@@ -98,6 +98,30 @@ class TestTf1ModelInputsOutputs:
         mlmodel = converter.convert(model, outputs=[first_output_name])
         assert mlmodel is not None
 
+    def test_auto_image_nhwc_input_names(self):
+        x_shape = (4, 5, 3)
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+
+        mlmodel = converter.convert(model, inputs=[ImageType()])
+        assert mlmodel is not None
+
+    def test_auto_image_nchw_input_names(self):
+        x_shape = (3, 4, 5)
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+
+        mlmodel = converter.convert(model, inputs=[ImageType(channel_first=True)])
+        assert mlmodel is not None
+
     def test_invalid_input_names(self):
         x_shape = (3, 4, 5)
 
@@ -107,10 +131,10 @@ class TestTf1ModelInputsOutputs:
 
         model, inputs, outputs = build_model
 
-        with pytest.raises(KeyError) as e:
+        with pytest.raises(ValueError) as e:
             converter.convert(
                 model, inputs=[TensorType('invalid_name', x_shape)])
-        e.match('invalid_name')
+        e.match(r'Input \(invalid_name\) provided is not found in given tensorflow graph. Placeholders in graph are: .*')
 
     def test_invalid_output_names(self):
         x_shape = (3, 4, 5)

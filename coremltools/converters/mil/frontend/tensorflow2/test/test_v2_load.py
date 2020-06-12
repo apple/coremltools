@@ -15,7 +15,7 @@ tf = pytest.importorskip('tensorflow', minversion='2.1.0')
 
 # -----------------------------------------------------------------------------
 # Overwrite utilities to enable different conversion / compare method
-tf_testing_utils.frontend = 'tensorflow2'
+tf_testing_utils.frontend = 'tensorflow'
 tf_testing_utils.make_tf_graph = make_tf2_graph
 tf_testing_utils.run_compare_tf = run_compare_tf2
 

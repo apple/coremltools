@@ -120,6 +120,7 @@ def convert(model,
         mlmodel.save('mobilenetv2.mlmodel')
 
     Unknown/Flexible Shapes:
+        # -1 in shape is meant to be a fully flexible shape, or a shape within range [1, inf)
 
         from coremltools import TensorType
         flexible_input = TensorType(name='input', shape=(1, -1, -1, 3))
@@ -128,26 +129,52 @@ def convert(model,
                                                  outputs=['Softmax'])
 
     Ranged Shapes:
+        # By using RangeDim, we allow users to provide input that is ONLY within the interval
 
         from coremltools import TensorType, RangeDim
-        range_input = TensorType(name=input, shape=(1, RangeDim(220, 230), -1, 3))
+        range_input = TensorType(name='input', shape=(1, RangeDim(220, 230), -1, 3))
         mlmodel = coremltools.convert(model='frozen_style_transfer.pb',
                                                  inputs=[range_input],
                                                  outputs=['Softmax'])
 
     Enumerated Shapes:
+        # EnumeratedShapes allows the mlmodel to take different kinds of shapes.
 
         from coremltools import TensorType, EnumeratedShapes
         shape_1 = (1, 224, 224, 3)
         shape_2 = (1, 225, 225, 3)
         shape_3 = (1, 300, 300, 3)
-        enumerated_shapes = EnumeratedShapes(shape=[shape1, shape2, shape3])
+        enumerated_shapes = EnumeratedShapes(shapes=[shape1, shape2, shape3])
         enumerated_inputs = TensorType(name='input', shape=enumerated_shapes)
         mlmodel = coremltools.convert(model='frozen_style_transfer.pb',
-                                                 inputs=[enumerated_input],
+                                                 inputs=[enumerated_inputs],
                                                  outputs=['Softmax'])
+
+    Optimized Shaping:
+        # If default is provided in Shape class, the default shape of the produced model will be set.
+        # By pre-setting the default shape, memory pre-allocation could be done when model is being loaded.
+
+        from coremltools import Shape, TensorType, RangeDim, EnumeratedShapes
+
+        flexible_input = TensorType(name='input', shape=Shape(shape=(1, -1, -1, 3), default=(1, 224, 224, 3)))
+        range_input = TensorType(name='input', shape=Shape(shape=(1, RangeDim(220, 230), -1, 3), default=(1, 224, 224, 3)))
+
+        shape_1 = (1, 224, 224, 3)
+        shape_2 = (1, 225, 225, 3)
+        shape_3 = (1, 300, 300, 3)
+        enumerated_shapes = EnumeratedShapes(shapes=[shape1, shape2, shape3], default=shape_1)
+        enumerated_inputs = TensorType(name='input', shape=enumerated_shapes)
+
+        mlmodel = coremltools.convert(model='frozen_style_transfer.pb',
+                                                 inputs=[flexible_input], # This could be flexible_input/range_input/enumerated_inputs
+                                                 outputs=['Softmax'])
+
     """
     source = source.lower()
+    if not source in {'auto', 'tensorflow', 'pytorch'}:
+        msg = "Unrecognized value of argument \"source\": {}. " \
+              "It must be one of \"auto\", \"tensorflow\", \"pytorch\"."
+        raise ValueError(msg.format(source))
 
     if inputs is not None:
         if not isinstance(inputs, list):
@@ -201,8 +228,6 @@ def convert(model,
 
         if source == 'tensorflow' and not HAS_TF_1:
             raise ValueError('Converter was called with source=tensorflow, but missing tensorflow package')
-        if source == "tensorflow2" and not HAS_TF_2:
-            raise ValueError('Converter was called with source=tensorflow2, but missing tensorflow2 package')
 
         if inputs is not None and not all([isinstance(_input, InputType) for _input in inputs]):
             raise ValueError('Input should be a list of TensorType or ImageType')
@@ -266,10 +291,6 @@ def convert(model,
                     **kwargs
                     )
 
-    else:
-        msg = "Unrecognized value of argument \"source\": {}. " \
-              "It must be one of \"auto\", \"tensorflow\", \"pytorch\"."
-        raise ValueError(msg.format(source))
 
     model = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
 

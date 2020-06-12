@@ -128,7 +128,7 @@ class TorchConverter:
         assert isinstance(torchscript, torch.jit.ScriptModule)
         self.inputs = inputs
         for idx, inp in enumerate(self.inputs):
-            if isinstance(inp, ImageType):
+            if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
                 self.inputs[idx].channel_first = True
         self.torchscript = torchscript
         self.output_names = outputs
