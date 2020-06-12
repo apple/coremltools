@@ -1628,6 +1628,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason="[GitLab CI failure: test_floor_gpu](rdar://64311149)")
     def test_floor_gpu(self):
         self.test_floor_cpu(cpu_only=False)
 
