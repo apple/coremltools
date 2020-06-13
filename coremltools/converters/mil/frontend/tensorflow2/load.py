@@ -7,7 +7,7 @@ import logging
 import os
 
 import six
-
+from tqdm import tqdm
 import tensorflow as tf
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
@@ -124,7 +124,7 @@ class TF2Loader(TFLoader):
         ]
 
         if self.debug:
-            for tf_pass in tf_passes:
+            for tf_pass in tqdm(tf_passes, desc="Running TensorFlow Graph Passes", unit=' passes'):
                 try:
                     tf_pass(self._tf_ssa)
                 except Exception as e:
@@ -132,7 +132,7 @@ class TF2Loader(TFLoader):
                     logging.info("Ignoring exception and continuing to next pass")
 
         else:
-            for tf_pass in tf_passes:
+            for tf_pass in tqdm(tf_passes, desc="Running TensorFlow Graph Passes", unit=' passes'):
                 tf_pass(self._tf_ssa)
 
         if self.debug:

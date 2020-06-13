@@ -179,6 +179,7 @@ try:
     import torch
 except:
     HAS_TORCH = False
+MSG_TORCH_NOT_FOUND = 'PyTorch not found.'
 
 # ---------------------------------------------------------------------------------------
 HAS_ONNX = True

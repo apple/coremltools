@@ -39,7 +39,7 @@ def convert_nodes(context, graph):
                 assign node outputs.
             graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
     """
-    for node in tqdm(graph.nodes, desc='Converting to MIL', unit='ops'):
+    for node in tqdm(graph.nodes, desc='Converting Frontend ==> MIL Ops', unit=' ops'):
         _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
         logging.info("Converting op {} : {}".format(node.name, node.kind))
         if _add_op is None:
