@@ -34,8 +34,6 @@ def _is_compatible_symbolic_array(a, b):
                 return False
         elif not is_symbolic(t) or not is_symbolic(v):
             return False
-        if t != v:
-            logging.warning("Try to replace var with different symbolic values.")
     return True
 
 def precondition(allow=ALL):

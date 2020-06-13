@@ -299,7 +299,7 @@ class list_write(Operation):
                     dynamic_length=dynamic_length)
         if list_elem_type == types.unknown:
             msg = 'Input ls elem type unknown. Override with {}'
-            logging.warning(msg.format(value_type))
+            logging.info(msg.format(value_type))
             return types.list(value_type, init_length=init_length,
                     dynamic_length=dynamic_length)
         if not types.is_subtype(value_type, list_elem_type):

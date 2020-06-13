@@ -30,7 +30,7 @@ def parse_type(t):
     if t in mapping:
         return mapping[t]
     else:
-        logging.warning("Type %d cannot be mapped", t)
+        logging.info("Type %d cannot be mapped", t)
         return None
 
 

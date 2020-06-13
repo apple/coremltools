@@ -324,7 +324,7 @@ class range_1d(Operation):
         start = self.start.val
         end   = self.end.val
         step  = self.step.val
-        return np.arange(start, end, step)
+        return np.arange(start, end, step).astype(np.int32)
 
     def type_inference(self):
         start = self.start.sym_val
