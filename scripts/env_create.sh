@@ -12,6 +12,7 @@ ENV_DIR="${COREMLTOOLS_HOME}/envs"
 
 # command flag options
 cleanup_option=0
+include_build_deps=1
 include_test_deps=1
 include_docs_deps=0
 DEV=0
@@ -27,7 +28,8 @@ function print_help {
   echo "Usage: zsh -i env_create <options>"
   echo
   echo "  --dev                Setup the environment for development."
-  echo "  --exclude-test-deps  Exclude packages needed for testing" 
+  echo "  --exclude-build-deps Exclude packages needed for building"
+  echo "  --exclude-test-deps  Exclude packages needed for testing"
   echo "  --force              Rebuild the environment if it exists already." 
   echo "  --include-docs-deps  Include packages needed for making docs" 
   echo "  --python=*           Python to use for configuration."
@@ -51,6 +53,7 @@ while [ $# -gt 0 ]
   do case $1 in
     --python=*)            PYTHON=${1##--python=} ;;
     --dev)                 DEV=1;;
+    --exclude-build-deps)  include_build_deps=0;;
     --exclude-test-deps)   include_test_deps=0;;
     --include-docs-deps)   include_docs_deps=1;;
     --force)               force=1;;
@@ -69,7 +72,7 @@ fi
 
 echo "Using python version string $PYTHON"
 
-# Setup a new conda env using the existing python\
+# Setup a new conda env using the existing python
 if conda activate $ENV_DIR && [ ${force} -eq 0 ]
 then
   echo "Build environment already exists in $ENV_DIR."
@@ -77,10 +80,12 @@ else
   echo "Creating a new conda environment in $ENV_DIR"
   conda create --prefix "$ENV_DIR" python="$PYTHON"
   conda activate $ENV_DIR
+fi
 
-  # Activate and install packages in the environment
-  echo "Installing basic build requirements."
-  python -m pip install -r $COREMLTOOLS_HOME/reqs/build.pip
+# Activate and install packages in the environment
+echo "Installing basic build requirements."
+if [[ $include_build_deps == 1 ]]; then
+    python -m pip install -r $COREMLTOOLS_HOME/reqs/build.pip
 fi
 
 # Install test requirements (upgrades packages if required)

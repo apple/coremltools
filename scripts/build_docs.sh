@@ -13,6 +13,8 @@ RELEASE=0
 UPLOAD=0
 MAIN_VERSION=0
 AUTH_TOKEN=""
+CHECK_ENV=1
+WHEEL_PATH=""
 
 unknown_option() {
   echo "Unknown option $1. Exiting."
@@ -32,6 +34,7 @@ print_help() {
                                   Default is the most recent version."
   echo "  --auth-token=*          Auth token for accessing documentation API."
   echo "  --set-main-version      Set the uploaded doc version as the main ('stable release') version."
+  echo "  --no-check-env          Don't check the environment to verify it's up to date."
   echo
   exit 1
 } # end of print help
@@ -46,6 +49,7 @@ while [ $# -gt 0 ]
     --auth-token=*)          AUTH_TOKEN=${1##--auth-token=} ;;
     --upload)                UPLOAD=1 ;;
     --release)               RELEASE_VERSION=1 ;;
+    --no-check-env)          CHECK_ENV=0 ;;
     --set-main-version)      MAIN_VERSION=1 ;;
     --help)              print_help ;;
     *) unknown_option $1 ;;
@@ -57,7 +61,9 @@ cd ${COREMLTOOLS_HOME}
 
 if [[ $PYTHON != "None" ]]; then
   # Setup the right python
-  zsh -i scripts/env_create.sh --python=$PYTHON --include-docs-deps
+  if [[ $CHECK_ENV == 1 ]]; then
+    zsh -i scripts/env_create.sh --python=$PYTHON --include-docs-deps
+  fi
   source scripts/env_activate.sh --python=$PYTHON
 fi
 
@@ -65,7 +71,14 @@ echo
 echo "Using python from $(which python)"
 echo
 
-$PIP_EXECUTABLE install ${WHEEL_PATH} --upgrade
+if [[ $WHEEL_PATH != "" ]]; then
+    $PIP_EXECUTABLE install ${WHEEL_PATH} --upgrade
+else
+    cd ..
+    $PIP_EXECUTABLE install -e coremltools --upgrade
+    cd coremltools
+fi
+
 cd docs
 make html
 cd ..
@@ -96,4 +109,4 @@ else
   fi
 fi
 
-pip uninstall coremltools # We're using the build env for this script, so uninstall the wheel when we're done.
+pip uninstall -y coremltools # We're using the build env for this script, so uninstall the wheel when we're done.

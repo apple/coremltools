@@ -13,6 +13,7 @@ NUM_PROCS=1
 BUILD_PROTO=0
 BUILD_DIST=0
 PYTHON="3.7"
+CHECK_ENV=1
 
 unknown_option() {
   echo "Unknown option $1. Exiting."
@@ -29,6 +30,7 @@ print_help() {
   echo "  --protobuf                      Rebuild & overwrite the protocol buffers in MLModel."
   echo "  --debug                         Build without optimizations and stripping symbols."
   echo "  --dist                          Build the distribution (wheel)."
+  echo "  --no-check-env                  Don't check the environment to verify it's up to date."
   echo
   exit 1
 } # end of print help
@@ -42,6 +44,7 @@ while [ $# -gt 0 ]
     --protobuf)          BUILD_PROTO=1 ;;
     --debug)             BUILD_MODE="Debug" ;;
     --dist)              BUILD_DIST=1 ;;
+    --no-check-env)      CHECK_ENV=0 ;;
     --help)              print_help ;;
     *) unknown_option $1 ;;
   esac
@@ -54,7 +57,11 @@ echo "Configuring using python from $PYTHON"
 echo
 echo ${COREMLTOOLS_HOME}
 cd ${COREMLTOOLS_HOME}
-zsh -i -e scripts/env_create.sh --python=$PYTHON --exclude-test-deps
+if [[ $CHECK_ENV == 1 ]]; then
+    zsh -i -e scripts/env_create.sh --python=$PYTHON --exclude-test-deps
+fi
+
+pip uninstall -y coremltools
 
 # Setup the right python
 source scripts/env_activate.sh --python=$PYTHON

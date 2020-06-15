@@ -12,6 +12,7 @@ pandas
 pillow
 pytest; python_version < '3.7'
 pytest==5.3.4; python_version >= '3.7'
+pytest-cov
 pytest-sugar
 scikit-learn==0.19.2; python_version <= '3.7'
 scikit-learn; python_version > '3.7'
