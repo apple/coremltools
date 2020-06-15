@@ -19,7 +19,7 @@ python = 3.7
 
 all: build
 
-.PHONY: checkstyle clean clean_envs lint build env env_force proto wheel style test test_fast test_slow
+.PHONY: checkstyle clean clean_envs lint build env env_force proto wheel release style test test_fast test_slow
 
 checkstyle:
 	${PY_EXE} -m yapf -rdp ${PACKAGES}
@@ -50,6 +50,9 @@ proto: ${ENV_DIR}/build_reqs
 
 wheel: ${ENV_DIR}/build_reqs
 	zsh -i scripts/build.sh --python=${python} --dist --no-check-env
+
+release: ${ENV_DIR}/build_reqs
+	zsh -i scripts/release_wheel.sh --no-check-env
 
 style:
 	${PY_EXE} -m yapf -rip --verify ${PACKAGES}
