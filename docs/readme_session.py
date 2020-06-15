@@ -228,10 +228,11 @@ class ReadMeSession():
 			file = open(currfilename, "r")			
 			filecontents = file.read()		
 			file.close()
-			filecontents = filecontents.replace('\n', '')
+			filecontents = filecontents.replace('\\', '&#92;')
+			filecontents = filecontents.replace('\n', '\\\\n')
 			filecontents = filecontents.replace('¶', '')
 			filecontents = filecontents.replace('"', '&#65282;') # Use HTML code for quote to make it parse in JSON
-			filecontents = '[block:html]{ \\"html\\": \\"' + filecontents + '\\"}[/block]'
+			filecontents = '[block:html]\\n{\\n \\"html\\": \\"' + filecontents + '\\"\\n}\\n[/block]'
 
 			firstheadline = os.path.basename(currfilename)[:-5]
 			# extract first heading and use as page title

@@ -76,7 +76,7 @@ if [[ $WHEEL_PATH != "" ]]; then
 else
     cd ..
     $PIP_EXECUTABLE install -e coremltools --upgrade
-    cd coremltools
+    cd ${COREMLTOOLS_HOME}
 fi
 
 cd docs
