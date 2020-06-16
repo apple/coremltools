@@ -1566,15 +1566,14 @@ class TestImageResizing:
                            ref, use_cpu_only=use_cpu_only, backend=backend)
 
     @pytest.mark.parametrize("use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic",
-                             list(itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [(1, 64, 64, 1)],
-                                 [1, 3, 5],
-                                 [(2, 2), (1, 1), (4, 4), (128, 128)],
-                                 ['bilinear'],
-                                 [False])) +
-                             [pytest.param(True, 'nn_proto', (1, 64, 64, 1), 1, (2, 2), 'bilinear', True, marks=pytest.mark.xfail)]
+                             itertools.product(
+                                [True, False],
+                                backends,
+                                [(1, 64, 64, 1)],
+                                [1, 3, 5],
+                                [(2, 2), (1, 1), (4, 4), (128, 128)],
+                                ['bilinear'],
+                                [False, True])
                              )
     def test_crop_and_resize(self, use_cpu_only, backend, input_shape, num_of_crops, crop_size, method, dynamic):
         input = np.random.randn(*input_shape)

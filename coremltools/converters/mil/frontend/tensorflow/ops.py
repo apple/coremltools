@@ -1877,8 +1877,6 @@ def CropAndResize(context, node):
     const_box_info = True
     if context[node.inputs[1]].val is None or context[node.inputs[2]].val is None:
         const_box_info = False
-        # TODO: rdar://60540725 ([MIL] [SSAv2] CropResize layer requires concat on float32 and int32 input)
-        raise ValueError('"CropResize" op: expected boxes and box_indices to be known during conversion!')
 
     crop_size = context[node.inputs[3]].val
     method = 'bilinear' if len(node.inputs) < 5 else context[node.inputs[4]].val
@@ -1897,7 +1895,6 @@ def CropAndResize(context, node):
         box_indices = context[node.inputs[2]]
         boxes = context[node.inputs[1]]
         box_indices = mb.expand_dims(x=box_indices, axes=[1])
-        # rdar://60540725 ([MIL] [SSAv2] CropResize layer requires concat on float32 and int32 input)
         boxes = mb.concat(values=(box_indices, boxes), axis=1)
         # TODO: Dynamic rank: Use GetShape and select indices dynamically
         boxes = mb.reshape(x=boxes, shape=[boxes.shape[0], 1, boxes.shape[1], 1, 1])
