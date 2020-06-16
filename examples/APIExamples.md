@@ -299,5 +299,5 @@ class MyLayerSelector(QuantizedLayerSelector):
 
 selector = MyLayerSelector()
 quantized_model = quantize_weights(
-    mlmodel, 8, quantization_mode='linear', selector=selector)
+    model, 8, quantization_mode='linear', selector=selector)
 ```
