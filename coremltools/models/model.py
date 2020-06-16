@@ -140,7 +140,7 @@ class MLModel(object):
         >>> model.short_description = 'Predicts the price of a house in the Seattle area.'
 
         # Get the interface to the model
-        >>> model.input_descriptions
+        >>> model.input_description
         >>> model.output_description
 
         # Set feature descriptions manually
