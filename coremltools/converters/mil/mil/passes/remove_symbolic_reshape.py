@@ -35,9 +35,7 @@ def remove_symbolic_reshape_block(block):
             raise ValueError(msg.format(op))
         num_symbols = num_symbolic(shape)
         if num_symbols > 1:
-            msg = 'Multiple symbol is not supported until we can use 0' \
-                + ' in reshape.'
-            raise ValueError(msg)
+            continue
         # Convert the one symbol to -1
         integer_shape = [-1 if is_symbolic(i) else i for i in shape]
         with block:

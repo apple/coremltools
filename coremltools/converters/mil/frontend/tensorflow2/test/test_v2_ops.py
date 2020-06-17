@@ -31,6 +31,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestActivationSoftSign,
     TestAddN,
     TestBroadcastTo,
+    TestBatchToSpaceND,
     TestCond,
     TestConcat,  # Redirects to ConcatV2 in TF2
     TestConv,
@@ -46,6 +47,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestPooling2d,
     TestPooling3d,
     TestSeparableConv,
+    TestSpaceToBatchND,
     TestTensorArray,
     TestWhileLoop,
     TestReshape,

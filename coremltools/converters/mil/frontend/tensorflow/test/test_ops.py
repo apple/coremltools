@@ -3319,13 +3319,61 @@ class TestSpaceToBatchND:
                                  [[2, 2]],
                                  [[[0, 0], [0, 0]], [[1, 1], [0, 2]], [[4, 2], [4, 2]]]
                              ))
-    def test(self, use_cpu_only, backend, input_shape, block_shape, paddings):
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            ref = tf.space_to_batch_nd(input=x, block_shape=block_shape, paddings=paddings)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+    def test_smoke(self, use_cpu_only, backend, input_shape, block_shape, paddings):
 
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.raw_ops.SpaceToBatchND(input=x, block_shape=block_shape, paddings=paddings)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False, backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend, input_block_rank, dynamic, trial",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(3,1),(3,2),(4,1)],
+                                 [True,False],
+                                 list(range(10)),
+                             ))
+    def test_programmatic(self, use_cpu_only, backend, input_block_rank, dynamic, trial):
+
+        input_rank, block_rank = input_block_rank
+
+        # generate data
+        input_shape = np.random.randint(low=1, high=5, size=input_rank)
+        block_shape = np.random.randint(low=1, high=3, size=block_rank)
+        paddings = []
+        for i in range(block_rank):
+            while True:
+                temp = np.random.randint(low=0, high=10, size=2)
+                if (np.sum(temp)+input_shape[i+1])%block_shape[i] == 0:
+                    paddings.append(temp)
+                    break
+        paddings = np.array(paddings)
+
+        if not dynamic:
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.raw_ops.SpaceToBatchND(input=x, block_shape=block_shape, paddings=paddings)
+        else:
+            @make_tf_graph([[None]*input_rank])
+            def build_model(x):
+                return tf.raw_ops.SpaceToBatchND(input=x, block_shape=block_shape, paddings=paddings)
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False, backend=backend)
 
 class TestBatchToSpaceND:
     # No direct mil smoke test since it's a TF op which is a composite of several ops.
@@ -3334,16 +3382,65 @@ class TestBatchToSpaceND:
                                  [True, False],
                                  backends,
                                  [(4, 4, 4, 1), (4, 4, 4, 3), (4, 4, 6, 1)],
-                                 [2],
+                                 [[2,2]],
                                  [[[0, 0], [0, 0]], [[1, 1], [0, 2]], [[4, 2], [4, 2]]]
                              ))
-    def test(self, use_cpu_only, backend, input_shape, block_size, crops):
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            ref = tf.batch_to_space(input=x, block_size=block_size, crops=crops)
-            run_compare_tf(graph, {x: random_gen(input_shape, rand_min=-100, rand_max=100)},
-                           ref, use_cpu_only=use_cpu_only, backend=backend)
+    def test_smoke(self, use_cpu_only, backend, input_shape, block_size, crops):
 
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.raw_ops.BatchToSpaceND(input=x, block_shape=block_size, crops=crops)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False, backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend, input_block_rank, dynamic, trial",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [(3,1),(3,2),(4,1)],
+                                 [True,False],
+                                 list(range(10)),
+                             ))
+    def test_programmatic(self, use_cpu_only, backend, input_block_rank, dynamic, trial):
+
+        input_rank, block_rank = input_block_rank
+
+        # generate data
+        input_shape = np.random.randint(low=1, high=5, size=input_rank)
+        block_shape = np.random.randint(low=1, high=3, size=block_rank)
+        input_shape[0] = input_shape[0]*np.prod(block_shape)
+        crops = []
+        for i in range(block_rank):
+            while True:
+                temp = np.random.randint(low=0, high=5, size=2)
+                if np.sum(temp) < input_shape[i+1]*block_shape[i]:
+                    crops.append(temp)
+                    break
+        crops = np.array(crops)
+
+        if not dynamic:
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.raw_ops.BatchToSpaceND(input=x, block_shape=block_shape, crops=crops)
+        else:
+            @make_tf_graph([[None]*input_rank])
+            def build_model(x):
+                return tf.raw_ops.BatchToSpaceND(input=x, block_shape=block_shape, crops=crops)
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict, outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False, backend=backend)
 
 class TestTensorArray:
 

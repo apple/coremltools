@@ -40,6 +40,14 @@ def _check_axes_type(x):
         return np.array([x.val])
     return x.val
 
+def _value_at(x, idx):
+    '''
+    input x: 1D tensor (vector).
+    return value at index idx. x[idx].
+    '''
+    assert x.rank == 1
+    return mb.slice_by_index(x=x,begin=[idx],end=[0],squeeze_mask=[True])
+
 @register_tf_op(tf_alias=['BiasAdd', 'AddV2'])
 def Add(context, node):
     x = context[node.inputs[0]]
@@ -171,27 +179,89 @@ def AddN(context, node):
 def BatchToSpaceND(context, node):
     x = context[node.inputs[0]]
     block_shape = context[node.inputs[1]].val
-
-    if x.rank != 4:
-        raise NotImplementedError('rank of input != 4 is not yet supported')
-    if len(block_shape.flatten()) != 2:
-        raise NotImplementedError('rank of spatial shape != 2 is not yet supported')
-    if block_shape[0] != block_shape[1]:
-        raise NotImplementedError('non-equal block shape is not yet supported')
     crops = context[node.inputs[2]].val
-    needs_cropping = any(crops.flatten())
 
-    x = mb.transpose(x=x, perm=[3, 0, 1, 2])
+    if x.rank != 3 and x.rank != 4:
+        raise NotImplementedError('rank of input must be 3 or 4!')
 
-    x = mb.depth_to_space(x=x, block_size=block_shape[0])
-    if needs_cropping:
-        x = mb.crop(
-                x=x,
-                crop_height=[crops[0][0], crops[0][1]],
-                crop_width=[crops[1][0], crops[1][1]],
-            )
+    if block_shape is None or crops is None:
+        raise NotImplementedError('Not support dynamic block_shape and paddings for BatchToSpaceND!')
 
-    x = mb.transpose(x=x, perm=[1, 2, 3, 0], name=node.name)
+    if len(block_shape.flatten()) > 2:
+        raise NotImplementedError('rank of spatial shape > 2 is not yet supported')
+
+    if x.rank == 3 or (x.rank==4 and len(block_shape)==1):
+
+        input_shape = mb.shape(x=x)
+        rank = x.rank
+        spatial_rank = len(block_shape)
+
+        # reshape input to [block_shape] + [batch_size/prod(block_shape)] + x.shape[1:]
+        batch_size = _value_at(input_shape,0)
+        block_shape_prod = np.prod(block_shape)
+        resize_batch_size = mb.real_div(x=batch_size, y=block_shape_prod)
+        resize_batch_size = [mb.cast(x=resize_batch_size,dtype="int32")]
+        remain_dims = [_value_at(input_shape,i) for i in range(1,rank)]
+        block_dims = [x for x in block_shape]
+        reshape_values = block_dims+resize_batch_size+remain_dims
+        reshape_shape = mb.concat(values=reshape_values, axis=0)
+        reshaped = mb.reshape(x=x, shape=reshape_shape)
+
+        # permute the tensor to shape [batch / prod(block_shape)] +
+        #                             [input_shape[1], block_shape[0], ..., input_shape[M], block_shape[M-1]] +
+        #                             [input_shape[M+1], ..., input_shape[N-1]]
+        block_shape_dims = list(range(spatial_rank))
+        batch_dim = [spatial_rank]
+        input_shape_dims = list(range(spatial_rank+1, reshaped.rank))
+        perm = [batch_dim[0]]
+        for i in range(spatial_rank):
+            perm += [input_shape_dims[i], block_shape_dims[i]]
+        perm += input_shape_dims[spatial_rank:]
+        permuted = mb.transpose(x=reshaped, perm=perm)
+
+        # reshape tensor to shape [batch / prod(block_shape)] +
+        #                         [input_shape[1] * block_shape[0], ..., input_shape[M] * block_shape[M-1]] +
+        #                         [input_shape[M+1], ..., input_shape[N-1]]
+        spatial_dims = []
+        for i in range(spatial_rank):
+            spatial_dims.append(mb.mul(x=_value_at(input_shape,i+1),y=block_shape[i]))
+        remain_dims = [_value_at(input_shape,i) for i in range(spatial_rank+1,rank)]
+        reshape_values = resize_batch_size+spatial_dims+remain_dims
+        reshape_shape = mb.concat(values=reshape_values,axis=0)
+        reshape_permuted = mb.reshape(x=permuted,shape=reshape_shape)
+
+        # crop the tensor using stride slice
+        begin = [0]
+        for i in range(spatial_rank):
+            begin.append(crops[i][0])
+        for i in range(spatial_rank+1, rank):
+            begin.append(0)
+        end = [resize_batch_size[0]]
+        for i in range(spatial_rank):
+            end.append(mb.sub(x=spatial_dims[i],y=crops[i][1]))
+        for i in range(spatial_rank+1, rank):
+            end += remain_dims
+        end = mb.concat(values=end,axis=0)
+        x = mb.slice_by_index(x=reshape_permuted, begin=begin, end=end, name=node.name)
+    else:
+        if len(block_shape.flatten()) != 2:
+            raise NotImplementedError('rank of spatial shape != 2 is not yet supported for 4d input.')
+        if block_shape[0] != block_shape[1]:
+            raise NotImplementedError('non-equal block shape is not yet supported')
+
+        needs_cropping = any(crops.flatten())
+
+        x = mb.transpose(x=x, perm=[3, 0, 1, 2])
+
+        x = mb.depth_to_space(x=x, block_size=block_shape[0])
+        if needs_cropping:
+            x = mb.crop(
+                    x=x,
+                    crop_height=[crops[0][0], crops[0][1]],
+                    crop_width=[crops[1][0], crops[1][1]],
+                )
+
+        x = mb.transpose(x=x, perm=[1, 2, 3, 0], name=node.name)
     context.add(node.name, x)
 
 
@@ -1305,24 +1375,88 @@ def Softmax(context, node):
 
 @register_tf_op
 def SpaceToBatchND(context, node):
+
     x = context[node.inputs[0]]
     block_shape = context[node.inputs[1]].val
-    if x.rank != 4:
-        raise NotImplementedError('rank of input != 4 is not yet supported')
-    if len(block_shape.flatten()) != 2:
-        raise NotImplementedError('rank of spatial shape != 2 is not yet supported')
-    if block_shape[0] != block_shape[1]:
-        raise NotImplementedError('non-equal block shape is not yet supported')
     paddings = context[node.inputs[2]].val
-    needs_paddings = any(paddings.flatten())
 
-    x = mb.transpose(x=x, perm=[3, 0, 1, 2])
+    if x.rank != 3 and x.rank != 4:
+        raise NotImplementedError('rank of input must be 3 or 4!')
 
-    if needs_paddings:
-        x = mb.pad(x=x, pad=paddings.flatten(), mode='constant')
+    if block_shape is None or paddings is None:
+        raise NotImplementedError('Not support dynamic block_shape and paddings for SpaceToBatchND!')
 
-    x = mb.space_to_depth(x=x, block_size=block_shape[0])
-    x = mb.transpose(x=x, perm=[1, 2, 3, 0], name=node.name)
+    if len(block_shape.flatten()) > 2:
+        raise NotImplementedError('rank of spatial shape > 2 is not yet supported')
+
+    # use sequence of ops to implement spacetobatch for cases:
+    # (1) x.rank == 3
+    # (2) x.rank == 4 and len(block_shape) == 1
+    if x.rank == 3 or (x.rank == 4 and len(block_shape) == 1):
+
+        rank = x.rank
+        spatial_rank  = len(block_shape)
+
+        # expand padding to have shape [x.rank, 2]
+        paddings = np.concatenate([[[0,0]],paddings,np.zeros(shape=(3,2),dtype=np.int32)], axis=0)
+        paddings = paddings[:x.rank,:]
+        needs_paddings = any(paddings.flatten())
+        if needs_paddings:
+            padded = mb.pad(x=x, pad=paddings.flatten(), mode='constant')
+        else:
+            padded = x
+        padded_shape = mb.shape(x=padded)
+
+        # padded_shape = [batch_size] + [spatial_dims] + [remaining_dims]
+        batch_size = [_value_at(padded_shape, 0)]
+        spatial_dims = [_value_at(padded_shape,i) for i in range(1,spatial_rank+1)]
+        remaining_dims = [_value_at(padded_shape,i) for i in range(spatial_rank+1,rank)]
+
+        # padded_shape = [batch_size] + [s0, s1, ..., sm] + [remaining_dims]
+        # reshape_shape = [batch_size] +
+        #                 [s0/block_shape[0],block_shape[0],...,sm/block_shape[m],block_shape[m]] +
+        #                 [remaining_dims]
+        values = []
+        for i in range(spatial_rank):
+            dim = mb.real_div(x=spatial_dims[i],y=block_shape[i])
+            values.append(mb.cast(x=dim,dtype="int32"))
+            values.append(block_shape[i])
+        values = batch_size+values+remaining_dims
+        reshape_shape = mb.concat(values=values,axis=0)
+        reshaped_padded = mb.reshape(x=padded, shape=reshape_shape)
+
+        # permute the shape to : [block_shape] + [batch_size] +
+        #                        [s0/block_shape[0],...,sm/block_shape[m]] +
+        #                        [remaining_dims]
+        batch_axis = [0]
+        block_shape_axis = [2+2*i for i in range(spatial_rank)]
+        spatial_axis = [1+2*i for i in range(spatial_rank)]
+        remaining_axis = list(range(block_shape_axis[-1]+1, len(values)))
+        perm = block_shape_axis+batch_axis+spatial_axis+remaining_axis
+        permuted_reshaped_padded = mb.transpose(x=reshaped_padded, perm=perm)
+
+        # reshape the tensor to [prod(block_shape)*batch_size] +
+        #                       [s0/block_shape[0],...,sm/block_shape[m],block_shape[m]] +
+        #                       [remaining_dims]
+        prod_block_shape = np.prod(block_shape.flatten())
+        resize_batch_size = [mb.mul(x=values[0],y=prod_block_shape)]
+        resize_spatial_dims = [values[1+2*i] for i in range(spatial_rank)]
+        final_reshape_values = resize_batch_size+resize_spatial_dims+remaining_dims
+        final_shape = mb.concat(values=final_reshape_values, axis=0)
+        x = mb.reshape(x=permuted_reshaped_padded, shape=final_shape, name=node.name)
+    else:
+
+        if block_shape[0] != block_shape[1]:
+            raise NotImplementedError('non-equal block shape is not yet supported for 4d input.')
+        needs_paddings = any(paddings.flatten())
+
+        x = mb.transpose(x=x, perm=[3, 0, 1, 2])
+
+        if needs_paddings:
+            x = mb.pad(x=x, pad=paddings.flatten(), mode='constant')
+
+        x = mb.space_to_depth(x=x, block_size=block_shape[0])
+        x = mb.transpose(x=x, perm=[1, 2, 3, 0], name=node.name)
 
     context.add(node.name, x)
 

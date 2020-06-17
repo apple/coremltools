@@ -1621,7 +1621,7 @@ def gather(const_context, builder, op):
             %3 = gather(%1, %2, axis=0) # %1 is a constant matrix of shape (vocab_size, embedding_size)
         can be mapped to:
             %2_e = expand_dims(%2, axis=-1)
-            %3 = embeddingND(%2_e, weight=%1)  
+            %3 = embeddingND(%2_e, weight=%1)
         """
         builder.add_expand_dims(
             name=op.name + '_expand_dims',
