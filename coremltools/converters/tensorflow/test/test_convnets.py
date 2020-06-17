@@ -201,6 +201,20 @@ class TFSingleLayerTest(TFNetworkBatchTest):
     """
     Small models from tensorflow.layers
     """
+    def test_add_n(self):
+
+        graph = tf.Graph()
+        with graph.as_default():
+            x = tf.placeholder(tf.float32, shape=[2,3])
+            y = tf.placeholder(tf.float32, shape=[2,3])
+            z = tf.placeholder(tf.float32, shape=[2,3])
+            dummpy = tf.Variable([1,2])
+            constant = tf.constant([[1,2,3],[4,5,6]], dtype=tf.float32)
+            output = [tf.add_n([x,x]), tf.add_n([x,y,2*z]), tf.add_n([x,constant])]
+        output_names = [n.op.name for n in output]
+        self._test_tf_model(
+            graph, {x.op.name: [2,3], y.op.name: [2,3], z.op.name: [2,3]},
+            output_names)
 
     def test_dense(self):
         # dense layer with some activation
@@ -1554,6 +1568,35 @@ class TFSingleLayerTest(TFNetworkBatchTest):
             a = tf.placeholder(tf.float32, shape=shape)
             out = tf.add(tf.zeros_like(a), a)
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_zeros_like_dynamic(self):
+        shape = [3,]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.int32, shape=shape)
+            c = tf.fill(dims=a, value=0.2)
+            out = tf.zeros_like(c)
+        self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+
+    def test_gelu_approximate(self):
+        '''
+        test that gelu tanh approximate formula pattern is fused into a single gelu layer
+        '''
+
+        shape = [3]
+        graph = tf.Graph()
+        with graph.as_default():
+            a = tf.placeholder(tf.float32, shape=shape)
+            b = 0.5 * (1.0 + tf.tanh((math.sqrt(2 / math.pi) * (a + 0.044715 * tf.pow(a, 3)))))
+            out = b * a
+        mlmodel = self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
+        spec = mlmodel.get_spec()
+        nn_spec = spec.neuralNetwork
+        number_gelu_layers = 0
+        for layer in nn_spec.layers:
+            if layer.WhichOneof('layer') == 'gelu':
+                number_gelu_layers += 1
+        self.assertEqual(number_gelu_layers, 1)
 
     def test_zeros_like_dynamic(self):
         shape = [3,]

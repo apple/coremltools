@@ -33,6 +33,7 @@ def _parse_coreml_name_to_tf(coreml_name):
         tf_name = coreml_name
     return tf_name
 
+
 @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
 class TFNetworkTest(unittest.TestCase):
 

@@ -455,7 +455,7 @@ in FP32 precision. These can be quantized to either FP16 or to 8 bits, 7 bits, u
 The lower the number of bits, more the chances of degrading the model accuracy. The loss in accuracy varies with
 the model.
 
-[Here](https://github.com/apple/coremltools/blob/master/docs/APIExamples.md#quantizing-a-neural-network-mlmodel)
+[Here](https://github.com/apple/coremltools/blob/master/examples/APIExamples.md#quantizing-a-neural-network-mlmodel)
 is a code snippet on using the quantization utilities.
 
 ## Model Predictions
@@ -641,5 +641,6 @@ print(np.reshape(np.asarray(weight_params.floatValue), (1, 1, 3, 3)))
 
 - [Control flow Core ML model via the builder library](../examples/neural_network_inference/Image_preprocessing_per_channel_scale.ipynb)
 - [Per channel scale pre-processing](../examples/neural_network_inference/Neural_network_control_flow_power_iteration.ipynb)
-- [Image type as output, for a style transfer network](https://github.com/tf-coreml/tf-coreml/blob/master/examples/style_transfer_example.ipynb)
-- [Setting image pre-processing correctly](https://github.com/tf-coreml/tf-coreml/blob/master/examples/inception_v1_preprocessing_steps.ipynb)
+- [Image type as output, for a style transfer network](../examples/neural_network_inference/tensorflow_converter/Tensorflow_1/style_transfer_example.ipynb)
+- [Setting image pre-processing correctly](../examples/neural_network_inference/tensorflow_converter/Tensorflow_1/inception_v1_preprocessing_steps.ipynb)
+- [More examples](../examples/)

@@ -3,13 +3,559 @@ import tempfile
 import numpy as np
 import coremltools
 import os
-import pytest
 import shutil
 from . test_utils import generate_data
 from coremltools._deps import HAS_TF_2, MSG_TF2_NOT_FOUND
 if HAS_TF_2:
     import tensorflow as tf
 import math
+import pytest
+from itertools import *
+
+
+@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+class TestSingleOp(unittest.TestCase):
+    # In this class we test tensorflow 2.x op without using Keras API
+
+    def _test_coreml(self, model, input_dic=None, output_names=None):
+
+        # Get concrete function
+        concrete_func = model.__call__.get_concrete_function()
+
+        # Get function input
+        if input_dic == None:
+            input_dic = []
+            for input in concrete_func.inputs:
+                name = input.name.split(':')[0]
+                shape = input.shape
+                if shape == None or any([x is None for x in input.shape.as_list()]):
+                    raise ValueError("Please specify 'input_dic' for dynamic shape input.")
+                shape = input.shape.as_list()
+                input_dic.append((name, shape))
+        else:
+            if not isinstance(input_dic, list):
+                raise TypeError("'input_dic' should be [(str, tensor)] type.")
+
+        inputs = [(name, np.random.uniform(-1,1,shape).astype(np.float32), shape)
+                  for name, shape in input_dic]
+
+        # Get output names
+        if output_names == None:
+            output_names = [output.name.split(':')[0] for output in concrete_func.outputs]
+        else:
+            if not isinstance(output_names, list):
+                raise TypeError("'output_names' should be [str] type.")
+        # Tensorflow predict
+        tf_inputs = [tf.convert_to_tensor(value) for name, value, shape in inputs]
+        tf_outputs = model(*tf_inputs)
+
+        # Coreml model predict
+        # Somehow the converter cannot have input shape [] now
+        # TODO: Need to fix it
+        coreml_inputs = {name: shape if not shape == [] else [1,] for name, value, shape in inputs}
+        coreml_predict_inputs = {name: value if not shape == [] else np.array([value]) for name, value, shape in inputs}
+
+        coreml_model = coremltools.converters.tensorflow.convert(
+            [concrete_func],
+            inputs=coreml_inputs,
+            outputs=output_names
+        )
+        coreml_outputs = coreml_model.predict(coreml_predict_inputs)
+
+        # Compare Tensorflow and Coreml
+        if not isinstance(tf_outputs, tuple):
+            tf_outputs = tuple([tf_outputs])
+        self.assertTrue(len(tf_outputs), len(coreml_outputs))
+        self.assertTrue(len(tf_outputs), len(output_names))
+        for i, output_name in enumerate(output_names):
+            np.testing.assert_almost_equal(tf_outputs[i].numpy(), coreml_outputs[output_name], decimal=2)
+
+    def test_single_output_example(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return x+y
+        self._test_coreml(model())
+
+    def test_multiple_outputs_example(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[3,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return x+y, x-y, x*y
+        self._test_coreml(model())
+
+    def test_relu(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[10,10], dtype=tf.float32)])
+
+            def __call__(self, x):
+                return tf.nn.relu(x)
+        self._test_coreml(model())
+
+    def test_control_flow(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.float32)])
+
+            def __call__(self, x):
+                if x <= 0.:
+                    return 0.
+                else:
+                    return x * 3.
+        self._test_coreml(model())
+
+    def test_add_n(self):
+
+        class model(tf.Module):
+
+            # TODO: Add single input and constant testcases
+            # Blocked by a bug in coremltools
+
+            def test_single_variable(self, x):
+                return tf.add_n([x, x])
+
+            def test_variable(self, x, y, z):
+                return tf.add_n([x,y,z,2*z])
+
+            def test_variable_and_constant(self, x):
+                return tf.add_n([x, tf.constant([[1,2,3],[4,5,6]], dtype=tf.float32)])
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (self.test_single_variable(x),
+                        self.test_variable(x, y, z),
+                        self.test_variable_and_constant(x))
+
+        self._test_coreml(model())
+@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+class TestStack(TestSingleOp):
+
+    def test_stack_simple(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.stack([x,y,z], axis=0),
+                        tf.stack([x,y,z], axis=1),
+                        tf.stack([x,y,z], axis=-1))
+
+        self._test_coreml(model())
+
+    def test_stack_simple_with_relu(self):
+
+        # Sometime even a single layer can be compiled but it fail after connects
+        # it with other layer...
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.nn.relu(tf.stack([x,y,z], axis=0)))
+
+        self._test_coreml(model())
+
+    @pytest.mark.xfail(reason="There are still issues with scalar inputs in coremltools...")
+    def test_stack_simple_scalar(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.stack([x,y,z], axis=0),
+                        tf.stack([x,y,z], axis=-1))
+
+        self._test_coreml(model())
+
+    def test_stack_dynamic(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.stack([x,y,z], axis=0),
+                        tf.stack([x,y,z], axis=1),
+                        tf.stack([x,y,z], axis=-1))
+
+        self._test_coreml(model(),input_dic=[('x', [2,3]),('y', [2,3]), ('z', [2,3])])
+
+    def test_stack_dynamic_with_relu(self):
+
+        # Sometime even a single layer can be compiled but it fail after connects
+        # it with other layer...
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                return (tf.nn.relu(tf.stack([x,y,z], axis=0)))
+
+        self._test_coreml(model(),input_dic=[('x', [2,3]),('y', [2,3]), ('z', [2,3])])
+
+@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+class TestEinsum(TestSingleOp):
+
+    def test_einsum_transpose(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[7,3,5,2], dtype=tf.float32)])
+
+            def __call__(self, x):
+                return (tf.einsum('ijkt->jtki', x),
+                       tf.einsum('ijkt->ijkt', x))
+        self._test_coreml(model())
+
+    def test_einsum_inner_product(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,2,2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[4,2,2,3], dtype=tf.float32)])
+
+            def __call__(self, x, y):
+                return (tf.einsum('ijkt,ijkt->', x, y),
+                        tf.einsum('ijkt,ikjt->', x, y))
+
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication_rank2(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,5], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return (tf.einsum('ij,jk->ki', x, y),
+                        tf.einsum('ij,jk->ik',x ,y))
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication_rank2_transpose_case(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[5,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return (tf.einsum('ij,kj->ki', x, y),
+                        tf.einsum('ij,kj->ik',x ,y))
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication_rank3(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[3,8,4], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('ijk,jti->'+''.join(suffix), x, y) for suffix in list(permutations('kit'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_matrix_multiplication_rank4(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7,9], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[10,4,9,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('ijkt,zitj->'+''.join(suffix), x, y) for suffix in list(permutations('itzk'))])
+        self._test_coreml(model())
+
+
+    def test_einsum_matrix_multiplication_rank5(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7,9,6], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[10,6,4,9,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('ijktp,zpitj->'+''.join(suffix), x, y) for suffix in list(permutations('iptzk'))])
+        self._test_coreml(model())
+
+    def test_einsum_high_rank_matrix_multiplication_testcase_1(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[9,2,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('bia,cdi->'+''.join(suffix), x, y) for suffix in list(permutations('abcd'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_high_rank_matrix_multiplication_testcase_2(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,7,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[9,2,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('bai,cdi->'+''.join(suffix), x, y) for suffix in list(permutations('abcd'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_high_rank_matrix_multiplication_testcase_3(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7,5], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[9,2,3,], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('bitk,cdi->'+''.join(suffix), x, y) for suffix in list(permutations('btkcd'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_high_rank_matrix_multiplication_testcase_4(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,3,7,5], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[2,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('bitk,di->'+''.join(suffix), x, y) for suffix in list(permutations('btkd'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_tensor_contraction_testcase_1(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[4,2,3], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[6,2,3], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('abc,dbc->'+''.join(suffix), x, y) for suffix in list(permutations('ad'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_tensor_contraction_testcase_2(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[32,4,3,2], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[6,2,3,32], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('iabc,dcbi->'+''.join(suffix), x, y) for suffix in list(permutations('ad'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_tensor_contraction_with_batch_testcase_1(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[32,4,3,2], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[6,2,3,32], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('iabc,dcbi->'+''.join(suffix), x, y) for suffix in list(permutations('aid'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_tensor_contraction_with_batch_testcase_2(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[64,32,4,3,2], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[6,2,64,3,32], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('jiabc,dcjbi->'+''.join(suffix), x, y) for suffix in list(permutations('aidj'))])
+
+        self._test_coreml(model())
+
+    def test_einsum_with_dynamic_shape_matrix_multiplication(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None,None,None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None,None,None,None], dtype=tf.float32)])
+            def __call__(self, x, y):
+                return tuple([tf.einsum('ijktp,zpitj->'+''.join(suffix), x, y) for suffix in list(permutations('iptzk'))])
+        self._test_coreml(model(), input_dic=[('x', [4,3,7,9,6]), ('y', [10,6,4,9,3])])
+
+    def test_einsum_with_dynamic_shape_inner_product(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None,None,None], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[None,None,None,None], dtype=tf.float32)])
+
+            def __call__(self, x, y):
+                return (tf.einsum('ijkt,ijkt->', x, y),
+                        tf.einsum('ijkt,ikjt->', x, y))
+
+        self._test_coreml(model(), input_dic=[('x', [4,2,2,3]), ('y', [4,2,2,3])])
+
+    def test_einsum_with_dynamic_shape_transpose(self):
+
+        class model(tf.Module):
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None,None,None,None], dtype=tf.float32)])
+
+            def __call__(self, x):
+                return (tf.einsum('ijkt->jtki', x),
+                       tf.einsum('ijkt->ijkt', x))
+        self._test_coreml(model(), input_dic=[('x', [7,3,5,2])])
+
+@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+class TestTensorflow2Model(unittest.TestCase):
+
+    def setUp(self):
+        self.saved_model_dir = tempfile.mkdtemp()
+
+    def test_two_layers_control_dependency(self):
+
+        class model(tf.Module):
+
+            def __init__(self, name=None):
+                super(model, self).__init__(name=name)
+                self.w = tf.constant(tf.random.normal(shape=[1, 10]), name='bias', dtype=tf.float32)
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                with tf.control_dependencies([x]):
+                    with tf.control_dependencies([y]):
+                        return self.w + z
+        model = model()
+        tf.saved_model.save(model, self.saved_model_dir)
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            input={'x':[1,10], 'y':[1,10], 'z':[1,10]},
+            outputs=['Identity']
+        )
+
+        x, y, z = np.random.rand(1,10), np.random.rand(1, 10), np.random.rand(1, 10)
+        tf_output = model(x, y, z).numpy()
+        ml_output = mlmodel.predict({'x':x, 'y':y, 'z':z})['Identity']
+
+        np.testing.assert_almost_equal(tf_output, ml_output, decimal=3)
+
+
+    def test_two_control_inputs(self):
+
+        class model(tf.Module):
+
+            def __init__(self, name=None):
+                super(model, self).__init__(name=name)
+                self.w = tf.constant(tf.random.normal(shape=[1, 10]), name='bias', dtype=tf.float32)
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32)])
+            def __call__(self, x, y, z):
+                with tf.control_dependencies([x, y]):
+                    return self.w + z
+        model = model()
+        tf.saved_model.save(model, self.saved_model_dir)
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            input={'x':[1,10], 'y':[1,10], 'z':[1,10]},
+            outputs=['Identity']
+        )
+
+        x, y, z = np.random.rand(1,10), np.random.rand(1, 10), np.random.rand(1, 10)
+        tf_output = model(x, y, z).numpy()
+        ml_output = mlmodel.predict({'x':x, 'y':y, 'z':z})['Identity']
+
+        np.testing.assert_almost_equal(tf_output, ml_output, decimal=3)
+
+
+    def test_control_inputs_with_node_with_no_outputs(self):
+
+        class model(tf.Module):
+
+            def __init__(self, name=None):
+                super(model, self).__init__(name=name)
+                self.w = tf.constant(tf.random.normal(shape=[1, 10]), name='bias', dtype=tf.float32)
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[1, 10], dtype=tf.float32),
+                                          tf.TensorSpec(shape=[1, 10], dtype=tf.float32)])
+            def __call__(self, x, y):
+                with tf.control_dependencies([x]):
+                    return self.w + y
+        model = model()
+        tf.saved_model.save(model, self.saved_model_dir)
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            input={'x':[1,10], 'y':[1,10]},
+            outputs=['Identity']
+        )
+
+        x, y = np.random.rand(1,10), np.random.rand(1, 10)
+        tf_output = model(x, y).numpy()
+        ml_output = mlmodel.predict({'x':x, 'y':y})['Identity']
+
+        np.testing.assert_almost_equal(tf_output, ml_output, decimal=3)
+
+    def test_save_and_load_low_level_model(self):
+        class model(tf.Module):
+            def __init__(self, in_features, output_features, name=None):
+                super(model, self).__init__(name=name)
+                self.in_features = in_features
+                self.w = tf.Variable(tf.random.normal([in_features, output_features]), name='w')
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None, 20], dtype=tf.float32)])
+            def __call__(self, x):
+                return tf.matmul(x, self.w)
+        in_features = 20
+        output_features = 30
+        model = model(in_features, output_features)
+        tf.saved_model.save(model, self.saved_model_dir)
+
+        mlmodel = coremltools.converters.tensorflow.convert(
+            self.saved_model_dir,
+            inputs={'x':[1,20]},
+            outputs=['Identity']
+        )
+
+        input = np.random.rand(1,20)
+        tf_output = model(input).numpy()
+        ml_output = mlmodel.predict({'x':input})['Identity']
+
+        np.testing.assert_almost_equal(tf_output, ml_output, decimal=3)
+
+    def test_save_and_load_low_level_model_with_multiple_signatures(self):
+        class model(tf.Module):
+            def __init__(self, in_features, output_features, name=None):
+                super(model, self).__init__(name=name)
+                self.in_features = in_features
+                self.w = tf.Variable(tf.random.normal([in_features, output_features]), name='w')
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None, 20], dtype=tf.float32)])
+            def __call__(self, x):
+                return tf.matmul(x, self.w)
+
+            @tf.function(input_signature=[tf.TensorSpec(shape=[None, 20], dtype=tf.float32)])
+            def predict(self, x):
+                return 2*tf.matmul(x, self.w)
+
+        in_features = 20
+        output_features = 30
+        model = model(in_features, output_features)
+        signatures = {'a':model.__call__, 'b':model.predict}
+        tf.saved_model.save(model, self.saved_model_dir, signatures)
+        with pytest.raises(ValueError):
+            mlmodel = coremltools.converters.tensorflow.convert(
+                self.saved_model_dir,
+                inputs={'x':[1,20]},
+                outputs=['Identity']
+            )
+
+    def test_save_and_load_low_level_model_with_no_signatures(self):
+        class model(tf.Module):
+            def __init__(self, in_features, output_features, name=None):
+                super(model, self).__init__(name=name)
+                self.in_features = in_features
+                self.w = tf.Variable(tf.random.normal([in_features, output_features]), name='w')
+
+            @tf.function()
+            def __call__(self, x):
+                return tf.matmul(x, self.w)
+
+        in_features = 20
+        output_features = 30
+        model = model(in_features, output_features)
+        tf.saved_model.save(model, self.saved_model_dir)
+        with pytest.raises(ValueError):
+            mlmodel = coremltools.converters.tensorflow.convert(
+                self.saved_model_dir,
+                inputs={'x':[1,20]},
+                outputs=['Identity']
+            )
 
 @unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestKerasFashionMnist(unittest.TestCase):

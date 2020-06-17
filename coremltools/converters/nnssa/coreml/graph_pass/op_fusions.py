@@ -7,7 +7,7 @@ import numpy as np
 from ...commons import builtins
 from ...commons.symbolic import *
 from ...commons.basic_graph_ops import disconnect_edge, connect_edge, \
-    delete_node, replace_node, replace_source, connect_dests, topsort
+    delete_node, replace_node, connect_dests, topsort, replace_source
 from ...nnssa import ParsedNode
 
 ELEMENTWISE_OPS = {
@@ -281,7 +281,7 @@ def transform_nhwc_to_nchw(nnssa):
                         )
 
             # Insert NHWC -> NCHW transpose
-            for i, inp_node_name in enumerate(node.inputs):
+            for i, inp_node_name in enumerate(list(node.inputs)):
                 inp_node_format = graph[inp_node_name].attr.get('data_format')
                 symbolic_value = graph[inp_node_name].attr['symbolic_value']
                 if (graph[inp_node_name].op == 'Const' or
@@ -295,7 +295,7 @@ def transform_nhwc_to_nchw(nnssa):
                     _insert_transpose_to_nchw(graph, graph[inp_node_name], node)
 
             # Insert NCHW -> NHWC transpose
-            for i, out_node_name in enumerate(node.outputs):
+            for i, out_node_name in enumerate(list(node.outputs)):
                 out_node_format = graph[out_node_name].attr.get('data_format')
                 if out_node_format != 'NHWC_format_inserted':
                     _insert_transpose_from_nchw(graph, node, graph[out_node_name])
@@ -453,7 +453,7 @@ def _match_layernorm_pattern(gf, entry_node):
         params['epsilon'] = const_8.value.val
         rsqrt_9 = gf[add_7.outputs[0]]
         mul_10 = gf[rsqrt_9.outputs[0]]
-        if not (add_7.op in ['Add', 'AddV2'] and const_8.op == 'Const' and
+        if not (add_7.op in ['Add','AddV2'] and const_8.op == 'Const' and
                 rsqrt_9.op == 'Rsqrt' and mul_10.op == 'Mul'):
             return None
         const_11 = gf[mul_10.inputs[1]]
@@ -471,7 +471,7 @@ def _match_layernorm_pattern(gf, entry_node):
             return None
         params['beta'] = const_14.value.val
         add_15 = gf[sub_13.outputs[0]]
-        if not (gf[add_15.inputs[0]] == mul_3 and add_15.op in ['Add', 'AddV2']):
+        if not (gf[add_15.inputs[0]] == mul_3 and add_15.op in ['Add','AddV2']):
             return None
 
         layernorm_nodes = [mean_1, sqdiff_2, mul_3, const_4, mean_5, const_6,
@@ -894,9 +894,10 @@ def spatial_reduce_to_global_pool(nnssa):
                 pooling_node.datatype = current_node.datatype
                 graph[pooling_node.name] = pooling_node
 
+                for output in output_nodes:
+                    replace_source(graph, current_node.name, output, pooling_node.name)
                 delete_node(graph, current_node.name)
                 connect_edge(graph, previous_node, pooling_node.name)
-                connect_dests(graph, pooling_node.name, output_nodes)
 
                 count += 1
 

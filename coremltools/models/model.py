@@ -3,9 +3,9 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import json as _json
-import os
+import os as _os
 import tempfile as _tempfile
-import warnings
+import warnings as _warnings
 from copy import deepcopy as _deepcopy
 from six import string_types
 
@@ -91,6 +91,7 @@ def _get_proxy_and_spec(filename, use_cpu_only=False):
     except Exception:
         _MLModelProxy = None
 
+    filename = _os.path.expanduser(filename)
     specification = _load_spec(filename)
 
     if _MLModelProxy:
@@ -105,7 +106,7 @@ def _get_proxy_and_spec(filename, use_cpu_only=False):
         try:
             return (_MLModelProxy(filename, use_cpu_only), specification, None)
         except RuntimeError as e:
-            warnings.warn(
+            _warnings.warn(
                 "You will not be able to run predict() on this Core ML model." +
                 " Underlying exception message was: " + str(e),
                 RuntimeWarning)
@@ -189,7 +190,7 @@ class MLModel(object):
             _save_spec(model, filename)
             self.__proxy__, self._spec, self.framework_error = _get_proxy_and_spec(filename, useCPUOnly)
             try:
-                os.remove(filename)
+                _os.remove(filename)
             except OSError:
                 pass
         else:
@@ -258,6 +259,7 @@ class MLModel(object):
         >>> model.save('my_model_file.mlmodel')
         >>> loaded_model = MLModel('my_model_file.mlmodel')
         """
+        filename = _os.path.expanduser(filename)
         _save_spec(self._spec, filename)
 
     def get_spec(self):

@@ -284,3 +284,18 @@ class TFSimpleNetworkTest(TFNetworkTest):
                 y = gelu(x)
                 z = tf.identity(y, name='output')
             self._test_tf_model_constant(graph, {'input': shape}, ['output'])
+
+    def test_gelu_tanh_approx(self):
+        def gelu(x):
+            cdf = 0.5 * (1.0 + tf.tanh(
+                (np.sqrt(2 / np.pi) * (x + 0.044715 * tf.pow(x, 3)))))
+            return x * cdf
+
+        shapes = [(3, 4), (3, 4, 5), (3, 4, 5, 6)]
+        for shape in shapes:
+            graph = tf.Graph()
+            with graph.as_default():
+                x = tf.placeholder(tf.float32, shape=shape, name='input')
+                y = gelu(x)
+                z = tf.identity(y, name='output')
+            self._test_tf_model_constant(graph, {'input': shape}, ['output'])

@@ -490,6 +490,9 @@ class TypeInferenceVisitor(object):
     def visit_Add(self, node):
         return self._visit_broadcast(node)
 
+    def visit_AddN(self, node):
+        return self._get_type_from_attr(node)
+
     def visit_AddV2(self, node):
         return self._visit_broadcast(node)
 
@@ -1118,6 +1121,50 @@ class TypeInferenceVisitor(object):
         shape[-1], shape[-2] = shape[-2], shape[-1]
         return tuple(shape)
 
+    def visit_Einsum(self, node):
+
+        if len(node.inputs) > 2:
+            raise ValueError('No support for more than 2 inputs to {} node {} now.'.format(node.op, node.name))
+        output_shape = node.attr.get("_output_shapes")
+        if not len(output_shape) == 1:
+            raise ValueError('Expect only one output for Einsum.')
+        equation = node.attr.get('equation')
+        if not '->' in equation:
+            raise ValueError('current einsum does not support matrix diagonal operations.')
+
+        input_tensor_types = [self.visit(input) for input in node.inputs]
+        input_shapes = [input.get_shape() for input in input_tensor_types]
+        input_types = [input.get_primitive() for input in input_tensor_types]
+
+        # Parse equation
+        prefix = equation.split('->')[0]
+        suffix = equation.split('->')[1]
+
+        # Pattern matching
+        inference_shape = []
+        if not ',' in prefix:
+            assert(len(input_shapes) == 1)
+            input_shape = input_shapes[0]
+            map = dict(zip(prefix, input_shape))
+            inference_shape = [map[axis] for axis in suffix]
+        else:
+            a_shape = input_shapes[0]
+            b_shape = input_shapes[1]
+            map = {}
+            a, b = prefix.split(',')
+            for i, axis in enumerate(a):
+                map[axis] = a_shape[i]
+            for i, axis in enumerate(b):
+                map[axis] = b_shape[i]
+            inference_shape = [map[axis] for axis in suffix]
+
+        # Make inference type symbolic if it contains symbol
+        inference_shape = [axis if axis != -1 else make_symbol(node.name + "_" + str(i))
+                           for i, axis in enumerate(inference_shape)]
+        inference_type = input_types[0] if len(input_types) == 1 else promote_types(*input_types)
+
+        return builtins.tensor(inference_type, inference_shape)
+
     def visit_MatMul(self, node):
         """
         Inputs:
@@ -1257,7 +1304,14 @@ class TypeInferenceVisitor(object):
         else:
             output_shapes = node.attr['_output_shapes']
             if len(output_shapes[0]) > 0:
-                return builtins.tensor(node.attr['T'], tuple(output_shapes[0]))
+                inference_shape = []
+                if builtins.is_tensor(intype):
+                    inference_shape = list(intype.get_shape())
+                else:
+                    inference_type = []
+                axis = node.attr['axis'] if node.attr['axis'] != -1 else len(inference_shape)
+                inference_shape.insert(axis, len(node.inputs))
+                return builtins.tensor(node.attr['T'], tuple(inference_shape))
             elif 'N' in node.attr:
                 return builtins.tensor(node.attr['T'], (node.attr['N'], ))
         return None
@@ -2615,6 +2669,53 @@ class TypeInferenceVisitor(object):
                     "Possible incompatible type in set_global: %s. expected %s",
                     builtins.get_type_info(input_type), builtins.get_type_info(variable_type))
         return input_type
+
+    def visit_Size(self, node):
+        self.visit(node.inputs[0])
+        parenttype = self.gdict[node.inputs[0]].datatype
+        rettype = node.attr["out_type"]
+        if parenttype is not None:
+            input_shape = parenttype.get_shape()
+            node.attr['symbolic_value'] = rettype()
+            node.attr['symbolic_value'].val = np.prod(input_shape)
+        return rettype
+
+    def visit_Sign(self, node):
+        input_type = self.visit(node.inputs[0])
+        return input_type
+
+    def visit_Cumsum(self, node):
+        assert (len(node.inputs) == 2)
+        return self.visit(node.inputs[0])
+
+    def visit_ClipByValue(self, node):
+        assert len(node.inputs) == 3
+
+        type_min = self.visit(node.inputs[1])
+        type_max = self.visit(node.inputs[2])
+        if not (builtins.is_tensor(type_max) or builtins.is_tensor(type_min)):
+            node.attr["min_value"] = self.gdict[node.inputs[1]].attr['value'].val
+            node.attr["max_value"] = self.gdict[node.inputs[2]].attr['value'].val
+
+        return self.visit(node.inputs[0])
+
+    def visit_SpaceToDepth(self, node):
+        return self._get_type_from_attr(node)
+
+    def visit_DepthToSpace(self, node):
+        return self._get_type_from_attr(node)
+
+    def visit_SpaceToBatchND(self, node):
+        return self._get_type_from_attr(node)
+
+    def visit_BatchToSpaceND(self, node):
+        return self._get_type_from_attr(node)
+
+    def visit_LRN(self, node):
+        return self._visit_unary(node)
+
+    def visit_Reciprocal(self, node):
+        return self._visit_unary(node)
 
     def visit_Size(self, node):
         self.visit(node.inputs[0])

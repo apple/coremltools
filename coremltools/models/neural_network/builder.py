@@ -28,6 +28,10 @@ _SUPPORTED_UPDATABLE_LAYERS = ['innerProduct', 'convolution']
 
 
 def _set_recurrent_activation(param, activation):
+
+    if isinstance(activation, bytes):
+        activation = activation.decode("utf8")
+
     activation = activation.upper() if isinstance(activation, string_types) else activation
     if activation == 'SIGMOID':
         param.sigmoid.MergeFromString(b'')
