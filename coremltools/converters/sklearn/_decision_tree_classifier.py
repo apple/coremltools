@@ -5,10 +5,10 @@
 
 from ._tree_ensemble import convert_tree_ensemble
 
-from ..._deps import HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     import sklearn.tree as _tree
     from . import _sklearn_util
 
@@ -34,7 +34,7 @@ def convert(model, input_name, output_features):
     model_spec: An object of type Model_pb.
         Protobuf representation of the model
     """
-    if not(HAS_SKLEARN):
+    if not(_HAS_SKLEARN):
         raise RuntimeError('scikit-learn not found. scikit-learn conversion API is disabled.')
     
     _sklearn_util.check_expected_type(model, _tree.DecisionTreeClassifier)

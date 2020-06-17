@@ -8,15 +8,15 @@ import unittest
 import numpy as np
 from scipy import sparse
 
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from coremltools.converters import sklearn
     from sklearn.datasets import load_iris
     from sklearn.neighbors import KNeighborsClassifier
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class KNeighborsClassifierScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.

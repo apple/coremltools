@@ -7,11 +7,11 @@ import unittest
 import numpy as np
 import pytest
 
-from coremltools._deps import HAS_KERAS2_TF
+from coremltools._deps import _HAS_KERAS2_TF
 from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION
-from coremltools.models.utils import macos_version, is_macos
+from coremltools.models.utils import _macos_version, _is_macos
 
-if HAS_KERAS2_TF:
+if _HAS_KERAS2_TF:
     import keras.backend
     from keras.models import Sequential, Model
     from keras.layers import Dense, Activation, Conv2D, Conv1D, Flatten, BatchNormalization, Conv2DTranspose, SeparableConv2D
@@ -89,7 +89,7 @@ def _generate_data(input_shape, mode='random'):
     return X
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
 class KerasNumericCorrectnessTest(unittest.TestCase):
     """
@@ -163,7 +163,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         coreml_model = _get_coreml_model(model, input_names, output_names, input_name_shape_dict,
                                          model_precision=model_precision)
         try:
-            if not (is_macos() and macos_version() >= (10, 13)):
+            if not (_is_macos() and _macos_version() >= (10, 13)):
                 return
 
             # Assuming coreml model output names are in the same order as
@@ -195,7 +195,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
                 shutil.rmtree(model_dir)
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
 class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
@@ -333,7 +333,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         # Test the keras model
         self._test_model(model, model_precision=model_precision)
 
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 14),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 14),
                          'Only supported on MacOS 10.14+')
     def test_tiny_conv_random_input_shape_dict(self, model_precision=_MLMODEL_FULL_PRECISION):
         np.random.seed(1988)
@@ -2007,7 +2007,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         self._test_model(model, delta=1e-2)
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
 class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
@@ -2254,7 +2254,7 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
 @pytest.mark.slow
 @pytest.mark.keras2
-@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
     """
     Unit test class for testing all combinations of a particular
@@ -2301,7 +2301,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         # Get the model
         coreml_model = _get_coreml_model(model, input_names, ['output'],
                                          model_precision=model_precision)
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # get prediction
             coreml_preds = coreml_model.predict(coreml_input)['output'].flatten()
 
@@ -2777,7 +2777,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
         self._test_model(model)
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
 class KerasBasicConversionTest(KerasNumericCorrectnessTest):
     def test_float_arraytype_flag(self):

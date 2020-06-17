@@ -1,7 +1,7 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import as _
+from __future__ import division as _
+from __future__ import print_function as _
+from __future__ import unicode_literals as _
 
 import pytest
 onnx = pytest.importorskip('onnx')
@@ -10,8 +10,8 @@ import unittest
 import numpy as np
 import numpy.testing as npt  # type: ignore
 
-from coremltools._deps import HAS_ONNX, MSG_ONNX_NOT_FOUND
-if HAS_ONNX:
+from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+if _HAS_ONNX:
     import onnx
     from onnx import helper, numpy_helper, TensorProto
 
@@ -30,7 +30,7 @@ if HAS_ONNX:
     )
 
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ConvAddFuserTest(unittest.TestCase):
     def test_fuse_conv_without_bias(self):  # type: () -> None
         kernel_shape = (3, 2)
@@ -132,7 +132,7 @@ class ConvAddFuserTest(unittest.TestCase):
         self.assertEqual(fused_graph.nodes[0].outputs[0], outputs[0][0])
 
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class NodeRemoverTests(unittest.TestCase):
     def test_dropout_remover(self):  # type: () -> None
         inputs = [("input", (1, 3, 50, 50))]
@@ -230,7 +230,7 @@ class NodeRemoverTests(unittest.TestCase):
         self.assertEqual(spec.neuralNetwork.preprocessing[1].scaler.grayBias, -13.0)
 
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class PixelShuffleFuserTest(unittest.TestCase):
     def test_pixel_shuffle(self):  # type: () -> None
         scale_factor = 2

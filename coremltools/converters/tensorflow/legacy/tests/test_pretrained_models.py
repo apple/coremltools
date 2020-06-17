@@ -4,13 +4,13 @@ import tarfile
 import zipfile
 import numpy as np
 import PIL.Image
-from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
-if HAS_TF:
+from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
+if _HAS_TF:
     import tensorflow as tf
     from tensorflow.core.framework import graph_pb2
     import coremltools.converters.tensorflow as tf_converter
     from coremltools.converters.tensorflow import SupportedVersion
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import _macos_version
 
 try:
     from urllib import urlretrieve
@@ -135,7 +135,7 @@ def _tf_transpose(x, is_sequence=False):
     else:
         return x
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class CorrectnessTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -289,7 +289,7 @@ class CorrectnessTest(unittest.TestCase):
         coreml_out_flatten = coreml_out.flatten()
         self._compare_tf_coreml_outputs(tf_out_flatten, coreml_out_flatten)
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TestModels(CorrectnessTest):
     def test_inception_v3_slim(self):
         # Download model
@@ -441,7 +441,7 @@ class TestModels(CorrectnessTest):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_googlenet_v1_slim_coreml_3(self):
@@ -476,7 +476,7 @@ class TestModels(CorrectnessTest):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_googlenet_v1_slim_coreml_3_with_img_format(self):

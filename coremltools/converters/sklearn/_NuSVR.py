@@ -5,7 +5,7 @@
 
 from . import _SVR as _SVR
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:

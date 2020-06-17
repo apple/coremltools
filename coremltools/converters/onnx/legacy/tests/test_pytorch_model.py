@@ -1,11 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import as _
+from __future__ import division as _
+from __future__ import print_function as _
+from __future__ import unicode_literals as _
 
 import unittest
-from coremltools._deps import HAS_ONNX, MSG_ONNX_NOT_FOUND
-if HAS_ONNX:
+from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+if _HAS_ONNX:
     import onnx
     from coremltools.converters.onnx import convert
     from coremltools.converters.onnx.legacy.onnx_coreml.converter import SupportedVersion
@@ -20,7 +20,7 @@ import tempfile
 import os
 import pytest
 
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import _macos_version
 
 np.random.seed(10)
 torch.manual_seed(10)
@@ -87,7 +87,7 @@ def _test_torch_model_single_io(
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class OnnxModelTest(unittest.TestCase):
     def test_functional_average_pool(self, minimum_ios_deployment_target="12"):
         class Net(nn.Module):
@@ -112,7 +112,7 @@ class OnnxModelTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_functional_average_pool_disable_rank5_mapping(self):
@@ -136,7 +136,7 @@ class OnnxModelTest(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (1, 256), (256), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_linear_no_bias_disable_rank5_mapping(self):
@@ -285,7 +285,7 @@ class OnnxModelTest(unittest.TestCase):
 
     @pytest.mark.skip(reason="rdar://64224329")
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_lstm(self):  # type: () -> None
@@ -304,7 +304,7 @@ class OnnxModelTest(unittest.TestCase):
 
     @pytest.mark.skip(reason="rdar://64224329")
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_bidirlstm(self):  # type: () -> None
@@ -325,7 +325,7 @@ class OnnxModelTest(unittest.TestCase):
 
     @pytest.mark.skip(reason="rdar://64224329")
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_gru(self):  # type: () -> None
@@ -558,7 +558,7 @@ class OnnxModelTest(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (1, 16), (1, 1, 16))  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_conv1d_pool1d(self, minimum_ios_deployment_target="13"):
@@ -591,7 +591,7 @@ class OnnxModelTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_slice(self, minimum_ios_deployment_target="13"):
@@ -622,7 +622,7 @@ class OnnxModelTest(unittest.TestCase):
             minimum_ios_deployment_target=minimum_ios_deployment_target,
         )
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ReshapeTransposeTests(unittest.TestCase):
     """
     tests for models that have patterns like:
@@ -747,7 +747,7 @@ class ReshapeTransposeTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (1, 12, 4, 6), (12, 4, 6))  # type: ignore
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class UnaryOperationTests(unittest.TestCase):
     """
     Unary Operation Test cases
@@ -755,7 +755,7 @@ class UnaryOperationTests(unittest.TestCase):
 
     ## Sqrt tests
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_sqrt_tensor(self, minimum_ios_deployment_target="13"):
@@ -767,14 +767,14 @@ class UnaryOperationTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class OperatorTests(unittest.TestCase):
     """
     Operator test for Operator
     """
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_repeat(self, minimum_ios_deployment_target="13"):
@@ -786,7 +786,7 @@ class OperatorTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class BinaryOperationTests(unittest.TestCase):
     """
     Binary Operation Test cases
@@ -794,7 +794,7 @@ class BinaryOperationTests(unittest.TestCase):
 
     ## Addition tests
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_add_same_shape(self, minimum_ios_deployment_target="13"):
@@ -808,7 +808,7 @@ class BinaryOperationTests(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_add_same_shape_multiple(self, minimum_ios_deployment_target="13"):
@@ -826,7 +826,7 @@ class BinaryOperationTests(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_add_tensor_scalar(self, minimum_ios_deployment_target="13"):
@@ -840,7 +840,7 @@ class BinaryOperationTests(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_add_diff_shape(self, minimum_ios_deployment_target="13"):
@@ -855,7 +855,7 @@ class BinaryOperationTests(unittest.TestCase):
 
     ## Subtraction tests
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_sub_same_shape(self, minimum_ios_deployment_target="13"):
@@ -869,7 +869,7 @@ class BinaryOperationTests(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_sub_same_shape_multiple(self, minimum_ios_deployment_target="13"):
@@ -887,7 +887,7 @@ class BinaryOperationTests(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_sub_tensor_scalar(self, minimum_ios_deployment_target="13"):
@@ -901,7 +901,7 @@ class BinaryOperationTests(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_sub_diff_shape(self, minimum_ios_deployment_target="13"):
@@ -915,7 +915,7 @@ class BinaryOperationTests(unittest.TestCase):
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_bianry_ops_mix_test(self, minimum_ios_deployment_target="13"):
@@ -935,7 +935,7 @@ class BinaryOperationTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ReduceOperationTests(unittest.TestCase):
     """
     Reduction Operation Test cases
@@ -943,7 +943,7 @@ class ReduceOperationTests(unittest.TestCase):
 
     ## Reduction tests
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_reducesum(self, minimum_ios_deployment_target="13"):
@@ -961,7 +961,7 @@ class ReduceOperationTests(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_reducemean(self, minimum_ios_deployment_target="13"):
@@ -978,7 +978,7 @@ class ReduceOperationTests(unittest.TestCase):
             minimum_ios_deployment_target=minimum_ios_deployment_target,
         )
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class TransformationTests(unittest.TestCase):
     """
     Test cases for validating transformations
@@ -988,7 +988,7 @@ class TransformationTests(unittest.TestCase):
     # Upsample with scalar factor is splited in Floor -> Cast -> Div -> Concat
     # Hence, is a good measure to test Costant Propagation and removal transformation
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     @pytest.mark.skip(reason="test failure: <rdar://63138211>")

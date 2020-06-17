@@ -2,12 +2,12 @@
 # # Use of this source code is governed by a BSD-3-clause license that can be # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools.models.utils import rename_feature, macos_version, is_macos
+from coremltools.models.utils import rename_feature, _macos_version, _is_macos
 from coremltools.models import MLModel
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 import pandas as pd
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
@@ -15,7 +15,7 @@ if HAS_SKLEARN:
     from coremltools.converters import sklearn as converter
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class PipeLineRenameTests(unittest.TestCase):
 
     @classmethod
@@ -43,7 +43,7 @@ class PipeLineRenameTests(unittest.TestCase):
         renamed_model = MLModel(scikit_spec)
 
         # Check the predictions
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             out_dict = model.predict({'input': sample_data})
             out_dict_renamed = renamed_model.predict({'renamed_input': sample_data})
             self.assertAlmostEqual(list(out_dict.keys()), list(out_dict_renamed.keys()))

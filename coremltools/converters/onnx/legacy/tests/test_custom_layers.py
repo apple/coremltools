@@ -1,11 +1,11 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import as _
+from __future__ import division as _
+from __future__ import print_function as _
 
 import unittest
 
-from coremltools._deps import HAS_ONNX, MSG_ONNX_NOT_FOUND
-if HAS_ONNX:
+from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+if _HAS_ONNX:
     import onnx
     from ._test_utils import _onnx_create_model
     from onnx import helper, numpy_helper, ModelProto, TensorProto
@@ -44,7 +44,7 @@ def _make_model_flatten_axis3():  # type: (...) -> ModelProto
     )
     return _onnx_create_model([flatten], inputs, outputs)
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class CustomLayerTest(unittest.TestCase):
     def test_unsupported_ops(self):  # type: () -> None
 

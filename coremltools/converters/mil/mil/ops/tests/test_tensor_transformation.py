@@ -673,7 +673,7 @@ class TestPixelShuffle:
                             expected_output_types, expected_outputs,
                             use_cpu_only=use_cpu_only, backend=backend)
 
-    @pytest.mark.skipif(not HAS_TORCH, reason='PyTorch not found.')
+    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason='PyTorch not found.')
     @pytest.mark.parametrize('use_cpu_only, backend, shape, upscale_factor',
                              itertools.product(
                                  [True, False],

@@ -8,19 +8,19 @@ import pytest
 import pandas as pd
 import unittest
 
-from coremltools._deps import HAS_SKLEARN, HAS_XGBOOST
+from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import evaluate_classifier,\
-    macos_version, is_macos
-if HAS_SKLEARN:
+    _macos_version, _is_macos
+if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingClassifier
     from coremltools.converters import sklearn as skl_converter
 
-if HAS_XGBOOST:
+if _HAS_XGBOOST:
     import xgboost
     from coremltools.converters import xgboost as xgb_converter
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter and running both models
@@ -53,7 +53,7 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
             df['prediction'] = scikit_model.predict(self.X)
@@ -62,7 +62,7 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
             metrics = evaluate_classifier(spec, df)
             self._check_metrics(metrics)
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class BoostedTreeBinaryClassificationBostonHousingScikitNumericTest(
            BoostedTreeClassificationBostonHousingScikitNumericTest):
 
@@ -89,7 +89,7 @@ class BoostedTreeBinaryClassificationBostonHousingScikitNumericTest(
         for it, arg in enumerate(args):
             self._train_convert_evaluate_assert(**arg)
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
            BoostedTreeClassificationBostonHousingScikitNumericTest):
 
@@ -134,8 +134,8 @@ class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
             self._train_convert_evaluate_assert(**arg)
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
-@unittest.skipIf(not HAS_XGBOOST, 'Skipping, no xgboost')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_XGBOOST, 'Skipping, no xgboost')
 class BoostedTreeClassificationBostonHousingXGboostNumericTest(unittest.TestCase):
     """
     Unit test class for testing xgboost converter and running both models
@@ -154,7 +154,7 @@ class BoostedTreeClassificationBostonHousingXGboostNumericTest(unittest.TestCase
         # Convert the model
         spec = xgb_converter.convert(xgb_model, self.feature_names, self.output_name, mode="classifier")
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
             df['prediction'] = xgb_model.predict(self.X)
@@ -177,8 +177,8 @@ class BoostedTreeClassificationBostonHousingXGboostNumericTest(unittest.TestCase
         for it, arg in enumerate(args):
             self._train_convert_evaluate_assert(**arg)
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
-@unittest.skipIf(not HAS_XGBOOST, 'Skipping, no xgboost')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_XGBOOST, 'Skipping, no xgboost')
 class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
            BoostedTreeClassificationBostonHousingXGboostNumericTest):
 
@@ -205,8 +205,8 @@ class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
         self._classifier_stress_test()
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
-@unittest.skipIf(not HAS_XGBOOST, 'Skipping, no xgboost')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_XGBOOST, 'Skipping, no xgboost')
 class BoostedTreeMultiClassClassificationBostonHousingXGboostNumericTest(
            BoostedTreeClassificationBostonHousingXGboostNumericTest):
 

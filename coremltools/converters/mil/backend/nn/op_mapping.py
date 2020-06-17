@@ -1,12 +1,12 @@
-import numpy as np
-import logging
-import six
+import numpy as _np
+import logging as _logging
+from six import string_types as _string_types
 from coremltools.models import neural_network as neural_network
 from coremltools.proto import NeuralNetwork_pb2
 from coremltools.converters.mil.mil.types.symbolic import is_variadic, any_symbolic, is_symbolic
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
-from tqdm import tqdm
+from tqdm import tqdm as _tqdm
 
 V2_TO_V1_OP_REGISTRY = {}
 
@@ -28,7 +28,7 @@ def convert_ops(const_context, builder, ops, outputs):
 
     const_context.append(set())
     custom_ops = SSAOpRegistry.custom_ops
-    for op in tqdm(ops, desc="Translating MIL ==> MLModel Ops", unit=" ops"):
+    for op in _tqdm(ops, desc="Translating MIL ==> MLModel Ops", unit=" ops"):
         if op.op_type in custom_ops:
             mapper = V2_TO_V1_OP_REGISTRY['custom_op']
         elif op.op_type in V2_TO_V1_OP_REGISTRY:
@@ -58,7 +58,7 @@ def make_input(const_context, builder, variables):
     """
     if isinstance(variables, (list, tuple)):
         return [make_input(const_context, builder, v) for v in variables]
-    if isinstance(variables, six.string_types):
+    if isinstance(variables, _string_types):
         return variables
 
     v = variables # variables is Var
@@ -172,10 +172,10 @@ def add_const(const_context, builder, name, val):
     """
     for const_set in const_context:
         if name in const_set:
-            logging.warning('Const {} was already added.'.format(name))
+            _logging.warning('Const {} was already added.'.format(name))
             return
-    if not isinstance(val, (np.ndarray, np.generic)):
-        val = np.array([val])
+    if not isinstance(val, (_np.ndarray, _np.generic)):
+        val = _np.array([val])
     rank = len(val.shape)
     if rank == 0:
         builder.add_load_constant_nd(
@@ -190,7 +190,7 @@ def add_const(const_context, builder, name, val):
                 constant_value=val,
                 shape=val.shape)
     const_context[-1].add(name)
-    logging.info('added const {} for builder {}'.format(name, builder))
+    _logging.info('added const {} for builder {}'.format(name, builder))
 
 
 # Helper routines for recurrent layers
@@ -215,7 +215,7 @@ def _split(x, sections, axis):
         return None
     if x.shape[axis] % sections != 0:
         raise ValueError("Cannot split axis {} into {} sections for input of shape {}".format(axis, sections, x.shape))
-    return np.split(x, sections, axis=axis)
+    return _np.split(x, sections, axis=axis)
 
 # Split weights into given number of sections
 # This method should be used when weights are combined into
@@ -224,7 +224,7 @@ def _split(x, sections, axis):
 def _split_weights(w, sections):
     hidden_size = w.shape[-1] // sections
     input_size = w.shape[0] - hidden_size
-    w = np.transpose(w, (1, 0))
+    w = _np.transpose(w, (1, 0))
     w_x = _split(w[:, :input_size], sections=sections, axis=0)
     w_h = _split(w[:, input_size:], sections=sections, axis=0)
     return w_x, w_h
@@ -289,8 +289,8 @@ def band_part(const_context, builder, op):
 @register_v2_op
 def batch_norm(const_context, builder, op):
     channels = op.x.shape[1]
-    gamma = np.array([1.] * channels) if op.gamma is None else op.gamma.val
-    beta = np.array([0.] * channels) if op.beta is None else op.beta.val
+    gamma = _np.array([1.] * channels) if op.gamma is None else op.gamma.val
+    beta = _np.array([0.] * channels) if op.beta is None else op.beta.val
     builder.add_batchnorm(
         name=op.name,
         channels=channels,
@@ -346,9 +346,9 @@ def conv(const_context, builder, op):
         # v1 convolution expects (H, W, C_in/groups, C_out) or (D, H, W, C_in/groups, C_out)
         weights = op.weight.val
         if is_conv1d:
-            weights = np.expand_dims(op.weight.val, 3)
+            weights = _np.expand_dims(op.weight.val, 3)
         if is_conv1d or is_conv2d:
-            weights = np.transpose(weights, [2, 3, 1, 0])
+            weights = _np.transpose(weights, [2, 3, 1, 0])
     else:
         # op.weight is not const at compile time.
         # When weight is dynamic, v1 convolution expects weight to be
@@ -488,7 +488,7 @@ def _add_elementwise_unary(const_context, builder, op, mode, output_name=None, *
     else:
         add_func = getattr(builder, "add_"+mode, None)
         if add_func is None:
-            logging.error('Elementwise unary method {} not found in builder.'.format(mode))
+            _logging.error('Elementwise unary method {} not found in builder.'.format(mode))
         add_func(name=name,
                  input_name=make_input(const_context, builder, op.x),
                  output_name=output_name,
@@ -566,7 +566,7 @@ def _add_elementwise_binary(const_context, builder, op, mode, output_name = None
             add_func = getattr(builder, "add_"+mode+"_broadcastable", None)
 
             if add_func is None:
-                logging.error('Elementwise binary broadcastable method {} not found in builder.'.format(mode))
+                _logging.error('Elementwise binary broadcastable method {} not found in builder.'.format(mode))
 
             add_func(name=name,
                      input_names=make_input(const_context, builder,
@@ -822,7 +822,7 @@ def slice_by_size(const_context, builder, op):
     # get the mask where size = -1
     # for instance, size = [-1,1,2] results in [1,0,0]
     const_name = op.name+'_const_name'
-    add_const(const_context, builder, const_name, np.array([-1]*op.x.rank))
+    add_const(const_context, builder, const_name, _np.array([-1] * op.x.rank))
 
     is_end_mask_name = op.name+'_is_end_mask'
     builder.add_equal(
@@ -1633,7 +1633,7 @@ def gather(const_context, builder, op):
                                  output_name=op.name,
                                  vocab_size=W.shape[0],
                                  embedding_size=W.shape[1],
-                                 W=np.transpose(W))
+                                 W=_np.transpose(W))
 
     else:
         builder.add_gather(
@@ -1903,7 +1903,7 @@ def pad(const_context, builder, op):
     nn_mode_mapping = {"reflect" : "reflection", "replicate" : "replication"}
     mode = nn_mode_mapping.get(mode,mode)
 
-    if op.x.rank > 1 and np.all(pad[:-4] == 0):
+    if op.x.rank > 1 and _np.all(pad[:-4] == 0):
         # check and map mode
         if mode == "symmetric":
             mode = "reflection"
@@ -1937,8 +1937,8 @@ def pad(const_context, builder, op):
 @register_v2_op
 def instance_norm(const_context, builder, op):
     channels = op.x.shape[1]
-    gamma = np.array([1.] * channels) if op.gamma is None else op.gamma.val
-    beta = np.array([0.] * channels) if op.beta is None else op.beta.val
+    gamma = _np.array([1.] * channels) if op.gamma is None else op.gamma.val
+    beta = _np.array([0.] * channels) if op.beta is None else op.beta.val
     builder.add_batchnorm(
         name=op.name,
         channels=channels,
@@ -1968,8 +1968,8 @@ def layer_norm(const_context, builder, op):
     input_shape = [-1 if is_symbolic(s) else s for s in input_shape_full]
     axes = None if op.axes is None else op.axes.val
     normalized_shape = input_shape[-len(axes):]
-    gamma = np.ones(normalized_shape) if op.gamma is None else op.gamma.val
-    beta = np.zeros(normalized_shape) if op.beta is None else op.beta.val
+    gamma = _np.ones(normalized_shape) if op.gamma is None else op.gamma.val
+    beta = _np.zeros(normalized_shape) if op.beta is None else op.beta.val
     if len(input_shape) in [2, 3] and len(axes) == 1 and axes[0] == len(input_shape) - 1 \
             and input_shape.count(-1) < 2:
         builder.add_reshape_static(name=op.name + '_reshape',
@@ -2045,12 +2045,12 @@ def conv_transpose(const_context, builder, op):
     output_channels = weight.shape[0] * op.groups.val
 
     if is_conv_transpose_1d:
-        weight = np.expand_dims(weight, 3)
+        weight = _np.expand_dims(weight, 3)
 
     # DeConvolution3D expects weights to have shape (C_out / groups, C_in, spatial_dims)
     # DeConvolution2D/1D expects (spatial_dims, C_out/groups, C_in)
     if not is_conv_transpose_3d:
-        weight = np.transpose(weight, [2, 3, 1, 0])
+        weight = _np.transpose(weight, [2, 3, 1, 0])
 
     # Adjust for Deconv1D case
     rank_factor = 1 if is_conv_transpose_1d else 2
@@ -2343,7 +2343,7 @@ def while_loop(const_context, builder, op):
     for vx_in, vx_out in zip(block.inputs, block.outputs[1:]):
         if vx_in.name == vx_out.name:
             msg = 'Loop invariant var {} detected in block {}'
-            logging.warning(msg.format(vx_in.name, block.name))
+            _logging.warning(msg.format(vx_in.name, block.name))
             continue
         body_builder.add_copy(
                     name=vx_in.name+'_ret_copy',
@@ -2537,12 +2537,12 @@ def make_list(const_context, builder, op):
         array_size = size if size > 0 else 1
         array_shape = [array_size] + list(elem_shape)
         add_const(const_context, builder, op.outputs[0].name,
-                val=np.zeros(array_shape, dtype='float'))
+                  val=_np.zeros(array_shape, dtype='float'))
     elif has_static_elem_shape:
         if len(elem_shape) > 0:
             node_es_name = op.name + '_element_shape'
             add_const(const_context, builder, node_es_name,
-                val=np.array(elem_shape, dtype='float'))
+                      val=_np.array(elem_shape, dtype='float'))
 
             # Concatenate list length (the input, should be a constant vector of size 1) with element shape
             node_arr_shape_name = op.name + '_arr_shape'
@@ -2595,7 +2595,7 @@ def _realloc_list(const_context, builder, ls_var, index_var):
 
     elem_shape_name = ls_var.name + '_elem_shape'
     add_const(const_context, builder, elem_shape_name,
-            np.array(ls_var.elem_shape))
+              _np.array(ls_var.elem_shape))
 
     condition_name = ls_var.name + '_condition'
     layer = builder.add_branch(
@@ -2742,8 +2742,8 @@ def list_length(const_context, builder, op):
 
 @register_v2_op
 def isfinite(const_context, builder, op):
-    int_max = np.iinfo(np.int64).max
-    int_min = -np.iinfo(np.int64).max - 1
+    int_max = _np.iinfo(_np.int64).max
+    int_min = -_np.iinfo(_np.int64).max - 1
     const_name_max = op.name+'_const_name_max'
     const_name_min = op.name+'_const_name_min'
     if any_symbolic(op.x.shape):

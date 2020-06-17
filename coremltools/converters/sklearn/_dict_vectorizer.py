@@ -15,7 +15,7 @@ from ...models._feature_management import process_or_validate_features
 from ...models.feature_vectorizer import create_feature_vectorizer
 from ...models import MLModel as _MLModel
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 if _HAS_SKLEARN:
     from sklearn.feature_extraction import DictVectorizer
     sklearn_class = DictVectorizer

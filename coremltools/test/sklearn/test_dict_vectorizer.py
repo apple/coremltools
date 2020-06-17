@@ -4,20 +4,20 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 from copy import copy
 import numpy as np
 from coremltools.models.utils import evaluate_transformer
 from coremltools.models.utils import evaluate_classifier
-from coremltools.models.utils import macos_version, is_macos
+from coremltools.models.utils import _macos_version, _is_macos
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from coremltools.converters import sklearn
     from sklearn.feature_extraction import DictVectorizer
 
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class DictVectorizerScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -31,7 +31,7 @@ class DictVectorizerScikitTest(unittest.TestCase):
                 input_features = "features", 
                 output_feature_names = "output")
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             ret = evaluate_transformer(
                     m, [{"features" : row} for row in data], 
                     [{"output" : x_r} for x_r in X], True)
@@ -84,7 +84,7 @@ class DictVectorizerScikitTest(unittest.TestCase):
 
         model = coremltools.converters.sklearn.convert(pl, input_features = "features", output_feature_names = "target")
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             x = pd.DataFrame( {"features" : x_train_dict, 
                                "prediction" : pl.predict(x_train_dict)})
 

@@ -6,16 +6,16 @@
 import os
 import pandas as pd
 import unittest
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import evaluate_regressor,\
-    macos_version, is_macos
+    _macos_version, _is_macos
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.linear_model import LinearRegression
     from sklearn.svm import LinearSVR
     from coremltools.converters.sklearn import convert
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikitlearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikitlearn. Skipping tests.')
 class LinearRegressionScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -83,7 +83,7 @@ class LinearRegressionScikitTest(unittest.TestCase):
             model = OneHotEncoder()
             spec = convert(model, 'data', 'out')
 
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_linear_regression_evaluation(self):
         """
@@ -102,7 +102,7 @@ class LinearRegressionScikitTest(unittest.TestCase):
             metrics = evaluate_regressor(spec, df)
             self.assertAlmostEquals(metrics['max_error'], 0)
 
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_linear_svr_evaluation(self):
         """

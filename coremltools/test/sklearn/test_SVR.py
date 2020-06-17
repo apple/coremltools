@@ -10,22 +10,22 @@ import tempfile
 import unittest
 import pytest
 
-from coremltools._deps import HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND, HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
-from coremltools.models.utils import evaluate_regressor, macos_version, is_macos
+from coremltools._deps import _HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND, _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
+from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
 
-if HAS_LIBSVM:
+if _HAS_LIBSVM:
     import svmutil
     import svm
     from coremltools.converters import libsvm
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.svm import SVR
     from sklearn.datasets import load_boston
     from coremltools.converters import sklearn as sklearn_converter
     from sklearn.preprocessing import OneHotEncoder
 
 
-@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
+@unittest.skipIf(not _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class SvrScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn sklearn_converter.
@@ -35,7 +35,7 @@ class SvrScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not HAS_SKLEARN:
+        if not _HAS_SKLEARN:
             return
 
         scikit_data = load_boston()
@@ -103,7 +103,7 @@ class SvrScikitTest(unittest.TestCase):
 
                 spec = sklearn_converter.convert(cur_model, input_names, 'target')
 
-                if is_macos() and macos_version() >= (10, 13):
+                if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_regressor(spec, df)
                     self.assertAlmostEquals(metrics['max_error'], 0)
 
@@ -114,8 +114,8 @@ class SvrScikitTest(unittest.TestCase):
                 break
 
 
-@unittest.skipIf(not HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND)
-@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
+@unittest.skipIf(not _HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND)
+@unittest.skipIf(not _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class EpsilonSVRLibSVMTest(unittest.TestCase):
     """
     Unit test class for testing the libsvm sklearn converter.
@@ -125,9 +125,9 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not HAS_SKLEARN:
+        if not _HAS_SKLEARN:
             return
-        if not HAS_LIBSVM:
+        if not _HAS_LIBSVM:
             return
 
         scikit_data = load_boston()
@@ -146,7 +146,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
 
         # Default values
         spec = libsvm.convert(self.libsvm_model)
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             (df['prediction'], _, _) = svmutil.svm_predict(data['target'], data['data'].tolist(), self.libsvm_model)
             metrics = evaluate_regressor(spec, df)
             self.assertAlmostEquals(metrics['max_error'], 0)
@@ -220,7 +220,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
 
                 spec = libsvm.convert(model, input_names=input_names, target_name='target')
 
-                if is_macos() and macos_version() >= (10, 13):
+                if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_regressor(spec, df)
                     self.assertAlmostEquals(metrics['max_error'], 0)
 

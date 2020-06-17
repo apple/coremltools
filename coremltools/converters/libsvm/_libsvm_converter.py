@@ -4,10 +4,10 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from ... import SPECIFICATION_VERSION
-from ..._deps import HAS_LIBSVM
+from ..._deps import _HAS_LIBSVM
 from coremltools import __version__ as ct_version
 from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
-from six import string_types
+from six import string_types as _string_types
 
 
 def _infer_min_num_features(model):
@@ -51,7 +51,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     model_spec: An object of type Model_pb.
         Protobuf representation of the model
     """
-    if not(HAS_LIBSVM):
+    if not(_HAS_LIBSVM):
         raise RuntimeError('libsvm not found. libsvm conversion API is disabled.')
 
     from libsvm import svm as _svm
@@ -73,7 +73,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
 
     # Set the features names
     inferred_length = _infer_min_num_features(libsvm_model)
-    if isinstance(feature_names, string_types):
+    if isinstance(feature_names, _string_types):
         # input will be a single array
         if input_length == 'auto':
             print("[WARNING] Infering an input length of %d. If this is not correct,"

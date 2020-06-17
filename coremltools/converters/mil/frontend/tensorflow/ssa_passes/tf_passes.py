@@ -1,8 +1,8 @@
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import logging
-from coremltools.converters._profile_utils import profile
+from coremltools.converters._profile_utils import _profile
 
-@profile
+@_profile
 def tensorflow_passes(prog):
     passes = [
             "common::dead_code_elimination",

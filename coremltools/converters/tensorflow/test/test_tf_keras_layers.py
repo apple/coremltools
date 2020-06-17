@@ -5,14 +5,14 @@ import coremltools
 import os
 import shutil
 
-from coremltools._deps import HAS_TF, HAS_TF_2, HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND
+from coremltools._deps import _HAS_TF, _HAS_TF_2, _HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND
 from . test_utils import generate_data, tf_transpose
-if (HAS_TF or HAS_TF_2) and HAS_KERAS2_TF:
+if (_HAS_TF or _HAS_TF_2) and _HAS_KERAS2_TF:
     import tensorflow as tf
     from tensorflow.keras import backend as _keras
     from tensorflow.keras import layers
 
-@unittest.skipUnless(HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
+@unittest.skipUnless(_HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
 class TensorFlowKerasTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -30,7 +30,7 @@ class TensorFlowKerasTests(unittest.TestCase):
         return graph.get_operation_by_name(name).outputs[0].name
 
     def _test_model(self, model, data_mode='random_zero_mean', decimal=4, use_cpu_only=False, has_variables=True, verbose=False):
-        if not HAS_TF_2:
+        if not _HAS_TF_2:
             self._test_keras_model_tf1(model, data_mode, decimal, use_cpu_only, has_variables, verbose)
         else:
             self._test_keras_model_tf2(model, data_mode, decimal, use_cpu_only, has_variables, verbose)
@@ -161,7 +161,7 @@ class TensorFlowKerasTests(unittest.TestCase):
         np.testing.assert_almost_equal(
             keras_output.flatten(), core_ml_output.flatten(), decimal=decimal)
 
-@unittest.skipIf(not HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
+@unittest.skipIf(not _HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
 class SimpleLayerTests(TensorFlowKerasTests):
 
     def test_dense_softmax(self):

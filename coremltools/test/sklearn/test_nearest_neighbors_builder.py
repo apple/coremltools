@@ -5,18 +5,18 @@
 
 import os
 import shutil
-from coremltools.models.utils import is_macos
+from coremltools.models.utils import _is_macos
 
 import unittest
 
 from coremltools.models import MLModel
 from coremltools.models.nearest_neighbors import KNearestNeighborsClassifierBuilder
-from coremltools._deps import HAS_SKLEARN
-if HAS_SKLEARN:
+from coremltools._deps import _HAS_SKLEARN
+if _HAS_SKLEARN:
     from sklearn.datasets import load_iris
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class NearestNeighborsBuilderTest(unittest.TestCase):
     """
     Unit tests for the nearest neighbors builder class.
@@ -315,7 +315,7 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             builder_string_labels.add_samples(some_X, invalid_string_y)
 
-    @unittest.skipUnless(is_macos(), 'Only supported on MacOS platform.')
+    @unittest.skipUnless(_is_macos(), 'Only supported on MacOS platform.')
     def test_can_init_and_save_model_from_builder_with_updated_spec(self):
         builder = KNearestNeighborsClassifierBuilder(
             input_name='input',
@@ -341,7 +341,7 @@ class NearestNeighborsBuilderTest(unittest.TestCase):
         finally:
             self._delete_mlmodel_and_mlmodelc(coreml_model_path)
 
-    @unittest.skipUnless(is_macos(), 'Only supported on MacOS platform.')
+    @unittest.skipUnless(_is_macos(), 'Only supported on MacOS platform.')
     def test_can_init_and_save_model_from_builder_default_parameters(self):
         builder = KNearestNeighborsClassifierBuilder(input_name='input',
                                                      output_name='output',

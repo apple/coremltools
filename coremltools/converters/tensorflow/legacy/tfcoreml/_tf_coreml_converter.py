@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function as _
 from six import string_types as _string_types
 
 import numpy as np

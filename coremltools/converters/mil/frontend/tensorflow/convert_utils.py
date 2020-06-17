@@ -6,7 +6,8 @@ from coremltools.converters.mil.mil import types
 from .tf_op_registry import _TF_OPS_REGISTRY
 from coremltools.converters.mil.mil.var import ListVar
 from collections import defaultdict
-from tqdm import tqdm
+from tqdm import tqdm as _tqdm
+
 
 def compatible_shapes(tf_shape, inf_shape):
     def compare_elem(dt, ds):
@@ -153,7 +154,7 @@ def convert_graph(context, graph, outputs=None):
 
     # Translate the non-placeholder ops.
     num_nodes = len(nodes)
-    for i, node_name in enumerate(tqdm(nodes, desc='Converting Frontend ==> MIL Ops', unit=' ops')):
+    for i, node_name in enumerate(_tqdm(nodes, desc='Converting Frontend ==> MIL Ops', unit=' ops')):
         node = graph[node_name]
         if node.op == 'return':
             continue

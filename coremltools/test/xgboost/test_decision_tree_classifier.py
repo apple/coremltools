@@ -4,20 +4,20 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools._deps import HAS_XGBOOST
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_XGBOOST
+from coremltools._deps import _HAS_SKLEARN
 from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.tree import DecisionTreeClassifier
     from coremltools.converters.sklearn import convert as skl_converter
 
-if HAS_XGBOOST:
+if _HAS_XGBOOST:
     from coremltools.converters import xgboost as xgb_converter
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class DecisionTreeBinaryClassifierScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -85,7 +85,7 @@ class DecisionTreeBinaryClassifierScikitTest(unittest.TestCase):
             spec = skl_converter(model, 'data', 'out')
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class DecisionTreeMultiClassClassifierScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.

@@ -18,7 +18,7 @@ from coremltools.models.neural_network.flexible_shape_utils import (
         update_image_size_range, add_enumerated_image_sizes,
         set_multiarray_ndshape_range, add_multiarray_ndshape_enumeration)
 from .passes.nn_passes import nn_backend_passes
-from coremltools.converters._profile_utils import profile
+from coremltools.converters._profile_utils import _profile
 
 def _convert_to_image_input(proto, inputs):
     tmp_model = MLModel(proto)
@@ -121,7 +121,7 @@ def _set_symbolic_inputs(proto, symbolic_inputs):
         set_multiarray_ndshape_range(
             proto, input_name, lower_bounds=lb, upper_bounds=ub)
 
-@profile
+@_profile
 def load(prog, **kwargs):
     if 'main' not in prog.functions:
         msg = 'main function not found in program {}'

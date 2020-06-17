@@ -7,7 +7,7 @@ from ...proto import Model_pb2 as _Model_pb2
 from ...models._interface_management import set_regressor_interface_params
 from ... import SPECIFICATION_VERSION
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:

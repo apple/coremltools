@@ -1,3 +1,5 @@
+import numpy as _np
+
 from coremltools.converters.mil.frontend.tensorflow.ops import (
     _transpose_NHWC_to_NCHW,
     _transpose_NCHW_to_NHWC,
@@ -102,7 +104,7 @@ def TensorListFromTensor(context, node):
     length = mb.slice_by_index(x=length, begin=[0], end=[1], squeeze_mask=[True])
 
     if element_shape is not None and \
-            all(np.atleast_1d(element_shape.val) != -1):
+            all(_np.atleast_1d(element_shape.val) != -1):
         ls = mb.make_list(
             init_length=length,
             elem_shape=element_shape,
@@ -155,7 +157,7 @@ def TensorListReserve(context, node):
     dtype = types.builtin_to_string(element_dtype)
 
     if element_shape is not None and \
-            all(np.atleast_1d(element_shape.val) != -1):
+            all(_np.atleast_1d(element_shape.val) != -1):
         ls = mb.make_list(
             init_length=num_elements,
             elem_shape=element_shape,

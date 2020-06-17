@@ -10,7 +10,7 @@ from ...proto import Model_pb2 as _Model_pb2
 from ...models import datatypes
 from ...models import MLModel as _MLModel
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 
 if _HAS_SKLEARN:
     import sklearn

@@ -3,18 +3,20 @@ from __future__ import absolute_import as _
 from __future__ import division as _
 from __future__ import print_function as _
 
-import logging
-import os
+import logging as _logging
+import os.path as _os_path
 
-import six
-from tqdm import tqdm
-import tensorflow as tf
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
-from tensorflow.python.framework.function_def_to_graph import function_def_to_graph
-from tensorflow.python.keras.saving import saving_utils
+from six import string_types as _string_types
+from tqdm import tqdm as _tqdm
+import tensorflow as _tf
 
-from tensorflow.lite.python.util import run_graph_optimizations, get_grappler_config
+from tensorflow.python.framework import dtypes as _dtypes
+from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2 as _convert_variables_to_constants_v2
+from tensorflow.python.framework.function_def_to_graph import function_def_to_graph as _function_def_to_graph
+from tensorflow.python.keras.saving import saving_utils as _saving_utils
+
+from tensorflow.lite.python.util import run_graph_optimizations as _run_graph_optimizations
+from tensorflow.lite.python.util import get_grappler_config as _get_grappler_config
 
 from .converter import TF2Converter
 from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import fill_outputs
@@ -61,20 +63,20 @@ class TF2Loader(TFLoader):
         msg = 'Expected model format: [SavedModel | [concrete_function] | ' \
               'tf.keras.Model | .h5], got {}'
         if isinstance(self.model, list) or \
-                isinstance(self.model, tf.keras.Model) or \
-                isinstance(self.model, six.string_types):
+                isinstance(self.model, _tf.keras.Model) or \
+                isinstance(self.model, _string_types):
             cfs = []
             if isinstance(self.model, list):
                 cfs = self.model
-            if isinstance(self.model, tf.keras.Model):
+            if isinstance(self.model, _tf.keras.Model):
                 cfs = self._concrete_fn_from_tf_keras_or_h5(self.model)
-            elif isinstance(self.model, six.string_types):
-                if not os.path.exists(self.model):
+            elif isinstance(self.model, _string_types):
+                if not _os_path.exists(self.model):
                     raise ValueError('Input model "{}" does not exist'.format(self.model))
-                elif os.path.isfile(self.model) and self.model.endswith('.h5'):
+                elif _os_path.isfile(self.model) and self.model.endswith('.h5'):
                     cfs = self._concrete_fn_from_tf_keras_or_h5(self.model)
-                elif os.path.isdir(self.model):
-                    saved_model = tf.saved_model.load(self.model)
+                elif _os_path.isdir(self.model):
+                    saved_model = _tf.saved_model.load(self.model)
                     sv = saved_model.signatures.values()
                     cfs = sv if isinstance(sv, list) else list(sv)
                 else:
@@ -87,8 +89,8 @@ class TF2Loader(TFLoader):
 
     def _tf_ssa_from_graph_def(self, fn_name='main'):
         """Overwrites TFLoader._tf_ssa_from_graph_def()"""
-        with tf.Graph().as_default() as tf_graph:
-            tf.graph_util.import_graph_def(self._graph_def, name='')
+        with _tf.Graph().as_default() as tf_graph:
+            _tf.graph_util.import_graph_def(self._graph_def, name='')
 
         # sub-graphs' input shapes are required for extracting sub-graphs
         sg_input_shapes = self._populate_sub_graph_input_shapes(
@@ -124,15 +126,15 @@ class TF2Loader(TFLoader):
         ]
 
         if self.debug:
-            for tf_pass in tqdm(tf_passes, desc="Running TensorFlow Graph Passes", unit=' passes'):
+            for tf_pass in _tqdm(tf_passes, desc="Running TensorFlow Graph Passes", unit=' passes'):
                 try:
                     tf_pass(self._tf_ssa)
                 except Exception as e:
-                    logging.exception('Exception in pass "{}": {}'.format(tf_pass, e))
-                    logging.info("Ignoring exception and continuing to next pass")
+                    _logging.exception('Exception in pass "{}": {}'.format(tf_pass, e))
+                    _logging.info("Ignoring exception and continuing to next pass")
 
         else:
-            for tf_pass in tqdm(tf_passes, desc="Running TensorFlow Graph Passes", unit=' passes'):
+            for tf_pass in _tqdm(tf_passes, desc="Running TensorFlow Graph Passes", unit=' passes'):
                 tf_pass(self._tf_ssa)
 
         if self.debug:
@@ -187,7 +189,7 @@ class TF2Loader(TFLoader):
             fn_def = sg.definition
             op_input_shapes = sg_input_shapes[name]
             op_input_shapes = op_input_shapes[-len(fn_def.signature.input_arg):]
-            fn_graph = function_def_to_graph(fn_def, input_shapes=op_input_shapes)
+            fn_graph = _function_def_to_graph(fn_def, input_shapes=op_input_shapes)
             sg_input_shapes.update(
                 self._populate_sub_graph_input_shapes(fn_graph, graph_fns))
 
@@ -227,7 +229,7 @@ class TF2Loader(TFLoader):
             sg_def = sg.definition
             input_shapes = sg_input_shapes[name]
             input_shapes = input_shapes[-len(sg_def.signature.input_arg):]
-            fn_graph = function_def_to_graph(sg_def, input_shapes=input_shapes)
+            fn_graph = _function_def_to_graph(sg_def, input_shapes=input_shapes)
 
             graph_dict.update(
                 TF2Loader._dict_from_graph_def(fn_graph, name, sg_input_shapes)[0])
@@ -246,15 +248,15 @@ class TF2Loader(TFLoader):
 
     @staticmethod
     def _concrete_fn_from_tf_keras_or_h5(keras_model):
-        if isinstance(keras_model, tf.keras.Model):
-            input_signature = saving_utils.model_input_signature(
+        if isinstance(keras_model, _tf.keras.Model):
+            input_signature = _saving_utils.model_input_signature(
                 keras_model, keep_original_batch_size=True)
-            fn = saving_utils.trace_model_call(keras_model, input_signature)
+            fn = _saving_utils.trace_model_call(keras_model, input_signature)
         else:
-            keras_model = tf.keras.models.load_model(keras_model)
-            input_signature = saving_utils.model_input_signature(
+            keras_model = _tf.keras.models.load_model(keras_model)
+            input_signature = _saving_utils.model_input_signature(
                 keras_model, keep_original_batch_size=True)
-            fn = saving_utils.trace_model_call(keras_model, input_signature)
+            fn = _saving_utils.trace_model_call(keras_model, input_signature)
         return [fn.get_concrete_function()]
 
     @staticmethod
@@ -262,15 +264,15 @@ class TF2Loader(TFLoader):
         if len(cfs) != 1:
             raise NotImplementedError('Only a single concrete function is supported.')
 
-        frozen_fn = convert_variables_to_constants_v2(cfs[0], lower_control_flow=False)
+        frozen_fn = _convert_variables_to_constants_v2(cfs[0], lower_control_flow=False)
         graph_def = frozen_fn.graph.as_graph_def(add_shapes=True)
 
         # run a Grappler's constant folding pass.
-        fn_inputs = [t for t in frozen_fn.inputs if t.dtype != dtypes.resource]
-        graph_def = run_graph_optimizations(
+        fn_inputs = [t for t in frozen_fn.inputs if t.dtype != _dtypes.resource]
+        graph_def = _run_graph_optimizations(
             graph_def,
             fn_inputs,
             frozen_fn.outputs,
-            config=get_grappler_config(['constfold', 'dependency']),
+            config=_get_grappler_config(['constfold', 'dependency']),
             graph=frozen_fn.graph)
         return graph_def

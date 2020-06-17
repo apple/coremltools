@@ -1,6 +1,6 @@
-import logging
-import six
-import numpy as np
+import logging as _logging
+from six import string_types as _string_types
+import numpy as _np
 
 from coremltools.converters.mil.mil.ops import get_const_mode
 from coremltools.converters.mil.mil import Builder as mb
@@ -36,8 +36,8 @@ def _transpose_NCDHW_to_NDHWC(x, node_name):
 def _check_axes_type(x):
     if x is None or x.val is None:
         return None
-    if isinstance(x.val, np.int32):
-        return np.array([x.val])
+    if isinstance(x.val, _np.int32):
+        return _np.array([x.val])
     return x.val
 
 def _value_at(x, idx):
@@ -198,7 +198,7 @@ def BatchToSpaceND(context, node):
 
         # reshape input to [block_shape] + [batch_size/prod(block_shape)] + x.shape[1:]
         batch_size = _value_at(input_shape,0)
-        block_shape_prod = np.prod(block_shape)
+        block_shape_prod = _np.prod(block_shape)
         resize_batch_size = mb.real_div(x=batch_size, y=block_shape_prod)
         resize_batch_size = [mb.cast(x=resize_batch_size,dtype="int32")]
         remain_dims = [_value_at(input_shape,i) for i in range(1,rank)]
@@ -363,7 +363,7 @@ def ExtractImagePatches(context, node):
         pad_w = max(0, last_w + sizes[2] - 1 - w)
         pad_h = [pad_h//2, pad_h//2 if pad_h%2 ==0 else pad_h//2+1]
         pad_w = [pad_w//2, pad_w//2 if pad_w%2 == 0 else pad_w//2+1]
-        pad = np.array([[0,0],pad_h,pad_w,[0,0]]).astype(np.int32)
+        pad = _np.array([[0, 0], pad_h, pad_w, [0, 0]]).astype(_np.int32)
         pad = pad.reshape(-1)
         if not all(pad == 0):
             x = mb.pad(x=x, pad=pad, mode='constant', constant_val=0.)
@@ -378,13 +378,13 @@ def ExtractImagePatches(context, node):
         for wi in w_index:
             boxes.append((hi, wi, hi+sizes[1]-1, wi+sizes[2]-1))
 
-    boxes = np.array(boxes)
-    box_indices = np.arange(batch)
-    box_indices = np.tile(box_indices,(len(boxes),1))
-    box_indices = np.transpose(box_indices)
+    boxes = _np.array(boxes)
+    box_indices = _np.arange(batch)
+    box_indices = _np.tile(box_indices, (len(boxes), 1))
+    box_indices = _np.transpose(box_indices)
     box_indices = box_indices.reshape(-1, 1)
-    boxes = np.tile(boxes,(batch,1))
-    boxes = np.concatenate([box_indices, boxes], axis=1)
+    boxes = _np.tile(boxes, (batch, 1))
+    boxes = _np.concatenate([box_indices, boxes], axis=1)
     boxes = boxes.reshape(boxes.shape[0], 1, boxes.shape[1], 1, 1)
 
     # use crop_and_resize
@@ -593,7 +593,7 @@ def Conv2D(context, node):
             'strides', node.attr.get('strides'), data_format)
 
     pad_type = node.attr.get('padding')
-    if not isinstance(pad_type, six.string_types):
+    if not isinstance(pad_type, _string_types):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
     pad_type = pad_type.lower()
@@ -619,7 +619,7 @@ def Conv3D(context, node):
             "strides", node.attr.get("strides"), data_format)
 
     pad_type = node.attr.get("padding")
-    if not isinstance(pad_type, six.string_types):
+    if not isinstance(pad_type, _string_types):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
     pad_type = pad_type.lower()
@@ -657,7 +657,7 @@ def Conv3DBackpropInputV2(context, node):
     if pad_type is None:
         raise ValueError("Padding type not specified for op: {}".format(node.name))
 
-    if not isinstance(pad_type, six.string_types):
+    if not isinstance(pad_type, _string_types):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
     pad_type = pad_type.lower()
@@ -1226,13 +1226,13 @@ def PadV2(context, node):
 
     pad = pad.val.reshape(-1)
     constant_val = constant_val.val
-    if constant_val == -np.inf:
-        INT_MIN = - np.iinfo(np.int64).max - 1
-        constant_val = np.float(INT_MIN)
+    if constant_val == -_np.inf:
+        INT_MIN = - _np.iinfo(_np.int64).max - 1
+        constant_val = _np.float(INT_MIN)
 
-    if constant_val == np.inf:
-        INT_MAX = np.iinfo(np.int64).max
-        constant_val = np.float(INT_MAX)
+    if constant_val == _np.inf:
+        INT_MAX = _np.iinfo(_np.int64).max
+        constant_val = _np.float(INT_MAX)
 
     x = mb.pad(x=x, pad=pad, name=node.name, mode='constant', constant_val=constant_val)
     context.add(node.name, x)
@@ -1398,7 +1398,7 @@ def SpaceToBatchND(context, node):
         spatial_rank  = len(block_shape)
 
         # expand padding to have shape [x.rank, 2]
-        paddings = np.concatenate([[[0,0]],paddings,np.zeros(shape=(3,2),dtype=np.int32)], axis=0)
+        paddings = _np.concatenate([[[0,0]],paddings, _np.zeros(shape=(3,2),dtype=_np.int32)], axis=0)
         paddings = paddings[:x.rank,:]
         needs_paddings = any(paddings.flatten())
         if needs_paddings:
@@ -1438,7 +1438,7 @@ def SpaceToBatchND(context, node):
         # reshape the tensor to [prod(block_shape)*batch_size] +
         #                       [s0/block_shape[0],...,sm/block_shape[m],block_shape[m]] +
         #                       [remaining_dims]
-        prod_block_shape = np.prod(block_shape.flatten())
+        prod_block_shape = _np.prod(block_shape.flatten())
         resize_batch_size = [mb.mul(x=values[0],y=prod_block_shape)]
         resize_spatial_dims = [values[1+2*i] for i in range(spatial_rank)]
         final_reshape_values = resize_batch_size+resize_spatial_dims+remaining_dims
@@ -1561,7 +1561,7 @@ def Conv2DBackpropInput(context, node):
                         'strides', node.attr.get('strides'), data_format)
     pad_type = node.attr.get('padding')
 
-    if not isinstance(pad_type, six.string_types):
+    if not isinstance(pad_type, _string_types):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
 
@@ -1673,7 +1673,7 @@ def ResizeNearestNeighbor(context, node):
 
     Hout, Wout = context[node.inputs[1]].val
 
-    if not (isinstance(Hout, (np.int32, np.int64)) and isinstance(Wout, (np.int32, np.int64))):
+    if not (isinstance(Hout, (_np.int32, _np.int64)) and isinstance(Wout, (_np.int32, _np.int64))):
         raise ValueError(
             '\"ResizeNearestNeighbor\" op: the second input, which is the output size, must have elements of type int32')
 
@@ -1721,7 +1721,7 @@ def ResizeBilinear(context, node):
 
     Hout, Wout = context[node.inputs[1]].val
 
-    if not (isinstance(Hout, np.int32) and isinstance(Wout, np.int32)):
+    if not (isinstance(Hout, _np.int32) and isinstance(Wout, _np.int32)):
         raise ValueError(
             '\"ResizeBilinear\" op: the second input, which is the output size, must have elements of type int32')
 
@@ -1903,7 +1903,7 @@ def Pack(context, node):
         # or y = tf.raw_ops.Pack(values=[tf.constant([1,2])], axis=0)
         input_type = values[0].sym_type
         if _is_scalar(input_type):
-            x = mb.mul(x=np.array([1], dtype=np.int32), y=values[0], name=node.name)
+            x = mb.mul(x=_np.array([1], dtype=_np.int32), y=values[0], name=node.name)
         else:
             x = mb.expand_dims(x=values[0], axes=[axis], name=node.name)
     else:
@@ -2020,8 +2020,8 @@ def CropAndResize(context, node):
     if const_box_info:
         boxes = context[node.inputs[1]].val
         box_indices = context[node.inputs[2]].val
-        box_indices = np.expand_dims(box_indices, axis=1)
-        boxes = np.concatenate([box_indices, boxes], axis=1)
+        box_indices = _np.expand_dims(box_indices, axis=1)
+        boxes = _np.concatenate([box_indices, boxes], axis=1)
         # CoreML expects boxes/ROI in
         # [N, 1, 5, 1, 1] format
         boxes = boxes.reshape(boxes.shape[0], 1, boxes.shape[1], 1, 1)

@@ -1,4 +1,4 @@
-from coremltools._deps import HAS_TF_1 as _HAS_TF_1
+from coremltools._deps import _HAS_TF_1
 
 # suppress TensorFlow stdout prints
 import os

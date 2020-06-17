@@ -5,15 +5,15 @@ import coremltools
 import os
 import shutil
 from . test_utils import generate_data
-from coremltools._deps import HAS_TF_2, MSG_TF2_NOT_FOUND
-if HAS_TF_2:
+from coremltools._deps import _HAS_TF_2, MSG_TF2_NOT_FOUND
+if _HAS_TF_2:
     import tensorflow as tf
 import math
 import pytest
 from itertools import *
 
 
-@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+@unittest.skipUnless(_HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestSingleOp(unittest.TestCase):
     # In this class we test tensorflow 2.x op without using Keras API
 
@@ -134,7 +134,8 @@ class TestSingleOp(unittest.TestCase):
                         self.test_variable_and_constant(x))
 
         self._test_coreml(model())
-@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+
+@unittest.skipUnless(_HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestStack(TestSingleOp):
 
     def test_stack_simple(self):
@@ -204,7 +205,7 @@ class TestStack(TestSingleOp):
 
         self._test_coreml(model(),input_dic=[('x', [2,3]),('y', [2,3]), ('z', [2,3])])
 
-@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+@unittest.skipUnless(_HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestEinsum(TestSingleOp):
 
     def test_einsum_transpose(self):
@@ -389,7 +390,7 @@ class TestEinsum(TestSingleOp):
                        tf.einsum('ijkt->ijkt', x))
         self._test_coreml(model(), input_dic=[('x', [7,3,5,2])])
 
-@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+@unittest.skipUnless(_HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestTensorflow2Model(unittest.TestCase):
 
     def setUp(self):
@@ -557,7 +558,7 @@ class TestTensorflow2Model(unittest.TestCase):
                 outputs=['Identity']
             )
 
-@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+@unittest.skipUnless(_HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestKerasFashionMnist(unittest.TestCase):
 
     def setUp(self):
@@ -645,7 +646,7 @@ class TestKerasFashionMnist(unittest.TestCase):
         )
 
 
-@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+@unittest.skipUnless(_HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestModelFormats(unittest.TestCase):
 
     def setUp(self):
@@ -748,7 +749,7 @@ class TestModelFormats(unittest.TestCase):
 
 
 @unittest.skipIf(False, 'skipping slow full model conversion tests.')
-@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+@unittest.skipUnless(_HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestKerasApplications(unittest.TestCase):
 
     def setUp(self):
@@ -957,7 +958,7 @@ class TestKerasApplications(unittest.TestCase):
             outputs=[output_name])
 
 
-@unittest.skipUnless(HAS_TF_2, MSG_TF2_NOT_FOUND)
+@unittest.skipUnless(_HAS_TF_2, MSG_TF2_NOT_FOUND)
 class TestCornerCases(unittest.TestCase):
 
     def setUp(self):

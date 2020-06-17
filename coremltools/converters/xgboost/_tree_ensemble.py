@@ -4,14 +4,15 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from ...models.tree_ensemble import TreeEnsembleRegressor as _TreeEnsembleRegressor, TreeEnsembleClassifier
-from ..._deps import HAS_XGBOOST as _HAS_XGBOOST
+from ..._deps import _HAS_XGBOOST
 
 import numpy as _np
-from six import string_types
+from six import string_types as _string_types
 
 
 if _HAS_XGBOOST:
     import xgboost as _xgboost
+
 
 def recurse_json(mlkit_tree, xgb_tree_json, tree_id, node_id, feature_map,
         force_32bit_float, mode="regressor", tree_index=0, n_classes=2):
@@ -175,7 +176,7 @@ def convert_tree_ensemble(
             feature_map = {f:i for i,f in enumerate(model.feature_names)}
 
     # Path on the file system where the XGboost model exists.
-    elif isinstance(model, string_types):
+    elif isinstance(model, _string_types):
         if not os.path.exists(model):
             raise TypeError("Invalid path %s." % model)
         with open(model) as f:

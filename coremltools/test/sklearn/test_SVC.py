@@ -12,21 +12,21 @@ import pytest
 import numpy as np
 
 from coremltools.models.utils import evaluate_classifier,\
-    evaluate_classifier_with_probabilities, macos_version, is_macos
-from coremltools._deps import HAS_LIBSVM, HAS_SKLEARN
+    evaluate_classifier_with_probabilities, _macos_version, _is_macos
+from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.svm import SVC
     from coremltools.converters import sklearn as scikit_converter
 
-if HAS_LIBSVM:
+if _HAS_LIBSVM:
     from svm import svm_parameter, svm_problem
     from svmutil import svm_train, svm_predict
     from coremltools.converters import libsvm
     import svmutil
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class SvcScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -69,7 +69,7 @@ class SvcScikitTest(unittest.TestCase):
 
                 spec = scikit_converter.convert(cur_model, column_names, 'target')
 
-                if is_macos() and macos_version() >= (10, 13):
+                if _is_macos() and _macos_version() >= (10, 13):
                     if use_probability_estimates:
                         probability_lists = cur_model.predict_proba(x)
                         df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
@@ -133,7 +133,7 @@ class SvcScikitTest(unittest.TestCase):
             spec = scikit_converter.convert(model, 'data', 'out')
 
 
-@unittest.skipIf(not HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
+@unittest.skipIf(not _HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
 class CSVCLibSVMTest(unittest.TestCase):
     # Model parameters for testing
     base_param = '-s 0 -q ' # model type C-SVC and quiet mode
@@ -154,7 +154,7 @@ class CSVCLibSVMTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not HAS_LIBSVM:
+        if not _HAS_LIBSVM:
             # setUpClass is still called even if class is skipped.
             return
 
@@ -184,7 +184,7 @@ class CSVCLibSVMTest(unittest.TestCase):
 
         # Test with probabilities
         spec = libsvm.convert(self.libsvm_model).get_spec()
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             (_, _, probability_lists) = svm_predict(self.y, self.x, self.libsvm_model, '-b 1 -q')
             probability_dicts = [dict(zip([1, 2], cur_vals)) for cur_vals in probability_lists]
             df['classProbability'] = probability_dicts
@@ -196,7 +196,7 @@ class CSVCLibSVMTest(unittest.TestCase):
         spec = libsvm.convert(no_probability_model).get_spec()
         self.assertEqual(len(spec.description.output), 1)
         self.assertEqual(spec.description.output[0].name, u'target')
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             (df['prediction'], _, _) = svm_predict(self.y, self.x, no_probability_model, ' -q')
             metrics = evaluate_classifier(spec, df, verbose=False)
             self.assertEquals(metrics['num_errors'], 0)
@@ -254,7 +254,7 @@ class CSVCLibSVMTest(unittest.TestCase):
                 
                 spec = libsvm.convert(model, self.column_names, 'target', 'probabilities')
 
-                if is_macos() and macos_version() >= (10, 13):
+                if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False)
                     self.assertEquals(metrics['num_key_mismatch'], 0)
                     self.assertLess(metrics['max_probability_error'], 0.00001)
@@ -294,7 +294,7 @@ class CSVCLibSVMTest(unittest.TestCase):
 
                 spec = libsvm.convert(model, column_names, 'target')
 
-                if is_macos() and macos_version() >= (10, 13):
+                if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_classifier(spec, df, verbose=False)
                     self.assertEquals(metrics['num_errors'], 0)
 

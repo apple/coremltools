@@ -1,4 +1,4 @@
-from coremltools.converters._profile_utils import profile
+from coremltools.converters._profile_utils import _profile
 from .mil.passes.common_pass import common_pass
 
 class ConverterRegistry:
@@ -88,7 +88,7 @@ class MILDummyFrontend:
     def __call__(self, program, *args, **kwargs):
         return program
 
-@profile
+@_profile
 def _convert(model, convert_from='TensorFlow', convert_to='nn_proto',
              converter_registry=ConverterRegistry, **kwargs):
     """

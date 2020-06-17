@@ -7,18 +7,18 @@ import shutil
 import os
 
 import coremltools
-from coremltools._deps import HAS_KERAS_TF, MSG_KERAS1_NOT_FOUND
-from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
+from coremltools._deps import _HAS_KERAS_TF, MSG_KERAS1_NOT_FOUND
+from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
 from coremltools.models.utils import _get_custom_layer_names, \
-    _replace_custom_layer_name, macos_version, is_macos
+    _replace_custom_layer_name, _macos_version, _is_macos
 from coremltools.proto import Model_pb2
 
-if HAS_KERAS_TF:
+if _HAS_KERAS_TF:
     from keras.models import Sequential
     from keras.layers import Dense, LSTM
     from coremltools.converters import keras as keras_converter
 
-if HAS_TF:
+if _HAS_TF:
     import tensorflow as tf
     from tensorflow.python.platform import gfile
     from tensorflow.python.tools import freeze_graph
@@ -26,7 +26,7 @@ if HAS_TF:
     tf.compat.v1.disable_eager_execution()
 
 
-@unittest.skipIf(not HAS_KERAS_TF, MSG_KERAS1_NOT_FOUND)
+@unittest.skipIf(not _HAS_KERAS_TF, MSG_KERAS1_NOT_FOUND)
 @pytest.mark.keras1
 class KerasBasicNumericCorrectnessTest(unittest.TestCase):
 
@@ -52,7 +52,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
         predicted_feature_name = 'pf'
         coremlmodel = keras_converter.convert(model, input_names, output_names, class_labels=class_labels, predicted_feature_name=predicted_feature_name, predicted_probabilities_output=output_names[0])
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             inputs = np.random.rand(input_dim)
             outputs = coremlmodel.predict({'input': inputs})
             # this checks that the dictionary got the right name and type
@@ -78,7 +78,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
         predicted_feature_name = 'pf'
         coremlmodel = keras_converter.convert(model, input_names, output_names, class_labels=class_labels, predicted_feature_name=predicted_feature_name)
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             inputs = np.random.rand(input_dim)
             outputs = coremlmodel.predict({'input': inputs})
             # this checks that the dictionary got the right name and type
@@ -130,7 +130,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
 
         coreml2 = keras_converter.convert(model2, input_names, ['output2'])
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # generate input data
             inputs = np.random.rand(input_dim)
 
@@ -142,7 +142,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
                 self.assertAlmostEquals(fullOutputs['middle_layer_output'][i], partialOutput['output2'][i], 2)
 
 # Base class for basic TF conversions
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TfConversionTestBase(unittest.TestCase):
     def setUp(self):
         self.tmp_dir = tempfile.mkdtemp()
@@ -199,7 +199,7 @@ class TfConversionTestBase(unittest.TestCase):
         raise NotImplementedError
 
 # Converting TF models with convolution layers
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TFBasicConversionTest(TfConversionTestBase):
     # Basic NN using convolutions
     def _get_network(self):
@@ -294,7 +294,7 @@ class TFConversionTestWithSimpleModelBase(TfConversionTestBase):
         probabilities = tf.nn.softmax(net, name='Softmax')
         return (i_placeholder, probabilities)
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TFConversionTestWithSimpleNHWCModel(TFConversionTestWithSimpleModelBase):
     # Use NHWC format
     def _get_input_shape(self):
@@ -328,7 +328,7 @@ class TFConversionTestWithSimpleNHWCModel(TFConversionTestWithSimpleModelBase):
                 outputs=['Softmax'],
                 tf_image_format='NCHW')
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TFConversionTestWithSimpleNCHWModel(TFConversionTestWithSimpleModelBase):
     # Use NHWC format
     def _get_input_shape(self):

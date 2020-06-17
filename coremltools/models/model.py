@@ -7,11 +7,11 @@ import os as _os
 import tempfile as _tempfile
 import warnings as _warnings
 from copy import deepcopy as _deepcopy
-from six import string_types
+from six import string_types as _string_types
 
-from .utils import has_custom_layer as _has_custom_layer
+from .utils import _has_custom_layer as _has_custom_layer
 from .utils import load_spec as _load_spec
-from .utils import macos_version as _macos_version
+from .utils import _macos_version as _macos_version
 from .utils import save_spec as _save_spec
 from ..proto import Model_pb2 as _Model_pb2
 
@@ -183,12 +183,12 @@ class MLModel(object):
         >>> loaded_model = MLModel('my_model_file.mlmodel')
         """
 
-        if isinstance(model, string_types):
-            self.__proxy__, self._spec, self.framework_error = _get_proxy_and_spec(model, useCPUOnly)
+        if isinstance(model, _string_types):
+            self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(model, useCPUOnly)
         elif isinstance(model, _Model_pb2.Model):
             filename = _tempfile.mktemp(suffix='.mlmodel')
             _save_spec(model, filename)
-            self.__proxy__, self._spec, self.framework_error = _get_proxy_and_spec(filename, useCPUOnly)
+            self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(filename, useCPUOnly)
             try:
                 _os.remove(filename)
             except OSError:
@@ -234,6 +234,14 @@ class MLModel(object):
     @license.setter
     def license(self, license):
         self._spec.description.metadata.license = license
+
+    @property
+    def version(self):
+        return self._spec.description.metadata.versionString
+
+    @version.setter
+    def version(self, version_string):
+        self._spec.description.metadata.versionString = version_string
 
     def __repr__(self):
         return self._spec.description.__repr__()
@@ -328,7 +336,7 @@ class MLModel(object):
             elif _has_custom_layer(self._spec):
                 raise Exception('This model contains a custom neural network layer, so predict is not supported.')
             else:
-                if self.framework_error:
-                    raise self.framework_error
+                if self._framework_error:
+                    raise self._framework_error
                 else:
                     raise Exception('Unable to load CoreML.framework. Cannot make predictions.')

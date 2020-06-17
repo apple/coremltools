@@ -5,15 +5,15 @@
 
 import unittest
 import pytest
-from coremltools._deps import HAS_KERAS_TF
+from coremltools._deps import _HAS_KERAS_TF
 
-if HAS_KERAS_TF:
+if _HAS_KERAS_TF:
     from keras.models import Model
     from keras.layers import Dense, Input, merge
     from coremltools.converters import keras
 
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras1
 class KerasNonSequentialModelTest(unittest.TestCase):
     """

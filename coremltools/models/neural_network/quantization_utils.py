@@ -12,8 +12,9 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 import numpy as _np
-import sys, os
-from six import string_types
+from sys import stdout as _stdout
+from os import listdir as _listdir
+from six import string_types as _string_types
 from .optimization_utils import _optimize_nn
 
 from coremltools.models import (
@@ -27,12 +28,12 @@ from coremltools.models import (
     _LUT_BASED_QUANTIZATION,
 )
 
-from ..utils import _get_nn_layers, _wp_to_fp16wp, _get_model, macos_version
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..utils import _get_nn_layers, _wp_to_fp16wp, _get_model, _macos_version
+from ..._deps import _HAS_SKLEARN as _HAS_SKLEARN
 from ... import (
     _MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
     _MINIMUM_FP16_SPEC_VERSION,
-    SPECIFICATION_VERSION_IOS_14,
+    SPECIFICATION_VERSION_IOS_14 as _SPECIFICATION_VERSION_IOS_14,
 )
 
 
@@ -213,7 +214,7 @@ class MatrixMultiplyLayerSelector(QuantizedLayerSelector):
 
         if not (
             isinstance(self.include_layers_with_names, (list, tuple))
-            and all([isinstance(s, string_types) for s in self.include_layers_with_names])
+            and all([isinstance(s, _string_types) for s in self.include_layers_with_names])
         ):
             raise ValueError(
                 "Property 'include_layers_with_names' must be a list/tuple of str objects"
@@ -611,7 +612,7 @@ def _quantize_wp_field(wp, nbits, qm, shape, axis=0, **kwargs):
     del wp.floatValue[:]
 
 
-def unpack_to_bytes(byte_arr, num_weights, nbits):
+def _unpack_to_bytes(byte_arr, num_weights, nbits):
     assert num_weights % 1 == 0
     num_weights = int(num_weights)
     bit_arr = _decompose_bytes_to_bit_arr(byte_arr.flatten().tolist())
@@ -674,7 +675,7 @@ def _dequantize_wp(wp, shape, axis=0):
     byte_arr = _np.frombuffer(wp.rawValue, dtype=_np.uint8)
 
     weight_8bit = (
-        byte_arr if nbits == 8 else unpack_to_bytes(byte_arr, num_weights, nbits)
+        byte_arr if nbits == 8 else _unpack_to_bytes(byte_arr, num_weights, nbits)
     )
     weight_8bit = weight_8bit.reshape(shape)
 
@@ -1267,7 +1268,7 @@ def _characterize_qmodel_perf_with_data_dir(fpmodel, qspec, data_dir):
     supported_image_exts = ["jpg", "bmp", "png", "jpeg"]
     test_image_paths = [
         "{}/{}".format(data_dir, fn)
-        for fn in os.listdir(data_dir)
+        for fn in _listdir(data_dir)
         if any(fn.endswith(ext) for ext in supported_image_exts)
     ]
 
@@ -1311,9 +1312,9 @@ def _characterize_qmodel_perf_with_data_dir(fpmodel, qspec, data_dir):
         # Update Progress
         tried += 1
         if tried % 10 == 0:
-            sys.stdout.write("\r")
-            sys.stdout.write("Analyzed {}/{}".format(tried, len(test_image_paths)))
-            sys.stdout.flush()
+            _stdout.write("\r")
+            _stdout.write("Analyzed {}/{}".format(tried, len(test_image_paths)))
+            _stdout.flush()
 
     print("\n")
     model_metrics.display_metrics()
@@ -1344,9 +1345,9 @@ def _characterize_quantized_model_perf(fpmodel, qspec, sample_data):
         # Update Progress
         tried += 1
         if tried % 10 == 0:
-            sys.stdout.write("\r")
-            sys.stdout.write("Analyzed {}/{}".format(tried, len(sample_data)))
-            sys.stdout.flush()
+            _stdout.write("\r")
+            _stdout.write("Analyzed {}/{}".format(tried, len(sample_data)))
+            _stdout.flush()
 
     print("\n")
     model_metrics.display_metrics()
@@ -1380,7 +1381,7 @@ def compare_models(full_precision_model, quantized_model, sample_data):
 
     spec = full_precision_model.get_spec()
     num_inputs = len(spec.description.input)
-    if isinstance(sample_data, string_types):
+    if isinstance(sample_data, _string_types):
         input_type = spec.description.input[0].type.WhichOneof("Type")
         if num_inputs != 1 or input_type != "imageType":
             raise Exception(
@@ -1489,7 +1490,7 @@ def activate_int8_int8_matrix_multiplications(spec, selector=None):
                 elif layer_type in ["innerProduct", "batchedMatmul"]:
                     # Bump up to appropriate spec version if at least one replacement occurs
                     spec.specificationVersion = max(
-                        SPECIFICATION_VERSION_IOS_14, spec.specificationVersion,
+                        _SPECIFICATION_VERSION_IOS_14, spec.specificationVersion,
                     )
 
                     # InnerProduct
@@ -1625,7 +1626,7 @@ def quantize_weights(
     spec = full_precision_model.get_spec()
     qspec = _quantize_spec_weights(spec, nbits, qmode, **kwargs)
 
-    if macos_version() < (10, 14):
+    if _macos_version() < (10, 14):
         print(
             "WARNING! Unable to return a quantized MLModel instance since"
             "OS != macOS 10.14 or later"

@@ -5,15 +5,15 @@
 
 import unittest
 from sklearn.ensemble import RandomForestRegressor
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.ensemble import RandomForestRegressor
     from coremltools.converters import sklearn as skl_converter
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class RandomForestRegressorScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.

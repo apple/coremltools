@@ -2,7 +2,7 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-from six import string_types
+from six import string_types as _string_types
 
 
 class Type:
@@ -19,7 +19,7 @@ class Type:
     def __init__(self, name, tparam=None, python_class=None):
         if tparam is None:
             tparam = []
-        assert (isinstance(name, string_types))
+        assert (isinstance(name, _string_types))
         assert (isinstance(tparam, list))
         self.name = name
         self.tparam = tparam

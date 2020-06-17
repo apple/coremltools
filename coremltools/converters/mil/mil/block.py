@@ -131,7 +131,7 @@ def precondition(allow=ALL):
 
 class Operation(object):
     """
-    Represents Operation in NNv2.Program.
+    Represents Operation in MIL.Program.
 
     # Properties
     name (str):

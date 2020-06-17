@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function as _
 
 import itertools
 import math
@@ -10,11 +10,11 @@ import unittest
 import uuid
 import pytest
 from packaging import version
-from six import string_types
+from six import string_types as _string_types
 
 import numpy as np
-from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
-if HAS_TF:
+from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
+if _HAS_TF:
     import tensorflow as tf
 import torch
 
@@ -24,7 +24,7 @@ from coremltools.converters.mil.mil.ops.defs._utils import aggregated_pad
 from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION
 from coremltools.models import neural_network as neural_network
 from coremltools.models.neural_network import flexible_shape_utils
-from coremltools.models.utils import macos_version, is_macos
+from coremltools.models.utils import _macos_version, _is_macos
 
 np.random.seed(10)
 
@@ -107,7 +107,7 @@ class CorrectnessTest(unittest.TestCase):
         def get_moment(data, k):
             return np.mean(np.power(data - np.mean(data), k))
 
-        if isinstance(model, string_types):
+        if isinstance(model, _string_types):
             model = coremltools.models.MLModel(model)
 
         model = coremltools.models.MLModel(model, useCPUOnly=use_cpu_only)
@@ -140,7 +140,7 @@ class CorrectnessTest(unittest.TestCase):
 
         model_dir = None
         # if we're given a path to a model
-        if isinstance(model, string_types):
+        if isinstance(model, _string_types):
             model = coremltools.models.MLModel(model)
 
         # If we're passed in a specification, save out the model
@@ -186,7 +186,7 @@ class CorrectnessTest(unittest.TestCase):
                 shutil.rmtree(model_dir)
 
 
-@unittest.skipIf(not is_macos() or macos_version() < MIN_MACOS_VERSION_REQUIRED,
+@unittest.skipIf(not _is_macos() or _macos_version() < MIN_MACOS_VERSION_REQUIRED,
                  'macOS 10.13+ is required. Skipping tests.')
 class SimpleTest(CorrectnessTest):
 
@@ -691,7 +691,7 @@ class SimpleTest(CorrectnessTest):
         self._test_model(builder.spec, input, expected, useCPUOnly=True)
 
 
-@unittest.skipIf(not is_macos() or macos_version() < LAYERS_10_15_MACOS_VERSION,
+@unittest.skipIf(not _is_macos() or _macos_version() < LAYERS_10_15_MACOS_VERSION,
                  'macOS 10.15+ required. Skipping tests.')
 class NewLayersSimpleTest(CorrectnessTest):
 
@@ -2258,7 +2258,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_topk_gpu(self):
         self.test_topk_cpu(cpu_only=False)
 
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_const_pad_cpu(self, cpu_only=True):
 
         def get_reference(data, pads, value):
@@ -2316,7 +2316,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_const_pad_gpu(self):
         self.test_const_pad_cpu(cpu_only=False)
 
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_const_pad_mode2_cpu(self, cpu_only=True):
 
         def get_reference(data, output_shape, value, left_pad=False):
@@ -2410,7 +2410,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             iou = intersection_area / union_area
             return iou
 
-        @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+        @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
         def _nms_TF(boxes, scores, iou_threshold, score_threshold, per_class_suppression, M):
             # boxes is (B,N,4), in order [center_w, center_h, width, height]
             # scores is (B,N,C)
@@ -3263,7 +3263,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {input_name: x}
 
             model = builder.spec
-            if isinstance(model, string_types):
+            if isinstance(model, _string_types):
                 model = coremltools.models.MLModel(model)
 
             model = coremltools.models.MLModel(model, useCPUOnly=True)
@@ -3330,7 +3330,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             inputs = {input_name: np.reshape(probs, shape)}
 
             model = builder.spec
-            if isinstance(model, string_types):
+            if isinstance(model, _string_types):
                 model = coremltools.models.MLModel(model)
 
             model = coremltools.models.MLModel(model, useCPUOnly=True)
@@ -3924,7 +3924,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reduce_logsumexp_gpu(self):
         self.test_reduce_logsumexp_cpu(cpu_only=False)
 
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_reverse_sequence_cpu(self, cpu_only=True):
         for rank in range(2, 6):
             for i in range(20):
@@ -4063,7 +4063,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_gather_along_axis_gpu(self):
         self.test_gather_along_axis_cpu(cpu_only=False)
 
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_gather_nd_cpu(self, cpu_only=True):
         for params_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(1, 6)]:
             params_shape = np.random.randint(low=2, high=8, size=params_rank)
@@ -4104,7 +4104,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_gather_nd_gpu(self):
         self.test_gather_nd_cpu(cpu_only=False)
 
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_scatter_cpu(self, cpu_only=True):
         for ref_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(1, 6)]:
             for accumulate_mode in ["UPDATE", "ADD", "SUB", "MUL", "DIV", "MAX", "MIN"]:
@@ -4232,7 +4232,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_scatter_along_axis_gpu(self):
         self.test_scatter_along_axis_cpu(cpu_only=False)
 
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_scatter_nd_cpu(self, cpu_only=True):
         for ref_rank, indices_rank in [(i, j) for i in range(1, 6) for j in range(2, 6)]:
             ref_shape = np.random.randint(low=2, high=8, size=ref_rank)
@@ -4382,7 +4382,7 @@ def get_coreml_predictions_slice(X, params):
         # prepare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         coreml_input = {'data': X}
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             coreml_preds = coreml_model.predict(coreml_input)['output']
         else:
             coreml_preds = None
@@ -4440,7 +4440,7 @@ def get_coreml_predictions_reduce(X, params):
         # prepare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         coreml_input = {'data': X}
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             coreml_preds = coreml_model.predict(coreml_input)['output']
         else:
             coreml_preds = None
@@ -4531,7 +4531,7 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_shape, [])
         self.assertEqual(failed_tests_numerical, [])
 
-@unittest.skipIf(not is_macos() or macos_version() < LAYERS_10_15_MACOS_VERSION,
+@unittest.skipIf(not _is_macos() or _macos_version() < LAYERS_10_15_MACOS_VERSION,
                  'macOS 10.15+ required. Skipping tests.')
 class CoreML3NetworkStressTest(CorrectnessTest):
     def test_dyn_weight_conv2d_stress(self):
@@ -4781,10 +4781,10 @@ class CoreML3NetworkStressTest(CorrectnessTest):
         expected = {'maximum_eigen_value': np.array([[e[idx]]])}
         self._test_model(spec, input, expected, useCPUOnly=True)
 
-@unittest.skipIf(macos_version() < LAYERS_10_16_MACOS_VERSION,
+@unittest.skipIf(_macos_version() < LAYERS_10_16_MACOS_VERSION,
                  'macOS 10.16+ required. Skipping tests.')
 class IOS14SingleLayerTests(CorrectnessTest):
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_onehot_layer_cpu(self, cpu_only=True):
         ctr = 0
         params_dict = dict(
@@ -4943,7 +4943,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
     def test_onehot_layer_gpu(self):
         self.test_onehot_layer_cpu(cpu_only=False)
 
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_cumsum_layer_cpu(self, cpu_only = True):
         ctr = 0
         params_dict = dict(
@@ -5618,7 +5618,7 @@ class ReorganizeDataTests(CorrectnessTest):
         elif to_rank == 5:
             return np.reshape(x, [1] + list(x.shape))
 
-    @unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
     def test_depth_to_space_cpu(self, cpu_only=True):
 
         params_dict = {
@@ -5668,7 +5668,7 @@ class ReorganizeDataTests(CorrectnessTest):
     def test_depth_to_space_gpu(self):
         self.test_depth_to_space_cpu(cpu_only=False)
 
-    @unittest.skipIf(macos_version() < LAYERS_10_16_MACOS_VERSION,
+    @unittest.skipIf(_macos_version() < LAYERS_10_16_MACOS_VERSION,
                      'macOS 10.16+ required. Skipping tests.')
     def test_pixel_shuffle_cpu(self, cpu_only=True):
 
@@ -5714,7 +5714,7 @@ class ReorganizeDataTests(CorrectnessTest):
             # Run model to calculate CoreML values and compare with expected
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    @unittest.skipIf(macos_version() < LAYERS_10_16_MACOS_VERSION,
+    @unittest.skipIf(_macos_version() < LAYERS_10_16_MACOS_VERSION,
                      'macOS 10.16+ required. Skipping tests.')
     def test_pixel_shuffle_gpu(self):
         self.test_pixel_shuffle_cpu(cpu_only=False)

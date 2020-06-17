@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function as _
 
 import json
 import os
@@ -14,10 +14,10 @@ import numpy as np
 import pytest
 
 import coremltools
-from coremltools._deps import HAS_KERAS2_TF
-from coremltools.models.utils import macos_version, is_macos
+from coremltools._deps import _HAS_KERAS2_TF
+from coremltools.models.utils import _macos_version, _is_macos
 
-if HAS_KERAS2_TF:
+if _HAS_KERAS2_TF:
     import keras
     from keras.models import Sequential, Model
     from keras.layers import Activation, GlobalMaxPooling2D, Input
@@ -59,7 +59,7 @@ def compare_models(caffe_preds, coreml_preds):
     return max_relative_error
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras2
 class ManyImagesKeras(unittest.TestCase):                                                    
                                                                                                  
@@ -94,7 +94,7 @@ class ManyImagesKeras(unittest.TestCase):
                                                 green_bias = green_bias, 
                                                 blue_bias = blue_bias)
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             coreml_input_dict = dict()
             coreml_input_dict["data"] = PIL.Image.fromarray(data.astype(np.uint8))
             coreml_preds = coreml_model.predict(coreml_input_dict)['output'].flatten()
@@ -162,7 +162,7 @@ class ManyImagesKeras(unittest.TestCase):
                                                 blue_bias = {'data1': blue_bias1, 'data2': blue_bias2},
                                                 is_bgr = {'data1': True, 'data2': False})
 
-        if is_macos()and macos_version() >= (10, 13):
+        if _is_macos()and _macos_version() >= (10, 13):
             coreml_input_dict = dict()
             coreml_input_dict["data1"] = PIL.Image.fromarray(data1.astype(np.uint8))
             coreml_input_dict["data2"] = PIL.Image.fromarray(data2.astype(np.uint8))

@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ..._deps import HAS_LIBSVM
+from ..._deps import _HAS_LIBSVM
 
 def load_model(model_path):
     """Load a libsvm model from a path on disk.
@@ -24,7 +24,7 @@ def load_model(model_path):
     model: libsvm_model
         A model of the libsvm format.
     """
-    if not(HAS_LIBSVM):
+    if not(_HAS_LIBSVM):
         raise RuntimeError('libsvm not found. libsvm conversion API is disabled.')
     
     from svmutil import svm_load_model # From libsvm

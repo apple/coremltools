@@ -9,21 +9,21 @@ import pandas as pd
 import itertools
 import pytest
 
-from coremltools._deps import HAS_SKLEARN, HAS_XGBOOST
-from coremltools.models.utils import evaluate_regressor, macos_version, is_macos
+from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
+from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
 
-if HAS_XGBOOST:
+if _HAS_XGBOOST:
     import xgboost
     from coremltools.converters import xgboost as xgb_converter
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
     from coremltools.converters import sklearn as skl_converter
     from sklearn.tree import DecisionTreeRegressor
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
 
     @classmethod
@@ -49,7 +49,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
             df['prediction'] = scikit_model.predict(self.X)
@@ -82,14 +82,14 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
             self._train_convert_evaluate_assert(**arg)
 
 
-@unittest.skipIf(not HAS_XGBOOST, 'Missing xgboost. Skipping')
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_XGBOOST, 'Missing xgboost. Skipping')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        if not HAS_XGBOOST:
+        if not _HAS_XGBOOST:
             return
-        if not HAS_SKLEARN:
+        if not _HAS_SKLEARN:
             return
 
         # Load data and train model
@@ -119,7 +119,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
         # Convert the model
         spec = xgb_converter.convert(xgb_model, self.feature_names, self.output_name, force_32bit_float = False)
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
             df['prediction'] = xgb_model.predict(self.dtrain)
@@ -173,8 +173,8 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
         for it, arg in enumerate(args):
             self._train_convert_evaluate_assert(arg)
 
-@unittest.skipIf(not HAS_XGBOOST, 'Missing xgboost. Skipping')
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_XGBOOST, 'Missing xgboost. Skipping')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -208,7 +208,7 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         # Convert the model (feature_names can't be given because of XGboost)
         spec = xgb_converter.convert(xgb_model, self.feature_names, self.output_name, force_32bit_float = False)
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
             df['prediction'] = xgb_model.predict(self.X)

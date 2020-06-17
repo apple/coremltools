@@ -5,12 +5,12 @@ from copy import copy
 import numpy as np
 import pytest
 
-from coremltools._deps import HAS_KERAS2_TF, HAS_KERAS_TF
-from coremltools.models.utils import macos_version, is_macos
+from coremltools._deps import _HAS_KERAS2_TF, _HAS_KERAS_TF
+from coremltools.models.utils import _macos_version, _is_macos
 
 np.random.seed(1377)
 
-if HAS_KERAS2_TF or HAS_KERAS_TF:
+if _HAS_KERAS2_TF or _HAS_KERAS_TF:
     import keras
     from keras.models import Sequential
     from keras.layers import LSTM, GRU, SimpleRNN, RepeatVector
@@ -116,7 +116,7 @@ def get_numpy_prediction_gru(model, X):
     if keras_layer.go_backwards:
         X = X[::-1, :]
 
-    if HAS_KERAS2_TF:
+    if _HAS_KERAS2_TF:
         hidden_size = keras_layer.units
 
         keras_W_h = keras_layer.get_weights()[1].T
@@ -182,7 +182,7 @@ def get_numpy_prediction_unilstm(model, X):
     if keras_layer.go_backwards:
         X = X[::-1, :]
 
-    if HAS_KERAS2_TF:
+    if _HAS_KERAS2_TF:
         hidden_size = keras_layer.units
 
         keras_W_h = keras_layer.get_weights()[1].T
@@ -261,7 +261,7 @@ def get_numpy_prediction_bilstm(model, X):
     keras_layer = model.layers[0]
     return_seq = keras_layer.return_sequences
 
-    if HAS_KERAS2_TF:
+    if _HAS_KERAS2_TF:
         hidden_size = keras_layer.forward_layer.units
 
         keras_W_h = keras_layer.forward_layer.get_weights()[1].T
@@ -410,7 +410,7 @@ def simple_model_eval(params, model):
             input_data.reshape((params[0]['input_dims'][0], params[0]['input_dims'][1]))).flatten()
     if len(params[0]['input_dims']) == 3:
         input_data = np.transpose(input_data, [1, 0, 2])
-    if is_macos() and macos_version() >= (10, 13):
+    if _is_macos() and _macos_version() >= (10, 13):
         coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
         if K.tensorflow_backend._SESSION:
             import tensorflow as tf
@@ -518,32 +518,32 @@ class SimpleTestCase(unittest.TestCase):
         for i in range(len(relative_error)):
             self.assertLessEqual(relative_error[i], 0.01)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_simple_rnn(self):
         self._test_simple_rnn(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_simple_lstm(self):
         self._test_simple_lstm(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_simple_gru(self):
         self._test_simple_gru(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_simple_rnn(self):
         self._test_simple_rnn(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_simple_lstm(self):
         self._test_simple_lstm(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_simple_gru(self):
         self._test_simple_gru(keras_major_version=2)
@@ -625,7 +625,7 @@ class RNNLayer(RecurrentLayerTest):
                 K.tensorflow_backend._SESSION.close()
                 K.tensorflow_backend._SESSION = None
             input_data = np.transpose(input_data, [1, 0, 2])
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
                 try:
                     self.assertEquals(coreml_preds.shape, keras_preds.shape)
@@ -655,24 +655,24 @@ class RNNLayer(RecurrentLayerTest):
             numerical_failiure, i)
                           )
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     @pytest.mark.slow
     def test_kers1_rnn_layer_stress(self):
         self._test_rnn_layer(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_rnn_layer(self):
         self._test_rnn_layer(keras_major_version=1, limit=10)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_rnn_layer_stress(self):
         self._test_rnn_layer(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_rnn_layer(self):
         self._test_rnn_layer(keras_major_version=2, limit=10)
@@ -759,7 +759,7 @@ class LSTMLayer(RecurrentLayerTest):
             else:
                 keras_preds = model.predict(input_data)  # (Batch, Seq, h)
 
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 input_data = np.transpose(input_data, [1, 0, 2])
                 input_dict = {}
                 input_dict['data'] = input_data
@@ -866,7 +866,7 @@ class LSTMLayer(RecurrentLayerTest):
 
             keras_preds = model.predict(input_data)  # (Batch, Seq, h)
 
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 input_data = np.transpose(input_data, [1, 0, 2])
                 input_dict = {}
                 input_dict['data'] = input_data
@@ -1010,7 +1010,7 @@ class LSTMLayer(RecurrentLayerTest):
             else:
                 keras_preds = model.predict(input_data).flatten()
 
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
 
@@ -1049,41 +1049,41 @@ class LSTMLayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     @pytest.mark.slow
     def test_keras_lstm_layer_stress(self):
         self._test_lstm_layer(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras_lstm_layer(self):
         self._test_lstm_layer(keras_major_version=1, limit=10)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_lstm_layer_stress(self):
         self._test_lstm_layer(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_lstm_layer(self):
         self._test_lstm_layer(keras_major_version=2, limit=10)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_bilstm_layer(self):
         self._test_bilstm_layer()
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_bilstm_layer_batched(self):
         self._test_bilstm_layer(batched=True)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_lstm_layer_batched(self):
@@ -1154,7 +1154,7 @@ class GRULayer(RecurrentLayerTest):
             else:
                 keras_preds = model.predict(input_data).flatten()
 
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
                 if K.tensorflow_backend._SESSION:
@@ -1193,24 +1193,24 @@ class GRULayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     @pytest.mark.slow
     def test_keras1_test_gru_layer_stress(self):
         self._test_gru_layer(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_test_gru_layer(self):
         self._test_gru_layer(keras_major_version=1, limit=10)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_test_gru_layer_stress(self):
         self._test_gru_layer(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_test_gru_layer(self):
         self._test_gru_layer(keras_major_version=2, limit=10)
@@ -1286,7 +1286,7 @@ class LSTMStacked(unittest.TestCase):
             mlkitmodel = get_mlkit_model_from_path(model)
             input_data = generate_input(base_params['input_dims'][0], base_params['input_dims'][1],
                                         base_params['input_dims'][2])
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 keras_preds = model.predict(input_data).flatten()
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
@@ -1317,24 +1317,24 @@ class LSTMStacked(unittest.TestCase):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     @pytest.mark.slow
     def test_keras1_lstm_stacked_stress(self):
         self._test_lstm_stacked(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_lstm_stacked(self):
         self._test_lstm_stacked(keras_major_version=1, limit=10)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_lstm_stacked_stress(self):
         self._test_lstm_stacked(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_lstm_stacked(self):
         self._test_lstm_stacked(keras_major_version=2, limit=10)
@@ -1420,38 +1420,38 @@ class DifferentIOModelsTypes(unittest.TestCase):
         for i in range(len(relative_error)):
             self.assertLessEqual(relative_error[i], 0.01)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_test_one_to_many(self):
         self._test_one_to_many(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_test_many_to_one(self):
         self._test_many_to_one(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_many_to_many(self):
         self._test_many_to_many(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_test_one_to_many(self):
         self._test_one_to_many(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_test_many_to_one(self):
         self._test_many_to_one(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_many_to_many(self):
         self._test_many_to_many(keras_major_version=2)
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+@unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
 @pytest.mark.keras2
 class InitialStateRecurrentModels(unittest.TestCase):
     """
@@ -1467,7 +1467,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.get_layer(index=1).reset_states()
 
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             keras_output_1 = model.predict(data)
             coreml_full_output_1 = coreml_model.predict({'data': data})
             coreml_output_1 = coreml_full_output_1['output']
@@ -1479,7 +1479,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.get_layer(index=1).reset_states(hidden_state)
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             keras_output_2 = model.predict(data)
             coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
             coreml_output_2 = coreml_full_output_2['output']
@@ -1492,7 +1492,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.add(keras.layers.SimpleRNN(5, input_shape=(1, 2), batch_input_shape=[1, 1, 2], stateful=True))
         model.get_layer(index=1).reset_states()
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             keras_output_1 = model.predict(data)
             coreml_full_output_1 = coreml_model.predict({'data': data})
             coreml_output_1 = coreml_full_output_1['output']
@@ -1503,7 +1503,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.get_layer(index=1).reset_states(hidden_state)
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             keras_output_2 = model.predict(data)
             coreml_full_output_2 = coreml_model.predict({'data': data, spec.description.input[1].name: hidden_state[0]})
             coreml_output_2 = coreml_full_output_2['output']
@@ -1517,7 +1517,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         model.add(keras.layers.LSTM(5, input_shape=(1, 2), batch_input_shape=[1, 1, 2], stateful=True))
         model.get_layer(index=1).reset_states()
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
 
             keras_output_1 = model.predict(data)
@@ -1533,7 +1533,7 @@ class InitialStateRecurrentModels(unittest.TestCase):
         coreml_model = keras_converter.convert(model=model, input_names='data', output_names='output')
         spec = coreml_model.get_spec()
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             keras_output_2 = model.predict(data)
             coreml_full_output_2 = coreml_model.predict(
                 {'data': data, spec.description.input[1].name: hidden_state[0][0],

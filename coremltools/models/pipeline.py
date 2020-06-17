@@ -6,7 +6,7 @@
 """
 Pipeline utils for this package.
 """
-from .. import SPECIFICATION_VERSION
+from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
 from . import _feature_management
 from . import model as _model
@@ -48,7 +48,7 @@ class Pipeline(object):
 
         """
         spec = _Model_pb2.Model()
-        spec.specificationVersion = SPECIFICATION_VERSION
+        spec.specificationVersion = _SPECIFICATION_VERSION
         
         # Access this to declare it as a pipeline
         spec.pipeline
@@ -146,7 +146,7 @@ class PipelineRegressor(Pipeline):
 
         """
         spec = _Model_pb2.Model()
-        spec.specificationVersion = SPECIFICATION_VERSION
+        spec.specificationVersion = _SPECIFICATION_VERSION
         
         # Access this to declare it as a pipeline
         spec.pipelineRegressor
@@ -231,7 +231,7 @@ class PipelineClassifier(Pipeline):
                 output_features, class_labels)
 
         spec = _Model_pb2.Model()
-        spec.specificationVersion = SPECIFICATION_VERSION
+        spec.specificationVersion = _SPECIFICATION_VERSION
         spec = set_classifier_interface_params(spec, input_features,
                 class_labels, 'pipelineClassifier', output_features, training_features)
 

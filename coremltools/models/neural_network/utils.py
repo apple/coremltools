@@ -1,6 +1,6 @@
 from .builder import NeuralNetworkBuilder
 from coremltools.models.utils import _get_model
-import copy
+import copy as _copy
 
 def make_image_input(model,
                      input_name,
@@ -83,7 +83,7 @@ def make_nn_classifier(model,
 
 
     # convert type to "neuralNetworkClassifier" and copy messages from "neuralNetwork"
-    nn_spec = copy.deepcopy(spec.neuralNetwork)
+    nn_spec = _copy.deepcopy(spec.neuralNetwork)
     spec.ClearField('neuralNetwork')
     for layer in nn_spec.layers:
         spec.neuralNetworkClassifier.layers.add().CopyFrom(layer)

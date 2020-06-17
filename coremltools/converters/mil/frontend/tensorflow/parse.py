@@ -7,8 +7,8 @@ from coremltools.converters.mil.mil import types
 from tensorflow.core.framework.types_pb2 import DataType
 from tensorflow.python.framework.dtypes import _TF_TO_NP
 
-import logging
-import numpy as np
+import logging as _logging
+import numpy as _np
 
 
 def parse_type(t):
@@ -30,7 +30,7 @@ def parse_type(t):
     if t in mapping:
         return mapping[t]
     else:
-        logging.info("Type %d cannot be mapped", t)
+        _logging.info("Type %d cannot be mapped", t)
         return None
 
 
@@ -47,21 +47,21 @@ def parse_tensor(t):
 
     retval = None
     if len(t.half_val) > 0:
-        retval = np.array(t.half_val, dtype=_TF_TO_NP[t.dtype])
+        retval = _np.array(t.half_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.float_val) > 0:
-        retval = np.array(t.float_val, dtype=_TF_TO_NP[t.dtype])
+        retval = _np.array(t.float_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.double_val) > 0:
-        retval = np.array(t.double_val, dtype=_TF_TO_NP[t.dtype])
+        retval = _np.array(t.double_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.int_val) > 0:
-        retval = np.array(t.int_val, dtype=_TF_TO_NP[t.dtype])
+        retval = _np.array(t.int_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.int64_val) > 0:
-        retval = np.array(t.int64_val, dtype=_TF_TO_NP[t.dtype])
+        retval = _np.array(t.int64_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.bool_val) > 0:
-        retval = np.array(t.bool_val, dtype=_TF_TO_NP[t.dtype])
+        retval = _np.array(t.bool_val, dtype=_TF_TO_NP[t.dtype])
     elif hasattr(t, 'uint32_val') and len(t.uint32_val) > 0:
-        retval = np.array(t.uint32_val, dtype=_TF_TO_NP[t.dtype])
+        retval = _np.array(t.uint32_val, dtype=_TF_TO_NP[t.dtype])
     elif hasattr(t, 'uint64_val') and len(t.uint64_val) > 0:
-        retval = np.array(t.uint64_val, dtype=_TF_TO_NP[t.dtype])
+        retval = _np.array(t.uint64_val, dtype=_TF_TO_NP[t.dtype])
 
     if not t.tensor_shape.unknown_rank and len(shape) == 0:
         retobj = typ()

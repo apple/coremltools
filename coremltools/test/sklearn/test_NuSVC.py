@@ -11,22 +11,22 @@ import random
 import pytest
 
 from coremltools.models.utils import evaluate_classifier,\
-    evaluate_classifier_with_probabilities, macos_version, is_macos
-from coremltools._deps import HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND, HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
+    evaluate_classifier_with_probabilities, _macos_version, _is_macos
+from coremltools._deps import _HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND, _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
 
-if HAS_LIBSVM:
+if _HAS_LIBSVM:
     from libsvm import svm, svmutil
     from svmutil import svm_train, svm_predict
     from libsvm import svmutil
     from coremltools.converters import libsvm
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.svm import NuSVC
     from sklearn.preprocessing import OneHotEncoder
     from coremltools.converters import sklearn as scikit_converter
 
 
-@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
+@unittest.skipIf(not _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class NuSvcScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -68,7 +68,7 @@ class NuSvcScikitTest(unittest.TestCase):
 
                 spec = scikit_converter.convert(cur_model, column_names, 'target')
 
-                if is_macos() and macos_version() >= (10, 13):
+                if _is_macos() and _macos_version() >= (10, 13):
                     if use_probability_estimates:
                         probability_lists = cur_model.predict_proba(x)
                         df['classProbability'] = [dict(zip(cur_model.classes_, cur_vals)) for cur_vals in probability_lists]
@@ -132,8 +132,8 @@ class NuSvcScikitTest(unittest.TestCase):
             spec = scikit_converter.convert(model, 'data', 'out')
 
 
-@unittest.skipIf(not HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND)
-@unittest.skipIf(not HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
+@unittest.skipIf(not _HAS_LIBSVM, MSG_LIBSVM_NOT_FOUND)
+@unittest.skipIf(not _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
 class NuSVCLibSVMTest(unittest.TestCase):
     # Model parameters for testing
     base_param = '-s 1 -q' # model type C-SVC and quiet mode
@@ -154,7 +154,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not HAS_LIBSVM:
+        if not _HAS_LIBSVM:
             # setUpClass is still called even if class is skipped.
             return
 
@@ -196,7 +196,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
 
         spec = libsvm.convert(model, self.column_names, 'target', 'probabilities')
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False)
             self.assertEquals(metrics['num_key_mismatch'], 0)
             self.assertLess(metrics['max_probability_error'], 0.00001)

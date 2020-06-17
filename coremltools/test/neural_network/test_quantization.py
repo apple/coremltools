@@ -14,7 +14,7 @@ from coremltools.models.neural_network.quantization_utils import (
     activate_int8_int8_matrix_multiplications, MatrixMultiplyLayerSelector, _quantize_spec_weights
 )
 
-from coremltools._deps import HAS_KERAS2_TF
+from coremltools._deps import _HAS_KERAS2_TF
 from coremltools.models import (
     _MLMODEL_FULL_PRECISION,
     _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
@@ -24,10 +24,10 @@ from coremltools.models import (
 
 
 @unittest.skipIf(
-    not coremltools.utils.is_macos() or coremltools.utils.macos_version() < (10, 14),
+    not coremltools.utils._is_macos() or coremltools.utils._macos_version() < (10, 14),
     "Missing macOS 10.14+. Skipping tests.",
 )
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 class QuantizationNumericalCorrectnessTests(unittest.TestCase):
     def runTest(self):
@@ -252,7 +252,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         self.keras_tester.test_lstm_seq_backwards()
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class SevenBitQuantizationNumericalCorrectnessTests(
@@ -263,7 +263,7 @@ class SevenBitQuantizationNumericalCorrectnessTests(
         self.qbits = 7
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class SixBitQuantizationNumericalCorrectnessTests(
@@ -274,7 +274,7 @@ class SixBitQuantizationNumericalCorrectnessTests(
         self.qbits = 6
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class FiveBitQuantizationNumericalCorrectnessTests(
@@ -285,7 +285,7 @@ class FiveBitQuantizationNumericalCorrectnessTests(
         self.qbits = 5
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 class FourBitQuantizationNumericalCorrectnessTests(
     QuantizationNumericalCorrectnessTests
@@ -295,7 +295,7 @@ class FourBitQuantizationNumericalCorrectnessTests(
         self.qbits = 4
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class ThreeBitQuantizationNumericalCorrectnessTests(
@@ -306,7 +306,7 @@ class ThreeBitQuantizationNumericalCorrectnessTests(
         self.qbits = 3
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class TwoBitQuantizationNumericalCorrectnessTests(
@@ -317,7 +317,7 @@ class TwoBitQuantizationNumericalCorrectnessTests(
         self.qbits = 2
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 class OneBitQuantizationNumericalCorrectnessTests(
     QuantizationNumericalCorrectnessTests
@@ -327,7 +327,7 @@ class OneBitQuantizationNumericalCorrectnessTests(
         self.qbits = 1
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 class LUTQuantizationNumericalCorrectnessTests(QuantizationNumericalCorrectnessTests):
     def setUp(self):
@@ -339,7 +339,7 @@ class LUTQuantizationNumericalCorrectnessTests(QuantizationNumericalCorrectnessT
         pass
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class LUTSevenBitQuantizationNumericalCorrectnessTests(
@@ -351,7 +351,7 @@ class LUTSevenBitQuantizationNumericalCorrectnessTests(
         self.qmode = _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class LUTSixBitQuantizationNumericalCorrectnessTests(
@@ -363,7 +363,7 @@ class LUTSixBitQuantizationNumericalCorrectnessTests(
         self.qmode = _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class LUTFiveBitQuantizationNumericalCorrectnessTests(
@@ -375,7 +375,7 @@ class LUTFiveBitQuantizationNumericalCorrectnessTests(
         self.qmode = _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 class LUTFourBitQuantizationNumericalCorrectnessTests(
     QuantizationNumericalCorrectnessTests
@@ -386,7 +386,7 @@ class LUTFourBitQuantizationNumericalCorrectnessTests(
         self.qmode = _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class LUTThreeBitQuantizationNumericalCorrectnessTests(
@@ -398,7 +398,7 @@ class LUTThreeBitQuantizationNumericalCorrectnessTests(
         self.qmode = _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 @pytest.mark.slow
 class LUTTwoBitQuantizationNumericalCorrectnessTests(
@@ -410,7 +410,7 @@ class LUTTwoBitQuantizationNumericalCorrectnessTests(
         self.qmode = _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 class LUTOneBitQuantizationNumericalCorrectnessTests(
     QuantizationNumericalCorrectnessTests
@@ -421,7 +421,7 @@ class LUTOneBitQuantizationNumericalCorrectnessTests(
         self.qmode = _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS
 
 
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 class LUTCustomQuantizationNumericalCorrectnessTests(
     QuantizationNumericalCorrectnessTests
@@ -437,10 +437,10 @@ from coremltools.converters import keras as keras_converter
 
 
 @unittest.skipIf(
-    not coremltools.utils.is_macos() or coremltools.utils.macos_version() < (10, 14),
+    not coremltools.utils._is_macos() or coremltools.utils._macos_version() < (10, 14),
     "Missing macOS 10.14+. Skipping tests.",
 )
-@unittest.skipIf(not HAS_KERAS2_TF, "Missing keras. Skipping tests.")
+@unittest.skipIf(not _HAS_KERAS2_TF, "Missing keras. Skipping tests.")
 @pytest.mark.keras2
 class AdvancedQuantizationNumericalCorrectnessTests(unittest.TestCase):
     """ Quantization tests for advanced settings
@@ -506,7 +506,7 @@ class AdvancedQuantizationNumericalCorrectnessTests(unittest.TestCase):
 
 
 @unittest.skipIf(
-    not coremltools.utils.is_macos() or coremltools.utils.macos_version() < (10, 16),
+    not coremltools.utils._is_macos() or coremltools.utils._macos_version() < (10, 16),
     "Missing macOS 10.16+. Skipping tests.",
 )
 class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
@@ -980,8 +980,8 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
         _quantize_spec_weights(self.builder.spec, 1, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
         self.compare()
 
-@unittest.skipIf(not coremltools.utils.is_macos() or
-                 coremltools.utils.macos_version() < (10, 15),
+@unittest.skipIf(not coremltools.utils._is_macos() or
+                 coremltools.utils._macos_version() < (10, 15),
                  'Missing macOS 10.15+. Skipping tests.')
 class QuantizeWeightsAPI(unittest.TestCase):
 

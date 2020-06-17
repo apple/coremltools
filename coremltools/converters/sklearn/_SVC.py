@@ -5,10 +5,10 @@
 
 from ...proto import Model_pb2 as _Model_pb2
 from ...proto import SVM_pb2 as _SVM_pb2
-from ... import SPECIFICATION_VERSION
+from ... import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ...models._interface_management import set_classifier_interface_params
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:
@@ -32,7 +32,7 @@ def _generate_base_svm_classifier_spec(model):
     check_fitted(model, lambda m: hasattr(m, 'support_vectors_'))
 
     spec = _Model_pb2.Model()
-    spec.specificationVersion = SPECIFICATION_VERSION
+    spec.specificationVersion = _SPECIFICATION_VERSION
     svm = spec.supportVectorClassifier
 
     _set_kernel(model, svm)

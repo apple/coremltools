@@ -8,15 +8,15 @@ from coremltools.converters import sklearn as skl_converter
 from coremltools.models.utils import evaluate_regressor
 import pandas as pd
 import os
-from coremltools.models.utils import evaluate_regressor, macos_version, is_macos
-from coremltools._deps import HAS_SKLEARN
+from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
+from coremltools._deps import _HAS_SKLEARN
 import pytest
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.tree import DecisionTreeRegressor
     from coremltools.converters.sklearn import _decision_tree_regressor as skl_converter
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class DecisionTreeRegressorBostonHousingScikitNumericTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter and running both models
@@ -56,7 +56,7 @@ class DecisionTreeRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
             df['prediction'] = scikit_model.predict(self.X)

@@ -9,7 +9,7 @@ from .delete_constant import delete_unnecessary_constant_nodes
 from ..basic_graph_ops import const_determined_nodes, delete_node, disconnect_edge
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.type_mapping import numpy_val_to_builtin_val
-from coremltools.converters._profile_utils import profile
+from coremltools.converters._profile_utils import _profile
 
 
 def _get_const_nodes(fn):
@@ -55,7 +55,7 @@ def _get_const_nodes(fn):
     gc.collect()
     return new_graph, list(constant_nodes), constant_node_num_outputs
 
-@profile
+@_profile
 def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outputs):
     try:
         if len(constant_nodes) > 0:
@@ -116,7 +116,7 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
     except Exception as e:
         logging.exception("Constant Propagation pass failed: {}".format(e))
 
-@profile
+@_profile
 def constant_propagation(tfssa):
     # we are going to rely on the TensorFlow graph to perform constant
     # propagation. For each graph, we construct a new graph comprising

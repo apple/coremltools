@@ -6,9 +6,9 @@
 from ...models.tree_ensemble import TreeEnsembleRegressor, TreeEnsembleClassifier
 from ...models._feature_management import process_or_validate_features
 
-from ..._deps import HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.tree import _tree
 
 import numpy as _np
@@ -45,7 +45,7 @@ def _recurse(coreml_tree, scikit_tree, tree_id, node_id, scaling = 1.0, mode = '
              n_classes = 2, tree_index = 0):
     """Traverse through the tree and append to the tree spec.
     """
-    if not(HAS_SKLEARN):
+    if not(_HAS_SKLEARN):
         raise RuntimeError('scikit-learn not found. scikit-learn conversion API is disabled.')
     
     ## Recursion should not be called on the leaf node.

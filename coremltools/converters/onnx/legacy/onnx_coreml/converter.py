@@ -1,14 +1,14 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import as _
+from __future__ import division as _
+from __future__ import print_function as _
+from __future__ import unicode_literals as _
 from typing import Text, Union, Optional, Dict, Any, Iterable, Sequence, Callable, List
 
 import numpy as np
 
-from coremltools._deps import HAS_ONNX
+from coremltools._deps import _HAS_ONNX
 
-if HAS_ONNX:
+if _HAS_ONNX:
     import onnx
     from onnx import shape_inference
     from onnx import TensorProto

@@ -17,8 +17,9 @@ from .converter import TFConverter
 from .tf_graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from .tfssa import NetworkEnsemble, SSAFunction
 from .parsed_tf_node import ParsedTFNode
-from coremltools.converters._profile_utils import profile
-from tqdm import tqdm
+from coremltools.converters._profile_utils import _profile
+from tqdm import tqdm as _tqdm
+
 
 class TFLoader:
     """Abstract class for TensorFlow model loader."""
@@ -42,7 +43,7 @@ class TFLoader:
         self._graph_def = None
         self._tf_ssa = None
 
-    @profile
+    @_profile
     def load(self):
         """Load TensorFlow model into MIL program."""
 
@@ -178,14 +179,14 @@ class TF1Loader(TFLoader):
         ]
 
         if self.debug:
-            for tf_pass in tqdm(tf_passes, desc='Running TensorFlow Graph Passes', unit=' passes'):
+            for tf_pass in _tqdm(tf_passes, desc='Running TensorFlow Graph Passes', unit=' passes'):
                 try:
                     tf_pass(self._tf_ssa)
                 except Exception as e:
                     logging.exception('Exception in pass "{}": {}'.format(tf_pass, e))
                     logging.info("Ignoring exception and continuing to next pass")
         else:
-            for tf_pass in tqdm(tf_passes, desc='Running TensorFlow Graph Passes', unit=' passes'):
+            for tf_pass in _tqdm(tf_passes, desc='Running TensorFlow Graph Passes', unit=' passes'):
                 tf_pass(self._tf_ssa)
 
         if self.debug:

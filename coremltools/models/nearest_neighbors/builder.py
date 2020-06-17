@@ -3,15 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ... import SPECIFICATION_VERSION
-
 from ...proto import FeatureTypes_pb2
 from .. import datatypes
 
 import coremltools
 
-import numpy as np
+import numpy as _np
 import six as _six
+
 
 class KNearestNeighborsClassifierBuilder(object):
     """
@@ -441,4 +440,4 @@ class KNearestNeighborsClassifierBuilder(object):
         :param obj: the object to check
         :return: True if a valid number type, False otherwise
         """
-        return isinstance(obj, (_six.integer_types, np.integer))
+        return isinstance(obj, (_six.integer_types, _np.integer))

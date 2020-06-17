@@ -8,18 +8,18 @@ import itertools
 import os
 import pandas as pd
 import numpy as np
-from coremltools._deps import HAS_SKLEARN, SKLEARN_VERSION
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import evaluate_classifier, \
-    macos_version, is_macos
+    _macos_version, _is_macos
 from distutils.version import StrictVersion
 import pytest
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.ensemble import RandomForestClassifier
     from coremltools.converters import sklearn as skl_converter
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase):
     def _check_metrics(self, metrics, params = {}):
         self.assertEquals(metrics['num_errors'], 0, msg = 'Failed case %s. Results %s' % (params, metrics))
@@ -31,7 +31,7 @@ class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
             df['prediction'] = scikit_model.predict(self.X)
@@ -41,7 +41,7 @@ class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase
             self._check_metrics(metrics, scikit_params)
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
            RandomForestClassificationBostonHousingScikitNumericTest):
     @classmethod
@@ -74,7 +74,7 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
             max_leaf_nodes = [None, 20],
         )
 
-        if SKLEARN_VERSION >= StrictVersion('0.19'):
+        if _SKLEARN_VERSION >= StrictVersion('0.19'):
             options['min_impurity_decrease'] = [1e-07, 0.1]
 
         # Make a cartesian product of all options
@@ -85,7 +85,7 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
         for it, arg in enumerate(args):
             self._train_convert_evaluate_assert(**arg)
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
            RandomForestClassificationBostonHousingScikitNumericTest):
 
@@ -122,7 +122,7 @@ class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
                        max_leaf_nodes = [None, 20],
         )
 
-        if SKLEARN_VERSION >= StrictVersion('0.19'):
+        if _SKLEARN_VERSION >= StrictVersion('0.19'):
             options['min_impurity_decrease'] = [1e-07, 0.1]
 
         # Make a cartesian product of all options

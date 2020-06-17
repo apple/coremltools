@@ -7,7 +7,7 @@ from coremltools.models import datatypes, MLModel
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models.neural_network.quantization_utils import \
     _convert_array_to_nbit_quantized_bytes, quantize_weights
-from coremltools.models.utils import macos_version, is_macos
+from coremltools.models.utils import _macos_version, _is_macos
 
 
 MIN_MACOS_VERSION_REQUIRED = (10, 13)
@@ -15,7 +15,7 @@ LAYERS_10_14_MACOS_VERSION = (10, 14)
 LAYERS_10_15_MACOS_VERSION = (10, 15)
 
 
-@unittest.skipIf(not is_macos() or macos_version() < LAYERS_10_15_MACOS_VERSION,
+@unittest.skipIf(not _is_macos() or _macos_version() < LAYERS_10_15_MACOS_VERSION,
                  'Only supported on macOS 10.15+')
 class ControlFlowCorrectnessTest(unittest.TestCase):
 
@@ -82,7 +82,7 @@ class ControlFlowCorrectnessTest(unittest.TestCase):
 
 
 @unittest.skipUnless(
-    is_macos() and macos_version() >= LAYERS_10_14_MACOS_VERSION,
+    _is_macos() and _macos_version() >= LAYERS_10_14_MACOS_VERSION,
     'Only supported on macOS 10.14+')
 class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
 
@@ -206,7 +206,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
 
 
 @unittest.skipUnless(
-    is_macos() and macos_version() >= LAYERS_10_15_MACOS_VERSION,
+    _is_macos() and _macos_version() >= LAYERS_10_15_MACOS_VERSION,
     'Only supported on macOS 10.15+')
 class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
 
@@ -349,7 +349,7 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
 
 
-@unittest.skipIf(not is_macos() or macos_version() < (10, 13),
+@unittest.skipIf(not _is_macos() or _macos_version() < (10, 13),
                  'Only supported on macOS 10.13+')
 class BasicNumericCorrectnessTest(unittest.TestCase):
 

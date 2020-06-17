@@ -10,13 +10,13 @@ import pandas as pd
 import itertools
 import numpy as np
 
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import evaluate_transformer
 from coremltools.models.utils import evaluate_regressor
-from coremltools.models.utils import macos_version, is_macos
+from coremltools.models.utils import _macos_version, _is_macos
 from coremltools.converters.sklearn import convert
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.pipeline import Pipeline
@@ -24,7 +24,7 @@ if HAS_SKLEARN:
     from sklearn.preprocessing import OneHotEncoder
         
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
 
     def test_boston_OHE_plus_normalizer(self): 
@@ -40,7 +40,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = convert(pl, data.feature_names, 'out')
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             input_data = [dict(zip(data.feature_names, row)) for row in data.data]
             output_data = [{"out" : row} for row in pl.transform(data.data)]
 
@@ -60,7 +60,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = convert(pl, data.feature_names, 'target')
 
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(data.data, columns=data.feature_names)
             df['prediction'] = pl.predict(data.data)

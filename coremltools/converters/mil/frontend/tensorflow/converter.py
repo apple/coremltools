@@ -15,7 +15,7 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Program
 from coremltools.converters.mil.mil import Function
 from .ssa_passes.tf_passes import tensorflow_passes
-from coremltools.converters._profile_utils import profile
+from coremltools.converters._profile_utils import _profile
 
 
 # TranscriptionContext maintains a map of tf_node.name --> ssa_var available
@@ -311,7 +311,7 @@ class TFConverter:
                     v_o.name, out_name))
                 v_o.name = out_name
 
-    @profile
+    @_profile
     def convert(self):
         prog = Program()
         if len(self.graph_stack) == 0:

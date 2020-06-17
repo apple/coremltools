@@ -19,10 +19,10 @@ def __get_version(version):
     return _StrictVersion(version)
 
 # ---------------------------------------------------------------------------------------
-HAS_SKLEARN = True
-SKLEARN_VERSION = None
-SKLEARN_MIN_VERSION = '0.17'
-SKLEARN_MAX_VERSION = '0.19.2'
+_HAS_SKLEARN = True
+_SKLEARN_VERSION = None
+_SKLEARN_MIN_VERSION = '0.17'
+_SKLEARN_MAX_VERSION = '0.19.2'
 def __get_sklearn_version(version):
     # matching 0.15b, 0.16bf, etc
     version_regex = r'^\d+\.\d+'
@@ -31,40 +31,40 @@ def __get_sklearn_version(version):
 
 try:
     import sklearn
-    SKLEARN_VERSION = __get_sklearn_version(sklearn.__version__)
-    if SKLEARN_VERSION < _StrictVersion(SKLEARN_MIN_VERSION) or SKLEARN_VERSION > _StrictVersion(SKLEARN_MAX_VERSION):
-        HAS_SKLEARN = False
+    _SKLEARN_VERSION = __get_sklearn_version(sklearn.__version__)
+    if _SKLEARN_VERSION < _StrictVersion(_SKLEARN_MIN_VERSION) or _SKLEARN_VERSION > _StrictVersion(_SKLEARN_MAX_VERSION):
+        _HAS_SKLEARN = False
         _logging.warning(('scikit-learn version %s is not supported. Minimum required version: %s. '
                        'Maximum required version: %s. '
                       'Disabling scikit-learn conversion API.')
-                      % (sklearn.__version__, SKLEARN_MIN_VERSION, SKLEARN_MAX_VERSION) )
+                         % (sklearn.__version__, _SKLEARN_MIN_VERSION, _SKLEARN_MAX_VERSION))
 except:
-    HAS_SKLEARN = False
+    _HAS_SKLEARN = False
 MSG_SKLEARN_NOT_FOUND = 'Sklearn not found.'
 
 # ---------------------------------------------------------------------------------------
-HAS_LIBSVM = True
+_HAS_LIBSVM = True
 try:
     from libsvm import svm
 except:
-    HAS_LIBSVM = False
+    _HAS_LIBSVM = False
 MSG_LIBSVM_NOT_FOUND = 'Libsvm not found.'
 
 # ---------------------------------------------------------------------------------------
-HAS_XGBOOST = True
+_HAS_XGBOOST = True
 try:
     import xgboost
 except:
-    HAS_XGBOOST = False
+    _HAS_XGBOOST = False
 
 # ---------------------------------------------------------------------------------------
-HAS_TF = True
-HAS_TF_1 = False
-HAS_TF_2 = False
-TF_1_MIN_VERSION = '1.0.0'
-TF_1_MAX_VERSION = '1.15.0'
-TF_2_MIN_VERSION = '2.1.0'
-TF_2_MAX_VERSION = '2.2.0'
+_HAS_TF = True
+_HAS_TF_1 = False
+_HAS_TF_2 = False
+_TF_1_MIN_VERSION = '1.0.0'
+_TF_1_MAX_VERSION = '1.15.0'
+_TF_2_MIN_VERSION = '2.1.0'
+_TF_2_MAX_VERSION = '2.2.0'
 
 try:
     import tensorflow
@@ -72,42 +72,42 @@ try:
 
     # TensorFlow
     if tf_ver < _StrictVersion('2.0.0'):
-        HAS_TF_1 = True
+        _HAS_TF_1 = True
 
     if tf_ver >= _StrictVersion('2.0.0'):
-        HAS_TF_2 = True
+        _HAS_TF_2 = True
 
-    if HAS_TF_1:
-        if tf_ver < _StrictVersion(TF_1_MIN_VERSION):
+    if _HAS_TF_1:
+        if tf_ver < _StrictVersion(_TF_1_MIN_VERSION):
             _logging.warn(('TensorFlow version %s is not supported. Minimum required version: %s .'
                           'TensorFlow conversion will be disabled.')
-                          % (tensorflow.__version__, TF_1_MIN_VERSION))
-        elif tf_ver > _StrictVersion(TF_1_MAX_VERSION):
+                          % (tensorflow.__version__, _TF_1_MIN_VERSION))
+        elif tf_ver > _StrictVersion(_TF_1_MAX_VERSION):
             _logging.warn('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
-                          % (tensorflow.__version__, TF_1_MAX_VERSION))
-    elif HAS_TF_2:
-        if tf_ver < _StrictVersion(TF_2_MIN_VERSION):
+                          % (tensorflow.__version__, _TF_1_MAX_VERSION))
+    elif _HAS_TF_2:
+        if tf_ver < _StrictVersion(_TF_2_MIN_VERSION):
             _logging.warn(('TensorFlow version %s is not supported. Minimum required version: %s .'
                           'TensorFlow conversion will be disabled.')
-                          % (tensorflow.__version__, TF_2_MIN_VERSION))
-        elif tf_ver > _StrictVersion(TF_2_MAX_VERSION):
+                          % (tensorflow.__version__, _TF_2_MIN_VERSION))
+        elif tf_ver > _StrictVersion(_TF_2_MAX_VERSION):
             _logging.warn('TensorFlow version %s detected. Last version known to be fully compatible is %s .'
-                          % (tensorflow.__version__, TF_2_MAX_VERSION))
+                          % (tensorflow.__version__, _TF_2_MAX_VERSION))
 
 except:
-    HAS_TF = False
-    HAS_TF_1 = False
-    HAS_TF_2 = False
+    _HAS_TF = False
+    _HAS_TF_1 = False
+    _HAS_TF_2 = False
 
 
 MSG_TF1_NOT_FOUND = 'TensorFlow 1.x not found.'
 MSG_TF2_NOT_FOUND = 'TensorFlow 2.x not found.'
 
 # ---------------------------------------------------------------------------------------
-HAS_KERAS_TF = True
-HAS_KERAS2_TF = True
-KERAS_MIN_VERSION = '1.2.2'
-KERAS_MAX_VERSION = '2.2.4'
+_HAS_KERAS_TF = True
+_HAS_KERAS2_TF = True
+_KERAS_MIN_VERSION = '1.2.2'
+_KERAS_MAX_VERSION = '2.2.4'
 MSG_KERAS1_NOT_FOUND = 'Keras 1 not found.'
 MSG_KERAS2_NOT_FOUND = 'Keras 2 not found.'
 
@@ -137,61 +137,61 @@ try:
     k_ver = __get_version(keras.__version__)
 
     # keras 1 version too old
-    if k_ver < _StrictVersion(KERAS_MIN_VERSION):
-        HAS_KERAS_TF = False
-        HAS_KERAS2_TF = False
+    if k_ver < _StrictVersion(_KERAS_MIN_VERSION):
+        _HAS_KERAS_TF = False
+        _HAS_KERAS2_TF = False
         _logging.warning(('Keras version %s is not supported. Minimum required version: %s .'
                       'Keras conversion will be disabled.')
-                      % (keras.__version__, KERAS_MIN_VERSION))
+                         % (keras.__version__, _KERAS_MIN_VERSION))
     # keras version too new
-    if k_ver > _StrictVersion(KERAS_MAX_VERSION):
-        HAS_KERAS_TF = False
+    if k_ver > _StrictVersion(_KERAS_MAX_VERSION):
+        _HAS_KERAS_TF = False
         _logging.warning(('Keras version %s detected. Last version known to be fully compatible of Keras is %s .')
-                      % (keras.__version__, KERAS_MAX_VERSION))
+                         % (keras.__version__, _KERAS_MAX_VERSION))
     # Using Keras 2 rather than 1
     if k_ver >= _StrictVersion('2.0.0'):
-        HAS_KERAS_TF = False
-        HAS_KERAS2_TF = True
+        _HAS_KERAS_TF = False
+        _HAS_KERAS2_TF = True
     # Using Keras 1 rather than 2
     else:
-        HAS_KERAS_TF = True
-        HAS_KERAS2_TF = False
+        _HAS_KERAS_TF = True
+        _HAS_KERAS2_TF = False
     if keras.backend.backend() != 'tensorflow':
-        HAS_KERAS_TF = False
-        HAS_KERAS2_TF = False
+        _HAS_KERAS_TF = False
+        _HAS_KERAS2_TF = False
         _logging.warning(('Unsupported Keras backend (only TensorFlow is currently supported). '
                       'Keras conversion will be disabled.'))
 
 except:
-    HAS_KERAS_TF = False
-    HAS_KERAS2_TF = False
+    _HAS_KERAS_TF = False
+    _HAS_KERAS2_TF = False
 
 # ---------------------------------------------------------------------------------------
-HAS_CAFFE2 = True
+_HAS_CAFFE2 = True
 try:
     import caffe2
 except:
-    HAS_CAFFE2 = False
+    _HAS_CAFFE2 = False
 
 # ---------------------------------------------------------------------------------------
-HAS_TORCH = True
+_HAS_TORCH = True
 try:
     import torch
 except:
-    HAS_TORCH = False
+    _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = 'PyTorch not found.'
 
 # ---------------------------------------------------------------------------------------
-HAS_ONNX = True
+_HAS_ONNX = True
 try:
     import onnx
 except:
-    HAS_ONNX = False
+    _HAS_ONNX = False
 
 # ---------------------------------------------------------------------------------------
-HAS_GRAPHVIZ = True
+_HAS_GRAPHVIZ = True
 try:
     import graphviz
 except:
-    HAS_GRAPHVIZ = False
+    _HAS_GRAPHVIZ = False
 MSG_ONNX_NOT_FOUND = 'ONNX not found.'

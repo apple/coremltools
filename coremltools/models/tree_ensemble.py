@@ -6,7 +6,7 @@
 """
 Tree ensemble builder class to construct CoreML models.
 """
-from .. import SPECIFICATION_VERSION
+from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
 from ..proto import TreeEnsemble_pb2 as _TreeEnsemble_pb2
 from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
@@ -28,7 +28,7 @@ class TreeEnsembleBase(object):
         """
         # Set inputs and outputs
         spec = _Model_pb2.Model()
-        spec.specificationVersion = SPECIFICATION_VERSION
+        spec.specificationVersion = _SPECIFICATION_VERSION
 
         # Save the spec in the protobuf
         self.spec = spec

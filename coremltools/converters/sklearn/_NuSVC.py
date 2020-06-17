@@ -5,7 +5,7 @@
 
 from . import _SVC as _SVC
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 
 if _HAS_SKLEARN:
     from ._sklearn_util import check_fitted

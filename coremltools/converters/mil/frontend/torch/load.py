@@ -1,11 +1,11 @@
 from __future__ import print_function as _
 
-import logging
-import os.path
+import logging as _logging
+import os.path as _os_path
 
-import torch
+import torch as _torch
 
-from six import string_types
+from six import string_types as _string_types
 from .converter import TorchConverter, torch_to_mil_types
 from coremltools.converters.mil.input_types import InputType, TensorType
 from coremltools.converters.mil.mil import Program, types
@@ -50,7 +50,7 @@ def load(model_spec, debug=False, **kwargs):
                 input_type.append(_convert_to_inputtype(_input))
             elif isinstance(_input, InputType):
                 input_type.append(_input)
-            elif isinstance(_input, torch.Tensor):
+            elif isinstance(_input, _torch.Tensor):
                 input_type.append(TensorType(shape=_input.shape, dtype=torch_to_mil_types[_input.dtype]))
             else:
                 raise ValueError(
@@ -83,10 +83,10 @@ def load(model_spec, debug=False, **kwargs):
 
 def _torchscript_from_model(model_spec):
 
-    if isinstance(model_spec, string_types) and model_spec.endswith(".pt"):
-        filename = os.path.abspath(model_spec)
-        return torch.jit.load(filename)
-    elif isinstance(model_spec, torch.jit.ScriptModule):
+    if isinstance(model_spec, _string_types) and model_spec.endswith(".pt"):
+        filename = _os_path.abspath(model_spec)
+        return _torch.jit.load(filename)
+    elif isinstance(model_spec, _torch.jit.ScriptModule):
         return model_spec
     else:
         raise TypeError(

@@ -5,7 +5,7 @@
 
 from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:

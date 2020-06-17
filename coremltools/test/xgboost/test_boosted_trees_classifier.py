@@ -11,15 +11,15 @@ from sklearn.ensemble import GradientBoostingClassifier
 from coremltools.converters import sklearn as skl_converter
 from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2
-from coremltools._deps import HAS_XGBOOST
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_XGBOOST
+from coremltools._deps import _HAS_SKLEARN
 
-if HAS_XGBOOST:
+if _HAS_XGBOOST:
     import xgboost
     from coremltools.converters import xgboost as xgb_converter
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -85,7 +85,7 @@ class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
             spec = skl_converter.convert(model, 'data', 'out')
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -149,8 +149,8 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
             spec = skl_converter.convert(model, 'data', 'out')
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
-@unittest.skipIf(not HAS_XGBOOST, 'Skipping, no xgboost')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_XGBOOST, 'Skipping, no xgboost')
 class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
     """
     Unit test class for testing xgboost converter.
@@ -213,8 +213,8 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
             spec = xgb_converter.convert(model, 'data', 'out', mode="classifier")
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
-@unittest.skipIf(not HAS_XGBOOST, 'Skipping, no xgboost')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_XGBOOST, 'Skipping, no xgboost')
 class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
     """
     Unit test class for testing xgboost converter.

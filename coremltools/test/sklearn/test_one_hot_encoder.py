@@ -7,12 +7,12 @@ from copy import copy
 import unittest
 import numpy as np
 
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import evaluate_transformer,\
-    macos_version, is_macos
+    _macos_version, _is_macos
 
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.preprocessing import Normalizer
@@ -21,7 +21,7 @@ if HAS_SKLEARN:
     from sklearn.datasets import load_boston
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class OneHotEncoderScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -42,7 +42,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
         self.scikit_data_multiple_cols = np.asarray(scikit_data_multiple_cols, dtype = 'd')
         self.scikit_model = scikit_model
 
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_conversion_one_column(self):
         # Fit a single OHE
@@ -60,7 +60,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
         self.assertIsNotNone(spec.description)
         self.assertEquals(metrics['num_errors'], 0)
 
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_conversion_many_columns(self):
         scikit_model = OneHotEncoder()
@@ -79,7 +79,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
         self.assertIsNotNone(spec.description)
         self.assertEquals(metrics['num_errors'], 0)
 
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_conversion_one_column_of_several(self):
         scikit_model = OneHotEncoder(categorical_features = [0])
@@ -97,7 +97,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
         self.assertIsNotNone(spec.description)
         self.assertEquals(metrics['num_errors'], 0)
 
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_boston_OHE(self):
         data = load_boston()
@@ -120,7 +120,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
             assert result["num_errors"] == 0
 
     # This test still isn't working
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_boston_OHE_pipeline(self):
         data = load_boston()
@@ -147,7 +147,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
 
             assert result["num_errors"] == 0
 
-    @unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_random_sparse_data(self): 
 

@@ -8,7 +8,7 @@ from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 
 from coremltools.converters.mil.mil import types
 from coremltools._deps import (
-    HAS_TF_1, HAS_TF_2, HAS_TORCH,
+    _HAS_TF_1, _HAS_TF_2, _HAS_TORCH,
     MSG_TF1_NOT_FOUND, MSG_TF2_NOT_FOUND
 )
 from .testing_utils import (
@@ -19,10 +19,10 @@ backends = _converter.ConverterRegistry.backends.keys()
 
 np.random.seed(1984)
 
-if HAS_TF_1 or HAS_TF_2:
+if _HAS_TF_1 or _HAS_TF_2:
     import tensorflow as tf
 
-    tf.compat.v1.set_random_seed(1234) if HAS_TF_1 else tf.random.set_seed(1234)
+    tf.compat.v1.set_random_seed(1234) if _HAS_TF_1 else tf.random.set_seed(1234)
 
-if HAS_TORCH:
+if _HAS_TORCH:
     import torch

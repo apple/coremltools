@@ -13,8 +13,8 @@ from ...models import MLModel as _MLModel
 from ...models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, _VALID_MLMODEL_PRECISION_TYPES
 from ...models.utils import _convert_neural_network_spec_weights_to_fp16
 
-from ..._deps import HAS_KERAS_TF as _HAS_KERAS_TF
-from ..._deps import HAS_KERAS2_TF as _HAS_KERAS2_TF
+from ..._deps import _HAS_KERAS_TF
+from ..._deps import _HAS_KERAS2_TF
 from coremltools import __version__ as ct_version
 
 
@@ -342,28 +342,29 @@ def _convert(model,
     spec = builder.spec
     return spec
 
-def convertToSpec(model,
-                  input_names = None,
-                  output_names = None,
-                  image_input_names = None,
-                  input_name_shape_dict = {},
-                  is_bgr = False,
-                  red_bias = 0.0,
-                  green_bias = 0.0,
-                  blue_bias = 0.0,
-                  gray_bias = 0.0,
-                  image_scale = 1.0,
-                  class_labels = None,
-                  predicted_feature_name = None,
-                  model_precision = _MLMODEL_FULL_PRECISION,
-                  predicted_probabilities_output = '',
-                  add_custom_layers = False,
-                  custom_conversion_functions = None,
-                  custom_objects=None,
-                  input_shapes = None,
-                  output_shapes = None,
-                  respect_trainable = False,
-                  use_float_arraytype = False):
+
+def _convert_to_spec(model,
+                     input_names = None,
+                     output_names = None,
+                     image_input_names = None,
+                     input_name_shape_dict = {},
+                     is_bgr = False,
+                     red_bias = 0.0,
+                     green_bias = 0.0,
+                     blue_bias = 0.0,
+                     gray_bias = 0.0,
+                     image_scale = 1.0,
+                     class_labels = None,
+                     predicted_feature_name = None,
+                     model_precision = _MLMODEL_FULL_PRECISION,
+                     predicted_probabilities_output = '',
+                     add_custom_layers = False,
+                     custom_conversion_functions = None,
+                     custom_objects=None,
+                     input_shapes = None,
+                     output_shapes = None,
+                     respect_trainable = False,
+                     use_float_arraytype = False):
 
     """
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
@@ -782,27 +783,27 @@ def convert(model,
         ...   ['my_input_1', 'my_input_2'], output_names = ['my_output'])
 
     """
-    spec = convertToSpec(model,
-                         input_names=input_names,
-                         output_names=output_names,
-                         image_input_names=image_input_names,
-                         input_name_shape_dict=input_name_shape_dict,
-                         is_bgr=is_bgr,
-                         red_bias=red_bias,
-                         green_bias=green_bias,
-                         blue_bias=blue_bias,
-                         gray_bias=gray_bias,
-                         image_scale=image_scale,
-                         class_labels=class_labels,
-                         predicted_feature_name=predicted_feature_name,
-                         model_precision=model_precision,
-                         predicted_probabilities_output=predicted_probabilities_output,
-                         add_custom_layers=add_custom_layers,
-                         custom_conversion_functions=custom_conversion_functions,
-                         input_shapes=input_shapes,
-                         output_shapes=output_shapes,
-                         respect_trainable=respect_trainable,
-                         use_float_arraytype=use_float_arraytype)
+    spec = _convert_to_spec(model,
+                            input_names=input_names,
+                            output_names=output_names,
+                            image_input_names=image_input_names,
+                            input_name_shape_dict=input_name_shape_dict,
+                            is_bgr=is_bgr,
+                            red_bias=red_bias,
+                            green_bias=green_bias,
+                            blue_bias=blue_bias,
+                            gray_bias=gray_bias,
+                            image_scale=image_scale,
+                            class_labels=class_labels,
+                            predicted_feature_name=predicted_feature_name,
+                            model_precision=model_precision,
+                            predicted_probabilities_output=predicted_probabilities_output,
+                            add_custom_layers=add_custom_layers,
+                            custom_conversion_functions=custom_conversion_functions,
+                            input_shapes=input_shapes,
+                            output_shapes=output_shapes,
+                            respect_trainable=respect_trainable,
+                            use_float_arraytype=use_float_arraytype)
 
     model = _MLModel(spec)
 

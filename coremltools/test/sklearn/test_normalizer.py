@@ -8,17 +8,17 @@ import random
 import unittest
 
 from coremltools.models.utils import evaluate_transformer,\
-    macos_version, is_macos
+    _macos_version, _is_macos
 
-from coremltools._deps import HAS_SKLEARN
-if HAS_SKLEARN:
+from coremltools._deps import _HAS_SKLEARN
+if _HAS_SKLEARN:
     from sklearn.preprocessing import Normalizer
     from coremltools.converters import sklearn as converter
 
 
-@unittest.skipUnless(is_macos() and macos_version() >= (10, 13),
+@unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                      'Only supported on macOS 10.13+')
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class NormalizerScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.

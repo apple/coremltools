@@ -1,6 +1,6 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import as _
+from __future__ import division as _
+from __future__ import print_function as _
 
 from typing import Dict, Text, Any, Callable
 from coremltools.models.neural_network import NeuralNetworkBuilder  # type: ignore

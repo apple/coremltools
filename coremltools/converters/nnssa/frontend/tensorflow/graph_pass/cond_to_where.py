@@ -5,10 +5,10 @@ from __future__ import absolute_import as _
 from ....commons.basic_graph_ops import delete_node, disconnect_edge
 from .visitors import FindAllUpstreamTerminals
 from .functionalize_loops import *
-from coremltools._deps import HAS_TF_2
+from coremltools._deps import _HAS_TF_2
 
 import logging
-from coremltools._deps import HAS_TF_2
+from coremltools._deps import _HAS_TF_2
 
 from coremltools.converters.nnssa.commons.features import Features
 
@@ -82,7 +82,7 @@ class CondToWhere(object):
 
         # build the final select
         g[merge].op = 'iff'
-        if not HAS_TF_2:
+        if not _HAS_TF_2:
             # swap true branch with false branch to get the right semantics for IFF
             g[merge].inputs[0], g[merge].inputs[1] = g[merge].inputs[1], g[merge].inputs[0]
 

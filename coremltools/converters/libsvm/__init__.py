@@ -8,7 +8,7 @@ from six import string_types as _string_types
 from . import _libsvm_converter
 from . import _libsvm_util
 
-from ..._deps import HAS_LIBSVM as _HAS_LIBSVM
+from ..._deps import _HAS_LIBSVM
 
 if _HAS_LIBSVM:
     from libsvm import svmutil as _svmutil

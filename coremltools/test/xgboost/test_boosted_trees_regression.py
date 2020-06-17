@@ -7,20 +7,20 @@ import unittest
 import tempfile
 import json
 
-from coremltools._deps import HAS_SKLEARN, HAS_XGBOOST
+from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 
-if HAS_XGBOOST:
+if _HAS_XGBOOST:
     import xgboost
     from coremltools.converters import xgboost as xgb_converter
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.preprocessing import OneHotEncoder
     from coremltools.converters import sklearn as skl_converter
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class GradientBoostingRegressorScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -31,7 +31,7 @@ class GradientBoostingRegressorScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not HAS_SKLEARN:
+        if not _HAS_SKLEARN:
             return
 
         scikit_data = load_boston()
@@ -83,8 +83,8 @@ class GradientBoostingRegressorScikitTest(unittest.TestCase):
             spec = skl_converter.convert(model, 'data', 'out')
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
-@unittest.skipIf(not HAS_XGBOOST, 'Skipping, no xgboost')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_XGBOOST, 'Skipping, no xgboost')
 class BoostedTreeRegressorXGboostTest(unittest.TestCase):
 
     @classmethod
@@ -92,9 +92,9 @@ class BoostedTreeRegressorXGboostTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not HAS_XGBOOST:
+        if not _HAS_XGBOOST:
             return
-        if not HAS_SKLEARN:
+        if not _HAS_SKLEARN:
             return
 
         scikit_data = load_boston()

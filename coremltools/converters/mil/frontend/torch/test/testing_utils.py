@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from six import string_types
+from six import string_types as _string_types
 from coremltools import TensorType
 from coremltools.converters import convert
 from coremltools.models import MLModel
@@ -88,7 +88,7 @@ def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5
         If expected results is not set, it will by default
         be set to the flattened output of the torch model.
     """
-    if isinstance(model_spec, string_types):
+    if isinstance(model_spec, _string_types):
         torch_model = torch.jit.load(model_spec)
     else:
         torch_model = model_spec

@@ -1,9 +1,8 @@
-from __future__ import print_function
+from __future__ import print_function as _
 
-from collections import OrderedDict
-from six import string_types
-import logging
-import torch
+from six import string_types as _string_types
+import logging as _logging
+import torch as _torch
 
 from coremltools.converters.mil.input_types import InputType, ImageType
 from coremltools.converters.mil.mil import types
@@ -21,10 +20,10 @@ from .ops import *
 from .torch_op_registry import _TORCH_OPS_REGISTRY
 
 torch_to_mil_types = {
-    torch.float32: types.fp32,
-    torch.float64: types.fp64,
-    torch.int32: types.int32,
-    torch.int64: types.int64,
+    _torch.float32: types.fp32,
+    _torch.float64: types.fp64,
+    _torch.int32: types.int32,
+    _torch.int64: types.int64,
 }
 
 mil_to_torch_types = {v: k for k, v in torch_to_mil_types.items()}
@@ -125,7 +124,7 @@ class TorchConverter:
     def __init__(
         self, torchscript, inputs, outputs=None, cut_at_symbols=None,
     ):
-        assert isinstance(torchscript, torch.jit.ScriptModule)
+        assert isinstance(torchscript, _torch.jit.ScriptModule)
         self.inputs = inputs
         for idx, inp in enumerate(self.inputs):
             if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
@@ -159,7 +158,7 @@ class TorchConverter:
                     changed = True
                     if not notified:
                         notified = True
-                        logging.warning(
+                        _logging.warning(
                             "Tuple detected at graph input. This will be flattened in the converted model."
                         )
                     # If this input to the graph is a tuple, we want to replace it
@@ -219,7 +218,7 @@ class TorchConverter:
                     changed = True
                     if not notified:
                         notified = True
-                        logging.warning(
+                        _logging.warning(
                             "Tuple detected at graph output. This will be flattened in the converted model."
                         )
                 else:
@@ -262,7 +261,7 @@ class TorchConverter:
 
     def convert(self):
 
-        logging.info("Converting graph.")
+        _logging.info("Converting graph.")
 
         # This will hold the converted model.
         prog = Program()
@@ -321,47 +320,47 @@ class TorchConverter:
         # those modules. The resulting graph will be self-contained and will
         # not reference into other modules. Params will contain the "trainable"
         # inputs to the graph.
-        graph, params = torch._C._jit_pass_lower_graph(
+        graph, params = _torch._C._jit_pass_lower_graph(
             torchscript.forward.graph, torchscript._c
         )
 
         # From PyTorch code: Inline function and method calls.
-        torch._C._jit_pass_inline(graph)
+        _torch._C._jit_pass_inline(graph)
         # From PyTorch code: This inlines the forked section in the fork()
         # callsite and replaces uses of the result of wait() calls with the
         # values produced from the (now-inlined) forked section.
-        torch._C._jit_pass_inline_fork_wait(graph)
+        _torch._C._jit_pass_inline_fork_wait(graph)
         # Starting from the return node, marks all nodes that feed into the
         # output, as well as nodes with side effects. Any nodes not marked are
         # eliminated.
-        torch._C._jit_pass_dce(graph)
+        _torch._C._jit_pass_dce(graph)
         # From PyTorch code: checks well-formedness and invariants of graph.
-        torch._C._jit_pass_lint(graph)
+        _torch._C._jit_pass_lint(graph)
         # From PyTorch code: remove all in-place ops and replace them with
         # out-of-place equivalents.
         # e.g.
         #   %foo = aten::add_(%foo, %n)
         # becomes
         #   %foo.2 = aten::add(%foo, %n)
-        torch._C._jit_pass_remove_inplace_ops(graph)
-        torch._C._jit_pass_dce(graph)
-        torch._C._jit_pass_lint(graph)
+        _torch._C._jit_pass_remove_inplace_ops(graph)
+        _torch._C._jit_pass_dce(graph)
+        _torch._C._jit_pass_lint(graph)
         # Replaces a couple specific ops patterns (add, sub, mul, div, chunk).
-        torch._C._jit_pass_canonicalize_ops(graph)
-        torch._C._jit_pass_lint(graph)
+        _torch._C._jit_pass_canonicalize_ops(graph)
+        _torch._C._jit_pass_lint(graph)
         # From PyTorch code: This pass catches all of the small, easy to catch
         # peephole optimizations you might be interested in doing.
         #     Eliminate no-op 'expand' nodes
         #     Simplify x.t().t() to x
-        torch._C._jit_pass_peephole(graph, addmm_fusion_enabled=False)
-        torch._C._jit_pass_lint(graph)
+        _torch._C._jit_pass_peephole(graph, addmm_fusion_enabled=False)
+        _torch._C._jit_pass_lint(graph)
         # From PyTorch docs: Renumber the graph so that all structurally
         # equivalent graphs have same numbers.
-        graph = torch._C._jit_pass_canonicalize(graph)
-        torch._C._jit_pass_lint(graph)
-        torch._C._jit_pass_constant_propagation(graph)
+        graph = _torch._C._jit_pass_canonicalize(graph)
+        _torch._C._jit_pass_lint(graph)
+        _torch._C._jit_pass_constant_propagation(graph)
         # NOTE: Don't need another DCE, it's included in constant propagation.
-        torch._C._jit_pass_lint(graph)
+        _torch._C._jit_pass_lint(graph)
 
         input_and_param_names = [val.debugName() for val in graph.inputs()]
         param_names = input_and_param_names[len(input_and_param_names) - len(params) :]

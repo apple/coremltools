@@ -1,12 +1,12 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import as _
+from __future__ import division as _
+from __future__ import print_function as _
+from __future__ import unicode_literals as _
 
 from typing import Any, Text, Dict, Tuple
 from onnx import ModelProto
 from onnx.backend.base import Backend
-from six import string_types
+from six import string_types as _string_types
 from ._backend_rep import CoreMLRep
 from .converter import convert
 import onnx
@@ -20,7 +20,7 @@ def _get_onnx_outputs_info(model):  # type: (...) -> Dict[Text, EdgeInfo]
     Takes in an onnx model and returns a dictionary 
     of onnx output names mapped to a tuple that is (output_name, type, shape)
     """
-    if isinstance(model, string_types):
+    if isinstance(model, _string_types):
         onnx_model = onnx.load(model)
     elif isinstance(model, onnx.ModelProto):
         onnx_model = model

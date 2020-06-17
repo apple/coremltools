@@ -10,11 +10,11 @@ import math as _math
 import numpy as _np
 import os as _os
 import six as _six
-import warnings
-import sys
+import warnings as _warnings
+import sys as _sys
 from coremltools.proto import Model_pb2 as _Model_pb2
-from coremltools.models._deprecation import deprecated
-from .._deps import HAS_SKLEARN as _HAS_SKLEARN
+from coremltools.models._deprecation import deprecated as _deprecated
+from .._deps import _HAS_SKLEARN
 
 
 if _HAS_SKLEARN:
@@ -69,7 +69,7 @@ def save_spec(spec, filename, auto_set_specification_version=False):
             spec = _MLModelProxy.auto_set_specification_version(spec)
         except Exception as e:
             print(e)
-            warnings.warn(
+            _warnings.warn(
                 "Failed to automatic set specification version for this model.",
                 RuntimeWarning)
 
@@ -186,7 +186,7 @@ def _wp_to_fp16wp(wp):
     wp.float16Value = _fp32_to_fp16_byte_array(wp.floatValue)
     del wp.floatValue[:]
 
-@deprecated(suffix="instead use 'coremltools.models.neural_network.quantization_utils.quantize_weights'.")
+@_deprecated(suffix="instead use 'coremltools.models.neural_network.quantization_utils.quantize_weights'.")
 def convert_neural_network_spec_weights_to_fp16(fp_spec):
     return _convert_neural_network_spec_weights_to_fp16(fp_spec)
 
@@ -198,7 +198,7 @@ def _convert_neural_network_spec_weights_to_fp16(fp_spec):
     return qspec
 
 
-@deprecated(suffix="instead use 'coremltools.models.neural_network.quantization_utils.quantize_weights'.")
+@_deprecated(suffix="instead use 'coremltools.models.neural_network.quantization_utils.quantize_weights'.")
 def convert_neural_network_weights_to_fp16(full_precision_model):
     return _convert_neural_network_weights_to_fp16(full_precision_model)
 
@@ -639,7 +639,7 @@ def evaluate_transformer(model, input_data, reference_output,
     return ret
 
 
-def has_custom_layer(spec):
+def _has_custom_layer(spec):
     """
 
     Returns true if the given protobuf specification has a custom layer, and false otherwise.
@@ -733,17 +733,17 @@ def _replace_custom_layer_name(spec, oldname, newname):
             layer.custom.className = newname
 
 
-def is_macos():
+def _is_macos():
     """Returns True if current platform is MacOS, False otherwise."""
-    return sys.platform == 'darwin'
+    return _sys.platform == 'darwin'
 
 
-def macos_version():
+def _macos_version():
     """
     Returns macOS version as a tuple of integers, making it easy to do proper
     version comparisons. On non-Macs, it returns an empty tuple.
     """
-    if is_macos():
+    if _is_macos():
         import platform
         ver_str = platform.mac_ver()[0]
         return tuple([int(v) for v in ver_str.split('.')])

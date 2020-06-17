@@ -14,9 +14,9 @@ from ...models import datatypes
 from ...models.feature_vectorizer import create_feature_vectorizer
 from ...models.pipeline import Pipeline, PipelineRegressor, PipelineClassifier
 
-from ..._deps import HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     import sklearn as _sklearn
     from sklearn.pipeline import Pipeline as sk_Pipeline
 
@@ -102,7 +102,7 @@ def _get_converter_module(sk_obj):
     return _converter_module_list[cv_idx]
 
 def _is_sklearn_model(sk_obj):
-    if not(HAS_SKLEARN):
+    if not(_HAS_SKLEARN):
         raise RuntimeError('scikit-learn not found. scikit-learn conversion API is disabled.')
     from sklearn.pipeline import Pipeline as sk_Pipeline
     return (isinstance(sk_obj, sk_Pipeline) 
@@ -114,7 +114,7 @@ def _convert_sklearn_model(input_sk_obj, input_features = None,
     Converts a generic sklearn pipeline, transformer, classifier, or regressor 
     into an coreML specification.
     """
-    if not(HAS_SKLEARN):
+    if not(_HAS_SKLEARN):
         raise RuntimeError('scikit-learn not found. scikit-learn conversion API is disabled.')
     from sklearn.pipeline import Pipeline as sk_Pipeline
     

@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ....._deps import HAS_TF_2 as _HAS_TF_2
+from ....._deps import _HAS_TF_2
 
 if _HAS_TF_2:
     from .ops import *  # register all TF2 ops

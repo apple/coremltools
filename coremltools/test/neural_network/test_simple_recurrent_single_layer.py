@@ -10,11 +10,11 @@ import shutil
 import tempfile
 import itertools
 import coremltools
-from coremltools._deps import HAS_KERAS_TF, HAS_KERAS2_TF
-from coremltools.models.utils import macos_version, is_macos
+from coremltools._deps import _HAS_KERAS_TF, _HAS_KERAS2_TF
+from coremltools.models.utils import _macos_version, _is_macos
 import pytest
 
-if HAS_KERAS_TF or HAS_KERAS2_TF:
+if _HAS_KERAS_TF or _HAS_KERAS2_TF:
     from keras.models import Sequential
     from keras.layers import LSTM, GRU, SimpleRNN
     from coremltools.converters import keras as keras_converter
@@ -123,7 +123,7 @@ class SimpleRNNLayer(RecurrentLayerTest):
             coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
             model.save_weights(keras_model_path)
             mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 keras_preds = model.predict(input_data).flatten()
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
@@ -149,24 +149,24 @@ class SimpleRNNLayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     @pytest.mark.slow
     def test_keras1_rnn_layer_stress(self):
         self._test_rnn_layer(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_rnn_layer(self):
         self._test_rnn_layer(keras_major_version=1, limit=10)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_rnn_layer_stress(self):
         self._test_rnn_layer(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_rnn_layer(self):
         self._test_rnn_layer(keras_major_version=2, limit=10)
@@ -236,7 +236,7 @@ class LSTMLayer(RecurrentLayerTest):
             coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
             model.save_weights(keras_model_path)
             mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 keras_preds = model.predict(input_data).flatten()
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
@@ -264,24 +264,24 @@ class LSTMLayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     @pytest.mark.slow
     def test_keras1_lstm_layer_stress(self):
         self._test_lstm_layer(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_lstm_layer(self):
         self._test_lstm_layer(keras_major_version=1, limit=10)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_lstm_layer_stress(self):
         self._test_lstm_layer(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_lstm_layer(self):
         self._test_lstm_layer(keras_major_version=2, limit=10)
@@ -351,7 +351,7 @@ class GRULayer(RecurrentLayerTest):
             coreml_model_path = os.path.join(model_dir, 'keras.mlmodel')
             model.save_weights(keras_model_path)
             mlkitmodel = _get_mlkit_model_from_path(model, coreml_model_path)
-            if is_macos() and macos_version() >= (10, 13):
+            if _is_macos() and _macos_version() >= (10, 13):
                 keras_preds = model.predict(input_data).flatten()
                 input_data = np.transpose(input_data, [1, 0, 2])
                 coreml_preds = mlkitmodel.predict({'data': input_data})['output'].flatten()
@@ -379,24 +379,24 @@ class GRULayer(RecurrentLayerTest):
         self.assertEquals(shape_err_models, [], msg='Shape error models {}'.format(shape_err_models))
         self.assertEquals(numerical_err_models, [], msg='Numerical error models {}'.format(numerical_err_models))
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     @pytest.mark.slow
     def test_keras1_gru_layer_stress(self):
         self._test_gru_layer(keras_major_version=1)
 
-    @unittest.skipIf(not HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras 1. Skipping test.')
     @pytest.mark.keras1
     def test_keras1_gru_layer(self):
         self._test_gru_layer(keras_major_version=1, limit=10)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     @pytest.mark.slow
     def test_keras2_gru_layer_stress(self):
         self._test_gru_layer(keras_major_version=2)
 
-    @unittest.skipIf(not HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
+    @unittest.skipIf(not _HAS_KERAS2_TF, 'Missing keras 2. Skipping test.')
     @pytest.mark.keras2
     def test_keras2_gru_layer(self):
         self._test_gru_layer(keras_major_version=2, limit=10)

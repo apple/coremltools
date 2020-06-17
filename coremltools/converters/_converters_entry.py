@@ -1,31 +1,31 @@
-from __future__ import absolute_import
+from __future__ import absolute_import as _
 
 import gc
 import coremltools
-from six import string_types
+from six import string_types as _string_types
 
 from coremltools.converters.mil.input_types import InputType, ClassifierConfig
 from coremltools.converters.mil.converter import _convert
 from coremltools.converters.mil.mil import Program
-from coremltools._deps import HAS_TORCH, HAS_TF_1, HAS_TF_2
-from coremltools.converters._profile_utils import profile
+from coremltools._deps import _HAS_TORCH, _HAS_TF_1, _HAS_TF_2
+from coremltools.converters._profile_utils import _profile
 from coremltools import __version__ as ct_version
 from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
 
 
-if HAS_TF_1:
+if _HAS_TF_1:
     import tensorflow as tf
     from coremltools.converters.mil.frontend.tensorflow.load import TF1Loader
-if HAS_TF_2:
+if _HAS_TF_2:
     import tensorflow as tf
     from coremltools.converters.mil.frontend.tensorflow2.load import TF2Loader
 
-if HAS_TORCH:
+if _HAS_TORCH:
     import torch
     from coremltools.converters.mil.frontend.torch.load import _torchscript_from_model as pytorch_load
 
 
-@profile
+@_profile
 def convert(model,
             source="auto",
             inputs=None,
@@ -186,10 +186,10 @@ def convert(model,
             msg = "\"classfier_config\" must be of type ClassifierConfig"
             raise ValueError(msg)
 
-    if source == "tensorflow" and HAS_TF_2:
+    if source == "tensorflow" and _HAS_TF_2:
         source = "tensorflow2"
 
-    if source == "auto" and HAS_TF_1:
+    if source == "auto" and _HAS_TF_1:
         try:
             loader = TF1Loader(model, outputs=outputs)
             loader._graph_def_from_model(outputs=outputs)
@@ -197,7 +197,7 @@ def convert(model,
         except:
             pass
 
-    if source == "auto" and HAS_TF_2:
+    if source == "auto" and _HAS_TF_2:
         try:
             loader = TF2Loader(model, outputs=outputs)
             loader._graph_def_from_model(outputs=outputs)
@@ -205,7 +205,7 @@ def convert(model,
         except:
             pass
 
-    if source == "auto" and HAS_TORCH:
+    if source == "auto" and _HAS_TORCH:
         try:
             pytorch_load(model)
             source = "pytorch"
@@ -226,7 +226,7 @@ def convert(model,
 
     elif source in {"tensorflow", "tensorflow2"}:
 
-        if source == 'tensorflow' and not HAS_TF_1:
+        if source == 'tensorflow' and not _HAS_TF_1:
             raise ValueError('Converter was called with source=tensorflow, but missing tensorflow package')
 
         if inputs is not None and not all([isinstance(_input, InputType) for _input in inputs]):
@@ -263,7 +263,7 @@ def convert(model,
             if not isinstance(outputs, list):
                 msg = "\"outputs\" must be of type list. Received: {}".format(outputs)
                 raise ValueError(msg)
-            if not all([isinstance(output, string_types) for output in outputs]):
+            if not all([isinstance(output, _string_types) for output in outputs]):
                 msg = "\"inputs\" list must contain strings. Received: {}".format(outputs)
                 raise ValueError(msg)
 
@@ -298,9 +298,9 @@ def convert(model,
     gc.collect()
 
     # recording metadata: coremltools version, source framework and version
-    if source in {'tensorflow', 'tensorflow2'} and (HAS_TF_1 or HAS_TF_2):
+    if source in {'tensorflow', 'tensorflow2'} and (_HAS_TF_1 or _HAS_TF_2):
         src_pkg_version = "tensorflow=={0}".format(tf.__version__)
-    elif source == 'pytorch' and HAS_TORCH:
+    elif source == 'pytorch' and _HAS_TORCH:
         src_pkg_version = "torch=={0}".format(torch.__version__)
     else:
         src_pkg_version = 'unknown'

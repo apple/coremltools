@@ -5,7 +5,7 @@ import unittest
 from sys import platform
 
 import coremltools.models.datatypes as datatypes
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import _macos_version
 from coremltools.models import neural_network as neural_network
 from coremltools.models import MLModel
 from coremltools.models.neural_network.printer import print_network_spec
@@ -230,7 +230,7 @@ class MLModelPassesTest(unittest.TestCase):
         after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
         np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
 
-@unittest.skipIf(platform != 'darwin' or macos_version() < (10, 15), "Requires MacOS 10.15 or later")
+@unittest.skipIf(platform != 'darwin' or _macos_version() < (10, 15), "Requires MacOS 10.15 or later")
 class Redundant_Transposees_Test(unittest.TestCase):
 
     def _test_builder(self, builder, input_shape, expected_layer_num=None):

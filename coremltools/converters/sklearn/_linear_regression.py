@@ -10,7 +10,7 @@ from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 
 import numpy as _np
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:

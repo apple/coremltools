@@ -5,13 +5,13 @@
 
 import unittest
 import numpy as np
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from coremltools.converters import sklearn as converter
     from sklearn.preprocessing import Imputer
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class ImputerTestCase(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.

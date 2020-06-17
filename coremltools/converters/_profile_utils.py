@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function as _
 import os
 import time
 
@@ -6,7 +6,7 @@ _FUNCTION_PROFILE_REGISTRY = {}  # str -> list (function name to time stack)
 _ENABLE_PROFILING = os.environ.get("ENABLE_PROFILING", False)
 
 
-def profile(_f=None):
+def _profile(_f=None):
     def func_wrapper(func):
         f_name = func.__module__ + "." + func.__name__
         if f_name in _FUNCTION_PROFILE_REGISTRY:
@@ -25,11 +25,11 @@ def profile(_f=None):
 _INITIAL_CALL = True
 
 
-def prColor(skk, color="94m", end='\n'):
+def _pr_color(skk, color="94m", end='\n'):
     print("\033[{} {}\033[00m".format(color, skk), end=end)
 
 
-def profiler(frame, event, arg, indent=[0]):
+def _profiler(frame, event, arg, indent=[0]):
 
     if frame.f_globals.get("__name__", None) is None:
         return
@@ -49,7 +49,7 @@ def profiler(frame, event, arg, indent=[0]):
             print("\n" * 2)
 
         indent[0] += 3
-        prColor(
+        _pr_color(
             "{} call {} {}".format(
                 "=" * indent[0] + ">",
                 function_name.split(".")[-1],
@@ -62,16 +62,16 @@ def profiler(frame, event, arg, indent=[0]):
     elif event == "return" and profile_function:
         duration = time.clock() - _FUNCTION_PROFILE_REGISTRY[function_name][-1]
         duration = round(duration)
-        prColor(
+        _pr_color(
             "{} exit {} {} ".format(
                 "<" + "=" * indent[0],
                 function_name.split(".")[-1],
                 " (" + ".".join(function_name.split(".")[2:-1]) + ")"
             ), end=""
         )
-        prColor(": Time spent {} seconds ".format(
+        _pr_color(": Time spent {} seconds ".format(
                 duration,), color="91m")
         indent[0] -= 3
         _FUNCTION_PROFILE_REGISTRY[function_name].pop()
 
-    return profiler
+    return _profiler

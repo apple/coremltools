@@ -12,10 +12,10 @@ import unittest
 import numpy as np
 import pytest
 
-from coremltools._deps import HAS_KERAS_TF
-from coremltools.models.utils import macos_version, is_macos
+from coremltools._deps import _HAS_KERAS_TF
+from coremltools.models.utils import _macos_version, _is_macos
 
-if HAS_KERAS_TF:
+if _HAS_KERAS_TF:
     from keras.models import Sequential, Model
     from keras.layers import Dense, Activation, Convolution2D, AtrousConvolution2D, LSTM, \
         ZeroPadding2D, Deconvolution2D, Permute, Convolution1D, AtrousConvolution1D, \
@@ -92,7 +92,7 @@ def conv2d_bn(x, nb_filter, nb_row, nb_col, border_mode='same', subsample=(1, 1)
     x = BatchNormalization(axis=bn_axis, name=bn_name)(x)
     return x
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras1
 class KerasNumericCorrectnessTest(unittest.TestCase):
     """
@@ -149,7 +149,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
         coreml_model = _get_coreml_model(model, model_path, input_names, 
                 output_names)
         
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # Assuming coreml model output names are in the same order as Keras 
             # Output list, put predictions into a list, sorted by output name
             coreml_preds = coreml_model.predict(coreml_input)
@@ -179,7 +179,7 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
             shutil.rmtree(model_dir)
         
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras1
 class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
 
@@ -1598,7 +1598,7 @@ class KerasBasicNumericCorrectnessTest(KerasNumericCorrectnessTest):
         self._test_keras_model(model, input_blob='data', output_blob='output', delta=1e-2)
 
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras1
 class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
 
@@ -1684,7 +1684,7 @@ class KerasTopologyCorrectnessTest(KerasNumericCorrectnessTest):
         model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
         self._test_keras_model(model, mode = 'random', delta=1e-2)
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras1
 class KerasInceptionCorrectnessTest(KerasNumericCorrectnessTest):
 
@@ -2029,7 +2029,7 @@ class KerasInceptionCorrectnessTest(KerasNumericCorrectnessTest):
         # Get the coreml model
         self._test_keras_model(model)
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras1
 @pytest.mark.slow
 class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
@@ -2077,7 +2077,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
 
         # Get the model
         coreml_model = _get_coreml_model(model, model_path, input_names, ['output'])
-        if is_macos() and macos_version() >= (10, 13):
+        if _is_macos() and _macos_version() >= (10, 13):
             # get prediction
             coreml_preds = coreml_model.predict(coreml_input)['output'].flatten()
 

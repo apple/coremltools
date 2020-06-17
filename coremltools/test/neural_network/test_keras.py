@@ -5,17 +5,17 @@
 
 import unittest
 
-from coremltools._deps import HAS_KERAS_TF
+from coremltools._deps import _HAS_KERAS_TF
 from coremltools.proto import FeatureTypes_pb2
 import pytest
 import six
 
-if HAS_KERAS_TF:
+if _HAS_KERAS_TF:
     import tensorflow as tf
     from keras.models import Sequential, Model
     from coremltools.converters import keras
 
-@unittest.skipIf(not HAS_KERAS_TF, 'Missing keras. Skipping tests.')
+@unittest.skipIf(not _HAS_KERAS_TF, 'Missing keras. Skipping tests.')
 @pytest.mark.keras1
 class KerasSingleLayerTest(unittest.TestCase):
     """

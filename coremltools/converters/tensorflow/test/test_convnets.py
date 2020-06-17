@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
-from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
-if HAS_TF:
+from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
+if _HAS_TF:
     import tensorflow as tf
-from coremltools.models.utils import is_macos, macos_version
+from coremltools.models.utils import _is_macos, _macos_version
 import math
 
 from .test_base import TFNetworkTest, TFNetworkBatchTest
@@ -20,7 +20,7 @@ def conv_cell(inp, conv_weights, bias=None, activation=None, pooling=None, has_b
     x = tf.nn.conv2d(inp, conv_weights, conv_config['strides'], conv_config['padding'], data_format=data_format)
     return x
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TFConvNetTest(TFNetworkBatchTest):
     @classmethod
     def setUpClass(self):
@@ -196,7 +196,7 @@ class TFConvNetTest(TFNetworkBatchTest):
             self._test_tf_model(graph, {x_image.op.name: [None, 16, 16, 3]},
                                 output_name, batch_sizes=[1, 4])
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TFSingleLayerTest(TFNetworkBatchTest):
     """
     Small models from tensorflow.layers
@@ -1094,7 +1094,7 @@ class TFSingleLayerTest(TFNetworkBatchTest):
         self._test_tf_model_constant(graph, {a.op.name: shape}, [out.op.name])
 
     @unittest.skipUnless(
-            macos_version() >= (10, 16), 'Only supported on MacOS 10.16+')
+        _macos_version() >= (10, 16), 'Only supported on MacOS 10.16+')
     def test_unary_activation_relu6(self):
         shape = [1, 5, 5, 6]
         graph = tf.Graph()

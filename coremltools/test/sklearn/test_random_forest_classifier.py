@@ -4,15 +4,15 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.ensemble import RandomForestClassifier
     from coremltools.converters import sklearn as skl_converter
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -79,7 +79,7 @@ class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
             spec = skl_converter.convert(model, 'data', 'out')
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.

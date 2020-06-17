@@ -63,9 +63,10 @@ from .converters import convert
 from .converters import ClassifierConfig, TensorType, ImageType, RangeDim, Shape, EnumeratedShapes
 
 # Time profiling for functions in coremltools package, decorated with @profile
-import os, sys
-from .converters._profile_utils import profiler
-_ENABLE_PROFILING = os.environ.get("ENABLE_PROFILING", False)
+import os as _os
+import sys as _sys
+from .converters._profile_utils import _profiler
+_ENABLE_PROFILING = _os.environ.get("ENABLE_PROFILING", False)
 
 if _ENABLE_PROFILING:
-    sys.setprofile(profiler)
+    _sys.setprofile(_profiler)

@@ -2,13 +2,15 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-import numpy as np
-import sympy as sm
+import logging as _logging
+import numpy as _np
+import sympy as _sm
 from . import types
 from .block import Function
 from .var import Var
 from .types.symbolic import k_used_symbols, k_num_internal_syms
 from coremltools.converters.mil.input_types import InputType
+
 
 class Program(object):
     def __init__(self):
@@ -82,7 +84,7 @@ class Placeholder(object):
 
         dtype: types.float or other scalar builtin types.
         """
-        if not isinstance(sym_shape, (list, tuple, np.generic, np.ndarray)):
+        if not isinstance(sym_shape, (list, tuple, _np.generic, _np.ndarray)):
             raise ValueError(
                 "Illegal shape for Placeholder: {}".format(sym_shape))
         self.sym_shape = sym_shape
@@ -134,7 +136,7 @@ def get_new_symbol(name=None):
         if s in k_used_symbols:
             new_name = name + k_num_internal_syms
             msg = 'Symbol name "{}" already occupied. Renaming to {}'
-            logging.warning(msg.format(name, new_name))
+            _logging.warning(msg.format(name, new_name))
             s = Symbol(new_name)
     else:
         s = Symbol('is' + str(k_num_internal_syms))
@@ -142,7 +144,7 @@ def get_new_symbol(name=None):
     return s
 
 
-class Symbol(sm.Symbol):
+class Symbol(_sm.Symbol):
     def __init__(self, sym_name):
         """
         Essentially sympy.Symbol representing an i32 value in shape.

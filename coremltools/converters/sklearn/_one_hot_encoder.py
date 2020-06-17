@@ -19,7 +19,7 @@ from ...models.array_feature_extractor import create_array_feature_extractor
 
 from ...models.pipeline import Pipeline
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN as _HAS_SKLEARN
 
 if _HAS_SKLEARN:
     import sklearn

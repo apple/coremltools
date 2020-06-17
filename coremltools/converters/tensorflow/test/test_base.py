@@ -7,8 +7,8 @@ import os, sys
 import numpy as np
 import unittest
 import shutil, tempfile
-from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
-if HAS_TF:
+from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
+if _HAS_TF:
     import tensorflow as tf
     from tensorflow.python.tools.freeze_graph import freeze_graph
     from tensorflow.tools.graph_transforms import TransformGraph
@@ -34,7 +34,7 @@ def _parse_coreml_name_to_tf(coreml_name):
     return tf_name
 
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TFNetworkTest(unittest.TestCase):
 
     @classmethod
@@ -412,4 +412,3 @@ class TFNetworkBatchTest(TFNetworkTest):
                 use_cpu_only=use_cpu_only,
                 graph_optimizations=graph_optimizations,
                 quantize_tf_model=quantize_tf_model)
-

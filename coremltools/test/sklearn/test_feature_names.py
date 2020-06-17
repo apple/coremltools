@@ -7,9 +7,9 @@ import coremltools.models._feature_management as fm
 import coremltools.models.datatypes as dt
 import six
 import unittest
-from coremltools._deps import HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
 class FeatureManagementTests(unittest.TestCase):
 
     def test_all_strings(self):

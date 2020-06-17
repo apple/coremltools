@@ -6,27 +6,27 @@
 import unittest
 import tempfile
 from coremltools.proto import FeatureTypes_pb2
-from coremltools._deps import HAS_SKLEARN, HAS_LIBSVM
+from coremltools._deps import _HAS_SKLEARN, _HAS_LIBSVM
 from coremltools.models.pipeline import PipelineRegressor, PipelineClassifier
 from coremltools.models.utils import evaluate_transformer
 import coremltools.models.datatypes as datatypes
 from coremltools.models.feature_vectorizer import create_feature_vectorizer
 
-if HAS_SKLEARN:
+if _HAS_SKLEARN:
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
     from sklearn.pipeline import Pipeline
     from coremltools.converters import sklearn as converter
 
-if HAS_LIBSVM:
+if _HAS_LIBSVM:
     from libsvm import svm
     from libsvm import svmutil
     from coremltools.converters import libsvm as libsvm_converter
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
-@unittest.skipIf(not HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
 class LinearRegressionPipelineCreationTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -38,7 +38,7 @@ class LinearRegressionPipelineCreationTest(unittest.TestCase):
         Set up the unit test by loading the dataset and training a model.
         """
         
-        if not(HAS_SKLEARN):
+        if not(_HAS_SKLEARN):
             return
 
         scikit_data = load_boston()
@@ -83,8 +83,8 @@ class LinearRegressionPipelineCreationTest(unittest.TestCase):
                sorted(map(lambda x: x.name, spec.description.input)))
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
-@unittest.skipIf(not HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_LIBSVM, 'Missing libsvm. Skipping tests.')
 class LibSVMPipelineCreationTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -94,9 +94,9 @@ class LibSVMPipelineCreationTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not HAS_SKLEARN:
+        if not _HAS_SKLEARN:
             return
-        if not HAS_LIBSVM:
+        if not _HAS_LIBSVM:
             return
 
         scikit_data = load_boston()
@@ -144,7 +144,7 @@ class LibSVMPipelineCreationTest(unittest.TestCase):
                sorted(map(lambda x: x.name, spec.description.input)))
 
 
-@unittest.skipIf(not HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
+@unittest.skipIf(not _HAS_SKLEARN, 'Missing scikit-learn. Skipping tests.')
 class LinearRegressionPipeline(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -155,7 +155,7 @@ class LinearRegressionPipeline(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not HAS_SKLEARN:
+        if not _HAS_SKLEARN:
             return
         scikit_data = load_boston()
         feature_names = scikit_data.feature_names

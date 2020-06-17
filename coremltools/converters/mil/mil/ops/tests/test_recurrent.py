@@ -8,7 +8,7 @@ backends = testing_reqs.backends
 
 
 class TestGRU:
-    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",
                              "batch_size", "input_size", "hidden_size", "has_bias",
                              "output_sequence", "direction", "symbolic"],
@@ -267,7 +267,7 @@ class TestLSTM:
                             # rdar://63839623 ([GITLAB-CI] precision issue on various tests on gitlab ci)
                             atol=1e-3, rtol=1e-3)
 
-    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",
                              "batch_size", "input_size", "hidden_size", "has_bias",
                              "output_sequence", "direction", "symbolic"],
@@ -370,7 +370,7 @@ class TestLSTM:
                     use_cpu_only=use_cpu_only, frontend_only=False,
                     backend=backend)
 
-    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len", "batch_size", "input_size",
                                        "hidden_size", "has_bias", "output_sequence", "symbolic"],
                              argvalues=
@@ -491,7 +491,7 @@ class TestLSTM:
 
 
 class TestRNN:
-    @pytest.mark.skipif(not HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(argnames=["use_cpu_only", "backend", "seq_len",
                              "batch_size", "input_size", "hidden_size", "has_bias",
                              "output_sequence", "direction", "symbolic"],

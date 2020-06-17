@@ -2,7 +2,7 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-from coremltools._deps import HAS_TF as _HAS_TF
+from coremltools._deps import _HAS_TF
 
 if _HAS_TF:
     # graphdef to ssa

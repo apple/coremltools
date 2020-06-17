@@ -5,13 +5,13 @@ from __future__ import absolute_import as _
 
 import numpy as np
 import unittest
-from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
-if HAS_TF:
+from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
+if _HAS_TF:
     import tensorflow as tf
 
 from . test_base import TFNetworkTest
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class TFDynRNNTest(TFNetworkTest):
 
     # Allows you to override common test entry for this class

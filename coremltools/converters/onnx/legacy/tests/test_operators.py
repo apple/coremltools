@@ -1,12 +1,12 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import as _
+from __future__ import division as _
+from __future__ import print_function as _
+from __future__ import unicode_literals as _
 
 import unittest
 import numpy as np
-from coremltools._deps import HAS_ONNX, MSG_ONNX_NOT_FOUND
-if HAS_ONNX:
+from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+if _HAS_ONNX:
     import onnx
     from onnx.numpy_helper import from_array
     from coremltools.converters.onnx import convert
@@ -20,13 +20,13 @@ if HAS_ONNX:
 
 from typing import Text
 
-from coremltools.models.utils import macos_version
+from coremltools.models.utils import _macos_version
 
 MIN_MACOS_VERSION_10_15 = (10, 15)
 
 ONNX_SHAPE_INFERENCE_FAILS = True
 
-@unittest.skipUnless(HAS_ONNX, MSG_ONNX_NOT_FOUND)
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class SingleOperatorTest(unittest.TestCase):
     def test_conv(self):  # type: () -> None
         kernel_shape = (3, 2)
@@ -225,7 +225,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_gemm_ios13(self):
@@ -249,7 +249,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_gemm_transB_off_ios13(self):
@@ -267,7 +267,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     @unittest.skip("Failing: wrong input type")
@@ -283,7 +283,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_concat(self, minimum_ios_deployment_target="13"):  # type: () -> None
@@ -296,7 +296,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     @unittest.skip("Failing: wrong input type")
@@ -310,7 +310,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     @unittest.skip("Failing: wrong input type")
@@ -325,7 +325,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     @unittest.skip("Failing: wrong input type")
@@ -342,7 +342,7 @@ class SingleOperatorTest(unittest.TestCase):
     # TODO: add test_reshape_diff_rank_infer_shape where shape is Constant and known
     # to test rank-4 into rank-3 reshape with shape inferencing
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     @unittest.skip("Failing: wrong input type")
@@ -357,7 +357,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_squeeze(self, minimum_ios_deployment_target="13"):  # type: () -> None
@@ -370,7 +370,7 @@ class SingleOperatorTest(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_transpose_default(
@@ -388,7 +388,7 @@ class SingleOperatorTest(unittest.TestCase):
         "ONNX Shape inference fails to recongnize correct shape",
     )
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_transpose_permute(
@@ -407,7 +407,7 @@ class SingleOperatorTest(unittest.TestCase):
         "ONNX Shape inference fails to recongnize correct shape",
     )
     @unittest.skipIf(
-        macos_version() < MIN_MACOS_VERSION_10_15,
+        _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
     def test_unsqueeze(self, minimum_ios_deployment_target="13"):  # type: () -> None

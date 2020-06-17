@@ -5,9 +5,9 @@ from tempfile import mkdtemp
 import pytest
 
 from coremltools._deps import (
-    HAS_TF_1,
-    HAS_TF_2,
-    HAS_TORCH,
+    _HAS_TF_1,
+    _HAS_TF_2,
+    _HAS_TORCH,
     MSG_TF1_NOT_FOUND,
     MSG_TF2_NOT_FOUND,
     MSG_TORCH_NOT_FOUND,
@@ -22,7 +22,7 @@ from coremltools._deps import (
 ###############################################################################
 
 
-@pytest.mark.skipif(not HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+@pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
 class TestTensorFlow1ConverterExamples:
     def setup_class(self):
         self._cwd = getcwd()
@@ -84,7 +84,7 @@ class TestTensorFlow1ConverterExamples:
         mlmodel.save("./model.mlmodel")
 
 
-@pytest.mark.skipif(not HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+@pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
 class TestTensorFlow2ConverterExamples:
     def setup_class(self):
         self._cwd = getcwd()
@@ -171,7 +171,7 @@ class TestTensorFlow2ConverterExamples:
         mlmodel.save("./model.mlmodel")
 
 
-@pytest.mark.skipif(not HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+@pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 class TestPyTorchConverterExamples:
     def setup_class(self):
         self._cwd = getcwd()

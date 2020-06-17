@@ -4,12 +4,12 @@ import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
 import numpy as np
 import copy
-from coremltools._deps import HAS_TF, MSG_TF1_NOT_FOUND
-if HAS_TF:
+from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
+if _HAS_TF:
     import tensorflow as tf
     from coremltools.converters.tensorflow.legacy.tfcoreml import optimize_nn_spec
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class CorrectnessTest(unittest.TestCase):
     def _compare_outputs(self, output, output_ref, delta=0.05):
         x = output.flatten()
@@ -20,7 +20,7 @@ class CorrectnessTest(unittest.TestCase):
         max_error = np.amax(np.abs(x - y))
         self.assertGreater(delta, max_error)
 
-@unittest.skipIf(not HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
 class OptimizerTests(CorrectnessTest):
     def test_pad_conv_fusion(self):
 

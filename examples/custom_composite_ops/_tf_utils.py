@@ -104,7 +104,7 @@ def convert_tf1(graph, feed_dict, output_nodes):
     output_names = get_tf_node_names(output_nodes, mode='outputs')
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    spec = coremltools.converter.convert(graph,
+    spec = coremltools.convert(graph,
                                          inputs=input_names,
                                          outputs=output_names)
     return spec
@@ -120,7 +120,7 @@ def convert_tf2(model, output_names):
         name = get_tf_node_names(t)[0]
         outputs.append(name)
 
-    proto = coremltools.converter.convert(model, inputs=inputs, outputs=outputs)
+    proto = coremltools.convert(model, inputs=inputs, outputs=outputs)
     return proto
     
 def compare_results(proto, tf_model, input_dict, output_names, atol=1e-04, rtol=1e-05):

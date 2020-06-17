@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import print_function as _
 import os
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data # Import MINST data

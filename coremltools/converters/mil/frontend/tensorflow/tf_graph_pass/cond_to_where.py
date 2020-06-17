@@ -6,7 +6,7 @@ from ..basic_graph_ops import delete_node, disconnect_edge
 from .visitors import FindAllUpstreamTerminals
 
 import logging
-from coremltools._deps import HAS_TF_2
+from coremltools._deps import _HAS_TF_2
 
 def compute_max_rank(graph):
     #  highly inefficient way to calculate the rank of every node
@@ -75,7 +75,7 @@ class CondToWhere(object):
 
         # build the final select
         g[merge].op = 'iff'
-        if not HAS_TF_2:
+        if not _HAS_TF_2:
             # swap true branch with false branch to get the right semantics for IFF
             g[merge].inputs[0], g[merge].inputs[1] = g[merge].inputs[1], g[merge].inputs[0]
 

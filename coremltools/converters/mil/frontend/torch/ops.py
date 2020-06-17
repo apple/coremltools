@@ -1,8 +1,8 @@
-import logging
+import logging as _logging
 
-import math
-import numpy as np
-from tqdm import tqdm
+import math as _math
+import numpy as _np
+from tqdm import tqdm as _tqdm
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil import Builder as mb
@@ -39,9 +39,9 @@ def convert_nodes(context, graph):
                 assign node outputs.
             graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
     """
-    for node in tqdm(graph.nodes, desc='Converting Frontend ==> MIL Ops', unit=' ops'):
+    for node in _tqdm(graph.nodes, desc='Converting Frontend ==> MIL Ops', unit=' ops'):
         _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
-        logging.info("Converting op {} : {}".format(node.name, node.kind))
+        _logging.info("Converting op {} : {}".format(node.name, node.kind))
         if _add_op is None:
             raise RuntimeError(
                 "Pytorch convert function for op {} not implemented".format(node.kind)
@@ -100,7 +100,7 @@ NUM_TO_TORCH_DTYPE = {
 
 
 def decide_immediate_or_file(val):
-    if val is not None and isinstance(val, (np.ndarray, np.generic)) and val.size >= 10:
+    if val is not None and isinstance(val, (_np.ndarray, _np.generic)) and val.size >= 10:
         return "file_value"
     return "immediate_value"
 
@@ -342,13 +342,13 @@ def _convolution(context, node):
     pad = inputs[4]
     if weight.val.ndim in (3, 4):
         # 1D and 2D: Need to explicitly state L-R, T-B pad
-        pad = np.repeat(pad.val, 2)
+        pad = _np.repeat(pad.val, 2)
     elif weight.val.ndim == 5:
         # 3D: Need to explicitly state F-Bk, L-R, T-B pad
         if type(pad.val) == int:
-            pad = np.repeat(pad.val, 6)
+            pad = _np.repeat(pad.val, 6)
         elif len(pad.val) == 3:
-            pad = np.repeat(pad.val, 2)
+            pad = _np.repeat(pad.val, 2)
     else:
         raise ValueError(
             "Invalid weight dimension. Must be 3, 4, or 5 for 1D, 2D, or 3D convolution, respectively."
@@ -471,7 +471,7 @@ def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes
             # MIL pooling does not support ceil_mode natively, but we can
             # workaround by padding the input appropriately.
             # rdar://60634390
-            logging.warning("pooling padding adjusted to support ceil_mode=True")
+            _logging.warning("pooling padding adjusted to support ceil_mode=True")
             new_pad[2 * idx + 1] += stride - remainder
 
     return new_pad
@@ -488,10 +488,10 @@ def max_pool2d(context, node):
 
     # Need to explicity state L-R, T-B pad
     pad = inputs[3]
-    pad = np.repeat(pad.val, 2)
+    pad = _np.repeat(pad.val, 2)
     dilation = inputs[4].val
     ceil_mode = inputs[5].val
-    if np.any(dilation > 1):
+    if _np.any(dilation > 1):
         # See: rdar://60633736 (Implement dilation for mil op max_pool)
         raise ValueError("@max_pool2d does not support dilation > 1")
     if ceil_mode is True:
@@ -577,7 +577,7 @@ def mean(context, node):
         # @axes needs to be a list, but if only one axis was specified in the
         # model, it will be constructed as an int. Construct a new constant as a
         # list.
-        if not isinstance(axes.val, np.ndarray):
+        if not isinstance(axes.val, _np.ndarray):
             axes = mb.const(val=[axes.val], name=axes.name + "_list")
             context.add(axes)
         kwargs["axes"] = axes
@@ -644,7 +644,7 @@ def adaptive_avg_pool2d(context, node):
 
     _input = inputs[0]
     output_size = inputs[1].val
-    assert isinstance(output_size, np.ndarray)
+    assert isinstance(output_size, _np.ndarray)
     output_size = tuple(output_size)
 
     if output_size == (1, 1):
@@ -732,7 +732,7 @@ def embedding(context, node):
         sparse = inputs[4].val
 
     if padding_idx != -1 or scale_grad_by_freq or sparse:
-        logging.warning(
+        _logging.warning(
             "CoreML embedding (gather) layer does not support any "
             "inputs besides the weights and indices. Those given "
             "will be ignored."
@@ -797,7 +797,7 @@ def item(context, node):
         # MIL ops that reduce already output a scalar, so no need to do
         # anything.
         res = inputs[0]
-    elif np.all([d == 1 for d in inputs[0].shape]):
+    elif _np.all([d == 1 for d in inputs[0].shape]):
         # Item only makes sense when called on a length 1 tensor. We use
         # reduce_max as a workaround for not having a way to extract a scalar
         # from a symbolic tensor.
@@ -811,7 +811,7 @@ def _cast(context, node, dtype, dtype_name):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
     # Input must either be a scalar or a (1 x 1 x ... x 1) tensor
-    if not (len(x.shape) == 0 or np.all([d == 1 for d in x.shape])):
+    if not (len(x.shape) == 0 or _np.all([d == 1 for d in x.shape])):
         raise ValueError("input to cast must be either a scalar or a length 1 tensor")
 
     if x.val is not None:
@@ -888,7 +888,7 @@ def _ifzo_to_ifoz(weights, name):
         to CoreML format 
     """
     split_size = weights.shape[0] // 4
-    weights_split = mb.split(x=weights, split_sizes=np.array([split_size] * 4), axis=0)
+    weights_split = mb.split(x=weights, split_sizes=_np.array([split_size] * 4), axis=0)
     weights_concat = mb.concat(
         values=[weights_split[0], weights_split[1], weights_split[3], weights_split[2]],
         axis=0,
@@ -905,10 +905,10 @@ def _pytorch_hidden_to_coreml_milops(x, name):
         from pytorch to CoreML format. 
     """
     split_size = x.shape[0] // 2
-    x_split = mb.split(x=x, split_sizes=np.array([split_size] * 2), axis=0)
+    x_split = mb.split(x=x, split_sizes=_np.array([split_size] * 2), axis=0)
     x_concat = mb.concat(values=[x_split[0], x_split[1]], axis=2,)
     # (4.) See docstring to @lstm
-    return mb.squeeze(x=x_concat, axes=np.array([0]), name=name)
+    return mb.squeeze(x=x_concat, axes=_np.array([0]), name=name)
 
 
 @register_torch_op
@@ -1062,8 +1062,8 @@ def lstm(context, node):
         )
 
         # (4.)
-        h = mb.squeeze(x=h0, axes=np.array([0]), name=node.name + "_lstm_h0_squeeze")
-        c = mb.squeeze(x=c0, axes=np.array([0]), name=node.name + "_lstm_c0_squeeze")
+        h = mb.squeeze(x=h0, axes=_np.array([0]), name=node.name + "_lstm_h0_squeeze")
+        c = mb.squeeze(x=c0, axes=_np.array([0]), name=node.name + "_lstm_c0_squeeze")
 
     lstm = mb.lstm(
         x=_input,
@@ -1239,8 +1239,8 @@ def loop(context, node):
 
         for input_var, output_var in zip(loop_vars[2:], res[1:]):
             if not _shapes_are_equivalent(input_var.shape, output_var.shape):
-                logging.warning("detected change in shape of loop variable. this could lead to incorrect inference results!")
-                logging.warning("{}:{} -> {}:{}".format(input_var.name, input_var.shape, output_var.name, output_var.shape))
+                _logging.warning("detected change in shape of loop variable. this could lead to incorrect inference results!")
+                _logging.warning("{}:{} -> {}:{}".format(input_var.name, input_var.shape, output_var.name, output_var.shape))
 
         # Update the iteration count if we're keeping track.
         if has_iter_count:
@@ -1348,7 +1348,7 @@ def select(context, node):
     )
     # Now we squeeze the dimension we have selected from to remove it
     squeeze = mb.squeeze(
-        x=slice_by_index, axes=np.array([dim]), name=node.name + "_squeeze"
+        x=slice_by_index, axes=_np.array([dim]), name=node.name + "_squeeze"
     )
     context.add(squeeze, node.name)
 
@@ -1386,7 +1386,7 @@ def _avg_pool(context, node, inputs):
     pad_type = "custom"
     # Need to explicity state L-R, T-B pad
     pad = inputs[3]
-    pad = np.repeat(pad.val, 2)
+    pad = _np.repeat(pad.val, 2)
     ceil_mode = inputs[4]
     if ceil_mode.val is True:
         rank = len(pad) // 2
@@ -1476,7 +1476,7 @@ def _slice(context, node):
     kwargs = {"x": x, "begin": begin_array, "end": end_array, "end_mask": end_mask, "name": node.name}
 
     if step != 1:
-        stride_array = np.array([1] * len(x.shape))
+        stride_array = _np.array([1] * len(x.shape))
         stride_array[dim] = step
         kwargs["stride"] = stride_array
 
@@ -1491,7 +1491,7 @@ def split(context, node):
     split_sizes = inputs[1]
     dim = inputs[2].val
 
-    if not isinstance(split_sizes.val, np.ndarray):
+    if not isinstance(split_sizes.val, _np.ndarray):
         shape = mb.shape(x=x)
         dim_size = _list_select(shape, dim)
         # MIL split op needs the size of each split to be given explicitly.
@@ -1588,8 +1588,8 @@ def constantchunk(context, node):
     dim = node.attr["dim"]
 
     total = x.shape[dim]
-    size = int(math.ceil(float(total) / float(chunks)))
-    split_sizes = [size] * int(math.floor(total / size))
+    size = int(_math.ceil(float(total) / float(chunks)))
+    split_sizes = [size] * int(_math.floor(total / size))
     remainder = total - sum(split_sizes)
     if remainder > 0:
         split_sizes.append(remainder)
@@ -1692,10 +1692,10 @@ def meshgrid(context, node):
     # scalar inputs will be considered 1d tensors
     tensor_inputs = []
     for tensor_var in inputs:
-        if not isinstance(tensor_var.val, np.ndarray):
-            tensor_inputs.append(np.array(tensor_var.val))
+        if not isinstance(tensor_var.val, _np.ndarray):
+            tensor_inputs.append(_np.array(tensor_var.val))
         else:
-            tensor_inputs.append(np.array(tensor_var))
+            tensor_inputs.append(_np.array(tensor_var))
 
     if any([len(tensor_var.shape) > 1 for tensor_var in inputs]):
         raise ValueError("meshgrid recieved non-1d tensor.")
@@ -1745,7 +1745,7 @@ def tanh(context, node):
     ]
 )
 def noop(context, node):
-    logging.info("Setting pytorch op: {} to no-op.".format(node))
+    _logging.info("Setting pytorch op: {} to no-op.".format(node))
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     context.add(_input, torch_name=node.name)

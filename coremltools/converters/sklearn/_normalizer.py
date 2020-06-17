@@ -10,7 +10,7 @@ from ...models._interface_management import set_transform_interface_params as \
 from ...proto import Model_pb2 as _Model_pb2
 from ...proto.Normalizer_pb2 import Normalizer as _proto__normalizer
 
-from ..._deps import HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:

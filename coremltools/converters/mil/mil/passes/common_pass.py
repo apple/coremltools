@@ -1,9 +1,10 @@
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-import logging
-from coremltools.converters._profile_utils import profile
-from tqdm import tqdm
+import logging as _logging
+from coremltools.converters._profile_utils import _profile
+from tqdm import tqdm as _tqdm
 
-@profile
+
+@_profile
 def common_pass(prog):
     passes = [
         'common::const_elimination',
@@ -17,16 +18,16 @@ def common_pass(prog):
         'common::fuse_bias_conv',
         'common::fuse_elementwise_to_batchnorm',
         'common::fuse_onehot_matmul_to_gather',
-        'common::fuse_layernorm_or_instancenorm', # should come after reduce_transposes, to detect instance_norm
+        'common::fuse_layernorm_or_instancenorm',  # should come after reduce_transposes, to detect instance_norm
         'common::dead_code_elimination',  # always end with dce
     ]
 
-    logging.debug('Program before common passes:\n{}'.format(prog))
+    _logging.debug('Program before common passes:\n{}'.format(prog))
 
     prog.validate()
-    for p in tqdm(passes, desc='Running MIL optimization passes', unit=' passes'):
-        logging.info('Performing pass: "{}"'.format(p))
+    for p in _tqdm(passes, desc='Running MIL optimization passes', unit=' passes'):
+        _logging.info('Performing pass: "{}"'.format(p))
         PASS_REGISTRY[p](prog)
         prog.validate()
 
-    logging.debug('Program after common passes:\n{}'.format(prog))
+    _logging.debug('Program after common passes:\n{}'.format(prog))
