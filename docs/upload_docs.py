@@ -6,6 +6,7 @@ import pathlib
 import os
 import re
 parser = argparse.ArgumentParser(description='Upload docs to ReadMe.')
+parser.add_argument('--version', type=str, help="Version to upload.", default=re.split('[a-z]+', coremltools.version.__version__)[0])
 parser.add_argument('--from_source_version', type=str, help='Create a version from this version if current CMLT version does not have docs.' +
 															'Default is the most recent version', default=None)
 parser.add_argument('--release_version', action='store_true', help='Release the version to the public.')
@@ -34,13 +35,12 @@ def sanitize_names(path):
 
 
 # API Setup
-cmlt_version = re.split('[a-z]+', coremltools.version.__version__)[0]
 sess = readme_session.ReadMeSession(args.auth_token)
 
 # Create version
-if cmlt_version not in sess.get_versions():
-	sess.create_version(cmlt_version, args.source_version)
-sess.set_api_version(cmlt_version)
+if args.version not in sess.get_versions():
+	sess.create_version(args.version, args.from_source_version)
+sess.set_api_version(args.version)
 
 # Upload generated folders
 docspath = str(pathlib.Path(__file__).parent.absolute() / '_build' / 'html')

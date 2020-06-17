@@ -213,7 +213,7 @@ class ReadMeSession():
 										         recursive)
 
 			# get all filenames in current dir
-			files = [os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+			files = sorted([os.path.join(path, f) for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))])
 
 			# iterate through all filenames and import the html files
 			for currfilename in files: self.upload(currfilename,
@@ -231,7 +231,7 @@ class ReadMeSession():
 			filecontents = filecontents.replace('\\', '&#92;')
 			filecontents = filecontents.replace('\n', '\\\\n')
 			filecontents = filecontents.replace('¶', '')
-			filecontents = filecontents.replace('"', '&#65282;') # Use HTML code for quote to make it parse in JSON
+			filecontents = filecontents.replace('"', '\'')
 			filecontents = '[block:html]\\n{\\n \\"html\\": \\"' + filecontents + '\\"\\n}\\n[/block]'
 
 			firstheadline = os.path.basename(currfilename)[:-5]
