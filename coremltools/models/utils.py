@@ -750,7 +750,8 @@ def _macos_version():
 
     return ()
 
-def python_version():
+
+def _python_version():
     """
     Return python version as a tuple of integers
     """

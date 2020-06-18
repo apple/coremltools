@@ -73,7 +73,7 @@ class TestApiVisibilities:
             "save",
             "short_description",
             "user_defined_metadata",
-            "version_string",
+            "version",
         ]
         _check_visible_modules(_get_visible_items(ct.models.MLModel), expected)
 
@@ -137,10 +137,8 @@ class TestApiVisibilities:
             "keras",
             "libsvm",
             "mil",
-            "nnssa",
             "onnx",
             "sklearn",
-            "tensorflow",
             "xgboost",
         ]
         _check_visible_modules(_get_visible_items(ct.converters), expected)
@@ -155,9 +153,7 @@ class TestApiVisibilities:
         _check_visible_modules(_get_visible_items(ct.converters.libsvm), ["convert"])
 
     def test_converters_onnx(self):
-        _check_visible_modules(
-            _get_visible_items(ct.converters.onnx), ["convert", "legacy"]
-        )
+        _check_visible_modules(_get_visible_items(ct.converters.onnx), ["convert"])
 
     def test_converters_sklearn(self):
         _check_visible_modules(_get_visible_items(ct.converters.sklearn), ["convert"])
