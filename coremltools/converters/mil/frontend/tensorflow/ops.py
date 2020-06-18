@@ -202,7 +202,7 @@ def BatchToSpaceND(context, node):
         resize_batch_size = mb.real_div(x=batch_size, y=block_shape_prod)
         resize_batch_size = [mb.cast(x=resize_batch_size,dtype="int32")]
         remain_dims = [_value_at(input_shape,i) for i in range(1,rank)]
-        block_dims = [x for x in block_shape]
+        block_dims = [dim for dim in block_shape]
         reshape_values = block_dims+resize_batch_size+remain_dims
         reshape_shape = mb.concat(values=reshape_values, axis=0)
         reshaped = mb.reshape(x=x, shape=reshape_shape)

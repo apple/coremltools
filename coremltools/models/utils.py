@@ -750,6 +750,14 @@ def _macos_version():
 
     return ()
 
+def python_version():
+    """
+    Return python version as a tuple of integers
+    """
+    version = _sys.version.split(' ')[0]
+    version = list(map(int, list(version.split('.'))))
+    return tuple(version)
+
 
 def _get_feature(spec, feature_name):
     for input_feature in spec.description.input:
