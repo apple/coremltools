@@ -61,17 +61,24 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
         if len(constant_nodes) > 0:
             with tf.Graph().as_default() as graph:
                 tf.import_graph_def(new_graph, name="")
-                with tf.compat.v1.Session(graph=graph) as sess:
+
+                # We're only making one call to `sess.run()` in order to compute constant values.
+                # In this context, the default optimization settings make everything dramatically
+                # slower and more memory-intensive.
+                session_config = tf.compat.v1.ConfigProto()
+                session_config.graph_options.optimizer_options.opt_level = tf.compat.v1.OptimizerOptions.L0
+                session_config.graph_options.rewrite_options.disable_meta_optimizer = True
+                with tf.compat.v1.Session(graph=graph, config=session_config) as sess:
                     query_list = list()
+                    control_flow_ops = list()
                     for c in constant_nodes:
                         for j in range(constant_node_num_outputs[c]):
-                            query_list.append(c + ':' + str(j))
-                    control_flow_ops = list()
-                    for query in list(query_list):
-                        op_name = query.lower()
-                        if 'switch' in op_name or 'cond' in op_name:
-                            control_flow_ops.append(query)
-                            query_list.remove(query)
+                            query = c + ':' + str(j)
+                            lower_query = query.lower()
+                            if 'switch' in lower_query or 'cond' in lower_query:
+                                control_flow_ops.append(query)
+                            else:
+                                query_list.append(query)
                     result_list = sess.run(query_list)
                     result = {query_list[i]: result_list[i] for i in range(len(query_list))}
                     # propagate switch one by one

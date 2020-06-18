@@ -108,12 +108,12 @@ def _fill_quantized_weights(weights_message=None,
     if quantization_type == 'linear':
         quant_scale = kwargs.get('quant_scale', [1.0])
         quant_bias = kwargs.get('quant_bias', [0.0])
-        weights_message.quantization.linearQuantization.scale.extend(map(float, quant_scale))
+        weights_message.quantization.linearQuantization.scale.extend(quant_scale)
         if not use_int_8:
-            weights_message.quantization.linearQuantization.bias.extend(map(float, quant_bias))
+            weights_message.quantization.linearQuantization.bias.extend(quant_bias)
     else:
         quant_lut = kwargs.get('quant_lut', [0.0, 1.0])
-        weights_message.quantization.lookupTableQuantization.floatValue.extend(map(float, quant_lut))
+        weights_message.quantization.lookupTableQuantization.floatValue.extend(quant_lut)
 
 
 def _get_nn_spec(spec):
@@ -1159,7 +1159,7 @@ class NeuralNetworkBuilder(object):
 
         weights = spec_layer_params.weights
         if not is_quantized_weight and isinstance(W, _np.ndarray):
-            weights.floatValue.extend(map(float, W.flatten()))
+            weights.floatValue.extend(W.flatten())
         else:
 
             _verify_quantization_arguments(weight=W, output_channels=output_channels,
@@ -1175,7 +1175,7 @@ class NeuralNetworkBuilder(object):
 
         if has_bias:
             bias = spec_layer_params.bias
-            bias.floatValue.extend(map(float, b.flatten()))
+            bias.floatValue.extend(b.flatten())
 
         return spec_layer
 
@@ -1252,7 +1252,7 @@ class NeuralNetworkBuilder(object):
 
         weights = spec_layer_params.weights
         if not is_quantized_weight:
-            weights.floatValue.extend(map(float, W.flatten()))
+            weights.floatValue.extend(W.flatten())
         else:
             _verify_quantization_arguments(weight=W, output_channels=output_channels,
                                            quantization_type=quantization_type, nbits=nbits,
@@ -1264,7 +1264,7 @@ class NeuralNetworkBuilder(object):
 
         if has_bias:
             bias = spec_layer_params.bias
-            bias.floatValue.extend(map(float, b.flatten()))
+            bias.floatValue.extend(b.flatten())
 
         return spec_layer
 
@@ -1427,7 +1427,7 @@ class NeuralNetworkBuilder(object):
 
         elif non_linearity == 'PRELU':
             # PReLU must provide an np array in params[0]
-            spec_layer_params.PReLU.alpha.floatValue.extend(map(float, params.flatten()))
+            spec_layer_params.PReLU.alpha.floatValue.extend(params.flatten())
 
         elif non_linearity == 'ELU':
             # ELU must provide an alpha in params[0]
@@ -1437,8 +1437,8 @@ class NeuralNetworkBuilder(object):
             # Parametric softplus must provide two np arrays for alpha and beta
             alphas, betas = (params[0], params[1])
             # Weight alignment: Keras [H,W,C,F]
-            spec_layer_params.parametricSoftplus.alpha.floatValue.extend(map(float, alphas.flatten()))
-            spec_layer_params.parametricSoftplus.beta.floatValue.extend(map(float, betas.flatten()))
+            spec_layer_params.parametricSoftplus.alpha.floatValue.extend(alphas.flatten())
+            spec_layer_params.parametricSoftplus.beta.floatValue.extend(betas.flatten())
 
         elif non_linearity == 'THRESHOLDEDRELU':
             if params is None:
@@ -1639,7 +1639,7 @@ class NeuralNetworkBuilder(object):
         if isinstance(W, int):
             scale.floatValue.append(float(W))
         else:
-            scale.floatValue.extend(map(float, W.flatten()))
+            scale.floatValue.extend(W.flatten())
         if len(scale.floatValue) != _np.prod(shape_scale):
             raise ValueError("Dimensions of 'shape_scale' do not match the size of the provided 'scale' parameter")
 
@@ -1650,7 +1650,7 @@ class NeuralNetworkBuilder(object):
             if isinstance(b, int):
                 bias.floatValue.append(float(b))
             else:
-                bias.floatValue.extend(map(float, b.flatten()))
+                bias.floatValue.extend(b.flatten())
             if len(bias.floatValue) != _np.prod(shape_bias):
                 raise ValueError("Dimensions of 'shape_bias' do not match the size of the provided 'b' parameter")
         return spec_layer
@@ -1693,7 +1693,7 @@ class NeuralNetworkBuilder(object):
         if isinstance(b, int):
             bias.floatValue.append(float(b))
         else:
-            bias.floatValue.extend(map(float, b.flatten()))
+            bias.floatValue.extend(b.flatten())
         if len(bias.floatValue) != _np.prod(shape_bias):
             raise ValueError("Dimensions of 'shape_bias' do not match the size"
                              "of the provided 'b' parameter")
@@ -1918,7 +1918,7 @@ class NeuralNetworkBuilder(object):
         # Assign weights
         weights = spec_layer_params.weights
         if len(kwargs) == 0:  # no quantization
-            weights.floatValue.extend(map(float, Wt.flatten()))
+            weights.floatValue.extend(Wt.flatten())
         else:  # there is quantization
             W_bytes = bytes()
             if nbits == 8:
@@ -2078,7 +2078,7 @@ class NeuralNetworkBuilder(object):
 
         # Assign weights
         weights = spec_layer_params.weights
-        weights.floatValue.extend(map(float, W.flatten()))
+        weights.floatValue.extend(W.flatten())
 
         # Assign biases
         spec_layer_params.hasBias = has_bias
@@ -2471,11 +2471,11 @@ class NeuralNetworkBuilder(object):
         _set_recurrent_activation(activation_f, activation)
 
         # Write the weights
-        spec_layer_params.weightMatrix.floatValue.extend(map(float, W_x.flatten()))
-        spec_layer_params.recursionMatrix.floatValue.extend(map(float, W_h.flatten()))
+        spec_layer_params.weightMatrix.floatValue.extend(W_x.flatten())
+        spec_layer_params.recursionMatrix.floatValue.extend(W_h.flatten())
 
         if b is not None:
-            spec_layer_params.biasVector.floatValue.extend(map(float, b.flatten()))
+            spec_layer_params.biasVector.floatValue.extend(b.flatten())
         return spec_layer
 
     def add_gru(self, name, W_h, W_x, b, hidden_size, input_size,
@@ -2554,19 +2554,19 @@ class NeuralNetworkBuilder(object):
         R_z, R_r, R_o = W_h
         W_z, W_r, W_o = W_x
 
-        spec_layer_params.updateGateWeightMatrix.floatValue.extend(map(float, W_z.flatten()))
-        spec_layer_params.resetGateWeightMatrix.floatValue.extend(map(float, W_r.flatten()))
-        spec_layer_params.outputGateWeightMatrix.floatValue.extend(map(float, W_o.flatten()))
+        spec_layer_params.updateGateWeightMatrix.floatValue.extend(W_z.flatten())
+        spec_layer_params.resetGateWeightMatrix.floatValue.extend(W_r.flatten())
+        spec_layer_params.outputGateWeightMatrix.floatValue.extend(W_o.flatten())
 
-        spec_layer_params.updateGateRecursionMatrix.floatValue.extend(map(float, R_z.flatten()))
-        spec_layer_params.resetGateRecursionMatrix.floatValue.extend(map(float, R_r.flatten()))
-        spec_layer_params.outputGateRecursionMatrix.floatValue.extend(map(float, R_o.flatten()))
+        spec_layer_params.updateGateRecursionMatrix.floatValue.extend(R_z.flatten())
+        spec_layer_params.resetGateRecursionMatrix.floatValue.extend(R_r.flatten())
+        spec_layer_params.outputGateRecursionMatrix.floatValue.extend(R_o.flatten())
 
         if b is not None:
             b_z, b_r, b_o = b
-            spec_layer_params.updateGateBiasVector.floatValue.extend(map(float, b_z.flatten()))
-            spec_layer_params.resetGateBiasVector.floatValue.extend(map(float, b_r.flatten()))
-            spec_layer_params.outputGateBiasVector.floatValue.extend(map(float, b_o.flatten()))
+            spec_layer_params.updateGateBiasVector.floatValue.extend(b_z.flatten())
+            spec_layer_params.resetGateBiasVector.floatValue.extend(b_r.flatten())
+            spec_layer_params.outputGateBiasVector.floatValue.extend(b_o.flatten())
         return spec_layer
 
     def add_unilstm(self, name, W_h, W_x, b, hidden_size, input_size, input_names, output_names,
@@ -2672,28 +2672,28 @@ class NeuralNetworkBuilder(object):
         R_i, R_f, R_o, R_z = W_h
         W_i, W_f, W_o, W_z = W_x
 
-        weight_params.inputGateWeightMatrix.floatValue.extend(map(float, W_i.flatten()))
-        weight_params.forgetGateWeightMatrix.floatValue.extend(map(float, W_f.flatten()))
-        weight_params.outputGateWeightMatrix.floatValue.extend(map(float, W_o.flatten()))
-        weight_params.blockInputWeightMatrix.floatValue.extend(map(float, W_z.flatten()))
+        weight_params.inputGateWeightMatrix.floatValue.extend(W_i.flatten())
+        weight_params.forgetGateWeightMatrix.floatValue.extend(W_f.flatten())
+        weight_params.outputGateWeightMatrix.floatValue.extend(W_o.flatten())
+        weight_params.blockInputWeightMatrix.floatValue.extend(W_z.flatten())
 
-        weight_params.inputGateRecursionMatrix.floatValue.extend(map(float, R_i.flatten()))
-        weight_params.forgetGateRecursionMatrix.floatValue.extend(map(float, R_f.flatten()))
-        weight_params.outputGateRecursionMatrix.floatValue.extend(map(float, R_o.flatten()))
-        weight_params.blockInputRecursionMatrix.floatValue.extend(map(float, R_z.flatten()))
+        weight_params.inputGateRecursionMatrix.floatValue.extend(R_i.flatten())
+        weight_params.forgetGateRecursionMatrix.floatValue.extend(R_f.flatten())
+        weight_params.outputGateRecursionMatrix.floatValue.extend(R_o.flatten())
+        weight_params.blockInputRecursionMatrix.floatValue.extend(R_z.flatten())
 
         if b is not None:
             b_i, b_f, b_o, b_z = b
-            weight_params.inputGateBiasVector.floatValue.extend(map(float, b_i.flatten()))
-            weight_params.forgetGateBiasVector.floatValue.extend(map(float, b_f.flatten()))
-            weight_params.outputGateBiasVector.floatValue.extend(map(float, b_o.flatten()))
-            weight_params.blockInputBiasVector.floatValue.extend(map(float, b_z.flatten()))
+            weight_params.inputGateBiasVector.floatValue.extend(b_i.flatten())
+            weight_params.forgetGateBiasVector.floatValue.extend(b_f.flatten())
+            weight_params.outputGateBiasVector.floatValue.extend(b_o.flatten())
+            weight_params.blockInputBiasVector.floatValue.extend(b_z.flatten())
 
         if peep is not None:
             p_i, p_f, p_o = peep
-            weight_params.inputGatePeepholeVector.floatValue.extend(map(float, p_i.flatten()))
-            weight_params.forgetGatePeepholeVector.floatValue.extend(map(float, p_f.flatten()))
-            weight_params.outputGatePeepholeVector.floatValue.extend(map(float, p_o.flatten()))
+            weight_params.inputGatePeepholeVector.floatValue.extend(p_i.flatten())
+            weight_params.forgetGatePeepholeVector.floatValue.extend(p_f.flatten())
+            weight_params.outputGatePeepholeVector.floatValue.extend(p_o.flatten())
 
         return spec_layer
 
@@ -2822,55 +2822,55 @@ class NeuralNetworkBuilder(object):
         R_i, R_f, R_o, R_z = W_h
         W_i, W_f, W_o, W_z = W_x
 
-        weight_params.inputGateWeightMatrix.floatValue.extend(map(float, W_i.flatten()))
-        weight_params.forgetGateWeightMatrix.floatValue.extend(map(float, W_f.flatten()))
-        weight_params.outputGateWeightMatrix.floatValue.extend(map(float, W_o.flatten()))
-        weight_params.blockInputWeightMatrix.floatValue.extend(map(float, W_z.flatten()))
+        weight_params.inputGateWeightMatrix.floatValue.extend(W_i.flatten())
+        weight_params.forgetGateWeightMatrix.floatValue.extend(W_f.flatten())
+        weight_params.outputGateWeightMatrix.floatValue.extend(W_o.flatten())
+        weight_params.blockInputWeightMatrix.floatValue.extend(W_z.flatten())
 
-        weight_params.inputGateRecursionMatrix.floatValue.extend(map(float, R_i.flatten()))
-        weight_params.forgetGateRecursionMatrix.floatValue.extend(map(float, R_f.flatten()))
-        weight_params.outputGateRecursionMatrix.floatValue.extend(map(float, R_o.flatten()))
-        weight_params.blockInputRecursionMatrix.floatValue.extend(map(float, R_z.flatten()))
+        weight_params.inputGateRecursionMatrix.floatValue.extend(R_i.flatten())
+        weight_params.forgetGateRecursionMatrix.floatValue.extend(R_f.flatten())
+        weight_params.outputGateRecursionMatrix.floatValue.extend(R_o.flatten())
+        weight_params.blockInputRecursionMatrix.floatValue.extend(R_z.flatten())
 
         if b is not None:
             b_i, b_f, b_o, b_z = b
-            weight_params.inputGateBiasVector.floatValue.extend(map(float, b_i.flatten()))
-            weight_params.forgetGateBiasVector.floatValue.extend(map(float, b_f.flatten()))
-            weight_params.outputGateBiasVector.floatValue.extend(map(float, b_o.flatten()))
-            weight_params.blockInputBiasVector.floatValue.extend(map(float, b_z.flatten()))
+            weight_params.inputGateBiasVector.floatValue.extend(b_i.flatten())
+            weight_params.forgetGateBiasVector.floatValue.extend(b_f.flatten())
+            weight_params.outputGateBiasVector.floatValue.extend(b_o.flatten())
+            weight_params.blockInputBiasVector.floatValue.extend(b_z.flatten())
 
         if peep is not None:
             p_i, p_f, p_o = peep
-            weight_params.inputGatePeepholeVector.floatValue.extend(map(float, p_i.flatten()))
-            weight_params.forgetGatePeepholeVector.floatValue.extend(map(float, p_f.flatten()))
-            weight_params.outputGatePeepholeVector.floatValue.extend(map(float, p_o.flatten()))
+            weight_params.inputGatePeepholeVector.floatValue.extend(p_i.flatten())
+            weight_params.forgetGatePeepholeVector.floatValue.extend(p_f.flatten())
+            weight_params.outputGatePeepholeVector.floatValue.extend(p_o.flatten())
 
         # Write the backward lstm weights
         R_i, R_f, R_o, R_z = W_h_back
         W_i, W_f, W_o, W_z = W_x_back
 
-        weight_params_back.inputGateWeightMatrix.floatValue.extend(map(float, W_i.flatten()))
-        weight_params_back.forgetGateWeightMatrix.floatValue.extend(map(float, W_f.flatten()))
-        weight_params_back.outputGateWeightMatrix.floatValue.extend(map(float, W_o.flatten()))
-        weight_params_back.blockInputWeightMatrix.floatValue.extend(map(float, W_z.flatten()))
+        weight_params_back.inputGateWeightMatrix.floatValue.extend(W_i.flatten())
+        weight_params_back.forgetGateWeightMatrix.floatValue.extend(W_f.flatten())
+        weight_params_back.outputGateWeightMatrix.floatValue.extend(W_o.flatten())
+        weight_params_back.blockInputWeightMatrix.floatValue.extend(W_z.flatten())
 
-        weight_params_back.inputGateRecursionMatrix.floatValue.extend(map(float, R_i.flatten()))
-        weight_params_back.forgetGateRecursionMatrix.floatValue.extend(map(float, R_f.flatten()))
-        weight_params_back.outputGateRecursionMatrix.floatValue.extend(map(float, R_o.flatten()))
-        weight_params_back.blockInputRecursionMatrix.floatValue.extend(map(float, R_z.flatten()))
+        weight_params_back.inputGateRecursionMatrix.floatValue.extend(R_i.flatten())
+        weight_params_back.forgetGateRecursionMatrix.floatValue.extend(R_f.flatten())
+        weight_params_back.outputGateRecursionMatrix.floatValue.extend(R_o.flatten())
+        weight_params_back.blockInputRecursionMatrix.floatValue.extend(R_z.flatten())
 
         if b_back is not None:
             b_i, b_f, b_o, b_z = b_back
-            weight_params_back.inputGateBiasVector.floatValue.extend(map(float, b_i.flatten()))
-            weight_params_back.forgetGateBiasVector.floatValue.extend(map(float, b_f.flatten()))
-            weight_params_back.outputGateBiasVector.floatValue.extend(map(float, b_o.flatten()))
-            weight_params_back.blockInputBiasVector.floatValue.extend(map(float, b_z.flatten()))
+            weight_params_back.inputGateBiasVector.floatValue.extend(b_i.flatten())
+            weight_params_back.forgetGateBiasVector.floatValue.extend(b_f.flatten())
+            weight_params_back.outputGateBiasVector.floatValue.extend(b_o.flatten())
+            weight_params_back.blockInputBiasVector.floatValue.extend(b_z.flatten())
 
         if peep_back is not None:
             p_i, p_f, p_o = peep_back
-            weight_params_back.inputGatePeepholeVector.floatValue.extend(map(float, p_i.flatten()))
-            weight_params_back.forgetGatePeepholeVector.floatValue.extend(map(float, p_f.flatten()))
-            weight_params_back.outputGatePeepholeVector.floatValue.extend(map(float, p_o.flatten()))
+            weight_params_back.inputGatePeepholeVector.floatValue.extend(p_i.flatten())
+            weight_params_back.forgetGatePeepholeVector.floatValue.extend(p_f.flatten())
+            weight_params_back.outputGatePeepholeVector.floatValue.extend(p_o.flatten())
         return spec_layer
 
     def add_flatten(self, name, mode, input_name, output_name):
@@ -3116,8 +3116,8 @@ class NeuralNetworkBuilder(object):
 
         # Set the parameters
         spec_layer_params.channels = channels
-        spec_layer_params.gamma.floatValue.extend(map(float, gamma.flatten()))
-        spec_layer_params.beta.floatValue.extend(map(float, beta.flatten()))
+        spec_layer_params.gamma.floatValue.extend(gamma.flatten())
+        spec_layer_params.beta.floatValue.extend(beta.flatten())
         spec_layer_params.epsilon = epsilon
         spec_layer_params.computeMeanVar = compute_mean_var
         spec_layer_params.instanceNormalization = instance_normalization
@@ -3127,8 +3127,8 @@ class NeuralNetworkBuilder(object):
                 raise NotImplementedError('Batch-instance norm is currently not supported')
 
         if not compute_mean_var:
-            spec_layer_params.mean.floatValue.extend(map(float, mean.flatten()))
-            spec_layer_params.variance.floatValue.extend(map(float, variance.flatten()))
+            spec_layer_params.mean.floatValue.extend(mean.flatten())
+            spec_layer_params.variance.floatValue.extend(variance.flatten())
 
         return spec_layer
 
@@ -3515,7 +3515,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.loadConstant
 
         data = spec_layer_params.data
-        data.floatValue.extend(map(float, constant_value.flatten()))
+        data.floatValue.extend(constant_value.flatten())
 
         spec_layer_params.shape.extend(shape)
 
@@ -5831,7 +5831,7 @@ class NeuralNetworkBuilder(object):
 
         weights = spec_layer_params.weights
         if not is_quantized_weight:
-            weights.floatValue.extend(map(float, W.flatten()))
+            weights.floatValue.extend(W.flatten())
         else:
             _verify_quantization_arguments(weight=W, output_channels=embedding_size,
                                            quantization_type=quantization_type, nbits=nbits,
@@ -5843,7 +5843,7 @@ class NeuralNetworkBuilder(object):
 
         if b is not None:
             bias = spec_layer_params.bias
-            bias.floatValue.extend(map(float, b.flatten()))
+            bias.floatValue.extend(b.flatten())
         return spec_layer
 
     def add_batched_mat_mul(self, name, input_names, output_name,
@@ -5947,9 +5947,8 @@ class NeuralNetworkBuilder(object):
             weights = spec_layer_params.weights
 
             if not is_quantized_weight:
-                weights.floatValue.extend(map(float, _np.transpose(W).flatten()))
+                weights.floatValue.extend(_np.transpose(W).flatten())
             else:
-
                 _verify_quantization_arguments(weight=W, output_channels=weight_matrix_columns,
                                                quantization_type=quantization_type, nbits=nbits,
                                                quant_scale=quant_scale, quant_bias=quant_bias, quant_lut=quant_lut,
@@ -5980,7 +5979,7 @@ class NeuralNetworkBuilder(object):
 
             if bias is not None:
                 bias_param = spec_layer_params.bias
-                bias_param.floatValue.extend(map(float, bias.flatten()))
+                bias_param.floatValue.extend(bias.flatten())
 
         return spec_layer
 
@@ -6036,7 +6035,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.loadConstantND
 
         data = spec_layer_params.data
-        data.floatValue.extend(map(float, constant_value.flatten()))
+        data.floatValue.extend(constant_value.flatten())
         spec_layer_params.shape.extend(shape)
 
         # Rank information
@@ -7429,10 +7428,10 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.normalizedShape.extend(normalized_shape)
 
         weights = spec_layer_params.gamma
-        weights.floatValue.extend(map(float, gamma.flatten()))
+        weights.floatValue.extend(gamma.flatten())
 
         bias = spec_layer_params.beta
-        bias.floatValue.extend(map(float, beta.flatten()))
+        bias.floatValue.extend(beta.flatten())
 
         spec_layer_params.eps = eps
 
