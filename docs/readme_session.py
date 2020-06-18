@@ -72,7 +72,7 @@ class ReadMeSession():
 	# API DELETE call.
 	def __api_DELETE(self, endpoint, print_info):
 		if not print_info: print_info = "API::DELETE(" + endpoint + ")"
-		return self.__api_call(requests.delete, endpoint, print_info)	
+		return self.__api_call(requests.delete, endpoint, print_info)
 
 	# Populates version_to_info as a map: "version" -> "version info"
 	def __refresh_versions(self):
@@ -108,7 +108,7 @@ class ReadMeSession():
 				if category['reference']: # Only get cateories that are in the API reference
 					if category['title'] in categories:
 						print("Warning: There are two categories with the name " + category['title'] +
-							  " for version " + self.api_version + ". Which category this title refers" + 
+							  " for version " + self.api_version + ". Which category this title refers" +
 							  " to will be unpredictable.")
 					categories[category['title']] = category
 					self.__refresh_category_files(category['title'])
@@ -140,7 +140,7 @@ class ReadMeSession():
 	# Verify a category exists
 	def __verify_category_exists(self, category):
 		if not self.get_category(category):
-			raise ValueError("Category " + category + 
+			raise ValueError("Category " + category +
 				" does not exist for version " + self.api_version + ".")
 
 	# Create a version with default settings.
@@ -224,9 +224,9 @@ class ReadMeSession():
 
 		currfilename = path
 		if(currfilename.find('.html') != -1):
-			# open and read file			
-			file = open(currfilename, "r")			
-			filecontents = file.read()		
+			# open and read file
+			file = open(currfilename, "r")
+			filecontents = file.read()
 			file.close()
 			filecontents = filecontents.replace('\\', '&#92;')
 			filecontents = filecontents.replace('\n', '\\\\n')

@@ -260,6 +260,29 @@ class TFConverter:
             if self._get_tensor_name(n) not in output_nodes + all_nodes:
                 raise KeyError('Output node name "{}" does exist.'.format(n))
 
+    def check_placeholder_output(self, prog):
+        """
+        Handle the cases where placeholder is output.
+        There is a case where the program is like
+            main(%Placeholder: (5,fp32)) {
+                block3() {
+                } -> (%Placeholder)
+            }
+        But self.outputs = ["Placeholder:0"]
+        We need to change the block output to Placeholder:0 by inserting an identity
+        """
+        block = prog["main"]
+        input_name = [x.name for x in list(block.inputs.values())]
+        output_name = [x.name for x in block.outputs]
+        placeholder_output_name = [x for x in output_name if x in input_name and x not in self.outputs]
+        with block:
+            new_outputs = [x for x in block.outputs if x.name not in placeholder_output_name]
+            for name in placeholder_output_name:
+                x = block.inputs[name]
+                x = mb.identity(x=x, name=name+':0')
+                new_outputs.append(x)
+            block.set_outputs(new_outputs)
+
     def convert_main_graph(self, prog, graph):
         func_inputs = {}
         for input_type in self.inputs:
@@ -304,12 +327,15 @@ class TFConverter:
         # ('while_0:0', 'while_0:1') returned from while_0 SSA op. We need to
         # rename `while_0:0` to `while/Exit` in order for users to find the
         # output.
+        # Note: only rename the output if the output is not Placeholder.
 
+        input_names = [x.name for x in self.inputs]
         for v_o, out_name in zip(prog['main'].outputs, self.outputs):
-            if v_o.name != out_name:
+            if v_o.name != out_name and v_o.name not in input_names:
                 logging.info("Renaming output var: '{}' -> '{}'".format(
                     v_o.name, out_name))
                 v_o.name = out_name
+        self.check_placeholder_output(prog)
 
     @_profile
     def convert(self):
