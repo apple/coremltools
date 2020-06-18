@@ -4,7 +4,7 @@ from __future__ import print_function as _
 from __future__ import unicode_literals as _
 
 import unittest
-from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND, _IS_MACOS
 if _HAS_ONNX:
     import onnx
     from coremltools.converters.onnx import convert
@@ -69,23 +69,24 @@ def _test_torch_model_single_io(
         input_dict = {input_name: input_numpy}  # type: ignore
     else:
         input_dict = {input_name: np.reshape(input_numpy, coreml_input_shape)}  # type: ignore
-    coreml_out = coreml_model.predict(input_dict, useCPUOnly=True)[output_name]
-    if DEBUG:
-        coreml_model.save(model_dir + "/torch_model.mlmodel")
-        print("coreml_out")
-        print(np.squeeze(coreml_out))
-        print("torch_out")
-        print(np.squeeze(torch_out))
-        print("coreml out shape ", coreml_out.shape)
-        print("torch out shape: ", torch_out.shape)
+    if _IS_MACOS:
+        coreml_out = coreml_model.predict(input_dict, useCPUOnly=True)[output_name]
+        if DEBUG:
+            coreml_model.save(model_dir + "/torch_model.mlmodel")
+            print("coreml_out")
+            print(np.squeeze(coreml_out))
+            print("torch_out")
+            print(np.squeeze(torch_out))
+            print("coreml out shape ", coreml_out.shape)
+            print("torch out shape: ", torch_out.shape)
 
-    # compare
-    _assert_outputs([torch_out], [coreml_out], decimal=decimal)  # type: ignore
+        # compare
+        _assert_outputs([torch_out], [coreml_out], decimal=decimal)  # type: ignore
 
-    # delete onnx model
-    if not DEBUG:
-        if os.path.exists(model_dir):
-            shutil.rmtree(model_dir)
+        # delete onnx model
+        if not DEBUG:
+            if os.path.exists(model_dir):
+                shutil.rmtree(model_dir)
 
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class OnnxModelTest(unittest.TestCase):

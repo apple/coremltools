@@ -5,6 +5,7 @@ import pytest
 import shutil
 import tempfile
 import coremltools.converters as converter
+from coremltools._deps import _IS_MACOS
 import coremltools.proto.FeatureTypes_pb2 as ft
 from coremltools import TensorType, ImageType, RangeDim, EnumeratedShapes
 from coremltools.converters.mil.testing_utils import random_gen
@@ -163,8 +164,9 @@ class TestTf1ModelInputsOutputs:
         assert mlmodel is not None
         input_values = [random_gen((3, 4, 5), -10., 10.)]
         input_dict = {input_name: input_values[0]}
-        ret = mlmodel.predict(input_dict)
-        np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
+        if _IS_MACOS:
+            ret = mlmodel.predict(input_dict)
+            np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
 
         # Enumerate shape
         inputs_shape = [TensorType(input_name, EnumeratedShapes(shapes=[(3, 4, 5), (4, 4, 5)]))]
@@ -173,18 +175,21 @@ class TestTf1ModelInputsOutputs:
         assert mlmodel is not None
         input_values = [random_gen((3, 4, 5), -10., 10.)]
         input_dict = {input_name: input_values[0]}
-        ret = mlmodel.predict(input_dict)
-        np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
+        if _IS_MACOS:
+            ret = mlmodel.predict(input_dict)
+            np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
 
         input_values = [random_gen((4, 4, 5), -10., 10.)]
         input_dict = {input_name: input_values[0]}
-        ret = mlmodel.predict(input_dict)
-        np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
-
-        with pytest.raises(RuntimeError) as e:
-            input_values = [random_gen((5, 4, 5), -10., 10.)]
-            input_dict = {input_name: input_values[0]}
+        if _IS_MACOS:
             ret = mlmodel.predict(input_dict)
+            np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
+
+        if _IS_MACOS:
+            with pytest.raises(RuntimeError) as e:
+                input_values = [random_gen((5, 4, 5), -10., 10.)]
+                input_dict = {input_name: input_values[0]}
+                ret = mlmodel.predict(input_dict)
 
         # Ranged shape
         inputs_shape = [TensorType(input_name, [RangeDim(3, 5), 4, 5])]
@@ -193,18 +198,21 @@ class TestTf1ModelInputsOutputs:
         assert mlmodel is not None
         input_values = [random_gen((3, 4, 5), -10., 10.)]
         input_dict = {input_name: input_values[0]}
-        ret = mlmodel.predict(input_dict)
-        np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
+        if _IS_MACOS:
+            ret = mlmodel.predict(input_dict)
+            np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
 
         input_values = [random_gen((4, 4, 5), -10., 10.)]
         input_dict = {input_name: input_values[0]}
-        ret = mlmodel.predict(input_dict)
-        np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
-
-        with pytest.raises(RuntimeError) as e:
-            input_values = [random_gen((2, 4, 5), -10., 10.)]
-            input_dict = {input_name: input_values[0]}
+        if _IS_MACOS:
             ret = mlmodel.predict(input_dict)
+            np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
+
+        if _IS_MACOS:
+            with pytest.raises(RuntimeError) as e:
+                input_values = [random_gen((2, 4, 5), -10., 10.)]
+                input_dict = {input_name: input_values[0]}
+                ret = mlmodel.predict(input_dict)
 
     def test_default_data_types(self):
         @make_tf_graph([(2, 2)])

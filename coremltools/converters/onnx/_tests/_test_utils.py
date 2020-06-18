@@ -10,6 +10,7 @@ from onnx import helper, ModelProto, ValueInfoProto, TensorProto, NodeProto
 from typing import Any, Sequence, Text, Tuple, Optional, Dict, List, TypeVar
 from coremltools.converters.onnx import convert
 from coremltools.converters.onnx._converter import SupportedVersion
+from coremltools._deps import _IS_MACOS
 import sys
 
 """
@@ -228,13 +229,14 @@ def _test_onnx_model(
             coreml_input_dict[key] = np.reshape(value, coreml_input_shape[key])
         else:
             coreml_input_dict[key] = value
-    coreml_outputs = _coreml_forward_onnx_model(
-        model,
-        coreml_input_dict,
-        onnx_coreml_input_shape_map=onnx_coreml_input_shape_map,
-        minimum_ios_deployment_target=minimum_ios_deployment_target,
-    )
-    _assert_outputs(c2_outputs, coreml_outputs, decimal=decimal)
+    if _IS_MACOS:
+        coreml_outputs = _coreml_forward_onnx_model(
+            model,
+            coreml_input_dict,
+            onnx_coreml_input_shape_map=onnx_coreml_input_shape_map,
+            minimum_ios_deployment_target=minimum_ios_deployment_target,
+        )
+        _assert_outputs(c2_outputs, coreml_outputs, decimal=decimal)
 
 
 def _test_single_node(

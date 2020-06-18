@@ -11,15 +11,21 @@ TEST_PACKAGES=${SRC_PACKAGES}
 PACKAGES=${SRC_PACKAGES} ${TEST_PACKAGES} ${EXAMPLES}
 ENV_DIR=envs/${CURR_DIR}-py${python}
 
-.PHONY: all lint test style checkstyle run_examples dist local_tests remote_tests
+# Docker image for CoreML
+DOCKERFILE_PATH=docker/Dockerfile-coremltools-linux
+DOCKERFILE_ROOT=docker/
+DOCKER_TAG=docker.apple.com/turi/coremltools-linux:latest
 
+# Define python version to use
 PY_EXE ?= $(shell command -v python || command -v python)
-
 python = 3.7
+
+.PHONY: all build checkstyle clean clean_envs docker_build docker_push env env_force lint proto release style test test_fast test_slow wheel
 
 all: build
 
-.PHONY: checkstyle clean clean_envs lint build env env_force proto wheel release style test test_fast test_slow
+build: ${ENV_DIR}/build_reqs
+	zsh -i scripts/build.sh --python=${python} --debug --no-check-env
 
 checkstyle:
 	${PY_EXE} -m yapf -rdp ${PACKAGES}
@@ -30,8 +36,11 @@ clean:
 clean_envs:
 	rm -rf envs
 
-build: ${ENV_DIR}/build_reqs
-	zsh -i scripts/build.sh --python=${python} --debug --no-check-env
+docker_build:
+	docker build -f ${DOCKERFILE_PATH} -t ${DOCKER_TAG} ${DOCKERFILE_ROOT}
+
+docker_push:
+	docker push ${DOCKER_TAG}
 
 docs: ${ENV_DIR}/docs_reqs
 	zsh -i scripts/build_docs.sh --python=${python} --no-check-env
@@ -48,9 +57,6 @@ lint:
 proto: ${ENV_DIR}/build_reqs
 	zsh -i scripts/build.sh --python=${python} --protobuf --debug --no-check-env
 
-wheel: ${ENV_DIR}/build_reqs
-	zsh -i scripts/build.sh --python=${python} --dist --no-check-env
-
 release: ${ENV_DIR}/build_reqs
 	zsh -i scripts/release_wheel.sh --no-check-env
 
@@ -65,6 +71,9 @@ test_fast: ${ENV_DIR}/test_reqs
 
 test_slow: ${ENV_DIR}/test_reqs
 	zsh -i scripts/test.sh --python=${python} --test-package="${TEST_PACKAGES}" --cov="${SRC_PACKAGES}" --slow --no-check-env
+
+wheel: ${ENV_DIR}/build_reqs
+	zsh -i scripts/build.sh --python=${python} --dist --no-check-env
 
 # For Managing Environments, so we don't need to rebuild every time we run a target.
 ${ENV_DIR}/build_reqs: ./reqs/build.pip

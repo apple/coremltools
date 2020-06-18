@@ -444,7 +444,8 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
           builder.set_pre_processing_parameters(image_input_names=image_input_names,
                                                 is_bgr=is_bgr)
 
-
+@unittest.skipUnless(_is_macos() and macos_version() >= (10, 13),
+                    'Only supported on macOS 10.13+')
 class UseFloatArraytypeTest(unittest.TestCase):
     """Test that the boolean flag `use_float_arraytype` correctly changes the datatype of the
     network's inputs and outputs and produces a spec that the `MLModel` class can call `predict`

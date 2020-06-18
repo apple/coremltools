@@ -3,7 +3,7 @@ from __future__ import division as _
 from __future__ import print_function as _
 from __future__ import unicode_literals as _
 
-from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND, _IS_MACOS
 import unittest
 import numpy as np
 import numpy.testing as npt  # type: ignore
@@ -52,15 +52,17 @@ class ConvertTest(unittest.TestCase):
                 "red_bias": bias[2],
             },
         )
-        output = coreml_model.predict({self.input_names[0]: self.img})[
-            self.output_names[0]
-        ]
 
-        expected_output = self.img_arr[:, :, ::-1].transpose((2, 0, 1))
-        expected_output[0] = expected_output[0] + bias[0]
-        expected_output[1] = expected_output[1] + bias[1]
-        expected_output[2] = expected_output[2] + bias[2]
-        npt.assert_equal(output.flatten(), expected_output.flatten())
+        if _IS_MACOS:
+            output = coreml_model.predict({self.input_names[0]: self.img})[
+                self.output_names[0]
+            ]
+
+            expected_output = self.img_arr[:, :, ::-1].transpose((2, 0, 1))
+            expected_output[0] = expected_output[0] + bias[0]
+            expected_output[1] = expected_output[1] + bias[1]
+            expected_output[2] = expected_output[2] + bias[2]
+            npt.assert_equal(output.flatten(), expected_output.flatten())
 
     def test_convert_image_output_bgr(self):  # type: () -> None
         coreml_model = convert(
@@ -69,9 +71,11 @@ class ConvertTest(unittest.TestCase):
             image_output_names=self.output_names,
             deprocessing_args={"is_bgr": True},
         )
-        output = coreml_model.predict({self.input_names[0]: self.img})[
-            self.output_names[0]
-        ]
-        output = np.array(output)[:, :, :3].transpose((2, 0, 1))
-        expected_output = self.img_arr[:, :, ::-1].transpose((2, 0, 1))
-        npt.assert_equal(output, expected_output)
+
+        if _IS_MACOS:
+            output = coreml_model.predict({self.input_names[0]: self.img})[
+                self.output_names[0]
+            ]
+            output = np.array(output)[:, :, :3].transpose((2, 0, 1))
+            expected_output = self.img_arr[:, :, ::-1].transpose((2, 0, 1))
+            npt.assert_equal(output, expected_output)

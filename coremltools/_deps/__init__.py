@@ -9,7 +9,9 @@ optional includes
 """
 from distutils.version import StrictVersion as _StrictVersion
 import logging as _logging
+import platform as _platform
 import re as _re
+import sys as _sys
 
 
 def __get_version(version):
@@ -17,6 +19,17 @@ def __get_version(version):
     version_regex = r'^\d+\.\d+\.\d+'
     version = _re.search(version_regex, str(version)).group(0)
     return _StrictVersion(version)
+
+# ---------------------------------------------------------------------------------------
+
+_IS_MACOS = _sys.platform == 'darwin'
+_MACOS_VERSION = ()
+
+if _IS_MACOS:
+    ver_str = _platform.mac_ver()[0]
+    MACOS_VERSION = tuple([int(v) for v in ver_str.split('.')])
+
+MSG_ONLY_MACOS = "Only supported on macOS"
 
 # ---------------------------------------------------------------------------------------
 _HAS_SKLEARN = True

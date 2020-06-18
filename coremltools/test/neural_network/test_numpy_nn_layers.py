@@ -5598,7 +5598,8 @@ class IOS14SingleLayerTests(CorrectnessTest):
     def test_conv3d_gpu_slow(self):
         self._test_conv3d(cpu_only=False, full_test=True)
 
-
+@unittest.skipUnless(_is_macos() and macos_version() >= LAYERS_10_16_MACOS_VERSION,
+                     'Only supported on macOS 10.16+')
 class ReorganizeDataTests(CorrectnessTest):
 
     def _to_rank_4(self, x):

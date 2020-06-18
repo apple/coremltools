@@ -4,6 +4,7 @@ import numpy as np
 import unittest
 from sys import platform
 
+from coremltools._deps import _IS_MACOS
 import coremltools.models.datatypes as datatypes
 from coremltools.models.utils import _macos_version
 from coremltools.models import neural_network as neural_network
@@ -72,19 +73,20 @@ class MLModelPassesTest(unittest.TestCase):
         mlmodel = MLModel(builder.spec)
         data = np.random.rand(2,)
         data_dict = {'input': data}
-        before_pass_out = mlmodel.predict(data_dict)['out']
-        if DEBUG:
-            print('\n mlmodel description before remove disconnected layers pass: \n')
-            print_network_spec(builder.spec, style='coding')
-        remove_disconnected_layers(builder.spec)
-        if DEBUG:
-            print('\n mlmodel description after remove disconnected layers pass: \n')
-            print_network_spec(builder.spec, style='coding')
-        mlmodel = MLModel(builder.spec)
-        after_pass_out = mlmodel.predict(data_dict)['out']
+        if _IS_MACOS:
+            before_pass_out = mlmodel.predict(data_dict)['out']
+            if DEBUG:
+                print('\n mlmodel description before remove disconnected layers pass: \n')
+                print_network_spec(builder.spec, style='coding')
+            remove_disconnected_layers(builder.spec)
+            if DEBUG:
+                print('\n mlmodel description after remove disconnected layers pass: \n')
+                print_network_spec(builder.spec, style='coding')
+            mlmodel = MLModel(builder.spec)
+            after_pass_out = mlmodel.predict(data_dict)['out']
 
-        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=2)
-        np.testing.assert_equal(len(builder.spec.neuralNetwork.layers), 1)
+            np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=2)
+            np.testing.assert_equal(len(builder.spec.neuralNetwork.layers), 1)
 
     @pytest.mark.xfail
     def test_dead_layer_partial_branch(self):
@@ -159,10 +161,11 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal('batchnorm', spec.layers[2].WhichOneof('layer'))
 
         # Predict
-        mlmodel = MLModel(builder.spec)
-        data = np.random.rand(1, 10, 10)
-        data_dict = {'data': data}
-        before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
+        if _IS_MACOS:
+            mlmodel = MLModel(builder.spec)
+            data = np.random.rand(1, 10, 10)
+            data_dict = {'data': data}
+            before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
 
         # transform the pattern
         transform_conv_crop(builder.spec)
@@ -170,10 +173,11 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal('batchnorm', spec.layers[1].WhichOneof('layer'))
         np.testing.assert_equal('crop', spec.layers[2].WhichOneof('layer'))
 
-        # Predict
-        mlmodel = MLModel(builder.spec)
-        after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
-        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
+        if _IS_MACOS:
+            # Predict
+            mlmodel = MLModel(builder.spec)
+            after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
+            np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
 
     def test_conv_crop_bn_relu_to_conv_bn_relu_crop(self):
         input_features = [('data', datatypes.Array(1, 10, 10))]
@@ -213,10 +217,11 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal('activation', spec.layers[3].WhichOneof('layer'))
 
         # Predict
-        mlmodel = MLModel(builder.spec)
-        data = np.random.rand(1, 10, 10)
-        data_dict = {'data': data}
-        before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
+        if _IS_MACOS:
+            mlmodel = MLModel(builder.spec)
+            data = np.random.rand(1, 10, 10)
+            data_dict = {'data': data}
+            before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
 
         # transform the pattern
         transform_conv_crop(builder.spec)
@@ -227,8 +232,9 @@ class MLModelPassesTest(unittest.TestCase):
 
         # Predict
         mlmodel = MLModel(builder.spec)
-        after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
-        np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
+        if _IS_MACOS:
+            after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)['out']
+            np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
 
 @unittest.skipIf(platform != 'darwin' or _macos_version() < (10, 15), "Requires MacOS 10.15 or later")
 class Redundant_Transposees_Test(unittest.TestCase):

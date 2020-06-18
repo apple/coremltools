@@ -5,7 +5,7 @@ from six import string_types as _string_types
 from coremltools import TensorType
 from coremltools.converters import convert
 from coremltools.models import MLModel
-
+from coremltools._deps import _IS_MACOS
 
 def _flatten(object):
     flattened_list = []
@@ -101,11 +101,12 @@ def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5
     expected_results = flatten_and_detach_torch_results(expected_results)
     mlmodel = convert_to_mlmodel(model_spec, input_data)
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
-    coreml_results = mlmodel.predict(coreml_inputs)
-    sorted_coreml_results = [
-        coreml_results[key] for key in sorted(coreml_results.keys())
-    ]
+    if _IS_MACOS:
+        coreml_results = mlmodel.predict(coreml_inputs)
+        sorted_coreml_results = [
+            coreml_results[key] for key in sorted(coreml_results.keys())
+        ]
 
-    for torch_result, coreml_result in zip(expected_results, sorted_coreml_results):
-        np.testing.assert_equal(coreml_result.shape, torch_result.shape)
-        np.testing.assert_allclose(coreml_result, torch_result, atol=atol)
+        for torch_result, coreml_result in zip(expected_results, sorted_coreml_results):
+            np.testing.assert_equal(coreml_result.shape, torch_result.shape)
+            np.testing.assert_allclose(coreml_result, torch_result, atol=atol)

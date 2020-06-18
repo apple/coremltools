@@ -97,4 +97,4 @@ def run_compare_builder(
                     input_key_values=input_values,
                     expected_outputs=expected_outputs,
                     use_cpu_only=use_cpu_only,
-                    atol=atol, rtol=rtol)
+                    atol=atol, rtol=rtol, also_compare_shapes=False)

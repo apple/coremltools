@@ -104,10 +104,9 @@ def run_compare_tf2(
     if frontend_only:
         return
 
-    compare_shapes(
-        proto, input_dict, expected_outputs, use_cpu_only)
-    compare_backend(
-        proto, input_dict, expected_outputs, use_cpu_only, atol=atol, rtol=rtol)
+    compare_backend(proto, input_dict, expected_outputs,
+                    use_cpu_only, atol=atol, rtol=rtol,
+                    also_compare_shapes=True)
 
     return proto
 
@@ -149,10 +148,7 @@ def run_compare_tf_keras(
     ref = [model(input_values).numpy()]
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
     input_key_values = {n: v for n, v in zip(inputs, input_values)}
-    compare_shapes(
-        proto, input_key_values, expected_outputs, use_cpu_only)
-    compare_backend(
-        proto, input_key_values, expected_outputs,
-        use_cpu_only, atol=atol, rtol=rtol)
+    compare_backend(proto, input_key_values, expected_outputs,
+                    use_cpu_only, atol=atol, rtol=rtol, also_compare_shapes=True)
 
     return proto

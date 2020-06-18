@@ -5,9 +5,9 @@ import copy
 import coremltools
 from coremltools import converters as converter
 from coremltools.converters.mil import converter as _converter
-
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools._deps import _IS_MACOS
 
 converter = converter
 _converter = _converter
@@ -53,12 +53,13 @@ def assert_model_is_valid(program, inputs, backend='nn_proto',
 
     model = coremltools.models.MLModel(proto)
     assert model is not None
-    prediction = model.predict(input_dict, useCPUOnly=True)
-    assert prediction is not None
-    if expected_output_shapes is not None:
-        for out_name, out_shape in expected_output_shapes.items():
-            assert out_name in prediction
-            assert out_shape == prediction[out_name].shape
+    if _IS_MACOS:
+        prediction = model.predict(input_dict, useCPUOnly=True)
+        assert prediction is not None
+        if expected_output_shapes is not None:
+            for out_name, out_shape in expected_output_shapes.items():
+                assert out_name in prediction
+                assert out_shape == prediction[out_name].shape
 
 
 def assert_same_output_names(prog1, prog2, func_name='main'):
@@ -162,9 +163,9 @@ def run_core_ml_predict(proto, input_key_values, use_cpu_only=False):
     return model.predict(input_key_values, useCPUOnly=use_cpu_only)
 
 
-def compare_backend(
-        proto, input_key_values, expected_outputs,
-        use_cpu_only=False, atol=1e-04, rtol=1e-05):
+def compare_backend(proto, input_key_values, expected_outputs,
+                    use_cpu_only=False, atol=1e-04, rtol=1e-05,
+                    also_compare_shapes=True):
     """
     Inputs:
         - proto: MLModel proto.
@@ -177,19 +178,21 @@ def compare_backend(
 
         - use_cpu_only: True/False.
     """
-    pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
-    if not use_cpu_only:
-        atol = min(atol * 100., 1e-1)
-        rtol = min(rtol * 100., 1e-2)
-    for o, expected in expected_outputs.items():
-        msg = 'Output {} differs. useCPUOnly={}.\nInput={}, ' + \
-              'Expected={}, Output={}\n'
-        assert is_close(expected, pred[o], atol, rtol), msg.format(
-            o, use_cpu_only, input_key_values, expected, pred[o])
+    if _IS_MACOS:
+        pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
+        if also_compare_shapes:
+            compare_shapes(proto, input_key_values, expected_outputs, pred)
+        if not use_cpu_only:
+            atol = min(atol * 100., 1e-1)
+            rtol = min(rtol * 100., 1e-2)
+        for o, expected in expected_outputs.items():
+            msg = 'Output {} differs. useCPUOnly={}.\nInput={}, ' + \
+                  'Expected={}, Output={}\n'
+            assert is_close(expected, pred[o], atol, rtol), msg.format(
+                o, use_cpu_only, input_key_values, expected, pred[o])
 
 
-def compare_shapes(
-        proto, input_key_values, expected_outputs, use_cpu_only=False):
+def compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only=False, pred=None):
     """
     Inputs:
         - proto: MLModel proto.
@@ -200,16 +203,21 @@ def compare_shapes(
         - expected_outputs: dict[str, np.array].
 
         - use_cpu_only: True/False.
+        
+        - pred: Prediction to use, if it has already been computed.
     """
-    pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
-    for o, expected in expected_outputs.items():
-        msg = 'Output: {}. expected shape {} != actual shape {}'.format(
-            o, expected.shape, pred[o].shape)
-        # Core ML does not support scalar as output
-        # remove this special case when support is added
-        if expected.shape == () and pred[o].shape == (1,):
-            continue
-        assert pred[o].shape == expected.shape, msg
+    
+    if _IS_MACOS:
+        if not pred:
+            pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
+        for o, expected in expected_outputs.items():
+            msg = 'Output: {}. expected shape {} != actual shape {}'.format(
+                o, expected.shape, pred[o].shape)
+            # Core ML does not support scalar as output
+            # remove this special case when support is added
+            if expected.shape == () and pred[o].shape == (1,):
+                continue
+            assert pred[o].shape == expected.shape, msg
 
 
 def get_core_ml_prediction(

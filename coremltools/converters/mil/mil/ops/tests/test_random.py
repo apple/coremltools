@@ -1,7 +1,7 @@
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.testing_utils import get_core_ml_prediction
-
+from coremltools._deps import _IS_MACOS
 from .testing_utils import UNK_SYM, run_compare_builder
 
 backends = testing_reqs.backends
@@ -138,26 +138,27 @@ class TestRandomCategorical:
                 x=x, size=n_sample, mode='logits', name=output_name)
             ]
 
-        prediction = get_core_ml_prediction(build, input_placeholders,
-                input_values, backend=backend)
+        if _IS_MACOS:
+            prediction = get_core_ml_prediction(build, input_placeholders,
+                    input_values, backend=backend)
 
-        ref0 = np.random.multinomial(n_sample, probs[0])
-        ref1 = np.random.multinomial(n_sample, probs[1])
+            ref0 = np.random.multinomial(n_sample, probs[0])
+            ref1 = np.random.multinomial(n_sample, probs[1])
 
-        pred0 = prediction[output_name].reshape(2, n_sample)[0]
-        pred1 = prediction[output_name].reshape(2, n_sample)[1]
+            pred0 = prediction[output_name].reshape(2, n_sample)[0]
+            pred1 = prediction[output_name].reshape(2, n_sample)[1]
 
-        # convert to bincount and validate probabilities
-        pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
-        pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
+            # convert to bincount and validate probabilities
+            pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
+            pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
 
-        assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
-        assert np.allclose(np.true_divide(pred0, n_sample),
-                           np.true_divide(ref0, n_sample), atol=1e-2)
+            assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
+            assert np.allclose(np.true_divide(pred0, n_sample),
+                               np.true_divide(ref0, n_sample), atol=1e-2)
 
-        assert np.allclose(np.true_divide(pred1, n_sample), probs[1], atol=1e-2)
-        assert np.allclose(np.true_divide(pred1, n_sample),
-                           np.true_divide(ref1, n_sample), atol=1e-2)
+            assert np.allclose(np.true_divide(pred1, n_sample), probs[1], atol=1e-2)
+            assert np.allclose(np.true_divide(pred1, n_sample),
+                               np.true_divide(ref1, n_sample), atol=1e-2)
 
         # Test probs input
         input_placeholders = {'x': mb.placeholder(shape=(2, n_class))}
@@ -168,23 +169,24 @@ class TestRandomCategorical:
                 x=x, size=n_sample, mode='probs', name=output_name)
             ]
 
-        prediction = get_core_ml_prediction(build, input_placeholders,
-                input_values, backend=backend)
+        if _IS_MACOS:
+            prediction = get_core_ml_prediction(build, input_placeholders,
+                    input_values, backend=backend)
 
-        pred0 = prediction[output_name].reshape(2, n_sample)[0]
-        pred1 = prediction[output_name].reshape(2, n_sample)[1]
+            pred0 = prediction[output_name].reshape(2, n_sample)[0]
+            pred1 = prediction[output_name].reshape(2, n_sample)[1]
 
-        # convert to bincount and validate probabilities
-        pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
-        pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
+            # convert to bincount and validate probabilities
+            pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
+            pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
 
-        assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
-        assert np.allclose(np.true_divide(pred0, n_sample),
-                           np.true_divide(ref0, n_sample), atol=1e-2)
+            assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
+            assert np.allclose(np.true_divide(pred0, n_sample),
+                               np.true_divide(ref0, n_sample), atol=1e-2)
 
-        assert np.allclose(np.true_divide(pred1, n_sample), probs[1], atol=1e-2)
-        assert np.allclose(np.true_divide(pred1, n_sample),
-                           np.true_divide(ref1, n_sample), atol=1e-2)
+            assert np.allclose(np.true_divide(pred1, n_sample), probs[1], atol=1e-2)
+            assert np.allclose(np.true_divide(pred1, n_sample),
+                               np.true_divide(ref1, n_sample), atol=1e-2)
 
 
 class TestRandomNormal:
