@@ -5,7 +5,7 @@ from __future__ import absolute_import as _
 import logging
 from collections import defaultdict
 
-from coremltools import ClassifierConfig, ImageType, EnumeratedShapes, Shape, RangeDim
+from coremltools.converters.mil.input_types import ClassifierConfig, ImageType, EnumeratedShapes, Shape, RangeDim
 from coremltools.models import MLModel
 from coremltools.models import neural_network as neural_network
 import coremltools.models.datatypes as datatypes

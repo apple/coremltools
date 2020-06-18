@@ -6,4 +6,4 @@
 from coremltools._deps import _HAS_ONNX
 
 if _HAS_ONNX:
-    from .legacy.onnx_coreml.converter import convert
+    from ._converter import convert
