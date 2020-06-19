@@ -265,7 +265,7 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(spec.description.input[0].type.multiArrayType.dataType, Model_pb2.ArrayFeatureType.FLOAT32)
         self.assertEqual(spec.description.output[0].type.multiArrayType.dataType, Model_pb2.ArrayFeatureType.FLOAT32)
 
-    @unittest.skipUnless(_is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_multiarray_to_image_input_util(self):
         H, W, C = 1, 1, 3
@@ -286,7 +286,7 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(y.shape, (C, H, W))
         np.testing.assert_almost_equal(y.flatten(), [35.0, 14.0, 47.5])
 
-    @unittest.skipUnless(_is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_multiarray_to_image_input_util_transpose_elimination(self):
         H, W, C = 1, 1, 3
@@ -308,7 +308,7 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(y.shape, (H, W, C))
         np.testing.assert_almost_equal(y.flatten(), [35.0, 14.0, 47.5])
 
-    @unittest.skipUnless(_is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_multiarray_to_image_input_util_HWC_format(self):
         H, W, C = 1, 1, 3
@@ -329,7 +329,7 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(y.shape, (H, W, C))
         np.testing.assert_almost_equal(y.flatten(), [35.0, 14.0, 47.5])
 
-    @unittest.skipUnless(_is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_nn_classifier_util(self):
         input_features = [('data', datatypes.Array(3,))]
@@ -345,7 +345,7 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(out_dict['out_confidence'], 'c')
         self.assertEqual(mlmodel.get_spec().WhichOneof("Type"), 'neuralNetworkClassifier')
 
-    @unittest.skipUnless(_is_macos() and macos_version() >= (10, 13),
+    @unittest.skipUnless(_is_macos() and _macos_version() >= (10, 13),
                          'Only supported on macOS 10.13+')
     def test_nn_classifier_util_file(self):
         input_features = [('data', datatypes.Array(3,))]
