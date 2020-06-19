@@ -49,7 +49,7 @@ def convert_nodes(context, graph):
         _logging.info("Converting op {} : {}".format(node.name, node.kind))
         if _add_op is None:
             raise RuntimeError(
-                "PyTorch convert function for op {} not implemented".format(node.kind)
+                "Pytorch convert function for op {} not implemented".format(node.kind)
             )
         else:
             _add_op(context, node)
@@ -1112,7 +1112,7 @@ def upsample_bilinear2d(context, node):
             output_size = [output_size.val[0], output_size.val[1]]
 
         # output size is computed using the formula
-        # floor (scale * input_size) in Core ML (and PyTorch)
+        # floor (scale * input_size) in Core ML (and Pytorch)
         # Thus, when computing the scales from the output size,
         # add a small positive constant to the output size,
         # to make sure that the floor formula results in the correct output
@@ -1544,7 +1544,7 @@ def to(context, node):
         return
     else:
         raise ValueError(
-            "Received invalid arguments for PyTorch conversion of op {}".format(node)
+            "Received invalid arguments for Pytorch conversion of op {}".format(node)
         )
 
     torch_dtype = NUM_TO_TORCH_DTYPE[dtype]

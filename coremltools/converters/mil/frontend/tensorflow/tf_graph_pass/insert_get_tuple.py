@@ -14,7 +14,7 @@ import copy
 
 def insert_get_tuple(gddict):
     """
-    TensorFlow uses input "nodename:i" to denote "get tuple i" from "nodename".
+    Tensorflow uses input "nodename:i" to denote "get tuple i" from "nodename".
     Here we split it so that:
 
     node1:i -> node2

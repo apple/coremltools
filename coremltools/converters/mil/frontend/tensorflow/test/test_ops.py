@@ -1495,7 +1495,7 @@ class TestElementWiseUnary:
                 val = random_gen(input_shape, rand_min=1, rand_max=6)
             elif mode == 'exp':
                 if not use_cpu_only:
-                    # We skip GPU here, since exp(1) already differs in backend.
+                    # We skip GPU here, since exp(1) already differs in Espresso.
                     return
                 res = tf.exp(x)
                 val = random_gen(input_shape, rand_min=-4, rand_max=20)
@@ -2614,7 +2614,7 @@ class TestCumSum:
                                res, use_cpu_only=use_cpu_only,
                                frontend_only=False, backend=backend)
 
-    @pytest.mark.xfail(reason="Backend doesn't support empty counts", run=False)
+    @pytest.mark.xfail(reason="Espresso doesn't support empty counts", run=False)
     @pytest.mark.parametrize("use_cpu_only, backend",
                              itertools.product(
                                  [True, False],

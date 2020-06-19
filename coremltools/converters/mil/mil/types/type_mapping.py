@@ -65,7 +65,7 @@ def builtin_to_string(builtin_type):
 
 def nptype_from_builtin(btype):
     """
-    Given a builtin type, return its corresponding Numpy dtype.
+    Given a Nitro builtin type, return its corresponding Numpy dtype.
     """
     return _types_TO_NPTYPES.get(btype, None)
 
@@ -75,11 +75,11 @@ def promote_types(dtype1, dtype2):
     Get the smallest type to which the given scalar types can be cast.
 
     Args:
-        dtype1 (builtin):
-        dtype2 (builtin):
+        dtype1 (apple_nitro.builtin):
+        dtype2 (apple_nitro.builtin):
 
     Returns:
-        A builtin datatype or None.
+        A Nitro builtin datatype or None.
     """
     nptype1 = nptype_from_builtin(dtype1)
     nptype2 = nptype_from_builtin(dtype2)
@@ -97,7 +97,7 @@ def promote_types(dtype1, dtype2):
 
 def is_primitive(btype):
     """
-    Is the indicated builtin type a primitive?
+    Is the indicated Nitro builtin type a primitive?
     """
     return btype is types_bool or btype is types_str or is_float(
         btype) or is_int(btype)

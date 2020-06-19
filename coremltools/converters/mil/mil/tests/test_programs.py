@@ -38,7 +38,7 @@ def test_single_layer_example():
     logging.info('prog:\n', prog)
 
     proto = converter._convert(prog,
-                convert_from="mil",
+                convert_from="NitroSSA",
                 convert_to="nn_proto")
 
     feed_dict = {
@@ -99,7 +99,7 @@ def test_conv_example():
         return conv1, conv2, conv3, pool1, pool2, conv4
 
     proto = converter._convert(prog,
-                convert_from="mil",
+                convert_from="NitroSSA",
                 convert_to="nn_proto")
 
     feed_dict = {
@@ -130,7 +130,7 @@ def test_while_example():
     logging.info('prog:\n', prog)
 
     proto = converter._convert(prog,
-                convert_from="mil",
+                convert_from="NitroSSA",
                 convert_to="nn_proto")
 
     feed_dict = {
@@ -141,3 +141,4 @@ def test_while_example():
     assert model is not None
     prediction = model.predict(feed_dict)
     assert len(prediction) == 2
+

@@ -38,7 +38,8 @@ def alert_return_type_cast(prog):
     #
     # Alert messages about %shape_0 being implicitly cast from i32 to fp32.
     #
-    # Comment: This pass should do more proper casting as backend supports more types.
+    # Comment: This pass should do more proper casting as NN / espresso
+    # supports more types.
     """
     for f_name, f in prog.functions.items():
         for v in f.outputs:

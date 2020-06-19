@@ -17,9 +17,9 @@ Changes of note, other than bug fixes
   
 - Added python 3.8 and 3.6 wheels to the PyPI upload  
   
-- Updated the API for using the TensorFlow (new) and PyTorch converters from `coremltools.converters.nnv2.converter.convert()` to `coremltools.converters.convert()`.  
+- Updated the API for using the Tensorflow (new) and Pytorch converters from `coremltools.converters.nnv2.converter.convert()` to `coremltools.converters.convert()`.  
 The former is modified to `coremltools.converters.nnv2.converter._convert()` since it is for internal use only.
 
 ### coremltools 4.0a1
 
-- First alpha release of coremltools 4. Includes 2 new converters (TensorFlow and PyTorch) that can be accessed via the `coremltools.converters.nnv2.converter.convert()` API
+- First alpha release of coremltools 4. Includes 2 new converters (Tensorflow and Pytorch) that can be accessed via the `coremltools.converters.nnv2.converter.convert()` API

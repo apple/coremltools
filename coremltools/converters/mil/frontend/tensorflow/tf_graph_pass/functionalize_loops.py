@@ -18,7 +18,7 @@ import logging
 
 class FunctionalizeLoops(object):
     """
-    Turns while loops in TensorFlow dataflow graph into the functional form:
+    Turns while loops in Tensorflow dataflow graph into the functional form:
     while(cond_function, body_function)
 
     Usage:

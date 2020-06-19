@@ -14,7 +14,7 @@ from .tfssa import ParsedNode
 
 class ParsedTFNode(ParsedNode):
     """
-    A parsed TensorFlow Node.
+    A parsed Tensorflow Node.
 
     name: The name of the node (str)
     op: The operation represented by the node (str)
