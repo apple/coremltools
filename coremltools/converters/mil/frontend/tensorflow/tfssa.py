@@ -108,12 +108,8 @@ class SSAFunction(object):
         enters = [n.name for n in self.graph.values() if ('entry' in n.op or 'Entry' in n.op)]
         exits = [n.name for n in self.graph.values() if n.op in ('Return', 'return')]
         if len(enters) > 0 or len(exits) > 0:
-            try:
-                assert (len(enters) > 0)
-                assert (len(exits) > 0)
-            except:
-                import pdb
-                pdb.set_trace()
+            assert (len(enters) > 0)
+            assert (len(exits) > 0)
             self.inputs = enters
             self.input_types = [self.graph[v].datatype for v in self.inputs]
             self.outputs = exits

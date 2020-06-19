@@ -50,7 +50,7 @@ def assert_model_is_valid(program, inputs, backend='nn_proto',
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
     proto = _converter._convert(program,
-                                convert_from='NitroSSA',
+                                convert_from='mil',
                                 convert_to=backend)
     if verbose:
         from coremltools.models.neural_network.printer import print_network_spec
@@ -208,10 +208,10 @@ def compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only=False
         - expected_outputs: dict[str, np.array].
 
         - use_cpu_only: True/False.
-        
+
         - pred: Prediction to use, if it has already been computed.
     """
-    
+
     if _IS_MACOS:
         if not pred:
             pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
@@ -242,7 +242,7 @@ def get_core_ml_prediction(
         program.add_function('main', ssa_func)
 
     proto = _converter._convert(program,
-                                convert_from='NitroSSA',
+                                convert_from='mil',
                                 convert_to=backend)
     model = coremltools.models.MLModel(proto, use_cpu_only)
     return model.predict(input_values, useCPUOnly=use_cpu_only)

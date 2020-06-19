@@ -41,7 +41,7 @@ pip install --upgrade onnx-coreml
 
 ## Keras.io Converter (TF 1.x backend)
 
-Models created via the [Keras.io API](https://keras.io), with Tensorflow 1.x backend,
+Models created via the [Keras.io API](https://keras.io), with TensorFlow 1.x backend,
 and saved in the `.h5` format can be converted to Core ML.
 
 The coremltools Keras converter supports Keras versions 2.2+.
@@ -120,7 +120,7 @@ mlmodel = tfcoreml.convert(
         minimum_ios_deployment_target='13')
 ```
 
-Function to convert .h5 to .pb in Tensorflow 1.x:
+Function to convert .h5 to .pb in TensorFlow 1.x:
 
 ```python
 def _save_h5_as_frozen_pb(h5_path, frozen_model_path, has_variables=True):
@@ -217,10 +217,10 @@ To convert models trained/saved via TensorFlow 1, first export them into the fro
 format with `.pb` as the extension. Frozen `.pb` files can be obtained by using TensorFlow's
 `tensorflow.python.tools.freeze_graph` utility.
 
-[This](../examples/neural_network_inference/tensorflow_converter/Tensorflow_1/linear_mnist_example.ipynb) Jupyter notebook shows how to freeze a graph to produce a `.pb` file.
+[This](../examples/neural_network_inference/tensorflow_converter/TensorFlow_1/linear_mnist_example.ipynb) Jupyter notebook shows how to freeze a graph to produce a `.pb` file.
 
 There are several other Jupyter notebook examples for conversion 
-[here](../examples/neural_network_inference/tensorflow_converter/Tensorflow_1).
+[here](../examples/neural_network_inference/tensorflow_converter/TensorFlow_1).
 
 ```python
 import tfcoreml
@@ -327,7 +327,7 @@ model = tfcoreml.convert('./savedmodel',
                          minimum_ios_deployment_target='13')
 ```
 
-See notebooks in [here](../examples/neural_network_inference/tensorflow_converter/Tensorflow_2) 
+See notebooks in [here](../examples/neural_network_inference/tensorflow_converter/TensorFlow_2) 
 or the [unit test cases](https://github.com/apple/coremltools/blob/master/coremltools/converters/tensorflow/test/test_tf_2x.py) for more examples, on how to save to `.h5` or `SavedModel` or `concrete functions`.
 
 Note: When the value of `minimum_ios_deployment_target` is set to `'13'`, `tfcoreml` directly calls coremltools to convert the TensorFlow models, as can be seen [here](https://github.com/tf-coreml/tf-coreml/blob/674c30572867cd9d00dc930c0ee625f5b27de757/tfcoreml/_tf_coreml_converter.py#L672).
@@ -641,6 +641,6 @@ print(np.reshape(np.asarray(weight_params.floatValue), (1, 1, 3, 3)))
 
 - [Control flow Core ML model via the builder library](../examples/neural_network_inference/Image_preprocessing_per_channel_scale.ipynb)
 - [Per channel scale pre-processing](../examples/neural_network_inference/Neural_network_control_flow_power_iteration.ipynb)
-- [Image type as output, for a style transfer network](../examples/neural_network_inference/tensorflow_converter/Tensorflow_1/style_transfer_example.ipynb)
-- [Setting image pre-processing correctly](../examples/neural_network_inference/tensorflow_converter/Tensorflow_1/inception_v1_preprocessing_steps.ipynb)
+- [Image type as output, for a style transfer network](../examples/neural_network_inference/tensorflow_converter/TensorFlow_1/style_transfer_example.ipynb)
+- [Setting image pre-processing correctly](../examples/neural_network_inference/tensorflow_converter/TensorFlow_1/inception_v1_preprocessing_steps.ipynb)
 - [More examples](../examples/)
