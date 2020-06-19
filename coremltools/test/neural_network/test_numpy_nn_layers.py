@@ -4647,7 +4647,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
 
             input_dim[0] = kwargs['batch_size']
             input_features = [
-                ('input', datatypes.Array(*input_dim))] 
+                ('input', datatypes.Array(*input_dim))]
                 # ('weight', datatypes.Array(*weight_dim))]
             output_features = [('output', None)]
 
@@ -5233,7 +5233,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
                                         output_name='output',
                                         pooling_type=pool_type)
                 input = np.random.rand(*shape)
-                
+
                 # Expected output from Torch
                 torch_input = torch.from_numpy(np.reshape(input, shape))
                 if pool_type == 'AVERAGE':
@@ -5598,7 +5598,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
     def test_conv3d_gpu_slow(self):
         self._test_conv3d(cpu_only=False, full_test=True)
 
-@unittest.skipUnless(_is_macos() and macos_version() >= LAYERS_10_16_MACOS_VERSION,
+@unittest.skipUnless(_is_macos() and _macos_version() >= LAYERS_10_16_MACOS_VERSION,
                      'Only supported on macOS 10.16+')
 class ReorganizeDataTests(CorrectnessTest):
 

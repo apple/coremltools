@@ -169,8 +169,7 @@ class TestTf2ModelFormats:
             converter.convert(
                 None, source='invalid')
 
-        expected_msg = "Unrecognized value of argument \"source\": invalid. " \
-                       "It must be one of \"auto\", \"tensorflow\", \"pytorch\"."
+        expected_msg = r'Unrecognized value of argument "source": .*'
         e.match(expected_msg)
 
         with pytest.raises(NotImplementedError) as e:
