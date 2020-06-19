@@ -65,7 +65,8 @@ class TranscriptionContext:
             return
         if is_new_var and isinstance(ssa_vars, Var) and \
                 tf_name != ssa_vars.name:
-            msg = 'tf_name: != ssa_vars.name: {} != {}'
+            msg = 'MIL op\'s name ({}) does not match TensorFlow\'s node name ({}).' \
+                  ' Warning: Node added to context must have the same name as the name passed to context.'
             raise ValueError(msg.format(tf_name, ssa_vars.name))
         self.context[tf_name] = ssa_vars
 

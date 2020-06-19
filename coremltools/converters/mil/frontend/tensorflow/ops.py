@@ -328,6 +328,51 @@ def Cosh(context, node):
     context.add(node.name, x)
 
 @register_tf_op
+def Einsum(context, node):
+    equation = node.attr['equation']
+    if equation == 'bnqd,bnkd->bnqk':
+        a = context[node.inputs[0]]
+        b = context[node.inputs[1]]
+        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=True, name=node.name)
+        context.add(node.name, x)
+    elif equation == 'abc,cd->abd':
+        a = context[node.inputs[0]]
+        b = context[node.inputs[1]]
+        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=False, name=node.name)
+        context.add(node.name, x)
+    elif equation == 'abc,cde->abde':
+        a = context[node.inputs[0]]
+        b = context[node.inputs[1]]
+        x_1 = mb.reshape(x=a, shape=[a.shape[0]*a.shape[1], a.shape[2]])
+        x_2 = mb.reshape(x=b, shape=[b.shape[0], b.shape[1]*b.shape[2]])
+        x = mb.matmul(x=x_1, y=x_2, transpose_x=False, transpose_y=False)
+        x = mb.reshape(x=x, shape=[a.shape[0], a.shape[1], b.shape[1], b.shape[2]], name=node.name)
+        context.add(node.name, x)
+    elif equation == 'BTNH,BFNH->BNFT':
+        a = context[node.inputs[0]]
+        b = context[node.inputs[1]]
+        a = mb.transpose(x=a, perm=[0, 2, 1, 3])
+        b = mb.transpose(x=b, perm=[0, 2, 1, 3])
+        x = mb.matmul(x=b, y=a, transpose_x=False, transpose_y=True, name=node.name)
+        context.add(node.name, x)
+    elif equation == 'BNFT,BTNH->BFNH':
+        a = context[node.inputs[0]]
+        b = context[node.inputs[1]]
+        b = mb.transpose(x=b, perm=[0, 2, 1, 3])
+        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=False)
+        x = mb.transpose(x=x, perm=[0, 2, 1, 3], name=node.name)
+        context.add(node.name, x)
+    elif equation == 'abcd,cde->abe':
+        a = context[node.inputs[0]]
+        b = context[node.inputs[1]]
+        x_1 = mb.reshape(x=a, shape=[a.shape[0], a.shape[1], a.shape[2]*a.shape[3]])
+        x_2 = mb.reshape(x=b, shape=[b.shape[0]*b.shape[1], b.shape[2]])
+        x = mb.matmul(x=x_1, y=x_2, transpose_x=False, transpose_y=False, name=node.name)
+        context.add(node.name, x)
+    else:
+        raise NotImplementedError('Einsum unsupported equation format: ', node.attr['equation'])
+
+@register_tf_op
 def Equal(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]

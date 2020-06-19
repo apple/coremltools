@@ -59,7 +59,6 @@ class ParsedNode(object):
     def copy(self):
         return self.__copy__()
 
-
 class SSAFunction(object):
     __slots__ = ["graph", "inputs", "input_types", "outputs", "output_types", "ret"]
 
@@ -123,7 +122,7 @@ class SSAFunction(object):
                     assert len(v.inputs) == 1, "This is not a PlaceholderWithDefault!"
                     self.inputs.append(k)
                     self.input_types.append(v.datatype)
-                if len(v.outputs) == 0 and v.op != "set_global":
+                if len(v.outputs) == 0 and len(v.control_outputs) == 0 and v.op != "set_global":
                     self.outputs.append(k)
                     self.output_types.append(v.datatype)
 
