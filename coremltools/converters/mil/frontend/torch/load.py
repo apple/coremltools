@@ -18,7 +18,7 @@ from coremltools.converters.mil.mil import Program, types
 
 def load(model_spec, debug=False, **kwargs):
     """
-    Convert Pytorch .pt file to mil CoreML format.
+    Convert PyTorch .pt file to mil CoreML format.
 
     Parameters
     ----------

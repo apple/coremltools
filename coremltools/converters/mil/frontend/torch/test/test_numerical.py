@@ -293,7 +293,7 @@ class TestTorchNumerical:
         run_numerical_test(input_shape, model)
 
     @pytest.mark.xfail(
-        reason="Pytorch convert function for op max_pool1d not implemented, "
+        reason="PyTorch convert function for op max_pool1d not implemented, "
         "we will also likely run into rdar://problem/61064173"
     )
     @pytest.mark.parametrize(

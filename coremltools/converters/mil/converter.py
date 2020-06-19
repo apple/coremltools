@@ -20,22 +20,11 @@ class ConverterRegistry:
         ConverterRegistry.backends[converter.name] = converter
         return converter
 
-
-# TODO: <rdar://problem/57081777> Docstring for converter's frontend interfaces
-# TODO: <rdar://problem/63503803> MIL: Create base class interface for ConverterRegistry frontend and backend
-@ConverterRegistry.frontend
-class NitroSSAConverter:
-    """Deprecated and use MILDummyFrontend"""
-    name = "nitrossa"
-
-    def __call__(self, model, *args, **kwargs):
-        return model
-
 @ConverterRegistry.frontend
 class MILFrontend:
     name = "mil"
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, model, *args, **kwargs):
         return model
 
 @ConverterRegistry.frontend
@@ -84,14 +73,6 @@ class CustomFrontend:
         from coremltools.converters.mil.mil.passes.common_pass import common_pass
         return common_pass(*args, **kwargs)
 
-
-@ConverterRegistry.frontend
-class MILDummyFrontend:
-    "A dummy frontend that returns the identical mil program"
-    name = "mil"
-
-    def __call__(self, program, *args, **kwargs):
-        return program
 
 @_profile
 def _convert(model, convert_from='TensorFlow', convert_to='nn_proto',

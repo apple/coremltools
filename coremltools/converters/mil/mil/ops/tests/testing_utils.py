@@ -83,7 +83,7 @@ def run_compare_builder(
             raise ValueError(msg)
 
     proto = converter._convert(
-        prog, convert_from="NitroSSA", convert_to=backend)
+        prog, convert_from="mil", convert_to=backend)
 
     if frontend_only:
         return

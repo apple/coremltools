@@ -34,25 +34,23 @@ def convert(model,
             classifier_config=None,
             **kwargs):
     """
-    Convert Tensorflow or Pytorch models to Core ML model format. Whether a
+    Convert TensorFlow or Pytorch models to Core ML model format. Whether a
     parameter is required may differ between frameworks (see below). Note that
     this function is aliased as `ct.convert` in the tutorials.
 
     Parameters
     ----------
     model:
-        Tensorflow 1, Tensorflow 2 or Pytorch model in one of the following
+        TensorFlow 1, TensorFlow 2 or Pytorch model in one of the following
         format:
 
-
-
-        For Tensorflow versions 1.x:
+        For TensorFlow versions 1.x:
             - Frozen `tf.Graph <https://www.tensorflow.org/api_docs/python/tf/Graph>`_
             - Frozen graph (`.pb`) file path
             - `tf.keras.Model <https://www.tensorflow.org/api_docs/python/tf/keras>`_
             -  `HDF5 <https://keras.io/api/models/model_saving_apis/>`_ file path (`.h5`)
             - `SavedModel <https://www.tensorflow.org/guide/saved_model>`_ directory path
-        For Tensorflow versions 2.x:
+        For TensorFlow versions 2.x:
             - `tf.keras.Model <https://www.tensorflow.org/api_docs/python/tf/keras>`_
             - `HDF5 file path <https://keras.io/api/models/model_saving_apis/>`_ (`.h5`)
             - `SavedModel <https://www.tensorflow.org/guide/saved_model>`_ directory path
@@ -90,7 +88,6 @@ def convert(model,
         PyTorch:
             - `outputs` must not be specified.
 
-
     classifier_config: ClassifierConfig class (optional)
         The configuration if the mlmodel is intended to be a classifier.
 
@@ -101,7 +98,7 @@ def convert(model,
 
     Examples
     --------
-    Tensorflow 1, 2 (`model` is a frozen graph):
+    TensorFlow 1, 2 (`model` is a frozen graph):
 
         >>> with tf.Graph().as_default() as graph:
         >>>     x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
@@ -109,12 +106,11 @@ def convert(model,
 
         # Automatically infer inputs and outputs
         >>> mlmodel = ct.convert(graph)
-
-	>>> test_input = np.random.rand(1, 2, 3) - 0.5
+	    >>> test_input = np.random.rand(1, 2, 3) - 0.5
         >>> results = mlmodel.predict({"input": test_input})
         >>> print(results['output'])
 
-    Tensorflow 2 (`model` is tf.Keras model path):
+    TensorFlow 2 (`model` is tf.Keras model path):
 
         >>> x = tf.keras.Input(shape=(32,), name='input')
         >>> y = tf.keras.layers.Dense(16, activation='softmax')(x)

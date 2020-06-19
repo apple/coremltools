@@ -23,7 +23,7 @@ coremltools.converters.sklearn.convert(...)
 # xgboost
 coremltools.converters.xgboost.convert(...)
 
-# Tensorflow and Pytorch [NEW API in coremltools 4.x, not present in coremltools 3.x]
+# TensorFlow and PyTorch [NEW API in coremltools 4.x, not present in coremltools 3.x]
 coremltools.converters.convert(...)
 
 
@@ -35,7 +35,7 @@ coremltools.converters.onnx.convert(...)
 ```
 
 
-## Tensorlfow and Pytorch Converters
+## Tensorlfow and PyTorch Converters
 
 
 For coremltools 3.x converters see [here](https://github.com/apple/coremltools/blob/master/examples/NeuralNetworkGuide.md)
@@ -55,27 +55,27 @@ coremltools.converters.convert(model,
     
    
 
-Method to convert neural networks represented in Tensorflow or Pytorch formats to the Core ML model format.
+Method to convert neural networks represented in TensorFlow or PyTorch formats to the Core ML model format.
 
 #### Parameters
 
 - model:  
-    an object representing a neural network model defined in one of Tensorflow 1, Tensorflow 2 or Pytorch formats
+    an object representing a neural network model defined in one of TensorFlow 1, TensorFlow 2 or PyTorch formats
 
 Depending on the source framework, type of model is one of the following:
 
-For Tensorflow versions 1.x:  
+For TensorFlow versions 1.x:  
     - frozen tf.Graph object  
     - path to a frozen .pb file  
     
-For Tensorflow versions 2.x:  
+For TensorFlow versions 2.x:  
     - tf.Graph object  
     - tf.keras model object    
     - path to a .h5 saved keras model file  
     - path to a saved model directory  
     - list of concrete functions  
 
-For Pytorch:  
+For PyTorch:  
     - a TorchScript object  
     - path to a .pt file  
 
@@ -83,12 +83,12 @@ For Pytorch:
     one of "auto" (default), "tensorflow", "pytorch"  
 
 - inputs: list (optional)  
-    For Tensorflow:  
+    For TensorFlow:  
         list of tuples or list of strings  
         - If [tuple] : each tuple contains input tensor name and shape  
         - If [str]: each string is the name of the Placeholder input op in the TF graph
           
-    For Pytorch
+    For PyTorch
         a list of example inputs, which are any of:
         1. tensor
         2. tuple shape
@@ -96,11 +96,11 @@ For Pytorch:
 
 
 - outputs: list[str] (optional)  
-    For Tensorflow:  
+    For TensorFlow:  
         (required)  
         list of output op names  
         
-    For Pytorch:  
+    For PyTorch:  
         (not required)
         list of output op names    
 
@@ -111,7 +111,7 @@ A Core ML MLModel object
 
 ### Examples
 
-Tensorflow 1:
+TensorFlow 1:
 
 ```python
 
@@ -126,7 +126,7 @@ mlmodel.save('model_mobilenet.mlmodel')
 
 
 
-Tensorflow 2:  
+TensorFlow 2:  
 
 ```python
 mlmodel = coremltools.converters.convert(model='frozen_model_mobilenet.h5',
@@ -138,7 +138,7 @@ mlmodel.save('model_mobilenet.mlmodel')
 
 
 
-Pytorch :  
+PyTorch :  
 
 ```python
 
