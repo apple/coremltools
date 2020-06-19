@@ -1,3 +1,8 @@
+#  Copyright (c) 2020, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import logging
 import numpy as np
 import copy
@@ -179,9 +184,9 @@ def compare_backend(proto, input_key_values, expected_outputs,
         - use_cpu_only: True/False.
     """
     if _IS_MACOS:
-        pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
+        pred = run_core_ml_predict(proto, input_key_values, use_cpu_only=use_cpu_only)
         if also_compare_shapes:
-            compare_shapes(proto, input_key_values, expected_outputs, pred)
+            compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only=use_cpu_only, pred=pred)
         if not use_cpu_only:
             atol = min(atol * 100., 1e-1)
             rtol = min(rtol * 100., 1e-2)

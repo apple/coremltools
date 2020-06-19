@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+
+#  Copyright (c) 2020, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 from .type_bool import bool as types_bool
 from .type_double import is_float, fp16 as types_fp16, fp32 as types_fp32, fp64 as types_fp64
 from .type_list import is_list
