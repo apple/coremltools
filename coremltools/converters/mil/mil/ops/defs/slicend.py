@@ -9,8 +9,46 @@ from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import get_new_symbol
 from ._op_reqs import *
 
-@register_op(doc_str='TODO')
+@register_op()
 class slice_by_index(Operation):
+    """
+    Method for numpy style indexing and slicing.
+    Suppose we have a tensor ``x``, this method achieves:
+    ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``
+    Note this method does not support pure indexing. You would need to do squeeze if indexing is intended.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+        * Input tensor
+    begin: tensor<[rank<x>], i32> (Required)
+        * Starting index for the dimension of slicing.
+    end: tensor<[rank(x)], i32> (Required)
+        * Ending index for the dimension of slicing.
+    stride: tensor<[rank(x)], i32> (Optional)
+        * Default as all ``1``s.
+        * Stride for the dimension of slicing.
+    begin_mask: tensor<[rank(x)], bool> (Optional)
+        * Default to all ``False``.
+        * If ``begin_mask[i]==True``, neglect ``begin[i]``, and set ``begin[i]`` to ``0``.
+    end_mask: tensor<[rank(x)], bool> (Optional)
+        * Default to all ``False``.
+        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.
+    squeeze_mask: tensor<[rank(x)], bool> (Optional)
+        * Default to all ``False``.
+        * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at ``begin[i]``.
+
+    Returns
+    -------
+    tensor<*?, T>
+        - Scalar or tensor.
+
+    Attributes
+    ----------
+    T: fp32
+
+    """
+
     input_spec = InputSpec(
         x=TensorInputType(),
         begin=IntTensorInputType(),

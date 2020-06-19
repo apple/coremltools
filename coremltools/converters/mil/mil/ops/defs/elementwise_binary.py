@@ -73,8 +73,25 @@ class elementwise_binary(Operation):
 Elementwise Binary Op Implmentation(s)
 """
 
-@register_op(doc_str='TODO')
+@register_op()
 class add(elementwise_binary):
+    """
+    Add two inputs element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same type and shape as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(add, self).__init__(**kwargs)
 
@@ -82,8 +99,25 @@ class add(elementwise_binary):
         return operator.add
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class equal(elementwise_binary):
+    """
+    Return ``x==y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(equal, self).__init__(**kwargs)
 
@@ -94,8 +128,26 @@ class equal(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class floor_div(elementwise_binary):
+    """
+    Return the floor_div values of two inputs element-wise.
+    That is the largest integer ``t``, and ``t <= x/y``.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same type and shape as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(floor_div, self).__init__(**kwargs)
 
@@ -103,8 +155,25 @@ class floor_div(elementwise_binary):
         return operator.floordiv
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class greater(elementwise_binary):
+    """
+    Return ``x > y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(greater, self).__init__(**kwargs)
 
@@ -115,8 +184,25 @@ class greater(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class greater_equal(elementwise_binary):
+    """
+    Return ``x >= y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(greater_equal, self).__init__(**kwargs)
 
@@ -127,8 +213,25 @@ class greater_equal(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class less(elementwise_binary):
+    """
+    Return ``x < y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(less, self).__init__(**kwargs)
 
@@ -139,8 +242,25 @@ class less(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class less_equal(elementwise_binary):
+    """
+    Return ``x <= y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(less_equal, self).__init__(**kwargs)
 
@@ -151,8 +271,21 @@ class less_equal(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class logical_and(elementwise_binary):
+    """
+    Return ``x & y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, bool> (Required)
+    y: tensor<*?, bool> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+    """
     def __init__(self, **kwargs):
         super(logical_and, self).__init__(**kwargs)
 
@@ -163,8 +296,21 @@ class logical_and(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class logical_or(elementwise_binary):
+    """
+    Return ``x || y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, bool> (Required)
+    y: tensor<*?, bool> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+    """
     def __init__(self, **kwargs):
         super(logical_or, self).__init__(**kwargs)
 
@@ -175,8 +321,21 @@ class logical_or(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class logical_xor(elementwise_binary):
+    """
+    Return ``x ^ y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, bool> (Required)
+    y: tensor<*?, bool> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+    """
     def __init__(self, **kwargs):
         super(logical_xor, self).__init__(**kwargs)
 
@@ -187,8 +346,25 @@ class logical_xor(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class maximum(elementwise_binary):
+    """
+    Return ``max(x,y)`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor with the same shape and type as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(maximum, self).__init__(**kwargs)
 
@@ -196,8 +372,25 @@ class maximum(elementwise_binary):
         return np.maximum
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class minimum(elementwise_binary):
+    """
+    Return ``min(x,y)`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor with the same shape and type as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(minimum, self).__init__(**kwargs)
 
@@ -205,8 +398,25 @@ class minimum(elementwise_binary):
         return np.minimum
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class mod(elementwise_binary):
+    """
+    Return ``x % y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor with the same shape and type as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(mod, self).__init__(**kwargs)
 
@@ -214,8 +424,25 @@ class mod(elementwise_binary):
         return operator.mod
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class mul(elementwise_binary):
+    """
+    Return ``x * y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor with the same shape and type as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(mul, self).__init__(**kwargs)
 
@@ -223,8 +450,21 @@ class mul(elementwise_binary):
         return operator.mul
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class not_equal(elementwise_binary):
+    """
+    Return ``x != y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, bool> (Required)
+    y: tensor<*?, bool> (Required)
+
+    Returns
+    -------
+    tensor<*?, bool>
+        * a bool tensor with the same shape as inputs.
+    """
     def __init__(self, **kwargs):
         super(not_equal, self).__init__(**kwargs)
 
@@ -235,8 +475,25 @@ class not_equal(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class real_div(elementwise_binary):
+    """
+    Return the true division ``x / y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor with the same shape and type as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(real_div, self).__init__(**kwargs)
 
@@ -247,8 +504,25 @@ class real_div(elementwise_binary):
         return types.float
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class pow(elementwise_binary):
+    """
+    Return ``pow(x,y)`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor with the same shape and type as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(pow, self).__init__(**kwargs)
 
@@ -256,8 +530,25 @@ class pow(elementwise_binary):
         return operator.pow
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class sub(elementwise_binary):
+    """
+    Return ``x - y`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    y: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor with the same shape and type as inputs.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(sub, self).__init__(**kwargs)
 

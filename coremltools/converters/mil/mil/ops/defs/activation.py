@@ -7,20 +7,26 @@ import scipy
 from ._op_reqs import *
 from .elementwise_unary import elementwise_unary
 
-@register_op(doc_str="""
-Returns elementwise min(beta, x) if x >= 0, min(beta, alpha * x) otherwise.
-
-Parameters
-----------
-x: <*, f32>, required
-alpha: const<f32>, required
-beta: const<f32>, required
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class clamped_relu(Operation):
+    """
+    Returns elementwise ``min(beta, x)`` if ``x >= 0``, ``min(beta, alpha * x)`` otherwise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    alpha: const fp32 (Required)
+    beta: const fp32 (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same type and shape as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = ScalarOrTensorInputType(),
             alpha = FloatInputType(const=True),
@@ -40,19 +46,26 @@ class clamped_relu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Returns x if x > 0,  alpha * e^(x - 1) otherwise.
-
-Parameters
-----------
-x: <*, f32>, required
-alpha: const<f32>, optional, default = 1
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class elu(Operation):
+    """
+    Returns elementwise ``x`` if ``x > 0``,  ``alpha * e^(x - 1)`` otherwise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    alpha: const fp32 (Optional)
+        * Default to ``1``
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = ScalarOrTensorInputType(),
             alpha = FloatInputType(const=True, default=1),
@@ -71,22 +84,30 @@ class elu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Returns the elementwise gaussian error linear unit activation on x.
-
-Parameters
-----------
-x: <*, f32>, required
-mode : const<str> : default = "EXACT", can take values 
-"EXACT" : f(x) = 0.5x\left ( 1+\rm{erf}\left ( \frac{x}{\sqrt{2}} \right ) \right )
-"TANH_APPROXIMATION" : f(x) = 0.5x\left ( 1+\rm{tanh}\left ( \sqrt{2/\pi}\left ( x + 0.044715x^3 \right ) \right ) \right )
-"SIGMOID_APPROXIMATION" : f(x) = x*\rm{sigmoid}(1.702x)
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class gelu(Operation):
+    """
+    Returns the elementwise gaussian error linear unit activation on ``x``.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    mode : const str (Optional)
+        * Default to 'EXACT'.
+        * Can take values:
+            *"EXACT" : ``f(x) = 0.5x\left ( 1+\rm{erf}\left ( \frac{x}{\sqrt{2}} \right ) \right )``
+            *"TANH_APPROXIMATION" : ``f(x) = 0.5x\left ( 1+\rm{tanh}\left ( \sqrt{2/\pi}\left ( x + 0.044715x^3 \right ) \right ) \right )``
+            *"SIGMOID_APPROXIMATION" : ``f(x) = x*\rm{sigmoid}(1.702x)``
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = ScalarOrTensorInputType(),
             mode = StringInputType(const=True, default="EXACT"),
@@ -113,19 +134,26 @@ class gelu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Elementwise apply x if x >= 0 else alpha * x
-
-Parameters
-----------
-x: <*, f32>, required
-alpha: const<f32>, optional, default= 0.01
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class leaky_relu(Operation):
+    """
+    Elementwise apply ``x`` if ``x >= 0`` else ``alpha * x``.
+
+    Parameters
+    ----------
+    x: <*?, T> (Required)
+    alpha: const fp32 (Optional)
+        * Default to ``0.01``.
+
+    Returns
+    -------
+    tensor<*?, f32>
+        * a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = ScalarOrTensorInputType(),
             alpha = FloatInputType(const=True, default=0.01),
@@ -144,20 +172,27 @@ class leaky_relu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Applies elementwise x * alpha + beta.
-
-Parameters
-----------
-x: <*, f32>, required
-alpha: const<f32>, required
-beta: const<f32>, optional, default = 0
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class linear_activation(Operation):
+    """
+    Applies elementwise ``x * alpha + beta``.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    alpha: const fp32 (Required)
+    beta: const fp32 (Optional)
+        * Default to ``0``.
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = ScalarOrTensorInputType(),
             alpha = FloatInputType(const=True),
@@ -175,19 +210,25 @@ class linear_activation(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Returns x_i if x_i > 0, alpha_i * x_i otherwise, where i = 1 ... C
-
-Parameters
-----------
-x: <*, C, n, m, f32>, required
-alpha: const<C, f32>, required
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class prelu(Operation):
+    """
+    Returns ``x_i`` if ``x_i > 0``, ``alpha_i * x_i`` otherwise, where ``i = 1 ... C``.
+
+    Parameters
+    ----------
+    x: tensor<[b, C, n, m], T> (Required)
+    alpha: const tensor<[C], T>, (Required)
+
+    Returns
+    -------
+    tensor<[b, C, n, m], f32>
+        * a tensor of the same shape as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = TensorInputType(),
             alpha = TensorInputType(const=True),
@@ -216,18 +257,24 @@ class prelu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Returns elementwise applied rectified linear activation: min(x, 0)
-
-Parameters
-----------
-x: <*, f32>, required
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class relu(elementwise_unary):
+    """
+    Returns elementwise applied rectified linear activation: ``min(x, 0)``.
+
+    Parameters
+    ----------
+    x: tensor<*?, f32> (Required)
+
+    Returns
+    -------
+    tensor<*?, f32>
+        * a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(relu, self).__init__(**kwargs)
 
@@ -236,18 +283,24 @@ class relu(elementwise_unary):
         return np.maximum(self.x.val, 0)
 
 
-@register_op(doc_str="""
-Returns elementwise applied rectified linear activation: max(min(x, 0), 6)
-
-Parameters
-----------
-x: <*, f32>, required
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class relu6(elementwise_unary):
+    """
+    Returns elementwise applied rectified linear activation: ``max(min(x, 0), 6)``.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(relu6, self).__init__(**kwargs)
 
@@ -256,20 +309,29 @@ class relu6(elementwise_unary):
         return np.minimum(np.maximum(self.x.val, 0), 6)
 
 
-@register_op(doc_str="""
-Returns alpha * tan(beta * x) element-wise. Input range is (-inf, inf).
-
-Parameters
-----------
-x: <*, f32>, required
-alpha: const<f32>, optional, default = 1
-beta: const<f32>, optional, default = 1
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class scaled_tanh(Operation):
+    """
+    Returns ``alpha * tan(beta * x)`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+        * Input range is ``(-inf, inf)``.
+    alpha: const f32 (Optional)
+        * Default to ``1``.
+    beta: const f32 (Optional)
+        * Default to ``1``.
+
+    Returns
+    -------
+    tensor<*?, f32>
+        * a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = ScalarOrTensorInputType(),
             alpha = FloatInputType(const=True, default=1),
@@ -287,18 +349,24 @@ class scaled_tanh(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Returns sigmoid(x) element-wise.
-
-Parameters
-----------
-x: <*, f32>, required
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class sigmoid(elementwise_unary):
+    """
+    Returns ``sigmoid(x)`` element-wise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same shape as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     def __init__(self, **kwargs):
         super(sigmoid, self).__init__(**kwargs)
 
@@ -307,20 +375,27 @@ class sigmoid(elementwise_unary):
         return 1/(1 + np.exp(-self.x.val))
 
 
-@register_op(doc_str="""
-Returns min( max( alpha * x + beta, 0 ), 1 ) elementwise.
-
-Parameters
-----------
-x: <*, f32>, required
-alpha: const<f32>, optional, default 0.2
-beta: const<f32>, optional, default 0.5
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class sigmoid_hard(Operation):
+    """
+    Returns ``min( max( alpha * x + beta, 0 ), 1 )`` elementwise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    alpha: const f32 (Optional)
+        * Default to ``0.2``.
+    beta: const f32 (Optional)
+        * Default to ``0.5``.
+
+    Returns
+    -------
+    tensor<*?, f32>, a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = ScalarOrTensorInputType(),
             alpha = FloatInputType(const=True, default=0.2),
@@ -338,40 +413,52 @@ class sigmoid_hard(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Returns log( 1 + e^x ) elementwise.
-
-Parameters
-----------
-x: <*, f32>, required
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class softplus(elementwise_unary):
-     def __init__(self, **kwargs):
-         super(softplus, self).__init__(**kwargs)
+    """
+    Returns ``log( 1 + e^x )`` elementwise.
 
-     @precondition(allow=VALUE)
-     def value_inference(self):
-         return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
+    def __init__(self, **kwargs):
+     super(softplus, self).__init__(**kwargs)
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+     return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
 
 
-@register_op(doc_str="""
-Returns alpha_i * log( 1 + e^( beta_i * x_i ) ), where i = 1 ... C
-
-Parameters
-----------
-x: <*, C, n, m, f32>, required
-alpha: const<C, f32>, required
-beta: const<C, f32>, required
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class softplus_parametric(Operation):
+    """
+    Returns ``alpha_i * log( 1 + e^( beta_i * x_i ) )``, where ``i = 1 ... C``.
+
+    Parameters
+    ----------
+    x: tensor<[b, C, n, m], T> (Required)
+    alpha: const tensor<[C], f32> (Required)
+    beta: const tensor<[C], f32> (Required)
+
+    Returns
+    -------
+    tensor<[b, C, n, m], T>
+        * a tensor of the same shape as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             x = TensorInputType(),
             alpha = TensorInputType(const=True),
@@ -406,20 +493,25 @@ class softplus_parametric(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str='''
-Returns exp(x) / tf.reduce_sum(tf.exp(x), axis)
-
-Parameters
-----------
-x: <*, f32>, required
-axis: const<f32>, optional, default = -1
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-
-''')
+@register_op()
 class softmax(Operation):
+    '''
+    Returns ``exp(x) / tf.reduce_sum(tf.exp(x), axis)``.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    axis: const i32 (Optional)
+        * Default to ``-1``.
+
+    Returns
+    -------
+    tensor<*?, f32>, a tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp32
+    '''
     input_spec = InputSpec(
             logit = TensorInputType(),
             axis = IntInputType(const=True, default=-1),
@@ -437,18 +529,20 @@ class softmax(Operation):
         axis = self.axis.val
         return scipy.special.softmax(x, axis=axis)
 
-@register_op(doc_str="""
-Returns x / ( 1 + |x| ) applied elementwise.
-
-Parameters
-----------
-x: <*, f32>, required
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class softsign(elementwise_unary):
+    """
+    Returns ``x / ( 1 + |x| )`` applied elementwise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * a tensor of the same shape and type as ``x``.
+    """
     def __init__(self, **kwargs):
         super(softsign, self).__init__(**kwargs)
 
@@ -457,19 +551,22 @@ class softsign(elementwise_unary):
         return self.x.val / (1 + np.abs(self.x.val))
 
 
-@register_op(doc_str="""
-Returns x if x >= alpha, 0 otherwise.
-
-Parameters
-----------
-x: <*, f32>, required
-alpha: const<f32>, optional, default = 1
-
-Returns
--------
-<*, f32>, a tensor of the same shape as x.
-""")
+@register_op()
 class thresholded_relu(Operation):
+    """
+    Returns ``x`` if ``x >= alpha``, ``0`` otherwise.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+    alpha: const f32 (Optional)
+        * Default to ``1``.
+
+    Returns
+    -------
+    tensor<*, T>
+        * a tensor of the same shape and type as ``x``.
+    """
     input_spec = InputSpec(
             x = ScalarOrTensorInputType(),
             alpha = FloatInputType(const=True, default=1),
