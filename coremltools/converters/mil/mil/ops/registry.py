@@ -14,7 +14,7 @@ class SSAOpRegistry:
     custom_ops = {}
 
     @staticmethod
-    def register_op(doc_str, is_custom_op=False, namespace='core'):
+    def register_op(doc_str='', is_custom_op=False, namespace='core'):
         """
         Registration routine for MIL Program operators
         is_custom_op: (Boolean) [Default=False]

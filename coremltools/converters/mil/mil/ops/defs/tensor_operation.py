@@ -10,33 +10,31 @@ from coremltools.converters.mil.mil import (
 from ._op_reqs import *
 from ._utils import promoted_primitive_type
 
-@register_op(doc_str="""
-Returns a tensor setting everything outside a center band to zeros for the innermost matrix. Special cases:
-
-* band_part(x, 0, -1) returns upper triangular part.
-* band_part(x, -1, 0) returns lower triangular part.
-* band_part(x, 0, 0) returns diagonal.
-
-Inputs
-
-* x <*, T> Required
-    * Input tensor.
-* lower: const<i32> Optional
-    * Number of lower / below sub-diagonals to keep. If negative, keep entire lower triangle.
-    * Defaults to -1 (keep the entire lower triangle)
-* upper: const<i32> Optional
-    * Number of upper / above sub-diagonals to keep. If negative, keep entire lower triangle.
-    * Defaults to -1 (keep the entire upper triangle)
-
-Outputs
-
-* <*, T> same type as the input tensor.
-
-Type Domains
-
-* T: f32
-""")
+@register_op()
 class band_part(Operation):
+    """
+    Returns a tensor setting everything outside a center band to zeros for the innermost matrix. Special cases:
+
+    - ``band_part(x, 0, -1)`` returns upper triangular part.
+    - ``band_part(x, -1, 0)`` returns lower triangular part.
+    - ``band_part(x, 0, 0)`` returns diagonal.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+        * Input tensor.
+    lower: const<i32> (Optional)
+        * Number of lower / below sub-diagonals to keep. If negative, keep entire lower triangle.
+        * Defaults to ``-1`` (keep the entire lower triangle)
+    upper: const<i32> (Optional)
+        * Number of upper / above sub-diagonals to keep. If negative, keep entire lower triangle.
+        * Defaults to ``-1`` (keep the entire upper triangle)
+
+    Returns
+    -------
+    tensor<*?, T>
+        * Same type and shape as the input tensor.
+    """
     input_spec = InputSpec(
         x=TensorInputType(),
         lower=IntInputType(const=True, default=-1),
@@ -52,6 +50,36 @@ class band_part(Operation):
 
 @register_op(doc_str='TODO')
 class cumsum(Operation):
+    """
+    Returns the cumulative sum the input along the given axis.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+        * Input tensor.
+    axis: const<i32> (Optional)
+        * default to ``0``.
+        * Axis for which the cumulative sum is computed.
+    exclusive: const<bool> (Optional)
+        * default to ``False``.
+        * When set to ``False``, inclusive cumsum is computed, that is the first element of
+          the output is identical to the first element in the input.
+        * When set to ``True``, exclusive cumsum is computed, which makes the first element
+          of output to ``0``.
+    reverse: const<bool> (Optional)
+        * default to ``False``.
+        * When set to ``True``, perform cumsum in the reverse order.
+
+    Returns
+    -------
+    tensor<*?, T>
+        * Same type and shape as the input tensor.
+
+    Attributes
+    ----------
+    T: fp32
+    """
+
     input_spec = InputSpec(
             x = TensorInputType(),
             axis = IntInputType(const=True, default=0),
@@ -87,22 +115,29 @@ class cumsum(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="""
-Returns a tensor with given shape filled with a constant value.
-
-Parameters
-----------
-shape: <K, i32>, required
-    Target output tensor shape.
-    K is the rank of the output tensor. shape[k] > 0 for k = 0,..., K-1.
-value: const<f32>, optional
-    Constant value to fill in. Defaults to 0.
-
-Returns
--------
-A tensor.
-""")
+@register_op()
 class fill(Operation):
+    """
+    Returns a tensor with given shape filled with a constant value.
+
+    Parameters
+    ----------
+    shape: tensor<[K], i32> (Required)
+        * Target output tensor shape.
+        * ``K`` is the rank of the output tensor. ``shape[k] > 0`` for ``k = 0,..., K-1``.
+    value: const<f32> (Optional)
+        * default to ``0``.
+        * Constant value to fill in.
+
+    Returns
+    -------
+    tensor<*?, T>
+        * Tensor with shape determined by the input shape.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         shape=IntTensorInputType(),
         value=IntOrFloatInputType(const=True, default=0.),
@@ -128,40 +163,45 @@ class fill(Operation):
         return np.full(shape=self.shape.val, fill_value=self.value.val)
 
 
-@register_op(doc_str="""
-Applies non-maximum suppression (NMS) on the input box coordinates according
-to their intersection-over-union (IoU). NMS selects as subset of bounding
-boxes with the descending scores. Removes boxes that have high
-intersection-over-union (IOU) overlap with previously selected boxes.
-
-Input
-
-* boxes: <n, B, 4, f32>
-    * Box coordinates to perform NMS on.
-* scores: <n, B, K, f32>
-    * Scores for each one of the boxes
-* iou_threshold: const<f32>
-    * The intersection over union (IoU) threshold over which boxes are suppressed. NMS remove all overlapping boxes with IoU > iou_threshold
-* score_threshold: const<f32>
-    * Before IoU suppression is performed, boxes with class scores below this threshold are rejected
-* max_boxes: const<i32>
-    * Maximum number of boxes to select. If the number of surviving boxes are less, output is padded up to this number
-* per_class_suppression: const<bool>
-    * Optional, defaults to False
-    * If true, suppression is performed independently within boxes of each class
-
-Output
-
-* <n, max_boxes, 4, f32>
-    * Coordinates of selected boxes
-* <n, max_boxes, K, f32>
-    * Scores of selected boxes
-* <n, max_boxes, i32>
-    * Indices of selected boxes
-* <n, i32>
-    * Number of boxes selected for each batch
-""")
+@register_op()
 class non_maximum_suppression(Operation):
+    """
+    Applies non-maximum suppression (NMS) on the input box coordinates according
+    to their intersection-over-union (IoU). NMS selects as subset of bounding
+    boxes with the descending scores. Removes boxes that have high
+    intersection-over-union (IOU) overlap with previously selected boxes.
+
+    Parameters
+    ---------
+    boxes: tensor<[n, B, 4], T> (Required)
+        * Box coordinates to perform NMS on.
+    scores: tensor<[n, B, K], T> (Required)
+        * Scores for each one of the boxes
+    iou_threshold: const<T> (Required)
+        * The intersection over union (``IoU``) threshold over which boxes are suppressed. NMS remove all overlapping boxes with ``IoU > iou_threshold``.
+    score_threshold: const<T> (Required)
+        * Before IoU suppression is performed, boxes with class scores below this threshold are rejected.
+    max_boxes: const<i32> (Required)
+        * Maximum number of boxes to select. If the number of surviving boxes are less, output is padded up to this number.
+    per_class_suppression: const<bool> (Optional)
+        * Default to ``False``.
+        * If ``True``, suppression is performed independently within boxes of each class.
+
+    Returns
+    -------
+    tensor<[n, max_boxes, 4], T>
+        * Coordinates of selected boxes.
+    tensor<[n, max_boxes, K], T>
+        * Scores of selected boxes.
+    tensor<[n, max_boxes], i32>
+        * Indices of selected boxes.
+    tensor<[n], i32>
+        * Number of boxes selected for each batch.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         boxes=TensorInputType(),
         scores=TensorInputType(),
@@ -186,26 +226,27 @@ class non_maximum_suppression(Operation):
                types.tensor(types.int32, (n_batch,))
 
 
-@register_op(doc_str="""
-Returns the indices of the elements in the given tensor that are non-zero.
-
-Inputs
-
-* x <*, T>
-    * Tensor, values selected at indices where its values is not equal to 0.
-
-Outputs
-
-* <N, R, T>
-    * 2-dimensional tensor contains indices of elements that are non-zero. Each
-    row is the index for a non-zero value. N is the number of non-zero elements,
-    R is the rank of the input.
-
-Type Domains
-
-* T: f32
-""")
+@register_op()
 class non_zero(Operation):
+    """
+    Returns the indices of the elements in the given tensor that are non-zero.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+        * Tensor, values selected at indices where its values is not equal to ``0``.
+
+    Returns
+    -------
+    tensor<[N, R], T>
+        * 2-dimensional tensor contains indices of elements that are non-zero. Each
+          row is the index for a non-zero value.
+        * ``N`` is the number of non-zero elements, ``R`` is the rank of the input.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         x=TensorInputType()
     )
@@ -222,9 +263,37 @@ class non_zero(Operation):
         return np.transpose(np.nonzero(self.x.val))
 
 
-# rdar://59195036
-@register_op(doc_str="TODO")
+@register_op()
 class one_hot(Operation):
+    """
+    Returns one hot vectors whose locations represented in ``indices`` take the ``on_value``,
+    while other locations take the ``off_value``.
+
+    Parameters
+    ----------
+    indices: tensor<[D],T> (Required)
+        * Tensor, values indicated the locations for each one hot vector to take the ``on_value``.
+    one_got_vector_size: i32 (Required)
+        * Indicates the number of returning vectors.
+    axis: const i32 (Optional)
+        * Indicates which dimension to append the new axis.
+        * If the input indices is rank ``D``, the output tensor will have rank ``D+1``.
+        * Default to ``-1`` (the last dimension).
+    on_value: const i32 (Optional)
+        * Values for locations where defined in ``indices``.
+        * Default to ``1``.
+    off_value: const i32 (Optional)
+        * Default to ``0``.
+
+    Returns
+    -------
+    tensor<*?,T>
+        * A tensor contains one hot vectors.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
             indices = IntTensorInputType(),
             one_hot_vector_size=IntInputType(),
@@ -268,9 +337,40 @@ class one_hot(Operation):
         return types.tensor(on_type, retshape)
 
 
-# rdar://58622145
-@register_op(doc_str='TODO')
+@register_op()
 class pad(Operation):
+    '''
+    Pad a tensor.
+
+    Parameters
+    ----------
+    x: tensor<[*D_in],T>  (Required)
+    * pad: const tensor<[2*N],i32> (Required)
+        * ``N <= D_in``: last ``N`` dimensions of ``x`` are padded as follows:
+        * For each dimension ``i`` of ``x`` if ``i >= D_in - N``
+            * pad ``pad[2*i]`` elements before ``x[..,i,..]``
+            * pad ``pad[2*i+1]`` elements after ``x[..,i,..]``
+        * If mode is "reflect" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at most ``D[i]-1``.
+        * If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at most ``D[i]``.
+    * mode: const<str> (Optional)
+        * Default to 'constant'.
+        * Must be one of the following values:
+            * constant
+            * reflect
+            * replicate
+    * constant_val: const<T> (Optional)
+        * Default to ``0``.
+        * Constant value to pad. Ignored if ``mode != constant``.
+
+    Returns
+    -------
+    tensor<[*D_out],T>
+        % Tensor with same type as the input.
+
+    Attributes
+    ----------
+    T: fp32
+    '''
     input_spec = InputSpec(
             x = TensorInputType(),
             pad = IntTensorInputType(const=True),
@@ -312,9 +412,29 @@ class pad(Operation):
         return np.pad(self.x.val, pad_val, mode)
 
 
-# rdar://59195036
-@register_op(doc_str="TODO")
+@register_op()
 class range_1d(Operation):
+    '''
+    Returns a numpy-like 1d range sequence.
+
+    Parameters
+    ----------
+    end: <T> (Required)
+        * The upper limit of the sequence, exclusive.
+    start: <T> (Required)
+        * The start point of the sequence.
+    step: <T> (Required)
+        * Number that increments ``start``.
+
+    Returns
+    -------
+    tensor<M, T>
+        * An 1D tensor. where ``M`` is the length of the sequence.
+
+    Attributes
+    ----------
+    T: fp32
+    '''
     input_spec = InputSpec(
             end   = IntOrFloatInputType(),
             start = IntOrFloatInputType(),
@@ -350,11 +470,30 @@ class range_1d(Operation):
         return types.tensor(self.start.dtype, shape)
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class tile(Operation):
+    '''
+    Returns a new tensor by replicating input ``x`` multiples times.
+    The ``i``th dimention of ``x`` will be replicated ``reps[i]`` times.
+
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+        * Input tensor.
+    reps: tensor<[rank(x)], T> (Required)
+        * A 1D tensor with length ``rank(x)`` which indicates number to replicate the input along each dimension.
+
+    Returns
+    -------
+    tensor<*?, T>:
+        * An Nd tensor with same type as the input.
+
+    Attributes
+    ----------
+    T: fp32
+    '''
     input_spec = InputSpec(
             x = TensorInputType(),
-            # TODO: rdar://63481891 (IntTensorInputType not compatible for Tile layer)
             reps = TensorInputType(),
             )
 
@@ -392,28 +531,31 @@ class tile(Operation):
         return np.tile(self.x.val, reps=self.reps.val)
 
 
-@register_op(doc_str="""
-Returns a tensor containing the indices of the sorted values along given axis
-of the input tensor.
-
-Inputs
-
-* x: <*, T> Required
-    * Input tensor.
-* axis: const<i32> or const<D, i32> Optional
-    * Axis to perform the operation.
-* ascending: const<bool> Optional
-    * True to sort in ascending order. Default to false, sort in descending order
-
-Outputs
-
-* <*, T>
-
-Type Domains
-
-* T: f32
-""")
+@register_op()
 class argsort(Operation):
+    """
+    Returns a tensor containing the indices of the sorted values along given axis
+    of the input tensor.
+
+    Paramters
+    ---------
+    x: <*?, T> (Required)
+        * Input tensor.
+    * axis: const<i32> (Optional)
+        * Default to ``-1`` (the last dimension).
+        * Axis to perform the operation.
+    * ascending: const<bool> (Optional)
+        * True to sort in ascending order. Default to ``Flattensalse``, sort in descending order.
+
+    Returns
+    -------
+    tensor<*?, T>
+        * Tensor containing the indices of the sorted values
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         x=TensorInputType(),
         axis=IntInputType(const=True, default=-1),
@@ -433,33 +575,37 @@ class argsort(Operation):
         return np.argsort(self.x.val, axis=self.axis.val)
 
 
-@register_op(doc_str="""
-Returns a tensor containing top or bottom k values and the corresponding
-indices of the input tensor along a given axis.
-
-Inputs
-
-* x: <*, T> Required
-    * Input tensor.
-* k: const<i32>  (Optional. Default to 1)
-    * Number of values/indices to be computed along each axis.
-* axis: const<i32> Optional
-    * Axis to perform the operation. Defaults to 1 (channel dimension).
-* ascending: const<bool> Optional
-    * Whether or not to sort in ascending order, defaults to false, sort in descending order.
-
-Outputs
-
-* <*, T>
-    * Values of top/bottom k elements
-* <*, T>
-    * Indices of the top/bottom k elements along axis
-
-Type Domains
-
-* T: f32
-""")
+@register_op()
 class topk(Operation):
+    """
+    Returns a tensor containing top or bottom k values and the corresponding
+    indices of the input tensor along a given axis.
+
+    Parameters
+    ----------
+    x: <*?, T> (Required)
+        * Input tensor.
+    k: const<i32> (Optional)
+        * Default to ``1``.
+        * Number of values/indices to be computed along each axis.
+    * axis: const<i32> (Optional)
+        * Defaults to ``1`` (channel dimension).
+        * Axis to perform the operation.
+    * ascending: const<bool> (Optional)
+        * Default to ``False``.
+        * Whether or not to sort in ascending order, sort in descending order.
+
+    Returns
+    -------
+    tensor<*?, T>
+        * Values of top/bottom ``k`` elements
+    tensor<*?, T>
+        * Indices of the top/bottom ``k`` elements along axis
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         x=TensorInputType(),
         k=IntInputType(const=True, default=1),
@@ -496,34 +642,37 @@ class topk(Operation):
         return values, indices
 
 
-@register_op(doc_str="""
-Flattens input tensor into 2d tensor by flattening dimensions before and after the provided axis
-
-Inputs
-
-* x: <*d, T> (Required)
-* axis: const<f32>  Optional, defaults to 1
-        negative axis is supported.
-
-Outputs
-
-* <d_prior, d_post, T>
-    * d_prior is product of dimensions x[:axis]
-    * d_post is product of dimensions x[axis:]
-
-Type Domains
-
-* T: f32
-
-Examples
-
-    1. input_shape = (3, ), axis = -1, output_shape = (1, 3)
-    2. input_shape = (3, ), axis = 1, output_shape = (3, 1)
-    3. input_shape = (4, 3), axis = -1, output_shape = (4, 3)
-    4. input_shape = (2, 3, 2), axis = -1, output_shape = (6, 2)
-    5. input_shape = (5, 5, 2), axis = 1, output_shape = (2, 10)
-""")
+@register_op()
 class flatten(Operation):
+    """
+    Flattens input tensor into 2d tensor by flattening dimensions before and after the provided axis
+
+    Parameters
+    ----------
+    x: tensor<[*d], T> (Required)
+        * Input tensor.
+    * axis: const<f32>  (Optional)
+        * Defaults to ``1``.
+        * negative axis is supported.
+
+    Returns
+    -------
+    tensor<d_prior, d_post, T>
+        * ``d_prior`` is product of dimensions ``x[:axis]``
+        * ``d_post`` is product of dimensions ``x[axis:]``
+
+    Examples
+    --------
+        1. ``input_shape = (3, ), axis = -1, output_shape = (1, 3)``
+        2. ``input_shape = (3, ), axis = 1, output_shape = (3, 1)``
+        3. ``input_shape = (4, 3), axis = -1, output_shape = (4, 3)``
+        4. ``input_shape = (2, 3, 2), axis = -1, output_shape = (6, 2)``
+        5. ``input_shape = (5, 5, 2), axis = 1, output_shape = (2, 10)``
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
               x = TensorInputType(),
            axis = IntInputType(const=True, default=1)
@@ -550,24 +699,26 @@ class flatten(Operation):
         return self.x.val.reshape(dim_pre_axis, dim_post_axis)
 
 
-@register_op(doc_str="""
-Returns 1-dimensional tensor with shape of input tensor
-
-Inputs
-
-* x: <*d_in, T> (Required)
-
-Outputs
-
-* <K, i32>
-    * Shape of input tensor
-    * K = x.rank = len(d_in)
-
-Type Domains
-
-* T: f32
-""")
+@register_op()
 class shape(Operation):
+    """
+    Returns 1-dimensional tensor with shape of input tensor
+
+    Parameters
+    ----------
+    x: tensor<[*?], T> (Required)
+        * Input tensor.
+
+    Returns
+    -------
+    tensor<K, i32>
+        * Shape of input tensor.
+        * ``K = x.rank``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
               x = TensorInputType()
     )
@@ -576,7 +727,6 @@ class shape(Operation):
         super(shape, self).__init__(**kwargs)
 
     def type_inference(self):
-        # TODO: rdar://60250739 ([MIL] Allow Variadic rank for get_shape type_inference)
         input_rank = self.x.rank
         return types.tensor(types.int32, tuple([input_rank]))
 
@@ -589,8 +739,28 @@ class shape(Operation):
             return np.array(self.x.shape).astype(np.int32)
 
 
-@register_op(doc_str='TODO')
+@register_op()
 class concat(Operation):
+    """
+    Concatenates tensors along a dimension.
+
+    Parameters
+    ----------
+    values: Tuple[tensor<[d0, d1, ..., d_axis_i, ..., d_n],T>]  (Required)
+        * The number of dimensions of the input tensors must match, and all dimensions except ``axis`` must be equal.
+        * The tensors may be variadic, but the number of tensors must be determined at compile time (i.e. a tuple).
+    axis: const<int32> (Required)
+        * The dimension along which to concatenate. Must be in the range ``[-rank(values[i]), rank(values[i]))`` for all ``i``.
+
+    Returns
+    -------
+    tensor<[d0, d1,...d_axis_out, ..., d_n],T>
+        * where ``d_axis_out = sum(d_axis_i)``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         values = TupleInputType(),
         axis = IntInputType(const=True),
@@ -676,8 +846,35 @@ class concat(Operation):
 
         return np.concatenate(values, axis=self.axis.val)
 
-@register_op(doc_str='TODO')
+@register_op()
 class split(Operation):
+    """
+    Split tensors into a tuple
+
+    Parameters
+    ----------
+    x: <*?,T>  (Required)
+        * The tensor to split.
+        * The tensors may be variadic, but the number of tensors must be determined at compile time (i.e. a tuple).
+    num_splits: <i32> (Optional)
+        * If specified, divide ``x`` into ``num_splits`` tensors along ``axis``. Its behavior depends on ``split_sizes``:
+            * If ``split_sizes`` is defined, ``num_splits == S``, and the output sizes may be uneven
+            * If ``split_sizes`` is not defined, ``value.shape[axis]`` must be divisible by ``num_splits``, and the output sizes must be even
+        * At least one of ``num_splits`` or ``split_sizes`` must be provided. If ``split_sizes``’ length ``S`` cannot be determined at compile time, ``num_splits`` must be supplied to determine the number of outputs.
+    * split_sizes: const<S,i32> (Optional)
+        * Sizes to split to. The sum of ``split_sizes`` must equal to ``value.shape[axis]``.
+    * axis: const<i32> (Required)
+        * The dimension along which to concatenate. Must be in the range ``[-rank(x), rank(x))``.
+
+    Returns
+    -------
+    Tuple[tensor<*?,T>]
+        * where the length of the tuple is the number of splits (determined from ``num_splits`` or ``split_sizes``).
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         x = TensorInputType(),
         num_splits = IntInputType(const=True, optional=True),
@@ -759,8 +956,27 @@ class split(Operation):
         split_indices = np.cumsum(sizes).astype(np.int)
         return tuple(np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val))
 
-@register_op(doc_str='TODO')
+@register_op()
 class stack(Operation):
+    """
+    Concatenates tensors along a dimension.
+
+    Parameters
+    ----------
+    values: Tuple[tensor<[d0, d1,...d_axis_i, ..., d_n],T>]  (Required)
+        * All tensors must have identical shape.
+    axis: const<i32> (Required)
+        * The dimension along which to concatenate. Must be in the range ``[-rank(values[i]), rank(values[i]))`` for all ``i``.
+
+    Returns
+    -------
+    tenor<[d0, d1,...d_axis_out, ..., d_n],T>
+        * where ``d_axis_out = sum(d_axis_i)``
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         values = TupleInputType(),
         axis = IntInputType(const=True),
@@ -803,11 +1019,14 @@ class stack(Operation):
 
         return np.stack(values, self.axis.val)
 
-@register_op(doc_str='TODO')
+@register_op()
 class addn(Operation):
     input_spec = InputSpec(
         values = TupleInputType(),
     )
+    """
+    Should deprecate this op.
+    """
 
     def __init__(self, **kwargs):
         super(addn, self).__init__(**kwargs)
@@ -835,11 +1054,14 @@ class addn(Operation):
         inputs = np.array([v.val for v in self.values])
         return np.sum(inputs, axis=0)
 
-@register_op(doc_str="TODO")
+@register_op()
 class isfinite(Operation):
     input_spec = InputSpec(
         x = ScalarOrTensorInputType(),
     )
+    """
+    Should deprecate this op.
+    """
 
     def __init__(self, **kwargs):
         super(isfinite, self).__init__(**kwargs)
