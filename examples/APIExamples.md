@@ -295,9 +295,10 @@ class MyLayerSelector(QuantizedLayerSelector):
         ret = super(MyLayerSelector, self).do_quantize(layer)
         if not ret or layer.name == 'dense_2':
             return True
+        return ret
 
 
 selector = MyLayerSelector()
 quantized_model = quantize_weights(
-    mlmodel, 8, quantization_mode='linear', selector=selector)
+    model, 8, quantization_mode='linear', selector=selector)
 ```
