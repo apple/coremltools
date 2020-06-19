@@ -713,7 +713,7 @@ class TestConv:
             [True, False],
             backends,
             ['conv1d', 'conv2d'],
-            ['SAME', 'VALID'],
+            ['SAME', 'VALID', [[2, 3], [3, 2]]],
             ['NHWC'],  # NCHW not supported by TF.
             [(11, 12, 3, 2), (12, 11, 2, 3)],
             [(1, 1), (2, 3)],
@@ -729,13 +729,23 @@ class TestConv:
         if data_format == 'NHWC':
             input_shape = (N, W, C_in) if conv_dim == 'conv1d' \
                 else (N, H, W, C_in)
+            if isinstance(padding, list):
+                padding = [[0, 0]] + padding + [[0, 0]]
             if conv_dim == 'conv1d':
                 data_format = 'NWC'
+                if isinstance(padding, list):
+                    # No explicit padding for conv1d in TF
+                    return
         else:  # 'NCHW'
             input_shape = (N, C_in, W) if conv_dim == 'conv1d' \
                 else (N, C_in, H, W)
+            if isinstance(padding, list):
+                padding = [[0, 0], [0, 0]] + padding
             if conv_dim == 'conv1d':
                 data_format = 'NCW'
+                if isinstance(padding, list):
+                    # No explicit padding for conv1d in TF
+                    return
         W_shape = (kW, C_in, C_out) if conv_dim == 'conv1d' \
             else (kH, kW, C_in, C_out)
         dilations = dilations[1] if conv_dim == 'conv1d' else dilations

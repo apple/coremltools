@@ -593,17 +593,26 @@ def Conv2D(context, node):
             'strides', node.attr.get('strides'), data_format)
 
     pad_type = node.attr.get('padding')
-    if not isinstance(pad_type, _string_types):
-        pad_type = "custom"
-        raise NotImplementedError("Custom padding not implemented for TF")
     pad_type = pad_type.lower()
+    pad_type = 'custom' if pad_type == 'explicit' else pad_type
+    assert(pad_type in {'same', 'valid', 'custom'})
     x = context[node.inputs[0]]
     if data_format == "NHWC":
         x = _transpose_NHWC_to_NCHW(x)
+        if pad_type == 'custom':
+            pad_val = node.attr['explicit_paddings']
+            pad_val = pad_val[2:-2]
+    elif data_format == "NCHW" and pad_type == 'custom':
+        pad_val = node.attr['explicit_paddings']
+        pad_val = pad_val[4:]
     # Only the last op should have the same name as node.name
     conv_name = node.name + 'x' if data_format == 'NHWC' else node.name
-    x = mb.conv(x=x, weight=W_oihw, pad_type=pad_type, strides=HW_strides,
-            dilations=HW_dilations, name=conv_name)
+    if pad_type == 'custom':
+        x = mb.conv(x=x, weight=W_oihw, pad_type=pad_type, strides=HW_strides,
+                dilations=HW_dilations, name=conv_name, pad=pad_val)
+    else:
+        x = mb.conv(x=x, weight=W_oihw, pad_type=pad_type, strides=HW_strides,
+                dilations=HW_dilations, name=conv_name)
     if data_format == "NHWC":
         x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
