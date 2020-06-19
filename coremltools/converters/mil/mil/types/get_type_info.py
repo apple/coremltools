@@ -57,8 +57,7 @@ def get_type_info(t):
         return Type(t.__name__, python_class=t)
     elif hasattr(t, '__call__'):
         return get_python_method_type(t)
-    else:
-        raise TypeError("Unsupported type %s" % t)
+    raise TypeError("Unsupported type %s" % t)
 
 
 def get_python_class_methods(cls):

@@ -113,19 +113,31 @@ def is_scalar(btype):
 def is_tensor(tensor_type):
     if tensor_type is None:
         return False
-    return get_type_info(tensor_type).name == 'tensor'
+    try:
+        type_info = get_type_info(tensor_type).name
+    except TypeError:
+        return False
+    return type_info == 'tensor'
 
 
 def is_str(t):
     if t is None:
         return False
-    return get_type_info(t).name == 'str'
+    try:
+        type_info = get_type_info(t).name
+    except TypeError:
+        return False
+    return type_info == 'str'
 
 
 def is_tuple(t):
     if t is None:
         return False
-    return get_type_info(t).name == 'tuple'
+    try:
+        type_info = get_type_info(t).name
+    except TypeError:
+        return False
+    return type_info == 'tuple'
 
 
 def is_builtin(t):

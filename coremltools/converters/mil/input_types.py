@@ -8,6 +8,8 @@ import numpy as np
 import six
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types.type_mapping import (
+        numpy_type_to_builtin_type, is_builtin)
 
 class ClassifierConfig(object):
     def __init__(self,
@@ -114,8 +116,15 @@ class TensorType(InputType):
         super(TensorType, self).__init__(name, shape)
         if dtype is None:
             self.dtype = types.fp32
-        else:
+        elif is_builtin(dtype):
             self.dtype = dtype
+        else:
+            # Assume dtype is numpy type
+            try:
+                self.dtype = numpy_type_to_builtin_type(dtype)
+            except TypeError:
+                raise TypeError('dtype={} is unsupported'.format(
+                    dtype))
 
 
 class RangeDim(object):
