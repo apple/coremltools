@@ -207,6 +207,8 @@ def convert_tree_ensemble(
         mlkit_tree.set_default_prediction_value(base_prediction)
         if n_classes == 2:
             mlkit_tree.set_post_evaluation_transform("Regression_Logistic")
+        else:
+            mlkit_tree.set_post_evaluation_transform("Classification_SoftMax")
     else:
         mlkit_tree = _TreeEnsembleRegressor(feature_names, target)
         mlkit_tree.set_default_prediction_value(0.5)

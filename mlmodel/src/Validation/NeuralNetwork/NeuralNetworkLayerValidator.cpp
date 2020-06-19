@@ -131,12 +131,12 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
         }
         if (weight_size != expected_weight_size) {
             if (is_deconv) {
-                std::string err = "Deconvolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(kernelChannels) + " x " + std::to_string(outputChannels/nGroups) + " x " + std::to_string(kernelHeight) + " x " + std::to_string(kernelWidth) + " convolution.";
+                std::string err = "Deconvolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(kernelChannels) + " × " + std::to_string(outputChannels/nGroups) + " × " + std::to_string(kernelHeight) + " × " + std::to_string(kernelWidth) + " convolution.";
                 r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
                 return r;
             }
             else {
-                std::string err = "Convolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(outputChannels) + " x " + std::to_string(kernelChannels) + " x " + std::to_string(kernelHeight) + " x " + std::to_string(kernelWidth) + " convolution.";
+                std::string err = "Convolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(outputChannels) + " × " + std::to_string(kernelChannels) + " × " + std::to_string(kernelHeight) + " × " + std::to_string(kernelWidth) + " convolution.";
                 r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
                 return r;
             }
@@ -420,7 +420,7 @@ static Result validateInnerProductWeightsBias(const Specification::NeuralNetwork
         if (num_inputs * num_outputs != weight_size) {
             r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layer.name() +
                        " has incorrect weight matrix size " + std::to_string(weight_size) +
-                       " to encode a " + std::to_string(num_inputs) + " x " +
+                       " to encode a " + std::to_string(num_inputs) + " × " +
                        std::to_string(num_outputs) + " " + layer_type + ".");
             return r;
         }

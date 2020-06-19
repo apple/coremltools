@@ -10,7 +10,8 @@ import unittest
 
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import evaluate_classifier,\
-    _macos_version, _is_macos
+    evaluate_classifier_with_probabilities, _macos_version, _is_macos
+
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingClassifier
@@ -157,11 +158,11 @@ class BoostedTreeClassificationBostonHousingXGboostNumericTest(unittest.TestCase
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
-            df['prediction'] = xgb_model.predict(self.X)
-
-            # Evaluate it
-            metrics = evaluate_classifier(spec, df)
-            self._check_metrics(metrics)
+            probabilities = xgb_model.predict_proba(self.X)
+            df['classProbability'] = [dict(zip(xgb_model.classes_, cur_vals)) for cur_vals in probabilities]
+            metrics = evaluate_classifier_with_probabilities(spec, df, probabilities='classProbability', verbose=False)
+            self.assertEquals(metrics['num_key_mismatch'], 0)
+            self.assertLess(metrics['max_probability_error'], 1e-3)
 
     def _classifier_stress_test(self):
         options = dict(

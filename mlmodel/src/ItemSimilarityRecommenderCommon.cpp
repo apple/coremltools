@@ -15,15 +15,13 @@ namespace CoreML { namespace Recommender {
 
   _ItemSimilarityRecommenderData::_ItemSimilarityRecommenderData(const Specification::ItemSimilarityRecommender& isr) {
 
-    // Validate that we have item_ids in the correct 0, 1, ..., n-1 sequence.
-    std::set<uint64_t> index_hits;
-
+    uint64_t max_item = 0;
     int n_similarities = isr.itemitemsimilarities_size();
 
     for(int i = 0; i < n_similarities; ++i) {
       const auto& item_sim_info = isr.itemitemsimilarities(i);
       uint64_t item_id = item_sim_info.itemid();
-      index_hits.insert(item_id);
+      max_item = std::max(max_item, item_id);
 
       auto& interaction_list_dest = item_interactions[item_id];
       int n_interactions = item_sim_info.similaritemlist_size();
@@ -35,7 +33,7 @@ namespace CoreML { namespace Recommender {
 
         interaction_list_dest.push_back({inter_id, score});
 
-        index_hits.insert(inter_id);
+        max_item = std::max(max_item, inter_id);
       }
 
       // Sort to ensure equality between equivalent models.
@@ -46,8 +44,6 @@ namespace CoreML { namespace Recommender {
       }
     }
 
-    // If there's been a crazy error and the numbers don't seem to be 
-    uint64_t max_item = *index_hits.rbegin(); 
     num_items = 0;
 
     // Check out the item similarity

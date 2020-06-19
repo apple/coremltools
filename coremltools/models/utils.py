@@ -393,7 +393,8 @@ def evaluate_classifier_with_probabilities(model, data,
     max_probability_error, num_key_mismatch = 0, 0
 
     for _,row in data.iterrows():
-        predicted_values = model.predict(dict(row))[_to_unicode(probabilities)]
+        input_dict = {k: v for k, v in dict(row).items() if k != probabilities}
+        predicted_values = model.predict(input_dict)[_to_unicode(probabilities)]
         other_values = row[probabilities]
 
         if set(predicted_values.keys()) != set(other_values.keys()):

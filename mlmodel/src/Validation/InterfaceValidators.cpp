@@ -238,7 +238,7 @@ namespace CoreML {
                             if (!foundDefault) {
                                 return Result(ResultType::INVALID_MODEL_INTERFACE,
                                               "Description of image feature '" + desc.name() + "' has a default size of " +
-                                              std::to_string(defaultWidth) + " x " + std::to_string(defaultHeight) +
+                                              std::to_string(defaultWidth) + " × " + std::to_string(defaultHeight) +
                                               " which is not within the allowed enumerated sizes specified.");
                             }
 
