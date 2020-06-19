@@ -327,8 +327,7 @@ class TestTf1ModelFormats:
     def test_invalid_converter_source(self):
         with pytest.raises(ValueError) as e:
             converter.convert(None, source='invalid')
-        expected_msg = "Unrecognized value of argument \"source\": invalid. " \
-                       "It must be one of \"auto\", \"tensorflow\", \"pytorch\"."
+        expected_msg = r'Unrecognized value of argument "source": .*'
         e.match(expected_msg)
 
     def test_invalid_converter_target(self):

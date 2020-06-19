@@ -168,12 +168,11 @@ def convert(model,
         mlmodel = coremltools.convert(model='frozen_style_transfer.pb',
                                                  inputs=[flexible_input], # This could be flexible_input/range_input/enumerated_inputs
                                                  outputs=['Softmax'])
-
     """
     source = source.lower()
-    if not source in {'auto', 'tensorflow', 'pytorch'}:
+    if source not in {'auto', 'tensorflow', 'pytorch'}:
         msg = "Unrecognized value of argument \"source\": {}. " \
-              "It must be one of \"auto\", \"tensorflow\", \"pytorch\"."
+              "It must be one of [\"auto\", \"tensorflow\", \"pytorch\"]."
         raise ValueError(msg.format(source))
 
     if inputs is not None:
@@ -219,15 +218,21 @@ def convert(model,
     kwargs.pop('convert_to', None)
 
     if source == "auto":
-        msg = "Unable to determine the type of the model, i.e. the source framework. " \
-              "Please provide the value of argument \"source\", from one of " \
-              "\"tensorflow\", \"pytorch\"."
+        msg = (
+            "Unable to determine the type of the model, i.e. the source framework. "
+            'Please provide the value of argument "source", from one of '
+            '["tensorflow", "pytorch"]. Note that model conversion requires the '
+            "source package that generates the model. Please make sure you have "
+            "the appropriate version of source package installed. E.g., if you're "
+            "converting model originally trained with TensorFlow 1.14, make sure "
+            "you have `tensorflow==1.14` installed."
+        )
         raise ValueError(msg)
 
     elif source in {"tensorflow", "tensorflow2"}:
 
         if source == 'tensorflow' and not _HAS_TF_1:
-            raise ValueError('Converter was called with source=tensorflow, but missing tensorflow package')
+            raise ValueError('Converter was called with source="tensorflow", but missing tensorflow package')
 
         if inputs is not None and not all([isinstance(_input, InputType) for _input in inputs]):
             raise ValueError('Input should be a list of TensorType or ImageType')
@@ -290,7 +295,6 @@ def convert(model,
                     classifier_config=classifier_config,
                     **kwargs
                     )
-
 
     model = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
 
