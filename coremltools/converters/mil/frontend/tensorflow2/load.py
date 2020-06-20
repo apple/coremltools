@@ -32,6 +32,7 @@ from coremltools.converters.mil.frontend.tensorflow.tf_graph_pass import (
     tensor_array_resource_removal,
     insert_get_tuple,
     delete_disconnected_nodes,
+    fuse_dilation_conv
 )
 from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
     flatten_sub_graph_namespaces, rewrite_control_flow_functions
@@ -128,7 +129,8 @@ class TF2Loader(TFLoader):
             constant_propagation,
             rewrite_control_flow_functions,
             flatten_sub_graph_namespaces,
-            remove_variable_nodes
+            remove_variable_nodes,
+            fuse_dilation_conv
         ]
 
         if self.debug:

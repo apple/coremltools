@@ -234,3 +234,19 @@ def run_compare_tf(
                         use_cpu_only, atol=atol, rtol=rtol, also_compare_shapes=True)
 
     return proto
+
+def layer_counts(spec, layer_type):
+    spec_type_map = {
+        "neuralNetworkClassifier": spec.neuralNetworkClassifier,
+        "neuralNetwork": spec.neuralNetwork,
+        "neuralNetworkRegressor": spec.neuralNetworkRegressor
+    }
+    nn_spec = spec_type_map.get(spec.WhichOneof("Type"))
+    if nn_spec is None:
+        raise ValueError("MLModel must have a neural network")
+
+    n = 0
+    for layer in nn_spec.layers:
+        if layer.WhichOneof('layer') == layer_type:
+            n += 1
+    return n

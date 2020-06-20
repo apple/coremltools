@@ -181,7 +181,8 @@ class TF1Loader(TFLoader):
             functionalize_loops,
             constant_propagation,
             cond_to_where,
-            remove_variable_nodes
+            remove_variable_nodes,
+            fuse_dilation_conv
         ]
 
         if self.debug:

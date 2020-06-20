@@ -6,7 +6,7 @@
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    make_tf_graph, run_compare_tf
+    make_tf_graph, run_compare_tf, layer_counts
 )
 import math
 
@@ -892,6 +892,10 @@ class TestDepthwiseConv:
     def test_depthwise_conv(
             self, use_cpu_only, backend, padding, HWkHkW, strides,
             dilations, dynamic_weights, batch_size):
+        if np.sum(strides) != len(strides) and \
+            np.sum(dilations) != len(dilations):
+            # TF doesn't compute correct output for non-one stride+dilation
+            return
         H, W, kH, kW = HWkHkW
         N, C_in, C_out = batch_size, 2, 6
         input_shape = (N, H, W, C_in)
@@ -912,8 +916,10 @@ class TestDepthwiseConv:
             input_values = [(np.random.rand(*input_shape).astype(np.float32))]
             input_dict = dict(zip(inputs, input_values))
 
-            run_compare_tf(model, input_dict, outputs,
+            proto = run_compare_tf(model, input_dict, outputs,
             use_cpu_only=use_cpu_only, backend=backend, frontend_only=False)
+
+            assert(layer_counts(proto, "reorganizeData") == 0)
 
         def test_dynamic_W():
             @make_tf_graph([input_shape, W_shape])
