@@ -14,9 +14,28 @@ from coremltools.converters.mil.mil import get_new_symbol
 from ._op_reqs import *
 import logging
 
-# rdar://58622145
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class cond(Operation):
+    """
+    Conditional execution. The return types must be identical between the true
+    and false branches.
+
+    Parameters
+    ----------
+    pred: tensor<[], bool> (Required)
+        * 0D tensor (scalar) predicate to switch between true and fall branches.
+
+    _true_fn: Python function (Required)
+	* A Python function that will be executed if ``cond`` evaluates to ``True``. It must take 0 input and return one or more values, whose types will be taken to be the return type of the operation.
+
+    _false_fn: Python function (Required)
+	* A Python function to be executed if ``cond`` evaluates to ``False``. It must take 0 input and has return types must match those of if_branch.
+
+    Returns
+    -------
+    Python tuple
+        * Tuple of ``Variables`` from one of the branches.
+    """
     input_spec = InputSpec(
             pred = BoolInputType(),
             _true_fn = PyFunctionInputType(),
@@ -63,8 +82,7 @@ class cond(Operation):
         return tuple(v.sym_type for v in true_ret_vars)
 
 
-# rdar://58622145
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class const(Operation):
     input_spec = InputSpec(
             mode = InternalStringInputType(const=True,
@@ -110,7 +128,7 @@ class const(Operation):
 
 
 # Internal const can have symbolic value (for testing purpose)
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class _const_symbolic(const):
     def __init__(self, **kwargs):
         super(_const_symbolic, self).__init__(**kwargs)
@@ -125,31 +143,35 @@ class _const_symbolic(const):
         return val
 
 
-@register_op(doc_str="""
-Returns the elements selected from either a or b, depending on the cond.
-Shape of cond, a, b must be broadcastable.
-
-Inputs
-
-* cond <*, T>
-    * Tensor, when True (non-zero), select element from a, otherwise, b
-* a <*, T> Optional
-    * Tensor, values selected at indices where condition is True
-    * Defaults to None.
-* b <*, T> Optional
-    * Tensor, values selected at indices where condition is False
-    * Defaults to None.
-
-Outputs
-
-* <*, T>
-    *  A tensor of shape equal to the broadcasted shape.
-
-Type Domains
-
-* T: f32
-""")
+@register_op(doc_str="")
 class select(Operation):
+    """
+    Returns the elements selected from either ``a`` or ``b``, depending on
+    ``cond``. Shape of ``cond``, ``a``, ``b`` must be broadcastable.
+
+    ``a, b`` must be provided together, or neither is provided. If neither is
+    provided, returns the indices of ``cond`` that are ``True``.
+
+    Parameters
+    ----------
+    cond: tensor<[*D1], T> (Required)
+        * Tensor, when True (non-zero), select element from x, otherwise, y
+
+    a: tensor<[*D2], T> (Optional. Default to None)
+        * Values selected at indices where ``cond`` is True
+
+    b: tensor<[*D3], T> (Optional. Default to None)
+        * Values selected at indices where ``cond`` is False
+
+    Returns
+    -------
+    tensor<[*D_out], T> or tensor<[n, len(D1)], int32>
+        *  If ``a, b`` are both provided, return shape is based on broadcast rules from ``cond, a, b``. If ``a, b`` are ``None``, returns shape is 2D, where first dimension ``n`` is the number of matching indices in ``cond`` and ``len(D1)`` is the rank of ``cond``.
+
+    Attributes
+    ----------
+    T: fp32
+    """
     input_spec = InputSpec(
         cond=TensorInputType(),
         a=TensorInputType(),
@@ -178,9 +200,27 @@ class select(Operation):
     def value_inference(self):
         return np.where(self.cond.val, self.a.val, self.b.val)
 
-# rdar://58622145
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class while_loop(Operation):
+    """
+    Perform body repeatly while the condition cond is true.
+
+    Parameters
+    ----------
+    _cond: Python function  (Required)
+	* A Python function that takes ``loop_vars`` as positional arguments. The function must return a bool Var.
+
+    _body: Python function  (Required)
+	* A Python function that takes ``loop_vars`` as positional arguments. The function must return the same number of output vars as ``loop_var`` with the same types.
+
+    loop_vars: Python tuple (Required)
+	* Python tuple of ``Variables``.
+
+    Returns
+    -------
+    Python tuple
+        * Same type as ``loop_vars``
+    """
     input_spec = InputSpec(
             # arg name with underscore prefix won't be printed.
             _cond = PyFunctionInputType(),
@@ -226,7 +266,7 @@ class while_loop(Operation):
 
 # identity is used for renaming and is rarely necessary. See
 # `loop_invariant_elimination` pass for a rare use case.
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class identity(Operation):
     input_spec = InputSpec(
         x=ListOrScalarOrTensorInputType())
@@ -242,7 +282,7 @@ class identity(Operation):
         return self.x.sym_val
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class make_list(Operation):
     input_spec = InputSpec(
         init_length = IntInputType(optional=True, default=1),
@@ -263,7 +303,7 @@ class make_list(Operation):
                 dynamic_length=self.dynamic_length.val)
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class list_length(Operation):
     input_spec = InputSpec(
         ls = ListInputType(),
@@ -281,7 +321,7 @@ class list_length(Operation):
             return self.ls.init_length
         raise NotImplementedError()
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class list_write(Operation):
     input_spec = InputSpec(
         ls = ListInputType(),
@@ -304,7 +344,7 @@ class list_write(Operation):
                     dynamic_length=dynamic_length)
         if list_elem_type == types.unknown:
             msg = 'Input ls elem type unknown. Override with {}'
-            logging.info(msg.format(value_type))
+            logging.warning(msg.format(value_type))
             return types.list(value_type, init_length=init_length,
                     dynamic_length=dynamic_length)
         if not types.is_subtype(value_type, list_elem_type):
@@ -313,7 +353,7 @@ class list_write(Operation):
             raise ValueError(msg.format(list_elem_type, value_type))
         return self.ls.sym_type
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class list_read(Operation):
     input_spec = InputSpec(
         ls = ListInputType(),
@@ -331,7 +371,7 @@ class list_read(Operation):
             raise ValueError(msg.format(self.name))
         return list_elem_type
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class list_gather(Operation):
     input_spec = InputSpec(
         ls = ListInputType(),
@@ -353,7 +393,7 @@ class list_gather(Operation):
         return types.tensor(dtype, tuple(ret_shape))
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class list_scatter(Operation):
     input_spec = InputSpec(
         ls = ListInputType(),

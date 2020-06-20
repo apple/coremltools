@@ -10,7 +10,7 @@ from coremltools.converters.mil.mil.types.symbolic import (
 from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol, VALUE, SYMBOL, types
 from ._op_reqs import *
 
-@register_op()
+@register_op(doc_str="")
 class depth_to_space(Operation):
     """
     Rearranges elements in a tensor from depth (channel) into spatial dimensions.
@@ -46,7 +46,7 @@ class depth_to_space(Operation):
         ret_shape = (n, c // (bs * bs), h * bs, w * bs)
         return types.tensor(x_type, ret_shape)
 
-@register_op()
+@register_op(doc_str="")
 class expand_dims(Operation):
     """
     Insert a single-dimension in a 1D or higher tensor at each axis in axes.
@@ -126,7 +126,7 @@ def reshape_with_symbol(v, shape):
     return v.reshape(shape)
 
 
-@register_op()
+@register_op(doc_str="")
 class reshape(Operation):
     """
     Returns a tensor that has the same values as ``x`` with shape ``shape``.
@@ -249,7 +249,7 @@ class reshape(Operation):
         return shape
 
 
-@register_op()
+@register_op(doc_str="")
 class reverse(Operation):
     """
     Reverses the order of the input tensor ``x`` along specified ``axes``(dimensions).
@@ -291,7 +291,7 @@ class reverse(Operation):
         return res
 
 
-@register_op()
+@register_op(doc_str="")
 class reverse_sequence(Operation):
     """
     Reverses variable length slices for specified axes / dimensions of the input
@@ -341,7 +341,7 @@ class reverse_sequence(Operation):
         raise NotImplementedError('TODO')
 
 
-@register_op()
+@register_op(doc_str="")
 class slice_by_size(Operation):
     """
     Slicing input tensor with given ``size`` for each rank.
@@ -422,7 +422,7 @@ class slice_by_size(Operation):
                 slices.append(slice(begin_val, None, None))
         return self.x.val[tuple(slices)]
 
-@register_op()
+@register_op(doc_str="")
 class space_to_depth(Operation):
     """
     Rearranges elements in a tensor from spatial into depth (channel) dimension.
@@ -459,7 +459,7 @@ class space_to_depth(Operation):
         return types.tensor(x_type, ret_shape)
 
 
-@register_op()
+@register_op(doc_str="")
 class squeeze(Operation):
     """
     Remove single-dimension dimensions in a 1D or higher tensor.
@@ -515,7 +515,7 @@ class squeeze(Operation):
             return np.squeeze(self.x.val, axis=tuple(self.axes.val))
 
 
-@register_op()
+@register_op(doc_str="")
 class transpose(Operation):
     """
     Permutes tensor ``x`` dimensions according to ``perm``.
@@ -564,7 +564,7 @@ class transpose(Operation):
         return np.transpose(self.x.val, axes=self.perm.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class pixel_shuffle(Operation):
     """
     Rearranges elements in a tensor from depth (channel) into spatial dimensions.
@@ -602,7 +602,7 @@ class pixel_shuffle(Operation):
         return types.tensor(x_type, ret_shape)
 
 
-@register_op()
+@register_op(doc_str="")
 class sliding_windows(Operation):
     """
     Returns a tensor containing all windows of ``size``, separated by stride along the given ``axis``.

@@ -10,7 +10,7 @@ from coremltools.converters.mil.mil import (
 from ._op_reqs import *
 from ._utils import promoted_primitive_type
 
-@register_op()
+@register_op(doc_str="")
 class band_part(Operation):
     """
     Returns a tensor setting everything outside a center band to zeros for the innermost matrix. Special cases:
@@ -48,7 +48,7 @@ class band_part(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class cumsum(Operation):
     """
     Returns the cumulative sum the input along the given axis.
@@ -115,7 +115,7 @@ class cumsum(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class fill(Operation):
     """
     Returns a tensor with given shape filled with a constant value.
@@ -163,7 +163,7 @@ class fill(Operation):
         return np.full(shape=self.shape.val, fill_value=self.value.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class non_maximum_suppression(Operation):
     """
     Applies non-maximum suppression (NMS) on the input box coordinates according
@@ -226,7 +226,7 @@ class non_maximum_suppression(Operation):
                types.tensor(types.int32, (n_batch,))
 
 
-@register_op()
+@register_op(doc_str="")
 class non_zero(Operation):
     """
     Returns the indices of the elements in the given tensor that are non-zero.
@@ -263,7 +263,7 @@ class non_zero(Operation):
         return np.transpose(np.nonzero(self.x.val))
 
 
-@register_op()
+@register_op(doc_str="")
 class one_hot(Operation):
     """
     Returns one hot vectors whose locations represented in ``indices`` take the ``on_value``,
@@ -337,7 +337,7 @@ class one_hot(Operation):
         return types.tensor(on_type, retshape)
 
 
-@register_op()
+@register_op(doc_str="")
 class pad(Operation):
     '''
     Pad a tensor.
@@ -412,7 +412,7 @@ class pad(Operation):
         return np.pad(self.x.val, pad_val, mode)
 
 
-@register_op()
+@register_op(doc_str="")
 class range_1d(Operation):
     '''
     Returns a numpy-like 1d range sequence.
@@ -470,7 +470,7 @@ class range_1d(Operation):
         return types.tensor(self.start.dtype, shape)
 
 
-@register_op()
+@register_op(doc_str="")
 class tile(Operation):
     '''
     Returns a new tensor by replicating input ``x`` multiples times.
@@ -531,7 +531,7 @@ class tile(Operation):
         return np.tile(self.x.val, reps=self.reps.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class argsort(Operation):
     """
     Returns a tensor containing the indices of the sorted values along given axis
@@ -575,7 +575,7 @@ class argsort(Operation):
         return np.argsort(self.x.val, axis=self.axis.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class topk(Operation):
     """
     Returns a tensor containing top or bottom k values and the corresponding
@@ -642,7 +642,7 @@ class topk(Operation):
         return values, indices
 
 
-@register_op()
+@register_op(doc_str="")
 class flatten(Operation):
     """
     Flattens input tensor into 2d tensor by flattening dimensions before and after the provided axis
@@ -699,7 +699,7 @@ class flatten(Operation):
         return self.x.val.reshape(dim_pre_axis, dim_post_axis)
 
 
-@register_op()
+@register_op(doc_str="")
 class shape(Operation):
     """
     Returns 1-dimensional tensor with shape of input tensor
@@ -739,7 +739,7 @@ class shape(Operation):
             return np.array(self.x.shape).astype(np.int32)
 
 
-@register_op()
+@register_op(doc_str="")
 class concat(Operation):
     """
     Concatenates tensors along a dimension.
@@ -846,7 +846,7 @@ class concat(Operation):
 
         return np.concatenate(values, axis=self.axis.val)
 
-@register_op()
+@register_op(doc_str="")
 class split(Operation):
     """
     Split tensors into a tuple
@@ -956,7 +956,7 @@ class split(Operation):
         split_indices = np.cumsum(sizes).astype(np.int)
         return tuple(np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val))
 
-@register_op()
+@register_op(doc_str="")
 class stack(Operation):
     """
     Concatenates tensors along a dimension.
@@ -1019,7 +1019,7 @@ class stack(Operation):
 
         return np.stack(values, self.axis.val)
 
-@register_op()
+@register_op(doc_str="")
 class addn(Operation):
     input_spec = InputSpec(
         values = TupleInputType(),
@@ -1054,7 +1054,7 @@ class addn(Operation):
         inputs = np.array([v.val for v in self.values])
         return np.sum(inputs, axis=0)
 
-@register_op()
+@register_op(doc_str="")
 class isfinite(Operation):
     input_spec = InputSpec(
         x = ScalarOrTensorInputType(),

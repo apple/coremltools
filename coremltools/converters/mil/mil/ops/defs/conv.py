@@ -7,7 +7,7 @@ from coremltools.converters.mil.mil.ops.defs._utils import spatial_dimensions_ou
 from ._op_reqs import *
 
 
-@register_op()
+@register_op(doc_str="")
 class conv(Operation):
     """
     Perform convolution over input, currently supporting only 1D and 2D
@@ -135,7 +135,7 @@ class conv(Operation):
         return types.tensor(self.x.dtype, tuple(retshape))
 
 
-@register_op()
+@register_op(doc_str="")
 class conv_transpose(Operation):
     """
     Perform transposed convolution (aka deconvolution, fractionally stride

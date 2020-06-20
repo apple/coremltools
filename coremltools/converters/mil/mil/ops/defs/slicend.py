@@ -9,7 +9,7 @@ from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import get_new_symbol
 from ._op_reqs import *
 
-@register_op()
+@register_op(doc_str="")
 class slice_by_index(Operation):
     """
     Method for numpy style indexing and slicing.

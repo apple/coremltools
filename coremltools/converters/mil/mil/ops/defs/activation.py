@@ -7,7 +7,7 @@ import scipy
 from ._op_reqs import *
 from .elementwise_unary import elementwise_unary
 
-@register_op()
+@register_op(doc_str="")
 class clamped_relu(Operation):
     """
     Returns elementwise ``min(beta, x)`` if ``x >= 0``, ``min(beta, alpha * x)`` otherwise.
@@ -46,7 +46,7 @@ class clamped_relu(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class elu(Operation):
     """
     Returns elementwise ``x`` if ``x > 0``,  ``alpha * e^(x - 1)`` otherwise.
@@ -84,7 +84,7 @@ class elu(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class gelu(Operation):
     """
     Returns the elementwise gaussian error linear unit activation on ``x``.
@@ -134,7 +134,7 @@ class gelu(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class leaky_relu(Operation):
     """
     Elementwise apply ``x`` if ``x >= 0`` else ``alpha * x``.
@@ -172,7 +172,7 @@ class leaky_relu(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class linear_activation(Operation):
     """
     Applies elementwise ``x * alpha + beta``.
@@ -210,7 +210,7 @@ class linear_activation(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class prelu(Operation):
     """
     Returns ``x_i`` if ``x_i > 0``, ``alpha_i * x_i`` otherwise, where ``i = 1 ... C``.
@@ -257,7 +257,7 @@ class prelu(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class relu(elementwise_unary):
     """
     Returns elementwise applied rectified linear activation: ``min(x, 0)``.
@@ -283,7 +283,7 @@ class relu(elementwise_unary):
         return np.maximum(self.x.val, 0)
 
 
-@register_op()
+@register_op(doc_str="")
 class relu6(elementwise_unary):
     """
     Returns elementwise applied rectified linear activation: ``max(min(x, 0), 6)``.
@@ -309,7 +309,7 @@ class relu6(elementwise_unary):
         return np.minimum(np.maximum(self.x.val, 0), 6)
 
 
-@register_op()
+@register_op(doc_str="")
 class scaled_tanh(Operation):
     """
     Returns ``alpha * tan(beta * x)`` element-wise.
@@ -349,7 +349,7 @@ class scaled_tanh(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class sigmoid(elementwise_unary):
     """
     Returns ``sigmoid(x)`` element-wise.
@@ -375,7 +375,7 @@ class sigmoid(elementwise_unary):
         return 1/(1 + np.exp(-self.x.val))
 
 
-@register_op()
+@register_op(doc_str="")
 class sigmoid_hard(Operation):
     """
     Returns ``min( max( alpha * x + beta, 0 ), 1 )`` elementwise.
@@ -413,7 +413,7 @@ class sigmoid_hard(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class softplus(elementwise_unary):
     """
     Returns ``log( 1 + e^x )`` elementwise.
@@ -439,7 +439,7 @@ class softplus(elementwise_unary):
      return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
 
 
-@register_op()
+@register_op(doc_str="")
 class softplus_parametric(Operation):
     """
     Returns ``alpha_i * log( 1 + e^( beta_i * x_i ) )``, where ``i = 1 ... C``.
@@ -493,7 +493,7 @@ class softplus_parametric(Operation):
         return self.x.sym_type
 
 
-@register_op()
+@register_op(doc_str="")
 class softmax(Operation):
     '''
     Returns ``exp(x) / tf.reduce_sum(tf.exp(x), axis)``.
@@ -529,7 +529,7 @@ class softmax(Operation):
         axis = self.axis.val
         return scipy.special.softmax(x, axis=axis)
 
-@register_op()
+@register_op(doc_str="")
 class softsign(elementwise_unary):
     """
     Returns ``x / ( 1 + |x| )`` applied elementwise.
@@ -551,7 +551,7 @@ class softsign(elementwise_unary):
         return self.x.val / (1 + np.abs(self.x.val))
 
 
-@register_op()
+@register_op(doc_str="")
 class thresholded_relu(Operation):
     """
     Returns ``x`` if ``x >= alpha``, ``0`` otherwise.

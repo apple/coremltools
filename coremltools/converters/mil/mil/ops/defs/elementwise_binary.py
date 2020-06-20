@@ -73,7 +73,7 @@ class elementwise_binary(Operation):
 Elementwise Binary Op Implmentation(s)
 """
 
-@register_op()
+@register_op(doc_str="")
 class add(elementwise_binary):
     """
     Add two inputs element-wise.
@@ -99,7 +99,7 @@ class add(elementwise_binary):
         return operator.add
 
 
-@register_op()
+@register_op(doc_str="")
 class equal(elementwise_binary):
     """
     Return ``x==y`` element-wise.
@@ -128,7 +128,7 @@ class equal(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class floor_div(elementwise_binary):
     """
     Return the floor_div values of two inputs element-wise.
@@ -155,7 +155,7 @@ class floor_div(elementwise_binary):
         return operator.floordiv
 
 
-@register_op()
+@register_op(doc_str="")
 class greater(elementwise_binary):
     """
     Return ``x > y`` element-wise.
@@ -184,7 +184,7 @@ class greater(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class greater_equal(elementwise_binary):
     """
     Return ``x >= y`` element-wise.
@@ -213,7 +213,7 @@ class greater_equal(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class less(elementwise_binary):
     """
     Return ``x < y`` element-wise.
@@ -242,7 +242,7 @@ class less(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class less_equal(elementwise_binary):
     """
     Return ``x <= y`` element-wise.
@@ -271,7 +271,7 @@ class less_equal(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class logical_and(elementwise_binary):
     """
     Return ``x & y`` element-wise.
@@ -296,7 +296,7 @@ class logical_and(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class logical_or(elementwise_binary):
     """
     Return ``x || y`` element-wise.
@@ -321,7 +321,7 @@ class logical_or(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class logical_xor(elementwise_binary):
     """
     Return ``x ^ y`` element-wise.
@@ -346,7 +346,7 @@ class logical_xor(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class maximum(elementwise_binary):
     """
     Return ``max(x,y)`` element-wise.
@@ -372,7 +372,7 @@ class maximum(elementwise_binary):
         return np.maximum
 
 
-@register_op()
+@register_op(doc_str="")
 class minimum(elementwise_binary):
     """
     Return ``min(x,y)`` element-wise.
@@ -398,7 +398,7 @@ class minimum(elementwise_binary):
         return np.minimum
 
 
-@register_op()
+@register_op(doc_str="")
 class mod(elementwise_binary):
     """
     Return ``x % y`` element-wise.
@@ -424,7 +424,7 @@ class mod(elementwise_binary):
         return operator.mod
 
 
-@register_op()
+@register_op(doc_str="")
 class mul(elementwise_binary):
     """
     Return ``x * y`` element-wise.
@@ -450,7 +450,7 @@ class mul(elementwise_binary):
         return operator.mul
 
 
-@register_op()
+@register_op(doc_str="")
 class not_equal(elementwise_binary):
     """
     Return ``x != y`` element-wise.
@@ -475,7 +475,7 @@ class not_equal(elementwise_binary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class real_div(elementwise_binary):
     """
     Return the true division ``x / y`` element-wise.
@@ -504,7 +504,7 @@ class real_div(elementwise_binary):
         return types.float
 
 
-@register_op()
+@register_op(doc_str="")
 class pow(elementwise_binary):
     """
     Return ``pow(x,y)`` element-wise.
@@ -530,7 +530,7 @@ class pow(elementwise_binary):
         return operator.pow
 
 
-@register_op()
+@register_op(doc_str="")
 class sub(elementwise_binary):
     """
     Return ``x - y`` element-wise.

@@ -25,7 +25,7 @@ class elementwise_unary(Operation):
 Elementwise unary op implmentation(s)
 """
 
-@register_op()
+@register_op(doc_str="")
 class abs(elementwise_unary):
     """
     Returns the absolute values of the input ``x``, element-wise.
@@ -51,7 +51,7 @@ class abs(elementwise_unary):
         return np.abs(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class acos(elementwise_unary):
     """
     Returns the inverse cosine values of the input ``x``, element-wise.
@@ -77,7 +77,7 @@ class acos(elementwise_unary):
         return np.arccos(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class asin(elementwise_unary):
     """
     Returns the inverse sine of the input ``x``, element-wise.
@@ -103,7 +103,7 @@ class asin(elementwise_unary):
         return np.arcsin(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class atan(elementwise_unary):
     """
     Returns the inverse tangent of the input ``x``, element-wise.
@@ -129,7 +129,7 @@ class atan(elementwise_unary):
         return np.arctan(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class atanh(elementwise_unary):
     """
     Returns the inverse hyperbolic tangent values of the input ``x``, element-wise.
@@ -155,7 +155,7 @@ class atanh(elementwise_unary):
         return np.arctanh(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class ceil(elementwise_unary):
     """
     Returns the ceil values of the input ``x``, element-wise.
@@ -181,7 +181,7 @@ class ceil(elementwise_unary):
         return np.ceil(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class clip(Operation):
     """
     Clip the values in the input ``x`` to ``[alpha, beta]``, element-wise.
@@ -220,7 +220,7 @@ class clip(Operation):
         return np.minimum(np.maximum(self.x.val, self.alpha.val), self.beta.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class cos(elementwise_unary):
     """
     Returns cosine of ``x`` element-wise. Input domain is ``(-inf, inf)`` and output
@@ -246,7 +246,7 @@ class cos(elementwise_unary):
         return np.cos(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class cosh(elementwise_unary):
     """
     Returns hyperbolic cosine of the input ``x``, element-wise.
@@ -271,7 +271,7 @@ class cosh(elementwise_unary):
         return np.cosh(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class erf(elementwise_unary):
     """
     Returns the gauss error function of the input ``x``, element-wise.
@@ -297,7 +297,7 @@ class erf(elementwise_unary):
         return scipy.special.erf(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class exp(elementwise_unary):
     """
     Returns the exponential values of the input ``x``, element-wise.
@@ -323,7 +323,7 @@ class exp(elementwise_unary):
         return np.exp(self.x.val)
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class exp2(elementwise_unary):
     """
     Returns the exponential values of the input ``x``, element-wise.
@@ -349,7 +349,7 @@ class exp2(elementwise_unary):
         return np.exp2(self.x.val)
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class floor(elementwise_unary):
     """
     Returns the floor of the input ``x``, element-wise.
@@ -374,7 +374,7 @@ class floor(elementwise_unary):
     def value_inference(self):
         return np.floor(self.x.val)
 
-@register_op()
+@register_op(doc_str="")
 class inverse(elementwise_unary):
     """
     Returns the reciprocal value of the input ``x``, element-wise.
@@ -399,7 +399,7 @@ class inverse(elementwise_unary):
     def value_inference(self):
         return np.reciprocal(self.x.val)
 
-@register_op()
+@register_op(doc_str="")
 class log(elementwise_unary):
     """
     Returns the natural logarithm value of the input ``x``, element-wise.
@@ -425,7 +425,7 @@ class log(elementwise_unary):
         return np.log(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class logical_not(elementwise_unary):
     """
     Returns the value of NOT the input ``x``, element-wise.
@@ -453,7 +453,7 @@ class logical_not(elementwise_unary):
         return types.bool
 
 
-@register_op()
+@register_op(doc_str="")
 class round(elementwise_unary):
     """
     Returns the round value of the input ``x``, element-wise.
@@ -479,7 +479,7 @@ class round(elementwise_unary):
         return np.round(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class rsqrt(elementwise_unary):
     """
     Returns the reciprocal value of the square root of the input ``x``, element-wise.
@@ -505,7 +505,7 @@ class rsqrt(elementwise_unary):
         return 1. / np.sqrt(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class sign(elementwise_unary):
     """
     Returns the sign value of the input ``x``, element-wise.
@@ -531,7 +531,7 @@ class sign(elementwise_unary):
         return np.sign(self.x.val)
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="")
 class sin(elementwise_unary):
     """
     Returns the sine value of the input ``x``, element-wise.
@@ -557,7 +557,7 @@ class sin(elementwise_unary):
         return np.sin(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class sinh(elementwise_unary):
     """
     Returns the hyperbolic sine value of the input ``x``, element-wise.
@@ -584,7 +584,7 @@ class sinh(elementwise_unary):
 
 
 
-@register_op()
+@register_op(doc_str="")
 class sqrt(elementwise_unary):
     """
     Returns the square root value of the input ``x``, element-wise.
@@ -610,7 +610,7 @@ class sqrt(elementwise_unary):
         return np.sqrt(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class square(elementwise_unary):
     """
     Returns the square value of the input ``x``, element-wise.
@@ -636,7 +636,7 @@ class square(elementwise_unary):
         return np.square(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class tan(elementwise_unary):
     """
     Returns the tangent value of the input ``x``, element-wise.
@@ -662,7 +662,7 @@ class tan(elementwise_unary):
         return np.tan(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class tanh(elementwise_unary):
     """
     Returns the hyperbolic tangent value of the input ``x``, element-wise.
@@ -688,7 +688,7 @@ class tanh(elementwise_unary):
         return np.tanh(self.x.val)
 
 
-@register_op()
+@register_op(doc_str="")
 class threshold(Operation):
     """
     Set a lower bound ``alpha`` to the values in the input ``x``, element-wise.
@@ -723,7 +723,7 @@ class threshold(Operation):
     def value_inference(self):
         return np.maximum(self.x.val, self.alpha.val)
 
-@register_op()
+@register_op(doc_str="")
 class cast(Operation):
     """
     Cast the input ``x`` to the new type ``dtype``.
