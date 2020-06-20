@@ -45,7 +45,7 @@ docker_push:
 docs: ${ENV_DIR}/docs_reqs
 	zsh -i scripts/build_docs.sh --python=${python} --no-check-env
 
-env: ${ENV_DIR}/docs_reqs
+env:
 	zsh -i scripts/env_create.sh --python=${python} --dev
 
 env_force:
