@@ -11,7 +11,7 @@ from ... import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ... import _MINIMUM_NDARRAY_SPEC_VERSION
 
 from ... import _MINIMUM_UPDATABLE_SPEC_VERSION
-from ... import SPECIFICATION_VERSION_IOS_14 as _SPECIFICATION_VERSION_IOS_14
+from ... import _SPECIFICATION_VERSION_IOS_14
 from ...proto import Model_pb2 as _Model_pb2
 from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
@@ -4739,6 +4739,12 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.strides.extend(strides)
         spec_layer_params.beginMasks.extend(begin_masks)
         spec_layer_params.endMasks.extend(end_masks)
+
+        if not (squeeze_masks and any(squeeze_masks)):
+            return spec_layer
+
+        if self.spec and (not self.spec.specificationVersion or self.spec.specificationVersion < _SPECIFICATION_VERSION_IOS_14):
+            self.spec.specificationVersion = _SPECIFICATION_VERSION_IOS_14
         spec_layer_params.squeezeMasks.extend(squeeze_masks)
 
         return spec_layer

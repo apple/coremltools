@@ -860,7 +860,7 @@ class split(Operation):
         * If specified, divide ``x`` into ``num_splits`` tensors along ``axis``. Its behavior depends on ``split_sizes``:
             * If ``split_sizes`` is defined, ``num_splits == S``, and the output sizes may be uneven
             * If ``split_sizes`` is not defined, ``value.shape[axis]`` must be divisible by ``num_splits``, and the output sizes must be even
-        * At least one of ``num_splits`` or ``split_sizes`` must be provided. If ``split_sizes``’ length ``S`` cannot be determined at compile time, ``num_splits`` must be supplied to determine the number of outputs.
+        * At least one of ``num_splits`` or ``split_sizes`` must be provided. If ``split_sizes`` length ``S`` cannot be determined at compile time, ``num_splits`` must be supplied to determine the number of outputs.
     * split_sizes: const<S,i32> (Optional)
         * Sizes to split to. The sum of ``split_sizes`` must equal to ``value.shape[axis]``.
     * axis: const<i32> (Required)

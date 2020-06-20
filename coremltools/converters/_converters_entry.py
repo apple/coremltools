@@ -12,7 +12,7 @@ from coremltools._deps import _HAS_TORCH, _HAS_TF_1, _HAS_TF_2
 from coremltools.converters._profile_utils import _profile
 from coremltools import __version__ as ct_version
 from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
-
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget, check_deployment_compatibility
 
 if _HAS_TF_1:
     import tensorflow as tf
@@ -32,6 +32,7 @@ def convert(model,
             inputs=None,
             outputs=None,
             classifier_config=None,
+            minimum_deployment_target=None,
             **kwargs):
     """
     Convert TensorFlow or Pytorch models to Core ML model format. Whether a
@@ -91,6 +92,10 @@ def convert(model,
     classifier_config: ClassifierConfig class (optional)
         The configuration if the mlmodel is intended to be a classifier.
 
+    minimum_deployment_target: coremltools.target enumeration (optional)
+        - one of the members of enum "coremltools.target."
+        - When not-specified or None, converter aims for as minimum of a deployment target as possible
+
     Returns
     -------
     model: MLModel
@@ -138,6 +143,12 @@ def convert(model,
     See `here <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
     more advanced options
     """
+    if minimum_deployment_target is not None and not isinstance(minimum_deployment_target, AvailableTarget):
+        msg = "Unrecognized value of argument 'minimum_deployment_target': {}. " \
+              "It needs to be a member of 'coremltools.target' enumeration. " \
+              "For example, coremltools.target.iOS13"
+        raise TypeError(msg.format(minimum_deployment_target))
+
     source = source.lower()
     if source not in {'auto', 'tensorflow', 'pytorch'}:
         msg = "Unrecognized value of argument \"source\": {}. " \
@@ -274,6 +285,10 @@ def convert(model,
                     )
 
     model = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
+
+    if minimum_deployment_target is not None:
+        check_deployment_compatibility(spec=proto_spec, representation=convert_to,
+                                       deployment_target= minimum_deployment_target)
 
     del proto_spec
     gc.collect()

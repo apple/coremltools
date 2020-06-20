@@ -9,6 +9,7 @@ import six
 import pytest
 import shutil
 import tempfile
+import coremltools as ct
 import coremltools.converters as converter
 from coremltools._deps import _IS_MACOS
 import coremltools.proto.FeatureTypes_pb2 as ft
@@ -141,6 +142,35 @@ class TestTf1ModelInputsOutputs:
             converter.convert(
                 model, inputs=[TensorType('invalid_name', x_shape)])
         e.match(r'Input \(invalid_name\) provided is not found in given tensorflow graph. Placeholders in graph are: .*')
+
+    @pytest.mark.parametrize("target", [ct.target.iOS13, ct.target.macOS15, ct.target.watchOS6, ct.target.tvOS13])
+    def test_invalid_deployment_target_cumsum(self, target):
+        x_shape = (3, 4, 5)
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.math.cumsum(x, axis=-1, reverse=False, exclusive=False)
+
+        model, inputs, outputs = build_model
+
+        with pytest.raises(ValueError) as e:
+            converter.convert(model, minimum_deployment_target=target)
+        e.match(r'Provided minimum deployment target .* version 4 but converted model '
+                r'uses .* available from version 5 onwards.\n    1. Cumsum operation\n')
+
+    @pytest.mark.parametrize("target", [ct.target.iOS14, ct.target.macOS16, ct.target.watchOS7, ct.target.tvOS14])
+    def test_valid_deployment_target_cumsum(self, target):
+        x_shape = (3, 4, 5)
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.math.cumsum(x, axis=-1, reverse=False, exclusive=False)
+
+        model, inputs, outputs = build_model
+
+        # successful conversion
+        converter.convert(model, minimum_deployment_target=target)
+
 
     def test_invalid_output_names(self):
         x_shape = (3, 4, 5)
@@ -333,6 +363,14 @@ class TestTf1ModelFormats:
         with pytest.raises(ValueError) as e:
             converter.convert(None, source='invalid')
         expected_msg = r'Unrecognized value of argument "source": .*'
+        e.match(expected_msg)
+
+    def test_invalid_converter_minimum_deployment_flag(self):
+        with pytest.raises(TypeError) as e:
+            converter.convert(None, source='tensorflow', minimum_deployment_target="iOs14")
+        expected_msg = "Unrecognized value of argument 'minimum_deployment_target': iOs14. " \
+                       "It needs to be a member of 'coremltools.target' enumeration"
+
         e.match(expected_msg)
 
     def test_invalid_converter_target(self):

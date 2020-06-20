@@ -45,10 +45,10 @@ _MINIMUM_NDARRAY_SPEC_VERSION = 4
 _MINIMUM_NEAREST_NEIGHBORS_SPEC_VERSION = 4
 _MINIMUM_LINKED_MODELS_SPEC_VERSION = 4
 _MINIMUM_UPDATABLE_SPEC_VERSION = 4
-SPECIFICATION_VERSION_IOS_13 = 4
+_SPECIFICATION_VERSION_IOS_13 = 4
 
 # New versions for iOS 14.0
-SPECIFICATION_VERSION_IOS_14 = 5
+_SPECIFICATION_VERSION_IOS_14 = 5
 
 # expose sub packages as directories
 from . import converters
@@ -61,6 +61,7 @@ from ._scripts.converter import _main
 # expose unified converter in coremltools package level
 from .converters import convert
 from .converters import ClassifierConfig, TensorType, ImageType, RangeDim, Shape, EnumeratedShapes
+from .converters.mil._deployment_compatibility import AvailableTarget as target
 
 # Time profiling for functions in coremltools package, decorated with @profile
 import os as _os
