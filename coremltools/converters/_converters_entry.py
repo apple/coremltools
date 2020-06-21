@@ -157,7 +157,7 @@ def convert(model,
 
     def raise_if_duplicated(input_list):
         # Detect duplicated inputs
-        input_names = [t.name for t in input_list]
+        input_names = [t.name for t in input_list if t.name is not None]
         dups = [item for item, count in
                 collections.Counter(input_names).items() if count > 1]
         if len(dups) > 0:
@@ -167,7 +167,6 @@ def convert(model,
         if not isinstance(inputs, list):
             msg = "\"inputs\" must be of type list"
             raise ValueError(msg)
-        raise_if_duplicated(inputs)
 
 
 
@@ -224,6 +223,9 @@ def convert(model,
 
         if source == 'tensorflow' and not _HAS_TF_1:
             raise ValueError('Converter was called with source="tensorflow", but missing tensorflow package')
+
+        if inputs is not None:
+            raise_if_duplicated(inputs)
 
         if inputs is not None and not all([isinstance(_input, InputType) for _input in inputs]):
             raise ValueError('Input should be a list of TensorType or ImageType')

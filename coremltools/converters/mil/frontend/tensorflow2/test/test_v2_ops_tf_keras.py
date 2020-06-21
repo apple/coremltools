@@ -300,6 +300,10 @@ class TestConvolution:
         s1, s2, k1, k2 = spatial_dim_and_ks
         c_in, c_out = 2, 6
 
+        if len(strides) != np.sum(strides) and len(dilations) != np.sum(dilations):
+            # TF produces incorrect output for non-one strides + dilations
+            return
+
         input_shape = (batch_size, s1, s2, c_in)
         model = tf.keras.Sequential([
             op(batch_input_shape=input_shape,
