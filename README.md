@@ -36,8 +36,8 @@ For the latest changes please see the [release notes](https://github.com/apple/c
 
 # Documentation
 
-* [coremltools user guide and examples](https://coremltools.readme.io/coremltools)
-* [Core ML specification](https://coremltools.readme.io/coremltools)
-* [API reference](https://coremltools.readme.io/coremltools)
+* [coremltools user guide and examples](https://coremltools.readme.io/)
+* [Core ML specification](https://mlmodel.readme.io/)
+* [API reference](https://coremltools.readme.io/reference/convertersconvert)
 
 

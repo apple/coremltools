@@ -43,8 +43,8 @@ the .mlmodel format. In particular, it can be used to:
 More Information
 ----------------
 
+- `coremltools user guide and examples <https://coremltools.readme.io/>`_
 - `Core ML framework documentation <http://developer.apple.com/documentation/coreml>`_
-- `Core ML model specification <https://apple.github.io/coremltools/coremlspecification>`_
 - `Machine learning at Apple <https://developer.apple.com/machine-learning>`_
 
 License
@@ -59,7 +59,6 @@ that can be found in the LICENSE.txt file.
 setup(name='coremltools',
       version=__version__,
       description='Community Tools for Core ML',
-      data_files=[('', ['CHANGELOG.md'])],
       long_description=long_description,
       author='Apple Inc.',
       author_email='coremltools@apple.com',
