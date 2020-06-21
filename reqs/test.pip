@@ -20,7 +20,6 @@ scipy
 sympy
 tensorflow==1.14.0; python_version < '3.8'
 torch==1.5.0
-torchvision
 xgboost
 mock
 wrapt
