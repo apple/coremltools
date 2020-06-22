@@ -54,6 +54,9 @@ namespace CoreML {
                     return a.neuralnetworkclassifier() == b.neuralnetworkclassifier();
                 case Model::kNeuralNetwork:
                     return a.neuralnetwork() == b.neuralnetwork();
+                case Model::kSerializedModel:
+                    return a.serializedmodel().identifier() == b.serializedmodel().identifier() &&
+                           a.serializedmodel().model() == b.serializedmodel().model();
                 case Model::kBayesianProbitRegressor:
                     return a.bayesianprobitregressor() == b.bayesianprobitregressor();
                 case Model::kOneHotEncoder:
@@ -981,6 +984,19 @@ namespace CoreML {
                 case CoreMLModels::VisionFeaturePrint::kScene:
                     if (a.scene().version() != b.scene().version()) {
                         return false;
+                    }
+                    break;
+                case CoreMLModels::VisionFeaturePrint::kObject:
+                    if (a.object().version() != b.object().version()) {
+                        return false;
+                    }
+                    if (a.object().output_size() != b.object().output_size()) {
+                        return false;
+                    }
+                    for (int i = 0; i < a.object().output_size(); i++) {
+                        if (a.object().output(i) != b.object().output(i)) {
+                            return false;
+                        }
                     }
                     break;
                 case CoreMLModels::VisionFeaturePrint::VISIONFEATUREPRINTTYPE_NOT_SET:

@@ -14,7 +14,6 @@ from ..proto import Model_pb2
 
 
 class _DatatypeBase(object):
-
     def __init__(self, type_tag, full_tag, num_elements):
         self.type_tag, self.full_tag = type_tag, full_tag
         self.num_elements = num_elements
@@ -81,17 +80,21 @@ class Array(_DatatypeBase):
         >>> multi_arr = coremltools.models.datatypes.Array(5, 2, 10)
         """
         assert len(dimensions) >= 1
-        assert all(isinstance(d, _integer_types + (_np.int64,)) for d in dimensions), \
-            "Dimensions must be ints, not {}".format(str(dimensions))
+        assert all(
+            isinstance(d, _integer_types + (_np.int64, _np.int32)) for d in dimensions
+        ), "Dimensions must be ints, not {}".format(str(dimensions))
         self.dimensions = dimensions
 
         num_elements = 1
         for d in self.dimensions:
             num_elements *= d
 
-        _DatatypeBase.__init__(self, "Array",
-                               "Array({%s})" % (",".join("%d" % d for d in self.dimensions)),
-                               num_elements)
+        _DatatypeBase.__init__(
+            self,
+            "Array",
+            "Array({%s})" % (",".join("%d" % d for d in self.dimensions)),
+            num_elements,
+        )
 
 
 class Dictionary(_DatatypeBase):
@@ -127,20 +130,22 @@ class Dictionary(_DatatypeBase):
 
         self.key_type = key_type
 
-        _DatatypeBase.__init__(self, "Dictionary",
-                               "Dictionary(%s)" % repr(self.key_type),
-                               None)
+        _DatatypeBase.__init__(
+            self, "Dictionary", "Dictionary(%s)" % repr(self.key_type), None
+        )
 
 
-_simple_type_remap = {int: Int64(),
-                      str: String(),
-                      float: Double(),
-                      Double: Double(),
-                      Int64: Int64(),
-                      String: String(),
-                      'Double': Double(),
-                      'Int64': Int64(),
-                      'String': String()}
+_simple_type_remap = {
+    int: Int64(),
+    str: String(),
+    float: Double(),
+    Double: Double(),
+    Int64: Int64(),
+    String: String(),
+    "Double": Double(),
+    "Int64": Int64(),
+    "String": String(),
+}
 
 
 def _is_valid_datatype(datatype_instance):
@@ -196,7 +201,9 @@ def _normalize_datatype(datatype_instance):
     raise ValueError("Datatype instance not recognized.")
 
 
-def _set_datatype(proto_type_obj, datatype_instance, array_datatype=Model_pb2.ArrayFeatureType.DOUBLE):
+def _set_datatype(
+    proto_type_obj, datatype_instance, array_datatype=Model_pb2.ArrayFeatureType.DOUBLE
+):
     # Remap so we can still use the python types for the simple cases
     global _simple_type_remap
     if datatype_instance in _simple_type_remap:
@@ -204,34 +211,36 @@ def _set_datatype(proto_type_obj, datatype_instance, array_datatype=Model_pb2.Ar
 
     # Now set the protobuf from this interface.
     if isinstance(datatype_instance, Int64):
-        proto_type_obj.int64Type.MergeFromString(b'')
+        proto_type_obj.int64Type.MergeFromString(b"")
 
     elif isinstance(datatype_instance, Double):
-        proto_type_obj.doubleType.MergeFromString(b'')
+        proto_type_obj.doubleType.MergeFromString(b"")
 
     elif isinstance(datatype_instance, String):
-        proto_type_obj.stringType.MergeFromString(b'')
+        proto_type_obj.stringType.MergeFromString(b"")
 
     elif isinstance(datatype_instance, Array):
-        proto_type_obj.multiArrayType.MergeFromString(b'')
+        proto_type_obj.multiArrayType.MergeFromString(b"")
         proto_type_obj.multiArrayType.dataType = array_datatype
 
         for n in datatype_instance.dimensions:
             proto_type_obj.multiArrayType.shape.append(n)
 
     elif isinstance(datatype_instance, Dictionary):
-        proto_type_obj.dictionaryType.MergeFromString(b'')
+        proto_type_obj.dictionaryType.MergeFromString(b"")
 
         kt = datatype_instance.key_type
 
         if isinstance(kt, Int64):
-            proto_type_obj.dictionaryType.int64KeyType.MergeFromString(b'')
+            proto_type_obj.dictionaryType.int64KeyType.MergeFromString(b"")
         elif isinstance(kt, String):
-            proto_type_obj.dictionaryType.stringKeyType.MergeFromString(b'')
+            proto_type_obj.dictionaryType.stringKeyType.MergeFromString(b"")
         else:
             raise ValueError("Dictionary key type must be either string or int.")
 
     else:
-        raise TypeError("Datatype parameter not recognized; must be an instance "
-                        "of datatypes.{Double, Int64, String, Dictionary, Array}, or "
-                        "python int, float, or str types.")
+        raise TypeError(
+            "Datatype parameter not recognized; must be an instance "
+            "of datatypes.{Double, Int64, String, Dictionary, Array}, or "
+            "python int, float, or str types."
+        )

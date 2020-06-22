@@ -4,7 +4,7 @@ Contribution Guidelines
 
 **Core ML Open Source Community**
 
-The Core ML open source community welcomes all contributions and ideas to grow the product. This can occur within this repo as well as [onnx-coreml](https://github.com/onnx/onnx-coreml) or [tf-coreml](https://github.com/tf-coreml/tf-coreml).
+The Core ML open source community welcomes all contributions and ideas to grow the product.
 
  This could be provided in a couple of ways:
 
