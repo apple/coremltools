@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='VisionFeaturePrint.proto',
   package='CoreML.Specification.CoreMLModels',
   syntax='proto3',
-  serialized_pb=_b('\n\x18VisionFeaturePrint.proto\x12!CoreML.Specification.CoreMLModels\"\xa1\x02\n\x12VisionFeaturePrint\x12L\n\x05scene\x18\x14 \x01(\x0b\x32;.CoreML.Specification.CoreMLModels.VisionFeaturePrint.SceneH\x00\x1a\xa2\x01\n\x05Scene\x12Y\n\x07version\x18\x01 \x01(\x0e\x32H.CoreML.Specification.CoreMLModels.VisionFeaturePrint.Scene.SceneVersion\">\n\x0cSceneVersion\x12\x19\n\x15SCENE_VERSION_INVALID\x10\x00\x12\x13\n\x0fSCENE_VERSION_1\x10\x01\x42\x18\n\x16VisionFeaturePrintTypeB\x02H\x03\x62\x06proto3')
+  serialized_pb=_b('\n\x18VisionFeaturePrint.proto\x12!CoreML.Specification.CoreMLModels\"\xac\x04\n\x12VisionFeaturePrint\x12L\n\x05scene\x18\x14 \x01(\x0b\x32;.CoreML.Specification.CoreMLModels.VisionFeaturePrint.SceneH\x00\x12N\n\x06object\x18\x15 \x01(\x0b\x32<.CoreML.Specification.CoreMLModels.VisionFeaturePrint.ObjectH\x00\x1a\xa2\x01\n\x05Scene\x12Y\n\x07version\x18\x01 \x01(\x0e\x32H.CoreML.Specification.CoreMLModels.VisionFeaturePrint.Scene.SceneVersion\">\n\x0cSceneVersion\x12\x19\n\x15SCENE_VERSION_INVALID\x10\x00\x12\x13\n\x0fSCENE_VERSION_1\x10\x01\x1a\xb8\x01\n\x06Object\x12[\n\x07version\x18\x01 \x01(\x0e\x32J.CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.ObjectVersion\x12\x0e\n\x06output\x18\x64 \x03(\t\"A\n\rObjectVersion\x12\x1a\n\x16OBJECT_VERSION_INVALID\x10\x00\x12\x14\n\x10OBJECT_VERSION_1\x10\x01\x42\x18\n\x16VisionFeaturePrintTypeB\x02H\x03\x62\x06proto3')
 )
 
 
@@ -41,10 +41,32 @@ _VISIONFEATUREPRINT_SCENE_SCENEVERSION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=265,
-  serialized_end=327,
+  serialized_start=345,
+  serialized_end=407,
 )
 _sym_db.RegisterEnumDescriptor(_VISIONFEATUREPRINT_SCENE_SCENEVERSION)
+
+_VISIONFEATUREPRINT_OBJECT_OBJECTVERSION = _descriptor.EnumDescriptor(
+  name='ObjectVersion',
+  full_name='CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.ObjectVersion',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='OBJECT_VERSION_INVALID', index=0, number=0,
+      options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='OBJECT_VERSION_1', index=1, number=1,
+      options=None,
+      type=None),
+  ],
+  containing_type=None,
+  options=None,
+  serialized_start=529,
+  serialized_end=594,
+)
+_sym_db.RegisterEnumDescriptor(_VISIONFEATUREPRINT_OBJECT_OBJECTVERSION)
 
 
 _VISIONFEATUREPRINT_SCENE = _descriptor.Descriptor(
@@ -74,8 +96,46 @@ _VISIONFEATUREPRINT_SCENE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=165,
-  serialized_end=327,
+  serialized_start=245,
+  serialized_end=407,
+)
+
+_VISIONFEATUREPRINT_OBJECT = _descriptor.Descriptor(
+  name='Object',
+  full_name='CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='version', full_name='CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.version', index=0,
+      number=1, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='output', full_name='CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output', index=1,
+      number=100, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _VISIONFEATUREPRINT_OBJECT_OBJECTVERSION,
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=410,
+  serialized_end=594,
 )
 
 _VISIONFEATUREPRINT = _descriptor.Descriptor(
@@ -92,10 +152,17 @@ _VISIONFEATUREPRINT = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='object', full_name='CoreML.Specification.CoreMLModels.VisionFeaturePrint.object', index=1,
+      number=21, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
-  nested_types=[_VISIONFEATUREPRINT_SCENE, ],
+  nested_types=[_VISIONFEATUREPRINT_SCENE, _VISIONFEATUREPRINT_OBJECT, ],
   enum_types=[
   ],
   options=None,
@@ -108,16 +175,23 @@ _VISIONFEATUREPRINT = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=64,
-  serialized_end=353,
+  serialized_end=620,
 )
 
 _VISIONFEATUREPRINT_SCENE.fields_by_name['version'].enum_type = _VISIONFEATUREPRINT_SCENE_SCENEVERSION
 _VISIONFEATUREPRINT_SCENE.containing_type = _VISIONFEATUREPRINT
 _VISIONFEATUREPRINT_SCENE_SCENEVERSION.containing_type = _VISIONFEATUREPRINT_SCENE
+_VISIONFEATUREPRINT_OBJECT.fields_by_name['version'].enum_type = _VISIONFEATUREPRINT_OBJECT_OBJECTVERSION
+_VISIONFEATUREPRINT_OBJECT.containing_type = _VISIONFEATUREPRINT
+_VISIONFEATUREPRINT_OBJECT_OBJECTVERSION.containing_type = _VISIONFEATUREPRINT_OBJECT
 _VISIONFEATUREPRINT.fields_by_name['scene'].message_type = _VISIONFEATUREPRINT_SCENE
+_VISIONFEATUREPRINT.fields_by_name['object'].message_type = _VISIONFEATUREPRINT_OBJECT
 _VISIONFEATUREPRINT.oneofs_by_name['VisionFeaturePrintType'].fields.append(
   _VISIONFEATUREPRINT.fields_by_name['scene'])
 _VISIONFEATUREPRINT.fields_by_name['scene'].containing_oneof = _VISIONFEATUREPRINT.oneofs_by_name['VisionFeaturePrintType']
+_VISIONFEATUREPRINT.oneofs_by_name['VisionFeaturePrintType'].fields.append(
+  _VISIONFEATUREPRINT.fields_by_name['object'])
+_VISIONFEATUREPRINT.fields_by_name['object'].containing_oneof = _VISIONFEATUREPRINT.oneofs_by_name['VisionFeaturePrintType']
 DESCRIPTOR.message_types_by_name['VisionFeaturePrint'] = _VISIONFEATUREPRINT
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -129,12 +203,20 @@ VisionFeaturePrint = _reflection.GeneratedProtocolMessageType('VisionFeaturePrin
     # @@protoc_insertion_point(class_scope:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Scene)
     ))
   ,
+
+  Object = _reflection.GeneratedProtocolMessageType('Object', (_message.Message,), dict(
+    DESCRIPTOR = _VISIONFEATUREPRINT_OBJECT,
+    __module__ = 'VisionFeaturePrint_pb2'
+    # @@protoc_insertion_point(class_scope:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object)
+    ))
+  ,
   DESCRIPTOR = _VISIONFEATUREPRINT,
   __module__ = 'VisionFeaturePrint_pb2'
   # @@protoc_insertion_point(class_scope:CoreML.Specification.CoreMLModels.VisionFeaturePrint)
   ))
 _sym_db.RegisterMessage(VisionFeaturePrint)
 _sym_db.RegisterMessage(VisionFeaturePrint.Scene)
+_sym_db.RegisterMessage(VisionFeaturePrint.Object)
 
 
 DESCRIPTOR.has_options = True

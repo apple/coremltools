@@ -10,12 +10,11 @@ import math as _math
 import numpy as _np
 import os as _os
 import six as _six
-import warnings
-import sys
+import warnings as _warnings
+import sys as _sys
 from coremltools.proto import Model_pb2 as _Model_pb2
-from coremltools.models._deprecation import deprecated
-
-from .._deps import HAS_SKLEARN as _HAS_SKLEARN
+from coremltools.models._deprecation import deprecated as _deprecated
+from .._deps import _HAS_SKLEARN
 
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
@@ -57,12 +56,8 @@ def save_spec(spec, filename, auto_set_specification_version=False):
     if not ext:
         filename = "{}.mlmodel".format(filename)
     else:
-        if ext != '.mlmodel':
+        if ext != ".mlmodel":
             raise Exception("Extension must be .mlmodel (not {})".format(ext))
-
-    # set model coremltools version
-    from coremltools import __version__
-    spec.description.metadata.userDefined['coremltoolsVersion'] = __version__
 
     spec = spec.SerializeToString()
     if auto_set_specification_version:
@@ -70,14 +65,16 @@ def save_spec(spec, filename, auto_set_specification_version=False):
             # always try to downgrade the specification version to the
             # minimal version that supports everything in this mlmodel
             from ..libcoremlpython import _MLModelProxy
+
             spec = _MLModelProxy.auto_set_specification_version(spec)
         except Exception as e:
             print(e)
-            warnings.warn(
+            _warnings.warn(
                 "Failed to automatic set specification version for this model.",
-                RuntimeWarning)
+                RuntimeWarning,
+            )
 
-    with open(filename, 'wb') as f:
+    with open(filename, "wb") as f:
         f.write(spec)
 
 
@@ -107,9 +104,10 @@ def load_spec(filename):
     save_spec
     """
     from ..proto import Model_pb2
+
     spec = Model_pb2.Model()
 
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         contents = f.read()
         spec.ParseFromString(contents)
         return spec
@@ -132,7 +130,7 @@ def _get_nn_layers(spec):
     """
 
     layers = []
-    if spec.WhichOneof('Type') == 'pipeline':
+    if spec.WhichOneof("Type") == "pipeline":
         layers = []
         for model_spec in spec.pipeline.models:
             if not layers:
@@ -140,8 +138,7 @@ def _get_nn_layers(spec):
             else:
                 layers.extend(_get_nn_layers(model_spec))
 
-    elif spec.WhichOneof('Type') in ['pipelineClassifier',
-                                        'pipelineRegressor']:
+    elif spec.WhichOneof("Type") in ["pipelineClassifier", "pipelineRegressor"]:
         layers = []
         for model_spec in spec.pipeline.models:
             if not layers:
@@ -161,9 +158,9 @@ def _get_nn_layers(spec):
 
 def _fp32_to_reversed_fp16_byte_array(fp32_arr):
     raw_fp16 = _np.float16(fp32_arr)
-    x = ''
+    x = ""
     for fp16 in raw_fp16:
-        all_bytes = _np.fromstring(fp16.tobytes(), dtype='int8')
+        all_bytes = _np.fromstring(fp16.tobytes(), dtype="int8")
         x += all_bytes[1].tobytes()
         x += all_bytes[0].tobytes()
     return x
@@ -171,12 +168,15 @@ def _fp32_to_reversed_fp16_byte_array(fp32_arr):
 
 def _fp32_to_fp16_byte_array(fp32_arr):
     if _np.amax(fp32_arr) >= 65504 or _np.amin(fp32_arr) <= -65504:
-        raise Exception('Model cannot be converted as '
-                        'it has weights that cannot be represented in '
-                        'half precision.\n')
+        raise Exception(
+            "Model cannot be converted as "
+            "it has weights that cannot be represented in "
+            "half precision.\n"
+        )
 
     import sys
-    if sys.byteorder == 'little':
+
+    if sys.byteorder == "little":
         return _np.float16(fp32_arr).tobytes()
     else:
         return _fp32_to_reversed_fp16_byte_array(fp32_arr)
@@ -191,20 +191,29 @@ def _wp_to_fp16wp(wp):
     del wp.floatValue[:]
 
 
-
+@_deprecated(
+    suffix="instead use 'coremltools.models.neural_network.quantization_utils.quantize_weights'."
+)
 def convert_neural_network_spec_weights_to_fp16(fp_spec):
     return _convert_neural_network_spec_weights_to_fp16(fp_spec)
 
+
 def _convert_neural_network_spec_weights_to_fp16(fp_spec):
     from .neural_network.quantization_utils import _quantize_spec_weights
-    from .neural_network.quantization_utils import _QUANTIZATION_MODE_LINEAR_QUANTIZATION
+    from .neural_network.quantization_utils import (
+        _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
+    )
 
     qspec = _quantize_spec_weights(fp_spec, 16, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
     return qspec
 
 
+@_deprecated(
+    suffix="instead use 'coremltools.models.neural_network.quantization_utils.quantize_weights'."
+)
 def convert_neural_network_weights_to_fp16(full_precision_model):
     return _convert_neural_network_weights_to_fp16(full_precision_model)
+
 
 def _convert_neural_network_weights_to_fp16(full_precision_model):
     """
@@ -224,11 +233,6 @@ def _convert_neural_network_weights_to_fp16(full_precision_model):
     model: MLModel
         The converted half precision MLModel
 
-    Examples
-    --------
-    .. sourcecode:: python
-
-        >>> half_precision_model = coremltools.utils.convert_neural_network_weights_to_fp16(model)
     """
     spec = full_precision_model.get_spec()
     return _get_model(_convert_neural_network_spec_weights_to_fp16(spec))
@@ -239,6 +243,7 @@ def _get_model(spec):
     Utility to get the model and the data.
     """
     from . import MLModel
+
     if isinstance(spec, MLModel):
         return spec
     else:
@@ -288,7 +293,7 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     max_error = 0
     error_squared = 0
 
-    for index,row in data.iterrows():
+    for index, row in data.iterrows():
         predicted = model.predict(dict(row))[_to_unicode(target)]
         other_framework = row["prediction"]
         delta = predicted - other_framework
@@ -302,7 +307,7 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     ret = {
         "samples": len(data),
         "rmse": _math.sqrt(error_squared / len(data)),
-        "max_error": max_error
+        "max_error": max_error,
     }
 
     if verbose:
@@ -310,7 +315,7 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     return ret
 
 
-def evaluate_classifier(model, data, target='target', verbose=False):
+def evaluate_classifier(model, data, target="target", verbose=False):
     """
     Evaluate a Core ML classifier model and compare against predictions
     from the original framework (for testing correctness of conversion).
@@ -351,7 +356,7 @@ def evaluate_classifier(model, data, target='target', verbose=False):
 
     num_errors = 0
 
-    for index,row in data.iterrows():
+    for index, row in data.iterrows():
         predicted = model.predict(dict(row))[_to_unicode(target)]
         other_framework = row["prediction"]
         if predicted != other_framework:
@@ -360,10 +365,7 @@ def evaluate_classifier(model, data, target='target', verbose=False):
         if verbose:
             print("{}\t\t\t\t{}".format(other_framework, predicted))
 
-    ret = {
-        "num_samples": len(data),
-        "num_errors": num_errors
-    }
+    ret = {"num_samples": len(data), "num_errors": num_errors}
 
     if verbose:
         print("results: {}".format(ret))
@@ -371,9 +373,9 @@ def evaluate_classifier(model, data, target='target', verbose=False):
     return ret
 
 
-def evaluate_classifier_with_probabilities(model, data,
-                                           probabilities='probabilities',
-                                           verbose = False):
+def evaluate_classifier_with_probabilities(
+    model, data, probabilities="probabilities", verbose=False
+):
     """
     Evaluate a classifier specification for testing.
 
@@ -401,13 +403,18 @@ def evaluate_classifier_with_probabilities(model, data,
 
     max_probability_error, num_key_mismatch = 0, 0
 
-    for _,row in data.iterrows():
-        predicted_values = model.predict(dict(row))[_to_unicode(probabilities)]
+    for _, row in data.iterrows():
+        input_dict = {k: v for k, v in dict(row).items() if k != probabilities}
+        predicted_values = model.predict(input_dict)[_to_unicode(probabilities)]
         other_values = row[probabilities]
 
         if set(predicted_values.keys()) != set(other_values.keys()):
             if verbose:
-                print("Different classes: ", str(predicted_values.keys()), str(other_values.keys()))
+                print(
+                    "Different classes: ",
+                    str(predicted_values.keys()),
+                    str(other_values.keys()),
+                )
             num_key_mismatch += 1
             continue
 
@@ -424,7 +431,7 @@ def evaluate_classifier_with_probabilities(model, data,
     ret = {
         "num_samples": len(data),
         "max_probability_error": max_probability_error,
-        "num_key_mismatch": num_key_mismatch
+        "num_key_mismatch": num_key_mismatch,
     }
 
     if verbose:
@@ -433,8 +440,9 @@ def evaluate_classifier_with_probabilities(model, data,
     return ret
 
 
-def rename_feature(spec, current_name, new_name, rename_inputs=True,
-                   rename_outputs=True):
+def rename_feature(
+    spec, current_name, new_name, rename_inputs=True, rename_outputs=True
+):
     """
     Rename a feature in the specification.
 
@@ -496,23 +504,27 @@ def rename_feature(spec, current_name, new_name, rename_inputs=True,
 
     # Rename internally in NN model
     nn = None
-    for nn_type in ['neuralNetwork','neuralNetworkClassifier','neuralNetworkRegressor']:
+    for nn_type in [
+        "neuralNetwork",
+        "neuralNetworkClassifier",
+        "neuralNetworkRegressor",
+    ]:
         if spec.HasField(nn_type):
-            nn = getattr(spec,nn_type)
+            nn = getattr(spec, nn_type)
 
     if nn is not None:
         for layer in nn.layers:
             if rename_inputs:
-                for index,name in enumerate(layer.input):
+                for index, name in enumerate(layer.input):
                     if name == current_name:
                         layer.input[index] = new_name
                 if rename_outputs:
-                    for index,name in enumerate(layer.output):
+                    for index, name in enumerate(layer.output):
                         if name == current_name:
                             layer.output[index] = new_name
 
     # Rename internally for feature vectorizer
-    if spec.HasField('featureVectorizer') and rename_inputs:
+    if spec.HasField("featureVectorizer") and rename_inputs:
         for input in spec.featureVectorizer.inputList:
             if input.inputColumn == current_name:
                 input.inputColumn = new_name
@@ -520,20 +532,22 @@ def rename_feature(spec, current_name, new_name, rename_inputs=True,
 
     # Rename for pipeline models
     pipeline = None
-    if spec.HasField('pipeline'):
+    if spec.HasField("pipeline"):
         pipeline = spec.pipeline
-    elif spec.HasField('pipelineClassifier'):
+    elif spec.HasField("pipelineClassifier"):
         pipeline = spec.pipelineClassifier.pipeline
-    elif spec.HasField('pipelineRegressor'):
+    elif spec.HasField("pipelineRegressor"):
         pipeline = spec.pipelineRegressor.pipeline
 
     if pipeline is not None:
-        for index,model in enumerate(pipeline.models):
-            rename_feature(model,
-                           current_name,
-                           new_name,
-                           rename_inputs or (index != 0),
-                           rename_outputs or (index < len(spec.pipeline.models)))
+        for index, model in enumerate(pipeline.models):
+            rename_feature(
+                model,
+                current_name,
+                new_name,
+                rename_inputs or (index != 0),
+                rename_outputs or (index < len(spec.pipeline.models)),
+            )
 
 
 def _sanitize_value(x):
@@ -552,7 +566,7 @@ def _sanitize_value(x):
     elif isinstance(x, list):
         return [_sanitize_value(v) for v in x]
     elif isinstance(x, dict):
-        return dict( (_sanitize_value(k), _sanitize_value(v)) for k, v in x.items())
+        return dict((_sanitize_value(k), _sanitize_value(v)) for k, v in x.items())
     else:
         assert False, str(x)
 
@@ -567,9 +581,11 @@ def _element_equal(x, y):
         except:
             return False
     elif isinstance(x, dict):
-        return (isinstance(y, dict)
-                and _element_equal(x.keys(), y.keys())
-                and all(_element_equal(x[k], y[k]) for k in x.keys()))
+        return (
+            isinstance(y, dict)
+            and _element_equal(x.keys(), y.keys())
+            and all(_element_equal(x[k], y[k]) for k in x.keys())
+        )
     elif isinstance(x, float):
         return abs(x - y) < 1e-5 * (abs(x) + abs(y))
     elif isinstance(x, (list, tuple)):
@@ -578,8 +594,7 @@ def _element_equal(x, y):
         return bool(x == y)
 
 
-def evaluate_transformer(model, input_data, reference_output,
-                         verbose=False):
+def evaluate_transformer(model, input_data, reference_output, verbose=False):
     """
     Evaluate a transformer specification for testing.
 
@@ -630,7 +645,7 @@ def evaluate_transformer(model, input_data, reference_output,
         assert isinstance(ref_data, dict)
         assert isinstance(predicted, dict)
 
-        predicted_trimmed = dict( (k, predicted[k]) for k in ref_data.keys())
+        predicted_trimmed = dict((k, predicted[k]) for k in ref_data.keys())
 
         if verbose:
             print("Predicted:\n\t", str(predicted_trimmed))
@@ -638,17 +653,14 @@ def evaluate_transformer(model, input_data, reference_output,
         if not _element_equal(predicted_trimmed, ref_data):
             num_errors += 1
 
-    ret = {
-        "num_samples": len(input_data),
-        "num_errors": num_errors
-    }
+    ret = {"num_samples": len(input_data), "num_errors": num_errors}
 
     if verbose:
         print("results: {}".format(ret))
     return ret
 
 
-def has_custom_layer(spec):
+def _has_custom_layer(spec):
     """
 
     Returns true if the given protobuf specification has a custom layer, and false otherwise.
@@ -666,15 +678,11 @@ def has_custom_layer(spec):
 
     layers = _get_nn_layers(spec)
     for layer in layers:
-        if layer.WhichOneof('layer') == 'custom':
+        if layer.WhichOneof("layer") == "custom":
             return True
 
     return False
 
-
-@deprecated
-def get_custom_layer_names(spec):
-    return _get_custom_layer_names(spec)
 
 def _get_custom_layer_names(spec):
     """
@@ -694,14 +702,11 @@ def _get_custom_layer_names(spec):
     layers = _get_nn_layers(spec)
     layers_out = set()
     for layer in layers:
-        if (layer.WhichOneof('layer') == 'custom'):
+        if layer.WhichOneof("layer") == "custom":
             layers_out.add(layer.custom.className)
 
     return layers_out
 
-@deprecated
-def get_custom_layers(spec):
-    return _get_custom_layers(spec)
 
 def _get_custom_layers(spec):
     """
@@ -720,15 +725,11 @@ def _get_custom_layers(spec):
     layers = _get_nn_layers(spec)
     layers_out = []
     for layer in layers:
-        if (layer.WhichOneof('layer') == 'custom'):
+        if layer.WhichOneof("layer") == "custom":
             layers_out.append(layer)
 
     return layers_out
 
-
-@deprecated
-def replace_custom_layer_name(spec, oldname, newname):
-    return _replace_custom_layer_name(spec, oldname, newname)
 
 def _replace_custom_layer_name(spec, oldname, newname):
     """
@@ -756,22 +757,32 @@ def _replace_custom_layer_name(spec, oldname, newname):
             layer.custom.className = newname
 
 
-def is_macos():
+def _is_macos():
     """Returns True if current platform is MacOS, False otherwise."""
-    return sys.platform == 'darwin'
+    return _sys.platform == "darwin"
 
 
-def macos_version():
+def _macos_version():
     """
     Returns macOS version as a tuple of integers, making it easy to do proper
     version comparisons. On non-Macs, it returns an empty tuple.
     """
-    if is_macos():
+    if _is_macos():
         import platform
+
         ver_str = platform.mac_ver()[0]
-        return tuple([int(v) for v in ver_str.split('.')])
+        return tuple([int(v) for v in ver_str.split(".")])
 
     return ()
+
+
+def _python_version():
+    """
+    Return python version as a tuple of integers
+    """
+    version = _sys.version.split(" ")[0]
+    version = list(map(int, list(version.split("."))))
+    return tuple(version)
 
 
 def _get_feature(spec, feature_name):
@@ -783,7 +794,7 @@ def _get_feature(spec, feature_name):
         if output_feature.name == feature_name:
             return output_feature
 
-    raise Exception('Feature with name {} does not exist'.format(feature_name))
+    raise Exception("Feature with name {} does not exist".format(feature_name))
 
 
 def _get_input_names(spec):
@@ -815,10 +826,16 @@ def convert_double_to_float_multiarray_type(spec):
         >>> coremltools.utils.convert_double_to_float_multiarray_type(spec)
         >>> model = coremltools.models.MLModel(spec)
     """
+
     def _convert_to_float(feature):
-        if feature.type.HasField('multiArrayType'):
-            if feature.type.multiArrayType.dataType == _Model_pb2.ArrayFeatureType.DOUBLE:
-                feature.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.FLOAT32
+        if feature.type.HasField("multiArrayType"):
+            if (
+                feature.type.multiArrayType.dataType
+                == _Model_pb2.ArrayFeatureType.DOUBLE
+            ):
+                feature.type.multiArrayType.dataType = (
+                    _Model_pb2.ArrayFeatureType.FLOAT32
+                )
 
     for feature in spec.description.input:
         _convert_to_float(feature)
@@ -828,3 +845,7 @@ def convert_double_to_float_multiarray_type(spec):
 
     for feature in spec.description.trainingInput:
         _convert_to_float(feature)
+
+    if spec.WhichOneof("Type") == "pipeline":
+        for model_spec in spec.pipeline.models:
+            convert_double_to_float_multiarray_type(model_spec)
