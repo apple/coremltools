@@ -1,8 +1,3 @@
-## Docs
+# Examples
 
-
-[Code Snippet examples](APIExamples.md)
-
-
-[Neural network guide](NeuralNetworkGuide.md) 
- 
+* [User Guides and Examples](https://coremltools.readme.io/)

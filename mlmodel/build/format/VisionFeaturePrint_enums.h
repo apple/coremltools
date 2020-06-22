@@ -2,6 +2,7 @@
 #define __VISIONFEATUREPRINT_ENUMS_H
 enum MLVisionFeaturePrintVisionFeaturePrintType: int {
     MLVisionFeaturePrintVisionFeaturePrintType_scene = 20,
+    MLVisionFeaturePrintVisionFeaturePrintType_object = 21,
     MLVisionFeaturePrintVisionFeaturePrintType_NOT_SET = 0,
 };
 
@@ -10,6 +11,8 @@ static const char * MLVisionFeaturePrintVisionFeaturePrintType_Name(MLVisionFeat
     switch (x) {
         case MLVisionFeaturePrintVisionFeaturePrintType_scene:
             return "MLVisionFeaturePrintVisionFeaturePrintType_scene";
+        case MLVisionFeaturePrintVisionFeaturePrintType_object:
+            return "MLVisionFeaturePrintVisionFeaturePrintType_object";
         case MLVisionFeaturePrintVisionFeaturePrintType_NOT_SET:
             return "INVALID";
     }
@@ -19,6 +22,11 @@ static const char * MLVisionFeaturePrintVisionFeaturePrintType_Name(MLVisionFeat
 enum MLSceneVersion: int {
     MLSceneVersionSCENE_VERSION_INVALID = 0,
     MLSceneVersionSCENE_VERSION_1 = 1,
+};
+
+enum MLObjectVersion: int {
+    MLObjectVersionOBJECT_VERSION_INVALID = 0,
+    MLObjectVersionOBJECT_VERSION_1 = 1,
 };
 
 #endif
