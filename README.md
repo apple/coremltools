@@ -29,7 +29,7 @@ With coremltools, you can do the following:
 To get the latest version of coremltools:
 
 ```shell
-pip install --upgrade coremltools
+pip install coremltools==4.0b1
 ```
 
 For the latest changes please see the [release notes](https://github.com/apple/coremltools/releases/).
