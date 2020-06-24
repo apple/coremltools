@@ -2,7 +2,7 @@
 [![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
 [![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
 
-Core ML Community Tools
+[Core ML Community Tools](https://coremltools.readme.io/docs)
 =======================
 
 Core ML is an Apple framework to integrate machine learning models into your
@@ -14,14 +14,14 @@ consumption. Running a model strictly on the user’s device removes any need fo
 a network connection, which helps keep the user’s data private and your app
 responsive.
 
-Core ML community tools contains all supporting tools for Core ML model
-conversion, editing and validation. This includes deep learning frameworks like
+[Core ML community tools](https://coremltools.readme.io/docs#what-is-coremltools) contains all supporting tools for [Core ML model
+conversion](https://coremltools.readme.io/docs), editing and validation. This includes deep learning frameworks like
 TensorFlow, PyTorch, Keras, Caffe as well as classical machine learning
 frameworks like LIBSVM, scikit-learn, and XGBoost.
 
 With coremltools, you can do the following:
 
-- Convert trained models from frameworks like TensorFlow and PyTorch to the
+- [Convert trained models](https://coremltools.readme.io/docs) from frameworks like TensorFlow and PyTorch to the
   Core ML format.
 - Read, write, and optimize Core ML models.
 - Verify conversion/creation (on macOS) by making predictions using Core ML.
